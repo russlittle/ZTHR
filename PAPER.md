@@ -4,6 +4,8 @@
 
 Russ Little · Pattern paper · Oct 29, 2026
 
+v1.0 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0.
+
 ## Abstract
 
 Zero Trust – High Reliability (ZTHR) is a way to deliver software written by AI without making human code review the thing that holds quality together. It rests on two principles.
@@ -14,6 +16,8 @@ Zero Trust – High Reliability (ZTHR) is a way to deliver software written by A
 This paper explains why those two principles follow from the economics of cheap generation, then sets out the recurring solutions that implement them as a pattern language: thirty-three patterns in six families, from construction through runtime. Each pattern names a problem, the forces acting on it, the solution and its consequences. The paper closes with how the patterns compose, how people's work changes, how to adopt the approach in stages, how to evaluate it honestly, and what it does not claim.
 
 > **Central proposition.** Nothing is accepted because it says so. A candidate must satisfy its acceptance conditions; the checks must have demonstrated that they can fail; the deployment must be observed; and consequential actions must stay inside authority boundaries enforced independently of the actor.
+
+**Author's note.** ZTHR grew out of practice before it became a theory. Its core moves (measuring the as-built system against a datum, calibrating models to reality, and letting fixtures rather than craft hold tolerance) come from driving manufacturing robots from 3D models in the late 1990s, and from the decades since spent leading software teams and running large application portfolios.
 
 ## 1. The problem: generation outran assurance
 
@@ -845,16 +849,7 @@ ZTHR spends compute to save attention. Generation, review and verification all c
 
 ### 16.2 Operating evidence
 
-ZTHR is in production use for the development of greenfield systems in a regulated industry, where it has proven highly effective. The measures below are the ones that operating record should be reported in, so that results from any adopter can be compared on the same terms.
-
-| Measure | Reported value |
-| --- | --- |
-| Intent completion rate |  |
-| Revision rate per change, against the incumbent process |  |
-| Time from agreed workflow to usable application |  |
-| Time to detect and time to restore |  |
-| Human hours per application, against the incumbent process |  |
-| Cost per accepted change, against the incumbent process |  |
+ZTHR is in production use for the development of greenfield systems in a regulated industry, where it has proven highly effective. To compare implementations on equal terms without exposing proprietary operating baselines, adopters should benchmark and report across six standard dimensions: intent completion rate; revision rate per change against the incumbent process; time from agreed workflow to usable application; time to detect and restore; human hours per application; and total compute-plus-human cost per accepted change.
 
 ## 17. Lineage
 
