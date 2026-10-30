@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: read
-  checks: write
-  pull-requests: write
 
 jobs:
   deploy:
@@ -28,11 +26,32 @@ jobs:
             echo "present=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - uses: actions/setup-node@v4
+        if: steps.creds.outputs.present == 'true'
+        with:
+          node-version: 20
+
       - name: Deploy to Firebase Hosting (live)
         if: steps.creds.outputs.present == 'true'
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: zthr-ai
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          if ! python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print('::notice::Credential parsed for', d.get('client_email'), 'project', d.get('project_id'))" "$RUNNER_TEMP/sa.json"; then
+            echo "::error::FIREBASE_SERVICE_ACCOUNT is not valid JSON."
+            exit 1
+          fi
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          set +e
+          npx --yes firebase-tools@13 deploy --only hosting --project zthr-ai --non-interactive > "$RUNNER_TEMP/deploy.log" 2>&1
+          status=$?
+          set -e
+          cat "$RUNNER_TEMP/deploy.log"
+          if [ $status -ne 0 ]; then
+            grep -iE "error|denied|permission|not found|enable|forbidden|403|404" "$RUNNER_TEMP/deploy.log" | head -8 | while IFS= read -r line; do
+              echo "::error::${line//%/%25}"
+            done
+            exit $status
+          fi
+          grep -iE "Hosting URL|Deploy complete" "$RUNNER_TEMP/deploy.log" | while IFS= read -r line; do echo "::notice::$line"; done
+          rm -f "$RUNNER_TEMP/sa.json"
