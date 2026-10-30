@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use or build on ZTHR, please cite it as below."
+title: "ZTHR: A Pattern Language for Autonomous Software Delivery"
+abstract: "Zero Trust – High Reliability (ZTHR) is a pattern language for delivering software written by AI, built on two principles: Symmetric Zero Trust and the Fixture Inversion."
+authors:
+  - family-names: Little
+    given-names: Russ
+type: report
+date-released: 2026-10-29
+url: "https://zthr.ai"
+license: CC-BY-4.0
+keywords:
+  - AI-assisted software development
+  - autonomous software delivery
+  - software quality
+  - zero trust
+  - pattern language
