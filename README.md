@@ -20,7 +20,11 @@ ZTHR is a pattern language for delivering software written by AI without relying
 
 ## What's in the paper
 
-[**Read the full paper →**](PAPER.md)
+Three ways in, by depth:
+
+- [**Executive summary**](SUMMARY.md): two pages
+- [**The brief**](BRIEF.md): five pages
+- [**The full paper**](PAPER.md): all thirty-three patterns
 
 Thirty-three patterns in six families, from construction through runtime:
 
