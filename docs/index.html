@@ -6,6 +6,25 @@
 <title>ZTHR</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="ZTHR: Zero Trust – High Reliability. A pattern language for software built by AI, where quality comes from the environment, not the author.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTMiIGZpbGw9IiMyZjNmYTgiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNC41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iNS41Ii8+PHBhdGggZD0iTTMyIDl2NDZNOSAzMmg0NiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjUuNSIvPjwvc3ZnPgo=">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#2f3fa8">
+<link rel="canonical" href="https://zthr.ai/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="ZTHR">
+<meta property="og:title" content="ZTHR: A Pattern Language for Autonomous Software Delivery">
+<meta property="og:description" content="AI writes the code. The factory proves it. Two principles and thirty-three patterns for delivering software written by AI without making human code review the thing that holds quality together.">
+<meta property="og:url" content="https://zthr.ai/">
+<meta property="og:image" content="https://zthr.ai/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="author" content="Russ Little">
+<meta name="citation_title" content="ZTHR: A Pattern Language for Autonomous Software Delivery">
+<meta name="citation_author" content="Little, Russ">
+<meta name="citation_publication_date" content="2026/10/29">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"ScholarlyArticle","headline":"ZTHR: A Pattern Language for Autonomous Software Delivery","alternativeHeadline":"Zero Trust – High Reliability","author":{"@type":"Person","name":"Russ Little"},"datePublished":"2026-10-29","version":"1.0","license":"https://creativecommons.org/licenses/by/4.0/","url":"https://zthr.ai/","keywords":"AI-assisted software development, autonomous software delivery, software quality, zero trust, pattern language","abstract":"A pattern language for delivering software written by AI, built on two principles: Symmetric Zero Trust and the Fixture Inversion."}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112..125,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
@@ -56,10 +75,14 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+.skip { position: absolute; left: 12px; top: -60px; z-index: 20; background: var(--ink); color: var(--sheet); padding: 8px 12px; font-family: var(--font-mono); font-size: 13px; }
+.skip:focus { top: calc(env(safe-area-inset-top, 0px) + 8px); }
+main:focus { outline: none; }
 a { color: var(--layout); text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--layout); outline-offset: 2px; }
 h1, h2, h3, h4 { font-family: var(--font-display); font-stretch: 118%; line-height: 1.15; text-wrap: balance; letter-spacing: -.01em; }
 .mono, .eyebrow, .tb, code { font-family: var(--font-mono); }
+h2.eyebrow { margin: 0 0 10px; font-family: var(--font-mono); font-weight: 400; font-stretch: 100%; letter-spacing: .12em; }
 .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-2); }
 
 /* Header */
@@ -88,7 +111,7 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 .tb b { display: block; font-weight: 500; color: var(--ink-2); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; }
 
 /* Prose */
-.prose { max-width: var(--measure); }
+.prose { max-width: var(--measure); min-width: 0; }
 .prose h2 { font-size: clamp(26px, 3.4vw, 34px); margin: 56px 0 14px; padding-top: 18px; border-top: 1px solid var(--rule); }
 .prose h2:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
 .prose h3 { font-size: 21px; margin: 34px 0 8px; }
@@ -96,7 +119,7 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 .prose blockquote { margin: 22px 0; padding: 14px 20px; border-left: 3px solid var(--layout); background: var(--layout-soft); }
 .prose blockquote p { margin: 0; }
 .prose table { border-collapse: collapse; font-size: 15px; width: 100%; min-width: 520px; }
-.tablewrap { overflow-x: auto; margin: 18px 0; max-width: calc(var(--measure) + 20ch); }
+.tablewrap { overflow-x: auto; margin: 18px 0; max-width: 100%; }
 .prose th, .prose td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--rule); }
 .prose th { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); border-bottom: 1px solid var(--rule-strong); }
 .prose strong { font-weight: 600; }
@@ -115,7 +138,7 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 .rung:first-child { border-left: 0; }
 .rung:hover { background: var(--layout-soft); }
 .rung .depth { font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--layout); display: flex; justify-content: space-between; }
-.rung h3 { margin: 4px 0 0; font-size: 22px; }
+.rung .h3 { margin: 4px 0 0; font-size: 22px; }
 .rung p { margin: 0; font-size: 15.5px; color: var(--ink-2); }
 .gauge { height: 6px; background: var(--rule); position: relative; margin-top: auto; }
 .gauge span { position: absolute; inset: 0 auto 0 0; background: var(--layout); }
@@ -125,7 +148,7 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 .principles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin-top: 56px; border-top: 2px solid var(--ink); }
 .principle { padding: 22px 28px 8px 0; }
 .principle + .principle { padding-left: 28px; border-left: 1px solid var(--rule); }
-.principle h3 { font-size: 26px; margin: 10px 0 8px; display: flex; align-items: center; gap: 12px; }
+.principle .h3 { font-size: 26px; margin: 10px 0 8px; display: flex; align-items: center; gap: 12px; }
 .principle p { margin: 0 0 10px; max-width: 46ch; }
 @media (max-width: 760px) { .principles { grid-template-columns: 1fr; } .principle + .principle { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); } }
 .datum { display: inline-flex; align-items: center; flex-shrink: 0; }
@@ -139,8 +162,8 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 .families { margin-top: 56px; }
 .famgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule-strong); }
 .fam { padding: 18px 18px 18px 0; border-bottom: 1px solid var(--rule); text-decoration: none; color: var(--ink); display: grid; gap: 4px; }
-.fam:hover h4 { color: var(--layout); }
-.fam h4 { margin: 0; font-size: 18px; display: flex; gap: 10px; align-items: baseline; }
+.fam:hover h3, .fam:hover h4 { color: var(--layout); }
+.fam h3, .fam h4 { margin: 0; font-size: 18px; display: flex; gap: 10px; align-items: baseline; }
 .fam p { margin: 0; font-size: 15px; color: var(--ink-2); }
 .fam .count { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); }
 .sw { width: 10px; height: 10px; display: inline-block; flex-shrink: 0; }
@@ -156,9 +179,14 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 .filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 26px; }
 .filters button { font-family: var(--font-mono); font-size: 12.5px; border: 1px solid var(--rule-strong); background: transparent; color: var(--ink); padding: 6px 10px; cursor: pointer; border-radius: 3px; display: inline-flex; gap: 8px; align-items: center; }
 .filters button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+.search { display: grid; gap: 6px; margin-top: 20px; max-width: 520px; }
+.search input { font: 16px var(--font-mono); padding: 10px 12px; border: 1.5px solid var(--rule-strong); background: var(--sheet); color: var(--ink); border-radius: 3px; }
+.search input:focus { outline: 2px solid var(--layout); border-color: var(--layout); }
+#pcount { margin: 0 0 10px; }
 .pgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--rule-strong); border-left: 1px solid var(--rule); }
 .pcard { border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 16px 16px 18px; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .pcard:hover { background: var(--layout-soft); }
+.pcard .fcf, .phead .fcf, .panel .fcf { align-self: flex-start; justify-self: start; }
 .pcard h4 { margin: 2px 0 0; font-size: 18px; }
 .pcard p { margin: 0; font-size: 15px; color: var(--ink-2); }
 @media (max-width: 900px) { .pgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -181,6 +209,8 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 /* Concept map */
 .maplayout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; }
 .mapwrap { min-width: 0; }
+.maphint { display: none; }
+@media (max-width: 900px) { .maphint { display: block; text-transform: none; letter-spacing: 0; font-size: 13px; } }
 .mapwrap svg { width: 100%; height: auto; display: block; }
 #mapsvg text { font-family: var(--font-mono); }
 #mapsvg .pn { cursor: pointer; }
@@ -190,7 +220,7 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 #mapsvg .pn:focus-visible circle { stroke-width: 4; }
 @media (max-width: 700px) { nav.views { flex-wrap: nowrap; overflow-x: auto; width: 100%; scrollbar-width: none; } nav.views a { white-space: nowrap; } .top-in { gap: 6px; } }
 .panel { border-top: 2px solid var(--ink); padding-top: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 72px); }
-.panel h3 { margin: 10px 0 6px; font-size: 24px; }
+.panel .h3, .panel h2 { margin: 10px 0 6px; font-size: 24px; }
 .panel p { font-size: 15.5px; margin: 0 0 12px; }
 .panel .btn { display: inline-block; font-family: var(--font-mono); font-size: 13px; text-decoration: none; border: 1.5px solid var(--layout); padding: 8px 12px; color: var(--layout); }
 .panel .btn:hover { background: var(--layout-soft); }
@@ -230,6 +260,15 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .diagram { margin: 26px 0; overflow-x: auto; }
 .diagram svg { width: 100%; min-width: 560px; height: auto; display: block; }
+@media print {
+  .top, footer, .cta-row, .tb, .filters, .search, .toc, .skip, body::before { display: none !important; }
+  body { background: #fff; color: #000; font-size: 11pt; padding: 0; }
+  .sheet { border: 0; padding: 0; background: #fff; }
+  .sheet::before { display: none; }
+  .prose h2 { break-after: avoid; }
+  .paperlayout { display: block; }
+  a { color: #000; }
+}
 
 [hidden]{display:none!important} :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} body{margin:0} img{max-width:100%}
 </style>
@@ -237,9 +276,10 @@ footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: 
 <body>
 
 
+<a class="skip" href="#main" onclick="event.preventDefault();document.getElementById('main').focus();document.getElementById('main').scrollIntoView()">Skip to content</a>
 <header class="top"><div class="top-in">
   <a class="brand" href="#start" aria-label="ZTHR home">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12h10M12 7v10" stroke="var(--layout)" stroke-width="2"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="var(--layout)" stroke-width="2"/></svg>
+    <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="13" fill="var(--layout)"/><circle cx="32" cy="32" r="14.5" fill="none" stroke="var(--sheet)" stroke-width="5.5"/><path d="M32 9v46M9 32h46" stroke="var(--sheet)" stroke-width="5.5"/></svg>
     ZTHR
   </a>
   <nav class="views" aria-label="Sections">
@@ -257,7 +297,7 @@ footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: 
   </nav>
 </div></header>
 
-<main id="main">
+<main id="main" tabindex="-1">
 
 <!-- START -->
 <section class="sheet view" data-view="start">
@@ -323,34 +363,34 @@ footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: 
 </div>
   </div>
 
-  <div class="ladder" role="list" aria-label="Choose your depth">
-    <a class="rung" role="listitem" href="#tldr" data-jump="tldr"><div class="depth"><span>Depth 1</span><span>1 min</span></div><h3>TL;DR</h3><p>One paragraph. What ZTHR is and why it works.</p><div class="gauge"><span style="width:12%"></span></div></a>
-    <a class="rung" role="listitem" href="#eli5"><div class="depth"><span>Depth 2</span><span>4 min</span></div><h3>Explain it simply</h3><p>The bookshelf factory. No software knowledge needed.</p><div class="gauge"><span style="width:32%"></span></div></a>
-    <a class="rung" role="listitem" href="#principles"><div class="depth"><span>Depth 3</span><span>25 min</span></div><h3>Engineer</h3><p>The two principles, the concept map and all thirty-three patterns.</p><div class="gauge"><span style="width:64%"></span></div></a>
-    <a class="rung" role="listitem" href="#system"><div class="depth"><span>Depth 4</span><span>90 min</span></div><h3>Architect</h3><p>Authority, the learning loops, failure tracing, economics and the full paper.</p><div class="gauge"><span style="width:100%"></span></div></a>
+  <div class="ladder" aria-label="Choose your depth">
+    <a class="rung" href="#tldr" data-jump="tldr"><div class="depth"><span>Depth 1</span><span>1 min</span></div><h2 class="h3">TL;DR</h2><p>One paragraph. What ZTHR is and why it works.</p><div class="gauge"><span style="width:12%"></span></div></a>
+    <a class="rung" href="#eli5"><div class="depth"><span>Depth 2</span><span>4 min</span></div><h2 class="h3">Explain it simply</h2><p>The bookshelf factory. No software knowledge needed.</p><div class="gauge"><span style="width:32%"></span></div></a>
+    <a class="rung" href="#principles"><div class="depth"><span>Depth 3</span><span>25 min</span></div><h2 class="h3">Engineer</h2><p>The two principles, the concept map and all thirty-three patterns.</p><div class="gauge"><span style="width:64%"></span></div></a>
+    <a class="rung" href="#system"><div class="depth"><span>Depth 4</span><span>90 min</span></div><h2 class="h3">Architect</h2><p>Authority, the learning loops, failure tracing, economics and the full paper.</p><div class="gauge"><span style="width:100%"></span></div></a>
   </div>
 
 
   <div class="families">
-    <div class="eyebrow">Read it as a document</div>
+    <h2 class="eyebrow">Read it as a document</h2>
     <div class="famgrid">
-      <a class="fam" href="#summary"><h4>Executive summary <span class="count">2 pages</span></h4><p>The problem, the two principles, how it works and how to judge it.</p></a>
-      <a class="fam" href="#brief"><h4>The brief <span class="count">5 pages</span></h4><p>Both principles in depth, all six families, governance and limits.</p></a>
-      <a class="fam" href="#paper"><h4>The full paper <span class="count">33 patterns</span></h4><p>Every pattern with its forces and consequences, failure tracing and economics.</p></a>
+      <a class="fam" href="#summary"><h3>Executive summary <span class="count">2 pages</span></h3><p>The problem, the two principles, how it works and how to judge it.</p></a>
+      <a class="fam" href="#brief"><h3>The brief <span class="count">5 pages</span></h3><p>Both principles in depth, all six families, governance and limits.</p></a>
+      <a class="fam" href="#paper"><h3>The full paper <span class="count">33 patterns</span></h3><p>Every pattern with its forces and consequences, failure tracing and economics.</p></a>
     </div>
   </div>
 
   <div class="principles" id="tldr">
     <div class="principle">
       <div class="eyebrow">TL;DR</div>
-      <h3>The whole idea in one paragraph</h3>
+      <h2 class="h3">The whole idea in one paragraph</h2>
       <p>Generating code is now nearly free. Deciding whether it is right is not. So stop asking people to read every diff, and build a factory that cannot be fooled: governed parts that limit what can be built, checks proven to fail on the defects they exist to catch, and statements of user intent the author cannot rewrite. Let the models try as many times as it takes. Ship only what passes. Turn every miss into a new check.</p>
     </div>
     <div class="principle">
       <div class="eyebrow">Two principles</div>
-      <h3><span class="datum"><i>A</i></span>Symmetric Zero Trust</h3>
+      <h2 class="h3"><span class="datum"><i>A</i></span>Symmetric Zero Trust</h2>
       <p>No author, reviewer, model, operator or report gains authority by asserting success. A claim counts only on evidence the claimant does not control.</p>
-      <h3><span class="datum"><i>B</i></span>The Fixture Inversion</h3>
+      <h2 class="h3"><span class="datum"><i>B</i></span>The Fixture Inversion</h2>
       <p>Quality moves out of the author's skill and into the environment. Generators iterate until the fixtures are satisfied.</p>
     </div>
   </div>
@@ -362,8 +402,8 @@ footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: 
   </div>
 
   <div class="families">
-    <div class="eyebrow">Thirty-three patterns in six families</div>
-    <div class="famgrid"><a class="fam" href="#patterns" data-fam="CN"><h4><span class="sw" style="background:var(--f1)"></span>Construction <span class="count">P1–6</span></h4><p>What can be built at all.</p></a><a class="fam" href="#patterns" data-fam="VR"><h4><span class="sw" style="background:var(--f2)"></span>Verification <span class="count">P7–14</span></h4><p>That code meets its properties, and the checks work.</p></a><a class="fam" href="#patterns" data-fam="IN"><h4><span class="sw" style="background:var(--f3)"></span>Intent <span class="count">P15–18</span></h4><p>That users can still do what they came to do.</p></a><a class="fam" href="#patterns" data-fam="ID"><h4><span class="sw" style="background:var(--f4)"></span>Independence <span class="count">P19–22</span></h4><p>That a reader without the author's story agrees.</p></a><a class="fam" href="#patterns" data-fam="OP"><h4><span class="sw" style="background:var(--f5)"></span>Operational <span class="count">P23–27</span></h4><p>That work keeps moving and what ships is what passed.</p></a><a class="fam" href="#patterns" data-fam="RT"><h4><span class="sw" style="background:var(--f6)"></span>Runtime and environment <span class="count">P28–33</span></h4><p>That models and integrations hold at the moment of use.</p></a></div>
+    <h2 class="eyebrow">Thirty-three patterns in six families</h2>
+    <div class="famgrid"><a class="fam" href="#patterns" data-fam="CN"><h3><span class="sw" style="background:var(--f1)"></span>Construction <span class="count">P1–6</span></h3><p>What can be built at all.</p></a><a class="fam" href="#patterns" data-fam="VR"><h3><span class="sw" style="background:var(--f2)"></span>Verification <span class="count">P7–14</span></h3><p>That code meets its properties, and the checks work.</p></a><a class="fam" href="#patterns" data-fam="IN"><h3><span class="sw" style="background:var(--f3)"></span>Intent <span class="count">P15–18</span></h3><p>That users can still do what they came to do.</p></a><a class="fam" href="#patterns" data-fam="ID"><h3><span class="sw" style="background:var(--f4)"></span>Independence <span class="count">P19–22</span></h3><p>That a reader without the author's story agrees.</p></a><a class="fam" href="#patterns" data-fam="OP"><h3><span class="sw" style="background:var(--f5)"></span>Operational <span class="count">P23–27</span></h3><p>That work keeps moving and what ships is what passed.</p></a><a class="fam" href="#patterns" data-fam="RT"><h3><span class="sw" style="background:var(--f6)"></span>Runtime and environment <span class="count">P28–33</span></h3><p>That models and integrations hold at the moment of use.</p></a></div>
   </div>
 
   <div class="question" style="grid-template-columns:1fr">
@@ -630,7 +670,7 @@ footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: 
 <div class="tablewrap"><table>
 <thead>
 <tr>
-<th></th>
+<th>Aspect</th>
 <th>Craft model</th>
 <th>Fixture model</th>
 </tr>
@@ -721,16 +761,16 @@ footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: 
 
 <!-- MAP -->
 <section class="sheet view" data-view="map" hidden>
-  <div class="viewhead"><div class="eyebrow">Depth 3 · Concept map</div><h1>How the patterns connect</h1><p class="lead-in">Two principles, six families, thirty-three patterns. Select a pattern to see what it does and which patterns it leans on.</p></div>
+  <div class="viewhead"><div class="eyebrow">Depth 3 · Concept map</div><h1>How the patterns connect</h1><p class="lead-in">Two principles, six families, thirty-three patterns. Select a pattern to see what it does and which patterns it leans on.</p><p class="eyebrow maphint">On a phone, tap any numbered node; details appear below the map. The <a href="#patterns">pattern index</a> lists them all.</p></div>
   <div class="maplayout">
-    <div class="mapwrap"><svg id="mapsvg" viewBox="0 0 1400 1400" role="img" aria-label="Concept map of ZTHR patterns"></svg></div>
-    <aside class="panel" id="mappanel" aria-live="polite">
+    <div class="mapwrap"><svg id="mapsvg" viewBox="0 0 1400 1400" role="group" aria-label="Concept map of ZTHR patterns. Each numbered node is a button."></svg></div>
+    <div class="panel" id="mappanel" aria-live="polite">
       <div class="eyebrow">Selected</div>
-      <h3>ZTHR</h3>
+      <h2 class="h3">ZTHR</h2>
       <p>Two principles at the center: Symmetric Zero Trust says how a claim earns authority, and the Fixture Inversion says where quality lives. Six families of fixtures surround them, each holding the patterns that implement it.</p>
       <p>Choose any numbered node. Lines show the patterns it references.</p>
       <div class="legend" id="maplegend"></div>
-    </aside>
+    </div>
   </div>
   <div class="tb"><div><b>Title</b>Concept map</div><div><b>Sheet</b>4 / 9</div><div><b>Nodes</b>41</div><div><b>Datum</b>A, B</div></div>
 </section>
@@ -738,7 +778,9 @@ footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: 
 <!-- PATTERNS -->
 <section class="sheet view" data-view="patterns" hidden>
   <div class="viewhead"><div class="eyebrow">Depth 3 · Pattern language</div><h1>Thirty-three patterns</h1><p class="lead-in">Each states a problem, the forces acting on it, the solution as a rule a system can enforce, and its consequences.</p></div>
+  <label class="search" for="psearch"><span class="eyebrow">Search patterns</span><input id="psearch" type="search" placeholder="Try: ratchet, intent, twin, review" autocomplete="off"></label>
   <div class="filters" role="group" aria-label="Filter by family" id="filters"></div>
+  <p class="eyebrow" id="pcount" aria-live="polite"></p>
   <div class="pgrid" id="pgrid"></div>
   <div class="tb"><div><b>Title</b>Pattern index</div><div><b>Sheet</b>5 / 9</div><div><b>Count</b>33</div><div><b>Families</b>6</div></div>
 </section>
@@ -1232,7 +1274,7 @@ footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: 
 <section class="sheet view" data-view="paper" hidden>
   <div class="paperlayout">
     <nav class="toc" id="toc" aria-label="Paper contents"></nav>
-    <article class="prose" id="paperbody"><p>v1.0 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0.</p>
+    <article class="prose" id="paperbody"><div class="eyebrow">Pattern paper · v1.0</div><h1 style="font-size:clamp(30px,4.5vw,48px);font-weight:800;margin:8px 0 10px">ZTHR: A Pattern Language for Autonomous Software Delivery</h1><p style="font-size:20px;color:var(--ink-2)">Zero Trust – High Reliability: why software built by AI should earn its quality from the environment, and how to build that environment.</p><p class="mono" style="font-size:13px">Russ Little · October 29, 2026 · v1.0, request for comments · CC BY 4.0</p><p>v1.0 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0.</p>
 <h2>Abstract</h2>
 <p>Zero Trust – High Reliability (ZTHR) is a way to deliver software written by AI without making human code review the thing that holds quality together. It rests on two principles.</p>
 <ul>
@@ -1342,7 +1384,7 @@ footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: 
 <div class="tablewrap"><table>
 <thead>
 <tr>
-<th></th>
+<th>Aspect</th>
 <th>Craft model</th>
 <th>Fixture model</th>
 </tr>
@@ -2657,12 +2699,20 @@ function fcf(p){ const f = famOf(p.n); return `<span class="fcf"><span style="co
 const grid = document.getElementById('pgrid');
 const filters = document.getElementById('filters');
 let activeFam = 'all';
+const psearch = document.getElementById('psearch');
+const plain = PAT.map(p => (p.title + ' ' + p.line + ' ' + p.html.replace(/<[^>]+>/g, ' ')).toLowerCase());
 function renderGrid(){
-  grid.innerHTML = PAT.filter(p => activeFam === 'all' || famOf(p.n).code === activeFam).map(p =>
+  const q = (psearch.value || '').trim().toLowerCase();
+  const list = PAT.filter((p, i) => (activeFam === 'all' || famOf(p.n).code === activeFam) && (!q || q.split(/\s+/).every(w => plain[i].includes(w))));
+  document.getElementById('pcount').textContent = list.length === PAT.length ? 'Showing all 33 patterns' : `Showing ${list.length} of 33 patterns`;
+  if (!list.length) { grid.innerHTML = '<p style="padding:16px;margin:0">No pattern matches that search. Try a broader word, or clear the family filter.</p>'; return; }
+  grid.innerHTML = list.map(p =>
     `<a class="pcard" href="#p-${p.n}">${fcf(p)}<h4>${p.title}</h4><p>${p.line}</p></a>`).join('');
 }
 filters.innerHTML = `<button type="button" id="f-all" aria-pressed="true" data-f="all">All 33</button>` +
   FAM.map(f => `<button type="button" id="f-${f.code}" aria-pressed="false" data-f="${f.code}"><span class="sw" style="background:var(${f.color})"></span>${f.name}</button>`).join('');
+psearch.addEventListener('input', renderGrid);
+document.querySelectorAll('.fam[data-fam]').forEach(a => a.addEventListener('click', () => { activeFam = a.dataset.fam; filters.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.f === activeFam ? 'true' : 'false')); renderGrid(); }));
 filters.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   activeFam = b.dataset.f;
@@ -2684,11 +2734,11 @@ function renderPattern(n){
     <p class="oneliner">${p.line}</p>
     <div class="pbody">
       <div class="prose">${p.html}</div>
-      <aside class="aside">
-        <div class="eyebrow">Leans on</div>${rel(p.refs)}
-        <div class="eyebrow">Referenced by</div>${rel(p.back)}
-        <div class="eyebrow">Same family</div>${rel(sibs)}
-      </aside>
+      <div class="aside">
+        <h2 class="eyebrow">Leans on</h2>${rel(p.refs)}
+        <h2 class="eyebrow">Referenced by</h2>${rel(p.back)}
+        <h2 class="eyebrow">Same family</h2>${rel(sibs)}
+      </div>
     </div>
     <div class="pnav">${prev ? `<a href="#p-${prev.n}">← P${prev.n} ${prev.title}</a>` : '<span></span>'}<a href="#patterns">All patterns</a>${next ? `<a href="#p-${next.n}">P${next.n} ${next.title} →</a>` : '<span></span>'}</div>
     <div class="tb"><div><b>Pattern</b>P${String(n).padStart(2,'0')}</div><div><b>Family</b>${f.name}</div><div><b>Sheet</b>5.${n}</div><div><b>Datum</b>A, B</div></div>`;
@@ -2753,11 +2803,12 @@ function renderPattern(n){
       const a = pos[n], b = pos[k];
       el('path', { d: `M${a.x} ${a.y} Q${C} ${C} ${b.x} ${b.y}`, fill: 'none', stroke: `var(${f.color})`, 'stroke-width': 2, 'stroke-opacity': .8 }, gRefs);
     });
-    panel.innerHTML = `<div class="eyebrow">Selected</div><div style="margin-top:10px">${fcf(p)}</div><h3>${p.title}</h3><p>${p.line}</p>
+    panel.innerHTML = `<div class="eyebrow">Selected</div><div style="margin-top:10px">${fcf(p)}</div><h2 class="h3">${p.title}</h2><p>${p.line}</p>
       <p style="color:var(--ink-2);font-size:14px">${f.name}. Linked to ${p.refs.length + p.back.length ? [...new Set([...p.refs, ...p.back])].sort((a,b)=>a-b).map(k=>'P'+k).join(', ') : 'no other patterns by reference'}.</p>
       <a class="btn" href="#p-${n}">Read pattern ${n}</a><div class="legend">${legendHTML}</div>`;
   }
-  gNodes.addEventListener('click', e => { const g = e.target.closest('.pn'); if (g) select(+g.dataset.n); });
+  const reveal = () => { if (innerWidth <= 900) panel.scrollIntoView({ block: 'start' }); };
+  gNodes.addEventListener('click', e => { const g = e.target.closest('.pn'); if (g) { select(+g.dataset.n); reveal(); } });
   gNodes.addEventListener('keydown', e => { const g = e.target.closest('.pn'); if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); select(+g.dataset.n); } });
 })();
 
