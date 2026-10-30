@@ -22,9 +22,13 @@ ZTHR is a pattern language for delivering software written by AI without relying
 
 Three ways in, by depth:
 
-- [**Executive summary**](SUMMARY.md): two pages
-- [**The brief**](BRIEF.md): five pages
-- [**The full paper**](PAPER.md): all thirty-three patterns
+| Read | Markdown | PDF |
+| :--- | :--- | :--- |
+| Executive summary, two pages | [SUMMARY.md](SUMMARY.md) | [PDF](pdf/ZTHR-executive-summary.pdf) |
+| The brief, five pages | [BRIEF.md](BRIEF.md) | [PDF](pdf/ZTHR-brief.pdf) |
+| The full paper, all thirty-three patterns | [PAPER.md](PAPER.md) | [PDF](pdf/ZTHR-paper.pdf) |
+
+Building agents or tooling? [`zthr-patterns.json`](zthr-patterns.json) holds all thirty-three patterns as data: problem, forces, pattern, consequences, family and related patterns.
 
 Thirty-three patterns in six families, from construction through runtime:
 
@@ -54,7 +58,7 @@ This is version 1.0, released for peer review. Sharp pushback is welcome, especi
 4. **Setting the bar.** How should a field set accuracy standards for AI-delivered work, measured against the human level already accepted there?
 5. **Held-out evidence.** Which long-run observations best show that measured safety reflects generalization rather than tuning?
 
-Open an issue against the section you are responding to.
+Comment in [Discussions](https://github.com/russlittle/ZTHR/discussions), in the category for the pattern family, and name the pattern number in your title.
 
 ## Author's note
 

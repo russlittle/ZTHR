@@ -1,0 +1,26 @@
+{
+  "title": "ZTHR: A Pattern Language for Autonomous Software Delivery",
+  "description": "<p>Zero Trust – High Reliability (ZTHR) is a pattern language for delivering software written by AI without making human code review the thing that holds quality together. It rests on two principles: Symmetric Zero Trust, under which no author, reviewer, model, operator or report gains authority by asserting success, and the Fixture Inversion, under which quality moves out of the author's skill and into the environment the author works in. Thirty-three patterns in six families implement them, from construction through runtime.</p><p>This record contains the full paper, a five-page brief, a two-page executive summary, and a machine-readable catalog of the patterns. Read online at https://zthr.ai.</p>",
+  "creators": [
+    {
+      "name": "Little, Russ"
+    }
+  ],
+  "upload_type": "publication",
+  "publication_type": "preprint",
+  "license": "cc-by-4.0",
+  "access_right": "open",
+  "version": "1.0",
+  "publication_date": "2026-10-29",
+  "language": "eng",
+  "keywords": [
+    "AI-assisted software development",
+    "autonomous software delivery",
+    "software quality",
+    "zero trust",
+    "pattern language",
+    "software engineering",
+    "verification",
+    "mutation testing"
+  ]
+}

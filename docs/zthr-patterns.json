@@ -1,0 +1,545 @@
+{
+  "name": "ZTHR: A Pattern Language for Autonomous Software Delivery",
+  "shortName": "ZTHR",
+  "expansion": "Zero Trust – High Reliability",
+  "version": "1.0",
+  "released": "2026-10-29",
+  "author": "Russ Little",
+  "license": "CC-BY-4.0",
+  "url": "https://zthr.ai",
+  "repository": "https://github.com/russlittle/ZTHR",
+  "principles": [
+    {
+      "id": "A",
+      "name": "Symmetric Zero Trust",
+      "statement": "No author, reviewer, model, operator or report gains authority by asserting success. A claim counts only on evidence the claimant does not control.",
+      "enforceableRule": "No participant can unilaterally redefine, suppress or substitute the evidence that authorizes its own consequential action."
+    },
+    {
+      "id": "B",
+      "name": "The Fixture Inversion",
+      "statement": "Quality moves out of the author's skill and into the environment the author works in. Governed parts constrain what can be built, checks proven to fail on their target defects judge what was built, and protected statements of user intent define what the result must still do. Generators iterate until those fixtures are satisfied."
+    }
+  ],
+  "reviewQuestion": "Which fixture forces that, and has it been shown to bite?",
+  "families": [
+    {
+      "id": "construction",
+      "name": "Construction",
+      "forces": "Jigs: what can be built at all",
+      "patterns": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "id": "verification",
+      "name": "Verification",
+      "forces": "Gauges: that code meets stated properties, and that the checks themselves can fail",
+      "patterns": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ]
+    },
+    {
+      "id": "intent",
+      "name": "Intent",
+      "forces": "That the product still does what its users came to do",
+      "patterns": [
+        15,
+        16,
+        17,
+        18
+      ]
+    },
+    {
+      "id": "independence",
+      "name": "Independence",
+      "forces": "That a reader without the author's story agrees",
+      "patterns": [
+        19,
+        20,
+        21,
+        22
+      ]
+    },
+    {
+      "id": "operational",
+      "name": "Operational",
+      "forces": "That work keeps moving, and what serves is what passed",
+      "patterns": [
+        23,
+        24,
+        25,
+        26,
+        27
+      ]
+    },
+    {
+      "id": "runtime-environment",
+      "name": "Runtime and environment",
+      "forces": "That models stay within policy at the moment of use, and integrations hold against calibrated twins",
+      "patterns": [
+        28,
+        29,
+        30,
+        31,
+        32,
+        33
+      ]
+    }
+  ],
+  "patterns": [
+    {
+      "number": 1,
+      "id": "ZTHR-P01",
+      "name": "Governed Foundation",
+      "family": "construction",
+      "summary": "Every application starts with identity, audit, deploy and checks already built in",
+      "problem": "A generator asked to build an application will invent its own sign-in, roles, audit trail, database access, deployment and health checks, differently every time. The verification surface has no bound.",
+      "forces": "These concerns are where the most serious defects live, they are tedious to get right, and they look easy enough that a generator will confidently write them from scratch.",
+      "pattern": "Every application starts from a shared foundation that already carries identity, authorization, audit, configuration, deployment and required checks. The foundation is assembled from the strongest existing implementation of each concern, released under a version, and delivered to each application as a change that must pass that application's own checks. Generators are instructed to read foundation files and never to regenerate or \"improve\" them locally, because patching a copy in place is how drift begins.",
+      "consequences": "A new application is born already taking part in the delivery process. Improvements are made once and travel everywhere. The cost is a release discipline for the foundation itself, which is control-plane work (Section 11).",
+      "related": [],
+      "url": "https://zthr.ai/#p-1"
+    },
+    {
+      "number": 2,
+      "id": "ZTHR-P02",
+      "name": "Parts Catalog with Purpose Notes",
+      "family": "construction",
+      "summary": "Assemble from qualified parts that say what they are for and what they are not",
+      "problem": "Without a catalog, every application re-solves solved problems, usually worse. With a catalog of bare code, a generator picks the part whose name sounds right.",
+      "forces": "Two parts often sound alike and are not. Parts depend on and conflict with each other, and some are only safe beside a companion control.",
+      "pattern": "Capabilities are packaged as parts, each with a manifest (what it adds, its dependencies, conflicts and required companion controls), its source, tests that fail when it breaks, and notes stating what it is for, which failure it was built against, and what it deliberately does not do. Search returns the notes. One shared planning function resolves dependencies and conflicts for every path that installs parts, so a preview can never promise a combination the installer would reject. Companion controls are structural: a part that can touch sensitive data cannot be installed without the part that detects and redacts it.",
+      "consequences": "Generators search before building and assemble from qualified parts. A gap that proves to be a genuinely new capability is written back as a part, so the next application meets it already built.",
+      "related": [],
+      "url": "https://zthr.ai/#p-2"
+    },
+    {
+      "number": 3,
+      "id": "ZTHR-P03",
+      "name": "Test the Part Where It Lives",
+      "family": "construction",
+      "summary": "Test each part inside a real consumer, not in the catalog",
+      "problem": "A part's imports resolve against the application that installs it, not against the catalog. Tested inside the catalog's own suite, a part can fail when correct or pass when broken.",
+      "forces": "Building a realistic consumer for every test run costs time, and catalog-local tests are faster and easier.",
+      "pattern": "Every part is tested inside a temporary application assembled exactly as a real consumer would assemble it: same starting template, same dependencies merged in, same paths, compiler settings and environment. A ratchet holds the number of parts with no failing test at zero. A part copied from a live application records where it came from, and a check reports whether that origin has since moved; an origin that cannot be read is reported as unknown, never guessed.",
+      "consequences": "The promise that a part works is tested in the only context where it matters. One end-to-end job proves that a freshly downloaded starting template, with representative parts merged, actually builds.",
+      "related": [],
+      "url": "https://zthr.ai/#p-3"
+    },
+    {
+      "number": 4,
+      "id": "ZTHR-P04",
+      "name": "Single Source, Generated Mirrors",
+      "family": "construction",
+      "summary": "One hand-authored place per fact; everything else generated and freshness-gated",
+      "problem": "A fact stated in two hand-edited places will disagree with itself. Indexes, mirrors, agent instructions and documentation counts drift from the thing they describe.",
+      "forces": "Copies are convenient and local. Regenerating them takes tooling.",
+      "pattern": "Every fact the system states lives in exactly one hand-authored place. Everything else is generated from it, and a freshness check fails whenever a generated artifact differs from what its source would produce now. Every shared file is published with a content hash, so comparing a local copy yields three states, not two: identical, behind a known version (safe to update), or locally modified (reconcile explicitly). A version number cannot tell \"behind\" from \"modified\"; a hash can.",
+      "consequences": "Drift between source and derivative becomes a failing build, not a slow corruption. The rule extends naturally to documentation (Pattern 14).",
+      "related": [
+        14
+      ],
+      "url": "https://zthr.ai/#p-4"
+    },
+    {
+      "number": 5,
+      "id": "ZTHR-P05",
+      "name": "Describe, Never Write",
+      "family": "construction",
+      "summary": "The factory plans changes; only the session's own admitted change writes them",
+      "problem": "AI sessions are the factory's primary users, and an interface that can write into their working copy is a remote code drop into whatever repository a credential reaches.",
+      "forces": "Letting the service apply changes directly is faster and feels helpful.",
+      "pattern": "The factory's interface for agents describes and never writes. Installing a part begins with a plan: the ordered parts, dependencies pulled in, any conflict, the companion-control verdict, every file with its hash, and the exact placement of each insertion. The session reads the plan, applies it in its own working copy, and submits the result through the normal admission path. Guardrails run where the session works: hooks block forbidden writes and destructive commands and flag undeclared data sources, and a conformance check at session end blocks completion on a critical violation.",
+      "consequences": "Every change, however it was assembled, arrives as an ordinary candidate judged by ordinary fixtures. The capability to write remotely does not exist, so it cannot be misused.",
+      "related": [],
+      "url": "https://zthr.ai/#p-5"
+    },
+    {
+      "number": 6,
+      "id": "ZTHR-P06",
+      "name": "Authorship Tiers by Consequence",
+      "family": "construction",
+      "summary": "The higher the stakes, the less the generator may author",
+      "problem": "\"The AI writes the code\" treats a configuration change to an internal dashboard and a change to authorization logic as the same kind of act.",
+      "forces": "Restricting what a generator may produce reduces flexibility, and some requirements will not compose from existing parts.",
+      "pattern": "The higher the consequence a system carries, the less the generator is allowed to author. Authorship authority is a dial set by consequence.\n\n| Tier | What the generator may produce | Where it fits |\n| --- | --- | --- |\n| Configuration only | Rows of configuration over governed data | Internal tools that are views over governed entities |\n| Assembly only | Compositions of qualified parts; no new code | Safety-critical and other high-consequence systems |\n| Code inside parts | New code, confined to a part qualified before release | The parts shop that feeds assembly |\n| Code under fixtures | New application code, admitted by gates, review and journeys | Most ordinary applications |\n\nIn the assembly-only tier the generator has no channel through which to emit code. It cannot hallucinate into the running system because nothing it produces becomes code. Each tier carries an explicit qualification standard for its parts, and the floor is measurable today: the known defect rate of human-built software. A standard that demonstrably exceeds it is a net gain, and the bar rises as evidence accumulates.",
+      "consequences": "Component-based engineering promised this decades ago and underdelivered because qualifying parts was expensive and composing them was slow, rigid human work. AI changes both ends at once: it can test small parts far more exhaustively than a human team could afford, and compose them faster than any person. Parts that each meet specification can still assemble into a system that does not, which is why assembly is gauged against intent (Pattern 15) and measured from datums (Pattern 12).",
+      "related": [
+        12,
+        15
+      ],
+      "url": "https://zthr.ai/#p-6"
+    },
+    {
+      "number": 7,
+      "id": "ZTHR-P07",
+      "name": "Zero-Bypass Admission",
+      "family": "verification",
+      "summary": "Every check required, nobody exempt, live rules compared with expected",
+      "problem": "A required check that someone can bypass is advisory for that someone, while the interface still shows it as required.",
+      "forces": "Bypass rights feel like a safety valve for emergencies, and the people who hold them are trusted.",
+      "pattern": "Every protected branch carries rules with no bypass actors, history rewrites and branch deletion are blocked, and every check that runs on a change is required, because a check that goes red and stops nothing teaches everyone to ignore red. The live rules are compared against a committed expectation on a schedule and on every change, so a check quietly removed through a settings page is caught. Admission proceeds through five logical stages: structural checks, behavioral properties, verification of the gates themselves, independent review, and release admission. Evidence at each stage must apply to the exact candidate being admitted.",
+      "consequences": "Emergencies use an audited break-glass path rather than a standing exemption. Automation that merges changes holds no administrative rights, so it can never alter the rules it must satisfy.",
+      "related": [],
+      "url": "https://zthr.ai/#p-7"
+    },
+    {
+      "number": 8,
+      "id": "ZTHR-P08",
+      "name": "Prove the Gate Can Fail",
+      "family": "verification",
+      "summary": "Plant the defect; the gate must go red; the proof expires when the gate changes",
+      "problem": "Test suites are full of vacuous passes: an assertion mocked away, a condition weakened, a path never executed. A gate that cannot fail looks exactly like a working gate on every green run.",
+      "forces": "Proving a negative for every check is expensive, and a green board is reassuring.",
+      "pattern": "For each named safety gate, a harness holds a case that plants the exact defect the gate exists to catch. Running a case confirms the gate is green on the clean tree, plants the defect, requires the gate to go red, restores the tree, and records a proof pinned to a hash of the gate's own content. Editing a gate changes its hash, makes its proof stale, and fails the build until the proof is re-established. A floor on the harness's case count stops it from passing by shrinking.",
+      "consequences": "Every named gate is a calibrated instrument. This proves sensitivity to named defects only; unnamed defects are found by mutation (Pattern 11), review, escapes and adversarial evaluation.",
+      "related": [
+        11
+      ],
+      "url": "https://zthr.ai/#p-8"
+    },
+    {
+      "number": 9,
+      "id": "ZTHR-P09",
+      "name": "Unknown Is a State",
+      "family": "verification",
+      "summary": "Pass, fail or unknown, and unknown never becomes pass",
+      "problem": "A wrong path, an over-broad filter or a swallowed network error yields a successful exit and a truthful \"no findings.\" A reviewer that never ran has approved nothing, but its absence can look like a pass.",
+      "forces": "Two-valued tooling is the default everywhere, and treating unknown as failure produces more red.",
+      "pattern": "Every verdict is pass, fail or unknown, and the governed path never converts unavailable evidence into a pass. Scanners carry floors on how much they examined, and a scan that cannot prove it ran fails. A complete run that did not reproduce a finding is kept distinct from a partial run that never looked. Every measurement carries its scope, depth and the build it applies to, so a number is never read as broader than it is.",
+      "consequences": "The system can always say what it does not know. Dashboards show not measured, not yet published and could not be read as states of their own, never as zero or empty.",
+      "related": [],
+      "url": "https://zthr.ai/#p-9"
+    },
+    {
+      "number": 10,
+      "id": "ZTHR-P10",
+      "name": "Ratchet",
+      "family": "verification",
+      "summary": "Debt may stay; it may not grow; only a person resets a floor, with a logged reason",
+      "problem": "A strict new gate cannot enter a codebase that does not yet meet it, so it is either never adopted or adopted as a warning nobody reads.",
+      "forces": "Requiring every author to clean up existing debt before their own change can land is unfair and stalls delivery.",
+      "pattern": "A ratchet records a floor for a measured property and fails only when a change goes past it. Existing debt may stay; it may not grow; improvements lower the floor permanently. Every gate takes one of three shapes, and knowing the shape tells any author the fix without reading the gate:\n\n| Shape | How it behaves | How to respond |\n| --- | --- | --- |\n| Correctness | Fails on a fact about the code | Fix the code |\n| Freshness | Fails because a generated file no longer matches its inputs | Regenerate; never hand-edit a generated artifact |\n| Ratchet | Fails only when a change goes past a recorded floor | Fix what the change added |",
+      "consequences": "Strict standards can be introduced anywhere, immediately. A ratchet prevents regression on what it measures; it does not by itself prove that overall quality is rising.\n\nRatchets apply steady pressure, and occasionally they lock in the wrong floor. A test that was off starts flagging good behavior as breaks; the test is fixed, but the cases written against the faulty version remain and fail forever, no longer fit for purpose. Every ratchet therefore has a reset lever. Only a person pulls it, with a stated reason, and every pull is written to the audit record as a control-plane change (Section 11).",
+      "related": [],
+      "url": "https://zthr.ai/#p-10"
+    },
+    {
+      "number": 11,
+      "id": "ZTHR-P11",
+      "name": "Mutation-Measured Tests",
+      "family": "verification",
+      "summary": "Tests must fail on planted defects, not merely execute code",
+      "problem": "Line and branch coverage are easy to satisfy with tests that execute code without asserting anything, and generative models produce such tests readily.",
+      "forces": "Mutation testing is slower than coverage, and its aggregate score can hide a serious survivor.",
+      "pattern": "Test strength is measured by planting small defects (a flipped comparison, a changed constant, a deleted call) and requiring the suite to fail on each. Scores are held by ratchets, so weakly tested new code lowers the score and fails the change. Scores are reported with their denominator and exclusions, and designated critical defect classes must be detected regardless of the average.",
+      "consequences": "A generator cannot satisfy the test bar with tests that test nothing. Mutation runs typically move to a nightly cadence, with the ratchet enforced per change.",
+      "related": [],
+      "url": "https://zthr.ai/#p-11"
+    },
+    {
+      "number": 12,
+      "id": "ZTHR-P12",
+      "name": "Measure From the Datum",
+      "family": "verification",
+      "summary": "Drift is distance from a fixed reference, not from the last build",
+      "problem": "Most verification compares each build with the one before it. A long series of individually acceptable changes can walk a system far from where it started without any single change looking wrong.",
+      "forces": "Comparing with the last build is cheap and needs no maintained reference.",
+      "pattern": "Drafting standards distinguish chain dimensioning, where each feature is measured from the previous one and tolerances accumulate, from baseline dimensioning, where every feature is measured from a common datum and each error is bounded on its own. ZTHR measures from datums under three rules. Every measured property has a declared datum: intent first, then safety thresholds, performance, accessibility, cost and output on reference inputs. Drift is distance from the datum, with a tolerance zone; outside it the gate fails, however small the last step was. Moving a datum is a governed, attributable event with a stated reason.",
+      "consequences": "A ratchet keeps a measure from getting worse than its floor; a datum keeps the whole system from wandering. Together they let the system say at any moment how far it is from its reference and whether that distance was chosen, and by whom.",
+      "related": [],
+      "url": "https://zthr.ai/#p-12"
+    },
+    {
+      "number": 13,
+      "id": "ZTHR-P13",
+      "name": "Register, Don't Suppress",
+      "family": "verification",
+      "summary": "Every unfixed finding has a reason and an expiry; stale entries fail",
+      "problem": "Suppressed findings outlive the reasons they were suppressed, and a suppression that survives its finding will hide the finding if it returns.",
+      "forces": "Not every finding can be fixed the day it is raised.",
+      "pattern": "A finding not fixed immediately goes into a register with a typed verdict, a reason and, for accepted risk, a named fix and a mandatory expiry. An open finding with no register entry fails the build, and so does a register entry whose finding no longer fires. A finding counts as resolved only after consecutive complete runs fail to reproduce it.",
+      "consequences": "Accepted risk is visible, attributable and time-limited. Nothing is silently ignored, and nothing stays ignored by accident.",
+      "related": [],
+      "url": "https://zthr.ai/#p-13"
+    },
+    {
+      "number": 14,
+      "id": "ZTHR-P14",
+      "name": "Documentation Derived From the System",
+      "family": "verification",
+      "summary": "Figures and claims in prose are checked against reality",
+      "problem": "At high velocity, hand-maintained documentation diverges from reality within weeks, and a document that reads better than the system it describes misleads every reader.",
+      "forces": "Prose resists mechanical checking.",
+      "pattern": "Documentation is checked like code. Figures in prose (counts, rates, required checks, model identifiers) are extracted and compared with the live system; a figure that disagrees fails, and so does a figure that was deleted, because removing a claim must not be a way to stop checking it. Absolute words such as \"always\" and \"cannot\" must anchor to the code that makes them true. A document describing specific source files declares them by hash, and fails when one changes until someone re-reads and re-stamps it. Diagrams and counts are generated and freshness-gated.",
+      "consequences": "Documentation stays consistent with the system, and changes to the system demand attention to the documents that describe it. Substantive judgment about prose remains a human job.",
+      "related": [],
+      "url": "https://zthr.ai/#p-14"
+    },
+    {
+      "number": 15,
+      "id": "ZTHR-P15",
+      "name": "Intent as the Primary Datum",
+      "family": "intent",
+      "summary": "Whole user activities are the functional gauge on the assembly",
+      "problem": "Parts that each meet specification can assemble into a product that fails its users. Manufacturing calls this tolerance stack-up.",
+      "forces": "Component checks are cheap and precise; whole-activity checks are slower and look less rigorous.",
+      "pattern": "Manufacturing verifies parts by dimensional inspection and assemblies by functional gauging: does the part fit its mate, does the mechanism move. A functional gauge catches stack-up without knowing which part drifted, because it tests the outcome the tolerances exist to protect. In ZTHR the functional gauge is the journey: a whole activity a user comes to do, declared with its goal in the user's words, its success conditions, its forbidden outcomes (things that must never appear), and an action budget for taps, scrolls and waiting. Journeys are set with users and domain experts from the use cases each role must accomplish, then extended with further journeys built by one model family and tested by another.\n\nUser intent is the system's primary datum, and it sets an order of severity. A board that is entirely green while an intent is broken is a failure. A failing component test with every intent intact is a defect to fix before it reaches anyone.\n\nAn intent or process flow that cannot be completed stops value delivery, and the system treats it that way. ZTHR does not prescribe one stop rule. It requires each team to tie what breaks to what stops explicitly: which broken intents halt a change, which halt promotion, and which halt the line, so the decision is made by declared policy rather than in the moment.",
+      "consequences": "The datum is the user's goal, not a snapshot of current behavior, so it cannot enshrine an existing bug. Layout, fields and components change freely while the intent holds; the datum moves only when what users need changes, and that move is governed (Pattern 18). For behavior that is not a number, distance from the datum is completion within the action budget with no forbidden outcome, and an activity creeping toward its budget is drift visible before it fails. Every enabled capability names the journey that evidences it, or records why it has none.",
+      "related": [
+        18
+      ],
+      "url": "https://zthr.ai/#p-15"
+    },
+    {
+      "number": 16,
+      "id": "ZTHR-P16",
+      "name": "Walk Like a User",
+      "family": "intent",
+      "summary": "Accessible names, real navigation, two readings of every screen",
+      "problem": "Tests that locate elements by style selectors or test identifiers pass when the element exists in the page but is hidden, covered, clipped or unreachable.",
+      "forces": "Selector-based tests are easy to write and stable across visual changes, which is also why they miss visual failures.",
+      "pattern": "Journeys run in a fresh browser at real device dimensions and locate elements only by accessible role and accessible name, the interface a screen reader uses. After the first navigation, the runner must reach every later screen by interacting with the application; it cannot skip a broken path by jumping to a destination address. Every judged state is read in two representations, the document with its text and roles, and the rendered pixels, and a disagreement between what the document says and what is drawn fails the step. The runner removes its own overlays first so it never reads its own captions. The interpreter that executes journeys is generic, may contain no journey-specific special cases, and must pass its own fixture set reaching every verdict it can return before it is trusted to judge the product.",
+      "consequences": "A change that preserves what users and assistive technology perceive passes; one that removes a label, covers a button or breaks focus fails. Accessibility is enforced as a side effect of testing the way people actually use the software.",
+      "related": [],
+      "url": "https://zthr.ai/#p-16"
+    },
+    {
+      "number": 17,
+      "id": "ZTHR-P17",
+      "name": "Oracles From the Record",
+      "family": "intent",
+      "summary": "Expected values come from the data, never typed into the test",
+      "problem": "Expected values typed into a test are written by the same process that wrote the code, often the same model in the same session. When both are wrong the same way, the test passes.",
+      "forces": "Hard-coded expectations are simple and fast.",
+      "pattern": "Expected values are never typed into a test. The harness signs in as a synthetic user, reads that user's data through the live interface, and derives what the screen should show from the record. Product wording comes from its canonical source declaration. Each step records four things separately: what was checked, what the record holds, what actually appeared, and the verdict. Where an activity ends with someone else, the journey checks that side too: a request submitted by one user must appear for the person who handles it, and a reply must return to the requester.",
+      "consequences": "Each assertion becomes a statement about the world rather than about the code. Oracles from the record test faithful presentation; independently specified scenarios remain the right tool for testing the calculations upstream of the record.",
+      "related": [],
+      "url": "https://zthr.ai/#p-17"
+    },
+    {
+      "number": 18,
+      "id": "ZTHR-P18",
+      "name": "Locked Intent",
+      "family": "intent",
+      "summary": "A change cannot edit the goal it is judged by",
+      "problem": "A generator that can edit the test it is judged by will eventually pass by redefining the test.",
+      "forces": "Intent must still be able to change when user needs change.",
+      "pattern": "Journey definitions belong to the product, not to whoever is changing the code. They are protected by a hash lock and an attributable change log recording whether each update tightens or loosens expectations. A change that alters journey intent cannot, in the same change, alter the application code that intent judges. Journeys end in pass, fail or blocked, and blocked has not established success; a readiness report refuses to declare ready while any required journey is incomplete or unjudged, and never substitutes an older green result for a missing current one.",
+      "consequences": "A generator cannot make its own admission easier by moving the goalposts. Changing what users need is a deliberate, visible act with an owner.",
+      "related": [],
+      "url": "https://zthr.ai/#p-18"
+    },
+    {
+      "number": 19,
+      "id": "ZTHR-P19",
+      "name": "The Determinism Ladder",
+      "family": "independence",
+      "summary": "Use the most deterministic tool that can solve the problem",
+      "problem": "When large language models are the default tool, they get used for jobs a simpler instrument would do more reliably, and their variability leaks into places that need repeatability.",
+      "forces": "A general model can do almost anything passably, which makes it tempting for everything.",
+      "pattern": "Use the most deterministic approach that can solve the problem. Plain code comes first. Small, specialized or non-language models and classification engines come next, where patterns alone are not enough. Generative models are used where open generation or open judgment is the task. Deterministic layers can be reasoned about, measured exhaustively on a labeled corpus, and kept running through a model outage. A classifier is still an empirical instrument even when its inference is repeatable, so every deterministic or classifier layer is measured and backed by later layers.",
+      "consequences": "Each layer carries the weight it can bear. A classifier that is wrong is wrong consistently, which hides its error; several model families, each given different context, reviewing the same outputs expose those systematic errors through their disagreements. Retraining or replacing a classifier is a fixture change and travels the governed path (Section 11).",
+      "related": [],
+      "url": "https://zthr.ai/#p-19"
+    },
+    {
+      "number": 20,
+      "id": "ZTHR-P20",
+      "name": "Roles Defined by What They Are Denied",
+      "family": "independence",
+      "summary": "Each role's limits are structural, not instructed",
+      "problem": "A capable agent given broad access will use it, and an instruction not to is a probabilistic control.",
+      "forces": "Narrow roles mean more components and more orchestration.",
+      "pattern": "Each role is filled by an engine suited to it, and each is defined as much by what it is denied as by what it receives. Every role produces candidates or evidence; permission to act comes only from governed admission and execution mechanisms.\n\n| Role | Receives | Denied |\n| --- | --- | --- |\n| Author | Requirements, the parts catalog, its repository, a scratch environment, local tests | Any write path outside its own working copy |\n| Context-aided checker | The change, its intended behavior, integration context | The author's reasoning |\n| Unaided reviewer | The diff and one short context page | The author's prompts, conversation, rationale and repository |\n| Triage | Failure output, change state, check history | Any write except through the operator's single write point |\n| Runtime responder | The current user's own data | Anything outside that data; any write to it |\n| Runtime judge | The candidate output and an enumerated policy | The responder's configuration |\n| Boundary screening | Inbound and outbound text | Generation of any kind |",
+      "consequences": "Safety does not depend on any role choosing to stay in its lane. The denial is structural.",
+      "related": [],
+      "url": "https://zthr.ai/#p-20"
+    },
+    {
+      "number": 21,
+      "id": "ZTHR-P21",
+      "name": "Multi-Family Review",
+      "family": "independence",
+      "summary": "Three model families before commit, a fourth in place before promotion",
+      "problem": "A reviewer who can be told why a change is fine will be persuaded by the explanation. A reviewer who knows nothing about a change cannot judge whether it fits its surroundings.",
+      "forces": "Context helps judgment and also contaminates it, and any single model family carries blind spots its own members share.",
+      "pattern": "Every change is reviewed by at least three models from different families before it is committed, each carrying a different part of the acceptance obligation. A context-aided checker in a fresh context, which did not write the code, is given the intended behavior and integration context and tasked with breaking the claim that the change meets its goal. An unaided reviewer receives the diff and a short context page and nothing else, so persuasion has no path in. An independent code checker examines the code on its own terms, without the author's framing or the other reviewers' findings. Verdicts are recorded against a fingerprint of the exact code state. The recommended configuration adds a fourth family after merge: a reviewer that re-reads the change in place, as integrated, as a safeguard before the release is fully promoted. Each surviving finding becomes one tracked issue. Families are chosen for difference, and a low-cost open model is a legitimate member of the set.\n\nThe reviewers, the judges and the documentation are themselves tested for drift as the system runs. A solution can drift toward a different intent while every test stays green, and that is a failure for the user, however clean the board looks. Drift in a reviewer is caught the same way as drift in a product: against declared datums and the intents they protect (Patterns 12, 15).\n\nModel review follows rules. Questions and outputs are bounded: a finding names a location or behavior, the violated expectation and enough support to investigate. A run that could not review fails. Findings are fixed, or answered in a register entry that quotes what it cites. The reviewer is pinned to the base branch, so a change cannot ship the reviewer that approves it, and runs under an identity that can reach model inference and nothing else. A model can raise a blocking concern; no model can waive an unrelated control. Repetition is not independence: four identical passes are not four assurances.",
+      "consequences": "Persuasion is removed from one path, fit is covered by another, and the code is read a third way by a family with no stake in either. Each reviewer's contribution can be measured by the unique, validated findings it produces, and the set can be tuned by evidence rather than habit.",
+      "related": [
+        12,
+        15
+      ],
+      "url": "https://zthr.ai/#p-21"
+    },
+    {
+      "number": 22,
+      "id": "ZTHR-P22",
+      "name": "Diversity of Representation",
+      "family": "independence",
+      "summary": "Read the system as source, database, artifact, screen and service",
+      "problem": "Authors and reviewers drawn from different model providers still share some tendencies, because all current large language models share some. Provider diversity alone is weak evidence of independent error.",
+      "forces": "Adding more model reviewers is easy and feels like more assurance.",
+      "pattern": "The strongest controls read different representations of the system. A reviewer reads source. A privilege check reads the database. A bundle scan reads the built artifact. A journey reads the rendered screen. The operator queries the running service. Several readers of the same source can share a blind spot; readers of different representations cannot all share the same one.",
+      "consequences": "This, more than the number of models involved, is the architecture's main defense against correlated failure. When designing a new control, the first question is which representation it reads, and whether anything else already reads it.",
+      "related": [],
+      "url": "https://zthr.ai/#p-22"
+    },
+    {
+      "number": 23,
+      "id": "ZTHR-P23",
+      "name": "Done Means Serving",
+      "family": "operational",
+      "summary": "Deploy by identity and prove what is running is what passed",
+      "problem": "Merged is a state on the source host. Shipped is a running service whose artifact matches what was approved. The most expensive failure in a delivery system is believing something shipped when it did not, or that what is running is what was tested.",
+      "forces": "Deployment tooling reports its own success, and checks on a proposed change are a verdict on a different commit from the one that lands.",
+      "pattern": "Deployment sits inside the assurance architecture, not after it. Each link in the release chain refuses one specific thing.\n\n| Link | Refuses |\n| --- | --- |\n| Tests and security run on the merged commit | Shipping code whose integrated state was never tested |\n| Deploy identity is federated, usable only from the main branch | A leaked key, because none is stored; a proposed change reaching deploy credentials |\n| Deploy by the content hash read from the build | Deploying an image this commit did not build; a movable tag is never consulted |\n| Rollback target captured before traffic moves | A rollback with nowhere to go |\n| Assert serving equals built | A hand-run deploy, an unrecorded rollback, a tag moved underneath |\n| Health check, including that unauthorized callers are refused | A broken or over-exposed deploy staying up |\n| Inspect the served bundle | A forbidden capability reintroduced by a dependency or build step |\n| Open every screen | A release whose pages compile and then fail |\n| Release record, filed on failure as well as success | Having no answer to \"prove the code you showed me is the code that was running\" |\n\nThe comparison that decides whether a deploy matched is a pure function with its own tests, and every uncertain case resolves to \"does not match.\" A false match puts a false claim in an auditor's hands; a false mismatch only fails a pipeline. Applications declare their recovery mode (traffic rollback, forward repair, restoration or compensation), because reverting an image is not enough after a schema change or an external side effect.",
+      "consequences": "\"Did it ship?\" always has an evidenced answer. A fuller release manifest binds source revision, artifact, configuration, policy, model configuration, dependency lock and migration state, so verification can ask whether every element of what is serving matches the approved release.",
+      "related": [],
+      "url": "https://zthr.ai/#p-23"
+    },
+    {
+      "number": 24,
+      "id": "ZTHR-P24",
+      "name": "The Persistent Operator",
+      "family": "operational",
+      "summary": "Act unless destructive, user-facing or wide in blast radius; every hold names its loss",
+      "problem": "Changes collide. Checks never start because an event was dropped. A check fails for a reason unrelated to the change. A green change waits for a merge nobody presses. A merged change's deploy never completes. None is hard to fix, but each needs someone watching all the time, and asking people to watch turns automation back into a queue.",
+      "forces": "An automated actor with write access across many repositories is dangerous if its limits depend on its judgment.",
+      "pattern": "Unfinished work gets a persistent operating owner: an automated operator that runs on a short, fixed cycle, observes every change and service in its scope, classifies each into a closed set of states, proposes a bounded remedy, acts where authorized, and verifies the outcome on a later cycle. It decides by one written rule:\n\n> Act, unless the action is destructive, has an outside audience, or carries a wide blast radius.\n\nDestructive means no single step brings back what was removed: unique commits, data, a secret, history. Outside audience means people beyond the team are using the surface now; on those surfaces, and only there, an action that changes what they see waits for a person. Asking permission for something that cannot hurt anyone is not caution; it is a queue. Every hold must name the loss a person's click prevents, and a hold that cannot name its loss is removed. When the operator cannot act because something is unprovisioned, that is an engineering gap, never a decision handed to a person.\n\nBlast radius means the action reaches beyond its own target: a shared part, the foundation, or a rule every application inherits. Those actions wait for a person even when each individual effect would be reversible.\n\nSome states exist to refuse. Re-runs follow evidence: a check may be re-run only if its history shows it has both failed and passed on unchanged code, or its runner was reclaimed mid-job; otherwise the operator refuses and reports what the record shows, because re-running until green hides real race conditions. Green is never asserted on a check list that could not be read. An operator that always does something is less trustworthy than one that knows when not to.",
+      "consequences": "People see a short, ranked list of decisions that genuinely need them, instead of a backlog automation could clear. A dead-man's switch alerts if no cycle completes, and the operator reviews its own stalls on a slower cadence and names each class once, with the remedy owed.",
+      "related": [],
+      "url": "https://zthr.ai/#p-24"
+    },
+    {
+      "number": 25,
+      "id": "ZTHR-P25",
+      "name": "A Dispatch Is Not a Result",
+      "family": "operational",
+      "summary": "Verify outcomes later; never retry an ambiguous write blind",
+      "problem": "Automation that records \"done\" when it sends a command reports success for work that may have failed, and automation that retries an interrupted write can duplicate an action.",
+      "forces": "Verifying outcomes later means holding state across cycles.",
+      "pattern": "Work is recorded as accepted when dispatched, and a later cycle reads the real outcome. An interrupted action is marked outcome unknown and never retried blind. Each proposal is claimed once, by a single conditional update, so overlapping cycles cannot both act. Each cycle runs fixed phases in a fixed order and records the result of each, so a cycle that did nothing can say why.",
+      "consequences": "The operator's own reports are held to Symmetric Zero Trust. Ambiguity stays visible until resolved.",
+      "related": [],
+      "url": "https://zthr.ai/#p-25"
+    },
+    {
+      "number": 26,
+      "id": "ZTHR-P26",
+      "name": "Leases",
+      "family": "operational",
+      "summary": "Heartbeat-backed claims keep sessions and operator from colliding",
+      "problem": "An automated operator and a working session acting on the same branch will overwrite each other, and sessions that end silently leave branches in limbo.",
+      "forces": "Locks that never expire block work; locks that expire too easily allow collisions.",
+      "pattern": "Before work starts, a session takes a heartbeat-backed lease on a repository and branch. A second claim on a live lease is refused and names the holder. A silent lease becomes stealable after a set interval, and an expired lease over uncommitted work becomes a finding. While a lease is live, the operator does nothing on that branch. A hook claims a lease for a session that forgot to. Writes carry the lease's generation and the expected branch head, so an owner whose lease has passed to someone else cannot complete a stale write.",
+      "consequences": "Many finite sessions and one persistent operator share a codebase without stepping on each other, and abandoned work surfaces instead of rotting.",
+      "related": [],
+      "url": "https://zthr.ai/#p-26"
+    },
+    {
+      "number": 27,
+      "id": "ZTHR-P27",
+      "name": "Bounded by Structure",
+      "family": "operational",
+      "summary": "The operator's limits never depend on its judgment",
+      "problem": "An operator with broad write access is acceptable only if its limits do not depend on its judgment being right.",
+      "forces": "Every structural limit is another piece of plumbing to maintain.",
+      "pattern": "Each limit is enforced by something other than the operator.\n\n| It cannot | Because |\n| --- | --- |\n| Act on a repository it was not assigned | Every write checks a declared allow-list before a credential is obtained, and each entry carries a written reason |\n| Merge a change that fails its checks | Its identity lacks administrative rights, so it cannot alter the rules it must satisfy |\n| Rewrite history | Its update path pushes only fast-forward changes |\n| Touch a branch a session is working on | A live lease stands it down |\n| Act twice at once | Proposals are claimed once by a conditional update |\n| Hide what it did | Every action, skip and reason goes to an append-only ledger |\n| Delete anything | No remedy deletes; closing remedies keep the branch, the text and the reason |\n\nBefore any remedy runs, a chain of gates resolves it to observe, propose or act, and names the gate that bound it: a kill switch effective on the next cycle, the remedy's own setting, the target's exposure posture, the credential, and the change class. Each remedy has an attempt cap under a global ceiling, and a change that exhausts its attempts moves to a quarantine lane with a sentence saying what is owed.",
+      "consequences": "Trust in the operator rests on structure, not on its reasoning. Human-triggered deploys run under a different identity, so the identity that decides which changes land can never change the rules those changes must pass.",
+      "related": [],
+      "url": "https://zthr.ai/#p-27"
+    },
+    {
+      "number": 28,
+      "id": "ZTHR-P28",
+      "name": "The Deterministic Sandwich",
+      "family": "runtime-environment",
+      "summary": "Deterministic layers around the models; no model is the floor",
+      "problem": "A model asked to be safe is safe most of the time. A second model asked to check the first is also right most of the time, and the two can fail together.",
+      "forces": "Pattern checks are reliable but shallow; model judges are deep but probabilistic. Neither alone is enough.",
+      "pattern": "Deterministic layers surround the models, so no model is ever the floor.\n\n1. Inbound screen, deterministic: reads every incoming message for conditions that must never wait on a model, such as an emergency or a request that must go to a person, and routes them directly.\n2. Identifier scrub, deterministic: removes identifying details from free text before it reaches a model or storage.\n3. Responder model: answers only from the current user's own data, in a structured output.\n4. Claim guard, deterministic: fixed patterns for statements the application must never make, held identical everywhere they run.\n5. Field verifier, deterministic: extracts every factual value in the candidate output and checks each against the source record.\n6. Judge model: a different model, configured independently, given an enumerated list of prohibited categories and what is explicitly allowed, never an open question.\n\nA block at any layer, or a layer that cannot return a verdict, withholds the output.",
+      "consequences": "Each layer has a distinct detection role. The deterministic floor survives a model outage, and the judge recovers what patterns cannot reach. Each layer is measured standalone on a labeled corpus and the composed path is measured end to end, because a strong local score does not show the whole path works and a layer's miss does not show the system failed.",
+      "related": [],
+      "url": "https://zthr.ai/#p-28"
+    },
+    {
+      "number": 29,
+      "id": "ZTHR-P29",
+      "name": "Refuse to Start Misconfigured",
+      "family": "runtime-environment",
+      "summary": "A missing safety condition is a service that does not come up",
+      "problem": "Most safety properties are configuration, and configuration can be dropped, defaulted or silently replaced by a fallback.",
+      "forces": "Services are usually built to start whatever happens and log a warning, and warnings are not read.",
+      "pattern": "When a service is told it is handling real data, a startup guard refuses every request unless every safety-relevant condition holds at once: identity verification, the approved model boundary, a durable tamper-evident audit sink, durable stores for anything a refusal produces, every expected migration applied, an explicit origin allowlist. The guard checks resolved reality, not stated intent; a store that silently fell back to memory cannot pass as configured.",
+      "consequences": "A misconfiguration becomes a service that does not come up, which the deploy's health check then rolls back. A safety property cannot be lost by omission.",
+      "related": [],
+      "url": "https://zthr.ai/#p-29"
+    },
+    {
+      "number": 30,
+      "id": "ZTHR-P30",
+      "name": "Authorization by Absence",
+      "family": "runtime-environment",
+      "summary": "Do not mount it, do not grant it",
+      "problem": "Every permission check is code that can be wrong, and a model that produces persuasive text can sometimes talk its way past logic that depends on interpretation.",
+      "forces": "Separate deployments and fine-grained grants add operational overhead.",
+      "pattern": "Prevent actions by not providing the capability at all, rather than by checking permission. Routes that should not be reachable from a surface are not mounted on it, so they answer \"not found\" even to an authenticated caller. Privileges that should not be used are not granted: records of truth and audit trails carry no update or delete grant for any application role, and that absence is verified against the live system. Services are split so that the public surface holds no sensitive data at rest, the data service is private and callable only by the surface's identity, and administrative functions run separately behind named-user access. Every read is scoped to the verified user, and isolation is enforced in the database itself.",
+      "consequences": "There is no permission check to get wrong, and no model output can obtain a privilege that does not exist.",
+      "related": [],
+      "url": "https://zthr.ai/#p-30"
+    },
+    {
+      "number": 31,
+      "id": "ZTHR-P31",
+      "name": "Fail Closed, Keep Serving the User",
+      "family": "runtime-environment",
+      "summary": "Default to caution where stakes are high; judge against how the work is done today",
+      "problem": "Failing closed protects users from bad output but can abandon them, and a system tuned only to block will block ordinary requests too.",
+      "forces": "The cost of a harmful answer and the cost of an unhelpful one are both real, and they are not symmetric.",
+      "pattern": "Anything the layers will not clear goes to a durable human review queue, and the user immediately receives an honest deferral that tells them where help comes from. A judge that errors, times out or returns something unparseable counts as a block. The bias is deliberate and stated: an over-escalation costs one unnecessary human contact, while the opposite error has no comparable price. Usefulness is measured alongside safety: queue age, capacity, handoff completion, repeated deferrals and ordinary questions answered are operating measures, not afterthoughts. Where wording must be tightly controlled, verified fields populate approved templates. For applications that take actions rather than converse, actions are typed, carry source references, and are authorized deterministically immediately before execution.",
+      "consequences": "The user is never left with a silent failure or a fabricated answer. The system shows how often it errs toward caution, so that bias can be tuned rather than guessed at.\n\nIn regulated, safety-critical and security-sensitive applications, over-deferral is the default position. Caution comes first with AI in those settings. As the system validates, the standard moves: set accuracy expectations comparable to the human level of support already accepted in that domain, and innovate from there. The question is never whether the AI is perfect. It never will be, and it does not need to be, because the fixtures and the measurements are what make it safe. The question is whether it does better than the way the work is done today.",
+      "related": [],
+      "url": "https://zthr.ai/#p-31"
+    },
+    {
+      "number": 32,
+      "id": "ZTHR-P32",
+      "name": "Held Out Means Held Out",
+      "family": "runtime-environment",
+      "summary": "Sealed evaluation sets, retired the moment a rule matches them",
+      "problem": "An evaluation set read during tuning stops measuring anything unseen, and generators iterating against a visible test learn the test.",
+      "forces": "Every look at a failing case is useful for fixing it, and every look contaminates the set.",
+      "pattern": "Evaluation sets meant to measure unseen behavior are sealed in storage readable only by a dedicated measurement identity, pinned by hash, reported only in aggregate, and checked for contamination. A case is retired the moment a rule is written to match it. Any set that was read during tuning is reclassified rather than quietly kept. Access records, evaluation budgets and the lineage of replacement cases are part of the design, because aggregate reporting reduces exposure but does not make repeated tuning against an evaluation free.",
+      "consequences": "Measured safety stays a measurement of generalization rather than of memorization. Dashboards count held-out cases but never show them.",
+      "related": [],
+      "url": "https://zthr.ai/#p-32"
+    },
+    {
+      "number": 33,
+      "id": "ZTHR-P33",
+      "name": "Twin What You Don't Own",
+      "family": "runtime-environment",
+      "summary": "Behavioral clones of external services, held to fixture discipline",
+      "problem": "Software depends on services it does not control: identity providers, payment processors, messaging, document stores, partner APIs. Testing against the live services is rate-limited, costly and unsafe for the failure modes that matter most. Mocks are usually written by the same process that wrote the code, so they agree with it and miss how the real service behaves.",
+      "forces": "A faithful clone of a substantial external service was always possible and almost never economical, so teams settled for thin mocks. A clone can also drift from the service it imitates, and a twin that lies is worse than none.",
+      "pattern": "Build a behavioral twin of each external dependency, and calibrate it to the service as built, not as documented. Documentation describes the nominal service; the live service, with its quirks, undocumented edge cases, latencies and failure behavior, is the as-built one, and a twin built from documentation alone carries the false confidence of a simulation of a machine that does not exist. Calibration runs in a loop:\n\n1. Probe the real service. Record real requests and responses, including errors, limits and edge cases, as measured points.\n2. Fit the twin to the measurements. Correct the twin wherever its behavior departs from what was observed, until it reproduces the recorded behavior within tolerance.\n3. Build and test against the calibrated twin. Journeys, adversarial runs and nightly break-it campaigns execute against it at volumes and rates no live service would allow, including outages, throttling, malformed responses, revoked credentials and partial failures too dangerous to trigger for real.\n4. Ship, and keep probing. Real behavior is re-measured on a schedule; drift beyond tolerance fails the twin until it is recalibrated.\n\nTwins are fixtures and follow the fixture rules. They are owned and locked apart from the code they judge, their recorded measurements are their datum, and they live in the parts catalog, so every application that integrates with a service inherits its calibrated twin.",
+      "consequences": "Integrations become as testable as internal code, and intent journeys can cover the whole activity even where it crosses into systems you do not own. Cheap generation is what makes this practical: building a high-fidelity twin is now an ordinary task for the factory rather than a project nobody would approve. Twin fidelity becomes another ceiling, and it is measured and raised the same way as fixture fidelity.",
+      "related": [],
+      "url": "https://zthr.ai/#p-33"
+    }
+  ]
+}
