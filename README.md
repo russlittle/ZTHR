@@ -64,7 +64,9 @@ Comment in [Discussions](https://github.com/russlittle/ZTHR/discussions), in the
 
 ## Author's note
 
-Jigs, gauges and datums are not only metaphors borrowed for software here. ZTHR grew out of practice: I first used this concept driving manufacturing robots from 3D models in the late 1990s, programming robot cells and verifying parts to tolerance in precision aerospace manufacturing. I had to keep changing the software to meet the physical gates of the real world machine. We did this in a loop to correct our errors until the system locked in a quality result. Ai can do the trial and error now, while we hold the measurement threshold and define success. I have a passion for building self-correcting and improving systems, and decades of experience leading software & data teams and running large application portfolios.
+Jigs, gauges and datums are not only metaphors borrowed for software here. ZTHR grew out of practice: I first used this concept driving manufacturing robots from 3D models in the late 1990s, programming robot cells and verifying parts to tolerance in precision aerospace manufacturing. I had to keep changing the software to meet the physical gates of the real world machine. We did this in a loop to correct our errors until the system locked in a quality result. We then used that to calibrate the robot, in a repeating process of improvement in accuracy. The practical application of this in software development did not make itself clear until I needed to manage fleets of AI Agents and have any hope of managing quality and not spend eternity in PR Review. Ai can do the trial and error now, while we hold the measurement threshold and define success. 
+
+I have a passion for building self-correcting and improving systems, and decades of experience leading software & data teams and running large application portfolios. It is my sincere hope this pattern is useful to others also trying to design software in these high velocity times. 
 
 ## Cite
 
