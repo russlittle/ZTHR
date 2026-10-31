@@ -2,7 +2,7 @@
 
 **Zero Trust – High Reliability. A pattern language for software built by AI.**
 
-Russ Little · v1.0 · © 2026 Russ Little, CC BY 4.0 · DOI: [10.5281/zenodo.23821218](https://doi.org/10.5281/zenodo.23821218)
+Russ Little · v1.0 · © 2026 Russ Little, CC BY 4.0 · DOI: [10.5281/zenodo.23826734](https://doi.org/10.5281/zenodo.23826734)
 
 ## The problem
 
