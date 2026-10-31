@@ -4,7 +4,7 @@
 
 Russ Little · Pattern paper · Oct 29, 2026
 
-v1.0 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0.
+v1.0 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0. DOI: [10.5281/zenodo.23821218](https://doi.org/10.5281/zenodo.23821218)
 
 ## Abstract
 

@@ -1,8 +1,10 @@
 # ZTHR: A Pattern Language for Autonomous Software Delivery
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23821218.svg)](https://doi.org/10.5281/zenodo.23821218) [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+
 **Zero Trust – High Reliability: why software built by AI should earn its quality from the environment, and how to build that environment.**
 
-**Author:** Russ Little · **Version:** 1.0, request for comments · **Released:** October 29, 2026 · **Site:** [zthr.ai](https://zthr.ai)
+**Author:** Russ Little · **Version:** 1.0, request for comments · **Released:** October 29, 2026 · **DOI:** [10.5281/zenodo.23821218](https://doi.org/10.5281/zenodo.23821218) · **Site:** [zthr.ai](https://zthr.ai)
 
 ---
 
@@ -66,7 +68,7 @@ Jigs, gauges and datums are not metaphors borrowed for software here. ZTHR grew 
 
 ## Cite
 
-Little, R. (2026). *ZTHR: A Pattern Language for Autonomous Software Delivery.* Zero Trust – High Reliability. https://zthr.ai
+Little, R. (2026). *ZTHR: A Pattern Language for Autonomous Software Delivery* (Version 1.0). Zenodo. https://doi.org/10.5281/zenodo.23821218
 
 See [CITATION.cff](CITATION.cff).
 

@@ -7,7 +7,14 @@ authors:
     given-names: Russ
 type: report
 date-released: 2026-10-29
+doi: "10.5281/zenodo.23821218"
 url: "https://zthr.ai"
+repository-code: "https://github.com/russlittle/ZTHR"
+version: "1.0"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23821218"
+    description: "Zenodo archive of v1.0"
 license: CC-BY-4.0
 keywords:
   - AI-assisted software development
