@@ -1,0 +1,51 @@
+title: "[P__] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reviewing ZTHR. Specific, falsifiable feedback is the most useful kind: a concrete case where a pattern fails, or where it would let something through. Read the pattern first: https://zthr.ai/#patterns
+  - type: dropdown
+    id: subject
+    attributes:
+      label: What are you responding to?
+      options:
+        - "P07 Zero-Bypass Admission"
+        - "P08 Prove the Gate Can Fail"
+        - "P09 Unknown Is a State"
+        - "P10 Ratchet"
+        - "P11 Mutation-Measured Tests"
+        - "P12 Measure From the Datum"
+        - "P13 Register, Don't Suppress"
+        - "P14 Documentation Derived From the System"
+        - "The Verification family as a whole"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of feedback is it?
+      options:
+        - "Objection: I think this is wrong"
+        - "A failure that would get through"
+        - "A missing pattern"
+        - "Experience report from a real team"
+        - "Question or clarification"
+        - "Suggested wording change"
+    validations:
+      required: true
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Your feedback
+      description: State the claim, then the case. If you think something fails, describe the concrete situation in which it fails.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Your context (optional)
+      description: Team size, domain, how much AI-written code you run, and whether you have tried anything like this.
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: What would you change? (optional)

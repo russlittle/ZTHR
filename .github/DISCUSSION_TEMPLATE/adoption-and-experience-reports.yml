@@ -1,0 +1,24 @@
+title: "[Report] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Experience reports are the most valuable evidence ZTHR can get, whether the approach worked, partly worked or failed. Numbers help most: intent completion, revision rate per change, time to usable software, and how they compare with your previous process.
+  - type: textarea
+    id: setup
+    attributes:
+      label: What did you build, and with what?
+      description: Domain, team size, which patterns you adopted, and which you skipped.
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: What happened?
+      description: What worked, what broke, and what you measured against how the work was done before.
+    validations:
+      required: true
+  - type: textarea
+    id: changes
+    attributes:
+      label: What should change in ZTHR because of it? (optional)

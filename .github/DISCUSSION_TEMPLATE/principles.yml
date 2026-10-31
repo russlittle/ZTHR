@@ -1,0 +1,46 @@
+title: "[Principles] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reviewing ZTHR. Specific, falsifiable feedback is the most useful kind: a concrete case where a pattern fails, or where it would let something through. Read the pattern first: https://zthr.ai/#principles
+  - type: dropdown
+    id: subject
+    attributes:
+      label: What are you responding to?
+      options:
+        - "Principle A: Symmetric Zero Trust"
+        - "Principle B: The Fixture Inversion"
+        - "Both principles"
+        - "The review question"
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of feedback is it?
+      options:
+        - "Objection: I think this is wrong"
+        - "A failure that would get through"
+        - "A missing pattern"
+        - "Experience report from a real team"
+        - "Question or clarification"
+        - "Suggested wording change"
+    validations:
+      required: true
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Your feedback
+      description: State the claim, then the case. If you think something fails, describe the concrete situation in which it fails.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Your context (optional)
+      description: Team size, domain, how much AI-written code you run, and whether you have tried anything like this.
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: What would you change? (optional)
