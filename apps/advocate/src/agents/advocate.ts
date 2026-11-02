@@ -29,6 +29,8 @@ import { findGuide, needsLicensed } from '../domain/lifeskills.js';
 import { COLLEGE_SITES, explain } from '../domain/college.js';
 import { prepText, type Meeting } from '../domain/meetings.js';
 import { PULSES, nextPulse, type PulseState } from '../domain/pulses.js';
+import { Community } from '../domain/community.js';
+import { solveWeek, type ChildCare } from '../domain/week.js';
 import { addDays, shortDate, time12, weekday } from '../domain/dates.js';
 import { AppStore } from '../domain/store.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
@@ -120,6 +122,7 @@ export class Advocate {
   private readonly now: () => Date;
   private readonly fromNumber: string;
   readonly model?: ModelClient;
+  readonly community: Community;
   private readonly pseudSalt = randomBytes(32);
 
   /** Evidence is pseudonymous: subjects are keyed hashes, and no message content is recorded. */
@@ -139,6 +142,7 @@ export class Advocate {
     this.outbound = new OutboundGate(this.approvals, async (a) => void this.outboundLog.push(a));
     this.catalog = o.catalog ?? DAYTON_CATALOG;
     this.today = o.today ?? (() => new Date().toISOString().slice(0, 10));
+    this.community = new Community(this.today);
     this.now = o.now ?? (() => new Date());
     this.model = o.model;
     this.fromNumber = o.fromNumber ?? '+19375550100';
@@ -556,6 +560,27 @@ export class Advocate {
       nextSteps: [{ label: 'Draft a reschedule request', action: `draft-reschedule:${appointment.id}` }, { label: 'It is fine', action: `dismiss:${appointment.id}` }],
       why: 'Found by comparing your appointments with your classes and shifts.',
     }));
+  }
+
+  setHousehold(studentId: string, h: { childCare?: ChildCare; commuteMin?: number; sleepHours?: number }): void {
+    this.store.put('household_plan', studentId, studentId, { ...(this.store.get<object>('household_plan', studentId) ?? {}), ...h });
+  }
+
+  /** HH-1: the week laid out, with problems named and a way out for each. */
+  week(studentId: string) {
+    const h = this.store.get<{ childCare?: ChildCare; commuteMin?: number; sleepHours?: number }>('household_plan', studentId) ?? {};
+    const r = solveWeek({ start: this.today(), classes: this.store.list<ClassMeeting>('classes', studentId), shifts: this.store.list<Shift>('shifts', studentId), childCare: h.childCare, commuteMin: h.commuteMin ?? 20, sleepHours: h.sleepHours ?? 7, deadlines: this.deadlines(studentId) });
+    const message: OutboundMessage = {
+      studentId,
+      author: 'household-planner',
+      urgency: r.problems.length ? 'time-sensitive' : 'routine',
+      text: r.problems.length
+        ? `I laid out your week. ${r.problems.length === 1 ? 'One thing does' : `${r.problems.length} things do`} not fit:\n${r.problems.map((p) => `${shortDate(p.date)}: ${p.text} ${p.fix}`).join('\n')}\nEverything else fits, with ${r.studyHours} hours of study time.`
+        : `I laid out your week: classes, work, pickups and sleep all fit, with ${r.studyHours} hours of study time.`,
+      nextSteps: [{ label: 'See the week', action: 'week' }, ...(r.problems.length ? [{ label: 'Draft the request', action: 'draft-week-fix' }] : [])],
+      why: 'Built from your classes, shifts, child care hours and commute.',
+    };
+    return { ...r, message };
   }
 
   // ---------- money found, navigator, crisis ----------

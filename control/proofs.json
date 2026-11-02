@@ -73,6 +73,14 @@
     ]
   },
   {
+    "gate": "community-moderation",
+    "gateHash": "ea36f3492c714236484ee3f92f8c59ecf4898630da66c5bc8c21fa96ca982cbd",
+    "valid": true,
+    "cases": [
+      "planted community with no filters"
+    ]
+  },
+  {
     "gate": "no-hidden-egress",
     "gateHash": "47934966cb1d643ef8b9ed1ef9386f97348b228d79dbaf9951959e4ba2dd1ff1",
     "valid": true,

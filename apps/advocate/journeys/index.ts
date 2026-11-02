@@ -452,6 +452,27 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
     ctx.forbid('a change the team saw is not announced', !alert || !/Building 14/.test(alert.text));
     forbidTone(app, ctx, s);
   },
+  'persona-1a-week-puzzle': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Maria', age: 27, enrollment: { college: 'sinclair', creditHours: 12 } });
+    const classes: ClassMeeting[] = [{ course: 'BIO 1111', days: ['Mon', 'Wed'], start: '09:00', end: '10:50' }, { course: 'MAT 1130', days: ['Tue', 'Thu'], start: '12:30', end: '13:45' }];
+    const shifts: Shift[] = [
+      { date: '2026-11-02', start: '14:00', end: '22:00', employer: 'Care center' },
+      { date: '2026-11-04', start: '11:30', end: '17:30', employer: 'Care center' },
+      { date: '2026-11-06', start: '07:00', end: '15:00', employer: 'Care center' },
+    ];
+    ctx.act('enter schedule and child care');
+    app.a.addClasses(s.id, classes);
+    app.a.addShifts(s.id, shifts);
+    app.a.setHousehold(s.id, { childCare: { name: 'Little Steps Daycare', open: '06:30', close: '18:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] }, commuteMin: 20, sleepHours: 7 });
+    const w = app.a.week(s.id);
+    const msg = show(app, ctx, w.message);
+    const studyClash = w.blocks.filter((b) => b.kind === 'study').some((b) => overlaps(b.date, b.start, 90, classes, shifts));
+    ctx.forbid('a study block is placed on top of a class or a shift', studyClash);
+    const mondayPickupProblem = w.problems.some((p) => p.date === '2026-11-02' && /closes/.test(p.text));
+    ctx.forbid('a pickup that cannot be made goes unmentioned', !mondayPickupProblem || !/closes at 6:00 p\.m\./.test(msg.text));
+    ctx.expect(w.blocks.some((b) => b.kind === 'pickup' && b.date === '2026-11-04'), 'pickups that fit are placed');
+    forbidTone(app, ctx, s);
+  },
 };
 
 export { checkTone };
