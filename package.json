@@ -4,8 +4,13 @@
   "description": "An independent, clean-room reference implementation of the ZTHR pattern language, and the Student Advocate application it builds.",
   "license": "Apache-2.0",
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
-  "engines": { "node": ">=22.13" },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
@@ -20,13 +25,14 @@
     "@stryker-mutator/core": "^9.0.0",
     "@stryker-mutator/vitest-runner": "^9.0.0",
     "@types/node": "^22.10.0",
+    "axe-core": "^4.14.0",
     "tsx": "^4.19.0",
     "typescript": "~5.9.0",
     "vitest": "^3.2.0"
   },
   "dependencies": {
-    "hono": "^4.6.0",
     "@hono/node-server": "^1.13.0",
+    "hono": "^4.6.0",
     "yaml": "^2.6.0",
     "zod": "^3.24.0"
   }

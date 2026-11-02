@@ -1,0 +1,12 @@
+id: persona-9a-simple
+persona: linda
+delight: 9a
+phase: 1
+goal: Linda starts by texting one number, never installs anything, and gets plain-language help she can act on.
+forbidden:
+  - the student is asked to install an app or create an account before getting help
+  - a message fails the tone rubric
+budget: { actions: 6, ms: 5000 }
+requirements: [ON-1, ON-3, ON-5, P8]
+modes: [walk-me-through]
+channels: [text]

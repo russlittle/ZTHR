@@ -27,9 +27,17 @@ export function syllables(word: string): number {
   return Math.max(1, groups?.length ?? 1);
 }
 
-/** Flesch-Kincaid grade level. URLs, phone numbers and dollar amounts are ignored. */
+/**
+ * Flesch-Kincaid grade level of the words the team writes. URLs, phone numbers,
+ * dollar amounts and proper names (runs of two or more capitalized words, such
+ * as an agency's name) are ignored: the student cannot be spared those, and
+ * they would otherwise hide whether the surrounding sentences are plain.
+ */
 export function readingGrade(text: string): number {
-  const clean = text.replace(/https?:\/\/\S+/g, '').replace(/[\d$().,:\-+/]{4,}/g, '');
+  const clean = text
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/[\d$().,:\-+/]{4,}/g, '')
+    .replace(/\b[A-Z][\w'.&-]*(?:\s+(?:of|and|the|for|de|&)?\s*[A-Z][\w'.&-]*)+/g, 'Name');
   const sentences = Math.max(1, (clean.match(/[.!?]+(\s|$)/g) ?? []).length);
   const words = clean.split(/\s+/).filter((w) => /[a-z]/i.test(w));
   if (words.length === 0) return 0;

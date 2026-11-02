@@ -1,0 +1,83 @@
+[
+  {
+    "gate": "tone-and-next-step",
+    "gateHash": "5e8f9335c97e9a52eaa1b5c48541fb610dd008e2b897da3c29211540f8e73faf",
+    "valid": true,
+    "cases": [
+      "planted scolding message",
+      "planted message with no next step"
+    ]
+  },
+  {
+    "gate": "student-sends",
+    "gateHash": "9291ad61107c7377d42568c96789f0fc3fe8a121fe05c95f33a31a0238cf620e",
+    "valid": true,
+    "cases": [
+      "planted dispatcher that ignores tokens"
+    ]
+  },
+  {
+    "gate": "safety-router",
+    "gateHash": "6b40e067a39959b93d0480bb60b792c90de14c9de3a5c77e5181c3efe5cdd7d1",
+    "valid": true,
+    "cases": [
+      "planted router that only knows one phrase"
+    ]
+  },
+  {
+    "gate": "freshness",
+    "gateHash": "fcbe7416131557ee562e10284423a841f7990bce5a0b27fd617df0d58128c726",
+    "valid": true,
+    "cases": [
+      "planted finder that ignores freshness"
+    ]
+  },
+  {
+    "gate": "sealed-facts",
+    "gateHash": "83a9376487361146e30276c8b09c5b5fe226f2ebadef3f23affd08c06f18545e",
+    "valid": true,
+    "cases": [
+      "planted message quoting the sealed fact"
+    ]
+  },
+  {
+    "gate": "evidence-pseudonymous",
+    "gateHash": "0090315f6b70f99ce1cea2238224b73114e0d667a1dc9814021436def1501b11",
+    "valid": true,
+    "cases": [
+      "planted evidence row with a phone number"
+    ]
+  },
+  {
+    "gate": "no-status-question",
+    "gateHash": "a385b8910465ba4f0a60f64181372a0401868fe583d26557622b375a8bedbf82",
+    "valid": true,
+    "cases": [
+      "planted citizenship question"
+    ]
+  },
+  {
+    "gate": "snap-income-oracle",
+    "gateHash": "476d7f2fa140ea58e75709f79ac4404ab103f769d4995a526c6e3ae290a38386",
+    "valid": true,
+    "cases": [
+      "planted off-by-one limit"
+    ]
+  },
+  {
+    "gate": "journey-lock",
+    "gateHash": "cc9247717e08b1fd223c7bdeb09c59c66c91979f349738d196d2bcde0e0c884b",
+    "valid": true,
+    "cases": [
+      "planted lock missing a card"
+    ]
+  },
+  {
+    "gate": "no-hidden-egress",
+    "gateHash": "47934966cb1d643ef8b9ed1ef9386f97348b228d79dbaf9951959e4ba2dd1ff1",
+    "valid": true,
+    "cases": [
+      "planted fetch in a domain file"
+    ]
+  }
+]

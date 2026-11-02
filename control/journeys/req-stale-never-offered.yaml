@@ -1,0 +1,11 @@
+id: req-stale-never-offered
+persona: any
+phase: 1
+goal: A catalog entry past its freshness window is never offered as available, and a need with no fresh resource is recorded as unmet with an honest reply.
+forbidden:
+  - a resource is offered that is stale or the student is ineligible for
+  - a gap is hidden instead of counted
+budget: { actions: 3, ms: 5000 }
+requirements: [P11, NAV-6]
+modes: [standard]
+channels: [app]

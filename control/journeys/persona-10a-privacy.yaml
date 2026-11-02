@@ -1,0 +1,13 @@
+id: persona-10a-privacy
+persona: luis
+delight: 10a
+phase: 1
+goal: Luis can see what the team knows, turn off any source, export everything and delete everything, and is never asked about immigration or citizenship status.
+forbidden:
+  - the team asks about immigration or citizenship status
+  - data from a turned-off source is used
+  - anything remains after deletion
+budget: { actions: 6, ms: 5000 }
+requirements: [P10, NAV-7, CTL-2, CTL-3]
+modes: [standard]
+channels: [app, text]

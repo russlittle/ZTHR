@@ -1,0 +1,5 @@
+[
+  { "id": "mutation-score", "metric": "mutation score (core files, %)", "direction": "up", "floor": 76 },
+  { "id": "tone-held-messages", "metric": "product messages held by the tone gate in the gate sample", "direction": "down", "floor": 0 },
+  { "id": "journeys-not-passing", "metric": "locked journeys not passing", "direction": "down", "floor": 0 }
+]

@@ -1,0 +1,10 @@
+id: req-quiet-hours
+persona: any
+phase: 1
+goal: Routine messages respect the student's quiet hours and daily limit.
+forbidden:
+  - a routine message is delivered in quiet hours or over the daily limit
+budget: { actions: 6, ms: 5000 }
+requirements: [ON-5]
+modes: [standard]
+channels: [app]

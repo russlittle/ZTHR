@@ -1,0 +1,19 @@
+{"at":"2026-11-02T00:55:00-05:00","candidate":"kits-1","unit":"factory kits: gates, evidence, runtime, models, review, intent, twins","outcome":"rejected","gate":"unit tests","finding":"model budget test set above one call's usage; budget never reached"}
+{"at":"2026-11-02T00:56:00-05:00","candidate":"kits-1","unit":"factory kits","outcome":"rejected","gate":"unit tests","finding":"safety router missed 'overdosed' and 'too many pills' (real defect)"}
+{"at":"2026-11-02T00:56:30-05:00","candidate":"kits-1","unit":"factory kits","outcome":"rejected","gate":"unit tests","finding":"append-only test on an empty table could not fire the row trigger"}
+{"at":"2026-11-02T00:57:30-05:00","candidate":"kits-1","unit":"factory kits","outcome":"accepted","gate":"unit tests + typecheck","finding":"62 tests pass"}
+{"at":"2026-11-02T01:19:00-05:00","candidate":"core-1","unit":"Advocate Phase 1 core","outcome":"rejected","gate":"unit tests","finding":"shutoff notice pattern missed 'disconnected' (real defect)"}
+{"at":"2026-11-02T01:19:30-05:00","candidate":"core-1","unit":"Advocate Phase 1 core","outcome":"accepted","gate":"unit tests + typecheck","finding":"95 tests pass"}
+{"at":"2026-11-02T01:24:00-05:00","candidate":"journeys-1","unit":"first journey run","outcome":"rejected","gate":"journey persona-5b","finding":"college explanation used 'you must' (tone gate: commands the student)"}
+{"at":"2026-11-02T01:24:00-05:00","candidate":"journeys-1","unit":"first journey run","outcome":"rejected","gate":"journey persona-5c","finding":"a free campus option was listed after a paid one"}
+{"at":"2026-11-02T01:24:00-05:00","candidate":"journeys-1","unit":"first journey run","outcome":"rejected","gate":"journey persona-6a","finding":"a passed reading assignment produced a recovery note, pushing the journey over its action budget"}
+{"at":"2026-11-02T01:24:00-05:00","candidate":"journeys-1","unit":"first journey run","outcome":"rejected","gate":"journey persona-9a","finding":"text onboarding asked four questions before giving any help (violates give-before-asking)"}
+{"at":"2026-11-02T01:25:30-05:00","candidate":"journeys-2","unit":"journey fixes","outcome":"rejected","gate":"journeys persona-5b, persona-9a","finding":"reading grade counted agency names; walk-me-through answers measured at grade 8.1"}
+{"at":"2026-11-02T01:26:10-05:00","candidate":"journeys-3","unit":"journey fixes + rubric calibration","outcome":"accepted","gate":"17 locked journeys","finding":"17/17 pass; the reading-grade change to the tone gate is a control-plane change pending sign-off","needsSignOff":true}
+{"at":"2026-11-02T01:28:00-05:00","candidate":"gates-1","unit":"ten named gates with falsification proofs","outcome":"accepted","gate":"gate proofs","finding":"all ten gates proven able to fail and passing"}
+{"at":"2026-11-02T01:32:00-05:00","candidate":"mutation-1","unit":"mutation testing baseline","outcome":"measured","gate":"mutation score","finding":"55.95% on core files: tests executed code without asserting enough"}
+{"at":"2026-11-02T01:40:00-05:00","candidate":"mutation-2","unit":"hardening tests","outcome":"accepted","gate":"mutation ratchet","finding":"76.08%; ratchet floor set at 76"}
+{"at":"2026-11-02T01:45:00-05:00","candidate":"ui-1","unit":"web app walk","outcome":"rejected","gate":"ui walk (pixels)","finding":"double period after 'p.m.' in a deadline message"}
+{"at":"2026-11-02T01:45:00-05:00","candidate":"ui-1","unit":"web app walk","outcome":"rejected","gate":"ui walk (journey)","finding":"a sent landlord draft could not be shown again for a new gap"}
+{"at":"2026-11-02T01:47:00-05:00","candidate":"ui-2","unit":"web app walk","outcome":"rejected","gate":"ui walk (accessibility)","finding":"dark mode links failed color contrast on 2 screens"}
+{"at":"2026-11-02T01:48:00-05:00","candidate":"ui-3","unit":"web app walk","outcome":"accepted","gate":"ui walk light and dark + axe","finding":"7 screens each, no serious violations"}

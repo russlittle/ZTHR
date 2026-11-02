@@ -24,7 +24,11 @@ import { parseIcs } from '../domain/ics.js';
 import { classifyInbound, type InboundItem } from '../domain/inbound.js';
 import { findGap, gapMessage } from '../domain/money.js';
 import { COLLEGE_COUNTY, findHelp, stepsLeft, type PlanOption } from '../domain/navigator.js';
-import { upcomingMessages } from '../domain/planner.js';
+import { planSteps, upcomingMessages } from '../domain/planner.js';
+import { findGuide, needsLicensed } from '../domain/lifeskills.js';
+import { COLLEGE_SITES, explain } from '../domain/college.js';
+import { prepText, type Meeting } from '../domain/meetings.js';
+import { shortDate, time12 } from '../domain/dates.js';
 import { AppStore } from '../domain/store.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
 import { buildToday, renderToday, type TodayView } from '../domain/today.js';
@@ -70,6 +74,7 @@ interface Onboarding {
   stage: 'start' | 'where' | 'household' | 'school' | 'done';
   studentId?: string;
   partial: Partial<Student>;
+  pendingNeed?: string;
 }
 
 export interface AdvocateOptions {
@@ -80,6 +85,9 @@ export interface AdvocateOptions {
   evidence?: EvidenceStore;
   playbookDir?: string;
   fromNumber?: string;
+  /** 32-byte keys; production reads them from secret storage and refuses to start without them. */
+  masterKey?: Buffer;
+  approvalSecret?: Buffer;
 }
 
 const NEED_WORDS: [NeedCategory, RegExp][] = [
@@ -125,8 +133,8 @@ export class Advocate {
   constructor(o: AdvocateOptions = {}) {
     this.store = new AppStore();
     this.evidence = o.evidence ?? new EvidenceStore();
-    this.sealed = new SealedStore(randomBytes(32), this.ledger);
-    this.approvals = new ApprovalService(randomBytes(32));
+    this.sealed = new SealedStore(o.masterKey ?? randomBytes(32), this.ledger);
+    this.approvals = new ApprovalService(o.approvalSecret ?? randomBytes(32));
     this.outbound = new OutboundGate(this.approvals, async (a) => void this.outboundLog.push(a));
     this.catalog = o.catalog ?? DAYTON_CATALOG;
     this.today = o.today ?? (() => new Date().toISOString().slice(0, 10));
@@ -212,6 +220,8 @@ export class Advocate {
   textIn(phone: string, body: string): string[] {
     const keyword = this.sms.inbound(phone, body);
     if (keyword === 'stop') return [];
+    const o = this.onboarding.get(phone);
+    if (o && o.stage !== 'done') return this.onboardStep(phone, body);
     const existing = this.findByPhone(phone);
     if (existing) return this.converse(existing.id, body).map((d) => this.asText(d));
     return this.onboardStep(phone, body);
@@ -234,41 +244,61 @@ export class Advocate {
     }
     const o = this.onboarding.get(phone) ?? { phone, stage: 'start', partial: {} };
     this.onboarding.set(phone, o);
+    const textDial = { ...DEFAULT_DIAL, channel: 'text' as const };
     switch (o.stage) {
-      case 'start':
+      case 'start': {
         o.stage = 'where';
         this.ev('onboarding', phone, { stage: 'start' });
+        // Give before asking: a student who opens with a need gets something useful at once.
+        const need = detectSituation(body) ?? NEED_WORDS.find(([, re]) => re.test(body))?.[0];
+        if (need) {
+          o.pendingNeed = need;
+          return [
+            "Hi, I'm your Advocate. I work for you, not your college. Here's something you can do right now: call 2-1-1 any time to reach local help with bills, food and housing.",
+            'To find help near you, which college do you go to, and what is your ZIP code? (Example: Sinclair 45402)',
+          ];
+        }
         return [
-          "Hi! I'm your Advocate. I work for you, not your college, and I never share anything unless you say so. Want me to check what money and help you might qualify for? It takes 4 quick questions.",
+          "Hi! I'm your Advocate. I work for you, not your college, and I never share anything unless you say so. Want me to check what money and help you might get? It takes 4 quick questions.",
           'First: which college, and what ZIP code do you live in? (Example: Sinclair 45402)',
         ];
+      }
       case 'where': {
         const college = /wright/i.test(body) ? 'wright-state' : /antioch/i.test(body) ? 'antioch' : /sinclair/i.test(body) ? 'sinclair' : undefined;
         const zip = body.match(/\b(\d{5})\b/)?.[1];
         if (!college || !zip) return ["Got it. I just need your college and ZIP code, like 'Sinclair 45402'."];
-        o.partial.enrollment = { college };
-        o.partial.zip = zip;
+        const s = this.createStudent({ chosenName: 'there', phone, zip, enrollment: { college }, dial: textDial });
+        o.studentId = s.id;
         o.stage = 'household';
-        return ['How many people are in your household, counting you, and about how much does your household earn in a month before taxes? (Example: 3 people, $1800)'];
+        const out: string[] = [];
+        if (o.pendingNeed) {
+          const situations: Situation[] = ['eviction', 'utility-shutoff', 'car', 'no-food', 'rent-short'];
+          const pending = o.pendingNeed;
+          const m = (situations as string[]).includes(pending) ? this.crisis(s.id, pending as Situation).message : this.helpMessage(s.id, pending as NeedCategory);
+          out.push(this.asText(this.deliver(m, { force: true })));
+          out.push('Want me to check for money you could get too? How many people live with you, counting you, and about how much does your household earn a month? (Example: 3 people, $1800)');
+        } else {
+          out.push('How many people live with you, counting you, and about how much does your household earn a month before taxes? (Example: 3 people, $1800)');
+        }
+        return out;
       }
       case 'household': {
         const nums = [...body.matchAll(/\$?\s?([\d,]+)/g)].map((m) => Number(m[1]!.replace(/,/g, '')));
-        if (nums.length < 2) return ["Thanks. Two numbers please: people in your household, and monthly income. Like '2, $1500'."];
-        o.partial.household = { size: Math.max(1, nums[0]!), monthlyGrossIncome: nums[1]! };
-        if (/\b(kid|child|son|daughter|baby)\b/i.test(body)) o.partial.household.childrenUnder12 = 1;
+        if (nums.length < 2) return ["Thanks. Two numbers please: people in your household, and money coming in each month. Like '2, $1500'."];
+        const household: Student['household'] = { size: Math.max(1, nums[0]!), monthlyGrossIncome: nums[1]! };
+        if (/\b(kid|child|son|daughter|baby)\b/i.test(body)) household.childrenUnder12 = 1;
+        this.updateStudent(o.studentId!, { household });
         o.stage = 'school';
         return ['Last one: how many credit hours are you taking, and how many hours a week do you work? (Example: 12 credits, 25 hours)'];
       }
       case 'school': {
-        const credits = Number(body.match(/(\d+)\s*(credit|cr|hour)?s?\b.*?(credit|cr)?/i)?.[1] ?? NaN);
-        const work = Number(body.match(/(\d+)\s*(hours|hrs|hr)\b(?!.*credit)/i)?.[1] ?? body.match(/(\d+)\D+(\d+)/)?.[2] ?? NaN);
-        o.partial.enrollment = { ...(o.partial.enrollment as Student['enrollment']), creditHours: Number.isNaN(credits) ? undefined : credits, weeklyWorkHours: Number.isNaN(work) ? undefined : work, workStudy: false, degreeSeeking: true };
-        const s = this.createStudent({ chosenName: 'there', phone, zip: o.partial.zip!, enrollment: o.partial.enrollment as Student['enrollment'], household: o.partial.household as Student['household'], dial: { ...DEFAULT_DIAL, channel: 'text' } });
-        o.studentId = s.id;
+        const credits = Number(body.match(/(\d+)\s*(credits?|cr)\b/i)?.[1] ?? body.match(/(\d+)/)?.[1] ?? NaN);
+        const work = Number(body.match(/(\d+)\s*(hours|hrs|hr)\b/i)?.[1] ?? body.match(/\d+\D+(\d+)/)?.[1] ?? NaN);
+        const s0 = this.student(o.studentId!);
+        this.updateStudent(s0.id, { enrollment: { ...s0.enrollment, creditHours: Number.isNaN(credits) ? undefined : credits, weeklyWorkHours: Number.isNaN(work) ? undefined : work, workStudy: false, degreeSeeking: true } });
         o.stage = 'done';
-        this.ev('onboarding', s.id, { stage: 'screened' });
-        const msg = this.moneyFoundMessage(s.id);
-        return [this.asText(this.deliver(msg, { force: true })), 'What should I call you? You can also tell me your pronouns.'];
+        this.ev('onboarding', s0.id, { stage: 'screened' });
+        return [this.asText(this.deliver(this.moneyFoundMessage(s0.id), { force: true })), 'What should I call you? You can tell me your pronouns too.'];
       }
       default:
         return [];
@@ -300,6 +330,16 @@ export class Advocate {
     if (/\b(walk me through|more detail|step by step)\b/.test(t)) {
       this.setDial(s.id, { depth: 'walk-me-through' });
       return [this.deliver({ studentId: s.id, author: 'chief-of-staff', urgency: 'routine', text: 'Okay. I will go step by step.', nextSteps: [{ label: 'Shorter answers', action: 'dial:brief' }] }, { force: true })];
+    }
+    const licensed = needsLicensed(text);
+    if (licensed) return [this.deliver(this.licensedMessage(s.id, licensed), { force: true })];
+    const guide = findGuide(text);
+    if (guide && !/\bfafsa\b/.test(t)) return [this.deliver(this.guideMessage(s.id, text)!, { force: true })];
+    const term = explain(text);
+    if (term) return [this.deliver(this.explainMessage(s.id, text)!, { force: true })];
+    if (/^plan\b/.test(t)) {
+      const one = this.today_(s.id).oneThing;
+      if (one?.deadlineId) return [this.deliver(this.planMessage(s.id, one.deadlineId), { force: true })];
     }
     if (/\bfafsa\b/.test(t)) return [this.deliver(this.playbookMessage(s.id, this.startPlaybook(s.id, 'fafsa-2027-28')), { force: true })];
     if (/\b(qualify|benefits|money found|screen)\b/.test(t)) return [this.deliver(this.moneyFoundMessage(s.id), { force: true })];
@@ -406,7 +446,8 @@ export class Advocate {
 
   // ---------- inbound: forwarded email and texts ----------
 
-  forward(studentId: string, text: string, meta: { from?: string; subject?: string } = {}): { item: InboundItem; message?: OutboundMessage } {
+  forward(studentId: string, text: string, meta: { from?: string; subject?: string } = {}): { item: InboundItem; message?: OutboundMessage; refused?: string } {
+    if (!this.hasSource(studentId, 'forwarding')) return { item: { kind: 'other', dates: [] }, refused: 'forwarding is turned off for this student' };
     const item = classifyInbound(text, meta);
     this.ev('inbound', studentId, { kind: item.kind });
     const map: Partial<Record<InboundItem['kind'], () => OutboundMessage>> = {
@@ -500,8 +541,7 @@ export class Advocate {
     const plan = crisisPlan(this.student(studentId), situation, this.catalog, this.today(), this.vaultDocuments(studentId));
     for (const n of plan.unmet) this.recordUnmet(studentId, n);
     this.ev('crisis_intake', studentId, { situation, options: plan.options.length });
-    const draft = DRAFTS[situation]?.(this.student(studentId));
-    if (draft) this.createDraft(studentId, draft.to, draft.to, draft.body, situation);
+    this.draftFor(studentId, situation);
     return plan;
   }
 
@@ -520,6 +560,14 @@ export class Advocate {
 
   drafts(studentId: string): Draft[] {
     return this.store.list<Draft>('drafts', studentId);
+  }
+
+  /** The waiting draft for a purpose, created from its template when the student asks to see it. */
+  draftFor(studentId: string, purpose: string): Draft | undefined {
+    const waiting = this.drafts(studentId).find((d) => d.purpose === purpose && d.status === 'shown');
+    if (waiting) return waiting;
+    const template = DRAFTS[purpose as Situation]?.(this.student(studentId));
+    return template ? this.createDraft(studentId, template.to, template.to, template.body, purpose) : undefined;
   }
 
   /** Issued only when the student taps approve on the exact draft shown. */
@@ -581,6 +629,102 @@ export class Advocate {
     return { studentId, author: `playbook:${run.playbook}`, urgency: 'routine', text: `${def.title}: ${text}`, nextSteps, why: def.purpose };
   }
 
+  // ---------- life skills, college explained, meetings, plans ----------
+
+  guideMessage(studentId: string, text: string): OutboundMessage | undefined {
+    const g = findGuide(text);
+    if (!g) return undefined;
+    const s = this.student(studentId);
+    const steps = s.dial.depth === 'brief' ? g.steps.slice(0, 2) : g.steps;
+    return {
+      studentId,
+      author: 'money-and-life-coach',
+      urgency: 'routine',
+      text: `About ${g.topic}:\n${steps.map((x, i) => `${i + 1}. ${x}`).join('\n')}${g.routeTo ? `\nFor more, ${g.routeTo.name} (${g.routeTo.contact}) can help ${g.routeTo.when}.` : ''}`,
+      nextSteps: [{ label: 'Set a reminder for this', action: `remind:${g.topic}` }, ...(g.routeTo ? [{ label: `Contact ${g.routeTo.name}`, action: `contact:${g.routeTo.contact}` }] : [])],
+      why: 'General guidance; your situation may differ.',
+    };
+  }
+
+  licensedMessage(studentId: string, kind: 'legal' | 'tax' | 'medical' | 'investment'): OutboundMessage {
+    const where = {
+      legal: { name: 'Legal Aid of Western Ohio', contact: '888-534-1432 or legalaidline.org', action: 'contact:lawo' },
+      tax: { name: 'free IRS-certified tax volunteers (VITA)', contact: 'irs.gov/vita', action: 'contact:vita' },
+      medical: { name: 'a doctor, nurse line or campus health service', contact: 'your clinic or campus health center', action: 'find-help:health' },
+      investment: { name: 'a free nonprofit financial counselor', contact: 'your college financial aid office can refer you', action: 'find-help:money' },
+    }[kind];
+    return {
+      studentId,
+      author: 'chief-of-staff',
+      urgency: 'routine',
+      text: `That one needs someone licensed, so I won't guess. ${where.name} can help for free: ${where.contact}. I can help you get your questions and papers ready first.`,
+      nextSteps: [{ label: 'Help me get ready', action: `prepare:${kind}` }, { label: `Contact ${where.name}`, action: where.action }],
+      why: 'Legal, tax, medical and investment questions go to licensed professionals.',
+    };
+  }
+
+  explainMessage(studentId: string, question: string): OutboundMessage | undefined {
+    const term = explain(question);
+    if (!term) return undefined;
+    const s = this.student(studentId);
+    const site = COLLEGE_SITES[s.enrollment.college];
+    return {
+      studentId,
+      author: 'chief-of-staff',
+      urgency: 'routine',
+      text: `${term.meaning} Your college sets the exact rules. ${term.ask.charAt(0).toUpperCase() + term.ask.slice(1)} is the place to confirm.${site ? ` ${site}` : ''}`,
+      nextSteps: [{ label: `Draft a question to ${term.ask}`, action: `draft:ask:${term.term}` }, { label: 'Ask something else', action: 'ask' }],
+      why: 'Plain meaning of a college term; your college decides its exact rules.',
+    };
+  }
+
+  addMeeting(studentId: string, m: Omit<Meeting, 'id'>): Meeting {
+    const full = { ...m, id: `mt_${randomUUID().slice(0, 8)}` };
+    this.store.put('meetings', full.id, studentId, full);
+    return full;
+  }
+
+  meetingPrep(studentId: string, meetingId: string): OutboundMessage {
+    const m = this.store.get<Meeting>('meetings', meetingId)!;
+    return {
+      studentId,
+      author: 'chief-of-staff',
+      urgency: 'routine',
+      text: prepText(m, this.deadlines(studentId), this.today()),
+      nextSteps: [{ label: 'Remind me 30 minutes before', action: `remind-meeting:${m.id}` }, { label: 'Draft a note to the group', action: `draft-group-note:${m.id}` }],
+      why: `From your calendar: ${m.title}.`,
+    };
+  }
+
+  planMessage(studentId: string, deadlineId: string): OutboundMessage {
+    const d = this.store.get<Deadline>('deadlines', deadlineId)!;
+    const steps = planSteps(d, this.today(), this.store.list<ClassMeeting>('classes', studentId), this.store.list<Shift>('shifts', studentId));
+    return {
+      studentId,
+      author: 'coursework-planner',
+      urgency: 'routine',
+      text: `Here is ${d.title} in small steps:\n${steps.map((x, i) => `${i + 1}. ${x.step} (${shortDate(x.date)}, ${time12(x.start)}, ${x.minutes} min)`).join('\n')}`,
+      nextSteps: [{ label: 'Put these on my calendar', action: `calendar-steps:${d.id}` }, { label: 'Change the times', action: `edit-steps:${d.id}` }],
+      why: `About ${d.effortHours ?? 3} hours of work before ${d.due}, split into short steps in your open time.`,
+    };
+  }
+
+  // ---------- sources the student connected (PRD ON-4, CTL-3) ----------
+
+  connectSource(studentId: string, source: 'calendar' | 'forwarding' | 'learning-feed' | 'location'): void {
+    this.store.put('sources', `${studentId}:${source}`, studentId, { source, connectedAt: this.today() });
+    this.ledger.append(studentId, 'grant', `source:${source}`, {});
+  }
+
+  disconnectSource(studentId: string, source: string): void {
+    this.store.remove('sources', `${studentId}:${source}`);
+    this.ledger.append(studentId, 'revoke', `source:${source}`, {});
+  }
+
+  hasSource(studentId: string, source: string): boolean {
+    return !!this.store.get('sources', `${studentId}:${source}`);
+  }
+
   // ---------- money ----------
 
   setMoney(studentId: string, balance: number, bills: Bill[], pay?: Paycheck): void {
@@ -600,7 +744,6 @@ export class Advocate {
       ...(bill?.kind === 'utility' ? [{ label: 'Apply for HEAP', action: 'start-resource:ohio-heap' }] : []),
       { label: 'Talk to 2-1-1', action: 'call:211' },
     ];
-    if (!this.drafts(studentId).some((d) => d.purpose === 'rent-short') && bill?.kind === 'rent') this.createDraft(studentId, 'landlord', 'landlord', DRAFTS['rent-short']!(s).body, 'rent-short');
     this.ev('money_gap', studentId, { daysAhead: daysBetween(this.today(), gap.date), shortBy: gap.shortBy });
     return gapMessage(s, gap, this.today(), options);
   }

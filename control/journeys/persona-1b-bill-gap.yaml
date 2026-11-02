@@ -1,0 +1,13 @@
+id: persona-1b-bill-gap
+persona: maria
+delight: 1b
+phase: 1
+goal: Maria sees a rent shortfall before the first of the month, with real ways to cover it and a drafted message to her landlord.
+forbidden:
+  - a message fails the tone rubric
+  - a message reports a problem without a next step
+  - something is sent without the student's approval
+budget: { actions: 4, ms: 5000 }
+requirements: [MON-1, NAV-4]
+modes: [brief, standard, walk-me-through]
+channels: [app, text]

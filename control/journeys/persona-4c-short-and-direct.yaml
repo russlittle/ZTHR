@@ -1,0 +1,12 @@
+id: persona-4c-short-and-direct
+persona: ana
+delight: 4c
+phase: 1
+goal: Ana sets brief mode once and every answer after that is short, direct and still carries the next step.
+forbidden:
+  - a brief-mode message runs long
+  - a message reports a problem without a next step
+budget: { actions: 4, ms: 5000 }
+requirements: [ON-5]
+modes: [brief]
+channels: [app, text]

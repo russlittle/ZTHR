@@ -1,0 +1,12 @@
+id: persona-5b-college-explained
+persona: tyler
+delight: 5b
+phase: 1
+goal: Tyler asks what college words mean and gets plain answers that tell him which office decides, without feeling talked down to.
+forbidden:
+  - a message fails the tone rubric
+  - an answer claims a college rule without pointing to the office that decides
+budget: { actions: 4, ms: 5000 }
+requirements: [DAY-5]
+modes: [standard, walk-me-through]
+channels: [app, text]

@@ -37,5 +37,6 @@ export function bookOptions(m: Material, college?: string): BookOption[] {
   if (oer) opts.push({ kind: 'open-textbook', label: 'A free open textbook covers this subject; ask your instructor if it works for the class', url: oer[1], cost: 'free' });
   opts.push({ kind: 'rental-or-used', label: 'Compare used and rental prices', url: `https://www.bookfinder.com/search/?keywords=${q}`, cost: 'varies' });
   if (college === 'sinclair') opts.push({ kind: 'campus', label: 'If money is the blocker, the Sinclair Emergency Grant and case management can help', url: 'https://sinclair.edu/emergencygrant', cost: 'free' });
-  return opts;
+  // Free routes always come first.
+  return [...opts.filter((o) => o.cost === 'free'), ...opts.filter((o) => o.cost !== 'free')];
 }

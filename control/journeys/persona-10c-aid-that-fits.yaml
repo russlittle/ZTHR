@@ -1,0 +1,12 @@
+id: persona-10c-aid-that-fits
+persona: luis
+delight: 10c
+phase: 1
+goal: Luis sees which programs fit his family, with the eligibility rule and its source shown, so his family can decide without entering anything risky.
+forbidden:
+  - the team asks about immigration or citizenship status
+  - an eligibility result is shown without its rule and source
+budget: { actions: 3, ms: 5000 }
+requirements: [NAV-1, NAV-2, NAV-7]
+modes: [standard]
+channels: [app]
