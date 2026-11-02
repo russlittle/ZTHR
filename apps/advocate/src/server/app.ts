@@ -79,11 +79,13 @@ export function createApp(a: Advocate): Hono {
     const recent = a.messages(sid).filter((m) => m.status === 'delivered').slice(-6).reverse();
     const ahead = a.lookAhead(sid);
     const money = a.moneyCheck(sid);
+    const pulse = a.pulse(sid);
     return c.html(
       page(
         `Today, ${s.chosenName}`,
         `${messageCard(sid, a.todayMessage(sid))}
 ${money ? messageCard(sid, money) : ''}
+${pulse ? messageCard(sid, pulse) : ''}
 ${ahead.map((m) => messageCard(sid, m)).join('')}
 <div class="card"><h2>Coming up</h2>${
           v.dueSoon.length
@@ -164,6 +166,8 @@ ${recent.length ? `<div class="card"><h2>Recent</h2>${recent.map((m) => `<div cl
           .map((src) => `<li>${esc(src)}: ${a.hasSource(sid, src) ? `<span class="ok">on</span> ${actionButton(sid, 'Turn off', `source-off:${src}`, true)}` : `<span class="muted">off</span> ${actionButton(sid, 'Turn on', `source-on:${src}`, true)}`}</li>`)
           .join('')}</ul></div>
 <div class="card"><h2>Your record of consent</h2>${ledger.length ? `<ul class="clean">${ledger.map((e) => `<li>${esc(e.kind)} <span class="tag">${esc(e.subject)}</span> <span class="muted">${esc(e.at.slice(0, 16).replace('T', ' '))}</span></li>`).join('')}</ul>` : '<p class="muted">Nothing yet.</p>'}</div>
+<div class="card"><h2>Quick questions</h2><p>${a.pulseState(sid).off ? 'Off' : `On, at most every ${a.pulseState(sid).everyDays} days`}</p><div class="steps">${a.pulseState(sid).off ? actionButton(sid, 'Turn on', 'pulses-on', true) : actionButton(sid, 'Turn off', 'pulses-off', true)}</div></div>
+<div class="card"><h2>Tell a friend</h2><div class="steps">${actionButton(sid, 'Share the Advocate', 'share', true)}</div></div>
 <div class="card"><h2>Your data</h2><div class="steps"><a class="btn secondary" href="/s/${esc(sid)}/export">Download everything</a>${actionButton(sid, 'Delete everything', 'delete-account', true)}</div></div>`,
         { studentId: sid },
       ),
@@ -187,7 +191,36 @@ ${recent.length ? `<div class="card"><h2>Recent</h2>${recent.map((m) => `<div cl
       case 'need':
         return show(a.helpMessage(sid, arg as NeedCategory));
       case 'find-help':
-        return c.redirect(`/s/${sid}/help`);
+        return arg ? show(a.assignmentHelp(sid, arg)) : c.redirect(`/s/${sid}/help`);
+      case 'find-tutor':
+      case 'plan-next': {
+        const next = a.deadlines(sid).find((d) => !d.done && d.due >= a.today_(sid).date);
+        if (!next) return show({ studentId: sid, author: 'coursework-planner', urgency: 'routine', text: 'Nothing is due yet. Add a syllabus and I will find every date.', nextSteps: [{ label: 'Back to today', action: 'today' }] });
+        return show(verb === 'find-tutor' ? a.assignmentHelp(sid, next.id) : a.planMessage(sid, next.id));
+      }
+      case 'pulse': {
+        const [pid, ans] = arg.split(':');
+        return show(a.answerPulse(sid, pid!, ans === 'yes' ? 'yes' : 'no'));
+      }
+      case 'pulses-off':
+        a.setPulses(sid, { off: true });
+        return show({ studentId: sid, author: 'navigator', urgency: 'routine', text: 'Done. No more quick questions. You can turn them back on in Settings.', nextSteps: [{ label: 'Settings', action: 'settings' }] });
+      case 'pulses-on':
+        a.setPulses(sid, { off: false });
+        return c.redirect(`/s/${sid}/settings`);
+      case 'settings':
+        return c.redirect(`/s/${sid}/settings`);
+      case 'share': {
+        const sh = a.shareText(sid, arg || undefined);
+        return c.html(page('Share', `<div class="card"><h2>Send to a friend</h2><div class="msg">${esc(sh.text)}</div><div class="steps"><a class="btn" href="${esc(sh.smsLink)}">Send by text</a></div></div>`, { studentId: sid }));
+      }
+      case 'draft-instructor-note': {
+        const d = a.deadlines(sid).find((x) => x.id === arg);
+        const st = a.student(sid);
+        if (d) a.createDraft(sid, 'instructor', `instructor:${d.course ?? 'course'}`, `Hello, this is ${st.chosenName} from ${d.course ?? 'your class'}. I would like to talk about a plan for ${d.title}. Is there a time this week that works, or a way I can still turn it in? Thank you.`, `instructor-note:${d.id}`);
+        const drafts = a.drafts(sid).filter((x) => x.status === 'shown' && x.purpose === `instructor-note:${arg}`);
+        return c.html(page('Draft', drafts.map((x) => `<div class="card"><h2>To: ${esc(x.to)}</h2><div class="msg">${esc(x.body)}</div><div class="why">Nothing is sent until you tap send.</div><div class="steps">${actionButton(sid, 'Send it', `approve:${x.id}`)}</div></div>`).join(''), { studentId: sid }));
+      }
       case 'situation':
         return show(a.crisis(sid, arg as never).message);
       case 'mark-done':

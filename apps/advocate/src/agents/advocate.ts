@@ -28,6 +28,7 @@ import { planSteps, upcomingMessages } from '../domain/planner.js';
 import { findGuide, needsLicensed } from '../domain/lifeskills.js';
 import { COLLEGE_SITES, explain } from '../domain/college.js';
 import { prepText, type Meeting } from '../domain/meetings.js';
+import { PULSES, nextPulse, type PulseState } from '../domain/pulses.js';
 import { shortDate, time12 } from '../domain/dates.js';
 import { AppStore } from '../domain/store.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
@@ -255,12 +256,12 @@ export class Advocate {
           o.pendingNeed = need;
           return [
             "Hi, I'm your Advocate. I work for you, not your college. Here's something you can do right now: call 2-1-1 any time to reach local help with bills, food and housing.",
-            'To find help near you, which college do you go to, and what is your ZIP code? (Example: Sinclair 45402)',
+            'To find help near you, which college do you go to, and what is your ZIP code? (Example: Sinclair 45402) By replying, you confirm you are 18 or older.',
           ];
         }
         return [
           "Hi! I'm your Advocate. I work for you, not your college, and I never share anything unless you say so. Want me to check what money and help you might get? It takes 4 quick questions.",
-          'First: which college, and what ZIP code do you live in? (Example: Sinclair 45402)',
+          'First: which college, and what ZIP code do you live in? (Example: Sinclair 45402) By replying, you confirm you are 18 or older.',
         ];
       }
       case 'where': {
@@ -268,6 +269,7 @@ export class Advocate {
         const zip = body.match(/\b(\d{5})\b/)?.[1];
         if (!college || !zip) return ["Got it. I just need your college and ZIP code, like 'Sinclair 45402'."];
         const s = this.createStudent({ chosenName: 'there', phone, zip, enrollment: { college }, dial: textDial });
+        this.ledger.append(s.id, 'grant', 'terms', { confirmedAdult: true, by: 'reply' });
         o.studentId = s.id;
         o.stage = 'household';
         const out: string[] = [];
@@ -331,6 +333,12 @@ export class Advocate {
       this.setDial(s.id, { depth: 'walk-me-through' });
       return [this.deliver({ studentId: s.id, author: 'chief-of-staff', urgency: 'routine', text: 'Okay. I will go step by step.', nextSteps: [{ label: 'Shorter answers', action: 'dial:brief' }] }, { force: true })];
     }
+    if (/\b(write|do|finish|complete)\b.{0,12}\b(my|this|the)\b.{0,12}\b(essay|paper|homework|assignment|lab report|discussion post|quiz|exam)\b/i.test(text)) {
+      return [this.deliver(this.courseworkBoundaryMessage(s.id), { force: true })];
+    }
+    const pulseAnswer = t.match(/^(yes|no|yeah|nope|yep)\b/);
+    const pending = this.store.get<{ pulse: string }>('pulse_pending', s.id);
+    if (pulseAnswer && pending) return [this.deliver(this.answerPulse(s.id, pending.pulse, /^(yes|yeah|yep)/.test(pulseAnswer[1]!) ? 'yes' : 'no'), { force: true })];
     const licensed = needsLicensed(text);
     if (licensed) return [this.deliver(this.licensedMessage(s.id, licensed), { force: true })];
     const guide = findGuide(text);
@@ -629,6 +637,88 @@ export class Advocate {
     return { studentId, author: `playbook:${run.playbook}`, urgency: 'routine', text: `${def.title}: ${text}`, nextSteps, why: def.purpose };
   }
 
+  // ---------- coursework help and boundaries (PRD CRS-3, CRS-4) ----------
+
+  courseworkBoundaryMessage(studentId: string): OutboundMessage {
+    return {
+      studentId,
+      author: 'coursework-planner',
+      urgency: 'routine',
+      text: "I can't do the assignment itself. I can break it into small steps, find a tutor or the writing center, and keep it on track with you.",
+      nextSteps: [{ label: 'Break it into steps', action: 'plan-next' }, { label: 'Find a tutor', action: 'find-tutor' }],
+      why: 'The Advocate plans and prepares; it never produces coursework.',
+    };
+  }
+
+  assignmentHelp(studentId: string, deadlineId: string): OutboundMessage {
+    const d = this.store.get<Deadline>('deadlines', deadlineId)!;
+    const s = this.student(studentId);
+    const policy = d.course ? this.courseAiPolicy(studentId, d.course) : 'unstated';
+    const site = COLLEGE_SITES[s.enrollment.college];
+    const kind = /essay|paper|report|portfolio|draft/i.test(d.title) ? 'writing' : d.kind === 'exam' ? 'exam' : 'general';
+    const helpLine =
+      kind === 'writing'
+        ? 'For a paper, a second reader helps most: the writing center, a tutor, or a classmate who swaps drafts with you.'
+        : kind === 'exam'
+          ? 'For a test, a tutor or a study group helps most, plus your instructor\'s office hours.'
+          : 'Your instructor\'s office hours and the tutoring center are the best places to start.';
+    return {
+      studentId,
+      author: 'coursework-planner',
+      urgency: 'routine',
+      text: `${helpLine} ${aiPolicySentence(policy, d.course ?? 'This course')}${site ? ` Your college's tutoring and writing help is listed at ${site}.` : ''}`,
+      nextSteps: [{ label: 'Draft a note to my instructor', action: `draft-instructor-note:${d.id}` }, { label: 'Break it into steps', action: `plan:${d.id}` }],
+      why: `For ${d.title}${d.course ? ` in ${d.course}` : ''}, using the course's AI policy from its syllabus.`,
+    };
+  }
+
+  // ---------- pulses (PRD NAV-10) ----------
+
+  pulseState(studentId: string): PulseState {
+    return this.store.get<PulseState>('pulse_state', studentId) ?? { asked: {}, everyDays: 3 };
+  }
+
+  setPulses(studentId: string, patch: Partial<PulseState>): void {
+    this.store.put('pulse_state', studentId, studentId, { ...this.pulseState(studentId), ...patch });
+  }
+
+  pulse(studentId: string): OutboundMessage | undefined {
+    const st = this.pulseState(studentId);
+    const p = nextPulse(st, this.today());
+    if (!p) return undefined;
+    this.setPulses(studentId, { asked: { ...st.asked, [p.id]: this.today() } });
+    this.store.put('pulse_pending', studentId, studentId, { pulse: p.id });
+    this.ev('pulse', studentId, { pulse: p.id, event: 'asked' });
+    return {
+      studentId,
+      author: 'navigator',
+      urgency: 'routine',
+      text: `${p.question} You can skip this anytime.`,
+      nextSteps: [{ label: 'Yes', action: `pulse:${p.id}:yes` }, { label: 'No', action: `pulse:${p.id}:no` }, { label: 'Stop these questions', action: 'pulses-off' }],
+      why: 'A single optional question, at most every few days, so I can offer help before it is needed.',
+    };
+  }
+
+  answerPulse(studentId: string, pulseId: string, answer: 'yes' | 'no'): OutboundMessage {
+    const p = PULSES.find((x) => x.id === pulseId)!;
+    this.store.remove('pulse_pending', studentId);
+    const need = answer === p.needOn;
+    this.ev('pulse', studentId, { pulse: p.id, event: 'answered', revealedNeed: need });
+    if (need) return this.helpMessage(studentId, p.need);
+    return { studentId, author: 'navigator', urgency: 'routine', text: p.tipWhenFine, nextSteps: [{ label: 'Show my day', action: 'today' }], why: 'Your answer to a quick question.' };
+  }
+
+  // ---------- sharing (PRD ON-7) ----------
+
+  shareText(studentId: string, resourceId?: string): { text: string; smsLink: string } {
+    const r = resourceId ? this.catalog.find((x) => x.id === resourceId) : undefined;
+    const text = r
+      ? `Thought this might help: ${r.name}. ${r.description}${r.phone ? ` Call ${r.phone}.` : ''}${r.url ? ` ${r.url}` : ''}`
+      : `I use Student Advocate. It's free, it works for students (not the college), and it finds help you qualify for. Text ${this.fromNumber} to start.`;
+    this.ev('share', studentId, { kind: r ? 'resource' : 'advocate' });
+    return { text, smsLink: `sms:?&body=${encodeURIComponent(text)}` };
+  }
+
   // ---------- life skills, college explained, meetings, plans ----------
 
   guideMessage(studentId: string, text: string): OutboundMessage | undefined {
@@ -744,15 +834,28 @@ export class Advocate {
       ...(bill?.kind === 'utility' ? [{ label: 'Apply for HEAP', action: 'start-resource:ohio-heap' }] : []),
       { label: 'Talk to 2-1-1', action: 'call:211' },
     ];
+    // The card's goal includes a drafted message, ready before the student asks.
+    if (bill?.kind === 'rent') this.draftFor(studentId, 'rent-short');
+    else if (bill?.kind === 'utility') this.draftFor(studentId, 'utility-shutoff');
     this.ev('money_gap', studentId, { daysAhead: daysBetween(this.today(), gap.date), shortBy: gap.shortBy });
     return gapMessage(s, gap, this.today(), options);
   }
 
   // ---------- books ----------
 
+  setAidDisbursement(studentId: string, date: string): void {
+    this.store.put('aid', studentId, studentId, { disbursement: date });
+  }
+
+  /** Books for less (BK-1), flagging books needed before aid arrives (BK-2). */
   books(studentId: string, materials: Material[]) {
     const s = this.student(studentId);
-    return materials.map((m) => ({ material: m, options: bookOptions(m, s.enrollment.college) }));
+    const aid = this.store.get<{ disbursement: string }>('aid', studentId)?.disbursement;
+    return materials.map((m) => ({
+      material: m,
+      options: bookOptions(m, s.enrollment.college),
+      beforeAid: !!(aid && m.neededBy && m.neededBy < aid),
+    }));
   }
 
   // ---------- sealed facts and control ----------
