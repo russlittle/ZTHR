@@ -1,0 +1,55 @@
+playbook: fafsa-2027-28
+title: FAFSA for 2027-28
+purpose: File the 2027-28 FAFSA, including the path for students who cannot provide parent information, and carry it to an aid offer.
+owner: builder
+sign_off: required
+sources:
+  - https://abcnews4.com/news/nation-world/education-department-opens-2027-28-fafsa-early-marking-programs-earliest-launch
+  - https://cdhe.colorado.gov/sites/highered/files/documents/Support_Guide_for_Unusual_Circumstances_F.pdf
+student_grants:
+  sealed: [family_circumstances]
+  profile: [chosenName, college]
+journeys: [persona-11a-fafsa-without-parents]
+steps:
+  - id: account
+    kind: checklist
+    text: Make your StudentAid.gov account if you don't have one. You'll use it to sign the FAFSA.
+    done_when: student-confirms
+  - id: parents-question
+    kind: question
+    text: Can you get your parents' information and their help signing the FAFSA?
+    branches:
+      "yes": standard-file
+      "no": unusual-circumstances
+  - id: standard-file
+    kind: checklist
+    text: Fill out the 2027-28 FAFSA at studentaid.gov. The form is open now. Invite your parent as a contributor when it asks.
+    done_when: student-confirms
+    next: submission-summary
+  - id: unusual-circumstances
+    kind: checklist
+    text: When the FAFSA asks, say you have unusual circumstances. You can finish it without parent information and get an estimate of your aid. Your college makes the final decision.
+    done_when: student-confirms
+  - id: gather-letter
+    kind: documents
+    text: Your aid office will ask for a letter or document from someone who knows your situation, such as a counselor, social worker, case worker, attorney, or college staff member. Bills or insurance in your own name can also help show you live apart.
+    documents: [Third-party letter about your situation]
+  - id: tell-aid-office
+    kind: draft
+    requires_approval: true
+    to: financial aid office
+    text: "Hello, my name is {chosenName}. I filed my 2027-28 FAFSA with unusual circumstances because I can't provide my parents' information. What documents do you need from me, and how long does your review usually take? Thank you."
+  - id: submission-summary
+    kind: wait
+    text: Watch for your FAFSA Submission Summary by email.
+    timeout_days: 14
+    on_timeout: Check the status at studentaid.gov, or ask me to draft a note to your aid office.
+  - id: verification
+    kind: wait
+    text: If your college asks for verification documents, I'll list exactly what they want and help you gather it.
+    timeout_days: 30
+  - id: carryover-note
+    kind: info
+    text: If your college approves your unusual circumstances, it carries over in later years at the same college as long as nothing changes. If you transfer, tell the new aid office.
+recovery:
+  - If anything stalls, I can draft a short note to your aid office asking what is still needed.

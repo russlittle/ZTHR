@@ -1,0 +1,38 @@
+playbook: snap-application
+title: SNAP application in Ohio
+purpose: Carry a student from a likely SNAP match to a decision, including the student exemption, the interview and verification.
+owner: builder
+sign_off: required
+sources:
+  - https://www.fna.usda.gov/snap/students
+  - https://www.greenecountyohio.gov/279/Job-Family-Services
+student_grants:
+  sealed: []
+  profile: [chosenName, phone, zip, householdSize, monthlyGrossIncome, weeklyWorkHours]
+journeys: [persona-1b-bill-gap]
+steps:
+  - id: exemption
+    kind: info
+    text: Most students in school half-time or more need an exemption for SNAP, such as working 20 hours a week, having work-study, or caring for a young child. I checked yours from what you told me.
+  - id: documents
+    kind: documents
+    text: Get these ready. Anything already in your vault is checked off.
+    documents: [Photo ID, Proof of income for the last 30 days, Proof of your student exemption]
+  - id: apply
+    kind: checklist
+    text: Apply at benefits.ohio.gov. I filled in what I could; you review it and submit it yourself.
+    done_when: student-confirms
+  - id: interview
+    kind: wait
+    text: The county will call to schedule an interview. Tell me the date and I'll put it on your calendar and remind you.
+    timeout_days: 10
+    on_timeout: Call your county Job and Family Services office to ask about your interview.
+  - id: verification
+    kind: wait
+    text: If they ask for more documents, tell me what the letter says and I'll help you send it.
+    timeout_days: 30
+  - id: recertify
+    kind: info
+    text: When you're approved, I'll remind you before your recertification date so the benefits don't stop.
+recovery:
+  - If the county doesn't call, I can give you the office number and what to say.
