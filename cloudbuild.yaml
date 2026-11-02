@@ -1,0 +1,78 @@
+# ZTHR factory on Google Cloud Build.
+#
+# This is where the tests run. GitHub only hosts the code; its workflow is manual-only.
+# Default machine (e2-standard-2) so ordinary runs stay inside Cloud Build's free monthly minutes.
+#
+# Substitutions:
+#   _MUTATION        "true" on the nightly trigger to run mutation testing (slow); "false" otherwise.
+#   _EVIDENCE_BUCKET optional gs:// bucket to keep the evidence page, journey results and UI screenshots.
+#
+# Setup: docs/ci-on-gcp.md
+
+substitutions:
+  _MUTATION: 'false'
+  _EVIDENCE_BUCKET: ''
+
+options:
+  substitution_option: ALLOW_LOOSE
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 3600s
+
+steps:
+  - id: install
+    name: node:22-bookworm
+    entrypoint: npm
+    args: ['ci']
+
+  - id: typecheck
+    name: node:22-bookworm
+    entrypoint: npm
+    args: ['run', 'typecheck']
+
+  - id: test
+    name: node:22-bookworm
+    entrypoint: npm
+    args: ['test']
+
+  - id: gates
+    name: node:22-bookworm
+    entrypoint: npm
+    args: ['run', 'gates']
+
+  - id: journeys
+    name: node:22-bookworm
+    entrypoint: bash
+    env: ['COMMIT=$COMMIT_SHA']
+    args: ['-c', 'npm run journeys -- --release "$${COMMIT:-manual}" && npm run evidence']
+
+  - id: walk
+    # Walk like a user: start the server, drive it by accessible names, fail on serious accessibility violations.
+    name: node:22-bookworm
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -e
+        npm install --no-save playwright@1.63.0
+        npx playwright install --with-deps chromium
+        ADVOCATE_TODAY=2026-11-02 PORT=8787 npx tsx apps/advocate/src/server/main.ts > server.log 2>&1 &
+        for i in $$(seq 1 30); do curl -sf localhost:8787/demo > /dev/null && break; sleep 1; done
+        npx tsx tools/ui/walk.ts http://localhost:8787 evidence-out/ui || { cat server.log; exit 1; }
+
+  - id: mutation
+    name: node:22-bookworm
+    entrypoint: bash
+    env: ['MUTATION=$_MUTATION']
+    args: ['-c', 'if [ "$$MUTATION" = "true" ]; then npm run mutation; else echo "Mutation testing runs on the nightly trigger."; fi']
+
+  - id: keep-evidence
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    env: ['BUCKET=$_EVIDENCE_BUCKET', 'COMMIT=$COMMIT_SHA']
+    args:
+      - -c
+      - |
+        if [ -z "$$BUCKET" ]; then echo "No evidence bucket set; skipping upload."; exit 0; fi
+        gcloud storage cp -r evidence-out control/proofs.json "$$BUCKET/$${COMMIT:-manual}/"
+        if [ -d reports ]; then gcloud storage cp -r reports "$$BUCKET/$${COMMIT:-manual}/"; fi

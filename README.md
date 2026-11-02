@@ -39,6 +39,9 @@ Phase 1 decisions make no model calls. Model review is an optional extra seat: s
 `REVIEW_BASE_URL` for any OpenAI-compatible provider, including a self-hosted one) to turn it on. Without it, the
 review job reports that it is not configured and admission rests on the deterministic gates and journeys.
 
+Continuous integration runs on Google Cloud Build (`cloudbuild.yaml`), not on GitHub-hosted runners. The GitHub
+workflow runs only when started by hand. Setup: `docs/ci-on-gcp.md`.
+
 ## Licenses
 
 Code: Apache 2.0. Documentation: CC BY 4.0. See `CLEANROOM.md` for provenance.
