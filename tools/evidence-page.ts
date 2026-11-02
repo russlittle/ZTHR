@@ -6,6 +6,7 @@ import { loadCards } from '@zthr/intent';
 import { runAll } from './journeys.js';
 import { runGates } from './gates.js';
 import { JOURNEY_DIR, OUT, ROOT } from './lib.js';
+import { readHistory } from './ci-cost.js';
 
 /**
  * Builds the public evidence page from what the factory actually recorded.
@@ -21,6 +22,14 @@ const { runs } = await runAll('evidence-page', store);
 const cards = loadCards(JOURNEY_DIR);
 const ic = intentCompletion(store);
 const cost = costSummary(store);
+const ciRuns = readHistory();
+const ciSince = new Date(Date.now() - 30 * 86400_000).toISOString();
+const ci30 = ciRuns.filter((r) => r.finishedAt >= ciSince);
+const usd = (n: number) => `$${n.toFixed(2)}`;
+const ciTotal = ciRuns.reduce((a, r) => a + r.costUsd, 0);
+const ci30Total = ci30.reduce((a, r) => a + r.costUsd, 0);
+const ciAvgMin = ciRuns.length ? ciRuns.reduce((a, r) => a + r.minutes, 0) / ciRuns.length : 0;
+const ciLast = ciRuns.at(-1);
 
 let tests = { total: 0, passed: 0 };
 try {
@@ -245,6 +254,8 @@ a{color:var(--layout)}
   <dl><dt>First commit</dt><dd>${esc(firstCommit.slice(0, 16).replace('T', ' '))}</dd><dt>Latest</dt><dd>${esc(lastCommit.slice(0, 16).replace('T', ' '))}</dd><dt>Elapsed</dt><dd>${esc(elapsedMin)} minutes</dd><dt>Source</dt><dd>${esc(loc.toLocaleString('en-US'))} lines</dd><dt>Tests</dt><dd>${esc(testLoc.toLocaleString('en-US'))} lines</dd><dt>Human hours</dt><dd>0 during the build; design time not logged</dd></dl></div>
   <div class="claim"><h3>Cost is real and manageable</h3><p>The running product makes no model calls in Phase 1: eligibility, schedules, plans and safety routing are deterministic.</p>
   <dl><dt>Product calls</dt><dd>${esc(cost.calls)}</dd><dt>Product spend</dt><dd>$0.00</dd><dt>Target</dt><dd>≤ $0.50 / student / month</dd><dt>Build tokens</dt><dd>not measured</dd><dt>Why</dt><dd>the build agent's usage was not exposed to the ledger in this session</dd></dl></div>
+  <div class="claim"><h3>Factory compute</h3><p>Every gate, journey, test and UI walk runs on Google Cloud Build. Each run records its minutes and the dated list rate for its machine.</p>
+  ${ciRuns.length === 0 ? '<dl><dt>Runs recorded</dt><dd>not measured</dd><dt>Why</dt><dd>this page was built outside Cloud Build</dd></dl>' : `<dl><dt>Runs recorded</dt><dd>${esc(ciRuns.length)}</dd><dt>Last 30 days</dt><dd>${esc(usd(ci30Total))} over ${esc(ci30.length)} run${ci30.length === 1 ? '' : 's'}</dd><dt>All time</dt><dd>${esc(usd(ciTotal))}</dd><dt>Average run</dt><dd>${esc(ciAvgMin.toFixed(1))} minutes</dd><dt>This run</dt><dd>${esc(ciLast!.minutes)} min on ${esc(ciLast!.machine)} at $${esc(ciLast!.ratePerMin)}/min (rate checked ${esc(ciLast!.rateChecked)})</dd><dt>Basis</dt><dd>list price; free tier not subtracted</dd></dl>`}</div>
 </div>
 
 <h2><span class="ref">§3</span>Intent: the twelve students</h2>

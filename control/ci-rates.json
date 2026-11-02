@@ -1,0 +1,9 @@
+{
+  "source": "https://cloud.google.com/build/pricing",
+  "checked": "2026-11-02",
+  "note": "List price per build-minute in the default pool. Costs are reported at list price; the e2-standard-2 free tier is not subtracted.",
+  "rates": {
+    "E2_STANDARD_2": 0.006,
+    "E2_HIGHCPU_8": 0.0156
+  }
+}

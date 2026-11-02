@@ -6,3 +6,4 @@ reports/
 .env
 dist/
 evidence-out/
+.ci-start

@@ -1,25 +1,47 @@
 # ZTHR factory on Google Cloud Build.
 #
-# This is where the tests run. GitHub only hosts the code; its workflow is manual-only.
-# Default machine (e2-standard-2) so ordinary runs stay inside Cloud Build's free monthly minutes.
+# This is where the tests run. GitHub hosts the code; its workflow is manual-only.
+# Every run records its own compute cost (tools/ci-cost.ts) and the evidence page publishes it.
 #
 # Substitutions:
-#   _MUTATION        "true" on the nightly trigger to run mutation testing (slow); "false" otherwise.
-#   _EVIDENCE_BUCKET optional gs:// bucket to keep the evidence page, journey results and UI screenshots.
+#   _MUTATION        "true" on the nightly trigger to run mutation testing; "false" otherwise.
+#   _KIND            "nightly" on the nightly trigger; "push" otherwise. Labels the cost record.
+#   _EVIDENCE_BUCKET gs:// bucket that keeps each run's evidence and one cost record per run (costs/<build>.json).
+#                    The cost clock stops at the record-cost step; the evidence page and upload after it are not counted.
+#                    Without it, the cost history holds only the current run.
 #
 # Setup: docs/ci-on-gcp.md
 
 substitutions:
   _MUTATION: 'false'
+  _KIND: 'push'
   _EVIDENCE_BUCKET: ''
 
 options:
+  # Keep CI_MACHINE in the cost step equal to this, and its rate in control/ci-rates.json.
+  machineType: E2_HIGHCPU_8
   substitution_option: ALLOW_LOOSE
   logging: CLOUD_LOGGING_ONLY
 
 timeout: 3600s
 
 steps:
+  - id: start
+    # Start the cost clock, and make sure full git history is present for the evidence page.
+    name: gcr.io/cloud-builders/git
+    entrypoint: bash
+    env: ['COMMIT=$COMMIT_SHA']
+    args:
+      - -c
+      - |
+        date +%s > .ci-start
+        if [ ! -d .git ]; then
+          git init -q && git remote add origin https://github.com/russlittle/ZTHR.git
+          git fetch -q origin "$$COMMIT" && git reset -q --soft FETCH_HEAD
+        elif [ -f .git/shallow ]; then
+          git fetch -q --unshallow || true
+        fi
+
   - id: install
     name: node:22-bookworm
     entrypoint: npm
@@ -44,7 +66,7 @@ steps:
     name: node:22-bookworm
     entrypoint: bash
     env: ['COMMIT=$COMMIT_SHA']
-    args: ['-c', 'npm run journeys -- --release "$${COMMIT:-manual}" && npm run evidence']
+    args: ['-c', 'npm run journeys -- --release "$${COMMIT:-manual}"']
 
   - id: walk
     # Walk like a user: start the server, drive it by accessible names, fail on serious accessibility violations.
@@ -64,15 +86,33 @@ steps:
     name: node:22-bookworm
     entrypoint: bash
     env: ['MUTATION=$_MUTATION']
-    args: ['-c', 'if [ "$$MUTATION" = "true" ]; then npm run mutation; else echo "Mutation testing runs on the nightly trigger."; fi']
+    args: ['-c', 'if [ "$$MUTATION" = "true" ]; then npx stryker run --concurrency "$$(nproc)"; else echo "Mutation testing runs on the nightly trigger."; fi']
+
+  - id: fetch-cost-history
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    env: ['BUCKET=$_EVIDENCE_BUCKET']
+    args: ['-c', 'mkdir -p evidence-out; if [ -n "$$BUCKET" ]; then gcloud storage cat "$$BUCKET/costs/*.json" > evidence-out/ci-costs.jsonl 2>/dev/null || { : > evidence-out/ci-costs.jsonl; echo "No cost history yet."; }; fi']
+
+  - id: record-cost
+    name: node:22-bookworm
+    entrypoint: npx
+    env: ['CI_MACHINE=E2_HIGHCPU_8', 'CI_KIND=$_KIND', 'BUILD_ID=$BUILD_ID', 'COMMIT=$COMMIT_SHA']
+    args: ['tsx', 'tools/ci-cost.ts']
+
+  - id: evidence-page
+    name: node:22-bookworm
+    entrypoint: npm
+    args: ['run', 'evidence']
 
   - id: keep-evidence
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: bash
-    env: ['BUCKET=$_EVIDENCE_BUCKET', 'COMMIT=$COMMIT_SHA']
+    env: ['BUCKET=$_EVIDENCE_BUCKET', 'COMMIT=$COMMIT_SHA', 'BUILD=$BUILD_ID']
     args:
       - -c
       - |
         if [ -z "$$BUCKET" ]; then echo "No evidence bucket set; skipping upload."; exit 0; fi
-        gcloud storage cp -r evidence-out control/proofs.json "$$BUCKET/$${COMMIT:-manual}/"
-        if [ -d reports ]; then gcloud storage cp -r reports "$$BUCKET/$${COMMIT:-manual}/"; fi
+        gcloud storage cp evidence-out/ci-cost.json "$$BUCKET/costs/$${BUILD:-manual-$$(date +%s)}.json"
+        gcloud storage cp -r evidence-out control/proofs.json "$$BUCKET/runs/$${COMMIT:-manual}/"
+        if [ -d reports ]; then gcloud storage cp -r reports "$$BUCKET/runs/$${COMMIT:-manual}/"; fi
