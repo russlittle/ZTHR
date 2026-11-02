@@ -3,7 +3,7 @@
 The tests, gates, journeys and the UI walk run on Google Cloud Build, not on GitHub. GitHub only hosts the code.
 The GitHub workflow is manual-only, so a push never starts GitHub-hosted compute.
 
-`cloudbuild.yaml` runs, in order: install, typecheck, unit tests, gates (prove then run), journeys plus the
+`cloudbuild.yaml` runs, in order: install, typecheck, unit tests, gates (prove then run), journeys, the
 Playwright walk with accessibility checks, and mutation testing (nightly only). It then records the run's compute
 cost, builds the evidence page, and uploads the evidence to a Cloud Storage bucket. Any failing step fails the build.
 
