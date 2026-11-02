@@ -1,0 +1,16 @@
+# Review panel (Pattern 21). At least three model families before commit, a fourth in place after merge.
+# Model names are OpenRouter identifiers; change them here as families improve. Changing this file is a
+# change to the AI and needs a listed person's sign-off.
+seats:
+  - role: context-aided
+    family: anthropic
+    model: anthropic/claude-sonnet-4.5
+  - role: unaided
+    family: google
+    model: google/gemini-2.5-pro
+  - role: independent
+    family: open-weights
+    model: qwen/qwen3-coder
+  - role: in-place
+    family: openai
+    model: openai/gpt-5
