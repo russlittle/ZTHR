@@ -1,0 +1,12 @@
+scout: montgomery-basic-needs
+geography: { county: Montgomery }
+needs: [food, housing, utilities, money, legal, transportation]
+sources:
+  - { url: "https://sinclair.edu/student-life/wellness/resources/food-assistance/", kind: college }
+  - { url: "https://www.ohiolegalhelp.org/resource/montgomery-county-job-and-family-services", kind: directory }
+  - { url: "https://www.wyso.org/news/2025-10-28/snap-funding-frozen-amid-shutdown-where-to-find-help-locally", kind: news }
+entries: [sinclair-food-pantry, sinclair-lunch-time-hunger, sinclair-student-assistance, sinclair-emergency-grant, montgomery-jfs, mvcap, foodbank-dayton, united-way-211, house-of-bread, good-neighbor-house, svdp-dayton, css-choice-pantry, have-a-gay-day-pantry, rta, rta-project-mobility, lawo]
+freshness_days: 45
+datum: { precision_min: 0.8 }
+owner: builder
+sign_off: required

@@ -19,7 +19,9 @@
     "lock": "tsx tools/lock.ts",
     "evidence": "tsx tools/evidence-page.ts",
     "mutation": "stryker run",
-    "dev": "tsx apps/advocate/src/server/main.ts"
+    "dev": "tsx apps/advocate/src/server/main.ts",
+    "builder": "tsx tools/builder.ts",
+    "signoff": "tsx tools/signoff.ts"
   },
   "devDependencies": {
     "@stryker-mutator/core": "^9.0.0",

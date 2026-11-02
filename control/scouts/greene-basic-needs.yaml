@@ -1,0 +1,12 @@
+scout: greene-basic-needs
+geography: { county: Greene }
+needs: [food, money, transportation]
+sources:
+  - { url: "https://greenelibrary.info/wp-content/uploads/sites/148/2025/11/GC_Food_Resource_Guide_updated_11-25.pdf", kind: directory }
+  - { url: "https://www.greenecountyohio.gov/279/Job-Family-Services", kind: agency }
+  - { url: "https://www.wright.edu/foodpantry", kind: college }
+entries: [wsu-raider-food-pantry, greene-jfs, greene-fish-xenia, fish-fairborn, ys-community-pantry, vineyard-beavercreek, greene-cats]
+freshness_days: 45
+datum: { precision_min: 0.8 }
+owner: builder
+sign_off: required

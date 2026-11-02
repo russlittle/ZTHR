@@ -1,0 +1,118 @@
+{
+  "id": "p-7f82777e5d",
+  "kind": "playbook",
+  "title": "New playbook: SNAP recertification",
+  "reason": "4 students forwarded recertification notices and handled them without a playbook.",
+  "evidence": {
+    "recertificationNotices": 4
+  },
+  "declaration": {
+    "playbook": "snap-recertification",
+    "title": "Keeping SNAP: recertification",
+    "purpose": "Carry a student through SNAP recertification so benefits do not stop.",
+    "owner": "builder",
+    "sign_off": "required",
+    "sources": [
+      "https://www.fna.usda.gov/snap/students"
+    ],
+    "student_grants": {
+      "sealed": [],
+      "profile": [
+        "chosenName",
+        "phone",
+        "householdSize",
+        "monthlyGrossIncome",
+        "weeklyWorkHours"
+      ]
+    },
+    "journeys": [
+      "playbook-snap-recertification"
+    ],
+    "steps": [
+      {
+        "id": "notice",
+        "kind": "info",
+        "text": "Your SNAP recertification notice came in. Finishing it on time keeps your benefits from stopping."
+      },
+      {
+        "id": "documents",
+        "kind": "documents",
+        "text": "Get these ready. Anything in your vault is checked off.",
+        "documents": [
+          "Proof of income for the last 30 days",
+          "Proof of your student exemption"
+        ]
+      },
+      {
+        "id": "submit",
+        "kind": "checklist",
+        "text": "Submit the renewal at benefits.ohio.gov before the date on your notice.",
+        "done_when": "student-confirms"
+      },
+      {
+        "id": "interview",
+        "kind": "wait",
+        "text": "If they schedule an interview, tell me the time and I will remind you.",
+        "timeout_days": 14,
+        "on_timeout": "Call your county Job and Family Services office to check on your renewal."
+      }
+    ],
+    "recovery": [
+      "If the date passes, I can help you reapply and ask about the gap."
+    ]
+  },
+  "journey": {
+    "id": "playbook-snap-recertification",
+    "persona": "any",
+    "phase": 2,
+    "goal": "A student who forwards a SNAP recertification notice is walked through renewal before the deadline, with documents lined up and reminders set.",
+    "forbidden": [
+      "a message fails the tone rubric",
+      "something is sent without the student's approval"
+    ],
+    "budget": {
+      "actions": 6,
+      "ms": 5000
+    },
+    "requirements": [
+      "PB-2"
+    ],
+    "modes": [
+      "standard"
+    ],
+    "channels": [
+      "app",
+      "text"
+    ]
+  },
+  "falsification": {
+    "name": "planted renewal step that submits for the student",
+    "plant": "a step of kind \"submit\" with no student confirmation",
+    "mustFail": "student-sends gate"
+  },
+  "checks": [
+    {
+      "name": "declaration parses",
+      "ok": true,
+      "detail": "playbook schema valid"
+    },
+    {
+      "name": "minimal grants",
+      "ok": true,
+      "detail": "no sealed facts requested"
+    },
+    {
+      "name": "journey card",
+      "ok": true,
+      "detail": "card valid; it will be locked on admission"
+    },
+    {
+      "name": "falsification case",
+      "ok": true,
+      "detail": "planted renewal step that submits for the student"
+    }
+  ],
+  "status": "awaiting-sign-off",
+  "createdAt": "2026-11-02",
+  "simulated": true
+}

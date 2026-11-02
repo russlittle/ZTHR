@@ -1,0 +1,12 @@
+scout: ohio-and-national-programs
+geography: { national: true }
+needs: [food, utilities, phone-internet, mental-health]
+sources:
+  - { url: "https://www.occ.ohio.gov/factsheet/home-energy-assistance-program-heap", kind: agency }
+  - { url: "https://www.usac.org/lifeline/consumer-eligibility/", kind: agency }
+  - { url: "https://www.fna.usda.gov/snap/students", kind: agency }
+entries: [ohio-benefits-snap, ohio-heap, lifeline, lifeline-988]
+freshness_days: 120
+datum: { precision_min: 0.9 }
+owner: builder
+sign_off: required

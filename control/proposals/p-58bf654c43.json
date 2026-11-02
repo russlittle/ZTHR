@@ -1,0 +1,82 @@
+{
+  "id": "p-58bf654c43",
+  "kind": "scout",
+  "title": "New scout: caregiving in Montgomery County",
+  "reason": "4 students asked for caregiving help in Montgomery County and no verified resource existed.",
+  "evidence": {
+    "unmetRequests": 4,
+    "county": "Montgomery",
+    "need": "caregiving"
+  },
+  "declaration": {
+    "scout": "montgomery-caregiving",
+    "geography": {
+      "county": "Montgomery"
+    },
+    "needs": [
+      "caregiving"
+    ],
+    "sources": [
+      {
+        "url": "https://eldercare.acl.gov",
+        "kind": "agency"
+      }
+    ],
+    "entries": [],
+    "freshness_days": 45,
+    "datum": {
+      "precision_min": 0.8
+    },
+    "owner": "builder",
+    "sign_off": "required"
+  },
+  "journey": {
+    "id": "scout-montgomery-caregiving",
+    "persona": "any",
+    "phase": 2,
+    "goal": "A student in Montgomery County who needs caregiving help is offered a verified resource, or told plainly that none is verified yet and the gap is counted.",
+    "forbidden": [
+      "a resource is offered that is stale or the student is ineligible for",
+      "a gap is hidden instead of counted"
+    ],
+    "budget": {
+      "actions": 3,
+      "ms": 5000
+    },
+    "requirements": [
+      "NAV-6",
+      "P11"
+    ],
+    "modes": [
+      "standard"
+    ],
+    "channels": [
+      "app"
+    ]
+  },
+  "falsification": {
+    "name": "planted unverified entry offered as available",
+    "plant": "an entry for caregiving in Montgomery with no verification date",
+    "mustFail": "freshness gate"
+  },
+  "checks": [
+    {
+      "name": "declaration parses",
+      "ok": true,
+      "detail": "scout schema valid"
+    },
+    {
+      "name": "journey card",
+      "ok": true,
+      "detail": "card valid; it will be locked on admission"
+    },
+    {
+      "name": "falsification case",
+      "ok": true,
+      "detail": "planted unverified entry offered as available"
+    }
+  ],
+  "status": "awaiting-sign-off",
+  "createdAt": "2026-11-02",
+  "simulated": true
+}
