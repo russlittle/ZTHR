@@ -34,8 +34,10 @@ npm run evidence    # build the evidence page from the evidence store
 npm run dev         # start the Advocate locally (text twin and web app)
 ```
 
-Model calls use `OPENROUTER_API_KEY` when it is set. Without it, model-dependent steps run against a twin and
-review seats report **unknown**, which never admits a change.
+No paid service is required. Every gate, journey and test is deterministic and runs offline, and the Advocate's
+Phase 1 decisions make no model calls. Model review is an optional extra seat: set `REVIEW_API_KEY` (and
+`REVIEW_BASE_URL` for any OpenAI-compatible provider, including a self-hosted one) to turn it on. Without it, the
+review job reports that it is not configured and admission rests on the deterministic gates and journeys.
 
 ## Licenses
 

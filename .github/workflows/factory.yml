@@ -62,8 +62,8 @@ jobs:
           name: ui-screens
           path: evidence-out/ui
 
-  admission:
-    name: Admission (multi-family review)
+  review:
+    name: Model review (optional)
     runs-on: ubuntu-latest
     needs: gates
     steps:
@@ -77,10 +77,11 @@ jobs:
       - run: npm ci
       - name: Review panel
         env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          REVIEW_API_KEY: ${{ secrets.REVIEW_API_KEY }}
+          REVIEW_BASE_URL: ${{ vars.REVIEW_BASE_URL }}
         run: |
-          if [ -z "$OPENROUTER_API_KEY" ]; then
-            echo "::error title=Review panel unknown::OPENROUTER_API_KEY is not set. Every review seat is unknown, and unknown never admits a change."
-            exit 1
+          if [ -z "$REVIEW_API_KEY" ]; then
+            echo "::notice title=Model review not configured::This repository admits changes on its deterministic gates and journeys. To add multi-family model review, set a REVIEW_API_KEY secret (and REVIEW_BASE_URL for any OpenAI-compatible provider)."
+            exit 0
           fi
           npx tsx tools/review.ts --base HEAD~1

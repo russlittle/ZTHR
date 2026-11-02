@@ -33,13 +33,19 @@ export interface ModelClient {
 export class ModelUnavailable extends Error {}
 export class BudgetExhausted extends Error {}
 
-/** OpenRouter: one integration for many model families, with usage per call. */
+/**
+ * Any OpenAI-compatible chat endpoint (OpenRouter by default; a self-hosted
+ * server works the same way). Nothing in the factory requires it.
+ */
 export class OpenRouterClient implements ModelClient {
-  readonly provider = 'openrouter';
-  constructor(private readonly apiKey: string | undefined = process.env.OPENROUTER_API_KEY, private readonly baseUrl = 'https://openrouter.ai/api/v1') {}
+  readonly provider = 'openai-compatible';
+  constructor(
+    private readonly apiKey: string | undefined = process.env.REVIEW_API_KEY ?? process.env.OPENROUTER_API_KEY,
+    private readonly baseUrl = process.env.REVIEW_BASE_URL || 'https://openrouter.ai/api/v1',
+  ) {}
 
   async complete(req: CompletionRequest): Promise<CompletionResult> {
-    if (!this.apiKey) throw new ModelUnavailable('OPENROUTER_API_KEY is not set');
+    if (!this.apiKey) throw new ModelUnavailable('no model provider configured (REVIEW_API_KEY)');
     const res = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { authorization: `Bearer ${this.apiKey}`, 'content-type': 'application/json' },
@@ -51,7 +57,7 @@ export class OpenRouterClient implements ModelClient {
         usage: { include: true },
       }),
     });
-    if (!res.ok) throw new ModelUnavailable(`openrouter ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    if (!res.ok) throw new ModelUnavailable(`model provider ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const body = (await res.json()) as {
       choices?: { message?: { content?: string } }[];
       model?: string;

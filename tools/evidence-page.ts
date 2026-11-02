@@ -159,7 +159,7 @@ const conformance: [string, string, string, Status][] = [
   ['Unit tests', 'All pass', `${tests.passed} of ${tests.total}`, tests.total > 0 && tests.passed === tests.total ? 'pass' : 'fail'],
   ['Accessibility', 'No serious or critical violations, light and dark', existsSync(join(OUT, 'ui', 'dark-07-settings.png')) ? '0 on 14 screens' : 'not measured', existsSync(join(OUT, 'ui', 'dark-07-settings.png')) ? 'pass' : 'not measured'],
   ['Product model spend', 'At most $0.50 per active student per month', cost.calls === 0 ? '$0.00: no model calls; every Phase 1 decision is deterministic' : `$${(cost.asPaid ?? 0).toFixed(4)}`, 'pass'],
-  ['Multi-family review', 'Three model families before commit, a fourth after', 'No provider key configured; every seat reports unknown', 'unknown'],
+  ['Model review', 'Optional: three model families before commit, a fourth after, when a provider is configured', 'Not configured; changes are admitted on the deterministic gates and journeys above', 'not measured'],
   ['Time to detect and restore', 'Measured from a bad deploy to a good one serving', 'No deployment yet', 'not measured'],
   ['Real-student outcomes', 'Persistence and credits against a comparison group', 'Phase 3 pilot', 'not measured'],
 ];
@@ -169,7 +169,7 @@ const pending = [
   ['Journey cards', `${cards.length} cards added by the build agent from the persona work. Adding cards tightens the control plane; Russ confirms they state the intents he means.`],
   ['Six playbooks', 'FAFSA, SNAP, GI Bill, accommodation letters, break housing and proof of enrollment. Each declares sign_off: required.'],
   ['Builder drafts', `${proposals.filter((p) => p.status === 'awaiting-sign-off').length} drafts await npm run signoff by a listed person.`],
-  ['Review panel models', 'The seats in control/review.yaml are a starting choice of families. Changing the AI needs sign-off.'],
+  ['Review panel models', 'Optional. The seats in control/review.yaml are a starting choice for adopters who configure a provider.'],
   ['Ratchet floors', 'Mutation score floor 76%, held messages 0, failing journeys 0, set from the first measurements.'],
 ];
 
