@@ -1,0 +1,8 @@
+node_modules/
+.stryker-tmp/
+reports/
+*.db
+*.db-*
+.env
+dist/
+evidence-out/

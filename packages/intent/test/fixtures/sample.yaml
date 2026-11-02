@@ -1,0 +1,9 @@
+id: sample-journey
+persona: maria
+delight: 1b
+phase: 1
+goal: Maria sees a rent gap before the first of the month with a way to cover it
+forbidden:
+  - a message reports a problem without a next step
+budget: { actions: 3, ms: 2000 }
+requirements: [MON-1]
