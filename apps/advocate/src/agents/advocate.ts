@@ -29,7 +29,7 @@ import { findGuide, needsLicensed } from '../domain/lifeskills.js';
 import { COLLEGE_SITES, explain } from '../domain/college.js';
 import { prepText, type Meeting } from '../domain/meetings.js';
 import { PULSES, nextPulse, type PulseState } from '../domain/pulses.js';
-import { shortDate, time12 } from '../domain/dates.js';
+import { addDays, shortDate, time12, weekday } from '../domain/dates.js';
 import { AppStore } from '../domain/store.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
 import { buildToday, renderToday, type TodayView } from '../domain/today.js';
@@ -470,10 +470,92 @@ export class Advocate {
         nextSteps: [{ label: 'List what they need', action: 'aid-verification-checklist' }, { label: 'Draft a question to the aid office', action: 'draft:aid-office' }],
         why: `From a forwarded message${meta.subject ? `: "${meta.subject}"` : ''}.`,
       }),
-      'room-change': () => ({ studentId, author: 'chief-of-staff', urgency: 'time-sensitive', text: 'Your class moved rooms. I updated your day so the new room shows up.', nextSteps: [{ label: 'Show my day', action: 'today' }], why: meta.subject ?? 'Forwarded message' }),
+      'room-change': () => this.applyRoomChange(studentId, text, meta.subject),
       'class-canceled': () => ({ studentId, author: 'chief-of-staff', urgency: 'time-sensitive', text: 'Heads up: your class is canceled. That frees up some time. Want to use it for what is due next?', nextSteps: [{ label: 'Plan the free time', action: 'plan-free-time' }], why: meta.subject ?? 'Forwarded message' }),
     };
     return { item, message: map[item.kind]?.() };
+  }
+
+  /** DAY-7: a room change seen in a forwarded message updates the schedule and is announced at once. */
+  applyRoomChange(studentId: string, text: string, subject?: string): OutboundMessage {
+    const all = `${subject ?? ''} ${text}`;
+    const course = all.match(/\b([A-Z]{2,4}\s?\d{3,4})\b/)?.[1]?.replace(/\s/, ' ');
+    const building = all.match(/building\s*([\w-]+)/i)?.[1];
+    const room = all.match(/room\s*([\w-]+)/i)?.[1];
+    const classes = this.store.list<ClassMeeting>('classes', studentId);
+    const idx = classes.findIndex((c) => course && c.course.replace(/\s/, ' ').toUpperCase() === course.toUpperCase());
+    if (idx >= 0) {
+      const before = classes[idx]!;
+      const after = { ...before, building: building ? `Building ${building}` : before.building, room: room ?? before.room };
+      this.store.put('classes', `${studentId}:${before.course}:${idx}`, studentId, after);
+      this.ev('change_alert', studentId, { kind: 'room-change', matched: true });
+      return {
+        studentId,
+        author: 'chief-of-staff',
+        urgency: 'time-sensitive',
+        text: `${before.course} moved from ${before.building ?? 'its old room'}${before.room ? ` room ${before.room}` : ''} to ${after.building ?? ''}${after.room ? ` room ${after.room}` : ''}. Your day is updated.`,
+        nextSteps: [{ label: 'Show my day', action: 'today' }],
+        why: `From a forwarded message${subject ? `: "${subject}"` : ''}.`,
+      };
+    }
+    this.ev('change_alert', studentId, { kind: 'room-change', matched: false });
+    return { studentId, author: 'chief-of-staff', urgency: 'time-sensitive', text: 'A class moved rooms, but I could not tell which one. Which class is it?', nextSteps: [{ label: 'Pick the class', action: 'pick-class' }], why: subject ?? 'Forwarded message' };
+  }
+
+  /** DAY-6: the week ahead, and what is different from this week. */
+  weeklyPreview(studentId: string): OutboundMessage {
+    const today = this.today();
+    const classes = this.store.list<ClassMeeting>('classes', studentId);
+    const shifts = this.store.list<Shift>('shifts', studentId);
+    const dls = this.deadlines(studentId).filter((d) => d.confirmed && !d.done);
+    const span = (from: number) => Array.from({ length: 7 }, (_, i) => addDays(today, from + i));
+    const thisWeek = span(0);
+    const nextWeek = span(7);
+    const count = (days: string[]) => ({
+      classes: days.reduce((n, d) => n + classes.filter((c) => c.days.includes(weekday(d))).length, 0),
+      shifts: shifts.filter((x) => days.includes(x.date)).length,
+      due: dls.filter((d) => days.includes(d.due.slice(0, 10))),
+    });
+    const a = count(thisWeek);
+    const b = count(nextWeek);
+    const diffs: string[] = [];
+    if (b.shifts !== a.shifts) diffs.push(`${b.shifts} work shifts instead of ${a.shifts}`);
+    if (b.due.length !== a.due.length) diffs.push(`${b.due.length} things due instead of ${a.due.length}`);
+    const lines = [
+      `Next week: ${b.classes} class meetings, ${b.shifts} work shifts, ${b.due.length} things due.`,
+      b.due.length ? `Due: ${b.due.map((d) => `${d.title} (${shortDate(d.due)})`).join('; ')}.` : 'Nothing is due next week.',
+      diffs.length ? `Different from this week: ${diffs.join('; ')}.` : 'It looks about the same as this week.',
+    ];
+    return { studentId, author: 'chief-of-staff', urgency: 'routine', text: lines.join('\n'), nextSteps: [{ label: 'Plan next week', action: 'plan-next' }], why: 'Your Sunday preview, built from your classes, shifts and deadlines.' };
+  }
+
+  /** Appointments that collide with a class or a shift, with a way to fix each one. */
+  conflicts(studentId: string): { appointment: Deadline; with: string }[] {
+    const classes = this.store.list<ClassMeeting>('classes', studentId);
+    const shifts = this.store.list<Shift>('shifts', studentId);
+    const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+    const out: { appointment: Deadline; with: string }[] = [];
+    for (const ap of this.deadlines(studentId).filter((d) => d.kind === 'appointment' && d.due.length > 10)) {
+      const date = ap.due.slice(0, 10);
+      const s0 = toMin(ap.due.slice(11, 16));
+      const e0 = s0 + (ap.durationMin ?? 60);
+      const cls = classes.find((c) => c.days.includes(weekday(date)) && s0 < toMin(c.end) && e0 > toMin(c.start));
+      const sh = shifts.find((x) => x.date === date && s0 < toMin(x.end) && e0 > toMin(x.start));
+      if (cls) out.push({ appointment: ap, with: `${cls.course} class` });
+      else if (sh) out.push({ appointment: ap, with: `your work shift` });
+    }
+    return out;
+  }
+
+  conflictMessages(studentId: string): OutboundMessage[] {
+    return this.conflicts(studentId).map(({ appointment, with: w }) => ({
+      studentId,
+      author: 'chief-of-staff',
+      urgency: 'time-sensitive' as const,
+      text: `${appointment.title} on ${shortDate(appointment.due)} at ${time12(appointment.due.slice(11, 16))} overlaps ${w}. Want me to draft a request to move one of them?`,
+      nextSteps: [{ label: 'Draft a reschedule request', action: `draft-reschedule:${appointment.id}` }, { label: 'It is fine', action: `dismiss:${appointment.id}` }],
+      why: 'Found by comparing your appointments with your classes and shifts.',
+    }));
   }
 
   // ---------- money found, navigator, crisis ----------

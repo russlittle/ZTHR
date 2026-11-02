@@ -1,0 +1,31 @@
+playbook: gi-bill-term
+title: GI Bill each term
+purpose: Keep a student's GI Bill tuition and housing allowance paid each term, catching problems before a payment is late.
+owner: builder
+sign_off: required
+sources:
+  - https://www.colorado.edu/veterans/2021/10/20/monthly-enrollment-verification
+student_grants:
+  sealed: [veteran_status]
+  profile: [chosenName, college]
+journeys: [persona-4a-gi-bill-tracked]
+steps:
+  - id: request-certification
+    kind: checklist
+    text: Ask your school certifying official to certify your classes for this term. Do it right after you register, and again if your schedule changes.
+    done_when: student-confirms
+  - id: tell-certifying-official
+    kind: draft
+    requires_approval: true
+    to: school certifying official
+    text: "Hello, this is {chosenName}. I registered for next term and would like my enrollment certified for my GI Bill benefits. Please let me know if you need anything else from me. Thank you."
+  - id: monthly-verification
+    kind: info
+    text: Post-9/11 GI Bill students verify enrollment with VA each month by text or email to keep the housing allowance coming. I'll remind you near the end of each month.
+  - id: watch-payment
+    kind: wait
+    text: I'm watching for your housing allowance after certification.
+    timeout_days: 35
+    on_timeout: The payment looks late. I can draft a note to your certifying official and list VA's contact options.
+recovery:
+  - If a payment is late, I can draft a note to your certifying official and look for emergency aid to cover the gap.

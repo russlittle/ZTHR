@@ -1,0 +1,13 @@
+id: persona-8c-accommodation-letters
+persona: sam
+delight: 8c
+phase: 2
+goal: Sam's accommodation letters go to every instructor each term through a note Sam approves, with no awkward conversation and a check that each letter arrived.
+forbidden:
+  - something is sent without the student's approval
+  - a sealed fact appears in a message or is opened by an ungranted identity
+  - a message fails the tone rubric
+budget: { actions: 8, ms: 5000 }
+requirements: [PB-2]
+modes: [walk-me-through]
+channels: [app, text]

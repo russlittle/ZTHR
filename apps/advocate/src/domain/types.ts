@@ -86,6 +86,8 @@ export interface Deadline {
   source: { type: 'syllabus' | 'calendar-feed' | 'email' | 'text' | 'student' | 'playbook'; line?: string; ref?: string };
   confirmed: boolean;
   effortHours?: number;
+  /** For appointments: how long it lasts. */
+  durationMin?: number;
   done?: boolean;
 }
 

@@ -1,0 +1,12 @@
+id: persona-8b-predictability
+persona: sam
+delight: 8b
+phase: 2
+goal: Sam sees next week ahead of time with what is different, and any change the team sees, like a room change, is announced right away with the schedule updated.
+forbidden:
+  - a change the team saw is not announced
+  - a message fails the tone rubric
+budget: { actions: 5, ms: 5000 }
+requirements: [DAY-6, DAY-7]
+modes: [walk-me-through]
+channels: [app, text]

@@ -1,0 +1,26 @@
+playbook: enrollment-verification
+title: Proof of enrollment packet
+purpose: Assemble a dated proof-of-enrollment packet a student can hand to a parole officer, employer, landlord or caseworker.
+owner: builder
+sign_off: required
+sources:
+  - https://www.studentclearinghouse.org/
+student_grants:
+  sealed: []
+  profile: [chosenName, college]
+journeys: [persona-3a-parole-schedule-proof]
+steps:
+  - id: request-certificate
+    kind: checklist
+    text: Request an official enrollment certificate from your registrar's office or the National Student Clearinghouse student portal.
+    done_when: student-confirms
+  - id: schedule
+    kind: info
+    text: I added your class schedule for the term, so the packet shows when you are in class.
+  - id: share
+    kind: draft
+    requires_approval: true
+    to: the person who asked for proof
+    text: "Hello, this is {chosenName}. Attached is my enrollment certificate and class schedule for this term. Please let me know if you need anything else."
+recovery:
+  - If the certificate takes time, the registrar can often give a letter the same day.

@@ -343,6 +343,115 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
     }
     ctx.forbid('a routine message is delivered in quiet hours or over the daily limit', m1.status === 'delivered' || statuses.filter((x) => x === 'delivered').length > 4);
   },
+  'persona-4a-gi-bill-tracked': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Ana', age: 31, enrollment: { college: 'wright-state', creditHours: 12 } });
+    ctx.act('seal veteran status');
+    app.a.seal(s.id, 'veteran_status', 'Army veteran, Post-9/11 GI Bill chapter 33');
+    app.a.grantToPlaybook(s.id, 'veteran_status', 'gi-bill-term');
+    const id = 'gi-bill-term';
+    show(app, ctx, app.a.playbookMessage(s.id, app.a.startPlaybook(s.id, id)));
+    let run = app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    const draft = app.a.drafts(s.id).find((d) => d.purpose === `${id}:tell-certifying-official`);
+    ctx.expect(!!draft, 'a note to the certifying official is drafted');
+    const unapproved = await app.a.send(s.id, draft!.id, undefined);
+    ctx.act('approve and send');
+    await app.a.send(s.id, draft!.id, app.a.approve(s.id, draft!.id));
+    run = app.a.playbookEvent(s.id, id, { type: 'approved' });
+    show(app, ctx, app.a.playbookMessage(s.id, run));
+    ctx.expect(run.stepId === 'monthly-verification', 'monthly verification is next');
+    run = app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    ctx.expect(run.status === 'waiting', 'the playbook watches for the payment');
+    run = app.a.playbookEvent(s.id, id, { type: 'tick', today: '2026-12-15' });
+    const recovery = app.a.playbookMessage(s.id, run);
+    ctx.forbid('a late payment goes unnoticed', run.status !== 'unresolved' || recovery.nextSteps.length === 0);
+    ctx.forbid("something is sent without the student's approval", unapproved.sent || app.a.outboundLog.length !== 1);
+    const leaked = delivered(app, s).some((m) => /chapter 33|Army veteran/i.test(m.text));
+    const badOpen = app.a.ledger.entries(s.id).some((e) => e.kind === 'release' && e.detail.identity !== 'playbook:gi-bill-term');
+    ctx.forbid('a sealed fact appears in a message or is opened by an ungranted identity', leaked || badOpen);
+  },
+
+  'persona-8c-accommodation-letters': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Sam', pronouns: 'they/them', age: 21, dial: { readingGrade: 6 } as Student['dial'], enrollment: { college: 'sinclair', creditHours: 9 } });
+    ctx.act('seal accommodations');
+    app.a.seal(s.id, 'disability_accommodations', 'extended test time and a quiet testing room');
+    app.a.grantToPlaybook(s.id, 'disability_accommodations', 'accommodation-letters');
+    const id = 'accommodation-letters';
+    show(app, ctx, app.a.playbookMessage(s.id, app.a.startPlaybook(s.id, id)));
+    app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    let run = app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    show(app, ctx, app.a.playbookMessage(s.id, run));
+    const draft = app.a.drafts(s.id).find((d) => d.purpose === `${id}:note-to-office`);
+    ctx.expect(!!draft, 'a note to the disability office is drafted');
+    const unapproved = await app.a.send(s.id, draft!.id, undefined);
+    ctx.act('approve and send');
+    await app.a.send(s.id, draft!.id, app.a.approve(s.id, draft!.id));
+    run = app.a.playbookEvent(s.id, id, { type: 'approved' });
+    ctx.expect(run.stepId === 'confirm-received' && run.status === 'waiting', 'the team checks the letters arrived');
+    ctx.forbid("something is sent without the student's approval", unapproved.sent || app.a.outboundLog.length !== 1);
+    const leaked = delivered(app, s).some((m) => /extended test time|quiet testing/i.test(m.text)) || /extended|quiet/i.test(draft!.body);
+    ctx.forbid('a sealed fact appears in a message or is opened by an ungranted identity', leaked);
+    forbidTone(app, ctx, s);
+  },
+
+  'persona-2a-break-housing': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Jayden', age: 19, enrollment: { college: 'sinclair', creditHours: 15 } });
+    const id = 'break-housing';
+    show(app, ctx, app.a.playbookMessage(s.id, app.a.startPlaybook(s.id, id)));
+    let run = app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    const draft = app.a.drafts(s.id).find((d) => d.purpose === `${id}:ask-housing-office`);
+    ctx.expect(!!draft, 'a note to the housing office is drafted');
+    const unapproved = await app.a.send(s.id, draft!.id, undefined);
+    ctx.act('approve and send');
+    await app.a.send(s.id, draft!.id, app.a.approve(s.id, draft!.id));
+    run = app.a.playbookEvent(s.id, id, { type: 'approved' });
+    ctx.expect(run.stepId === 'backup', 'backup housing is next');
+    const backup = show(app, ctx, app.a.helpMessage(s.id, 'housing'));
+    ctx.expect(/housing help|couldn't find/.test(backup.text), 'backup housing help is lined up');
+    ctx.forbid("something is sent without the student's approval", unapproved.sent || app.a.outboundLog.length !== 1);
+    ctx.forbid('a gap is hidden instead of counted', /couldn't find/.test(backup.text) && app.a.evidence.events('unmet_need').length === 0);
+  },
+
+  'persona-3a-parole-schedule-proof': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Darnell', age: 34, enrollment: { college: 'sinclair', creditHours: 9 } });
+    app.a.seal(s.id, 'justice_involvement', 'on parole, check-ins every other week');
+    const classes: ClassMeeting[] = [{ course: 'HVA 1101', days: ['Tue', 'Thu'], start: '18:00', end: '20:45', building: 'Building 9', room: '010' }];
+    app.a.addClasses(s.id, classes);
+    app.a.addShifts(s.id, [{ date: '2026-11-03', start: '07:00', end: '15:30', employer: 'Warehouse' }]);
+    ctx.act('add check-ins');
+    app.a.addDeadline(s.id, { title: 'Check-in appointment', due: '2026-11-03T14:30', durationMin: 45, kind: 'appointment', source: { type: 'student' }, confirmed: true });
+    app.a.addDeadline(s.id, { title: 'Check-in appointment', due: '2026-11-17T10:00', durationMin: 45, kind: 'appointment', source: { type: 'student' }, confirmed: true });
+    const conflicts = app.a.conflictMessages(s.id);
+    conflicts.forEach((m) => show(app, ctx, m));
+    ctx.forbid('an appointment collides with a class or shift without being raised', conflicts.length !== 1 || !/overlaps your work shift/.test(conflicts[0]!.text));
+    const id = 'enrollment-verification';
+    show(app, ctx, app.a.playbookMessage(s.id, app.a.startPlaybook(s.id, id)));
+    app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    const draft = app.a.drafts(s.id).find((d) => d.purpose === `${id}:share`);
+    const unapproved = await app.a.send(s.id, draft!.id, undefined);
+    ctx.act('approve and send');
+    await app.a.send(s.id, draft!.id, app.a.approve(s.id, draft!.id));
+    ctx.forbid("something is sent without the student's approval", unapproved.sent || app.a.outboundLog.length !== 1);
+    const leaked = delivered(app, s).some((m) => /parole|prison|record/i.test(m.text)) || /parole/i.test(draft!.body);
+    ctx.forbid('a sealed fact appears in a message or is opened by an ungranted identity', leaked);
+  },
+
+  'persona-8b-predictability': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Sam', age: 21, dial: { readingGrade: 6 } as Student['dial'], enrollment: { college: 'sinclair', creditHours: 9 } });
+    app.a.addClasses(s.id, [{ course: 'CHE 1211', days: ['Mon', 'Wed'], start: '10:00', end: '11:15', building: 'Building 12', room: '120' }]);
+    app.a.addShifts(s.id, [{ date: '2026-11-04', start: '16:00', end: '20:00' }, { date: '2026-11-10', start: '16:00', end: '20:00' }, { date: '2026-11-12', start: '16:00', end: '20:00' }]);
+    app.a.addDeadline(s.id, { title: 'Lab 6', course: 'CHE 1211', due: '2026-11-11', kind: 'assignment', effortHours: 3, source: { type: 'syllabus', line: 'Nov 11 Lab 6' }, confirmed: true });
+    const preview = show(app, ctx, app.a.weeklyPreview(s.id));
+    ctx.expect(/Different from this week/.test(preview.text) && /Lab 6/.test(preview.text), 'the preview shows what is different and what is due');
+    ctx.act('forward a room change');
+    app.a.connectSource(s.id, 'forwarding');
+    const r = app.a.forward(s.id, 'CHE 1211 has moved to Building 14, room 210 starting Wednesday.', { subject: 'Room change' });
+    const alert = r.message ? show(app, ctx, r.message) : undefined;
+    const updated = app.a.today_(s.id);
+    void updated;
+    ctx.forbid('a change the team saw is not announced', !alert || !/Building 14/.test(alert.text));
+    forbidTone(app, ctx, s);
+  },
 };
 
 export { checkTone };

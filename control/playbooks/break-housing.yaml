@@ -1,0 +1,31 @@
+playbook: break-housing
+title: Housing over breaks
+purpose: Make sure a student has somewhere to stay over every break, arranged weeks ahead.
+owner: builder
+sign_off: required
+sources:
+  - https://sinclair.edu/student-life/wellness/resources/food-assistance/
+student_grants:
+  sealed: []
+  profile: [chosenName, college]
+journeys: [persona-2a-break-housing]
+steps:
+  - id: dates
+    kind: info
+    text: Your next break starts soon. I'll make sure you have a place to stay before it does.
+  - id: ask-housing-office
+    kind: draft
+    requires_approval: true
+    to: campus housing or student affairs office
+    text: "Hello, this is {chosenName}. I need a place to stay over the upcoming break. Are break housing or emergency housing options available, and how do I request them? Thank you."
+  - id: backup
+    kind: checklist
+    text: If campus housing is not available, I lined up shelter and housing help near you as a backup.
+    done_when: student-confirms
+  - id: confirm
+    kind: wait
+    text: Tell me when your break housing is confirmed.
+    timeout_days: 14
+    on_timeout: Break is getting close. Let's call 2-1-1 together for backup options.
+recovery:
+  - If nothing is confirmed a week before break, we call 2-1-1 and the campus student affairs office together.

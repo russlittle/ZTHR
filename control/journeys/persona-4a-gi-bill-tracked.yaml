@@ -1,0 +1,13 @@
+id: persona-4a-gi-bill-tracked
+persona: ana
+delight: 4a
+phase: 2
+goal: Ana's GI Bill certification is requested each term with a note she sends herself, monthly verification is on her radar, and a late housing allowance is caught with a recovery path.
+forbidden:
+  - something is sent without the student's approval
+  - a late payment goes unnoticed
+  - a sealed fact appears in a message or is opened by an ungranted identity
+budget: { actions: 8, ms: 5000 }
+requirements: [PB-2]
+modes: [brief, standard]
+channels: [app, text]

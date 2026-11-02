@@ -1,0 +1,12 @@
+id: persona-2a-break-housing
+persona: jayden
+delight: 2a
+phase: 2
+goal: Jayden has housing for the break arranged weeks ahead, with a note to the housing office he sends and backup housing help lined up.
+forbidden:
+  - something is sent without the student's approval
+  - a gap is hidden instead of counted
+budget: { actions: 8, ms: 5000 }
+requirements: [PB-2, NAV-3]
+modes: [standard]
+channels: [app, text]
