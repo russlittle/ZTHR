@@ -1,0 +1,12 @@
+id: persona-10b-spanish
+persona: luis
+delight: 10b
+phase: 2
+goal: Luis texts in Spanish and is answered in Spanish from the first reply, through finding help, without being asked about anyone's immigration status.
+forbidden:
+  - a student who wrote in Spanish is answered in English
+  - the team asks about immigration or citizenship status
+budget: { actions: 3, ms: 5000 }
+requirements: [LNG-1, NAV-7]
+modes: [standard]
+channels: [text]

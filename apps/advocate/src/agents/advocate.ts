@@ -31,6 +31,7 @@ import { prepText, type Meeting } from '../domain/meetings.js';
 import { PULSES, nextPulse, type PulseState } from '../domain/pulses.js';
 import { Community } from '../domain/community.js';
 import { solveWeek, type ChildCare } from '../domain/week.js';
+import { crisisReplyEs, detectSpanish, t as tr } from '../domain/i18n.js';
 import { addDays, shortDate, time12, weekday } from '../domain/dates.js';
 import { AppStore } from '../domain/store.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
@@ -72,7 +73,15 @@ export interface Draft {
   status: 'shown' | 'sent' | 'discarded';
 }
 
+const SPANISH_NEEDS: [NeedCategory, RegExp][] = [
+  ['food', /\b(comida|hambre|despensa)\b/i],
+  ['utilities', /\b(luz|electricidad|gas|agua)\b/i],
+  ['housing', /\b(renta|alquiler|vivienda|desalojo)\b/i],
+  ['transportation', /\b(carro|transporte|autob[uú]s)\b/i],
+];
+
 interface Onboarding {
+  language?: 'en' | 'es';
   phone: string;
   stage: 'start' | 'where' | 'household' | 'school' | 'done';
   studentId?: string;
@@ -196,7 +205,7 @@ export class Advocate {
     const s = this.student(m.studentId);
     const at = this.now().toISOString();
     const base = { ...m, id: `msg_${randomUUID().slice(0, 8)}`, at };
-    const tone = checkTone(m, s.dial.depth, s.dial.readingGrade);
+    const tone = checkTone(m, s.dial.depth, s.dial.readingGrade, s.dial.language);
     if (!tone.ok && m.urgency !== 'safety') {
       const held: Delivered = { ...base, status: 'held', holdReason: tone.problems.join('; ') };
       this.store.put('messages', held.id, s.id, held);
@@ -242,26 +251,25 @@ export class Advocate {
   }
 
   private onboardStep(phone: string, body: string): string[] {
-    const safety = screen(body);
-    if (safety.crisis) {
-      this.ev('safety_route', phone, { categories: safety.categories, before: 'account' });
-      return [crisisReply(safety.categories)];
-    }
     const o = this.onboarding.get(phone) ?? { phone, stage: 'start', partial: {} };
+    if (o.stage === 'start' && detectSpanish(body)) o.language = 'es';
+    const lang = o.language ?? 'en';
+    const safety = screen(body);
+    if (safety.crisis || (lang === 'es' && /\b(matarme|suicid|quitarme la vida|no quiero vivir|me pega)\b/i.test(body))) {
+      this.ev('safety_route', phone, { categories: safety.categories, before: 'account', language: lang });
+      return [lang === 'es' ? crisisReplyEs(true, /\bme pega\b/i.test(body)) : crisisReply(safety.categories)];
+    }
     this.onboarding.set(phone, o);
-    const textDial = { ...DEFAULT_DIAL, channel: 'text' as const };
+    const textDial = { ...DEFAULT_DIAL, channel: 'text' as const, language: lang };
     switch (o.stage) {
       case 'start': {
         o.stage = 'where';
         this.ev('onboarding', phone, { stage: 'start' });
         // Give before asking: a student who opens with a need gets something useful at once.
-        const need = detectSituation(body) ?? NEED_WORDS.find(([, re]) => re.test(body))?.[0];
-        if (need) {
-          o.pendingNeed = need;
-          return [
-            "Hi, I'm your Advocate. I work for you, not your college. Here's something you can do right now: call 2-1-1 any time to reach local help with bills, food and housing.",
-            'To find help near you, which college do you go to, and what is your ZIP code? (Example: Sinclair 45402) By replying, you confirm you are 18 or older.',
-          ];
+        const need = detectSituation(body) ?? NEED_WORDS.find(([, re]) => re.test(body))?.[0] ?? (lang === 'es' ? SPANISH_NEEDS.find(([, re]) => re.test(body))?.[0] : undefined);
+        if (need || lang === 'es') {
+          if (need) o.pendingNeed = need;
+          return [tr('startNeed', lang), tr('askWhere', lang)];
         }
         return [
           "Hi! I'm your Advocate. I work for you, not your college, and I never share anything unless you say so. Want me to check what money and help you might get? It takes 4 quick questions.",
@@ -282,7 +290,7 @@ export class Advocate {
           const pending = o.pendingNeed;
           const m = (situations as string[]).includes(pending) ? this.crisis(s.id, pending as Situation).message : this.helpMessage(s.id, pending as NeedCategory);
           out.push(this.asText(this.deliver(m, { force: true })));
-          out.push('Want me to check for money you could get too? How many people live with you, counting you, and about how much does your household earn a month? (Example: 3 people, $1800)');
+          out.push(tr('askHousehold', lang));
         } else {
           out.push('How many people live with you, counting you, and about how much does your household earn a month before taxes? (Example: 3 people, $1800)');
         }
@@ -644,10 +652,10 @@ export class Advocate {
       studentId,
       author: 'navigator',
       urgency: 'routine',
-      text: `Here's ${need.replace('-', ' ')} help that fits you:\n${top
+      text: `${tr('helpHeader', this.student(studentId).dial.language, { need })}\n${top
         .map((o, i) => `${i + 1}. ${o.resource.name}${o.resource.hours ? ` (${o.resource.hours})` : ''}${o.resource.phone ? `, ${o.resource.phone}` : ''}`)
-        .join('\n')}\nWant me to start one?`,
-      nextSteps: top.slice(0, 2).map((o) => ({ label: `Start: ${o.resource.name}`, action: `start-resource:${o.resource.id}` })),
+        .join('\n')}\n${tr('helpAsk', this.student(studentId).dial.language)}`,
+      nextSteps: top.slice(0, 2).map((o) => ({ label: `${tr('start', this.student(studentId).dial.language)}: ${o.resource.name}`, action: `start-resource:${o.resource.id}` })),
       why: top.map((o) => `${o.resource.name}: ${o.why}`).join(' | '),
     };
   }

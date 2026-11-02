@@ -1,7 +1,7 @@
 [
   {
     "gate": "tone-and-next-step",
-    "gateHash": "5e8f9335c97e9a52eaa1b5c48541fb610dd008e2b897da3c29211540f8e73faf",
+    "gateHash": "2568e3a9663cb875e4c13597ab078e69c85339989aeaf4e6a0422e85ee7c3f46",
     "valid": true,
     "cases": [
       "planted scolding message",

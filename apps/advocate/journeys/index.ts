@@ -473,6 +473,18 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
     ctx.expect(w.blocks.some((b) => b.kind === 'pickup' && b.date === '2026-11-04'), 'pickups that fit are placed');
     forbidTone(app, ctx, s);
   },
+  'persona-10b-spanish': async (app, ctx) => {
+    const phone = '+19375558181';
+    const replies: string[] = [];
+    for (const m of ['Hola, necesito ayuda con la comida por favor', 'Sinclair 45403']) {
+      ctx.act(`text: ${m}`);
+      replies.push(...app.a.textIn(phone, m));
+    }
+    const english = replies.filter((r) => /\b(Here's|Want me|which college|help that fits)\b/.test(r));
+    ctx.expect(replies.some((r) => /comida/.test(r)), 'food help is found');
+    ctx.forbid('a student who wrote in Spanish is answered in English', english.length > 0, english.map((r) => r.slice(0, 50)).join(' | '));
+    ctx.forbid('the team asks about immigration or citizenship status', replies.some((r) => /ciudadan|inmigra|estatus migratorio|green card|visa/i.test(r) || STATUS_QUESTION.test(r)));
+  },
 };
 
 export { checkTone };

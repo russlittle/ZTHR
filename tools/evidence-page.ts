@@ -127,6 +127,31 @@ const REQS: [string, 'built' | 'partial', string][] = [
   ['CTL-3', 'built', 'Any source off at any time'],
 ];
 
+const REQS2: [string, 'built' | 'partial' | 'not yet', string][] = [
+  ['PB-2', 'partial', 'GI Bill, accommodation letters, break housing and proof of enrollment built; retraining and foster youth benefits not yet'],
+  ['PB-3', 'built', 'New playbooks only through the builder and a person\'s sign-off'],
+  ['DAY-6', 'built', 'Weekly preview with what is different'],
+  ['DAY-7', 'built', 'Room changes update the schedule and are announced'],
+  ['HH-1', 'built', 'Week solver: shifts, classes, child care, commute, sleep'],
+  ['COM-1', 'built', 'Asks and offers that expire and close when met'],
+  ['COM-2', 'built', 'Tips rated by students and retired when stale or unhelpful'],
+  ['COM-3', 'built', 'Study groups form at three students per course'],
+  ['COM-4', 'built', 'Opt-in communities filter what a student sees'],
+  ['COM-5', 'built', 'Filters, reports and a person queue; proven moderation gate'],
+  ['LNG-1', 'partial', 'Spanish for starting by text, crisis replies and help found'],
+  ['Builder', 'built', 'Drafts scouts, playbooks and retirements from evidence; cannot admit its own work'],
+  ['Scouts', 'built', 'Refresh what sources confirm; retire below their datum'],
+  ['DAY-8', 'not yet', 'Weather and road conditions'],
+  ['HH-2', 'not yet', 'Meal plans with SNAP grocery delivery'],
+  ['HH-3', 'not yet', 'Caregiver specialist (the builder has drafted the scout it needs)'],
+  ['CAR-1 to 4', 'not yet', 'Career trajectories, openings, fair-chance filter, mentors'],
+  ['CL-1 to 4', 'not yet', 'Dining menus, late food, team recaps, quiet study spots'],
+  ['LNG-2', 'not yet', 'Letter explainer from a photo'],
+];
+
+const proposalsDir = join(ROOT, 'control/proposals');
+const proposals = existsSync(proposalsDir) ? readdirSync(proposalsDir).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(readFileSync(join(proposalsDir, f), 'utf8')) as { id: string; title: string; reason: string; status: string; simulated?: boolean; checks: { name: string; ok: boolean }[] }) : [];
+
 const conformance: [string, string, string, Status][] = [
   ['Intent completion', 'Every locked journey passes in every declared mode and channel', `${ic.numerator} of ${ic.denominator} journeys (${runs.length} variant runs)`, ic.numerator === ic.denominator && ic.denominator > 0 ? 'pass' : 'fail'],
   ['Named gates', 'Each gate proven able to fail, then passing', `${proofsValid} of ${proofs.length} proven; ${gatesPassed} of ${verdicts.length} passing`, proofsValid === proofs.length && gatesPassed === verdicts.length ? 'pass' : 'fail'],
@@ -141,7 +166,9 @@ const conformance: [string, string, string, Status][] = [
 
 const pending = [
   ['Tone gate calibration', 'The reading-grade measure now ignores proper names such as agency names. This changed a gate, so it needs a listed person\'s sign-off.'],
-  ['Seventeen journey cards', 'Added by the build agent from the persona work. Adding cards tightens the control plane; Russ confirms they state the intents he means.'],
+  ['Journey cards', `${cards.length} cards added by the build agent from the persona work. Adding cards tightens the control plane; Russ confirms they state the intents he means.`],
+  ['Six playbooks', 'FAFSA, SNAP, GI Bill, accommodation letters, break housing and proof of enrollment. Each declares sign_off: required.'],
+  ['Builder drafts', `${proposals.filter((p) => p.status === 'awaiting-sign-off').length} drafts await npm run signoff by a listed person.`],
   ['Review panel models', 'The seats in control/review.yaml are a starting choice of families. Changing the AI needs sign-off.'],
   ['Ratchet floors', 'Mutation score floor 76%, held messages 0, failing journeys 0, set from the first measurements.'],
 ];
@@ -201,7 +228,7 @@ a{color:var(--layout)}
 </style>
 <div class="wrap">
 <header class="stamp">
-  <div><p class="eyebrow">First article inspection · Student Advocate, Phase 1</p><h1>ZTHR reference implementation: evidence</h1></div>
+  <div><p class="eyebrow">First article inspection · Student Advocate, Phases 1 and 2</p><h1>ZTHR reference implementation: evidence</h1></div>
   <div class="meta">build ${esc(commit)} · ${esc(commits)} commits<br>${esc(lastCommit.slice(0, 16).replace('T', ' '))} ET<br>synthetic students only</div>
 </header>
 <p class="lede">Every figure below was computed by the factory from what it recorded while building the Student Advocate: gate verdicts, journey runs, mutation results and the build ledger. Anything the factory could not measure is marked not measured, never zero.</p>
@@ -244,10 +271,17 @@ a{color:var(--layout)}
 <h2><span class="ref">§6</span>Phase 1 requirements</h2>
 <div class="reqs">${REQS.map(([id, st, what]) => `<div class="req ${st}"><b>${esc(id)}</b><span>${esc(what)}</span>${st === 'partial' ? '<small>partial</small>' : ''}</div>`).join('')}</div>
 
-<h2><span class="ref">§7</span>Waiting for sign-off</h2>
+<h2><span class="ref">§7</span>Phase 2 so far</h2>
+<div class="reqs">${REQS2.map(([id, st, what]) => `<div class="req ${st === 'built' ? '' : 'partial'}"><b>${esc(id)}</b><span>${esc(what)}</span>${st !== 'built' ? `<small>${esc(st)}</small>` : ''}</div>`).join('')}</div>
+
+<h2><span class="ref">§8</span>Agents the builder has drafted</h2>
+<p>The builder reads the evidence for gaps and drafts new agents. Each draft passes the same checks as any change, then waits for a listed person. The builder cannot admit its own work: a sign-off attempted by the agent was refused.</p>
+<div class="scroll"><table><thead><tr><th>Draft</th><th>Why the builder drafted it</th><th>Checks</th><th>Status</th></tr></thead><tbody>${proposals.map((p) => `<tr><td>${esc(p.title)}${p.simulated ? ' <span class="chip not-measured">simulated demand</span>' : ''}</td><td>${esc(p.reason)}</td><td class="num">${esc(p.checks.filter((c) => c.ok).length)} of ${esc(p.checks.length)}</td><td>${chip(p.status === 'admitted' ? 'pass' : 'unknown', p.status.replace(/-/g, ' '))}</td></tr>`).join('') || '<tr><td colspan="4">No drafts yet.</td></tr>'}</tbody></table></div>
+
+<h2><span class="ref">§9</span>Waiting for sign-off</h2>
 <div class="scroll"><table><thead><tr><th>Change</th><th>Why it needs a person</th></tr></thead><tbody>${pending.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</tbody></table></div>
 
-${shots.length ? `<h2><span class="ref">§8</span>The app, walked by accessible name</h2><div class="shots">${shots.map((s, i) => `<figure><img src="${s}" alt="${esc(['Maria\'s day with a rent gap seen a month ahead', 'A drafted message to her landlord, sent only on her tap', 'What Maria likely qualifies for, with rules and sources'][i])}"><figcaption>${esc(['Today: the gap, seen early', 'The student sends', 'Money found, with sources'][i])}</figcaption></figure>`).join('')}</div>` : ''}
+${shots.length ? `<h2><span class="ref">§10</span>The app, walked by accessible name</h2><div class="shots">${shots.map((s, i) => `<figure><img src="${s}" alt="${esc(['Maria\'s day with a rent gap seen a month ahead', 'A drafted message to her landlord, sent only on her tap', 'What Maria likely qualifies for, with rules and sources'][i])}"><figcaption>${esc(['Today: the gap, seen early', 'The student sends', 'Money found, with sources'][i])}</figcaption></figure>`).join('')}</div>` : ''}
 
 <footer>Computed by <code>npm run evidence</code> from the evidence store, control/proofs.json, reports/mutation.json and evidence/build-ledger.jsonl. Code: github.com/russlittle/ZTHR, branch reference-implementation. Pattern language: zthr.ai, DOI 10.5281/zenodo.23826734.</footer>
 </div>`;

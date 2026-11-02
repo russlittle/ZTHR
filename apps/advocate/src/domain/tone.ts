@@ -20,6 +20,13 @@ const SCOLDING: [RegExp, string][] = [
   [/\birresponsible\b/i, 'judges the student'],
 ];
 
+const SCOLDING_ES: [RegExp, string][] = [
+  [/\b(llegas tarde|estás atrasad[oa])\b/i, 'tells the student they are late'],
+  [/\b(debiste|deberías haber)\b/i, 'second-guesses the student'],
+  [/\b(advertencia|vencid[oa])\b/i, 'uses alarm language'],
+  [/\b(tienes que|debes)\b/i, 'commands the student'],
+];
+
 export function syllables(word: string): number {
   const w = word.toLowerCase().replace(/[^a-z]/g, '');
   if (w.length <= 3) return w.length > 0 ? 1 : 0;
@@ -57,13 +64,15 @@ export interface ToneResult {
   grade: number;
 }
 
-export function checkTone(m: Pick<OutboundMessage, 'text' | 'nextSteps' | 'urgency'>, depth: Depth, targetGrade: number): ToneResult {
+export function checkTone(m: Pick<OutboundMessage, 'text' | 'nextSteps' | 'urgency'>, depth: Depth, targetGrade: number, language: 'en' | 'es' = 'en'): ToneResult {
   const problems: string[] = [];
   for (const [re, why] of SCOLDING) if (re.test(m.text)) problems.push(why);
+  for (const [re, why] of SCOLDING_ES) if (re.test(m.text)) problems.push(why);
   if (m.urgency !== 'safety' && m.nextSteps.length === 0) problems.push('reports without offering a next step');
-  const grade = readingGrade(m.text);
+  // The grade formula is for English; Spanish reading level is not yet measured, so it is not gated.
+  const grade = language === 'en' ? readingGrade(m.text) : 0;
   const lim = LIMITS[depth];
-  if (m.urgency !== 'safety' && grade > targetGrade + lim.gradeSlack) problems.push(`reads at grade ${grade.toFixed(1)}, above ${targetGrade + lim.gradeSlack}`);
+  if (language === 'en' && m.urgency !== 'safety' && grade > targetGrade + lim.gradeSlack) problems.push(`reads at grade ${grade.toFixed(1)}, above ${targetGrade + lim.gradeSlack}`);
   if (m.text.length > lim.maxChars) problems.push(`${m.text.length} characters is too long for ${depth} mode`);
   return { ok: problems.length === 0, problems, grade };
 }
