@@ -7,40 +7,31 @@ The GitHub workflow is manual-only, so a push never starts GitHub-hosted compute
 Playwright walk with accessibility checks, and mutation testing (nightly only). It then records the run's compute
 cost, builds the evidence page, and uploads the evidence to a Cloud Storage bucket. Any failing step fails the build.
 
-## One-time setup (project `zthr-ai`)
+## One-time setup
 
-1. Enable Cloud Build:
-   `gcloud services enable cloudbuild.googleapis.com --project zthr-ai`
-2. Connect the GitHub repository: Cloud Build → Repositories (2nd gen) → Create host connection → GitHub,
-   install the Google Cloud Build GitHub App on `russlittle/zthr` only, then link the repository.
-3. Push trigger (every push to any branch):
+Open [Cloud Shell](https://console.cloud.google.com/cloudshell) signed in to the account that owns `zthr-ai` and run:
 
-   ```sh
-   gcloud builds triggers create github --project zthr-ai --region us-central1 \
-     --name zthr-factory --repository projects/zthr-ai/locations/us-central1/connections/github/repositories/russlittle-zthr \
-     --branch-pattern '.*' --build-config cloudbuild.yaml
-   ```
+```sh
+bash <(curl -sL https://raw.githubusercontent.com/russlittle/ZTHR/reference-implementation/tools/setup-gcp.sh)
+```
 
-   Add a second trigger with `--pull-request-pattern '.*'` if you want pull requests checked before merge.
-4. Nightly mutation run: create a manual trigger with `_MUTATION=true` and `_KIND=nightly`, then schedule it.
+`tools/setup-gcp.sh` is safe to run again; each step checks before it creates. It:
 
-   ```sh
-   gcloud builds triggers create manual --project zthr-ai --region us-central1 \
-     --name zthr-nightly --repository projects/zthr-ai/locations/us-central1/connections/github/repositories/russlittle-zthr \
-     --branch main --build-config cloudbuild.yaml --substitutions _MUTATION=true,_KIND=nightly
-   ```
+1. Enables Cloud Build, Secret Manager, Cloud Scheduler, Storage and the billing budget APIs.
+2. Creates a build service account, `zthr-factory`, with only log writing, build running and the evidence bucket.
+3. Creates the evidence bucket `gs://zthr-ai-evidence`, which holds each run's evidence and cost record.
+4. Connects GitHub. This is the one manual step: the script prints a link, you authorize Cloud Build and install
+   its app on `russlittle/ZTHR` only, then press Enter.
+5. Links the repository.
+6. Creates two triggers. `zthr-factory` runs on every push to any branch except `main`, which holds the website.
+   `zthr-nightly` runs the same build plus mutation testing.
+7. Schedules `zthr-nightly` for 2:17 a.m. Eastern with Cloud Scheduler.
+8. Sets a $100-a-month budget alert on the project, with emails at 50%, 90% and 100%.
 
-   In Cloud Build → Triggers → zthr-nightly → Run on schedule, choose a nightly time.
-5. Keep evidence and the cost history. Create a bucket and set `_EVIDENCE_BUCKET=gs://<bucket>` on both triggers:
+It finishes by starting the first run and printing its link. Defaults can be changed with environment variables
+(`PROJECT`, `REGION`, `BUCKET`, `CODE_BRANCH`, `BUDGET_USD`, `NIGHTLY_CRON`, `TZ_NAME`).
 
-   ```sh
-   gcloud storage buckets create gs://zthr-ai-evidence --project zthr-ai --location us-central1
-   ```
-
-   Grant the Cloud Build service account Storage Object Admin on that bucket. Without a bucket the build still
-   passes or fails the same way, but the published cost covers only the current run.
-
-Run once by hand from a checkout: `gcloud builds submit --project zthr-ai --config cloudbuild.yaml .`
+Run a build by hand from a checkout: `gcloud builds submit --project zthr-ai --config cloudbuild.yaml .`
 
 ## Cost
 
