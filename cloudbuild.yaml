@@ -13,7 +13,7 @@
 # Setup: docs/testing/ci.md
 
 substitutions:
-  _DEPLOY_BRANCH: ''  # set on the trigger by tools/setup-deploy.sh once deploying is allowed
+  _DEPLOY_BRANCH: 'reference-implementation'  # the only branch that deploys; every other branch stops after the evidence
   _MUTATION: 'false'
   _KIND: 'push'
   _EVIDENCE_BUCKET: ''

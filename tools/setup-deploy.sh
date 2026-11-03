@@ -35,9 +35,8 @@ retry gcloud projects add-iam-policy-binding "$PROJECT" --member "serviceAccount
 retry gcloud artifacts repositories add-iam-policy-binding zthr --location "$REGION" --member "serviceAccount:${BUILDER}" --role roles/artifactregistry.writer
 retry gcloud iam service-accounts add-iam-policy-binding "$RUNTIME" --member "serviceAccount:${BUILDER}" --role roles/iam.serviceAccountUser
 
-say "4/4 Turning on deploys, then the first deploy"
-gcloud builds triggers update github zthr-factory --region "$REGION" --update-substitutions _DEPLOY_BRANCH=reference-implementation >/dev/null
-gcloud builds triggers update manual zthr-nightly --region "$REGION" --update-substitutions _DEPLOY_BRANCH=reference-implementation >/dev/null || true
+say "4/4 The first deploy"
+# The pipeline names its deploy branch (reference-implementation); now that Cloud Run can accept it, run it.
 gcloud builds triggers run zthr-factory --region "$REGION" --branch reference-implementation --format='value(metadata.build.id)' |
   sed "s#^#Build: https://console.cloud.google.com/cloud-build/builds;region=${REGION}/#;s#\$#?project=${PROJECT}#"
 echo "When that build finishes, the service is live at its run.app address:"
