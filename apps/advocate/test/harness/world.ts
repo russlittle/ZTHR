@@ -1,6 +1,6 @@
 // Verifies docs/testing/exploration.md (the exhaustive walk of every button, in app and text).
 import { applyCampus, type SeedDoc } from './campus.js';
-import { explore, hash, type ExploreReport, type Step } from '@zthr/explore';
+import { explore, exploreAsync, hash, type ExploreReport, type ExploreSpec, type Step } from '@zthr/explore';
 import { Advocate } from '../../src/agents/advocate.js';
 import type { ActionResult } from '../../src/agents/actions.js';
 import { PERSONAS, PERSONA_NAMES } from '../../src/server/demo.js';
@@ -151,28 +151,39 @@ export function personaSeeds(only?: string[], depths: ('own' | 'brief' | 'standa
 }
 
 export function exploreAdvocate(opts: { only?: string[]; maxNodes?: number; withTyping?: boolean; campus?: SeedDoc[] } = {}): ExploreReport {
-  const names = PERSONA_NAMES;
-  const reports: ExploreReport[] = [];
-  const merged: ExploreReport = { seeds: [], states: 0, transitions: 0, actionsSeen: [], verbsSeen: {}, violations: [], exhausted: true };
-  for (const seed of personaSeeds(opts.only, undefined, opts.campus)) {
-    const others = names.filter((n) => n !== seed.name.split('/')[0]);
+  return mergeReports(advocateSpecs(opts).map((sp) => explore(sp)));
+}
+
+/** The same walk, yielding to the event loop as it goes (for test runners). */
+export async function exploreAdvocateAsync(opts: { only?: string[]; maxNodes?: number; withTyping?: boolean; campus?: SeedDoc[] } = {}): Promise<ExploreReport> {
+  const out: ExploreReport[] = [];
+  for (const sp of advocateSpecs(opts)) out.push(await exploreAsync(sp));
+  return mergeReports(out);
+}
+
+function advocateSpecs(opts: { only?: string[]; maxNodes?: number; withTyping?: boolean; campus?: SeedDoc[] }): ExploreSpec<World, Outcome>[] {
+  return personaSeeds(opts.only, undefined, opts.campus).map((seed) => {
+    const others = PERSONA_NAMES.filter((n) => n !== seed.name.split('/')[0]);
     const check = invariants(others, ['synthetic sealed fact for the demonstration']);
-    const r = explore<World, Outcome>({
+    return {
       seeds: [seed],
-      actions: (w, last) => actions(w, last).filter((x) => opts.withTyping !== false || !x.startsWith('say:')),
+      actions: (w: World, last: Outcome | undefined) => actions(w, last).filter((x) => opts.withTyping !== false || !x.startsWith('say:')),
       perform,
       signature,
       // Frozen states hold plain data plus the seed's first Advocate, whose options and keys every thaw reuses.
-      freeze: (w) => ({ snap: w.a.snapshot(), sid: w.sid, deleted: w.deleted, root: w.root ?? w.a }),
-      thaw: (f) => {
+      freeze: (w: World) => ({ snap: w.a.snapshot(), sid: w.sid, deleted: w.deleted, root: w.root ?? w.a }),
+      thaw: (f: unknown) => {
         const x = f as { snap: ReturnType<Advocate['snapshot']>; sid: string; deleted?: boolean; root: Advocate };
         return { a: x.root.restore(x.snap), sid: x.sid, deleted: x.deleted, root: x.root };
       },
-      check: (w, step) => [...check(w, step), ...idempotency(w, step)],
+      check: (w: World, step: Step<Outcome>) => [...check(w, step), ...idempotency(w, step)],
       maxNodes: opts.maxNodes ?? 20_000,
-    });
-    reports.push(r);
-  }
+    };
+  });
+}
+
+function mergeReports(reports: ExploreReport[]): ExploreReport {
+  const merged: ExploreReport = { seeds: [], states: 0, transitions: 0, actionsSeen: [], verbsSeen: {}, violations: [], exhausted: true };
   for (const r of reports) {
     merged.seeds.push(...r.seeds);
     merged.states += r.states;

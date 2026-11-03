@@ -1,7 +1,7 @@
 // Verifies docs/testing/exploration.md
 // Verifies docs/testing/coverage.md
 import { describe, expect, it } from 'vitest';
-import { exploreAdvocate } from './harness/world.js';
+import { exploreAdvocateAsync } from './harness/world.js';
 import { crawlAdvocate } from './harness/crawl.js';
 
 /**
@@ -9,8 +9,8 @@ import { crawlAdvocate } from './harness/crawl.js';
  * typing included) run in the factory with npm run explore and npm run crawl.
  */
 describe('walks, quick slice', () => {
-  it('button walk: Ana (brief), to a fixpoint, with no violations', () => {
-    const r = exploreAdvocate({ only: ['Ana'], withTyping: false });
+  it('button walk: Ana (brief), to a fixpoint, with no violations', async () => {
+    const r = await exploreAdvocateAsync({ only: ['Ana'], withTyping: false });
     expect(r.violations.map((v) => `${v.problem} :: ${v.path.join(' > ')}`)).toEqual([]);
     expect(r.exhausted).toBe(true);
   }, 600_000);

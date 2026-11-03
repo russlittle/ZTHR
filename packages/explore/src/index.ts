@@ -57,7 +57,30 @@ export const hash = (s: string): string => createHash('sha256').update(s).digest
 /** The verb of an action: the part before the first colon. */
 export const verbOf = (action: string): string => action.split(':')[0]!;
 
+/** Runs the walk to completion in one go. */
 export function explore<W, O>(spec: ExploreSpec<W, O>): ExploreReport {
+  const it = walk(spec);
+  for (;;) {
+    const r = it.next();
+    if (r.done) return r.value;
+  }
+}
+
+/**
+ * The same walk, giving the event loop a turn every few states, so a long walk inside a test runner or a server
+ * never starves it. Results are identical to explore().
+ */
+export async function exploreAsync<W, O>(spec: ExploreSpec<W, O>, every = 20): Promise<ExploreReport> {
+  const it = walk(spec);
+  let n = 0;
+  for (;;) {
+    const r = it.next();
+    if (r.done) return r.value;
+    if (++n % every === 0) await new Promise((res) => setImmediate(res));
+  }
+}
+
+function* walk<W, O>(spec: ExploreSpec<W, O>): Generator<void, ExploreReport, void> {
   const max = spec.maxNodes ?? 50_000;
   const report: ExploreReport = { seeds: [], states: 0, transitions: 0, actionsSeen: [], verbsSeen: {}, violations: [], exhausted: true };
   const actionsSeen = new Set<string>();
@@ -111,6 +134,7 @@ export function explore<W, O>(spec: ExploreSpec<W, O>): ExploreReport {
         queue.push(next);
         if (keep) frozen.set(next, { data: spec.freeze!(world), last: outcome });
       }
+      yield;
     }
     report.seeds.push({ name: seed.name, states: seen.size, transitions, maxDepth, exhausted });
     report.states += seen.size;

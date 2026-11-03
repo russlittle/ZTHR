@@ -4,7 +4,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { COLLECTIONS, COLLECTION_NAMES } from '../src/domain/schema.js';
-import { exploreAdvocate } from './harness/world.js';
+import { exploreAdvocateAsync } from './harness/world.js';
 import { Advocate } from '../src/agents/advocate.js';
 import { PERSONAS, PERSONA_NAMES } from '../src/server/demo.js';
 
@@ -44,8 +44,8 @@ describe('stored documents match their declarations', () => {
       expect(checkDocs(a, s.id)).toEqual([]);
     });
   }
-  it('after a full walk of every button for Maria, every document still matches', () => {
-    const r = exploreAdvocate({ only: ['Maria'], withTyping: false, maxNodes: 400 });
+  it('after a full walk of every button for Maria, every document still matches', async () => {
+    const r = await exploreAdvocateAsync({ only: ['Maria'], withTyping: false, maxNodes: 400 });
     expect(r.violations).toEqual([]);
     // The walk's worlds are gone; replay a busy session instead and check it.
     const a = new Advocate({ today: () => '2026-11-02' });

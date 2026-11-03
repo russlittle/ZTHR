@@ -28,7 +28,16 @@ flowchart LR
   adv -- approved drafts only --> outbound[Outbound gate]
   adv -- webhooks --> egress[Egress block]
   egress -- allow-listed hosts --> internet((Internet))
+  op[Operator: leased jobs] -- feeds, plans, class sites --> egress
+  egress -- campus hosts --> campus[Campus services: dining, transit, places, careers, class site]
+  op -- writes as dispatches, confirmed by lookup --> egress
+  op --> store
+  adv --> op
 ```
+
+The operator is the part that works when no one is asking: it refreshes campus feeds, plans bus trips, syncs class
+sites and carries out the writes students asked for, on a schedule and under leases. Conversations never wait on
+the network; they answer from what the operator fetched and say how old it is.
 
 ## Building blocks
 
@@ -42,7 +51,13 @@ flowchart TB
     agentsA --> elig[eligibility engine + dated parameters]
     agentsA --> pb[playbook engine]
     agentsA --> builder[builder agent + scouts]
+    agentsA --> opA[operator: leases, dispatches]
+    agentsA --> integ[integrations: campus clients]
   end
+  subgraph svc[apps/campus-services]
+    synth[synthetic dining, transit, places, careers, class site + contracts]
+  end
+  integ -. contract .-> synth
   subgraph blocks[packages]
     ui["@zthr/ui"]
     explore["@zthr/explore"]
