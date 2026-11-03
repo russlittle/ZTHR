@@ -1,6 +1,6 @@
 import type { Advocate } from './advocate.js';
 import type { Deadline, NeedCategory, OutboundMessage } from '../domain/types.js';
-import { addDays, relDay, shortDate, time12 } from '../domain/dates.js';
+import { addDays, relDay, sentence, shortDate, time12 } from '../domain/dates.js';
 import { openBlocks, planSteps } from '../domain/planner.js';
 import { TERMS } from '../domain/college.js';
 import type { Situation } from '../domain/crisis.js';
@@ -65,7 +65,7 @@ export const ACTIONS: Record<string, Handler> = {
   today: (a, sid) => ({ message: a.todayMessage(sid), view: 'today' }),
   settings: (a, sid) => {
     const s = a.student(sid);
-    return { message: msg(sid, `You get ${s.dial.depth.replace(/-/g, ' ')} answers, with quiet hours from ${time12(s.dial.quietStart)} to ${time12(s.dial.quietEnd)}.`, [{ label: 'Shorter answers', action: 'dial:brief' }, { label: 'Walk me through things', action: 'dial:walk-me-through' }]), view: 'settings' };
+    return { message: msg(sid, sentence(`You get ${s.dial.depth.replace(/-/g, ' ')} answers, with quiet hours from ${time12(s.dial.quietStart)} to ${time12(s.dial.quietEnd)}`), [{ label: 'Shorter answers', action: 'dial:brief' }, { label: 'Walk me through things', action: 'dial:walk-me-through' }]), view: 'settings' };
   },
   ask: (_a, sid) => ({ message: msg(sid, 'Ask me anything about school, money or life. You can type it in your own words.', [back]), view: 'ask' }),
 
@@ -77,14 +77,19 @@ export const ACTIONS: Record<string, Handler> = {
   }),
   'why-qualify': (a, sid) => {
     const likely = a.screen(sid).filter((r) => r.status === 'likely');
-    const text = likely.length ? `Here is why:\n${likely.map((r) => `${r.title}: ${r.reasons[0] ?? 'you meet the main rule'}`).join('\n')}\nThe agency makes the final call.` : 'I did not find a likely match yet. Tell me more and I will check again.';
+    const brief = a.student(sid).dial.depth === 'brief';
+    const text = !likely.length
+      ? 'I did not find a likely match yet. Tell me more and I will check again.'
+      : brief
+        ? `You meet the main rules for:\n${likely.map((r) => r.title).join('\n')}\nThe agency decides.`
+        : `Here is why:\n${likely.map((r) => `${r.title}: ${r.reasons[0] ?? 'you meet the main rule'}`).join('\n')}\nThe agency makes the final call.`;
     return { message: msg(sid, text, likely[0] ? [{ label: `Start ${likely[0].title}`, action: `start-program:${likely[0].program}` }, back] : [{ label: 'Answer a question', action: 'screen-more' }], 'navigator'), view: 'money' };
   },
   'start-program': (a, sid, arg) => ACTIONS['start-resource']!(a, sid, { snap: 'ohio-benefits-snap', lifeline: 'lifeline', 'ohio-heap': 'ohio-heap', 'sinclair-emergency-grant': 'sinclair-emergency-grant' }[arg] ?? arg),
   'start-resource': (a, sid, arg) => {
     const r = a.catalog.find((x) => x.id === arg);
     if (!r) return { message: msg(sid, 'That one is not in my list anymore. Let us look for another option.', [{ label: 'Find help', action: 'find-help' }], 'navigator'), view: 'help' };
-    return { message: msg(sid, `${r.name}: ${r.howToApply[0] ?? r.description}${r.phone ? ` Call ${r.phone}.` : ''}`, [...(r.phone ? [{ label: `Call ${r.name}`, action: `call:${r.phone}` }] : []), { label: 'Share this', action: `share:${r.id}` }], 'navigator'), view: 'resource', viewArg: r.id };
+    return { message: msg(sid, `${r.name}.\nFirst step: ${r.howToApply[0] ?? r.description}${r.phone ? ` Call ${r.phone}.` : ''}`, [...(r.phone ? [{ label: `Call ${r.name}`, action: `call:${r.phone}` }] : []), { label: 'Share this', action: `share:${r.id}` }], 'navigator'), view: 'resource', viewArg: r.id };
   },
 
   // help

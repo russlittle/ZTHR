@@ -76,5 +76,9 @@ export function checkTone(m: Pick<OutboundMessage, 'text' | 'nextSteps' | 'urgen
   const lim = LIMITS[depth];
   if (language === 'en' && m.urgency !== 'safety' && grade > targetGrade + lim.gradeSlack) problems.push(`reads at grade ${grade.toFixed(1)}, above ${targetGrade + lim.gradeSlack}`);
   if (m.text.length > lim.maxChars) problems.push(`${m.text.length} characters is too long for ${depth} mode`);
+  // Careless writing reads as not caring: doubled periods, empty parentheses, stray template holes.
+  if (/[^.]\.\.(?!\.)/.test(m.text)) problems.push('has a doubled period');
+  if (/\(\s*\)|\bundefined\b|\bnull\b|NaN|\$\{/.test(m.text)) problems.push('has a template hole or empty value');
+  for (const n of m.nextSteps) if (!n.label.trim()) problems.push('has a button with no label');
   return { ok: problems.length === 0, problems, grade };
 }

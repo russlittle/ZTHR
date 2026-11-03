@@ -70,7 +70,7 @@ export function upcomingMessages(
     const b0 = blocks[0];
     const workBefore = shifts.filter((s) => daysBetween(today, s.date) >= 0 && daysBetween(s.date, d.due) > 0).sort((x, y) => (x.date + x.start).localeCompare(y.date + y.start));
     const blockNote = b0
-      ? ` You have two open hours ${relDay(today, b0.date)}, ${time12(b0.start)} to ${time12(b0.end)}.`
+      ? ` ${endSentence(`You have two open hours ${relDay(today, b0.date)}, ${time12(b0.start)} to ${time12(b0.end)}`)}`
       : " Your schedule is tight, so let's find a short window together.";
     const shiftNote = workBefore.length > 0 ? ` You also work ${relDay(today, workBefore[0]!.date)} at ${time12(workBefore[0]!.start)}` : '';
     out.push({

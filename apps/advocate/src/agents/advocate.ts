@@ -1,4 +1,5 @@
-import { createHmac, randomBytes, randomUUID } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomUUID } from 'node:crypto';
+import { EgressTwin, type Egress } from '@zthr/egress';
 import { fileURLToPath } from 'node:url';
 import { EvidenceStore } from '@zthr/evidence';
 import {
@@ -32,7 +33,7 @@ import { PULSES, nextPulse, type PulseState } from '../domain/pulses.js';
 import { Community } from '../domain/community.js';
 import { solveWeek, type ChildCare } from '../domain/week.js';
 import { crisisReplyEs, detectSpanish, t as tr } from '../domain/i18n.js';
-import { addDays, shortDate, time12, weekday } from '../domain/dates.js';
+import { addDays, sentence, shortDate, time12, weekday } from '../domain/dates.js';
 import { AppStore } from '../domain/store.js';
 import { parseShifts } from '../domain/shifts.js';
 import { ACTIONS, type ActionResult } from './actions.js';
@@ -91,6 +92,8 @@ export interface Reminder {
   text: string;
 }
 
+export type ApiScope = 'read' | 'write' | 'actions';
+
 const SPANISH_NEEDS: [NeedCategory, RegExp][] = [
   ['food', /\b(comida|hambre|despensa)\b/i],
   ['utilities', /\b(luz|electricidad|gas|agua)\b/i],
@@ -115,6 +118,8 @@ export interface AdvocateOptions {
   evidence?: EvidenceStore;
   playbookDir?: string;
   fromNumber?: string;
+  /** The only way out to the network (webhooks). Defaults to a recording twin. */
+  egress?: Egress;
   /** 32-byte keys; production reads them from secret storage and refuses to start without them. */
   masterKey?: Buffer;
   approvalSecret?: Buffer;
@@ -150,6 +155,7 @@ export class Advocate {
   private readonly fromNumber: string;
   readonly model?: ModelClient;
   readonly community: Community;
+  readonly egress: Egress;
   private readonly pseudSalt = randomBytes(32);
 
   /** Evidence is pseudonymous: subjects are keyed hashes, and no message content is recorded. */
@@ -172,6 +178,7 @@ export class Advocate {
     this.community = new Community(this.today);
     this.now = o.now ?? (() => new Date());
     this.model = o.model;
+    this.egress = o.egress ?? new EgressTwin();
     this.fromNumber = o.fromNumber ?? '+19375550100';
     this.playbooks = loadPlaybooks(o.playbookDir ?? fileURLToPath(new URL('../../../../control/playbooks', import.meta.url)));
   }
@@ -213,6 +220,8 @@ export class Advocate {
   }
 
   setDial(id: string, patch: Partial<HelpDial>): Student {
+    if (patch.depth !== undefined && !['brief', 'standard', 'walk-me-through'].includes(patch.depth)) throw new Error(`unknown depth ${String(patch.depth)}`);
+    if (patch.readingGrade !== undefined && !(patch.readingGrade >= 3 && patch.readingGrade <= 16)) throw new Error('reading grade must be 3 to 16');
     const s = this.student(id);
     return this.updateStudent(id, { dial: { ...s.dial, ...patch } });
   }
@@ -422,7 +431,10 @@ export class Advocate {
     shifts.forEach((x) => this.store.put('shifts', `${studentId}:${x.date}:${x.start}`, studentId, x));
   }
 
+  /** The same date from a second upload or feed is the same deadline, not a new one. */
   addDeadline(studentId: string, d: Omit<Deadline, 'id' | 'studentId'>): Deadline {
+    const same = this.deadlines(studentId).find((x) => x.title === d.title && x.due === d.due && (x.course ?? '') === (d.course ?? ''));
+    if (same) return same;
     const full: Deadline = { ...d, id: `dl_${randomUUID().slice(0, 8)}`, studentId };
     this.store.put('deadlines', full.id, studentId, full);
     return full;
@@ -705,6 +717,8 @@ export class Advocate {
   // ---------- drafts and the student sends (PRD P9) ----------
 
   createDraft(studentId: string, to: string, recipient: string, body: string, purpose: string): Draft {
+    const waiting = this.drafts(studentId).find((x) => x.purpose === purpose && x.status === 'shown');
+    if (waiting) return waiting;
     const d: Draft = { id: `dr_${randomUUID().slice(0, 8)}`, studentId, to, recipient, body, purpose, status: 'shown' };
     this.store.put('drafts', d.id, studentId, d);
     return d;
@@ -937,7 +951,9 @@ export class Advocate {
       studentId,
       author: 'coursework-planner',
       urgency: 'routine',
-      text: `Here is ${d.title} in small steps:\n${steps.map((x, i) => `${i + 1}. ${x.step} (${shortDate(x.date)}, ${time12(x.start)}, ${x.minutes} min)`).join('\n')}`,
+      text: this.student(studentId).dial.depth === 'brief'
+        ? sentence(`${d.title}: ${steps.length} short sessions. First: ${steps[0]?.step ?? 'start'}, ${shortDate(steps[0]?.date ?? d.due)} at ${time12(steps[0]?.start ?? '18:00')}`)
+        : `Here is ${d.title} in small steps:\n${steps.map((x, i) => `${i + 1}. ${x.step} (${shortDate(x.date)}, ${time12(x.start)}, ${x.minutes} min)`).join('\n')}`,
       nextSteps: [{ label: 'Put these on my calendar', action: `calendar-steps:${d.id}` }, { label: 'Change the times', action: `edit-steps:${d.id}` }],
       why: `About ${d.effortHours ?? 3} hours of work before ${d.due}, split into short steps in your open time.`,
     };
@@ -1018,6 +1034,8 @@ export class Advocate {
   // ---------- held time, reminders, typed shifts ----------
 
   holdTime(studentId: string, h: Omit<Hold, 'id'>): Hold {
+    const same = this.holds(studentId).find((x) => x.date === h.date && x.start === h.start && x.deadlineId === h.deadlineId && x.title === h.title);
+    if (same) return same;
     const full: Hold = { ...h, id: `hd_${randomUUID().slice(0, 8)}` };
     this.store.put('holds', full.id, studentId, full);
     this.ev('hold', studentId, { forDeadline: !!h.deadlineId });
@@ -1029,6 +1047,8 @@ export class Advocate {
   }
 
   remind(studentId: string, about: string, at: string, text: string): Reminder {
+    const same = this.reminders(studentId).find((x) => x.about === about && x.at === at);
+    if (same) return same;
     const r: Reminder = { id: `rm_${randomUUID().slice(0, 8)}`, about, at, text };
     this.store.put('reminders', r.id, studentId, r);
     return r;
@@ -1070,6 +1090,86 @@ export class Advocate {
       nextSteps: [{ label: 'See my week', action: 'week' }, { label: 'Show my day', action: 'today' }],
       why: 'From the shifts you typed.',
     };
+  }
+
+  // ---------- integration: tokens, calendar feed, webhooks ----------
+
+  /** A token the student creates to connect another tool. Only its hash is stored; the ledger records the grant. */
+  issueApiToken(studentId: string, label: string, scopes: ApiScope[]): string {
+    const token = `adv_${randomBytes(24).toString('base64url')}`;
+    const id = createHash('sha256').update(token).digest('hex');
+    this.store.put('api_tokens', id, studentId, { id, label, scopes, createdAt: this.today() });
+    this.ledger.append(studentId, 'grant', `api:${label}`, { scopes });
+    return token;
+  }
+
+  apiTokens(studentId: string): { id: string; label: string; scopes: ApiScope[]; createdAt: string }[] {
+    return this.store.list('api_tokens', studentId);
+  }
+
+  revokeApiToken(studentId: string, id: string): void {
+    const t = this.store.list<{ id: string; label: string }>('api_tokens', studentId).find((x) => x.id === id);
+    if (!t) return;
+    this.store.remove('api_tokens', id);
+    this.ledger.append(studentId, 'revoke', `api:${t.label}`, {});
+  }
+
+  /** Who a bearer token belongs to, and what it may do. */
+  tokenOwner(token: string): { studentId: string; scopes: ApiScope[] } | undefined {
+    const id = createHash('sha256').update(token).digest('hex');
+    const row = this.store.db.prepare("SELECT student_id, json FROM docs WHERE collection = 'api_tokens' AND id = ?").get(id) as { student_id: string; json: string } | undefined;
+    return row ? { studentId: row.student_id, scopes: (JSON.parse(row.json) as { scopes: ApiScope[] }).scopes } : undefined;
+  }
+
+  /** Deadlines and held time as an iCalendar feed any calendar app can subscribe to. */
+  calendarFeed(studentId: string): string {
+    const s = this.student(studentId);
+    const stamp = `${this.today().replace(/-/g, '')}T000000Z`;
+    const escIcs = (t: string) => t.replace(/[\\,;]/g, (c) => `\\${c}`).replace(/\n/g, '\\n');
+    const ev = (uid: string, title: string, date: string, start?: string, end?: string) =>
+      ['BEGIN:VEVENT', `UID:${uid}@student-advocate`, `DTSTAMP:${stamp}`, start ? `DTSTART:${date.replace(/-/g, '')}T${start.replace(':', '')}00` : `DTSTART;VALUE=DATE:${date.replace(/-/g, '')}`, ...(start && end ? [`DTEND:${date.replace(/-/g, '')}T${end.replace(':', '')}00`] : []), `SUMMARY:${escIcs(title)}`, 'END:VEVENT'].join('\r\n');
+    const events = [
+      ...this.deadlines(studentId).filter((d) => d.confirmed && !d.done).map((d) => ev(d.id, `${d.title}${d.course ? ` (${d.course})` : ''} due`, d.due.slice(0, 10), d.due.length > 10 ? d.due.slice(11, 16) : undefined, d.due.length > 10 ? d.due.slice(11, 16) : undefined)),
+      ...this.holds(studentId).map((h) => ev(h.id, h.title, h.date, h.start, h.end)),
+    ];
+    return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Student Advocate//EN', `X-WR-CALNAME:${escIcs(`${s.chosenName}'s Advocate`)}`, ...events, 'END:VCALENDAR', ''].join('\r\n');
+  }
+
+  addWebhook(studentId: string, url: string, events: string[]): { id: string; url: string; events: string[] } {
+    const u = new URL(url);
+    if (u.protocol !== 'https:') throw new Error('webhooks must use https');
+    const w = { id: `wh_${randomUUID().slice(0, 8)}`, url: u.toString(), events, secret: randomBytes(16).toString('hex') };
+    this.store.put('webhooks', w.id, studentId, w);
+    this.ledger.append(studentId, 'grant', `webhook:${u.hostname}`, { events });
+    return { id: w.id, url: w.url, events };
+  }
+
+  webhooks(studentId: string): { id: string; url: string; events: string[] }[] {
+    return this.store.list<{ id: string; url: string; events: string[] }>('webhooks', studentId).map(({ id, url, events }) => ({ id, url, events }));
+  }
+
+  removeWebhook(studentId: string, id: string): void {
+    const w = this.store.list<{ id: string; url: string }>('webhooks', studentId).find((x) => x.id === id);
+    if (!w) return;
+    this.store.remove('webhooks', id);
+    this.ledger.append(studentId, 'revoke', `webhook:${new URL(w.url).hostname}`, {});
+  }
+
+  /** Tell the student's own tools that something happened. Payloads name the event and ids, never message text. */
+  async emit(studentId: string, event: string, data: Record<string, unknown>): Promise<number> {
+    let sent = 0;
+    for (const w of this.store.list<{ id: string; url: string; events: string[]; secret: string }>('webhooks', studentId)) {
+      if (!w.events.includes(event) && !w.events.includes('*')) continue;
+      const body = JSON.stringify({ event, at: this.now().toISOString(), data });
+      const sig = createHmac('sha256', w.secret).update(body).digest('hex');
+      try {
+        await this.egress.send({ purpose: `webhook:${event}`, method: 'POST', url: w.url, body, headers: { 'content-type': 'application/json', 'x-advocate-signature': sig } });
+        sent++;
+      } catch {
+        this.ev('webhook_failed', studentId, { event });
+      }
+    }
+    return sent;
   }
 
   // ---------- sealed facts and control ----------

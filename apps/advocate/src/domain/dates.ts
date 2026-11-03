@@ -42,3 +42,6 @@ export function relDay(today: string, date: string): string {
   if (n > 1 && n < 7) return new Date(`${date.slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
   return shortDate(date);
 }
+
+/** End a sentence with one period, even when it ends in an abbreviation like "p.m." */
+export const sentence = (t: string): string => (/[.!?]$/.test(t) ? t : `${t}.`);

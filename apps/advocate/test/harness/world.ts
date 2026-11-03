@@ -2,7 +2,7 @@
 import { explore, hash, type ExploreReport, type Step } from '@zthr/explore';
 import { Advocate } from '../../src/agents/advocate.js';
 import type { ActionResult } from '../../src/agents/actions.js';
-import { seedDemo } from '../../src/server/demo.js';
+import { PERSONAS, PERSONA_NAMES } from '../../src/server/demo.js';
 import { checkTone } from '../../src/domain/tone.js';
 import type { NeedCategory } from '../../src/domain/types.js';
 
@@ -35,18 +35,38 @@ export const TYPED = ['today', 'plan', 'fafsa', 'I need food', 'what is a regist
 
 export const IDEMPOTENT = new Set(['mark-done', 'confirm-deadlines', 'confirm-deadline', 'dismiss', 'source-on', 'source-off', 'dial', 'pulses-off', 'pulses-on', 'hold-block', 'calendar-steps', 'remind', 'remind-meeting']);
 
-const STATE_IGNORE = new Set(['messages', 'last_steps']);
+const ID = /(dl|hd|rm|dr|mt)_[0-9a-f]{8}/g;
 
+/**
+ * The abstract state: what changes what the student can do or will be told next. Exact state multiplies
+ * independent features together (every combination of drafts, reminders and held times) and never reaches a
+ * fixpoint; this abstraction keeps each feature's own progress (every deadline's status, every playbook's step,
+ * whether a draft is waiting, whether a question is pending) and the buttons on screen, so every screen is
+ * reached in every state that changes its behavior, and the walk ends.
+ */
 export function signature(w: World, last: Outcome | undefined): string {
   if (w.deleted) return 'deleted';
-  const rows = w.a.store.exportStudent(w.sid);
-  const state = Object.entries(rows)
-    .filter(([c]) => !STATE_IGNORE.has(c))
-    .map(([c, docs]) => `${c}:${(docs as unknown[]).map((d) => JSON.stringify(d).replace(/"(id|deadlineId)":"[a-z]{2,3}_[0-9a-f]{8}"/g, '"$1":"*"').replace(/(dl|hd|rm|dr|mt)_[0-9a-f]{8}/g, '*')).sort().join('|')}`)
-    .sort()
-    .join('\n');
-  const next = last ? (last.via === 'tap' ? last.result.message.nextSteps.map((n) => n.action.replace(/(dl|hd|rm|dr|mt)_[0-9a-f]{8}/g, '*')) : last.replies.flatMap((r) => r.nextSteps.map((n) => n.action.replace(/(dl|hd|rm|dr|mt)_[0-9a-f]{8}/g, '*')))) : [];
-  return hash(`${state}\n--\n${next.join(',')}`);
+  const parts = stateParts(w);
+  const next = last ? (last.via === 'tap' ? last.result.message.nextSteps.map((n) => n.action.replace(ID, '*')) : last.replies.flatMap((r) => r.nextSteps.map((n) => n.action.replace(ID, '*')))) : [];
+  return hash(`${parts.join('\n')}\n--\n${next.join(',')}`);
+}
+
+export function stateParts(w: World): string[] {
+  const a = w.a;
+  const sid = w.sid;
+  const s = a.student(sid);
+  const store = a.store;
+  const has = (c: string) => (store.list(c, sid).length ? 1 : 0);
+  const parts = [
+    `dial:${s.dial.depth}:${s.dial.channel}:${s.chosenName === 'there' ? 'unnamed' : 'named'}`,
+    `deadlines:${a.deadlines(sid).map((d) => `${d.title}/${d.done ? 'done' : d.confirmed ? 'on' : 'unconfirmed'}`).sort().join(',')}`,
+    `runs:${store.list<{ playbook: string; stepId: string; status: string }>('playbook_runs', sid).map((r) => `${r.playbook}/${r.stepId}/${r.status}`).sort().join(',')}`,
+    `drafts:${a.drafts(sid).some((d) => d.status === 'shown') ? 'waiting' : 'none'}:${a.drafts(sid).some((d) => d.status === 'sent') ? 'sent' : ''}`,
+    `holds:${has('holds')} reminders:${has('reminders')} shifts:${a.shifts(sid).length} dismissed:${has('dismissed')}`,
+    `pulse:${a.pulseState(sid).off ? 'off' : 'on'}:${store.get('pulse_pending', sid) ? 'pending' : ''}`,
+    `sources:${['calendar', 'forwarding', 'learning-feed', 'location'].filter((x) => a.hasSource(sid, x)).join(',')}`,
+  ];
+  return parts;
 }
 
 export function perform(w: World, action: string): Outcome {
@@ -107,16 +127,14 @@ export function idempotency(w: World, step: Step<Outcome>): string[] {
 
 /** Each student as seeded, and again at each other depth, so every path is walked at every depth. */
 export function personaSeeds(only?: string[], depths: ('own' | 'brief' | 'standard' | 'walk-me-through')[] = ['own', 'brief', 'walk-me-through']) {
-  const names = ['Maria', 'Jayden', 'Darnell', 'Ana', 'Tyler', 'Priya', 'Destiny', 'Sam', 'Linda', 'Luis', 'Alex', 'Keisha'];
-  return names
+  return PERSONA_NAMES
     .filter((n) => !only || only.includes(n))
     .flatMap((name) =>
       depths.map((depth) => ({
         name: depth === 'own' ? name : `${name}/${depth}`,
         make: (): World => {
           const a = new Advocate({ today: () => DAY, now: () => new Date(`${DAY}T15:00:00Z`) });
-          const students = seedDemo(a);
-          const s = students.find((x) => x.chosenName === name)!;
+          const s = PERSONAS[name]!(a);
           if (depth !== 'own') a.setDial(s.id, { depth });
           return { a, sid: s.id };
         },
@@ -125,7 +143,7 @@ export function personaSeeds(only?: string[], depths: ('own' | 'brief' | 'standa
 }
 
 export function exploreAdvocate(opts: { only?: string[]; maxNodes?: number; withTyping?: boolean } = {}): ExploreReport {
-  const names = ['Maria', 'Jayden', 'Darnell', 'Ana', 'Tyler', 'Priya', 'Destiny', 'Sam', 'Linda', 'Luis', 'Alex', 'Keisha'];
+  const names = PERSONA_NAMES;
   const reports: ExploreReport[] = [];
   const merged: ExploreReport = { seeds: [], states: 0, transitions: 0, actionsSeen: [], verbsSeen: {}, violations: [], exhausted: true };
   for (const seed of personaSeeds(opts.only)) {

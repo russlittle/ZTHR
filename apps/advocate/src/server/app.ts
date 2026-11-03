@@ -1,101 +1,202 @@
 import { Hono } from 'hono';
+import { getCookie, setCookie } from 'hono/cookie';
+import * as ui from '@zthr/ui';
 import type { Advocate, Delivered } from '../agents/advocate.js';
-import { intentCompletion, costSummary } from '@zthr/evidence';
-import { friendly, shortDate } from '../domain/dates.js';
+import type { View } from '../agents/actions.js';
+import { friendly, relDay, shortDate, time12, weekday } from '../domain/dates.js';
 import type { NeedCategory, OutboundMessage } from '../domain/types.js';
-import { actionButton, esc, page } from './html.js';
+import { parseShifts } from '../domain/shifts.js';
+import { PERSONA_NAMES } from './demo.js';
+import { createApi } from './api.js';
 
 /**
- * The web app and text-message webhook. Both are thin: every behavior lives in
- * the Advocate, so the app and text channel stay at parity (PRD P8, ADR 0002).
+ * The web app and the text-message webhook. Both are thin: every behavior lives in the Advocate and its action
+ * registry, so the app and the text channel stay at parity (PRD P8, ADR 0002). Pages are server-rendered from
+ * the @zthr/ui blocks and work without JavaScript.
  */
-const NEEDS: [NeedCategory, string][] = [
-  ['food', 'Food'],
-  ['housing', 'Housing'],
-  ['utilities', 'Utilities'],
-  ['money', 'Money for an emergency'],
-  ['transportation', 'Getting around'],
-  ['phone-internet', 'Phone or internet'],
-  ['childcare', 'Child care'],
-  ['legal', 'Legal help'],
-  ['mental-health', 'Someone to talk to'],
-];
-
-const PROGRAM_RESOURCE: Record<string, string> = {
-  snap: 'ohio-benefits-snap',
-  lifeline: 'lifeline',
-  'ohio-heap': 'ohio-heap',
-  'sinclair-emergency-grant': 'sinclair-emergency-grant',
-};
-
-function messageCard(sid: string, m: Delivered | (OutboundMessage & { at?: string })): string {
-  return `<div class="card"><div class="msg">${esc(m.text)}</div>${m.why ? `<div class="why">Why you're seeing this: ${esc(m.why)}</div>` : ''}<div class="steps">${m.nextSteps
-    .map((n, i) => actionButton(sid, n.label, n.action, i > 0))
-    .join('')}</div></div>`;
+export interface AppOptions {
+  /** Where the app is mounted, for example "/advocate". Empty for the root. */
+  base?: string;
+  /** Demonstration students shown on the start page. */
+  demo?: { id: string; name: string; line: string }[];
 }
 
-export function createApp(a: Advocate): Hono {
-  const app = new Hono();
+const NEEDS: [NeedCategory, string, string][] = [
+  ['food', 'Food', 'food'],
+  ['housing', 'Rent or a place to stay', 'home'],
+  ['utilities', 'Power, gas or water', 'bolt'],
+  ['money', 'Money for an emergency', 'dollar'],
+  ['transportation', 'Getting around', 'bus'],
+  ['phone-internet', 'Phone or internet', 'phone'],
+  ['childcare', 'Child care', 'child'],
+  ['legal', 'Legal help', 'shield'],
+  ['mental-health', 'Someone to talk to', 'talk'],
+];
+const SITUATIONS: [string, string][] = [
+  ['eviction', 'I got an eviction notice'],
+  ['utility-shutoff', 'My power is getting shut off'],
+  ['car', 'My car died'],
+  ['no-food', "I'm out of food"],
+  ['rent-short', "I can't make rent"],
+];
 
-  app.get('/', (c) =>
-    c.html(
-      page(
-        'Student Advocate',
-        `<div class="card"><h2>A team that works for you, not your college</h2>
-<p>Student Advocate runs your day, finds money and help you qualify for, and does the legwork to get it. It's free, it belongs to you, and it never shares anything unless you say so.</p>
-<p><strong>Start by text:</strong> send any message to the Advocate number, or try the <a href="/demo">demo students</a>.</p>
-<p class="muted">This is the demonstration build of the ZTHR reference implementation. It runs on synthetic students; nothing here is a real person's data.</p></div>
-<div class="card"><h2>Try it by text</h2><form method="post" action="/try"><label for="phone">Pretend phone number</label><input id="phone" name="phone" value="+19375550123"><label for="body">Message</label><input id="body" name="body" value="I need help with my electric bill"><div class="steps"><button>Send</button></div></form></div>`,
-      ),
-    ),
-  );
+const FROM: Record<string, string> = {
+  'chief-of-staff': 'Your Advocate',
+  navigator: 'Help finder',
+  'coursework-planner': 'Class planner',
+  'household-planner': 'Week planner',
+  'safety-router': 'Your Advocate',
+  'money-coach': 'Money coach',
+  'money-and-life-coach': 'Money coach',
+};
 
-  app.post('/try', async (c) => {
-    const f = await c.req.parseBody();
-    const phone = String(f.phone ?? '+19375550123');
-    const replies = a.textIn(phone, String(f.body ?? ''));
-    const s = a.findByPhone(phone);
+const fromLabel = (author: string) => FROM[author] ?? (author.startsWith('playbook:') ? 'Checklist' : 'Your Advocate');
+
+export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
+  const base = opts.base ?? '';
+  const app = new Hono({ strict: false });
+  const u = (sid: string, path = '') => `${base}/s/${encodeURIComponent(sid)}${path}`;
+  const VIEW_PATH: Record<View, string> = { today: '', money: '/money', help: '/help', settings: '/you', week: '/week', syllabus: '/syllabus', shifts: '/shifts', dates: '/dates', drafts: '/drafts', resource: '/resource', ask: '/ask', deleted: '', share: '/share' };
+
+  const toAction = (sid: string, n: { label: string; action: string }, i: number): ui.Action =>
+    n.action.startsWith('call:')
+      ? { label: n.label, href: `tel:${n.action.slice(5)}`, variant: 'call', icon: 'phone' }
+      : { label: n.label, post: { url: u(sid, '/action'), fields: { action: n.action } }, variant: i === 0 ? 'primary' : 'quiet' };
+
+  const noteFor = (sid: string, m: OutboundMessage | Delivered, extra: Partial<ui.NoteOpts> = {}) =>
+    ui.note({
+      kind: m.urgency === 'safety' ? 'safety' : m.urgency === 'time-sensitive' ? 'heads' : m.author === 'coursework-planner' ? 'plan' : 'info',
+      from: fromLabel(m.author),
+      body: m.text,
+      why: m.why,
+      actions: m.nextSteps.map((n, i) => toAction(sid, n, i)),
+      ...extra,
+    });
+
+  const nav = (sid: string, current: string): ui.NavItem[] => [
+    { href: u(sid), label: 'Today', icon: 'today', current: current === 'today' },
+    { href: u(sid, '/money'), label: 'Money', icon: 'money', current: current === 'money' },
+    { href: u(sid, '/help'), label: 'Help', icon: 'help', current: current === 'help' },
+    { href: u(sid, '/you'), label: 'You', icon: 'you', current: current === 'you' },
+  ];
+
+  const page = (sid: string | undefined, title: string, body: string, current = '') =>
+    ui.appShell({ title: `${title} · Student Advocate`, body, base, brand: 'Student Advocate', brandHref: sid ? u(sid) : `${base}/`, nav: sid ? nav(sid, current) : [{ href: `${base}/`, label: 'Start', icon: 'today' }, { href: `${base}/text`, label: 'Try by text', icon: 'send' }] });
+
+  /** A message produced by the last tap, shown at the top of the screen it led to. */
+  const flash = (sid: string, id: string | undefined) => {
+    if (!id) return '';
+    const m = a.messages(sid).find((x) => x.id === id);
+    return m ? noteFor(sid, m, { id: 'latest' }) : '';
+  };
+
+  const exists = (sid: string) => {
+    try {
+      a.student(sid);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  app.get('/_ui/:file', (c) => {
+    const f = ui.uiAsset(c.req.param('file'));
+    return f ? c.body(f.body as unknown as ArrayBuffer, 200, { 'content-type': f.type, 'cache-control': 'public, max-age=31536000, immutable' }) : c.notFound();
+  });
+
+  app.use('/s/:id/*', async (c, next) => (exists(c.req.param('id')) ? next() : c.html(page(undefined, 'Not found', ui.note({ title: 'That student is not here', body: 'The link may be old, or the account was deleted.', actions: [{ label: 'Go to the start', href: `${base}/` }] })), 404)));
+  app.use('/s/:id', async (c, next) => (exists(c.req.param('id')) ? next() : c.html(page(undefined, 'Not found', ui.note({ title: 'That student is not here', body: 'The link may be old, or the account was deleted.', actions: [{ label: 'Go to the start', href: `${base}/` }] })), 404)));
+
+  // ------------------------------------------------------------ start
+
+  app.get('/', (c) => {
+    const demo = opts.demo ?? [];
     return c.html(
       page(
-        'Text conversation',
-        `${replies.map((r) => `<div class="card msg">${esc(r)}</div>`).join('')}
-<div class="card"><form method="post" action="/try"><input type="hidden" name="phone" value="${esc(phone)}"><label for="body">Reply</label><input id="body" name="body" autofocus><div class="steps"><button>Send</button>${s ? `<a class="btn secondary" href="/s/${esc(s.id)}">Open in the app</a>` : ''}</div></form></div>`,
+        undefined,
+        'Start',
+        `<div class="hello"><h1>A team that works for you</h1><p class="date">Student Advocate runs your day, finds money and help you qualify for, and does the legwork to get it. It belongs to you, and it never shares anything unless you say so.</p></div>
+${demo.length ? ui.section('Meet the students', ui.rows(demo.map((d) => ({ title: d.name, sub: d.line, href: u(d.id) })))) : ''}
+${ui.section('Or start by text', ui.note({ body: 'Text the Advocate the way you would text a friend. Try it here without a phone.', actions: [{ label: 'Try it by text', href: `${base}/text`, icon: 'send' }] }))}`,
       ),
     );
+  });
+
+  // ------------------------------------------------------------ text, in the browser and from the carrier
+
+  const textPage = (phone: string, thread: { who: 'you' | 'advocate'; text: string }[]) =>
+    page(
+      undefined,
+      'Try it by text',
+      `<div class="hello"><h1>Text the Advocate</h1><p class="date">This is exactly what a student sees on their phone.</p></div>
+<div class="panel"><ul class="rows">${thread.map((t) => `<li><div class="grow"><b>${t.who === 'you' ? 'You' : 'Advocate'}</b><span style="white-space:pre-line;color:var(--ink)">${ui.esc(t.text)}</span></div></li>`).join('') || '<li><div class="grow"><span>Say anything, like "I need help with my electric bill".</span></div></li>'}</ul></div>
+${ui.form({ url: `${base}/text`, submit: 'Send', hidden: { phone }, fields: [{ name: 'body', label: 'Message', placeholder: 'I need help with my electric bill' }] })}
+${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', href: u(a.findByPhone(phone)!.id), variant: 'quiet' }]) : ''}`,
+    );
+
+  const threads = new Map<string, { who: 'you' | 'advocate'; text: string }[]>();
+  app.get('/text', (c) => {
+    let phone = getCookie(c, 'demo_phone');
+    if (!phone) {
+      phone = `+1937555${String(Math.floor(1000 + Math.random() * 8999))}`;
+      setCookie(c, 'demo_phone', phone, { path: base || '/', httpOnly: true, sameSite: 'Lax', maxAge: 86400 });
+    }
+    return c.html(textPage(phone, threads.get(phone) ?? []));
+  });
+  app.post('/text', async (c) => {
+    const f = await c.req.parseBody();
+    const phone = String(f.phone ?? getCookie(c, 'demo_phone') ?? '+19375550123');
+    const body = String(f.body ?? '');
+    const replies = a.textIn(phone, body);
+    const t = threads.get(phone) ?? [];
+    t.push({ who: 'you', text: body }, ...replies.map((r) => ({ who: 'advocate' as const, text: r })));
+    threads.set(phone, t.slice(-40));
+    return c.html(textPage(phone, t));
   });
 
   // Carrier webhook (form-encoded From and Body), answered in the provider's XML reply format.
   app.post('/sms/inbound', async (c) => {
     const f = await c.req.parseBody();
     const replies = a.textIn(String(f.From ?? ''), String(f.Body ?? ''));
-    const xml = `<?xml version="1.0" encoding="UTF-8"?><Response>${replies.map((r) => `<Message>${esc(r)}</Message>`).join('')}</Response>`;
+    const xml = `<?xml version="1.0" encoding="UTF-8"?><Response>${replies.map((r) => `<Message>${ui.esc(r)}</Message>`).join('')}</Response>`;
     return c.body(xml, 200, { 'content-type': 'text/xml' });
   });
+
+  // ------------------------------------------------------------ today
 
   app.get('/s/:id', (c) => {
     const sid = c.req.param('id');
     const s = a.student(sid);
     const v = a.today_(sid);
-    const recent = a.messages(sid).filter((m) => m.status === 'delivered').slice(-6).reverse();
-    const ahead = a.lookAhead(sid);
+    const date = v.date;
+    const stops: ui.Stop[] = [
+      ...v.classes.map((k) => ({ time: time12(k.start).replace(':00', ''), title: k.course, sub: [k.building, k.room ? `room ${k.room}` : ''].filter(Boolean).join(', '), kind: 'class' as const, at: k.start })),
+      ...v.shifts.map((x) => ({ time: time12(x.start).replace(':00', ''), title: 'Work', sub: `${x.employer ?? ''}${x.employer ? ', ' : ''}until ${time12(x.end)}`, kind: 'shift' as const, at: x.start })),
+      ...a.holds(sid).filter((h) => h.date === date).map((h) => ({ time: time12(h.start).replace(':00', ''), title: h.title, sub: `Held until ${time12(h.end)}`, kind: 'hold' as const, at: h.start })),
+      ...a.deadlines(sid).filter((d) => !d.done && d.confirmed && d.due.slice(0, 10) === date).map((d) => ({ time: d.due.length > 10 ? time12(d.due.slice(11, 16)).replace(':00', '') : 'Today', title: `${d.title} due`, sub: d.course, kind: 'due' as const, at: d.due.length > 10 ? d.due.slice(11, 16) : '23:59' })),
+    ].sort((x, y) => x.at.localeCompare(y.at));
     const money = a.moneyCheck(sid);
     const pulse = a.pulse(sid);
+    const ahead = a.lookAhead(sid);
+    const conflicts = a.conflictMessages(sid);
+    const today = a.todayMessage(sid);
+    const greeting = `Good ${new Date().getUTCHours() - 5 < 12 ? 'morning' : 'afternoon'}, ${s.chosenName}`;
+    const one = v.oneThing;
+    const comingUp = v.dueSoon.filter((d) => d.due.slice(0, 10) !== date);
+    const unconfirmed = a.deadlines(sid).filter((d) => !d.confirmed && !d.done).length;
     return c.html(
       page(
+        sid,
         `Today, ${s.chosenName}`,
-        `${messageCard(sid, a.todayMessage(sid))}
-${money ? messageCard(sid, money) : ''}
-${pulse ? messageCard(sid, pulse) : ''}
-${ahead.map((m) => messageCard(sid, m)).join('')}
-<div class="card"><h2>Coming up</h2>${
-          v.dueSoon.length
-            ? `<ul class="clean">${v.dueSoon.map((d) => `<li>${esc(d.title)}${d.course ? ` <span class="tag">${esc(d.course)}</span>` : ''}<br><span class="muted">${esc(friendly(d.due))}</span> ${actionButton(sid, 'Done', `mark-done:${d.id}`, true)}</li>`).join('')}</ul>`
-            : '<p class="muted">Nothing due in the next week. Add a syllabus below and I will find every date.</p>'
-        }</div>
-<div class="card"><h2>Talk to your Advocate</h2><form method="post" action="/s/${esc(sid)}/say"><label for="t">Message</label><input id="t" name="text" placeholder="Try: I need food, today, what is a registrar"><div class="steps"><button>Send</button></div></form></div>
-${recent.length ? `<div class="card"><h2>Recent</h2>${recent.map((m) => `<div class="msg" style="margin:8px 0">${esc(m.text)}</div>`).join('<hr style="border:0;border-top:1px solid var(--line)">')}</div>` : ''}
-<div class="card"><h2>Add a syllabus</h2><form method="post" action="/s/${esc(sid)}/syllabus"><label for="course">Course</label><input id="course" name="course" placeholder="ENG 1101"><label for="text">Paste the schedule part of the syllabus</label><textarea id="text" name="text" rows="6"></textarea><div class="steps"><button>Find the dates</button></div></form></div>`,
-        { studentId: sid },
+        `${flash(sid, c.req.query('m'))}
+<div class="hello"><h1>${ui.esc(greeting)}</h1><p class="date">${ui.esc(friendly(date))}</p></div>
+${stops.length ? ui.dayLine(stops, `Your ${weekday(date)}`) : ui.note({ body: 'Nothing on your calendar today. Add your classes or shifts and I will plan around them.', actions: [toAction(sid, { label: 'Add a syllabus', action: 'upload-syllabus' }, 0), toAction(sid, { label: 'Add my work shifts', action: 'add-shifts' }, 1)] })}
+${one ? ui.note({ kind: 'one', title: 'If you do one thing today', body: `${one.title}. ${one.why}.`, actions: today.nextSteps.map((n, i) => toAction(sid, n, i)) }) : ''}
+${[money, pulse, ...conflicts, ...ahead].filter((m): m is OutboundMessage => !!m).map((m) => noteFor(sid, m)).join('')}
+${unconfirmed ? ui.note({ kind: 'plan', from: 'Class planner', body: `${unconfirmed} date${unconfirmed === 1 ? '' : 's'} from your syllabus need a quick look before I plan around them.`, actions: [toAction(sid, { label: 'Check the dates', action: 'review-deadlines' }, 0)] }) : ''}
+${ui.section('Coming up', ui.rows(comingUp.map((d) => ({ title: d.title, sub: `${d.course ? `${d.course}, ` : ''}${relDay(date, d.due)}`, actions: [toAction(sid, { label: 'Done', action: `mark-done:${d.id}` }, 1)] })), 'Nothing due in the next week.'), `<a href="${u(sid, '/week')}">See the week</a>`)}
+${ui.section('Ask your Advocate', ui.form({ url: u(sid, '/say'), submit: 'Send', fields: [{ name: 'text', label: 'Message', placeholder: 'Try: plan my essay, I need food, what is a registrar' }] }))}`,
+        'today',
       ),
     );
   });
@@ -103,214 +204,256 @@ ${recent.length ? `<div class="card"><h2>Recent</h2>${recent.map((m) => `<div cl
   app.post('/s/:id/say', async (c) => {
     const sid = c.req.param('id');
     const f = await c.req.parseBody();
-    const out = a.converse(sid, String(f.text ?? ''));
-    return c.html(page('Advocate', out.map((m) => messageCard(sid, m)).join(''), { studentId: sid }));
+    const text = String(f.text ?? '').trim();
+    const out = text ? a.converse(sid, text) : [];
+    return c.html(page(sid, 'Your Advocate', `<div class="hello"><h1>Your Advocate</h1>${text ? `<p class="date">You asked: ${ui.esc(text)}</p>` : ''}</div>${out.map((m) => noteFor(sid, m)).join('')}${ui.form({ url: u(sid, '/say'), submit: 'Send', fields: [{ name: 'text', label: 'Ask something else' }] })}`, 'today'));
+  });
+
+  app.get('/s/:id/ask', (c) => {
+    const sid = c.req.param('id');
+    const recent = a.messages(sid).filter((m) => m.status === 'delivered').slice(-8).reverse();
+    return c.html(page(sid, 'Ask', `${flash(sid, c.req.query('m'))}<div class="hello"><h1>Ask your Advocate</h1><p class="date">School, money or life. Your own words are fine.</p></div>${ui.form({ url: u(sid, '/say'), submit: 'Send', fields: [{ name: 'text', label: 'Message' }] })}${recent.length ? ui.section('Recent', recent.map((m) => noteFor(sid, m)).join('')) : ''}`, 'today'));
+  });
+
+  // ------------------------------------------------------------ week, dates, shifts, syllabus
+
+  app.get('/s/:id/week', (c) => {
+    const sid = c.req.param('id');
+    const w = a.week(sid);
+    const date = a.today_(sid).date;
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(`${date}T12:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + i);
+      return d.toISOString().slice(0, 10);
+    });
+    const grid: ui.WeekDay[] = days.map((d) => ({
+      label: `${relDay(date, d)[0]!.toUpperCase()}${relDay(date, d).slice(1)}${relDay(date, d).includes(',') ? '' : `, ${shortDate(d).split(', ')[1] ?? ''}`}`,
+      blocks: [
+        ...w.blocks.filter((b) => b.date === d && b.kind !== 'sleep').map((b) => ({ time: time12(b.start).replace(':00', ''), title: b.label, kind: b.kind, at: b.start })),
+        ...a.holds(sid).filter((h) => h.date === d).map((h) => ({ time: time12(h.start).replace(':00', ''), title: h.title, kind: 'hold', at: h.start })),
+        ...a.deadlines(sid).filter((x) => !x.done && x.confirmed && x.due.slice(0, 10) === d).map((x) => ({ time: 'Due', title: x.title, kind: 'due', at: '23:58' })),
+      ].sort((x, y) => x.at.localeCompare(y.at)),
+      problem: w.problems.filter((p) => p.date === d).map((p) => p.text).join(' ') || undefined,
+    }));
+    return c.html(page(sid, 'Your week', `${flash(sid, c.req.query('m'))}<div class="hello"><h1>Your week</h1><p class="date">${ui.esc(`${w.studyHours} hours open for study${w.problems.length ? `, and ${w.problems.length} thing${w.problems.length === 1 ? '' : 's'} to fix` : ''}.`)}</p></div>${w.problems.length ? noteFor(sid, w.message) : ''}${ui.weekGrid(grid)}${ui.actions([toAction(sid, { label: 'Add my work shifts', action: 'add-shifts' }, 1), toAction(sid, { label: 'Plan what is due next', action: 'plan-next' }, 1)])}`, 'today'));
+  });
+
+  app.get('/s/:id/dates', (c) => {
+    const sid = c.req.param('id');
+    const all = a.deadlines(sid).filter((d) => !d.done);
+    const row = (d: (typeof all)[number]) => ({
+      title: d.title,
+      sub: `${d.course ? `${d.course}, ` : ''}${shortDate(d.due)}${d.source.line ? `. From: "${d.source.line}"` : ''}`,
+      chip: d.confirmed ? { text: 'On your calendar', tone: 'ok' as const } : { text: 'Check this', tone: 'warn' as const },
+      actions: d.confirmed ? [toAction(sid, { label: 'Remove', action: `remove-deadline:${d.id}` }, 1)] : [toAction(sid, { label: 'Looks right', action: `confirm-deadline:${d.id}` }, 0), toAction(sid, { label: 'Remove', action: `remove-deadline:${d.id}` }, 1)],
+    });
+    return c.html(page(sid, 'Your dates', `${flash(sid, c.req.query('m'))}<div class="hello"><h1>Your dates</h1><p class="date">Everything I found, and where I found it.</p></div>${ui.rows(all.map(row), 'No dates yet. Add a syllabus and I will find them.')}${ui.actions([toAction(sid, { label: 'Add a syllabus', action: 'upload-syllabus' }, 1)])}`, 'today'));
+  });
+
+  app.get('/s/:id/syllabus', (c) => {
+    const sid = c.req.param('id');
+    return c.html(page(sid, 'Add a syllabus', `${flash(sid, c.req.query('m'))}<div class="hello"><h1>Add a syllabus</h1><p class="date">Paste the schedule part. I find every date and ask you to check them.</p></div>${ui.form({ url: u(sid, '/syllabus'), submit: 'Find the dates', fields: [{ name: 'course', label: 'Course', placeholder: 'ENG 1101' }, { name: 'text', label: 'Schedule', multiline: 8, placeholder: 'Sep 3 Reading: Chapter 1\nOct 14 Essay 1 due' }] })}`, 'today'));
   });
 
   app.post('/s/:id/syllabus', async (c) => {
     const sid = c.req.param('id');
     const f = await c.req.parseBody();
-    const r = a.uploadSyllabus(sid, String(f.course || 'Course'), String(f.text ?? ''), a.student(sid).createdAt.slice(0, 4) + '-08-24');
-    const list = `<div class="card"><h2>Dates I found</h2><ul class="clean">${r.deadlines.map((d) => `<li><strong>${esc(d.title)}</strong> <span class="tag">${esc(shortDate(d.due))}</span><div class="why">From: "${esc(d.source.line)}"</div></li>`).join('')}</ul></div>`;
-    return c.html(page('Syllabus', messageCard(sid, a.deliver(r.message, { force: true })) + list, { studentId: sid }));
+    const r = a.uploadSyllabus(sid, String(f.course || 'Course').slice(0, 20), String(f.text ?? '').slice(0, 20000), `${a.today_(sid).date.slice(0, 4)}-08-24`);
+    const d = a.deliver(r.message, { force: true });
+    return c.redirect(`${u(sid, '/dates')}?m=${d.id}`);
   });
+
+  app.get('/s/:id/shifts', (c) => {
+    const sid = c.req.param('id');
+    const date = a.today_(sid).date;
+    const upcoming = a.shifts(sid).filter((x) => x.date >= date);
+    return c.html(page(sid, 'Work shifts', `${flash(sid, c.req.query('m'))}<div class="hello"><h1>Work shifts</h1><p class="date">I plan study time and reminders around these.</p></div>${ui.rows(upcoming.map((x) => ({ title: `${relDay(date, x.date)[0]!.toUpperCase()}${relDay(date, x.date).slice(1)}`, sub: `${time12(x.start)} to ${time12(x.end)}${x.employer ? `, ${x.employer}` : ''}` })), 'No shifts yet.')}${ui.form({ url: u(sid, '/shifts'), submit: 'Add shifts', fields: [{ name: 'text', label: 'Your shifts', placeholder: 'Tue 3pm-9pm, Thu 4-10pm', hint: 'A day and times, separated by commas.' }] })}`, 'today'));
+  });
+
+  app.post('/s/:id/shifts', async (c) => {
+    const sid = c.req.param('id');
+    const f = await c.req.parseBody();
+    const parsed = parseShifts(String(f.text ?? '').slice(0, 2000), a.today_(sid).date);
+    const m = parsed.shifts.length ? a.addShiftsMessage(sid, parsed.shifts, parsed.unread) : { studentId: sid, author: 'chief-of-staff', urgency: 'routine' as const, text: 'I could not read those. Try a day and times, like Tue 3pm-9pm.', nextSteps: [{ label: 'Show my day', action: 'today' }] };
+    const d = a.deliver(m, { force: true });
+    return c.redirect(`${u(sid, '/shifts')}?m=${d.id}`);
+  });
+
+  // ------------------------------------------------------------ money
 
   app.get('/s/:id/money', (c) => {
     const sid = c.req.param('id');
     const results = a.screen(sid);
+    const likely = results.filter((r) => r.status === 'likely');
+    const monthly = likely.reduce((n, r) => n + (r.estimatedMonthlyValue ?? 0), 0);
+    const tone = (st: string) => (st === 'likely' ? 'ok' : st === 'unlikely' ? undefined : 'warn') as 'ok' | 'warn' | undefined;
+    const programRows = results.map((r) => ({
+      title: r.title,
+      sub: [...r.reasons, ...r.needs.map((n) => `Need: ${n}`)].join(' '),
+      chip: { text: r.status === 'likely' ? (r.estimatedMonthlyValue ? `About $${r.estimatedMonthlyValue.toFixed(r.estimatedMonthlyValue % 1 ? 2 : 0)}/mo` : 'Likely') : r.status === 'unlikely' ? 'Not likely' : 'Need more info', tone: tone(r.status) },
+      actions: r.status === 'likely' ? [toAction(sid, { label: 'Start', action: `start-program:${r.program}` }, 0)] : [],
+    }));
+    const s = a.student(sid);
     return c.html(
       page(
+        sid,
         'Money',
-        `${messageCard(sid, a.moneyFoundMessage(sid))}
-<div class="card"><h2>What I checked</h2><table><tr><th>Program</th><th>Result</th><th>Why</th></tr>${results
-          .map(
-            (r) =>
-              `<tr><td>${esc(r.title)}</td><td class="${r.status === 'likely' ? 'ok' : r.status === 'unlikely' ? 'muted' : 'warn'}">${esc(r.status.replace('-', ' '))}${r.estimatedMonthlyValue ? `<br>$${esc(r.estimatedMonthlyValue)}/mo${r.valueIsEstimate ? ' est.' : ''}` : ''}</td><td>${esc([...r.reasons, ...r.needs.map((n) => `Need: ${n}`)].join(' '))}<div class="why"><a href="${esc(r.source)}">Rule source</a>${r.statusRuleNote ? ` · ${esc(r.statusRuleNote)}` : ''}</div></td></tr>`,
-          )
-          .join('')}</table></div>`,
-        { studentId: sid },
+        `${flash(sid, c.req.query('m'))}
+<div class="hello"><h1>Money you may be missing</h1><p class="date">I checked ${results.length} programs against what you told me. The agencies make the final call.</p></div>
+${likely.length ? `<div class="panel" style="padding:18px">${ui.figure(monthly ? `$${Math.round(monthly)}` : `${likely.length}`, monthly ? 'a month you may qualify for' : `program${likely.length === 1 ? '' : 's'} you likely qualify for`)}</div>` : ''}
+${a.moneyCheck(sid) ? noteFor(sid, a.moneyCheck(sid)!) : ''}
+${ui.section('What I checked', ui.rows(programRows))}
+<p class="small muted">Some programs have citizenship or immigration rules. I never ask about that. The agency explains its rules, and you decide whether to apply.</p>
+${ui.section('Update what I know', ui.form({ url: u(sid, '/household'), submit: 'Check again', fields: [{ name: 'size', label: 'People in your household, counting you', value: String(s.household.size), type: 'number' }, { name: 'income', label: 'Household income a month, before taxes', value: s.household.monthlyGrossIncome !== undefined ? String(s.household.monthlyGrossIncome) : '', type: 'number' }, { name: 'work', label: 'Hours you work a week', value: s.enrollment.weeklyWorkHours !== undefined ? String(s.enrollment.weeklyWorkHours) : '', type: 'number' }] }))}`,
+        'money',
       ),
     );
   });
+
+  app.post('/s/:id/household', async (c) => {
+    const sid = c.req.param('id');
+    const f = await c.req.parseBody();
+    const s = a.student(sid);
+    const num = (v: unknown) => (v === undefined || v === '' || Number.isNaN(Number(v)) ? undefined : Math.max(0, Number(v)));
+    a.updateStudent(sid, { household: { ...s.household, size: Math.max(1, Math.min(20, num(f.size) ?? s.household.size)), monthlyGrossIncome: num(f.income) ?? s.household.monthlyGrossIncome }, enrollment: { ...s.enrollment, weeklyWorkHours: num(f.work) ?? s.enrollment.weeklyWorkHours } });
+    const d = a.deliver(a.moneyFoundMessage(sid), { force: true });
+    return c.redirect(`${u(sid, '/money')}?m=${d.id}`);
+  });
+
+  // ------------------------------------------------------------ help
 
   app.get('/s/:id/help', (c) => {
     const sid = c.req.param('id');
+    const post = (action: string) => ({ url: u(sid, '/action'), fields: { action } });
     return c.html(
       page(
+        sid,
         'Help',
-        `<div class="card"><h2>What's hard right now?</h2><p class="muted">Pick one. I'll find help that fits you and do the legwork.</p><div class="steps">${NEEDS.map(([n, label]) => actionButton(sid, label, `need:${n}`, true)).join('')}</div></div>
-<div class="card"><h2>Something went wrong?</h2><div class="steps">${[
-          ['I got an eviction notice', 'situation:eviction'],
-          ['My power is getting shut off', 'situation:utility-shutoff'],
-          ['My car died', 'situation:car'],
-          ["I'm out of food", 'situation:no-food'],
-          ["I can't make rent", 'situation:rent-short'],
-        ]
-          .map(([l, x]) => actionButton(sid, l!, x!, true))
-          .join('')}</div></div>
-<div class="card"><h2>Need to talk to someone now?</h2><p>Call or text <strong>988</strong> any time. If you are in danger, call 911.</p></div>`,
-        { studentId: sid },
+        `${flash(sid, c.req.query('m'))}
+<div class="hello"><h1>What's hard right now?</h1><p class="date">Pick one. I find help that fits you and do the legwork.</p></div>
+${ui.tiles(NEEDS.map(([n, label, ic]) => ({ label, icon: ic, post: post(`need:${n}`) })), 'Kinds of help')}
+${ui.section('Something went wrong?', ui.tiles(SITUATIONS.map(([x, label]) => ({ label, icon: 'alert', post: post(`situation:${x}`) })), 'Situations'))}
+${ui.note({ kind: 'safety', title: 'Need to talk to someone now?', body: 'Call or text 988 any time, day or night. If you are in danger, call 911.', actions: [{ label: 'Call or text 988', href: 'tel:988', variant: 'call', icon: 'phone' }] })}`,
+        'help',
       ),
     );
   });
 
-  app.get('/s/:id/settings', (c) => {
+  app.get('/s/:id/resource/:rid', (c) => {
+    const sid = c.req.param('id');
+    const r = a.catalog.find((x) => x.id === c.req.param('rid'));
+    if (!r) return c.redirect(u(sid, '/help'));
+    const opt = a.findHelp(sid, r.categories[0]!).options.find((o) => o.resource.id === r.id);
+    const steps = `<ol>${r.howToApply.map((x) => `<li>${ui.esc(x)}</li>`).join('')}</ol>`;
+    return c.html(
+      page(
+        sid,
+        r.name,
+        `${flash(sid, c.req.query('m'))}<div class="hello"><h1>${ui.esc(r.name)}</h1><p class="date">${ui.esc(r.description)}</p></div>
+<div class="panel" style="padding:16px 18px">${r.hours ? `<p><b>Hours:</b> ${ui.esc(r.hours)}</p>` : '<p class="muted">Hours are not published. Call ahead.</p>'}${r.location ? `<p><b>Where:</b> ${ui.esc(r.location.address)}, ${ui.esc(r.location.city)}</p>` : ''}${r.phone ? `<p><b>Call:</b> <a href="tel:${ui.esc(r.phone)}">${ui.esc(r.phone)}</a></p>` : ''}<h2 style="margin-top:14px">Steps</h2>${steps}
+${opt?.missingDocuments.length ? `<h3>Still needed</h3><ul>${opt.missingDocuments.map((d) => `<li>${ui.esc(d)}</li>`).join('')}</ul>` : ''}
+${opt && Object.keys(opt.prefilled).length ? `<h3>I can fill in</h3><ul>${Object.entries(opt.prefilled).map(([k, v]) => `<li>${ui.esc(k)}: ${ui.esc(v)}</li>`).join('')}</ul>` : ''}
+<p class="small muted">Checked ${ui.esc(r.verifiedOn)} against <a href="${ui.esc(r.source.url)}">the source</a>.</p></div>
+${ui.actions([...(r.url ? [{ label: 'Open the application', href: r.url }] : []), ...(r.phone ? [{ label: `Call ${r.name}`, href: `tel:${r.phone}`, variant: 'call' as const, icon: 'phone' }] : []), toAction(sid, { label: 'Share with a friend', action: `share:${r.id}` }, 1)])}`,
+        'help',
+      ),
+    );
+  });
+
+  app.get('/s/:id/resource', (c) => c.redirect(u(c.req.param('id'), '/help')));
+
+  app.get('/s/:id/share', (c) => {
+    const sid = c.req.param('id');
+    const sh = a.shareText(sid, c.req.query('r') || undefined);
+    return c.html(page(sid, 'Share', `<div class="hello"><h1>Send to a friend</h1></div>${ui.note({ body: sh.text, actions: [{ label: 'Send by text', href: sh.smsLink, icon: 'send' }] })}`, 'help'));
+  });
+
+  app.get('/s/:id/drafts', (c) => {
+    const sid = c.req.param('id');
+    const purpose = c.req.query('p');
+    const list = a.drafts(sid).filter((d) => !purpose || d.purpose === purpose).reverse();
+    return c.html(
+      page(
+        sid,
+        'Messages to send',
+        `${flash(sid, c.req.query('m'))}<div class="hello"><h1>Messages I drafted</h1><p class="date">Nothing is sent until you tap send.</p></div>${
+          list.length
+            ? list.map((d) => ui.note({ kind: d.status === 'sent' ? 'info' : 'plan', title: `To ${d.to}`, body: d.body, actions: d.status === 'sent' ? [] : [toAction(sid, { label: 'Send it', action: `approve:${d.id}` }, 0)], from: d.status === 'sent' ? 'Sent' : 'Waiting for you' })).join('')
+            : ui.rows([], 'No drafts right now.')
+        }`,
+        'today',
+      ),
+    );
+  });
+
+  // ------------------------------------------------------------ you
+
+  app.get('/s/:id/you', (c) => {
     const sid = c.req.param('id');
     const s = a.student(sid);
-    const ledger = a.ledger.entries(sid).slice(-10).reverse();
+    const ledger = a.ledger.entries(sid).slice(-12).reverse();
+    const ps = a.pulseState(sid);
+    const depthLabel = { brief: 'Brief', standard: 'Standard', 'walk-me-through': 'Walk me through' } as const;
     return c.html(
       page(
-        'Settings',
-        `<div class="card"><h2>How I work with you</h2><p>Depth: <strong>${esc(s.dial.depth)}</strong> · Channel: <strong>${esc(s.dial.channel)}</strong> · Quiet hours ${esc(s.dial.quietStart)} to ${esc(s.dial.quietEnd)}</p><div class="steps">${actionButton(sid, 'Brief', 'dial:brief', true)}${actionButton(sid, 'Standard', 'dial:standard', true)}${actionButton(sid, 'Walk me through', 'dial:walk-me-through', true)}</div></div>
-<div class="card"><h2>What I can see</h2><ul class="clean">${(['calendar', 'forwarding', 'learning-feed', 'location'] as const)
-          .map((src) => `<li>${esc(src)}: ${a.hasSource(sid, src) ? `<span class="ok">on</span> ${actionButton(sid, 'Turn off', `source-off:${src}`, true)}` : `<span class="muted">off</span> ${actionButton(sid, 'Turn on', `source-on:${src}`, true)}`}</li>`)
-          .join('')}</ul></div>
-<div class="card"><h2>Your record of consent</h2>${ledger.length ? `<ul class="clean">${ledger.map((e) => `<li>${esc(e.kind)} <span class="tag">${esc(e.subject)}</span> <span class="muted">${esc(e.at.slice(0, 16).replace('T', ' '))}</span></li>`).join('')}</ul>` : '<p class="muted">Nothing yet.</p>'}</div>
-<div class="card"><h2>Quick questions</h2><p>${a.pulseState(sid).off ? 'Off' : `On, at most every ${a.pulseState(sid).everyDays} days`}</p><div class="steps">${a.pulseState(sid).off ? actionButton(sid, 'Turn on', 'pulses-on', true) : actionButton(sid, 'Turn off', 'pulses-off', true)}</div></div>
-<div class="card"><h2>Tell a friend</h2><div class="steps">${actionButton(sid, 'Share the Advocate', 'share', true)}</div></div>
-<div class="card"><h2>Your data</h2><div class="steps"><a class="btn secondary" href="/s/${esc(sid)}/export">Download everything</a>${actionButton(sid, 'Delete everything', 'delete-account', true)}</div></div>`,
-        { studentId: sid },
+        sid,
+        'You',
+        `${flash(sid, c.req.query('m'))}<div class="hello"><h1>${ui.esc(s.chosenName)}</h1><p class="date">${ui.esc([s.pronouns, s.enrollment.college.replace('-', ' '), s.enrollment.creditHours ? `${s.enrollment.creditHours} credits` : ''].filter(Boolean).join(', '))}</p></div>
+${ui.section('Your things', ui.rows([
+  { title: 'Your week', sub: 'Classes, work, pickups and study time', href: u(sid, '/week') },
+  { title: 'Your dates', sub: 'Every deadline I found, and where', href: u(sid, '/dates') },
+  { title: 'Work shifts', sub: 'Add or check your shifts', href: u(sid, '/shifts') },
+  { title: 'Add a syllabus', sub: 'I find every date in it', href: u(sid, '/syllabus') },
+  { title: 'Messages I drafted', sub: 'Nothing is sent until you say so', href: u(sid, '/drafts') },
+  { title: 'Ask your Advocate', sub: 'Anything about school, money or life', href: u(sid, '/ask') },
+]))}
+${ui.section('How I talk with you', `<div class="panel" style="padding:14px 18px"><p>Right now: <b>${depthLabel[s.dial.depth]}</b>. Quiet from ${ui.esc(time12(s.dial.quietStart))} to ${ui.esc(time12(s.dial.quietEnd))}.</p>${ui.actions((['brief', 'standard', 'walk-me-through'] as const).map((d) => toAction(sid, { label: depthLabel[d], action: `dial:${d}` }, d === s.dial.depth ? 0 : 1)))}</div>`)}
+${ui.section('What I can see', ui.rows((['calendar', 'forwarding', 'learning-feed', 'location'] as const).map((src) => ({ title: { calendar: 'Your calendar', forwarding: 'Emails you forward', 'learning-feed': 'Your class site', location: 'Your location' }[src], chip: a.hasSource(sid, src) ? { text: 'On', tone: 'ok' as const } : { text: 'Off' }, actions: [toAction(sid, a.hasSource(sid, src) ? { label: 'Turn off', action: `source-off:${src}` } : { label: 'Turn on', action: `source-on:${src}` }, 1)] }))))}
+${ui.section('Quick questions', ui.rows([{ title: ps.off ? 'Off' : `On, at most every ${ps.everyDays} days`, sub: 'One optional question now and then, so I can offer help before it is needed.', actions: [toAction(sid, ps.off ? { label: 'Turn on', action: 'pulses-on' } : { label: 'Turn off', action: 'pulses-off' }, 1)] }]))}
+${ui.section('Your record of consent', ui.rows(ledger.map((e) => ({ title: `${e.kind} ${e.subject}`, sub: e.at.slice(0, 16).replace('T', ' ') })), 'Nothing yet.'))}
+${ui.section('Your data', `<div class="panel" style="padding:14px 18px"><p>Everything I keep is yours. Download it, connect it to other tools, or delete it.</p>${ui.actions([{ label: 'Download everything', href: u(sid, '/export'), variant: 'quiet' }, { label: 'Calendar feed', href: u(sid, '/calendar.ics'), variant: 'quiet' }, toAction(sid, { label: 'Share the Advocate', action: 'share' }, 1), { label: 'Delete everything', post: { url: u(sid, '/action'), fields: { action: 'delete-account' } }, variant: 'danger' }])}</div>`)}`,
+        'you',
       ),
     );
   });
 
+  app.get('/s/:id/settings', (c) => c.redirect(u(c.req.param('id'), '/you')));
+
   app.get('/s/:id/export', (c) => c.json(a.exportData(c.req.param('id'))));
+
+  // ------------------------------------------------------------ every button
 
   app.post('/s/:id/action', async (c) => {
     const sid = c.req.param('id');
     const f = await c.req.parseBody();
     const action = String(f.action ?? '');
-    const [verb, ...rest] = action.split(':');
-    const arg = rest.join(':');
-    const show = (m: OutboundMessage) => c.html(page('Advocate', messageCard(sid, a.deliver(m, { force: true })), { studentId: sid }));
-    switch (verb) {
-      case 'today':
-        return show(a.todayMessage(sid));
-      case 'screen':
-        return show(a.moneyFoundMessage(sid));
-      case 'need':
-        return show(a.helpMessage(sid, arg as NeedCategory));
-      case 'find-help':
-        return arg ? show(a.assignmentHelp(sid, arg)) : c.redirect(`/s/${sid}/help`);
-      case 'find-tutor':
-      case 'plan-next': {
-        const next = a.deadlines(sid).find((d) => !d.done && d.due >= a.today_(sid).date);
-        if (!next) return show({ studentId: sid, author: 'coursework-planner', urgency: 'routine', text: 'Nothing is due yet. Add a syllabus and I will find every date.', nextSteps: [{ label: 'Back to today', action: 'today' }] });
-        return show(verb === 'find-tutor' ? a.assignmentHelp(sid, next.id) : a.planMessage(sid, next.id));
-      }
-      case 'pulse': {
-        const [pid, ans] = arg.split(':');
-        return show(a.answerPulse(sid, pid!, ans === 'yes' ? 'yes' : 'no'));
-      }
-      case 'pulses-off':
-        a.setPulses(sid, { off: true });
-        return show({ studentId: sid, author: 'navigator', urgency: 'routine', text: 'Done. No more quick questions. You can turn them back on in Settings.', nextSteps: [{ label: 'Settings', action: 'settings' }] });
-      case 'pulses-on':
-        a.setPulses(sid, { off: false });
-        return c.redirect(`/s/${sid}/settings`);
-      case 'settings':
-        return c.redirect(`/s/${sid}/settings`);
-      case 'share': {
-        const sh = a.shareText(sid, arg || undefined);
-        return c.html(page('Share', `<div class="card"><h2>Send to a friend</h2><div class="msg">${esc(sh.text)}</div><div class="steps"><a class="btn" href="${esc(sh.smsLink)}">Send by text</a></div></div>`, { studentId: sid }));
-      }
-      case 'draft-instructor-note': {
-        const d = a.deadlines(sid).find((x) => x.id === arg);
-        const st = a.student(sid);
-        if (d) a.createDraft(sid, 'instructor', `instructor:${d.course ?? 'course'}`, `Hello, this is ${st.chosenName} from ${d.course ?? 'your class'}. I would like to talk about a plan for ${d.title}. Is there a time this week that works, or a way I can still turn it in? Thank you.`, `instructor-note:${d.id}`);
-        const drafts = a.drafts(sid).filter((x) => x.status === 'shown' && x.purpose === `instructor-note:${arg}`);
-        return c.html(page('Draft', drafts.map((x) => `<div class="card"><h2>To: ${esc(x.to)}</h2><div class="msg">${esc(x.body)}</div><div class="why">Nothing is sent until you tap send.</div><div class="steps">${actionButton(sid, 'Send it', `approve:${x.id}`)}</div></div>`).join(''), { studentId: sid }));
-      }
-      case 'situation':
-        return show(a.crisis(sid, arg as never).message);
-      case 'mark-done':
-        a.markDone(sid, arg);
-        return c.redirect(`/s/${sid}`);
-      case 'confirm-deadlines':
-        a.confirmDeadlines(sid, 'all');
-        return c.redirect(`/s/${sid}`);
-      case 'plan':
-        return show(a.planMessage(sid, arg));
-      case 'dial':
-        a.setDial(sid, { depth: arg as never });
-        return c.redirect(`/s/${sid}/settings`);
-      case 'source-on':
-        a.connectSource(sid, arg as never);
-        return c.redirect(`/s/${sid}/settings`);
-      case 'source-off':
-        a.disconnectSource(sid, arg);
-        return c.redirect(`/s/${sid}/settings`);
-      case 'start-program':
-      case 'start-resource': {
-        const rid = verb === 'start-program' ? PROGRAM_RESOURCE[arg] ?? arg : arg;
-        const r = a.catalog.find((x) => x.id === rid);
-        if (!r) return show({ studentId: sid, author: 'navigator', urgency: 'routine', text: "I couldn't find that one. Let's look again.", nextSteps: [{ label: 'Find help', action: 'find-help' }] });
-        const opt = a.findHelp(sid, r.categories[0]!).options.find((o) => o.resource.id === rid);
-        const body = `<div class="card"><h2>${esc(r.name)}</h2><p>${esc(r.description)}</p>${r.hours ? `<p><strong>Hours:</strong> ${esc(r.hours)}</p>` : '<p class="muted">Hours not published. Call ahead.</p>'}${r.location ? `<p><strong>Where:</strong> ${esc(r.location.address)}, ${esc(r.location.city)}</p>` : ''}${r.phone ? `<p><strong>Call:</strong> <a href="tel:${esc(r.phone)}">${esc(r.phone)}</a></p>` : ''}
-<h3>Steps</h3><ol>${r.howToApply.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>
-${opt?.missingDocuments.length ? `<h3>Still needed</h3><ul>${opt.missingDocuments.map((d) => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}
-${opt && Object.keys(opt.prefilled).length ? `<h3>I can fill in</h3><ul>${Object.entries(opt.prefilled).map(([k, v]) => `<li>${esc(k)}: ${esc(v)}</li>`).join('')}</ul>` : ''}
-${r.url ? `<div class="steps"><a class="btn" href="${esc(r.url)}">Open the application</a></div>` : ''}
-<div class="why">Verified ${esc(r.verifiedOn)} from <a href="${esc(r.source.url)}">the source</a>.</div></div>`;
-        return c.html(page(r.name, body, { studentId: sid }));
-      }
-      case 'show-draft': {
-        const one = arg ? a.draftFor(sid, arg) : undefined;
-        const drafts = one ? [one] : a.drafts(sid).filter((d) => d.status === 'shown');
-        return c.html(
-          page(
-            'Drafts',
-            drafts.length
-              ? drafts.map((d) => `<div class="card"><h2>To: ${esc(d.to)}</h2><div class="msg">${esc(d.body)}</div><div class="why">Nothing is sent until you tap send.</div><div class="steps">${actionButton(sid, 'Send it', `approve:${d.id}`)}</div></div>`).join('')
-              : '<div class="card"><p>No drafts waiting.</p></div>',
-            { studentId: sid },
-          ),
-        );
-      }
-      case 'approve': {
-        const token = a.approve(sid, arg);
-        const r = await a.send(sid, arg, token);
-        return show({ studentId: sid, author: 'chief-of-staff', urgency: 'routine', text: r.sent ? 'Sent. I will watch for a reply and let you know.' : `That didn't go through (${r.reason}).`, nextSteps: [{ label: 'Back to today', action: 'today' }] });
-      }
-      case 'playbook': {
-        const [id, ev, value] = arg.split(':');
-        const run = ev === 'answer' ? a.playbookEvent(sid, id!, { type: 'answer', value: value! }) : ev === 'confirm' ? a.playbookEvent(sid, id!, { type: 'confirm' }) : undefined;
-        if (ev === 'draft') return c.redirect(`/s/${sid}`);
-        return show(a.playbookMessage(sid, run!));
-      }
-      case 'delete-account': {
-        a.deleteStudent(sid);
-        return c.html(page('Deleted', '<div class="card"><h2>Everything is deleted.</h2><p>Your Advocate account and everything in it are gone. You can start again any time by texting the Advocate number.</p></div>'));
-      }
-      default:
-        return show({
-          studentId: sid,
-          author: 'chief-of-staff',
-          urgency: 'routine',
-          text: 'That part is still being built. Here is what I can do right now.',
-          nextSteps: [
-            { label: 'Show my day', action: 'today' },
-            { label: 'Find help', action: 'find-help' },
-          ],
-        });
+    const r = a.perform(sid, action);
+    if (!r) {
+      const d = a.deliver({ studentId: sid, author: 'chief-of-staff', urgency: 'routine', text: 'That button is not available right now. Here is your day.', nextSteps: [{ label: 'Show my day', action: 'today' }] }, { force: true });
+      return c.redirect(`${u(sid)}?m=${d.id}`);
     }
+    if (r.view === 'deleted') return c.html(page(undefined, 'Deleted', `<div class="hello"><h1>Deleted</h1></div>` + ui.note({ title: 'Everything is deleted', body: 'Your Advocate account and everything in it are gone. You can start again any time.', actions: [{ label: 'Go to the start', href: `${base}/` }] })));
+    const d = a.deliver(r.message, { force: true });
+    if (r.view) {
+      const path = r.view === 'resource' ? `/resource/${encodeURIComponent(r.viewArg ?? '')}` : r.view === 'share' ? '/share' : VIEW_PATH[r.view];
+      const q = new URLSearchParams({ m: d.id });
+      if (r.view === 'share' && r.viewArg) q.set('r', r.viewArg);
+      if (r.view === 'drafts' && r.viewArg) q.set('p', r.viewArg);
+      return c.redirect(`${u(sid, path)}?${q}#latest`);
+    }
+    return c.html(page(sid, 'Your Advocate', `<div class="hello"><h1>Your Advocate</h1></div>${noteFor(sid, d, { id: 'latest' })}${ui.actions([{ label: 'Back to today', href: u(sid), variant: 'quiet' }])}`, 'today'));
   });
 
-  app.get('/manifest.webmanifest', (c) =>
-    c.json({ name: 'Student Advocate', short_name: 'Advocate', start_url: '/', display: 'standalone', background_color: '#f6f7f9', theme_color: '#1f3a5f', icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' }] }),
-  );
-  app.get('/icon.svg', (c) =>
-    c.body(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#1f5fbf"/><path d="M18 44 L32 16 L46 44 M24 34 H40" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`, 200, { 'content-type': 'image/svg+xml' }),
-  );
-  app.get('/sw.js', (c) =>
-    c.body(`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',()=>{});`, 200, { 'content-type': 'text/javascript' }),
-  );
+  // ------------------------------------------------------------ integration API, calendar feed, app shell bits
 
-  app.get('/evidence', (c) => {
-    const ic = intentCompletion(a.evidence);
-    const cost = costSummary(a.evidence);
-    return c.html(page('Evidence', `<div class="card"><h2>Live evidence (this server)</h2><p>Intent completion: ${ic.value === undefined ? 'not measured' : `${ic.numerator}/${ic.denominator}`}</p><p>Model calls: ${cost.calls}; cost as paid: ${cost.asPaid === undefined ? 'not measured' : `$${cost.asPaid.toFixed(4)}`}</p><p class="muted">The published evidence page is built from the factory's evidence store by <code>npm run evidence</code>.</p></div>`));
-  });
+  app.route('/api', createApi(a));
 
+  app.get('/s/:id/calendar.ics', (c) => c.body(a.calendarFeed(c.req.param('id')), 200, { 'content-type': 'text/calendar; charset=utf-8' }));
+
+  app.get('/manifest.webmanifest', (c) => c.json({ name: 'Student Advocate', short_name: 'Advocate', start_url: `${base}/`, display: 'standalone', background_color: ui.TOKENS.light.paper, theme_color: ui.TOKENS.light.action, icons: [{ src: `${base}/icon.svg`, sizes: 'any', type: 'image/svg+xml' }] }));
+  app.get('/icon.svg', (c) => c.body(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="${ui.TOKENS.light.action}"/><circle cx="20" cy="44" r="5" fill="#fff"/><circle cx="44" cy="20" r="5" fill="${ui.TOKENS.light.mark}"/><path d="M25 44h12a9 9 0 0 0 0-18H27a9 9 0 0 1 0-18h12" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`, 200, { 'content-type': 'image/svg+xml' }));
+  app.get('/healthz', (c) => c.json({ ok: true }));
+
+  void PERSONA_NAMES;
   return app;
 }

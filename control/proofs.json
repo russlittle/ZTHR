@@ -1,7 +1,7 @@
 [
   {
     "gate": "tone-and-next-step",
-    "gateHash": "2568e3a9663cb875e4c13597ab078e69c85339989aeaf4e6a0422e85ee7c3f46",
+    "gateHash": "2e9eb2869bb72e7490b3e4174bc0181924cc96de65fd115c978a5da3eec07a0f",
     "valid": true,
     "cases": [
       "planted scolding message",
@@ -91,7 +91,7 @@
   },
   {
     "gate": "no-hidden-egress",
-    "gateHash": "47934966cb1d643ef8b9ed1ef9386f97348b228d79dbaf9951959e4ba2dd1ff1",
+    "gateHash": "bc4e369e5c95ba8ca215387283499d7dda51f2cd299c16bff9e58dcce2179868",
     "valid": true,
     "cases": [
       "planted fetch in a domain file"

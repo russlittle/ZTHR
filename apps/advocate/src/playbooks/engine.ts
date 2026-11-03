@@ -39,8 +39,13 @@ export const PlaybookDef = z.object({
 });
 export type PlaybookDef = z.infer<typeof PlaybookDef>;
 
+const loaded = new Map<string, Map<string, PlaybookDef>>();
+
 export function loadPlaybooks(dir: string): Map<string, PlaybookDef> {
+  const cached = loaded.get(dir);
+  if (cached) return cached;
   const m = new Map<string, PlaybookDef>();
+  loaded.set(dir, m);
   for (const f of readdirSync(dir).filter((x) => x.endsWith('.yaml'))) {
     const def = PlaybookDef.parse(parse(readFileSync(join(dir, f), 'utf8')));
     m.set(def.playbook, def);
