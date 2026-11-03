@@ -65,6 +65,13 @@
         "source": "**",
         "destination": "/index.html"
       }
+    ],
+    "redirects": [
+      {
+        "source": "/advocate/:path*",
+        "destination": "/studentadvocate/:path*",
+        "type": 301
+      }
     ]
   }
 }
