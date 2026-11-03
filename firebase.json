@@ -34,14 +34,14 @@
     ],
     "rewrites": [
       {
-        "source": "/advocate",
+        "source": "/studentadvocate",
         "run": {
           "serviceId": "advocate",
           "region": "us-central1"
         }
       },
       {
-        "source": "/advocate/**",
+        "source": "/studentadvocate/**",
         "run": {
           "serviceId": "advocate",
           "region": "us-central1"
