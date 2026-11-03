@@ -34,6 +34,55 @@
     ],
     "rewrites": [
       {
+        "source": "/advocate",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/advocate/**",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/docs/**",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/factory/**",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/assets/**",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/docs",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/factory",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
