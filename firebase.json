@@ -65,13 +65,6 @@
         "source": "**",
         "destination": "/index.html"
       }
-    ],
-    "redirects": [
-      {
-        "source": "/reference",
-        "destination": "/reference/index",
-        "type": 301
-      }
     ]
   }
 }
