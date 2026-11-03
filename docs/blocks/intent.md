@@ -24,5 +24,6 @@ Unit-level assertions, or editing a goal so that a change passes.
 ## Verified by
 
 <!-- verified-by:start -->
+- [`packages/intent/test/intent-more.test.ts`](../../packages/intent/test/intent-more.test.ts) (12 test definitions)
 - [`packages/intent/test/intent.test.ts`](../../packages/intent/test/intent.test.ts) (6 test definitions)
 <!-- verified-by:end -->

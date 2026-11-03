@@ -39,6 +39,22 @@ export const PERSONAS: Record<string, Builder> = {
 
 export const PERSONA_NAMES = Object.keys(PERSONAS);
 
+/** One line about each demonstration student, for the product page and the start page. */
+export const PERSONA_LINES: Record<string, { line: string; college: string; tries: string }> = {
+  Maria: { line: 'Single parent studying nursing, works nights. Rent is short this month.', college: 'Sinclair', tries: 'the rent plan, the bus to class, a room booking' },
+  Jayden: { line: 'First year, work-study, first time living alone.', college: 'Wright State', tries: 'class-site sync, an essay plan, jobs that fit' },
+  Darnell: { line: 'Back in school at 34 and working full time.', college: 'Sinclair', tries: 'the fair-chance career path, money he is missing' },
+  Ana: { line: 'Wants short answers and nothing extra.', college: 'Wright State', tries: 'brief mode: the same help in fewer words' },
+  Tyler: { line: 'First in his family at college.', college: 'Sinclair', tries: 'FAFSA step by step, what a registrar is' },
+  Priya: { line: 'Seventeen credits and a packed calendar.', college: 'Wright State', tries: 'the week solver and held study time' },
+  Destiny: { line: 'Juggling two jobs and a full load.', college: 'Wright State', tries: 'shift conflicts and jobs that fit' },
+  Sam: { line: 'Wants things one step at a time.', college: 'Sinclair', tries: 'walk-me-through mode at a sixth-grade reading level' },
+  Linda: { line: 'Back to school at 46; prefers texting.', college: 'Sinclair', tries: 'the whole app by text message' },
+  Luis: { line: 'Family of five; Spanish at home.', college: 'Sinclair', tries: 'SNAP and meal plans for a big household' },
+  Alex: { line: 'At Antioch; wants privacy above all.', college: 'Antioch', tries: 'export everything, then delete everything' },
+  Keisha: { line: 'Moved to Atlanta mid-degree.', college: 'Wright State', tries: 'help found where she lives now, not where she started' },
+};
+
 export function seedDemo(a: Advocate): Student[] {
   const all = PERSONA_NAMES.map((n) => PERSONAS[n]!(a));
   // In the demonstration, Maria rides the bus and Jayden's class site is connected, so those features are live.

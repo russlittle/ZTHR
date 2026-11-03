@@ -1,0 +1,13 @@
+{
+  "name": "@zthr/operator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Leases, idempotent dispatches confirmed by lookup, and holds",
+  "zthr": {
+    "purpose": "Leases, idempotent dispatches confirmed by lookup, and holds",
+    "mutationFloor": 90
+  }
+}

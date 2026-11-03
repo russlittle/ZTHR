@@ -23,5 +23,6 @@ Model calls (they go through the models block), inbound requests, or retry polic
 ## Verified by
 
 <!-- verified-by:start -->
+- [`packages/egress/test/door.test.ts`](../../packages/egress/test/door.test.ts) (8 test definitions)
 - [`packages/egress/test/egress.test.ts`](../../packages/egress/test/egress.test.ts) (4 test definitions)
 <!-- verified-by:end -->

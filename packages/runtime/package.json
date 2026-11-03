@@ -1,1 +1,14 @@
-{ "name": "@zthr/runtime", "version": "0.1.0", "private": true, "type": "module", "main": "src/index.ts", "license": "Apache-2.0" }
+{
+  "name": "@zthr/runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Consent ledger, sealed facts, approvals, outbound gate and refuse-to-start",
+  "zthr": {
+    "purpose": "Consent ledger, sealed facts, approvals, outbound gate and refuse-to-start",
+    "mutationFloor": 48,
+    "mutationTarget": 80
+  }
+}

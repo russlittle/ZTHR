@@ -1,1 +1,14 @@
-{ "name": "@zthr/evidence", "version": "0.1.0", "private": true, "type": "module", "main": "src/index.ts", "license": "Apache-2.0" }
+{
+  "name": "@zthr/evidence",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Append-only, pseudonymous record of what the factory and the product did",
+  "zthr": {
+    "purpose": "Append-only, pseudonymous record of what the factory and the product did",
+    "mutationFloor": 61,
+    "mutationTarget": 80
+  }
+}

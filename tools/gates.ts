@@ -461,7 +461,65 @@ const heldOutGate: Gate<{ held: string[]; rules: Record<string, string> }> = {
   falsification: [{ name: 'planted rule written against a held-out line', plant: () => ({ held: heldOutLines('crisis.txt'), rules: { 'safety.ts': `const CRISIS = [/${heldOutLines('crisis.txt')[0]}/i];` } }) }],
 };
 
-const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate].map((g) => g.id);
+
+// ---------- sensitive data: every field classified, and the trace finds no leak (docs/flows/sensitive-data.md)
+type TraceLike = { leaks: { field: string; sink: string }[]; unexercised: string[] };
+const sensitiveGate: Gate<{ unclassified: string[]; trace: TraceLike }> = {
+  id: 'sensitive-data',
+  protects: 'Every field the app keeps is classified, and a planted marker in each personal, sensitive and secret field turns up only where its class may go.',
+  definition: 'no unclassified field; the canary trace reports no leak and no unexercised field',
+  check: ({ unclassified, trace }) => {
+    const problems = [...unclassified.map((f) => `unclassified: ${f}`), ...trace.leaks.map((l) => `${l.field} reached ${l.sink}`), ...trace.unexercised.map((f) => `not exercised: ${f}`)];
+    return problems.length ? fail('sensitive-data', problems.slice(0, 6).join('; ')) : pass('sensitive-data', 'every field classified; no marker outside where its class may go');
+  },
+  falsification: [
+    { name: 'planted field with no class', plant: () => ({ unclassified: ['students.newField'], trace: { leaks: [], unexercised: [] } }) },
+    { name: 'planted income marker in the evidence log', plant: () => ({ unclassified: [], trace: { leaks: [{ field: 'students.household', sink: 'evidence' }], unexercised: [] } }) },
+    { name: 'planted field the trace never exercised', plant: () => ({ unclassified: [], trace: { leaks: [], unexercised: ['money.bills'] } }) },
+  ],
+};
+
+// ---------- block library: every block tested, documented, used, at its mutation floor, and never copied (Pattern 2)
+type BlockLike = { name: string; tests: number; docHasUseFor: boolean; consumers: string[]; floor: number; mutation?: { score: number } };
+const blockGate: Gate<{ blocks: BlockLike[]; appExports: Record<string, string[]>; blockExports: Record<string, string[]> }> = {
+  id: 'block-library',
+  protects: 'Every block has its own tests, a page saying what to use it for and what not, at least one consumer, a mutation score at or above its floor, and no copy of its code inside an app.',
+  definition: 'each block: tests > 0, doc with Use it for and Not for, a consumer, mutation (when measured) >= floor; no app file exports a function a block exports',
+  check: ({ blocks, appExports, blockExports }) => {
+    const p: string[] = [];
+    for (const b of blocks) {
+      if (b.tests === 0) p.push(`${b.name} has no tests`);
+      if (!b.docHasUseFor) p.push(`${b.name} has no Use it for / Not for page`);
+      if (!b.consumers.length) p.push(`${b.name} is used by nothing`);
+      if (b.mutation && b.mutation.score < b.floor) p.push(`${b.name} mutation ${b.mutation.score.toFixed(1)}% under its floor of ${b.floor}%`);
+    }
+    for (const [file, names] of Object.entries(appExports)) for (const n of names) for (const [block, bn] of Object.entries(blockExports)) if (bn.includes(n)) p.push(`${file} copies ${n} from @zthr/${block}`);
+    return p.length ? fail('block-library', p.slice(0, 6).join('; ')) : pass('block-library', `${blocks.length} blocks tested, documented, used and at their floors; no copies`);
+  },
+  falsification: [
+    { name: 'planted block with no tests', plant: () => ({ blocks: [{ name: 'x', tests: 0, docHasUseFor: true, consumers: ['app:a'], floor: 70 }], appExports: {}, blockExports: {} }) },
+    { name: 'planted block nothing uses', plant: () => ({ blocks: [{ name: 'x', tests: 3, docHasUseFor: true, consumers: [], floor: 70 }], appExports: {}, blockExports: {} }) },
+    { name: 'planted block under its mutation floor', plant: () => ({ blocks: [{ name: 'x', tests: 3, docHasUseFor: true, consumers: ['app:a'], floor: 80, mutation: { score: 79.9 } }], appExports: {}, blockExports: {} }) },
+    { name: 'planted block with no purpose page', plant: () => ({ blocks: [{ name: 'x', tests: 3, docHasUseFor: false, consumers: ['app:a'], floor: 70 }], appExports: {}, blockExports: {} }) },
+    { name: 'planted app copy of a block function', plant: () => ({ blocks: [], appExports: { 'apps/advocate/src/domain/tone.ts': ['readingGrade'] }, blockExports: { 'plain-language': ['readingGrade'] } }) },
+  ],
+};
+
+/** Functions and classes each file under a directory defines and exports itself (re-exports do not count). */
+function ownExports(dir: string): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  const walk = (d: string) => {
+    for (const n of readdirSync(d)) {
+      const p = `${d}/${n}`;
+      if (statSync(p).isDirectory()) walk(p);
+      else if (n.endsWith('.ts')) out[p.slice(ROOT.length)] = [...readFileSync(p, 'utf8').matchAll(/^export (?:async )?(?:function|class) (\w+)/gm)].map((m) => m[1]!);
+    }
+  };
+  walk(dir);
+  return out;
+}
+
+const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate].map((g) => g.id);
 
 function repoFiles(): string[] {
   const out: string[] = [];
@@ -479,7 +537,7 @@ function repoFiles(): string[] {
 
 /** What each gate protects and what it is proven against, for the docs and the console. */
 export function gateCatalog(): { id: string; protects: string; plants: string[] }[] {
-  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
+  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
 }
 
 export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdict[]; proofs: Proof[] }> {
@@ -512,6 +570,15 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   await run(zeroBypassGate, () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: livePipeline() }));
   await run(tiersGate, () => ({ tiers: readYaml<Tiers>('authorship.yaml'), files: repoFiles() }));
   await run(heldOutGate, () => ({ held: [...heldOutLines('crisis.txt'), ...heldOutLines('community.txt')], rules: Object.fromEntries(RULE_FILES.map((f) => [f, readFileSync(`${ROOT}${f}`, 'utf8')])) }));
+  const { runTrace } = await import('../apps/advocate/test/harness/trace.js');
+  const { unclassified } = await import('@zthr/store');
+  const { COLLECTIONS } = await import('../apps/advocate/src/domain/schema.js');
+  const traced = await runTrace();
+  await run(sensitiveGate, () => ({ unclassified: unclassified(COLLECTIONS), trace: traced }));
+  const { blockNames, report } = await import('./blocks.js');
+  const blockExports = Object.fromEntries(blockNames().map((b) => [b, Object.values(ownExports(`${ROOT}packages/${b}/src`)).flat()]));
+  const appExports = Object.fromEntries(['advocate', 'campus-services'].flatMap((app) => Object.entries(ownExports(`${ROOT}apps/${app}/src`))));
+  await run(blockGate, () => ({ blocks: blockNames().map(report), appExports, blockExports }));
   writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
   return { verdicts, proofs };
 }

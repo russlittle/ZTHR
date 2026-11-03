@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 import { randomBytes } from 'node:crypto';
 import * as ui from '@zthr/ui';
+import { productPage } from './product.js';
 import type { Advocate, Delivered } from '../agents/advocate.js';
 import type { View } from '../agents/actions.js';
 import { friendly, relDay, shortDate, time12, weekday } from '../domain/dates.js';
@@ -23,6 +24,8 @@ export interface AppOptions {
   base?: string;
   /** Demonstration students shown on the start page. */
   demo?: { id: string; name: string; line: string }[];
+  /** Where the documentation and the factory console live, for the product page. Defaults to zthr.ai's /reference. */
+  links?: { docs: string; factory: string };
   /** Sign in with Google. When set, every student page needs the owner's session and the admin needs a listed email. */
   auth?: { clientId: string; verifier: GoogleVerifier; sessions: Sessions; adminEmailHashes: string[]; secure?: boolean };
 }
@@ -56,6 +59,8 @@ const FROM: Record<string, string> = {
   'money-and-life-coach': 'Money coach',
 };
 
+const FROM_ICON: Record<string, string> = { 'Your Advocate': 'route', 'Help finder': 'help', 'Class planner': 'book', 'Week planner': 'week', 'Money coach': 'money', Checklist: 'list' };
+
 const fromLabel = (author: string) => FROM[author] ?? (author.startsWith('playbook:') ? 'Checklist' : 'Your Advocate');
 
 export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
@@ -73,6 +78,7 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
     ui.note({
       kind: m.urgency === 'safety' ? 'safety' : m.urgency === 'time-sensitive' ? 'heads' : m.author === 'coursework-planner' ? 'plan' : 'info',
       from: fromLabel(m.author),
+      icon: FROM_ICON[fromLabel(m.author)] ?? 'route',
       body: m.text,
       why: m.why,
       actions: m.nextSteps.map((n, i) => toAction(sid, n, i)),
@@ -86,8 +92,8 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
     { href: u(sid, '/you'), label: 'You', icon: 'you', current: current === 'you' },
   ];
 
-  const page = (sid: string | undefined, title: string, body: string, current = '') =>
-    ui.appShell({ title: `${title} · Student Advocate`, body, base, brand: 'Student Advocate', brandHref: sid ? u(sid) : `${base}/`, nav: sid ? nav(sid, current) : [{ href: `${base}/`, label: 'Start', icon: 'today' }, { href: `${base}/text`, label: 'Try by text', icon: 'send' }] });
+  const page = (sid: string | undefined, title: string, body: string, current = '', wide = false) =>
+    ui.appShell({ title: `${title} · Student Advocate`, body, base, wide, brand: 'Student Advocate', brandHref: sid ? u(sid) : `${base}/`, nav: sid ? nav(sid, current) : [{ href: `${base}/`, label: 'Start', icon: 'today' }, { href: `${base}/text`, label: 'Try by text', icon: 'send' }] });
 
   /** A message produced by the last tap, shown at the top of the screen it led to. */
   const flash = (sid: string, id: string | undefined) => {
@@ -154,18 +160,12 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
 
   // ------------------------------------------------------------ start
 
-  app.get('/', (c) => {
-    const demo = opts.demo ?? [];
-    return c.html(
-      page(
-        undefined,
-        'Start',
-        `<div class="hello"><h1>A team that works for you</h1><p class="date">Student Advocate runs your day, finds money and help you qualify for, and does the legwork to get it. It belongs to you, and it never shares anything unless you say so.</p></div>
-${demo.length ? ui.section('Meet the students', ui.rows(demo.map((d) => ({ title: d.name, sub: d.line, href: u(d.id) })))) : ''}
-${ui.section('Or start by text', ui.note({ body: 'Text the Advocate the way you would text a friend. Try it here without a phone.', actions: [{ label: 'Try it by text', href: `${base}/text`, icon: 'send' }] }))}`,
-      ),
-    );
-  });
+  // The front page is the product page: what the Advocate is, and a way in as any demonstration student.
+  app.get('/', (c) =>
+    c.html(
+      productPage({ app: base, docs: opts.links?.docs ?? '/reference/docs/index.html', factory: opts.links?.factory ?? '/reference/factory/index.html', factoryPage: (p) => `${opts.links?.factory?.replace(/index\.html$/, '') ?? '/reference/factory/'}${p}.html`, admin: `${base}/admin/`, fontBase: base, live: !!opts.demo?.length }),
+    ),
+  );
 
   // ------------------------------------------------------------ text, in the browser and from the carrier
 
@@ -227,23 +227,33 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
     const ahead = a.lookAhead(sid);
     const conflicts = a.conflictMessages(sid);
     const today = a.todayMessage(sid);
-    const greeting = `Good ${new Date().getUTCHours() - 5 < 12 ? 'morning' : 'afternoon'}, ${s.chosenName}`;
+    const hour = Math.floor(a.localNow().min / 60);
+    const greeting = `Good ${hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'}, ${s.chosenName}`;
     const one = v.oneThing;
     const comingUp = v.dueSoon.filter((d) => d.due.slice(0, 10) !== date);
     const unconfirmed = a.deadlines(sid).filter((d) => !d.confirmed && !d.done).length;
+    const glance = ui.glance([
+      ...(v.classes.length ? [{ text: `${v.classes.length} class${v.classes.length === 1 ? '' : 'es'} today`, icon: 'book' }] : []),
+      ...(v.shifts.length ? [{ text: 'Work today', icon: 'week' }] : []),
+      { text: comingUp.length ? `${comingUp.length} due this week` : 'Nothing else due this week', icon: 'check' },
+      ...(money ? [{ text: 'Money needs a look', tone: 'warn' as const, icon: 'money' }] : []),
+    ]);
+    const feed = `${one ? ui.note({ kind: 'one', title: 'If you do one thing today', body: `${one.title}. ${one.why}.`, actions: today.nextSteps.map((n, i) => toAction(sid, n, i)) }) : ''}
+${[commute, weather, money, pulse, ...conflicts, ...ahead].filter((m): m is OutboundMessage => !!m).map((m) => noteFor(sid, m)).join('')}
+${unconfirmed ? ui.note({ kind: 'plan', from: 'Class planner', icon: 'book', body: `${unconfirmed} date${unconfirmed === 1 ? '' : 's'} from your syllabus need a quick look before I plan around them.`, actions: [toAction(sid, { label: 'Check the dates', action: 'review-deadlines' }, 0)] }) : ''}`;
+    const dayName = new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+    const day = stops.length ? ui.card(`Your ${dayName}`, ui.dayLine(stops, `Your ${dayName}`)) : ui.note({ body: 'Nothing on your calendar today. Add your classes or shifts and I will plan around them.', actions: [toAction(sid, { label: 'Add a syllabus', action: 'upload-syllabus' }, 0), toAction(sid, { label: 'Add my work shifts', action: 'add-shifts' }, 1)] });
     return c.html(
       page(
         sid,
         `Today, ${s.chosenName}`,
         `${flash(sid, c.req.query('m'))}
-<div class="hello"><h1>${ui.esc(greeting)}</h1><p class="date">${ui.esc(friendly(date))}</p></div>
-${stops.length ? ui.dayLine(stops, `Your ${weekday(date)}`) : ui.note({ body: 'Nothing on your calendar today. Add your classes or shifts and I will plan around them.', actions: [toAction(sid, { label: 'Add a syllabus', action: 'upload-syllabus' }, 0), toAction(sid, { label: 'Add my work shifts', action: 'add-shifts' }, 1)] })}
-${one ? ui.note({ kind: 'one', title: 'If you do one thing today', body: `${one.title}. ${one.why}.`, actions: today.nextSteps.map((n, i) => toAction(sid, n, i)) }) : ''}
-${[commute, weather, money, pulse, ...conflicts, ...ahead].filter((m): m is OutboundMessage => !!m).map((m) => noteFor(sid, m)).join('')}
-${unconfirmed ? ui.note({ kind: 'plan', from: 'Class planner', body: `${unconfirmed} date${unconfirmed === 1 ? '' : 's'} from your syllabus need a quick look before I plan around them.`, actions: [toAction(sid, { label: 'Check the dates', action: 'review-deadlines' }, 0)] }) : ''}
+<div class="hero"><h1>${ui.esc(greeting)}</h1><p class="date">${ui.esc(friendly(date))}</p>${glance}</div>
+<div class="today"><div class="t-day">${day}</div><div class="t-feed">${feed}</div><div class="t-side">
 ${ui.section('Coming up', ui.rows(comingUp.map((d) => ({ title: d.title, sub: `${d.course ? `${d.course}, ` : ''}${relDay(date, d.due)}`, actions: [toAction(sid, { label: 'Done', action: `mark-done:${d.id}` }, 1)] })), 'Nothing due in the next week.'), `<a href="${u(sid, '/week')}">See the week</a>`)}
-${ui.section('Ask your Advocate', ui.form({ url: u(sid, '/say'), submit: 'Send', fields: [{ name: 'text', label: 'Message', placeholder: 'Try: plan my essay, I need food, what is a registrar' }] }))}`,
+${ui.section('Ask your Advocate', ui.form({ url: u(sid, '/say'), submit: 'Send', fields: [{ name: 'text', label: 'Message', placeholder: 'Try: plan my essay, I need food, what is a registrar' }] }))}</div></div>`,
         'today',
+        true,
       ),
     );
   });

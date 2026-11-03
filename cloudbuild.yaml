@@ -115,13 +115,25 @@ steps:
     name: node:22-bookworm
     entrypoint: bash
     env: ['MUTATION=$_MUTATION']
-    args: ['-c', 'if [ "$$MUTATION" = "true" ]; then npx stryker run --concurrency "$$(nproc)"; else echo "Mutation testing runs on the nightly trigger."; fi']
+    args: ['-c', 'if [ "$$MUTATION" = "true" ]; then npx stryker run --concurrency "$$(nproc)" && npx tsx tools/blocks.ts --mutate; else echo "Mutation testing runs on the nightly trigger."; fi']
+
+  - id: sensitive-trace
+    # Plants a marker in every personal, sensitive and secret field and records where each one went.
+    name: node:22-bookworm
+    entrypoint: npx
+    args: ['tsx', 'tools/sensitive.ts']
 
   - id: fetch-cost-history
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: bash
     env: ['BUCKET=$_EVIDENCE_BUCKET']
-    args: ['-c', 'mkdir -p evidence-out reports; if [ -n "$$BUCKET" ]; then gcloud storage cat "$$BUCKET/costs/*.json" > evidence-out/ci-costs.jsonl 2>/dev/null || { : > evidence-out/ci-costs.jsonl; echo "No cost history yet."; }; [ -f reports/mutation.json ] || gcloud storage cp "$$BUCKET/latest/mutation.json" reports/mutation.json 2>/dev/null || echo "No nightly mutation report yet."; fi']
+    args: ['-c', 'mkdir -p evidence-out reports; if [ -n "$$BUCKET" ]; then gcloud storage cat "$$BUCKET/costs/*.json" > evidence-out/ci-costs.jsonl 2>/dev/null || { : > evidence-out/ci-costs.jsonl; echo "No cost history yet."; }; [ -f reports/mutation.json ] || gcloud storage cp "$$BUCKET/latest/mutation.json" reports/mutation.json 2>/dev/null || echo "No nightly mutation report yet."; [ -d reports/blocks ] || gcloud storage cp -r "$$BUCKET/latest/blocks" reports/ 2>/dev/null || echo "No nightly block reports yet."; fi']
+
+  - id: blocks
+    # The block library: tests, consumers and each block's own mutation score (from the nightly run when this is not one).
+    name: node:22-bookworm
+    entrypoint: npx
+    args: ['tsx', 'tools/blocks.ts']
 
   - id: record-cost
     name: node:22-bookworm
@@ -152,7 +164,7 @@ steps:
         gcloud storage cp evidence-out/ci-cost.json "$$BUCKET/costs/$${BUILD:-manual-$$(date +%s)}.json"
         gcloud storage cp -r evidence-out control/proofs.json "$$BUCKET/runs/$${COMMIT:-manual}/"
         if [ -d reports ]; then gcloud storage cp -r reports "$$BUCKET/runs/$${COMMIT:-manual}/"; fi
-        if [ -f reports/mutation.json ] && [ "$_MUTATION" = "true" ]; then gcloud storage cp reports/mutation.json "$$BUCKET/latest/mutation.json"; fi
+        if [ -f reports/mutation.json ] && [ "$_MUTATION" = "true" ]; then gcloud storage cp reports/mutation.json "$$BUCKET/latest/mutation.json"; gcloud storage cp -r reports/blocks "$$BUCKET/latest/"; fi
 
   - id: site
     # The published docs and factory console, from everything this run recorded.

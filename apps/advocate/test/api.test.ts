@@ -73,9 +73,11 @@ describe('authentication and scopes', () => {
     const dl = (await (await s.call('GET', '/v1/deadlines', s.darnellToken)).json()) as unknown[];
     expect(dl).toHaveLength(0);
   });
-  it('creating a token is recorded in the consent ledger, and only its hash is stored', async () => {
+  it('creating a token is recorded in the consent ledger by a short hash, never its label, and only its hash is stored', async () => {
     const s = setup();
-    expect(s.a.ledger.entries(s.maria.id).some((e) => e.kind === 'grant' && e.subject === 'api:everything')).toBe(true);
+    const id = s.a.apiTokens(s.maria.id).find((t) => t.label === 'everything')!.id;
+    expect(s.a.ledger.entries(s.maria.id).some((e) => e.kind === 'grant' && e.subject === `api:${id.slice(0, 12)}`)).toBe(true);
+    expect(JSON.stringify(s.a.ledger.entries(s.maria.id))).not.toContain('everything');
     expect(JSON.stringify(s.a.store.exportStudent(s.maria.id))).not.toContain(s.full);
   });
 });

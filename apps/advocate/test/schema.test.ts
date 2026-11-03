@@ -10,7 +10,8 @@ import { PERSONAS, PERSONA_NAMES } from '../src/server/demo.js';
 
 const SRC = fileURLToPath(new URL('../src', import.meta.url));
 const files = (d: string): string[] => readdirSync(d).flatMap((n) => (statSync(join(d, n)).isDirectory() ? files(join(d, n)) : n.endsWith('.ts') ? [join(d, n)] : []));
-const written = new Set(files(SRC).flatMap((f) => [...readFileSync(f, 'utf8').matchAll(/store\.put(?:<[^>]*>)?\('([a-z_]+)'/g)].map((m) => m[1]!)));
+// A collection is written by the app directly (store.put) or by a block the app hands a named collection to.
+const written = new Set(files(SRC).flatMap((f) => [...readFileSync(f, 'utf8').matchAll(/store\.put(?:<[^>]*>)?\('([a-z_]+)'|collection: '([a-z_]+)'/g)].map((m) => (m[1] ?? m[2])!)));
 
 describe('the declared data model matches the code', () => {
   for (const c of written) it(`code writes "${c}", which is declared`, () => expect(COLLECTION_NAMES).toContain(c));

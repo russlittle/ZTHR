@@ -3,30 +3,18 @@
  * relates to the others. The data-model document and its ERD are generated from this list, and tests fail when the
  * code writes a collection or a field this list does not declare, so the picture can never drift from the system.
  */
-export interface FieldDef {
-  name: string;
-  type: string;
-  note?: string;
-  optional?: boolean;
-}
+import type { CollectionDef as BlockCollectionDef, DataClass, FieldDef } from '@zthr/store';
 
-export interface CollectionDef {
-  name: string;
-  purpose: string;
-  key: string;
-  fields: FieldDef[];
-  /** Other collections this one points at: [target, label, cardinality as in Mermaid, e.g. "||--o{"]. */
-  relations?: [string, string, string][];
-  /** Kept only as long as needed; not part of the student's lasting record. */
-  transient?: boolean;
+export type { DataClass, FieldDef };
+export interface CollectionDef extends BlockCollectionDef {
   /** Which part of the record it belongs to, for drawing. */
   group?: 'schedule' | 'conversation' | 'help and money' | 'connections' | 'campus';
 }
 
-const f = (name: string, type: string, note?: string, optional = false): FieldDef => ({ name, type, note, optional });
+const f = (name: string, type: string, note?: string, optional = false): FieldDef => ({ name, type, ...(note ? { note } : {}), optional });
 const o = (name: string, type: string, note?: string): FieldDef => f(name, type, note, true);
 
-export const COLLECTIONS: CollectionDef[] = [
+const DECLARED: CollectionDef[] = [
   {
     name: 'students',
     purpose: 'Who the student is and how they want to be helped. Sealed facts are never stored here.',
@@ -65,6 +53,51 @@ export const COLLECTIONS: CollectionDef[] = [
   { group: 'schedule', name: 'courses', purpose: 'Each course and its AI policy, read from the syllabus.', key: 'student:course', fields: [f('course', 'string'), f('aiPolicy', 'enum'), o('aiPolicyLine', 'string')] },
   { group: 'conversation', name: 'dismissed', purpose: 'Alerts the student said are fine.', key: 'student:subject', fields: [f('subject', 'string'), f('at', 'date')] },
   { group: 'help and money', name: 'aid', purpose: 'When financial aid is expected, for book timing.', key: 'student', fields: [f('disbursement', 'date')] },
+];
+
+/**
+ * How sensitive each field is (the store block's classes). Personal: identifies or describes the student.
+ * Sensitive: special-category facts (money, benefits, family, health, identity, which help they need).
+ * Secret: credentials, kept only hashed or encrypted. Fields not listed are internal or public as named below.
+ * The sensitive-data trace plants a marker in each personal, sensitive and secret field and checks where it goes.
+ */
+export const CLASSIFICATION: Record<string, DataClass> = {
+  // students
+  'students.phone': 'personal', 'students.chosenName': 'personal', 'students.pronouns': 'sensitive', 'students.zip': 'personal', 'students.county': 'personal', 'students.age': 'personal', 'students.goal': 'personal',
+  'students.household': 'sensitive', 'students.enrollment': 'personal', 'students.receives': 'sensitive', 'students.helpAreas': 'sensitive', 'students.communities': 'sensitive',
+  // schedule
+  'deadlines.title': 'personal', 'deadlines.due': 'personal', 'deadlines.course': 'personal', 'deadlines.source': 'personal',
+  'classes.course': 'personal', 'classes.days': 'personal', 'classes.start': 'personal', 'classes.end': 'personal', 'classes.building': 'personal', 'classes.room': 'personal', 'classes.campus': 'personal',
+  'shifts.date': 'personal', 'shifts.start': 'personal', 'shifts.end': 'personal', 'shifts.employer': 'personal',
+  'holds.title': 'personal', 'holds.date': 'personal', 'holds.start': 'personal', 'holds.end': 'personal',
+  'reminders.about': 'personal', 'reminders.at': 'personal', 'reminders.text': 'personal',
+  'meetings.title': 'personal', 'meetings.date': 'personal', 'meetings.start': 'personal', 'meetings.attendees': 'personal', 'meetings.course': 'personal',
+  'courses.course': 'personal', 'courses.aiPolicy': 'public', 'courses.aiPolicyLine': 'public',
+  // conversation
+  'drafts.to': 'personal', 'drafts.recipient': 'personal', 'drafts.body': 'personal',
+  'messages.text': 'personal', 'dismissed.subject': 'personal',
+  // help and money
+  'playbook_runs.playbook': 'sensitive', 'playbook_runs.history': 'sensitive',
+  'vault.name': 'sensitive', 'money.balance': 'sensitive', 'money.bills': 'sensitive', 'money.pay': 'sensitive', 'aid.disbursement': 'sensitive',
+  'household_plan.childCare': 'sensitive', 'household_plan.commuteMin': 'personal', 'household_plan.sleepHours': 'personal', 'household_plan.commuteMode': 'personal', 'household_plan.homeStop': 'personal',
+  // connections
+  'api_tokens.label': 'personal', 'webhooks.url': 'personal', 'webhooks.secret': 'secret',
+  // campus
+  'commute_plans.date': 'personal', 'commute_plans.course': 'personal', 'commute_plans.classStart': 'personal', 'commute_plans.from': 'personal', 'commute_plans.to': 'personal', 'commute_plans.itineraries': 'personal', 'commute_plans.notice': 'public',
+  'transit_now.stop': 'personal', 'transit_now.arrivals': 'public', 'transit_now.alerts': 'public',
+  'dispatches.request': 'personal', 'dispatches.result': 'personal',
+  'campus_feeds.campus': 'public', 'campus_feeds.locations': 'public', 'campus_feeds.hours': 'public', 'campus_feeds.menus': 'public', 'campus_feeds.spaces': 'public', 'campus_feeds.events': 'public', 'campus_feeds.postings': 'public', 'campus_feeds.mentors': 'public', 'campus_feeds.stops': 'public',
+};
+
+/** Every collection with every field classified: listed above, or internal (ids, times, settings, statuses). */
+export const COLLECTIONS: CollectionDef[] = DECLARED.map((c) => ({ ...c, fields: c.fields.map((x) => ({ ...x, cls: CLASSIFICATION[`${c.name}.${x.name}`] ?? 'internal' })) }));
+
+/** Facts kept sealed (encrypted, opened only by granted identities), and how sensitive each is. */
+export const SEALED_FACTS: { fact: string; cls: DataClass; why: string }[] = [
+  { fact: 'justice_involvement', cls: 'sensitive', why: 'Justice history; used only for the fair-chance path when the student asks.' },
+  { fact: 'foster_care_history', cls: 'sensitive', why: 'Foster care history; opens foster-youth aid.' },
+  { fact: 'class_site_token', cls: 'secret', why: 'The student\'s class-site login token; granted only to the class-site sync.' },
+  { fact: 'doc:<keyed hash of the name>', cls: 'sensitive', why: 'The contents of documents the student keeps; the name itself stays out of the sealed store and the ledger.' },
 ];
 
 /** The other stores, each its own database with its own guarantees. */

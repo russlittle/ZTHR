@@ -1,4 +1,5 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
+import { Leases, afterLookup, afterSend, due, exhausted, idempotencyKey, unsettled, type Lease } from '@zthr/operator';
 import type { Advocate } from '../agents/advocate.js';
 import { Schemas, minutesOf, type CampusFeed, type CommutePlan, type TransitNow } from '../integrations/campus.js';
 import { addDays, weekday } from '../domain/dates.js';
@@ -21,12 +22,7 @@ import type { ClassMeeting } from '../domain/types.js';
 export const JOBS = ['campus-feeds', 'commute', 'transit-now', 'class-site', 'dispatch', 'verify'] as const;
 export type JobId = (typeof JOBS)[number];
 
-export interface Lease {
-  job: string;
-  holder: string;
-  until: string;
-  beats: number;
-}
+export type { Lease };
 
 export interface Dispatch {
   id: string;
@@ -49,38 +45,31 @@ export interface TickReport {
   failed: { job: string; reason: string }[];
 }
 
-const LEASE_MS = 60_000;
 const SHARED = '_operator';
 
 export class Operator {
   readonly id: string;
+  private readonly leases: Leases;
   constructor(
     private readonly a: Advocate,
     id?: string,
   ) {
     this.id = id ?? `op-${randomUUID().slice(0, 6)}`;
+    this.leases = new Leases(a.store, this.id, { owner: SHARED, collection: 'leases' });
   }
 
   // ---------- leases (Pattern 26) ----------
 
   lease(job: string, now: Date): Lease | undefined {
-    const cur = this.a.store.get<Lease>('leases', job);
-    if (cur && cur.holder !== this.id && Date.parse(cur.until) > now.getTime()) return undefined;
-    const l: Lease = { job, holder: this.id, until: new Date(now.getTime() + LEASE_MS).toISOString(), beats: (cur?.holder === this.id ? cur.beats : 0) + 1 };
-    this.a.store.put('leases', job, SHARED, l);
-    return l;
+    return this.leases.take(job, now);
   }
 
   heartbeat(job: string, now: Date): boolean {
-    const cur = this.a.store.get<Lease>('leases', job);
-    if (!cur || cur.holder !== this.id) return false;
-    this.a.store.put('leases', job, SHARED, { ...cur, until: new Date(now.getTime() + LEASE_MS).toISOString(), beats: cur.beats + 1 });
-    return true;
+    return this.leases.beat(job, now);
   }
 
   release(job: string): void {
-    const cur = this.a.store.get<Lease>('leases', job);
-    if (cur?.holder === this.id) this.a.store.remove('leases', job);
+    this.leases.release(job);
   }
 
   // ---------- the tick ----------
@@ -89,15 +78,10 @@ export class Operator {
   async tick(now: Date = this.a.clock()): Promise<TickReport> {
     const report: TickReport = { at: now.toISOString(), ran: [], skipped: [], held: [], failed: [] };
     const run = async (job: string, fn: () => Promise<unknown>) => {
-      if (!this.lease(job, now)) return void report.skipped.push({ job, reason: 'another operator holds the lease' });
-      try {
-        await fn();
-        report.ran.push(job);
-      } catch (e) {
-        report.failed.push({ job, reason: (e as Error).message });
-      } finally {
-        this.release(job);
-      }
+      const r = await this.leases.run(job, now, fn);
+      if (r.status === 'ran') report.ran.push(job);
+      else if (r.status === 'skipped') report.skipped.push({ job, reason: r.reason });
+      else report.failed.push({ job, reason: r.reason });
     };
     const students = this.a.studentIds();
     for (const campus of [...new Set(students.map((s) => this.a.student(s).enrollment.college))]) await run(`campus-feeds:${campus}`, () => this.refreshCampus(campus, now));
@@ -206,7 +190,7 @@ export class Operator {
   // ---------- writes: dispatch, then verify (Pattern 25) ----------
 
   queue(d: Omit<Dispatch, 'id' | 'key' | 'status' | 'attempts' | 'queuedAt'>, now: Date): Dispatch {
-    const key = createHash('sha256').update(`${d.studentId}|${d.kind}|${JSON.stringify(d.request)}`).digest('hex').slice(0, 24);
+    const key = idempotencyKey(d.studentId, d.kind, d.request);
     const existing = this.a.store.get<Dispatch>('dispatches', key);
     if (existing) return existing;
     const full: Dispatch = { ...d, id: key, key, status: 'queued', attempts: 0, queuedAt: now.toISOString() };
@@ -223,8 +207,8 @@ export class Operator {
   }
 
   async dispatch(now: Date): Promise<void> {
-    for (const d of this.all().filter((x) => x.status === 'queued' || x.status === 'ambiguous')) {
-      if (d.attempts >= 3) {
+    for (const d of this.all().filter(due)) {
+      if (exhausted(d)) {
         const gave: Dispatch = { ...d, status: 'refused', result: { reason: 'could not reach the booking system after three tries' } };
         this.save(gave);
         this.a.notifyDispatch(d.studentId, gave);
@@ -234,23 +218,24 @@ export class Operator {
         d.kind === 'mentor-request'
           ? await this.a.campus.post('careers', `/v1/mentors/${d.request.mentor}/requests`, { firstName: d.request.firstName, note: d.request.note }, Schemas.mentorRequest, { 'idempotency-key': d.key })
           : await this.a.campus.post('places', `/v1/rooms/${d.request.room}/reservations`, { date: d.request.date, start: d.request.start, minutes: d.request.minutes, name: d.request.name }, Schemas.reservation, { 'idempotency-key': d.key });
-      if (r.ok) this.save({ ...d, status: 'sent', attempts: d.attempts + 1, result: d.kind === 'mentor-request' ? { requestId: r.data.id } : { reservationId: r.data.id } });
-      else if (r.status === 409 || r.status === 400) {
-        const done = { ...d, status: 'refused' as const, attempts: d.attempts + 1, result: { reason: r.status === 409 ? (d.kind === 'mentor-request' ? 'the mentor has no open time' : 'that time was taken') : 'the request was refused' } };
-        this.save(done);
-        this.a.notifyDispatch(d.studentId, done);
-      } else this.save({ ...d, status: 'ambiguous', attempts: d.attempts + 1, result: { reason: r.reason } });
+      const next = afterSend<NonNullable<Dispatch['result']>, Dispatch>(
+        d,
+        r.ok ? { ok: true, result: d.kind === 'mentor-request' ? { requestId: r.data.id } : { reservationId: r.data.id } } : { ok: false, status: r.status ?? 0, reason: r.reason },
+        (status) => ({ reason: status === 409 ? (d.kind === 'mentor-request' ? 'the mentor has no open time' : 'that time was taken') : 'the request was refused' }),
+      );
+      this.save(next);
+      if (next.status === 'refused') this.a.notifyDispatch(d.studentId, next);
       this.heartbeat('dispatch', now);
     }
   }
 
   async verify(): Promise<void> {
-    for (const d of this.all().filter((x) => x.status === 'sent' || x.status === 'ambiguous')) {
+    for (const d of this.all().filter(unsettled)) {
       if (d.kind === 'mentor-request') {
         const m = await this.a.campus.get('careers', `/v1/requests?key=${d.key}`, Schemas.mentorRequests);
         const found = m.ok ? m.data.requests[0] : undefined;
         if (!found || found.status === 'pending') continue;
-        const done: Dispatch = found.status === 'accepted' ? { ...d, status: 'confirmed', result: { requestId: found.id, ...(found.meeting ? { meeting: found.meeting } : {}) } } : { ...d, status: 'refused', result: { requestId: found.id, reason: found.reason ?? 'declined' } };
+        const done = afterLookup<NonNullable<Dispatch['result']>, Dispatch>(d, found.status === 'accepted' ? { outcome: 'confirmed', result: { requestId: found.id, ...(found.meeting ? { meeting: found.meeting } : {}) } } : { outcome: 'refused', result: { requestId: found.id, reason: found.reason ?? 'declined' } });
         this.save(done);
         this.a.notifyDispatch(d.studentId, done);
         continue;
@@ -259,7 +244,7 @@ export class Operator {
       if (!r.ok) continue;
       const found = r.data.reservations[0];
       if (found && found.room === d.request.room && found.date === d.request.date && found.start === d.request.start) {
-        const done = { ...d, status: 'confirmed' as const, result: { reservationId: found.id } };
+        const done = afterLookup<NonNullable<Dispatch['result']>, Dispatch>(d, { outcome: 'confirmed', result: { reservationId: found.id } });
         this.save(done);
         this.a.notifyDispatch(d.studentId, done);
       }

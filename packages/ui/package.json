@@ -1,1 +1,14 @@
-{ "name": "@zthr/ui", "version": "0.1.0", "private": true, "type": "module", "main": "src/index.ts", "license": "Apache-2.0" }
+{
+  "name": "@zthr/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Accessible, themed page parts shared by the app and the factory console",
+  "zthr": {
+    "purpose": "Accessible, themed page parts shared by the app and the factory console",
+    "mutationFloor": 12,
+    "mutationTarget": 80
+  }
+}

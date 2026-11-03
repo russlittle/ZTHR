@@ -1,3 +1,4 @@
+import { safeRate, tooSmall } from '@zthr/privacy';
 import type { Advocate } from '../agents/advocate.js';
 import type { Deadline } from './types.js';
 
@@ -7,7 +8,7 @@ import type { Deadline } from './types.js';
  * what it cannot tell you. Persistence and credits need the college's own records; until a college shares them,
  * those two are "not measured", never estimated.
  */
-export const MIN_CELL = 5;
+export { MIN_CELL } from '@zthr/privacy';
 
 export interface Measure {
   id: string;
@@ -21,20 +22,18 @@ export interface Measure {
   limits: string;
 }
 
-const rate = (n: number, d: number) => (d === 0 ? 0 : Math.round((n / d) * 1000) / 10);
 
 export function outcomes(a: Advocate, today: string): { students: number; measures: Measure[] } {
   const ids = a.studentIds();
   const students = ids.length;
   const ev = (kind: string) => a.evidence.events(kind);
-  const small = (d: number) => d < MIN_CELL;
   const m = (id: string, label: string, how: string, n: number, d: number | undefined, limits: string): Measure => ({
     id,
     label,
     how,
     numerator: n,
     ...(d !== undefined ? { denominator: d } : {}),
-    value: small(d ?? students) ? 'suppressed' : d !== undefined ? rate(n, d) : n,
+    value: tooSmall(d ?? students) ? 'suppressed' : d !== undefined ? safeRate(n, d) : n,
     limits,
   });
 

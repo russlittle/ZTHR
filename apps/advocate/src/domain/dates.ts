@@ -44,4 +44,4 @@ export function relDay(today: string, date: string): string {
 }
 
 /** End a sentence with one period, even when it ends in an abbreviation like "p.m." */
-export const sentence = (t: string): string => (/[.!?]$/.test(t) ? t : `${t}.`);
+export { sentence } from '@zthr/plain-language';

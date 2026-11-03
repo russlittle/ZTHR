@@ -1,1 +1,13 @@
-{ "name": "@zthr/models", "version": "0.1.0", "private": true, "type": "module", "main": "src/index.ts", "license": "Apache-2.0" }
+{
+  "name": "@zthr/models",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Model calls behind one interface, with a twin, budgets and family labels",
+  "zthr": {
+    "purpose": "Model calls behind one interface, with a twin, budgets and family labels",
+    "mutationFloor": 80
+  }
+}

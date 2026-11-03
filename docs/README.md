@@ -18,6 +18,9 @@ flowchart LR
 - [Integration API](api.md)
 - [Architecture](architecture.md)
 - [Data model](data-model.md)
+- [Data sources](data-sources.md)
+- [Features](features.md)
+- [Glossary](glossary.md)
 
 ## Business flows
 
@@ -35,6 +38,7 @@ flowchart LR
 - [Outcome measures](flows/outcomes.md)
 - [Deadlines, plans and held time](flows/planning.md)
 - [Playbooks](flows/playbooks.md)
+- [Sensitive data](flows/sensitive-data.md)
 - [Signing in](flows/sign-in.md)
 - [Starting by text](flows/text-onboarding.md)
 - [Weather and roads](flows/weather.md)
@@ -60,8 +64,13 @@ flowchart LR
 - [@zthr/gates](blocks/gates.md)
 - [@zthr/intent](blocks/intent.md)
 - [@zthr/models](blocks/models.md)
+- [@zthr/operator](blocks/operator.md)
+- [@zthr/plain-language](blocks/plain-language.md)
+- [@zthr/privacy](blocks/privacy.md)
 - [@zthr/review](blocks/review.md)
 - [@zthr/runtime](blocks/runtime.md)
+- [@zthr/store](blocks/store.md)
+- [@zthr/twin-service](blocks/twin-service.md)
 - [@zthr/twins](blocks/twins.md)
 - [@zthr/ui](blocks/ui.md)
 

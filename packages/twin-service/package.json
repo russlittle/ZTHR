@@ -1,0 +1,13 @@
+{
+  "name": "@zthr/twin-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Clock, scenarios, health and OpenAPI for synthetic services",
+  "zthr": {
+    "purpose": "Clock, scenarios, health and OpenAPI for synthetic services",
+    "mutationFloor": 85
+  }
+}

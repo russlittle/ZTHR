@@ -21,5 +21,6 @@ Decisions that must be right every time (use deterministic code), or calling a p
 ## Verified by
 
 <!-- verified-by:start -->
+- [`packages/models/test/models-more.test.ts`](../../packages/models/test/models-more.test.ts) (7 test definitions)
 - [`packages/models/test/models.test.ts`](../../packages/models/test/models.test.ts) (2 test definitions)
 <!-- verified-by:end -->

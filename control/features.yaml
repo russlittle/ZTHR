@@ -1,0 +1,186 @@
+# Every feature of the Student Advocate, declared once. The phases page, the features page and docs/features.md are
+# generated from this file; the journeys named here are the locked intent cards that prove each feature.
+# status: built | partial | not measured
+phases:
+  - n: 1
+    name: Run my day
+    features:
+      - name: Today, the day line and the one thing to do
+        what: Classes, shifts, held time and due dates on one line, with the single most useful thing to do today.
+        status: built
+        screens: [Today]
+        journeys: [persona-6a-calendar-mastery, persona-12b-work-fitted-coursework]
+      - name: Syllabus and calendar ingest
+        what: A pasted syllabus or calendar feed becomes dates, held for a quick check before they are planned around.
+        status: built
+        screens: [Dates, Syllabus]
+        journeys: [persona-6a-calendar-mastery]
+      - name: Coursework broken into steps
+        what: A big assignment split into short steps placed in open time, with the course's AI policy respected.
+        status: built
+        screens: [Today, Week]
+        journeys: [persona-8a-small-steps, persona-12b-work-fitted-coursework]
+      - name: Money you may be missing
+        what: SNAP, Lifeline, HEAP and campus emergency grants checked against published limits, with the rule shown.
+        status: built
+        screens: [Money]
+        journeys: [persona-7b-money-and-shifts, persona-10c-aid-that-fits]
+      - name: Short-month warning
+        what: A rent or bill shortfall seen before the first of the month, with real ways to cover it.
+        status: built
+        screens: [Today, Money]
+        journeys: [persona-1b-bill-gap]
+      - name: Finding help, with the legwork done
+        what: Verified, current programs near the student, what to bring, and a drafted message to send.
+        status: built
+        screens: [Help]
+        journeys: [req-stale-never-offered, persona-3c-no-judgment]
+      - name: Crisis routing first
+        what: Words that signal danger go straight to 988 or 911 information before anything else.
+        status: built
+        screens: [Every screen, text]
+        journeys: [req-crisis-routing]
+      - name: FAFSA, including without parents
+        what: The FAFSA as a playbook, with the unusual-circumstances path when parents cannot be included.
+        status: built
+        screens: [Help]
+        journeys: [persona-11a-fafsa-without-parents]
+      - name: Plain answers about college and adult life
+        what: College words, leases, bank accounts and taxes explained plainly, with licensed help named where needed.
+        status: built
+        screens: [Ask]
+        journeys: [persona-5b-college-explained, persona-2c-adult-know-how]
+      - name: Books, free first
+        what: Free and cheaper ways to get course materials, timed to financial aid.
+        status: built
+        screens: [Money]
+        journeys: [persona-5c-money-saved]
+      - name: Start by text, never install anything
+        what: The whole Advocate by text message, with numbered choices and carrier opt-out honored.
+        status: built
+        screens: [Text]
+        journeys: [persona-9a-simple]
+      - name: Depth and quiet hours
+        what: Brief, standard or walk-me-through answers at a chosen reading level, and nothing routine during quiet hours.
+        status: built
+        screens: [You]
+        journeys: [persona-4c-short-and-direct, req-quiet-hours]
+      - name: See, export and delete everything
+        what: What the team knows, every source switchable, a full export, and deletion in one step.
+        status: built
+        screens: [You]
+        journeys: [persona-10a-privacy]
+  - n: 2
+    name: Household, career and campus life
+    features:
+      - name: The week solver
+        what: Rotating shifts, classes, child care drop-off and pickup, commute and sleep fitted into one week.
+        status: built
+        screens: [Week]
+        journeys: [persona-1a-week-puzzle, persona-8b-predictability]
+      - name: Playbooks for long processes
+        what: GI Bill certification, accommodation letters, break housing, enrollment proof and SNAP recertification, tracked to the end.
+        status: built
+        screens: [Help, Drafts]
+        journeys: [persona-4a-gi-bill-tracked, persona-8c-accommodation-letters, persona-2a-break-housing, persona-3a-parole-schedule-proof, playbook-snap-recertification]
+      - name: Foster-youth aid and retraining
+        what: Independent FAFSA status and education vouchers for former foster youth; workforce training funds after a layoff.
+        status: built
+        screens: [Help]
+        journeys: [p2-foster-youth-aid, p2-retraining]
+      - name: Letters explained
+        what: A pasted agency letter explained in plain words, with what to do and by when.
+        status: built
+        screens: [Letter]
+        journeys: [persona-9b-letter-explained]
+      - name: Caregiver help
+        what: The Eldercare Locator and county caregiving programs, kept fresh by a scout the factory admitted.
+        status: built
+        screens: [Help]
+        journeys: [scout-montgomery-caregiving]
+      - name: Campus food, now and free
+        what: What is open to eat right now and until when, late food, and free food at campus events today.
+        status: built
+        screens: [Help, text]
+        journeys: [p2-food-on-campus-late]
+      - name: Study spots and room booking
+        what: Quiet spaces open now, and a room booked once and reported booked only after the room system confirms it.
+        status: built
+        screens: [Help]
+        journeys: [p2-study-room-booked-once]
+      - name: Bus to class
+        what: When to leave for the first class each day, with live delays and alerts, and a late note to draft.
+        status: built
+        screens: [Today]
+        journeys: [p2-bus-to-class]
+      - name: Jobs that fit
+        what: Open jobs whose hours fit around classes and shifts, and a fair-chance path when the student asks.
+        status: built
+        screens: [Help]
+        journeys: [p2-jobs-that-fit]
+      - name: Community with moderation
+        what: Opt-in groups with moderation that holds anything identifying or unkind.
+        status: built
+        screens: [Help]
+        journeys: []
+      - name: Spanish
+        what: Spanish from the first text through finding help and crisis replies; other screens answer in English for now.
+        status: partial
+        screens: [Text, Help]
+        journeys: [persona-10b-spanish]
+  - n: 3
+    name: Integrations
+    features:
+      - name: Integration API
+        what: Ingest dates, shifts, syllabi and email; export everything; webhooks that carry ids, never content.
+        status: built
+        screens: [API]
+        journeys: []
+      - name: Class-site sync
+        what: Every assignment from the class site once, moved dates followed with a message, room changes applied.
+        status: built
+        screens: [Dates, Today]
+        journeys: [p3-class-site-sync]
+      - name: Synthetic campus services
+        what: Dining, transit, places, careers and a class site as real HTTP APIs with contracts and bad-day scenarios.
+        status: built
+        screens: [/twins]
+        journeys: []
+      - name: The operator
+        what: Background jobs under leases; writes sent with idempotency keys and confirmed by lookup.
+        status: built
+        screens: []
+        journeys: [p2-study-room-booked-once]
+      - name: Sign in with Google, and the app admin
+        what: Google sign-in in production; an admin that shows counts and the catalog, never a student's record.
+        status: built
+        screens: [Admin]
+        journeys: []
+  - n: 4
+    name: Any college, and proof it works
+    features:
+      - name: Any college
+        what: A college declared in one file; the builder drafts its county scouts for the factory to admit.
+        status: built
+        screens: []
+        journeys: [scout-clark-basic-needs]
+      - name: Mentor network
+        what: Introductions that share only a first name and an approved note; a yes puts the meeting on the calendar.
+        status: built
+        screens: [Help]
+        journeys: [p4-mentor-introduction]
+      - name: Outcome measures
+        what: What changed for students, never shown for a group smaller than five.
+        status: built
+        screens: [Admin, API]
+        journeys: []
+      - name: Sensitive data trace
+        what: Every field classified; planted markers prove where each personal and sensitive fact can go.
+        status: built
+        screens: []
+        journeys: []
+      - name: Persistence and credits
+        what: Needs a college's own records for students who opt in; not estimated from app activity.
+        status: not measured
+        screens: []
+        journeys: []

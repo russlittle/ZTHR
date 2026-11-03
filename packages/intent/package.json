@@ -1,1 +1,14 @@
-{ "name": "@zthr/intent", "version": "0.1.0", "private": true, "type": "module", "main": "src/index.ts", "license": "Apache-2.0" }
+{
+  "name": "@zthr/intent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Locked journey cards: goals in plain words, run in every mode and channel",
+  "zthr": {
+    "purpose": "Locked journey cards: goals in plain words, run in every mode and channel",
+    "mutationFloor": 79,
+    "mutationTarget": 80
+  }
+}

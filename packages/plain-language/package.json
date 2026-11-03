@@ -1,0 +1,13 @@
+{
+  "name": "@zthr/plain-language",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Reading grade, phrase rules and carelessness checks for any text",
+  "zthr": {
+    "purpose": "Reading grade, phrase rules and carelessness checks for any text",
+    "mutationFloor": 80
+  }
+}

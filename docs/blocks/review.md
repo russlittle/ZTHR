@@ -15,5 +15,6 @@ Replacing gates, or review by a single model family.
 ## Verified by
 
 <!-- verified-by:start -->
+- [`packages/review/test/review-more.test.ts`](../../packages/review/test/review-more.test.ts) (9 test definitions)
 - [`packages/review/test/review.test.ts`](../../packages/review/test/review.test.ts) (6 test definitions)
 <!-- verified-by:end -->

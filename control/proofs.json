@@ -1,7 +1,7 @@
 [
   {
     "gate": "tone-and-next-step",
-    "gateHash": "2e9eb2869bb72e7490b3e4174bc0181924cc96de65fd115c978a5da3eec07a0f",
+    "gateHash": "acc3ce507609627bbbeccd05ddc76cd65443df601c088699e68ce81c4e515ba8",
     "valid": true,
     "cases": [
       "planted scolding message",
@@ -149,6 +149,28 @@
     "valid": true,
     "cases": [
       "planted rule written against a held-out line"
+    ]
+  },
+  {
+    "gate": "sensitive-data",
+    "gateHash": "6f4ea8d980b0ab388e6ce345440b29c173b877d0fad4fe46caff89ad622d71f7",
+    "valid": true,
+    "cases": [
+      "planted field with no class",
+      "planted income marker in the evidence log",
+      "planted field the trace never exercised"
+    ]
+  },
+  {
+    "gate": "block-library",
+    "gateHash": "b23795afc27fc9cdba33932e967503503a7f0f951520a09b0bcde477fdc856bb",
+    "valid": true,
+    "cases": [
+      "planted block with no tests",
+      "planted block nothing uses",
+      "planted block under its mutation floor",
+      "planted block with no purpose page",
+      "planted app copy of a block function"
     ]
   }
 ]

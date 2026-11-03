@@ -15,5 +15,6 @@ Services you own: test those where they live.
 ## Verified by
 
 <!-- verified-by:start -->
+- [`packages/twins/test/twins-more.test.ts`](../../packages/twins/test/twins-more.test.ts) (5 test definitions)
 - [`packages/twins/test/twins.test.ts`](../../packages/twins/test/twins.test.ts) (3 test definitions)
 <!-- verified-by:end -->

@@ -1,0 +1,13 @@
+{
+  "name": "@zthr/store",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Owner-scoped document store and the classified data declaration",
+  "zthr": {
+    "purpose": "Owner-scoped document store and the classified data declaration",
+    "mutationFloor": 85
+  }
+}

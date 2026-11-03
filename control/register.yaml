@@ -25,3 +25,9 @@ findings:
     reason: They need a college's records for students who opt in (Phase 4 pilot); they are never estimated from app activity.
     owner: claude-agent
     expires: 2027-06-01
+  - id: blocks-below-mutation-target
+    gate: block-library
+    finding: Six blocks score under the 80% mutation target on their own tests (runtime, ui, evidence, explore, gates, intent); their floors are set at today's scores and only rise.
+    reason: These blocks were first tested through the app; their own suites are being grown block by block, guided by surviving mutants.
+    owner: claude-agent
+    expires: 2027-01-15

@@ -5,6 +5,9 @@ import { COLLECTIONS, OTHER_STORES } from '../apps/advocate/src/domain/schema.js
 import { loadPlaybooks } from '../apps/advocate/src/playbooks/engine.js';
 import { OPENAPI } from '../apps/advocate/src/server/api.js';
 import { ROOT } from './lib.js';
+import { sourcesPage } from './sources.js';
+import { sensitivePage } from './sensitive.js';
+import { featuresPage } from './features.js';
 
 /**
  * Documentation derived from the system (Pattern 14).
@@ -253,6 +256,9 @@ export async function buildDocs(check: boolean): Promise<string[]> {
   const { gateCatalog } = await import('./gates.js');
   const generated: Record<string, string> = {
     'docs/data-model.md': dataModel(),
+    'docs/data-sources.md': sourcesPage(),
+    'docs/features.md': featuresPage(),
+    'docs/flows/sensitive-data.md': sensitivePage(),
     'docs/flows/playbooks.md': playbooksPage(),
     'docs/testing/gates.md': gatesPage(gateCatalog()),
     'docs/testing/coverage.md': coveragePage(),

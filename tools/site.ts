@@ -10,6 +10,11 @@ import { parse as parseYaml } from 'yaml';
 import { SERVICES, SERVICE_IDS } from '../apps/campus-services/src/index.js';
 import { links } from './doc-links.js';
 import { JOURNEY_DIR, OUT, ROOT, headCommit } from './lib.js';
+import { loadFeatures } from './features.js';
+import { sources } from './sources.js';
+import { erd } from '@zthr/store';
+import { EvidenceStore } from '@zthr/evidence';
+import { productPage } from '../apps/advocate/src/server/product.js';
 
 /**
  * Builds the public site the factory publishes next to the app:
@@ -18,21 +23,24 @@ import { JOURNEY_DIR, OUT, ROOT, headCommit } from './lib.js';
  * Everything is read from what the factory recorded in this build; nothing is typed in by hand.
  */
 // --artifact builds a self-contained copy with relative links (no analytics) for previewing outside zthr.ai.
+// --static builds the same relative-link copy with analytics, for zthr.ai/reference on the static site host.
 const ARTIFACT = process.argv.includes('--artifact');
-const SITE = join(ROOT, ARTIFACT ? 'site-artifact' : 'site-out');
+const STATIC = process.argv.includes('--static');
+const RELATIVE = ARTIFACT || STATIC;
+const SITE = join(ROOT, ARTIFACT ? 'site-artifact' : STATIC ? 'site-static' : 'site-out');
 const GA = process.env.SITE_GA_ID ?? 'G-0VXPS15MY4';
 const APP = ARTIFACT ? 'https://zthr.ai/advocate/' : '/advocate/';
-/** Fonts and assets: served from the app when published, relative to the page in the self-contained copy. */
-const fontBase = (rootRel: string) => (ARTIFACT ? rootRel.replace(/\/$/, '') || '.' : '/advocate');
+/** Fonts and assets: served from the app when published, relative to the page in the self-contained copies. */
+const fontBase = (rootRel: string) => (RELATIVE ? rootRel.replace(/\/$/, '') || '.' : '/advocate');
 const head = (rootRel: string) => `${ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`}
-${ARTIFACT ? '' : `<script src="/assets/mermaid-11.4.1.min.js"></script>`}<script>window.mermaid&&mermaid.initialize({startOnLoad:true,theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'neutral',securityLevel:'strict'});</script>
+${ARTIFACT ? '' : `<script src="${STATIC ? rootRel : '/'}assets/mermaid-11.4.1.min.js"></script>`}<script>window.mermaid&&mermaid.initialize({startOnLoad:true,theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'neutral',securityLevel:'strict'});</script>
 <style>.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style>`;
 
 const read = <T>(p: string): T | undefined => (existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as T) : undefined);
 const write = (path: string, html: string) => {
   mkdirSync(dirname(path), { recursive: true });
   // The preview host reserves names that start with "_", so fonts live under fonts/ there.
-  writeFileSync(path, ARTIFACT ? html.replace(/_ui\/atkinson/g, 'fonts/atkinson') : html);
+  writeFileSync(path, RELATIVE ? html.replace(/_ui\/atkinson/g, 'fonts/atkinson') : html);
 };
 const walkFiles = (dir: string, ext: string): string[] => (existsSync(dir) ? readdirSync(dir).flatMap((n) => (statSync(join(dir, n)).isDirectory() ? walkFiles(join(dir, n), ext) : n.endsWith(ext) ? [join(dir, n)] : [])) : []);
 
@@ -42,19 +50,16 @@ function copyAssets(): void {
   // Diagrams are drawn by a copy of Mermaid served from this site, so readers' browsers fetch nothing elsewhere.
   mkdirSync(join(SITE, 'assets'), { recursive: true });
   cpSync(join(ROOT, 'node_modules/mermaid/dist/mermaid.min.js'), join(SITE, 'assets', 'mermaid-11.4.1.min.js'));
-  if (ARTIFACT) {
+  if (RELATIVE) {
     mkdirSync(join(SITE, 'fonts'), { recursive: true });
     for (const f of ['atkinson-400.woff2', 'atkinson-700.woff2']) writeFileSync(join(SITE, 'fonts', f), ui.uiAsset(f)!.body);
   }
 }
 
 function buildLanding(): void {
-  const body = `<h1>ZTHR reference implementation</h1><p class="muted">The Student Advocate, built by agents under the factory's fixtures. Everything here was recorded by the factory.</p>${ui.rows([
-    { title: 'Factory console', sub: 'Guardrails, red team, walks, journeys, every test, mutation, phases, cost', href: 'factory/index.html' },
-    { title: 'Documentation', sub: 'Architecture, flows, data model, API and every building block, illustrated', href: 'docs/index.html' },
-    { title: 'The Student Advocate', sub: 'The app itself', href: APP },
-  ])}`;
-  write(join(SITE, 'index.html'), ui.consoleShell({ title: 'ZTHR reference', brand: 'ZTHR reference', brandHref: 'index.html', base: fontBase(''), head: head(''), groups: [{ title: '', items: [{ href: 'factory/index.html', label: 'Factory console', icon: 'shield' }, { href: 'docs/index.html', label: 'Documentation', icon: 'doc' }, { href: APP, label: 'The app', icon: 'route' }] }], body }));
+  // The front of the reference site is the Student Advocate's product page, linking to the docs, the factory and the app.
+  const gaHead = ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`;
+  write(join(SITE, 'index.html'), productPage({ app: APP.replace(/\/$/, ''), docs: 'docs/index.html', factory: 'factory/index.html', factoryPage: (p) => `factory/${p}.html`, admin: `${APP}admin/`, fontBase: fontBase(''), head: gaHead, live: false }));
   if (ARTIFACT) {
     // The preview's front page is written as page content only; the host wraps it in its own document.
     const full = readFileSync(join(SITE, 'index.html'), 'utf8');
@@ -114,6 +119,7 @@ interface WalkReport {
   ms?: number;
 }
 
+let HEAD_ = '';
 function buildFactory(): number {
   const tests = read<{ numTotalTests: number; numPassedTests: number; testResults: { name: string; status: string; assertionResults: { fullName: string; status: string; title: string; ancestorTitles: string[] }[] }[] }>(join(OUT, 'tests.json'));
   const explore = read<WalkReport>(join(OUT, 'explore.json'));
@@ -136,24 +142,17 @@ function buildFactory(): number {
     return { score: (killed / valid) * 100, killed, valid, total: all.length };
   })() : undefined;
 
-  const PAGES: [string, string, string][] = [
-    ['index', 'Overview', 'gauge'],
-    ['phases', 'Phases', 'list'],
-    ['gates', 'Guardrails', 'shield'],
-    ['redteam', 'Red team', 'alert'],
-    ['feature-walks', 'Feature walks', 'route'],
-    ['ui-walk', 'Browser walk', 'today'],
-    ['intent', 'Intent walks', 'check'],
-    ['tests', 'Every test', 'flask'],
-    ['mutation', 'Mutation', 'bolt'],
-    ['docs-qa', 'Docs and links', 'doc'],
-    ['data', 'Data model', 'book'],
-    ['twins', 'Campus twins', 'bus'],
-    ['patterns', 'The 33 patterns', 'list'],
-    ['cost', 'Cost', 'dollar'],
+  // The console's menu, in buckets: what was built, how it is kept safe, how it is verified, what it is made of.
+  const NAV: { title: string; pages: [string, string, string][] }[] = [
+    { title: 'The build', pages: [['index', 'Overview', 'gauge'], ['phases', 'Phases', 'list'], ['features', 'Features', 'check'], ['patterns', 'The 33 patterns', 'list']] },
+    { title: 'Safety', pages: [['gates', 'Guardrails', 'shield'], ['redteam', 'Red team', 'alert'], ['sensitive', 'Sensitive data trace', 'you']] },
+    { title: 'QA verification', pages: [['feature-walks', 'Feature walks', 'route'], ['ui-walk', 'Browser walk', 'today'], ['intent', 'Intent walks', 'check'], ['tests', 'Every test', 'flask'], ['mutation', 'Mutation', 'bolt'], ['docs-qa', 'Docs and links', 'doc']] },
+    { title: 'Parts and data', pages: [['blocks', 'Block library', 'list'], ['data', 'Data model', 'book'], ['sources', 'Data sources', 'book'], ['twins', 'Campus twins', 'bus']] },
+    { title: 'Operations', pages: [['cost', 'Cost', 'dollar']] },
   ];
+  const PAGES = NAV.flatMap((g) => g.pages);
   const shell = (id: string, title: string, body: string) =>
-    ui.consoleShell({ title: `${title} · ZTHR factory`, brand: 'ZTHR factory', brandHref: 'index.html', base: fontBase('../'), head: head('../'), groups: [{ title: 'Factory', items: PAGES.map(([p, l, ic]) => ({ href: `${p}.html`, label: l, icon: ic, current: p === id })) }, { title: 'Elsewhere', items: [{ href: APP, label: 'The app', icon: 'route' }, { href: `${APP}admin/`, label: 'App admin', icon: 'you' }, { href: '../docs/index.html', label: 'Documentation', icon: 'doc' }] }], body: `<h1>${ui.esc(title)}</h1>${body}` });
+    ui.consoleShell({ title: `${title} · ZTHR factory`, brand: 'ZTHR factory', brandHref: 'index.html', base: fontBase('../'), head: head('../'), groups: [...NAV.map((g) => ({ title: g.title, items: g.pages.map(([p, l, ic]) => ({ href: `${p}.html`, label: l, icon: ic, current: p === id })) })), { title: 'Elsewhere', items: [{ href: APP, label: 'The app', icon: 'route' }, { href: `${APP}admin/`, label: 'App admin', icon: 'you' }, { href: '../docs/index.html', label: 'Documentation', icon: 'doc' }] }], body: `<h1>${ui.esc(title)}</h1>${body}` });
   const n = (x: number | undefined) => (x === undefined ? 'not measured' : x.toLocaleString('en-US'));
   const held = redteam?.results.filter((r) => r.held).length;
   const walkStates = (explore?.states ?? 0) + (crawl?.states ?? 0) + (crawlSettings?.states ?? 0);
@@ -171,15 +170,10 @@ ${ui.kpis([
   { value: mutScore ? `${mutScore.score.toFixed(1)}%` : 'not measured', label: 'mutation score' },
   { value: uiManifest ? n(uiManifest.stops.length) : 'not measured', label: 'browser stops checked' },
 ])}
-${ui.section('What each part proves', ui.rows(PAGES.slice(1).map(([p, l]) => ({ title: l, href: `${p}.html`, sub: { phases: 'What each phase delivers and whether the factory certified it', gates: 'The checks that must fail on planted defects before they count', redteam: 'Attacks real people send, and whether the app held', 'feature-walks': 'Every button and every page, for every student, to a fixpoint', 'ui-walk': 'A real browser: accessibility, layout, screenshots and video', intent: 'The goals students actually have, run in every mode and channel', tests: 'Every test, grouped by file, with the document it verifies', mutation: 'Whether the tests notice when the code is wrong', 'docs-qa': 'Every test linked to a document and every document to a test', data: 'Every collection the app keeps', cost: 'What the factory spent to run itself', twins: 'The campus services the Advocate talks to, and their contracts', patterns: 'All 33 patterns, where each lives and what proves it' }[p] })))) }`));
+${NAV.map((g) => ui.section(g.title, ui.rows(g.pages.filter(([p]) => p !== 'index').map(([p, l]) => ({ title: l, href: `${p}.html`, sub: ({ features: 'Everything the app does, by phase, with the journey that proves it', sensitive: 'Every personal and sensitive field, where it may go, and where a planted canary actually went', blocks: 'The reusable parts this app is built from, each with its own tests and mutation score', sources: 'Every outside source the app reads, with an ERD of what each returns', phases: 'What each phase delivers and whether the factory certified it', gates: 'The checks that must fail on planted defects before they count', redteam: 'Attacks real people send, and whether the app held', 'feature-walks': 'Every button and every page, for every student, to a fixpoint', 'ui-walk': 'A real browser: accessibility, layout, screenshots and video', intent: 'The goals students actually have, run in every mode and channel', tests: 'Every test, grouped by file, with the document it verifies', mutation: 'Whether the tests notice when the code is wrong', 'docs-qa': 'Every test linked to a document and every document to a test', data: 'Every collection the app keeps', cost: 'What the factory spent to run itself', twins: 'The campus services the Advocate talks to, and their contracts', patterns: 'All 33 patterns, where each lives and what proves it' } as Record<string, string>)[p] }))))).join('')}`));
 
   // phases
-  const PHASES: { n: number; name: string; items: [string, string][] }[] = [
-    { n: 1, name: 'Run my day', items: [['Today, plans and held time', 'built'], ['Money and benefits checks', 'built'], ['Finding help and crisis plans', 'built'], ['FAFSA and SNAP playbooks', 'built'], ['Starting by text', 'built'], ['Every button works, app and text', 'built']] },
-    { n: 2, name: 'Household, career and campus life', items: [['Week solver with child care and commute', 'built'], ['GI Bill, accommodations, break housing, enrollment, SNAP recertification playbooks', 'built'], ['Foster-youth aid and retraining playbooks', 'built'], ['Community with moderation', 'built'], ['Meal plans sized to SNAP, with one shopping list', 'built'], ['Caregivers: Eldercare Locator and a county scout the factory admitted', 'built'], ['Career help at each college, and the fair-chance (CQE) path when the student asks', 'built'], ['Jobs that fit around classes and shifts', 'built'], ['Campus food open now, late food and free food', 'built'], ['Study spots, and room booking confirmed by the room system', 'built'], ['Bus to class with live delays, and a late note to draft', 'built'], ['Spanish: text start, finding help and crisis; other screens registered', 'partial']] },
-    { n: 3, name: 'Integrations', items: [['Integration API: ingest, export, webhooks', 'built'], ['Calendar feed and calendar ingest', 'built'], ['Class-site sync: assignments, moved dates, room changes', 'built'], ['Synthetic campus services with contracts and fixtures', 'built'], ['The operator: leases, dispatches verified by lookup', 'built'], ['One door to the network', 'built'], ['App admin', 'built'], ['Sign in with Google', 'built']] },
-    { n: 4, name: 'Any college, and proof it works', items: [['Red team', 'built'], ['Any college: declared once, county scouts drafted by the builder (Clark State added)', 'built'], ['Mentor network: introductions sent, answers tracked', 'built'], ['Letter explainer with a model inside a deterministic sandwich', 'built'], ['Outcome measures with small-group suppression', 'built'], ['Persistence and credits: needs a college pilot', 'not measured']] },
-  ];
+  const PHASES = loadFeatures().map((p) => ({ n: p.n, name: p.name, items: p.features.map((f) => [f.name, f.status] as [string, string]) }));
   const certs = read<{ phase: number; commit: string; at: string; certified: boolean; checks: { check: string; status: string; detail: string }[] }[]>(join(OUT, 'certificates.json')) ?? [];
   const certFor = (n: number) => {
     const c = certs.find((x) => x.phase === n);
@@ -197,6 +191,7 @@ ${ui.section('What each part proves', ui.rows(PAGES.slice(1).map(([p, l]) => ({ 
 
   // feature walks
   const HEAD = headCommit();
+  HEAD_ = HEAD;
   const measuredAt = (r: WalkReport & { commit?: string }) => (r.commit === HEAD ? `<p class="small">${ui.chip(`measured at ${HEAD}`, 'ok')}</p>` : `<p class="small">${ui.chip(r.commit ? `measured at ${r.commit}, an earlier commit` : 'measured at an earlier commit', 'warn')} The walk for this commit has not finished.</p>`);
   const walkSection = (title: string, r: WalkReport | undefined, unit: string) =>
     r ? ui.section(title, `${measuredAt(r)}${ui.kpis([{ value: n(r.states), label: 'states' }, { value: n(r.transitions), label: unit }, { value: r.seeds.every((s) => s.exhausted) ? 'yes' : 'no', label: 'every seed reached its fixpoint' }, { value: n(r.violations.length), label: 'violations' }])}${ui.table(['Seed', 'States', unit, 'Deepest path', 'Fixpoint'], r.seeds.map((s) => [s.name, n(s.states), n(s.transitions), s.maxDepth, s.exhausted ? 'reached' : 'cut short']))}${r.violations.length ? ui.table(['Seed', 'Path', 'Problem'], r.violations.slice(0, 50).map((v) => [v.seed, v.path.slice(-4).join(' > '), v.problem])) : ''}`) : ui.section(title, '<p class="muted">Not measured in this build.</p>');
@@ -255,6 +250,23 @@ ${SERVICE_IDS.map((id) => { const sv = SERVICES[id]; const probes = (contract?.r
       `<p class="muted">Every pattern in the ZTHR pattern language, where this build implements it, and what proves it. The <code>pattern-coverage</code> gate fails if any is missing. <a href="../docs/testing/patterns.html">The map, explained</a>.</p>${ui.table(['#', 'Pattern', 'Implemented in', 'Proven by', 'Gate'], pmap.patterns.map((p) => [String(p.n), ui.esc(p.name), p.implemented_in.map((f) => `<a href="${GH}${ui.esc(f)}"><code>${ui.esc(f)}</code></a>`).join('<br>'), p.verified_by.map((f) => `<a href="${GH}${ui.esc(f)}"><code>${ui.esc(f.split('/').pop()!)}</code></a>`).join('<br>'), p.gate ? (proofs.find((x) => x.gate === p.gate)?.valid ? ui.chip(p.gate, 'ok') : ui.chip(p.gate, 'warn')) : '']), { raw: [false, false, true, true, true] })}`,
     ),
   );
+
+  // features
+  const journeyRuns: { journey: string; status: string }[] = existsSync(join(OUT, 'evidence.db')) ? new EvidenceStore(join(OUT, 'evidence.db')).events('journey_run').map((e) => ({ journey: e.subject, status: String(e.data.status) })) : [];
+  const jStatus = (id: string) => journeyRuns.filter((r) => r.journey === id).pop()?.status ?? 'not measured';
+  const phasesF = loadFeatures();
+  write(join(SITE, 'factory', 'features.html'), shell('features', 'Features', `<p class="muted">Everything the Student Advocate does, declared once in <code>control/features.yaml</code>, with the locked journeys that prove each feature. <a href="../docs/features.html">The features document</a>.</p>${ui.kpis([{ value: String(phasesF.flatMap((p) => p.features).length), label: 'features' }, { value: String(phasesF.flatMap((p) => p.features).filter((f) => f.status === 'built').length), label: 'built' }, { value: String(phasesF.flatMap((p) => p.features).filter((f) => f.status !== 'built').length), label: 'partial or not measured' }, { value: String(cards.length), label: 'journeys proving them' }])}${phasesF.map((p) => ui.section(`Phase ${p.n}: ${p.name}`, ui.table(['Feature', 'What it does', 'Status', 'Proven by'], p.features.map((f) => [`<b>${ui.esc(f.name)}</b>`, ui.esc(f.what), ui.chip(f.status, f.status === 'built' ? 'ok' : 'warn'), f.journeys.map((j) => `${ui.esc(j)} ${journeyRuns.length ? ui.chip(jStatus(j), jStatus(j) === 'pass' ? 'ok' : jStatus(j) === 'fail' ? 'bad' : 'warn') : ''}`).join('<br>') || '<span class="muted">tests and gates</span>']), { raw: [true, false, true, true] }))).join('')}`));
+
+  // sensitive data trace
+  const tr = read<{ at: string; commit?: string; canaries: { field: string; cls: string }[]; findings: { field: string; sink: string; allowed: boolean }[]; leaks: { field: string; sink: string }[]; unexercised: string[]; sealedNowhere: string[]; sinks: string[]; policy: Record<string, string[]> }>(join(OUT, 'sensitive-trace.json'));
+  write(join(SITE, 'factory', 'sensitive.html'), shell('sensitive', 'Sensitive data trace', tr ? `<p class="muted">A unique marker was planted in every personal, sensitive and secret field. A student then used the app by text, on the web and through the API, sent a mentor introduction and registered a webhook. Every place data can land was searched for every marker. <a href="../docs/flows/sensitive-data.html">How it works, and every field's class</a>.</p>${tr.commit ? `<p class="small">${ui.chip(`measured at ${tr.commit}`, tr.commit === HEAD_ ? 'ok' : 'warn')}</p>` : ''}${ui.kpis([{ value: String(tr.canaries.length), label: 'markers planted' }, { value: String(tr.findings.length), label: 'sightings, all checked' }, { value: String(tr.leaks.length), label: 'leaks' }, { value: String(tr.sealedNowhere.length), label: 'sealed facts and secrets seen nowhere' }])}${ui.section('Where each marker turned up', `<div style="overflow-x:auto">${ui.table(['Field', 'Class', ...tr.sinks], tr.canaries.map((c) => [`<code>${ui.esc(c.field)}</code>`, ui.chip(c.cls, c.cls === 'secret' ? 'bad' : c.cls === 'sensitive' ? 'warn' : undefined), ...tr.sinks.map((k) => { const f = tr.findings.find((x) => x.field === c.field && x.sink === k); return f ? (f.allowed ? '<span title="allowed">✓</span>' : ui.chip('leak', 'bad')) : '<span class="muted">·</span>'; })]), { raw: [true, true, ...tr.sinks.map(() => true)] })}</div><p class="small muted">✓ the marker was found there and its class may go there. · not found. A leak fails the <code>sensitive-data</code> gate.</p>`)}${ui.section('Where each class may go', ui.table(['Place', 'Personal', 'Sensitive', 'Secret'], tr.sinks.map((k) => [ui.esc(k), tr.policy.personal!.includes(k) ? 'yes' : 'no', tr.policy.sensitive!.includes(k) ? 'yes' : 'no', 'no'])))}` : '<p class="muted">Not measured in this build.</p>'));
+
+  // block library
+  const bl = read<{ at: string; commit: string; blocks: { name: string; purpose: string; floor: number; tests: number; srcLines: number; consumers: string[]; doc?: string; mutation?: { score: number; killed: number; survived: number; noCoverage: number; valid: number; commit?: string } }[] }>(join(OUT, 'blocks.json'));
+  write(join(SITE, 'factory', 'blocks.html'), shell('blocks', 'Block library', bl ? `<p class="muted">The reusable parts the Student Advocate is built from. Each block has one purpose, its own tests, its own mutation run against only those tests, a floor it may not fall below, and a page saying what to use it for and what not. The app inherits blocks by importing them; the <code>block-library</code> gate fails if an app copies a block's code.</p>${ui.kpis([{ value: String(bl.blocks.length), label: 'blocks' }, { value: String(bl.blocks.reduce((n, b) => n + b.tests, 0)), label: 'block tests' }, { value: String(bl.blocks.filter((b) => b.mutation && b.mutation.score >= b.floor).length), label: 'at or above their floor' }, { value: `${(bl.blocks.filter((b) => b.mutation).reduce((n, b) => n + b.mutation!.score, 0) / Math.max(1, bl.blocks.filter((b) => b.mutation).length)).toFixed(1)}%`, label: 'average mutation score' }])}${ui.table(['Block', 'What it is for', 'Tests', 'Mutation', 'Floor', 'Used by'], bl.blocks.map((b) => [b.doc ? `<a href="../${ui.esc(b.doc.replace(/\.md$/, '.html'))}"><code>@zthr/${ui.esc(b.name)}</code></a>` : `<code>@zthr/${ui.esc(b.name)}</code>`, ui.esc(b.purpose), String(b.tests), b.mutation ? `${b.mutation.score.toFixed(1)}% ${ui.bar(b.mutation.score / 100, `${b.name} mutation`)}` : ui.chip('not measured', 'warn'), b.mutation ? (b.mutation.score >= b.floor ? ui.chip(`${b.floor}%`, 'ok') : ui.chip(`${b.floor}%`, 'bad')) : `${b.floor}%`, b.consumers.map((c) => ui.esc(c)).join('<br>')]), { raw: [true, false, false, true, true, true] })}<p class="small muted">Floors are ratchets: they start at the score each block measured on its own tests and only rise. Mutation for a block runs only that block's own tests, so a block cannot lean on the app's tests to look strong.</p>` : '<p class="muted">Not measured in this build.</p>'));
+
+  // data sources
+  write(join(SITE, 'factory', 'sources.html'), shell('sources', 'Data sources', `<p class="muted">Everything the Advocate reads that it does not own, with an ERD of what each returns, drawn from the same schemas the contract tests enforce. Each field shows its sensitivity class. <a href="../docs/data-sources.html">The data sources document</a>.</p>${sources().map((src) => ui.section(src.name, `<p class="small muted">${ui.esc(src.kind)} · ${ui.esc(src.how)} Lands in: ${ui.esc(src.lands)}.</p><pre class="mermaid">${ui.esc(erd(src.entities, { showClass: true }))}</pre>`)).join('')}`));
 
   return PAGES.length;
 }

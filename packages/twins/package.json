@@ -1,1 +1,13 @@
-{ "name": "@zthr/twins", "version": "0.1.0", "private": true, "type": "module", "main": "src/index.ts", "license": "Apache-2.0" }
+{
+  "name": "@zthr/twins",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Twins of outside services (SMS, mail, calendars) with calibration dates",
+  "zthr": {
+    "purpose": "Twins of outside services (SMS, mail, calendars) with calibration dates",
+    "mutationFloor": 80
+  }
+}

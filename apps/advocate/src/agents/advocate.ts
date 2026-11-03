@@ -746,7 +746,8 @@ export class Advocate {
   }
 
   addDocument(studentId: string, name: string, content: string): void {
-    this.sealed.seal(studentId, `doc:${name}`, content);
+    // A document's name says what it is ("eviction notice"), so the sealed store and its ledger see only a keyed hash.
+    this.sealed.seal(studentId, `doc:${this.pseud(`doc|${name}`)}`, content);
     this.store.put('vault', `${studentId}:${name}`, studentId, { name, addedAt: this.today() });
   }
 
@@ -1519,7 +1520,8 @@ export class Advocate {
     const token = `adv_${randomBytes(24).toString('base64url')}`;
     const id = createHash('sha256').update(token).digest('hex');
     this.store.put('api_tokens', id, studentId, { id, label, scopes, createdAt: this.today() });
-    this.ledger.append(studentId, 'grant', `api:${label}`, { scopes });
+    // The ledger is permanent, so it names the token by a short hash, never by the student's own label.
+    this.ledger.append(studentId, 'grant', `api:${id.slice(0, 12)}`, { scopes });
     return token;
   }
 
@@ -1531,7 +1533,7 @@ export class Advocate {
     const t = this.store.list<{ id: string; label: string }>('api_tokens', studentId).find((x) => x.id === id);
     if (!t) return;
     this.store.remove('api_tokens', id);
-    this.ledger.append(studentId, 'revoke', `api:${t.label}`, {});
+    this.ledger.append(studentId, 'revoke', `api:${t.id.slice(0, 12)}`, {});
   }
 
   /** Who a bearer token belongs to, and what it may do. */
@@ -1606,7 +1608,10 @@ export class Advocate {
 
   exportData(studentId: string): Record<string, unknown> {
     this.ledger.append(studentId, 'export', 'all', {});
-    return { ...this.store.exportStudent(studentId), consent: this.ledger.entries(studentId) };
+    const all = this.store.exportStudent(studentId);
+    // Secrets are never shown, not even to their owner: a webhook's signing secret stays on the server.
+    if (all.webhooks) all.webhooks = (all.webhooks as Record<string, unknown>[]).map(({ secret: _secret, ...w }) => w);
+    return { ...all, consent: this.ledger.entries(studentId) };
   }
 
   deleteStudent(studentId: string): { removed: number; remaining: number } {

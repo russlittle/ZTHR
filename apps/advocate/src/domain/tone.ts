@@ -1,3 +1,4 @@
+import { carelessness, phraseProblems, readingGrade, type PhraseRule } from '@zthr/plain-language';
 import type { Depth, OutboundMessage } from './types.js';
 
 /**
@@ -6,7 +7,7 @@ import type { Depth, OutboundMessage } from './types.js';
  * student's level, or if it is too long for their chosen depth. A model judge
  * from another family adds a second opinion; it can fail a message, never pass one.
  */
-const SCOLDING: [RegExp, string][] = [
+const SCOLDING: PhraseRule[] = [
   [/\byou(?:'re| are) (?:late|behind|falling behind)\b/i, 'tells the student they are late or behind'],
   [/\byou (?:failed|forgot|missed|neglected)\b/i, 'blames the student'],
   [/\byou should have\b/i, 'second-guesses the student'],
@@ -20,39 +21,14 @@ const SCOLDING: [RegExp, string][] = [
   [/\birresponsible\b/i, 'judges the student'],
 ];
 
-const SCOLDING_ES: [RegExp, string][] = [
+const SCOLDING_ES: PhraseRule[] = [
   [/\b(llegas tarde|estás atrasad[oa])\b/i, 'tells the student they are late'],
   [/\b(debiste|deberías haber)\b/i, 'second-guesses the student'],
   [/\b(advertencia|vencid[oa])\b/i, 'uses alarm language'],
   [/\b(tienes que|debes)\b/i, 'commands the student'],
 ];
 
-export function syllables(word: string): number {
-  const w = word.toLowerCase().replace(/[^a-z]/g, '');
-  if (w.length <= 3) return w.length > 0 ? 1 : 0;
-  const groups = w.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '').replace(/^y/, '').match(/[aeiouy]{1,2}/g);
-  return Math.max(1, groups?.length ?? 1);
-}
-
-/**
- * Flesch-Kincaid grade level of the words the team writes. URLs and web addresses, phone numbers,
- * dollar amounts and proper names (runs of two or more capitalized words, such
- * as an agency's name) are ignored: the student cannot be spared those, and
- * they would otherwise hide whether the surrounding sentences are plain.
- */
-export function readingGrade(text: string): number {
-  const clean = text
-    .replace(/https?:\/\/\S+/g, '')
-    .replace(/\b[\w-]+(?:\.[\w-]+)*\.(?:gov|org|com|edu|net|us)(?:\/[^\s,;]*)?/gi, 'site')
-    .replace(/[\d$().,:\-+/]{4,}/g, '')
-    .replace(/\b[A-Z][\w'.&-]*(?:\s+(?:of|and|the|for|de|&)?\s*[A-Z][\w'.&-]*)+/g, 'Name');
-  // A line in a list is read as its own sentence.
-  const sentences = Math.max(1, (clean.match(/[.!?]+(\s|$)|\n(?=\s*\S)/g) ?? []).length);
-  const words = clean.split(/\s+/).filter((w) => /[a-z]/i.test(w));
-  if (words.length === 0) return 0;
-  const syl = words.reduce((s, w) => s + syllables(w), 0);
-  return 0.39 * (words.length / sentences) + 11.8 * (syl / words.length) - 15.59;
-}
+export { readingGrade, syllables } from '@zthr/plain-language';
 
 const LIMITS: Record<Depth, { maxChars: number; gradeSlack: number }> = {
   brief: { maxChars: 320, gradeSlack: 2 },
@@ -68,17 +44,14 @@ export interface ToneResult {
 
 export function checkTone(m: Pick<OutboundMessage, 'text' | 'nextSteps' | 'urgency'>, depth: Depth, targetGrade: number, language: 'en' | 'es' = 'en'): ToneResult {
   const problems: string[] = [];
-  for (const [re, why] of SCOLDING) if (re.test(m.text)) problems.push(why);
-  for (const [re, why] of SCOLDING_ES) if (re.test(m.text)) problems.push(why);
+  problems.push(...phraseProblems(m.text, SCOLDING), ...phraseProblems(m.text, SCOLDING_ES));
   if (m.urgency !== 'safety' && m.nextSteps.length === 0) problems.push('reports without offering a next step');
   // The grade formula is for English; Spanish reading level is not yet measured, so it is not gated.
   const grade = language === 'en' ? readingGrade(m.text) : 0;
   const lim = LIMITS[depth];
   if (language === 'en' && m.urgency !== 'safety' && grade > targetGrade + lim.gradeSlack) problems.push(`reads at grade ${grade.toFixed(1)}, above ${targetGrade + lim.gradeSlack}`);
   if (m.text.length > lim.maxChars) problems.push(`${m.text.length} characters is too long for ${depth} mode`);
-  // Careless writing reads as not caring: doubled periods, empty parentheses, stray template holes.
-  if (/[^.]\.\.(?!\.)/.test(m.text)) problems.push('has a doubled period');
-  if (/\(\s*\)|\bundefined\b|\bnull\b|NaN|\$\{/.test(m.text)) problems.push('has a template hole or empty value');
+  problems.push(...carelessness(m.text));
   for (const n of m.nextSteps) if (!n.label.trim()) problems.push('has a button with no label');
   return { ok: problems.length === 0, problems, grade };
 }

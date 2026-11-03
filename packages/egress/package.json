@@ -1,1 +1,13 @@
-{ "name": "@zthr/egress", "version": "0.1.0", "private": true, "type": "module", "main": "src/index.ts", "license": "Apache-2.0" }
+{
+  "name": "@zthr/egress",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "The one door to the network: allow-listed https hosts, named purposes, recorded",
+  "zthr": {
+    "purpose": "The one door to the network: allow-listed https hosts, named purposes, recorded",
+    "mutationFloor": 80
+  }
+}

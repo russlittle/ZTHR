@@ -2,7 +2,7 @@
 # gate fails if a pattern is missing, a path does not exist, or a pattern names a gate that is not in the catalog.
 patterns:
   - { n: 1, name: Governed Foundation, implemented_in: [packages/runtime/src/governor.ts, packages/runtime/src/ledger.ts, apps/advocate/src/server/auth.ts, cloudbuild.yaml], verified_by: [packages/runtime/test/runtime.test.ts, apps/advocate/test/auth.test.ts] }
-  - { n: 2, name: Parts Catalog with Purpose Notes, implemented_in: [packages, docs/blocks], verified_by: [tools/test/patterns.test.ts] }
+  - { n: 2, name: Parts Catalog with Purpose Notes, implemented_in: [packages, docs/blocks, tools/blocks.ts, vitest.block.config.ts], verified_by: [tools/test/patterns.test.ts, packages/operator/test/operator.test.ts], gate: block-library }
   - { n: 3, name: Test the Part Where It Lives, implemented_in: [apps/advocate/test/harness/world.ts, apps/advocate/test/harness/crawl.ts], verified_by: [apps/advocate/test/schema.test.ts, tools/test/ui-walk.test.ts] }
   - { n: 4, name: Single Source, Generated Mirrors, implemented_in: [tools/docs.ts, apps/advocate/src/domain/schema.ts, control/colleges], verified_by: [apps/advocate/test/schema.test.ts, apps/advocate/test/colleges.test.ts] }
   - { n: 5, name: Describe, Never Write, implemented_in: [apps/advocate/src/builder/builder.ts, tools/certify.ts, tools/admit.ts], verified_by: [apps/advocate/test/builder.test.ts, apps/advocate/test/roles.test.ts] }
@@ -24,9 +24,9 @@ patterns:
   - { n: 21, name: Multi-Family Review, implemented_in: [packages/review/src/index.ts, control/review.yaml], verified_by: [packages/review/test/review.test.ts] }
   - { n: 22, name: Diversity of Representation, implemented_in: [apps/advocate/test/reconcile.test.ts], verified_by: [apps/advocate/test/reconcile.test.ts] }
   - { n: 23, name: Done Means Serving, implemented_in: [cloudbuild.yaml, apps/advocate/src/server/main.ts], verified_by: [tools/test/patterns.test.ts] }
-  - { n: 24, name: The Persistent Operator, implemented_in: [apps/advocate/src/operator/operator.ts], verified_by: [apps/advocate/test/campus.test.ts] }
-  - { n: 25, name: A Dispatch Is Not a Result, implemented_in: [apps/advocate/src/operator/operator.ts], verified_by: [apps/advocate/test/campus.test.ts] }
-  - { n: 26, name: Leases, implemented_in: [apps/advocate/src/operator/operator.ts], verified_by: [apps/advocate/test/campus.test.ts] }
+  - { n: 24, name: The Persistent Operator, implemented_in: [apps/advocate/src/operator/operator.ts, packages/operator/src/index.ts], verified_by: [apps/advocate/test/campus.test.ts] }
+  - { n: 25, name: A Dispatch Is Not a Result, implemented_in: [packages/operator/src/index.ts, apps/advocate/src/operator/operator.ts], verified_by: [packages/operator/test/operator.test.ts, apps/advocate/test/campus.test.ts] }
+  - { n: 26, name: Leases, implemented_in: [packages/operator/src/index.ts, apps/advocate/src/operator/operator.ts], verified_by: [packages/operator/test/operator.test.ts, apps/advocate/test/campus.test.ts] }
   - { n: 27, name: Bounded by Structure, implemented_in: [apps/advocate/src/operator/operator.ts, packages/egress/src/index.ts], verified_by: [apps/advocate/test/roles.test.ts] }
   - { n: 28, name: The Deterministic Sandwich, implemented_in: [packages/runtime/src/sandwich.ts], verified_by: [apps/advocate/test/letters.test.ts, packages/runtime/test/runtime.test.ts] }
   - { n: 29, name: Refuse to Start Misconfigured, implemented_in: [packages/runtime/src/sandwich.ts, apps/advocate/src/server/main.ts], verified_by: [packages/runtime/test/runtime.test.ts] }
