@@ -23,7 +23,7 @@ const APP = ARTIFACT ? 'https://zthr.ai/advocate/' : '/advocate/';
 /** Fonts and assets: served from the app when published, relative to the page in the self-contained copy. */
 const fontBase = (rootRel: string) => (ARTIFACT ? rootRel.replace(/\/$/, '') || '.' : '/advocate');
 const head = (rootRel: string) => `${ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`}
-<script src="${ARTIFACT ? rootRel : '/'}assets/mermaid-11.4.1.min.js"></script><script>mermaid.initialize({startOnLoad:true,theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'neutral',securityLevel:'strict'});</script>
+${ARTIFACT ? '' : `<script src="/assets/mermaid-11.4.1.min.js"></script>`}<script>window.mermaid&&mermaid.initialize({startOnLoad:true,theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'neutral',securityLevel:'strict'});</script>
 <style>.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style>`;
 
 const read = <T>(p: string): T | undefined => (existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as T) : undefined);
@@ -52,6 +52,13 @@ function buildLanding(): void {
     { title: 'The Student Advocate', sub: 'The app itself', href: APP },
   ])}`;
   write(join(SITE, 'index.html'), ui.consoleShell({ title: 'ZTHR reference', brand: 'ZTHR reference', brandHref: 'index.html', base: fontBase(''), head: head(''), groups: [{ title: '', items: [{ href: 'factory/index.html', label: 'Factory console', icon: 'shield' }, { href: 'docs/index.html', label: 'Documentation', icon: 'doc' }, { href: APP, label: 'The app', icon: 'route' }] }], body }));
+  if (ARTIFACT) {
+    // The preview's front page is written as page content only; the host wraps it in its own document.
+    const full = readFileSync(join(SITE, 'index.html'), 'utf8');
+    const style = full.match(/<style>[\s\S]*?<\/style>/g)?.join('') ?? '';
+    const bodyHtml = full.slice(full.indexOf('<body>') + 6, full.lastIndexOf('</body>'));
+    write(join(SITE, 'index.html'), `<title>ZTHR Reference</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n${style}<style>main.con{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 60px}</style>\n${bodyHtml}`);
+  }
 }
 
 function buildDocs(): number {
@@ -164,7 +171,7 @@ ${ui.section('What each part proves', ui.rows(PAGES.slice(1).map(([p, l]) => ({ 
   // phases
   const PHASES: { n: number; name: string; items: [string, string][] }[] = [
     { n: 1, name: 'Run my day', items: [['Today, plans and held time', 'built'], ['Money and benefits checks', 'built'], ['Finding help and crisis plans', 'built'], ['FAFSA and SNAP playbooks', 'built'], ['Starting by text', 'built'], ['Every button works, app and text', 'built']] },
-    { n: 2, name: 'Household, career and campus life', items: [['Week solver with child care and commute', 'built'], ['GI Bill, accommodations, break housing, enrollment playbooks', 'built'], ['Community with moderation', 'built'], ['Spanish, first slice', 'partial'], ['Meal plans sized to SNAP, with one shopping list', 'built'], ['Caregivers: the builder drafted the scout; waiting for sign-off', 'partial'], ['Career paths, openings, fair-chance, mentors', 'not yet'], ['Campus life: dining, late food, study spots', 'not yet'], ['Weather and roads, from the National Weather Service through the egress block', 'built'], ['Letter explainer, with an optional model rewrite inside the sandwich', 'built']] },
+    { n: 2, name: 'Household, career and campus life', items: [['Week solver with child care and commute', 'built'], ['GI Bill, accommodations, break housing, enrollment playbooks', 'built'], ['Community with moderation', 'built'], ['Spanish, first slice', 'partial'], ['Meal plans sized to SNAP, with one shopping list', 'built'], ['Caregivers: the builder drafted the scout; waiting for sign-off', 'partial'], ['Career help at each college, and the fair-chance (CQE) path when the student asks', 'built'], ['Job openings and mentors', 'not yet'], ['Campus life: dining, late food, study spots', 'not yet'], ['Weather and roads, from the National Weather Service through the egress block', 'built'], ['Letter explainer, with an optional model rewrite inside the sandwich', 'built']] },
     { n: 3, name: 'Integrations', items: [['Integration API: ingest, export, webhooks', 'built'], ['Calendar feed', 'built'], ['One door to the network', 'built'], ['App admin', 'built'], ['Sign in with Google', 'built'], ['Class-site and calendar sync', 'not yet']] },
     { n: 4, name: 'Any college, and proof it works', items: [['Red team', 'built'], ['Scouts that build each college’s list', 'partial'], ['Mentor and peer network', 'not yet'], ['Model-assisted features through twins', 'not yet'], ['Outcome measures', 'not yet']] },
   ];

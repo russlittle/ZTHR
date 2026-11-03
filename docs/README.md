@@ -21,6 +21,7 @@ flowchart LR
 
 ## Business flows
 
+- [Jobs and careers](flows/careers.md)
 - [Community](flows/community.md)
 - [When something goes wrong](flows/crisis.md)
 - [Drafts and approval](flows/drafts-and-approval.md)

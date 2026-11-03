@@ -220,6 +220,7 @@ export const ACTIONS: Record<string, Handler> = {
       const term = TERMS.find((t) => t.term === arg.slice(4));
       return showDraft(a, sid, `ask:${arg.slice(4)}`, term?.ask ?? 'the office', `Hello, this is ${s.chosenName}. I have a question about ${term?.term ?? 'a college rule'} and how it applies to me. Could you tell me what I need to know or do? Thank you.`, 'Offices answer questions like this every day.');
     }
+    if (arg === 'career') return showDraft(a, sid, 'career', 'career services', `Hello, this is ${s.chosenName}. I'm a student and I would like help finding a job that fits my classes. Could I set up a time to meet, and what should I bring? Thank you.`, 'Career offices are glad to hear from students.');
     if (arg.startsWith('letter:')) {
       const to = decodeURIComponent(arg.slice(7)) || 'the sender';
       return showDraft(a, sid, `letter:${to}`, to, `Hello, this is ${s.chosenName}. I got your letter and want to make sure I understand it. What exactly do you need from me, and by what date? Thank you.`, 'Asking is always okay.');
@@ -239,6 +240,10 @@ export const ACTIONS: Record<string, Handler> = {
     if (!d) return { message: msg(sid, 'No drafts are waiting.', [back]), view: 'drafts' };
     return { message: msg(sid, `Here is the draft to ${d.to}:\n"${d.body}"\nNothing is sent until you say so.`, [{ label: 'Send it', action: `approve:${d.id}` }, back]), view: 'drafts', viewArg: arg };
   },
+
+  // careers
+  career: (a, sid) => ({ message: a.careerMessage(sid), view: 'help' }),
+  'fair-chance': (a, sid) => ({ message: a.fairChanceMessage(sid) }),
 
   // meals
   'meal-plan': (a, sid) => ({ message: a.mealPlanMessage(sid), view: 'meals' }),

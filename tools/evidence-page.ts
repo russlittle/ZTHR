@@ -153,7 +153,8 @@ const REQS2: [string, 'built' | 'partial' | 'not yet', string][] = [
   ['DAY-8', 'built', 'Weather and roads: a heads-up only when it changes the trip'],
   ['HH-2', 'built', 'Meal plans sized to SNAP, with one shopping list'],
   ['HH-3', 'not yet', 'Caregiver specialist (the builder has drafted the scout it needs)'],
-  ['CAR-1 to 4', 'not yet', 'Career trajectories, openings, fair-chance filter, mentors'],
+  ['CAR-1, CAR-3', 'built', 'Career help at each college; the fair-chance (CQE) path only when the student asks'],
+  ['CAR-2, CAR-4', 'not yet', 'Job openings and mentors'],
   ['CL-1 to 4', 'not yet', 'Dining menus, late food, team recaps, quiet study spots'],
   ['LNG-2', 'built', 'Letter explainer: pasted, texted or forwarded; model rewrite only inside the sandwich'],
 ];

@@ -378,7 +378,7 @@ ${ui.section('Update what I know', ui.form({ url: u(sid, '/household'), submit: 
         `${flash(sid, c.req.query('m'))}
 <div class="hello"><h1>What's hard right now?</h1><p class="date">Pick one. I find help that fits you and do the legwork.</p></div>
 ${ui.tiles(NEEDS.map(([n, label, ic]) => ({ label, icon: ic, post: post(`need:${n}`) })), 'Kinds of help')}
-${ui.section('Something went wrong?', ui.tiles([...SITUATIONS.map(([x, label]) => ({ label, icon: 'alert', post: post(`situation:${x}`) })), { label: 'Explain a letter I got', icon: 'doc', href: u(sid, '/letter') }, { label: 'Plan a week of meals', icon: 'food', href: u(sid, '/meals') }], 'Situations'))}
+${ui.section('Something went wrong?', ui.tiles([...SITUATIONS.map(([x, label]) => ({ label, icon: 'alert', post: post(`situation:${x}`) })), { label: 'Explain a letter I got', icon: 'doc', href: u(sid, '/letter') }, { label: 'Plan a week of meals', icon: 'food', href: u(sid, '/meals') }, { label: 'Find a job or career help', icon: 'route', post: post('career') }], 'Situations'))}
 ${ui.note({ kind: 'safety', title: 'Need to talk to someone now?', body: 'Call or text 988 any time, day or night. If you are in danger, call 911.', actions: [{ label: 'Call or text 988', href: 'tel:988', variant: 'call', icon: 'phone' }] })}`,
         'help',
       ),

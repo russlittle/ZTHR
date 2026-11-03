@@ -39,6 +39,7 @@ import { parseShifts } from '../domain/shifts.js';
 import { explainLetter, factsPreserved, letterText, type Letter } from '../domain/letters.js';
 import { forecast, impactOf, weatherNote } from '../domain/weather.js';
 import { mealPlan, mealPlanText, type MealPlan } from '../domain/meals.js';
+import { CQE, RECORD_WORDS, careerText, fairChanceText } from '../domain/careers.js';
 import { sandwich } from '@zthr/runtime';
 import { ACTIONS, type ActionResult } from './actions.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
@@ -456,6 +457,8 @@ export class Advocate {
       const one = this.today_(s.id).oneThing;
       if (one?.deadlineId) return [this.deliver(this.planMessage(s.id, one.deadlineId), { force: true })];
     }
+    if (RECORD_WORDS.test(text) && /\b(job|work|hire|hiring|career|license|employ)/i.test(text)) return [this.deliver(this.fairChanceMessage(s.id), { force: true })];
+    if (/\b(find a job|job search|looking for (a )?(job|work)|career|resume|internship|jobs? (near|for) me)\b/.test(t)) return [this.deliver(this.careerMessage(s.id), { force: true })];
     if (/\b(meal plan|what (should|can) i (cook|make|eat)|groceries on a budget|cheap meals)\b/.test(t)) return [this.deliver(this.mealPlanMessage(s.id), { force: true })];
     if (/\bfafsa\b/.test(t)) return [this.deliver(this.playbookMessage(s.id, this.startPlaybook(s.id, 'fafsa-2027-28')), { force: true })];
     if (/\b(qualify|benefits|money found|screen)\b/.test(t)) return [this.deliver(this.moneyFoundMessage(s.id), { force: true })];
@@ -1074,6 +1077,19 @@ export class Advocate {
       options: bookOptions(m, s.enrollment.college),
       beforeAid: !!(aid && m.neededBy && m.neededBy < aid),
     }));
+  }
+
+  // ---------- careers (PRD CAR-1, CAR-3) ----------
+
+  careerMessage(studentId: string): OutboundMessage {
+    this.ev('career', studentId, { kind: 'career-help' });
+    return { studentId, author: 'navigator', urgency: 'routine', text: careerText(this.student(studentId)), nextSteps: [{ label: 'Draft a note to career services', action: 'draft:career' }, { label: 'Jobs if you have a record', action: 'fair-chance' }], why: 'Career help at your college is free for students.' };
+  }
+
+  /** Only when the student brings it up. Nothing is inferred, stored or opened from a sealed fact. */
+  fairChanceMessage(studentId: string): OutboundMessage {
+    this.ev('career', studentId, { kind: 'fair-chance' });
+    return { studentId, author: 'navigator', urgency: 'routine', text: fairChanceText(), nextSteps: [{ label: 'Get free legal help with it', action: 'need:legal' }, { label: 'Career help at my college', action: 'career' }], why: `About ${CQE.name}, from the Ohio Department of Rehabilitation and Correction.` };
   }
 
   // ---------- meal plans (PRD HH-2) ----------
