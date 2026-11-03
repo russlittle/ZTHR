@@ -35,7 +35,6 @@
     "rewrites": [
       {
         "source": "/studentadvocate",
-<<<<<<< HEAD
         "run": {
           "serviceId": "advocate",
           "region": "us-central1"
@@ -61,13 +60,6 @@
           "serviceId": "advocate",
           "region": "us-central1"
         }
-=======
-        "destination": "/studentadvocate-pending.html"
-      },
-      {
-        "source": "/studentadvocate/**",
-        "destination": "/studentadvocate-pending.html"
->>>>>>> main
       },
       {
         "source": "**",
