@@ -43,6 +43,18 @@ It finishes by starting the first run and printing its link. Defaults can be cha
 
 Run a build by hand from a checkout: `gcloud builds submit --project zthr-ai --config cloudbuild.yaml .`
 
+## What runs when
+
+| Step | Every push | Nightly |
+| --- | --- | --- |
+| Type checks, unit tests, gates, journeys, docs check | yes | yes |
+| Button walk and feature walk | four students whose settings differ most | all twelve students |
+| Settings walk | one student | all twelve |
+| Browser walk | yes | yes |
+| Mutation testing | no | yes |
+
+Pushes stay quick and cheap; the nightly run is the full proof, and its reports are the ones the console shows.
+
 ## Deploying
 
 A passing build on `reference-implementation` builds the container and deploys it to Cloud Run as `advocate`. The
