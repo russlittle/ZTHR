@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { cpus } from 'node:os';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import type { ExploreReport } from '@zthr/explore';
 import { exploreAdvocate } from '../apps/advocate/test/harness/world.js';
 import { campusSeedDocs } from '../apps/advocate/test/harness/campus.js';
@@ -19,6 +19,22 @@ const max = Number(args[args.indexOf('--max') + 1]) || undefined;
 const typing = !args.includes('--no-typing');
 const childOut = args.includes('--child') ? args[args.indexOf('--child') + 1] : undefined;
 const t0 = Date.now();
+
+function mergeAll(results: ExploreReport[]): ExploreReport {
+  const merged: ExploreReport = { seeds: [], states: 0, transitions: 0, actionsSeen: [], verbsSeen: {}, violations: [], exhausted: true };
+  for (const x of results) {
+    merged.seeds.push(...x.seeds);
+    merged.states += x.states;
+    merged.transitions += x.transitions;
+    merged.violations.push(...x.violations);
+    merged.exhausted &&= x.exhausted;
+    merged.actionsSeen.push(...x.actionsSeen);
+    for (const [k, v] of Object.entries(x.verbsSeen)) merged.verbsSeen[k] = (merged.verbsSeen[k] ?? 0) + v;
+  }
+  merged.actionsSeen = [...new Set(merged.actionsSeen)].sort();
+  merged.seeds.sort((a, b) => a.name.localeCompare(b.name));
+  return merged;
+}
 
 async function runParallel(names: string[]): Promise<ExploreReport> {
   mkdirSync(`${OUT}/explore`, { recursive: true });
@@ -61,10 +77,23 @@ if (childOut) {
   process.exit(r.violations.length || !r.exhausted ? 1 : 0);
 }
 
-const names = only ?? PERSONA_NAMES;
-const r = args.includes('--serial') || names.length === 1 ? exploreAdvocate({ only: names, maxNodes: max, withTyping: typing, campus }) : await runParallel(names);
+// A long walk can run in parts on a small machine (--part a, --part b), then --merge joins the parts of one commit.
+const part = args.includes('--part') ? args[args.indexOf('--part') + 1] : undefined;
+type Saved = ExploreReport & { ms: number; commit: string; only: string[] };
+let r: ExploreReport;
+let names = only ?? PERSONA_NAMES;
+if (args.includes('--merge')) {
+  const parts = readdirSync(OUT).filter((f) => /^explore-part-.+\.json$/.test(f)).map((f) => JSON.parse(readFileSync(`${OUT}/${f}`, 'utf8')) as Saved);
+  const commits = new Set(parts.map((x) => x.commit));
+  if (commits.size !== 1 || !commits.has(headCommit())) {
+    console.error(`refused: parts are from ${[...commits].join(', ')}, not ${headCommit()}`);
+    process.exit(1);
+  }
+  r = mergeAll(parts);
+  names = parts.flatMap((x) => x.only);
+} else r = args.includes('--serial') || names.length === 1 ? exploreAdvocate({ only: names, maxNodes: max, withTyping: typing, campus }) : await runParallel(names);
 mkdirSync(OUT, { recursive: true });
-writeFileSync(`${OUT}/explore.json`, JSON.stringify({ ...r, ms: Date.now() - t0, commit: headCommit(), only: names }, null, 1));
+writeFileSync(`${OUT}/explore${part ? `-part-${part}` : ''}.json`, JSON.stringify({ ...r, ms: Date.now() - t0, commit: headCommit(), only: names }, null, 1));
 for (const s of r.seeds) console.log(`${s.name.padEnd(22)} states ${String(s.states).padStart(6)}  transitions ${String(s.transitions).padStart(7)}  depth ${s.maxDepth}  ${s.exhausted ? 'exhausted' : 'CUT SHORT'}`);
 const byProblem = new Map<string, { n: number; path: string[]; seed: string }>();
 for (const v of r.violations) {
