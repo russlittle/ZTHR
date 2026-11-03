@@ -410,6 +410,34 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
     forbidTone(app, ctx, s);
   },
 
+  'playbook-snap-recertification': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Linda', age: 46, household: { size: 2, monthlyGrossIncome: 1400 }, enrollment: { college: 'sinclair', creditHours: 6, weeklyWorkHours: 20 } });
+    const notice = 'Montgomery County Job and Family Services. Your SNAP benefits must be recertified. Submit your renewal by Nov 30 or your benefits may stop.';
+    const [m] = say(app, ctx, s, `I got my SNAP recertification notice: ${notice}`);
+    ctx.expect(!!m && /recertification/i.test(m.text), 'the recertification playbook starts');
+    ctx.expect(app.a.deadlines(s.id).some((d) => d.due === '2026-11-30' && d.kind === 'benefit'), 'the due date from the notice is on the calendar');
+    ctx.expect(app.a.reminders(s.id).some((r) => r.about === 'snap-recertification' && r.at.slice(0, 10) < '2026-11-30'), 'a reminder is set before the deadline');
+    const id = 'snap-recertification';
+    const run = app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    ctx.act('see the documents step');
+    const docs = show(app, ctx, app.a.playbookMessage(s.id, run));
+    ctx.expect(run.stepId === 'documents' && /Proof of income/i.test(JSON.stringify(app.a.playbooks.get(id))) && docs.nextSteps.length > 0, 'documents are lined up next');
+    ctx.forbid("something is sent without the student's approval", app.a.outboundLog.length > 0);
+    forbidTone(app, ctx, s);
+  },
+
+  'scout-montgomery-caregiving': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Any', zip: '45402', county: 'Montgomery', enrollment: { college: 'sinclair', creditHours: 12 } });
+    ctx.act('look for caregiving help');
+    const before = app.a.evidence.events('unmet_need').length;
+    const m = show(app, ctx, app.a.helpMessage(s.id, 'caregiving'));
+    const offered = app.a.findHelp(s.id, 'caregiving').options;
+    const stale = offered.filter((o) => daysBetween(o.resource.verifiedOn, DAY) > 90 || o.eligibility?.status === 'unlikely');
+    ctx.forbid('a resource is offered that is stale or the student is ineligible for', stale.length > 0, stale.map((o) => o.resource.id).join(', '));
+    ctx.forbid('a gap is hidden instead of counted', offered.length === 0 && (!/couldn't find/.test(m.text) || app.a.evidence.events('unmet_need').length <= before));
+    ctx.expect(offered.length > 0 || /couldn't find/.test(m.text), 'a verified resource is offered, or the gap is said plainly');
+  },
+
   'persona-2a-break-housing': async (app, ctx) => {
     const s = student(app, ctx, { chosenName: 'Jayden', age: 19, enrollment: { college: 'sinclair', creditHours: 15 } });
     const id = 'break-housing';

@@ -1,1 +1,1 @@
-{ "people": ["russ"], "note": "Only listed people may sign ratchet resets, journey-lock loosening and changes to the AI." }
+{ "people": ["russ"], "note": "Listed people sign destructive changes only: loosening or removing a locked journey card, lowering a ratchet floor, weakening or removing a gate, and deleting data. Everything else is certified by the factory when every check passes (docs/adr/0004-who-admits-what.md)." }

@@ -1,0 +1,14 @@
+scout: montgomery-caregiving
+geography:
+  county: Montgomery
+needs:
+  - caregiving
+sources:
+  - url: https://eldercare.acl.gov
+    kind: agency
+entries: []
+freshness_days: 45
+datum:
+  precision_min: 0.8
+owner: builder
+admitted_by: factory

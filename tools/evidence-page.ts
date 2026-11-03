@@ -138,7 +138,7 @@ const REQS: [string, 'built' | 'partial', string][] = [
 
 const REQS2: [string, 'built' | 'partial' | 'not yet', string][] = [
   ['PB-2', 'partial', 'GI Bill, accommodation letters, break housing and proof of enrollment built; retraining and foster youth benefits not yet'],
-  ['PB-3', 'built', 'New playbooks only through the builder and a person\'s sign-off'],
+  ['PB-3', 'built', 'New playbooks only through the builder, admitted by the factory when every check passes'],
   ['DAY-6', 'built', 'Weekly preview with what is different'],
   ['DAY-7', 'built', 'Room changes update the schedule and are announced'],
   ['HH-1', 'built', 'Week solver: shifts, classes, child care, commute, sleep'],
@@ -175,12 +175,10 @@ const conformance: [string, string, string, Status][] = [
 ];
 
 const pending = [
-  ['Tone gate calibration', 'The reading-grade measure now ignores proper names such as agency names. This changed a gate, so it needs a listed person\'s sign-off.'],
-  ['Journey cards', `${cards.length} cards added by the build agent from the persona work. Adding cards tightens the control plane; Russ confirms they state the intents he means.`],
-  ['Six playbooks', 'FAFSA, SNAP, GI Bill, accommodation letters, break housing and proof of enrollment. Each declares sign_off: required.'],
-  ['Builder drafts', `${proposals.filter((p) => p.status === 'awaiting-sign-off').length} drafts await npm run signoff by a listed person.`],
-  ['Review panel models', 'Optional. The seats in control/review.yaml are a starting choice for adopters who configure a provider.'],
-  ['Ratchet floors', 'Mutation score floor 76%, held messages 0, failing journeys 0, set from the first measurements.'],
+  ['Loosening or removing a locked journey card', 'npm run lock -- --direction loosen, by a listed person, with a reason in control/journey-changes.jsonl.'],
+  ['Lowering a ratchet floor', 'A signed reset in control/ratchet-resets.jsonl; the ratchet gate refuses a reset by anyone not listed.'],
+  ['Weakening or removing a gate', 'A gate\'s proof is pinned to a hash of its definition; a weaker gate must be proven again and the change signed.'],
+  ['Deleting data', 'Student data is deleted only on the student\'s own request; nothing else deletes it.'],
 ];
 
 const shots = [ui('02-maria-today'), ui('03-draft'), ui('05-money')].filter(Boolean) as string[];
@@ -287,11 +285,11 @@ a{color:var(--layout)}
 <div class="reqs">${REQS2.map(([id, st, what]) => `<div class="req ${st === 'built' ? '' : 'partial'}"><b>${esc(id)}</b><span>${esc(what)}</span>${st !== 'built' ? `<small>${esc(st)}</small>` : ''}</div>`).join('')}</div>
 
 <h2><span class="ref">§8</span>Agents the builder has drafted</h2>
-<p>The builder reads the evidence for gaps and drafts new agents. Each draft passes the same checks as any change, then waits for a listed person. The builder cannot admit its own work: a sign-off attempted by the agent was refused.</p>
+<p>The builder reads the evidence for gaps and drafts new agents. Each draft passes the same checks as any change; the factory admits a draft only when every check passes. The builder cannot admit its own work, and it cannot widen any agent\'s permissions.</p>
 <div class="scroll"><table><thead><tr><th>Draft</th><th>Why the builder drafted it</th><th>Checks</th><th>Status</th></tr></thead><tbody>${proposals.map((p) => `<tr><td>${esc(p.title)}${p.simulated ? ' <span class="chip not-measured">simulated demand</span>' : ''}</td><td>${esc(p.reason)}</td><td class="num">${esc(p.checks.filter((c) => c.ok).length)} of ${esc(p.checks.length)}</td><td>${chip(p.status === 'admitted' ? 'pass' : 'unknown', p.status.replace(/-/g, ' '))}</td></tr>`).join('') || '<tr><td colspan="4">No drafts yet.</td></tr>'}</tbody></table></div>
 
-<h2><span class="ref">§9</span>Waiting for sign-off</h2>
-<div class="scroll"><table><thead><tr><th>Change</th><th>Why it needs a person</th></tr></thead><tbody>${pending.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</tbody></table></div>
+<h2><span class="ref">§9</span>What only a person can do</h2><p>Sign-off is for destructive changes. Everything else is certified by the factory when every check passes.</p>
+<div class="scroll"><table><thead><tr><th>Change</th><th>How it is recorded</th></tr></thead><tbody>${pending.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</tbody></table></div>
 
 ${shots.length ? `<h2><span class="ref">§10</span>The app, walked by accessible name</h2><div class="shots">${shots.map((s, i) => `<figure><img src="${s}" alt="${esc(['Maria\'s day with a rent gap seen a month ahead', 'A drafted message to her landlord, sent only on her tap', 'What Maria likely qualifies for, with rules and sources'][i])}"><figcaption>${esc(['Today: the gap, seen early', 'The student sends', 'Money found, with sources'][i])}</figcaption></figure>`).join('')}</div>` : ''}
 

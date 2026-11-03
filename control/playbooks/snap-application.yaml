@@ -2,7 +2,7 @@ playbook: snap-application
 title: SNAP application in Ohio
 purpose: Carry a student from a likely SNAP match to a decision, including the student exemption, the interview and verification.
 owner: builder
-sign_off: required
+admitted_by: factory
 sources:
   - https://www.fna.usda.gov/snap/students
   - https://www.greenecountyohio.gov/279/Job-Family-Services

@@ -63,6 +63,7 @@ flowchart LR
 - [ADR 0001: Storage behind an interface, SQLite first](adr/0001-storage.md)
 - [ADR 0002: Hono server and a framework-free progressive web app](adr/0002-web-stack.md)
 - [ADR 0003: Deterministic first, models optional](adr/0003-models-offline.md)
+- [ADR 0004: The factory admits; people sign only what destroys](adr/0004-who-admits-what.md)
 
 Every test file names the document it verifies, and every document lists its tests. The `docs-linked` gate fails
 the build when either side is missing.

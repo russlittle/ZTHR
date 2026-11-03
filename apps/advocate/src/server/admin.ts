@@ -9,7 +9,7 @@ import { isFresh } from '../catalog/types.js';
 
 /**
  * The app admin. It runs the service, never a student's life: it sees the catalog, the moderation queue, what the
- * builder proposes, what is waiting for a person's sign-off, the scouts, and counts from the evidence. It never
+ * builder proposes, what the factory admitted, the scouts, and counts from the evidence. It never
  * shows a student's record, messages or sealed facts; the student owns those.
  */
 export interface AdminOptions {
@@ -24,7 +24,7 @@ export function createAdmin(a: Advocate, o: AdminOptions): Hono {
     ['catalog', 'Catalog', 'book'],
     ['moderation', 'Moderation', 'shield'],
     ['proposals', 'Builder proposals', 'flask'],
-    ['signoff', 'Waiting for sign-off', 'check'],
+    ['admissions', 'Admissions', 'check'],
     ['scouts', 'Scouts', 'route'],
   ];
   const shell = (id: string, title: string, body: string) =>
@@ -67,10 +67,10 @@ ${ui.section('Evidence recorded', ui.table(['Kind', 'Count'], ev.map((e) => [e.k
   app.get('/proposals', (c) => {
     const dir = control('proposals');
     const list = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8')) as { id: string; kind: string; title: string; reason: string; status: string; simulated?: boolean; checks: { name: string; ok: boolean }[] }) : [];
-    return c.html(shell('proposals', 'Builder proposals', `<p class="muted">The builder agent drafts new scouts, playbooks and retirements from what students needed and could not get. It cannot admit its own work: each proposal passes its checks, then waits for a listed person.</p>${list.map((p) => ui.note({ kind: 'plan', title: p.title, from: `${p.kind}${p.simulated ? ', simulated' : ''}, ${p.status}`, body: p.reason, why: p.checks.map((x) => `${x.ok ? 'passes' : 'fails'}: ${x.name}`).join('; ') })).join('') || ui.rows([], 'No proposals.')}`));
+    return c.html(shell('proposals', 'Builder proposals', `<p class="muted">The builder agent drafts new scouts, playbooks and retirements from what students needed and could not get. It cannot admit its own work: the factory admits a proposal only when every check passes.</p>${list.map((p) => ui.note({ kind: 'plan', title: p.title, from: `${p.kind}${p.simulated ? ', simulated' : ''}, ${p.status}`, body: p.reason, why: p.checks.map((x) => `${x.ok ? 'passes' : 'fails'}: ${x.name}`).join('; ') })).join('') || ui.rows([], 'No proposals.')}`));
   });
 
-  app.get('/signoff', (c) => {
+  app.get('/admissions', (c) => {
     const raw = existsSync(control('people.json')) ? (JSON.parse(readFileSync(control('people.json'), 'utf8')) as unknown) : [];
     const list = Array.isArray(raw) ? raw : (raw as { people?: unknown }).people;
     const people = Array.isArray(list) ? list.map(String) : [];
@@ -78,9 +78,9 @@ ${ui.section('Evidence recorded', ui.table(['Kind', 'Count'], ev.map((e) => [e.k
     const playbooks = yamlDir('playbooks').map((p) => ({ id: (parse(p.body) as { playbook: string }).playbook, hash: sha(p.body).slice(0, 12) }));
     return c.html(
       shell(
-        'signoff',
-        'Waiting for sign-off',
-        `<p class="muted">Changes to what the product promises (journey cards, playbooks, ratchet floors, calibrations) are made by agents and admitted by a listed person: ${ui.esc(people.join(', ') || 'none listed')}. A sign-off is a signed entry in the control plane, made with <code>npm run signoff</code>.</p>
+        'admissions',
+        'Admissions',
+        `<p class="muted">Agents build; the factory admits a change when every check passes. A listed person (${ui.esc(people.join(', ') || 'none listed')}) signs only destructive changes: loosening or removing a locked card, lowering a ratchet floor, weakening a gate, deleting data.</p>
 ${ui.section('Journey cards', ui.table(['Card', 'Changed by', 'Why', 'When'], changes.map((x) => [x.id, x.by, x.reason, x.at.slice(0, 10)])))}
 ${ui.section('Playbooks', ui.table(['Playbook', 'Content hash'], playbooks.map((p) => [p.id, p.hash])))}`,
       ),

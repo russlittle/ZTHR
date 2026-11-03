@@ -2,7 +2,7 @@ playbook: accommodation-letters
 title: Your letters each term
 purpose: Get approved accommodation letters to every instructor at the start of each term, without the student having to repeat the conversation.
 owner: builder
-sign_off: required
+admitted_by: factory
 sources:
   - https://www2.ed.gov/about/offices/list/ocr/transition.html
 student_grants:

@@ -2,7 +2,7 @@ playbook: fafsa-2027-28
 title: FAFSA for 2027-28
 purpose: File the 2027-28 FAFSA, including the path for students who cannot provide parent information, and carry it to an aid offer.
 owner: builder
-sign_off: required
+admitted_by: factory
 sources:
   - https://abcnews4.com/news/nation-world/education-department-opens-2027-28-fafsa-early-marking-programs-earliest-launch
   - https://cdhe.colorado.gov/sites/highered/files/documents/Support_Guide_for_Unusual_Circumstances_F.pdf

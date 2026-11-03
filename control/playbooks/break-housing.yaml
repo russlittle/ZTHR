@@ -2,7 +2,7 @@ playbook: break-housing
 title: Housing over breaks
 purpose: Make sure a student has somewhere to stay over every break, arranged weeks ahead.
 owner: builder
-sign_off: required
+admitted_by: factory
 sources:
   - https://sinclair.edu/student-life/wellness/resources/food-assistance/
 student_grants:

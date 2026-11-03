@@ -11,7 +11,7 @@
     "title": "Keeping SNAP: recertification",
     "purpose": "Carry a student through SNAP recertification so benefits do not stop.",
     "owner": "builder",
-    "sign_off": "required",
+    "admitted_by": "factory",
     "sources": [
       "https://www.fna.usda.gov/snap/students"
     ],
@@ -112,7 +112,7 @@
       "detail": "planted renewal step that submits for the student"
     }
   ],
-  "status": "awaiting-sign-off",
+  "status": "admitted",
   "createdAt": "2026-11-02",
   "simulated": true
 }

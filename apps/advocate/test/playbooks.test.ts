@@ -31,8 +31,8 @@ describe('every playbook', () => {
       const seen = new Set(allPaths(def).flat().map((x) => x.split('=')[0]));
       for (const s of def.steps) expect(seen, s.id).toContain(s.id);
     });
-    it(`${def.playbook}: needs a person's sign-off and cites a source`, () => {
-      expect(def.sign_off).toBe('required');
+    it(`${def.playbook}: is admitted by the factory and cites a source`, () => {
+      expect(def.admitted_by).toBe('factory');
       expect(def.sources.length).toBeGreaterThan(0);
     });
     it(`${def.playbook}: question steps offer at least two answers`, () => {

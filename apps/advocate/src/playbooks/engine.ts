@@ -14,7 +14,8 @@ export const PlaybookDef = z.object({
   title: z.string(),
   purpose: z.string(),
   owner: z.string(),
-  sign_off: z.literal('required'),
+  /** Who admitted it: the factory, when every check passed. Only destructive changes go to a listed person. */
+  admitted_by: z.enum(['factory', 'person']),
   sources: z.array(z.string().url()).min(1),
   student_grants: z.object({ sealed: z.array(z.string()), profile: z.array(z.string()) }),
   journeys: z.array(z.string()).min(1),

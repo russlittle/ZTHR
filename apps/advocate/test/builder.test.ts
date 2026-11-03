@@ -23,7 +23,7 @@ describe('the builder', () => {
   });
   it('drafts a scout with a journey card and falsification case once demand crosses the threshold', () => {
     const [p] = propose(demand('caregiving', 3), opts);
-    expect(p).toMatchObject({ kind: 'scout', status: 'awaiting-sign-off' });
+    expect(p).toMatchObject({ kind: 'scout', status: 'certified' });
     expect(p!.journey).toBeDefined();
     expect(p!.falsification).toBeDefined();
   });
@@ -38,7 +38,7 @@ describe('the builder', () => {
   it('retires a question that almost never reveals a need', () => {
     const ev = new EvidenceStore();
     for (let i = 0; i < 40; i++) ev.append('pulse', 'x', { pulse: 'phone', event: 'answered', revealedNeed: false });
-    expect(propose(ev, opts)[0]).toMatchObject({ kind: 'retire-pulse', status: 'awaiting-sign-off' });
+    expect(propose(ev, opts)[0]).toMatchObject({ kind: 'retire-pulse', status: 'certified' });
   });
   it('every declared scout and playbook in the control plane parses', () => {
     for (const s of loadScouts(`${CONTROL}/scouts`)) expect(ScoutDef.safeParse(s).success).toBe(true);
@@ -53,7 +53,7 @@ describe('the builder', () => {
 describe('scouts manage themselves', () => {
   const def = ScoutDef.parse({
     scout: 'test-scout', geography: { county: 'Montgomery' }, needs: ['food'], sources: [{ url: 'https://example.org', kind: 'directory' }],
-    entries: ['house-of-bread', 'good-neighbor-house', 'css-choice-pantry', 'sinclair-food-pantry', 'foodbank-dayton'], freshness_days: 45, datum: { precision_min: 0.8 }, owner: 'builder', sign_off: 'required',
+    entries: ['house-of-bread', 'good-neighbor-house', 'css-choice-pantry', 'sinclair-food-pantry', 'foodbank-dayton'], freshness_days: 45, datum: { precision_min: 0.8 }, owner: 'builder', admitted_by: 'factory',
   });
   it('refreshes what its sources confirm and holds what changed', async () => {
     const check: SourceCheck = async (r) => (r.id === 'css-choice-pantry' ? 'changed' : 'confirmed');

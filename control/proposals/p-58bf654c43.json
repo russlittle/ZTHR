@@ -28,7 +28,7 @@
       "precision_min": 0.8
     },
     "owner": "builder",
-    "sign_off": "required"
+    "admitted_by": "factory"
   },
   "journey": {
     "id": "scout-montgomery-caregiving",
@@ -76,7 +76,7 @@
       "detail": "planted unverified entry offered as available"
     }
   ],
-  "status": "awaiting-sign-off",
+  "status": "admitted",
   "createdAt": "2026-11-02",
   "simulated": true
 }

@@ -2,7 +2,7 @@ playbook: enrollment-verification
 title: Proof of enrollment packet
 purpose: Assemble a dated proof-of-enrollment packet a student can hand to a parole officer, employer, landlord or caseworker.
 owner: builder
-sign_off: required
+admitted_by: factory
 sources:
   - https://www.studentclearinghouse.org/
 student_grants:

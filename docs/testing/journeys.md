@@ -1,7 +1,7 @@
 # Intent journeys
 
 Each journey is a card a person wrote in plain words: whose goal, what success looks like, what must never happen,
-and the budget of actions and time. Cards are locked by hash; changing one needs a person's sign-off. A journey
+and the budget of actions and time. Cards are locked by hash. Adding or tightening a card is certified by the factory; loosening or removing one needs a listed person. A journey
 passes only if every declared depth (brief, standard, walk me through) and channel (app, text) passes.
 
 ```mermaid

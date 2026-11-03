@@ -22,6 +22,7 @@
     "dev": "tsx apps/advocate/src/server/main.ts",
     "builder": "tsx tools/builder.ts",
     "signoff": "tsx tools/signoff.ts",
+    "certify": "tsx tools/certify.ts",
     "docs": "tsx tools/docs.ts",
     "docs:check": "tsx tools/docs.ts --check",
     "explore": "tsx tools/explore.ts",

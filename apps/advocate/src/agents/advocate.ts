@@ -427,6 +427,7 @@ export class Advocate {
     const shiftsTyped = parseShifts(text.replace(/^(i )?(work|shifts?:?)\s+/i, ''), this.today());
     if (/^(i )?(work|shifts?)\b/i.test(t) && shiftsTyped.shifts.length) return [this.deliver(this.addShiftsMessage(s.id, shiftsTyped.shifts, shiftsTyped.unread), { force: true })];
     if (/\b[A-Z]{2,4}\s?\d{3,4}\b.*\b(room|building)\b/i.test(text) && /\b(moved|new room|changed|now in)\b/i.test(t)) return [this.deliver(this.applyRoomChange(s.id, text), { force: true })];
+    if (/\b(recertif\w*|renew (my )?snap|snap renewal|keep (my )?snap)\b/i.test(text)) return [this.deliver(this.snapRecertMessage(s.id, text), { force: true })];
     if (/^(explain|what does|what's|whats)\b.{0,30}\bletter\b/i.test(t) || (text.length > 280 && /\b(dear|notice|re:|sincerely|account number|case number)\b/i.test(text))) {
       return [this.deliver(this.letterMessage(s.id, text.replace(/^(explain|what does|what's|whats)\b[^:\n]*[:\n]?/i, '')), { force: true })];
     }
@@ -840,6 +841,21 @@ export class Advocate {
     }
     this.ev('playbook', studentId, { playbook: id, event: ev.type, step: next.stepId, status: next.status });
     return next;
+  }
+
+  /**
+   * A forwarded SNAP recertification notice (PB-2): start the recertification playbook, put the due date from the
+   * notice on the calendar, and set a reminder three days ahead. Dates come only from the notice itself.
+   */
+  snapRecertMessage(studentId: string, notice: string): OutboundMessage {
+    const run = this.startPlaybook(studentId, 'snap-recertification');
+    const m = this.playbookMessage(studentId, run);
+    const due = explainLetter(notice, this.today()).dates.map((d) => d.date).filter((d) => d >= this.today()).sort()[0];
+    if (!due) return { ...m, text: `${m.text}\nWhat date is on your notice? I will put it on your calendar.` };
+    this.addDeadline(studentId, { title: 'SNAP renewal due', course: 'SNAP', due, kind: 'benefit', effortHours: 1, source: { type: 'playbook', ref: 'snap-recertification' }, confirmed: true });
+    const remindOn = addDays(due, -3) > this.today() ? addDays(due, -3) : this.today();
+    this.remind(studentId, 'snap-recertification', `${remindOn}T14:00:00Z`, 'Your SNAP renewal is due soon. Is it in?');
+    return { ...m, text: `${m.text}\nIt is due ${shortDate(due)}. I put it on your calendar and will remind you ${shortDate(remindOn)}.` };
   }
 
   playbookMessage(studentId: string, run: PlaybookRun): OutboundMessage {

@@ -9,4 +9,4 @@ entries: [ohio-benefits-snap, ohio-heap, lifeline, lifeline-988]
 freshness_days: 120
 datum: { precision_min: 0.9 }
 owner: builder
-sign_off: required
+admitted_by: factory

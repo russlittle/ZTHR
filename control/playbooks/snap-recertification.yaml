@@ -1,0 +1,39 @@
+playbook: snap-recertification
+title: "Keeping SNAP: recertification"
+purpose: Carry a student through SNAP recertification so benefits do not stop.
+owner: builder
+admitted_by: factory
+sources:
+  - https://www.fna.usda.gov/snap/students
+student_grants:
+  sealed: []
+  profile:
+    - chosenName
+    - phone
+    - householdSize
+    - monthlyGrossIncome
+    - weeklyWorkHours
+journeys:
+  - playbook-snap-recertification
+steps:
+  - id: notice
+    kind: info
+    text: Your SNAP recertification notice came in. Finishing it on time keeps your
+      benefits from stopping.
+  - id: documents
+    kind: documents
+    text: Get these ready. Anything in your vault is checked off.
+    documents:
+      - Proof of income for the last 30 days
+      - Proof of your student exemption
+  - id: submit
+    kind: checklist
+    text: Submit the renewal at benefits.ohio.gov before the date on your notice.
+    done_when: student-confirms
+  - id: interview
+    kind: wait
+    text: If they schedule an interview, tell me the time and I will remind you.
+    timeout_days: 14
+    on_timeout: Call your county Job and Family Services office to check on your renewal.
+recovery:
+  - If the date passes, I can help you reapply and ask about the gap.

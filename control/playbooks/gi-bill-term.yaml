@@ -2,7 +2,7 @@ playbook: gi-bill-term
 title: GI Bill each term
 purpose: Keep a student's GI Bill tuition and housing allowance paid each term, catching problems before a payment is late.
 owner: builder
-sign_off: required
+admitted_by: factory
 sources:
   - https://www.colorado.edu/veterans/2021/10/20/monthly-enrollment-verification
 student_grants:

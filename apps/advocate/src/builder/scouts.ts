@@ -19,7 +19,8 @@ export const ScoutDef = z.object({
   freshness_days: z.number().int().positive(),
   datum: z.object({ precision_min: z.number().min(0).max(1) }),
   owner: z.string(),
-  sign_off: z.literal('required'),
+  /** Who admitted it: the factory, when every check passed. Only destructive changes go to a listed person. */
+  admitted_by: z.enum(['factory', 'person']),
 });
 export type ScoutDef = z.infer<typeof ScoutDef>;
 

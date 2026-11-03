@@ -11,12 +11,14 @@ import { ScoutDef } from './scouts.js';
  * that rarely help), drafts a new scout, playbook or retirement, and puts each
  * draft through the same admission as any change: a declaration that parses,
  * sources of record, a falsification case, a locked journey card, minimal
- * grants. A draft that passes waits for a listed person's sign-off, because it
- * is a change to the AI. The builder can create agents; it cannot admit them,
- * and it cannot widen any agent's permissions.
+ * grants. A draft that passes every check is certified, and the factory admits
+ * it (npm run certify): the checks decide, and the builder does not control the
+ * checks. A draft that asks for sealed facts fails "minimal grants" and stays
+ * unresolved until a listed person decides. The builder can create agents; it
+ * cannot admit them, and it cannot widen any agent's permissions.
  */
 export type ProposalKind = 'scout' | 'playbook' | 'retire-pulse';
-export type ProposalStatus = 'unresolved' | 'awaiting-sign-off' | 'admitted' | 'rejected';
+export type ProposalStatus = 'unresolved' | 'certified' | 'admitted' | 'rejected';
 
 export interface Proposal {
   id: string;
@@ -67,7 +69,7 @@ function gate(p: Proposal): Proposal {
     checks.push({ name: 'falsification case', ok: !!p.falsification, detail: p.falsification ? p.falsification.name : 'no planted defect to prove the new agent can fail' });
   }
   const ok = checks.every((c) => c.ok);
-  return { ...p, checks, status: ok ? 'awaiting-sign-off' : 'unresolved' };
+  return { ...p, checks, status: ok ? 'certified' : 'unresolved' };
 }
 
 export function propose(ev: EvidenceStore, o: BuilderOptions): Proposal[] {
@@ -102,7 +104,7 @@ export function propose(ev: EvidenceStore, o: BuilderOptions): Proposal[] {
           freshness_days: 45,
           datum: { precision_min: 0.8 },
           owner: 'builder',
-          sign_off: 'required',
+          admitted_by: 'factory',
         },
         journey: {
           id: `scout-${slug}`,
@@ -138,7 +140,7 @@ export function propose(ev: EvidenceStore, o: BuilderOptions): Proposal[] {
           title: 'Keeping SNAP: recertification',
           purpose: 'Carry a student through SNAP recertification so benefits do not stop.',
           owner: 'builder',
-          sign_off: 'required',
+          admitted_by: 'factory',
           sources: ['https://www.fna.usda.gov/snap/students'],
           student_grants: { sealed: [], profile: ['chosenName', 'phone', 'householdSize', 'monthlyGrossIncome', 'weeklyWorkHours'] },
           journeys: ['playbook-snap-recertification'],
