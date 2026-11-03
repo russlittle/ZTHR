@@ -29,6 +29,13 @@ SA_PATH="projects/${PROJECT}/serviceAccounts/${SA}"
 CB_AGENT="service-${NUMBER}@gcp-sa-cloudbuild.iam.gserviceaccount.com"
 REPO_PATH="projects/${PROJECT}/locations/${REGION}/connections/${CONNECTION}/repositories/${REPO_NAME}"
 
+if [ "$(gcloud billing projects describe "$PROJECT" --format='value(billingEnabled)' 2>/dev/null)" != "True" ]; then
+  echo "Billing is not enabled on ${PROJECT}. Cloud Build needs it. List your accounts and link one, then run this again:"
+  echo "  gcloud billing accounts list"
+  echo "  gcloud billing projects link ${PROJECT} --billing-account=ACCOUNT_ID"
+  exit 1
+fi
+
 say "1/8 Enabling APIs"
 gcloud services enable cloudbuild.googleapis.com secretmanager.googleapis.com cloudscheduler.googleapis.com \
   storage.googleapis.com iam.googleapis.com billingbudgets.googleapis.com cloudbilling.googleapis.com
