@@ -13,6 +13,7 @@ import { snap } from '../apps/advocate/src/eligibility/engine.js';
 import { Community, moderate } from '../apps/advocate/src/domain/community.js';
 import { SNAP_FY2027 } from '../apps/advocate/src/eligibility/params.js';
 import type { OutboundMessage, Student } from '../apps/advocate/src/domain/types.js';
+import type { ActionResult } from '../apps/advocate/src/agents/actions.js';
 import { CONTROL, JOURNEY_DIR, OUT, ROOT, readLock } from './lib.js';
 
 /**
@@ -240,6 +241,104 @@ const moderationGate: Gate<CommunityFactory> = {
   falsification: [{ name: 'planted community with no filters', plant: () => () => { const posts: { text: string }[] = []; return { post: ((_s: string, p: { text: string }) => (posts.push(p), p)) as unknown as Community['post'], visible: (() => posts) as unknown as Community['visible'] }; } }],
 };
 
+// ---- no dead ends: every button any agent offers does something, in app and text alike ----
+
+type Perform = (a: Advocate, sid: string, action: string) => ActionResult | undefined;
+
+/** A student with a full life, so every agent has something to say. */
+export function richStudent(): { a: Advocate; sid: string; seeds: OutboundMessage[] } {
+  const a = new Advocate({ today: () => DAY });
+  const s = sampleStudent(a);
+  const sid = s.id;
+  a.addClasses(sid, [{ course: 'BIO 1111', days: ['Mon', 'Wed'], start: '09:00', end: '10:15', building: 'Building 3', room: '212' }]);
+  a.addShifts(sid, [{ date: '2026-11-03', start: '15:00', end: '21:00', employer: 'Kroger' }]);
+  const essay = a.addDeadline(sid, { title: 'Essay 2', course: 'ENG 1101', due: '2026-11-05', kind: 'assignment', effortHours: 8, source: { type: 'student' }, confirmed: true });
+  a.addDeadline(sid, { title: 'Lab 3', course: 'BIO 1111', due: '2026-10-30', kind: 'assignment', effortHours: 3, source: { type: 'student' }, confirmed: true });
+  const appt = a.addDeadline(sid, { title: 'Advising appointment', due: '2026-11-04T09:30', kind: 'appointment', durationMin: 30, source: { type: 'student' }, confirmed: true });
+  void appt;
+  a.addDeadline(sid, { title: 'Quiz 4', course: 'BIO 1111', due: '2026-11-12', kind: 'exam', source: { type: 'syllabus', line: 'Nov 12 Quiz 4' }, confirmed: false });
+  a.setMoney(sid, 100, [{ name: 'Rent', amount: 900, dueDay: 1, kind: 'rent' }, { name: 'Electric', amount: 120, dueDay: 10, kind: 'utility' }], { amount: 300, next: '2026-11-20', everyDays: 14 });
+  a.connectSource(sid, 'forwarding');
+  const mt = a.addMeeting(sid, { title: 'Group project', date: '2026-11-04', start: '18:00', attendees: ['Ana', 'Lee'], course: 'ENG 1101' });
+  const seeds: OutboundMessage[] = [
+    a.todayMessage(sid),
+    ...a.lookAhead(sid),
+    a.moneyCheck(sid),
+    a.moneyFoundMessage(sid),
+    a.week(sid).message,
+    a.weeklyPreview(sid),
+    ...a.conflictMessages(sid),
+    a.pulse(sid),
+    a.planMessage(sid, essay.id),
+    a.assignmentHelp(sid, essay.id),
+    a.meetingPrep(sid, mt.id),
+    a.licensedMessage(sid, 'legal'),
+    a.licensedMessage(sid, 'tax'),
+    a.courseworkBoundaryMessage(sid),
+    a.forward(sid, 'Your financial aid file was selected for verification. Please submit documents.', { subject: 'Verification required' }).message,
+    a.forward(sid, 'Class canceled today', { subject: 'BIO 1111 canceled' }).message,
+    a.forward(sid, 'Our class moved to a new room', { subject: 'Room change' }).message,
+    a.uploadSyllabus(sid, 'HIS 1101', 'Sep 3 Reading: Chapter 1\nNov 20 Paper 1 due', '2026-08-24').message,
+    ...[...a.playbooks.keys()].map((id) => a.playbookMessage(sid, a.startPlaybook(sid, id))),
+  ].filter((m): m is OutboundMessage => !!m);
+  return { a, sid, seeds };
+}
+
+/** Follow every button breadth-first, the way a curious student would, up to a few taps deep. */
+export function walkActions(perform: Perform, depth = 4): { reached: number; dead: string[]; held: string[] } {
+  const { a, sid, seeds } = richStudent();
+  const seen = new Set<string>();
+  const dead: string[] = [];
+  const held: string[] = [];
+  let frontier = seeds.flatMap((m) => m.nextSteps.map((n) => n.action));
+  for (let level = 0; level < depth && frontier.length; level++) {
+    const next: string[] = [];
+    for (const action of frontier) {
+      if (seen.has(action)) continue;
+      seen.add(action);
+      if (action === 'delete-account') {
+        const fresh = richStudent();
+        if (!perform(fresh.a, fresh.sid, action)) dead.push(action);
+        continue;
+      }
+      let r: ActionResult | undefined;
+      try {
+        r = perform(a, sid, action);
+      } catch (e) {
+        dead.push(`${action} (crashed: ${(e as Error).message})`);
+        continue;
+      }
+      if (!r) {
+        dead.push(action);
+        continue;
+      }
+      const tone = checkTone(r.message, 'standard', 8, 'en');
+      if (!tone.ok && r.message.urgency !== 'safety') held.push(`${action}: ${tone.problems.join('; ')}`);
+      next.push(...r.message.nextSteps.map((n) => n.action));
+    }
+    frontier = next;
+  }
+  return { reached: seen.size, dead, held };
+}
+
+const realPerform: Perform = (a, sid, action) => a.perform(sid, action);
+
+const deadEndGate: Gate<Perform> = {
+  id: 'no-dead-ends',
+  protects: 'Every button any agent offers works, in the app and by text (PRD P3, P8).',
+  definition: def(walkActions),
+  check: (perform) => {
+    const r = walkActions(perform);
+    if (r.dead.length) return fail('no-dead-ends', `${r.dead.length} buttons go nowhere: ${r.dead.slice(0, 5).join(', ')}`);
+    if (r.held.length) return fail('no-dead-ends', `${r.held.length} buttons answer with a message the tone gate holds: ${r.held.slice(0, 3).join(' | ')}`);
+    return pass('no-dead-ends', `${r.reached} distinct buttons followed up to 4 taps deep; every one answers`);
+  },
+  falsification: [
+    { name: 'planted registry missing a handler', plant: () => (a: Advocate, sid: string, action: string) => (action.startsWith('hold-block:') ? undefined : a.perform(sid, action)) },
+    { name: 'planted handler that answers with no next step', plant: () => (a: Advocate, sid: string, action: string) => { const r = a.perform(sid, action); return r && action.startsWith('mark-done:') ? { ...r, message: { ...r.message, nextSteps: [] } } : r; } },
+  ],
+};
+
 export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdict[]; proofs: Proof[] }> {
   const ev = store ?? (mkdirSync(OUT, { recursive: true }), new EvidenceStore(`${OUT}/evidence.db`));
   const proofs: Proof[] = [];
@@ -262,6 +361,7 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   await run(oracleGate, () => snap as EligFn);
   await run(lockGate, () => ({ lock: readLock() }));
   await run(moderationGate, () => () => new Community(() => DAY));
+  await run(deadEndGate, () => realPerform);
   await run(egressGate, () => ({ ...sourceFiles(`${ROOT}apps/advocate/src`), ...sourceFiles(`${ROOT}packages`) }));
   writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
   return { verdicts, proofs };

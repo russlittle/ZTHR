@@ -1,5 +1,5 @@
 import type { ClassMeeting, Deadline, OutboundMessage, Shift, Student } from './types.js';
-import { addDays, daysBetween, friendly, shortDate, time12, weekday } from './dates.js';
+import { addDays, daysBetween, friendly, relDay, shortDate, time12, weekday } from './dates.js';
 
 /**
  * Anticipate, then solve (PRD P3, DAY-3). A deadline is raised early enough to
@@ -67,19 +67,19 @@ export function upcomingMessages(
     }
     if (days < 0 || days > leadDays(d) + 2) continue; // passed readings need no recovery note
     const blocks = openBlocks(today, d.due, classes, shifts, Math.min(3, Math.ceil((d.effortHours ?? 3) / 2)));
-    const workBefore = shifts.filter((s) => daysBetween(today, s.date) >= 0 && daysBetween(s.date, d.due) > 0);
-    const shiftNote = workBefore.length > 0 ? ` ${endSentence(`You work ${shortDate(workBefore[0]!.date)} from ${time12(workBefore[0]!.start)}`)}` : '';
-    const blockNote =
-      blocks.length > 0
-        ? ` ${shortDate(blocks[0]!.date)} from ${time12(blocks[0]!.start)} to ${time12(blocks[0]!.end)} is open.`
-        : ' Your schedule is tight, so let\'s find a short window together.';
+    const b0 = blocks[0];
+    const workBefore = shifts.filter((s) => daysBetween(today, s.date) >= 0 && daysBetween(s.date, d.due) > 0).sort((x, y) => (x.date + x.start).localeCompare(y.date + y.start));
+    const blockNote = b0
+      ? ` You have two open hours ${relDay(today, b0.date)}, ${time12(b0.start)} to ${time12(b0.end)}.`
+      : " Your schedule is tight, so let's find a short window together.";
+    const shiftNote = workBefore.length > 0 ? ` You also work ${relDay(today, workBefore[0]!.date)} at ${time12(workBefore[0]!.start)}` : '';
     out.push({
       studentId: student.id,
       author: 'coursework-planner',
       urgency: days <= 1 ? 'time-sensitive' : 'routine',
-      text: `${label} is due ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : friendly(d.due)}.${shiftNote}${blockNote} Want me to hold that time for it?`,
+      text: `${label} is due ${days === 0 ? 'today' : days === 1 ? 'tomorrow' : friendly(d.due)}.${blockNote}${shiftNote ? endSentence(shiftNote) : ''}${b0 ? ' Want me to hold that time for it?' : ''}`,
       nextSteps: [
-        ...(blocks.length > 0 ? [{ label: `Hold ${shortDate(blocks[0]!.date)} ${time12(blocks[0]!.start)}`, action: `hold-block:${d.id}:${blocks[0]!.date}:${blocks[0]!.start}` }] : []),
+        ...(blocks.length > 0 ? [{ label: `Hold ${relDay(today, blocks[0]!.date)} ${time12(blocks[0]!.start)}`, action: `hold-block:${d.id}:${blocks[0]!.date}:${blocks[0]!.start}` }] : []),
         { label: 'Find me help with it', action: `find-help:${d.id}` },
         { label: 'Already done', action: `mark-done:${d.id}` },
       ],

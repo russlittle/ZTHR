@@ -81,6 +81,15 @@
     ]
   },
   {
+    "gate": "no-dead-ends",
+    "gateHash": "6e53f2ec92aef046b30af0d421edae83cd9a22c0539a55e926d1d78f79031397",
+    "valid": true,
+    "cases": [
+      "planted registry missing a handler",
+      "planted handler that answers with no next step"
+    ]
+  },
+  {
     "gate": "no-hidden-egress",
     "gateHash": "47934966cb1d643ef8b9ed1ef9386f97348b228d79dbaf9951959e4ba2dd1ff1",
     "valid": true,

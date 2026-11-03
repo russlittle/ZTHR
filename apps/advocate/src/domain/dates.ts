@@ -33,3 +33,12 @@ export function time12(hhmm: string): string {
   const hh = ((h ?? 0) + 11) % 12 + 1;
   return `${hh}:${pad(m ?? 0)} ${(h ?? 0) < 12 ? 'a.m.' : 'p.m.'}`;
 }
+
+/** "today", "tomorrow", a weekday name within the week, or a short date beyond it. */
+export function relDay(today: string, date: string): string {
+  const n = daysBetween(today, date);
+  if (n === 0) return 'today';
+  if (n === 1) return 'tomorrow';
+  if (n > 1 && n < 7) return new Date(`${date.slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+  return shortDate(date);
+}

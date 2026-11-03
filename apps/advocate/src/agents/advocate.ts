@@ -34,6 +34,8 @@ import { solveWeek, type ChildCare } from '../domain/week.js';
 import { crisisReplyEs, detectSpanish, t as tr } from '../domain/i18n.js';
 import { addDays, shortDate, time12, weekday } from '../domain/dates.js';
 import { AppStore } from '../domain/store.js';
+import { parseShifts } from '../domain/shifts.js';
+import { ACTIONS, type ActionResult } from './actions.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
 import { buildToday, renderToday, type TodayView } from '../domain/today.js';
 import { checkTone } from '../domain/tone.js';
@@ -71,6 +73,22 @@ export interface Draft {
   body: string;
   purpose: string;
   status: 'shown' | 'sent' | 'discarded';
+}
+
+export interface Hold {
+  id: string;
+  deadlineId?: string;
+  title: string;
+  date: string;
+  start: string;
+  end: string;
+}
+
+export interface Reminder {
+  id: string;
+  about: string;
+  at: string; // YYYY-MM-DD or YYYY-MM-DDTHH:MM
+  text: string;
 }
 
 const SPANISH_NEEDS: [NeedCategory, RegExp][] = [
@@ -216,6 +234,7 @@ export class Advocate {
     const decision = opts.force ? { action: 'send' as const } : decideContact({ maxPerDay: s.dial.maxPerDay, quietStart: s.dial.quietStart, quietEnd: s.dial.quietEnd, timeZone: 'America/New_York' }, this.now(), sentToday, m.urgency);
     const d: Delivered = { ...base, status: decision.action === 'send' ? 'delivered' : 'deferred', holdReason: decision.action === 'defer' ? decision.reason : undefined };
     this.store.put('messages', d.id, s.id, d);
+    if (d.status === 'delivered' && d.nextSteps.length) this.store.put('last_steps', s.id, s.id, { steps: d.nextSteps });
     this.ev('message', s.id, { author: m.author, status: d.status, urgency: m.urgency, nextSteps: m.nextSteps.length, grade: Number(tone.grade.toFixed(1)) });
     if (d.status === 'delivered' && s.dial.channel === 'text' && s.phone) {
       const steps = m.nextSteps.length ? `\n${m.nextSteps.map((n, i) => `${i + 1}) ${n.label}`).join('\n')}` : '';
@@ -334,6 +353,16 @@ export class Advocate {
       return [this.deliver({ studentId: s.id, author: 'chief-of-staff', urgency: 'routine', text: `Nice to meet you, ${name.charAt(0).toUpperCase() + name.slice(1)}. Text me anytime. Try TODAY for your day, or tell me what's going on.`, nextSteps: [{ label: 'Show my day', action: 'today' }, { label: 'Upload a syllabus', action: 'upload-syllabus' }] }, { force: true })];
     }
     const t = text.trim().toLowerCase();
+    // A number answers the last message's numbered choices, so text has every button the app has.
+    const pick = t.match(/^(\d)$/);
+    const last = this.store.get<{ steps: { label: string; action: string }[] }>('last_steps', s.id);
+    if (pick && last?.steps[Number(pick[1]) - 1]) {
+      const r = this.perform(s.id, last.steps[Number(pick[1]) - 1]!.action);
+      if (r) return [this.deliver(r.message, { force: true })];
+    }
+    const shiftsTyped = parseShifts(text.replace(/^(i )?(work|shifts?:?)\s+/i, ''), this.today());
+    if (/^(i )?(work|shifts?)\b/i.test(t) && shiftsTyped.shifts.length) return [this.deliver(this.addShiftsMessage(s.id, shiftsTyped.shifts, shiftsTyped.unread), { force: true })];
+    if (/\b[A-Z]{2,4}\s?\d{3,4}\b.*\b(room|building)\b/i.test(text) && /\b(moved|new room|changed|now in)\b/i.test(t)) return [this.deliver(this.applyRoomChange(s.id, text), { force: true })];
     const situation = detectSituation(text);
     if (situation) return [this.deliver(this.crisis(s.id, situation).message, { force: true })];
     if (/^(today|my day|schedule|what'?s today)\b/.test(t)) return [this.deliver(this.todayMessage(s.id), { force: true })];
@@ -560,7 +589,7 @@ export class Advocate {
   }
 
   conflictMessages(studentId: string): OutboundMessage[] {
-    return this.conflicts(studentId).map(({ appointment, with: w }) => ({
+    return this.conflicts(studentId).filter(({ appointment }) => !this.isDismissed(studentId, appointment.id)).map(({ appointment, with: w }) => ({
       studentId,
       author: 'chief-of-staff',
       urgency: 'time-sensitive' as const,
@@ -773,7 +802,7 @@ export class Advocate {
     const kind = /essay|paper|report|portfolio|draft/i.test(d.title) ? 'writing' : d.kind === 'exam' ? 'exam' : 'general';
     const helpLine =
       kind === 'writing'
-        ? 'For a paper, a second reader helps most: the writing center, a tutor, or a classmate who swaps drafts with you.'
+        ? 'For a paper, a second reader helps most. Try the writing center, a tutor, or a classmate who trades drafts with you.'
         : kind === 'exam'
           ? 'For a test, a tutor or a study group helps most, plus your instructor\'s office hours.'
           : 'Your instructor\'s office hours and the tutoring center are the best places to start.';
@@ -828,7 +857,7 @@ export class Advocate {
   shareText(studentId: string, resourceId?: string): { text: string; smsLink: string } {
     const r = resourceId ? this.catalog.find((x) => x.id === resourceId) : undefined;
     const text = r
-      ? `Thought this might help: ${r.name}. ${r.description}${r.phone ? ` Call ${r.phone}.` : ''}${r.url ? ` ${r.url}` : ''}`
+      ? `This might help: ${r.name}. ${r.description}${r.phone ? ` Call ${r.phone}.` : ''}${r.url ? ` ${r.url}` : ''}`
       : `I use Student Advocate. It's free, it works for students (not the college), and it finds help you qualify for. Text ${this.fromNumber} to start.`;
     this.ev('share', studentId, { kind: r ? 'resource' : 'advocate' });
     return { text, smsLink: `sms:?&body=${encodeURIComponent(text)}` };
@@ -971,6 +1000,76 @@ export class Advocate {
       options: bookOptions(m, s.enrollment.college),
       beforeAid: !!(aid && m.neededBy && m.neededBy < aid),
     }));
+  }
+
+  // ---------- actions: one registry for app, text and journeys ----------
+
+  /** Run a next-step action. Undefined only for a verb no handler knows, which the no-dead-ends gate forbids. */
+  perform(studentId: string, action: string): ActionResult | undefined {
+    const [verb, ...rest] = action.split(':');
+    const handler = ACTIONS[verb!];
+    if (!handler) {
+      this.ev('dead_end', studentId, { verb });
+      return undefined;
+    }
+    return handler(this, studentId, rest.join(':'));
+  }
+
+  // ---------- held time, reminders, typed shifts ----------
+
+  holdTime(studentId: string, h: Omit<Hold, 'id'>): Hold {
+    const full: Hold = { ...h, id: `hd_${randomUUID().slice(0, 8)}` };
+    this.store.put('holds', full.id, studentId, full);
+    this.ev('hold', studentId, { forDeadline: !!h.deadlineId });
+    return full;
+  }
+
+  holds(studentId: string): Hold[] {
+    return this.store.list<Hold>('holds', studentId).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+  }
+
+  remind(studentId: string, about: string, at: string, text: string): Reminder {
+    const r: Reminder = { id: `rm_${randomUUID().slice(0, 8)}`, about, at, text };
+    this.store.put('reminders', r.id, studentId, r);
+    return r;
+  }
+
+  reminders(studentId: string): Reminder[] {
+    return this.store.list<Reminder>('reminders', studentId).sort((a, b) => a.at.localeCompare(b.at));
+  }
+
+  removeDeadline(studentId: string, deadlineId: string): void {
+    const d = this.store.get<Deadline>('deadlines', deadlineId);
+    if (d && d.studentId === studentId) this.store.remove('deadlines', deadlineId);
+  }
+
+  dismiss(studentId: string, subject: string): void {
+    this.store.put('dismissed', `${studentId}:${subject}`, studentId, { subject, at: this.today() });
+  }
+
+  isDismissed(studentId: string, subject: string): boolean {
+    return !!this.store.get('dismissed', `${studentId}:${subject}`);
+  }
+
+  shifts(studentId: string): Shift[] {
+    return this.store.list<Shift>('shifts', studentId).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+  }
+
+  classes(studentId: string): ClassMeeting[] {
+    return this.store.list<ClassMeeting>('classes', studentId);
+  }
+
+  addShiftsMessage(studentId: string, shifts: Shift[], unread: string[] = []): OutboundMessage {
+    this.addShifts(studentId, shifts);
+    const list = shifts.map((x) => `${shortDate(x.date)}, ${time12(x.start)} to ${time12(x.end)}`).join('; ');
+    return {
+      studentId,
+      author: 'chief-of-staff',
+      urgency: 'routine',
+      text: `Added ${shifts.length === 1 ? 'your shift' : `${shifts.length} shifts`}: ${list}.${unread.length ? ` I could not read "${unread.join('", "')}". Try a day and times, like Tue 3pm-9pm.` : ''} I will plan around ${shifts.length === 1 ? 'it' : 'them'}.`,
+      nextSteps: [{ label: 'See my week', action: 'week' }, { label: 'Show my day', action: 'today' }],
+      why: 'From the shifts you typed.',
+    };
   }
 
   // ---------- sealed facts and control ----------
