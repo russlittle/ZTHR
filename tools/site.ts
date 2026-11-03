@@ -15,10 +15,15 @@ import { JOURNEY_DIR, OUT, ROOT } from './lib.js';
  *   /factory  the factory console: guardrails, red team, walks, journeys, tests, mutation, phases, cost
  * Everything is read from what the factory recorded in this build; nothing is typed in by hand.
  */
-const SITE = join(ROOT, 'site-out');
+// --artifact builds a self-contained copy with relative links (no analytics) for previewing outside zthr.ai.
+const ARTIFACT = process.argv.includes('--artifact');
+const SITE = join(ROOT, ARTIFACT ? 'site-artifact' : 'site-out');
 const GA = process.env.SITE_GA_ID ?? 'G-0VXPS15MY4';
-const head = `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>
-<script src="/assets/mermaid-11.4.1.min.js"></script><script>mermaid.initialize({startOnLoad:true,theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'neutral',securityLevel:'strict'});</script>
+const APP = ARTIFACT ? 'https://zthr.ai/advocate/' : '/advocate/';
+/** Fonts and assets: served from the app when published, relative to the page in the self-contained copy. */
+const fontBase = (rootRel: string) => (ARTIFACT ? rootRel.replace(/\/$/, '') || '.' : '/advocate');
+const head = (rootRel: string) => `${ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`}
+<script src="${ARTIFACT ? rootRel : '/'}assets/mermaid-11.4.1.min.js"></script><script>mermaid.initialize({startOnLoad:true,theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'neutral',securityLevel:'strict'});</script>
 <style>.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style>`;
 
 const read = <T>(p: string): T | undefined => (existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as T) : undefined);
@@ -34,6 +39,19 @@ function copyAssets(): void {
   // Diagrams are drawn by a copy of Mermaid served from this site, so readers' browsers fetch nothing elsewhere.
   mkdirSync(join(SITE, 'assets'), { recursive: true });
   cpSync(join(ROOT, 'node_modules/mermaid/dist/mermaid.min.js'), join(SITE, 'assets', 'mermaid-11.4.1.min.js'));
+  if (ARTIFACT) {
+    mkdirSync(join(SITE, '_ui'), { recursive: true });
+    for (const f of ['atkinson-400.woff2', 'atkinson-700.woff2']) writeFileSync(join(SITE, '_ui', f), ui.uiAsset(f)!.body);
+  }
+}
+
+function buildLanding(): void {
+  const body = `<h1>ZTHR reference implementation</h1><p class="muted">The Student Advocate, built by agents under the factory's fixtures. Everything here was recorded by the factory.</p>${ui.rows([
+    { title: 'Factory console', sub: 'Guardrails, red team, walks, journeys, every test, mutation, phases, cost', href: 'factory/index.html' },
+    { title: 'Documentation', sub: 'Architecture, flows, data model, API and every building block, illustrated', href: 'docs/index.html' },
+    { title: 'The Student Advocate', sub: 'The app itself', href: APP },
+  ])}`;
+  write(join(SITE, 'index.html'), ui.consoleShell({ title: 'ZTHR reference', brand: 'ZTHR reference', brandHref: 'index.html', base: fontBase(''), head: head(''), groups: [{ title: '', items: [{ href: 'factory/index.html', label: 'Factory console', icon: 'shield' }, { href: 'docs/index.html', label: 'Documentation', icon: 'doc' }, { href: APP, label: 'The app', icon: 'route' }] }], body }));
 }
 
 function buildDocs(): number {
@@ -67,7 +85,8 @@ function buildDocs(): number {
     });
     const body = marked.parse(readFileSync(f, 'utf8').replace(/<!--[\s\S]*?-->/g, '')) as string;
     const nav = groups.map(([g, keep]) => ({ title: g, items: files.map(rel).filter(keep).sort().map((x) => ({ href: `${up}${x.replace(/\.md$/, '.html')}`, label: title(join(ROOT, 'docs', x)), current: x === r })) }));
-    write(join(SITE, 'docs', out), ui.consoleShell({ title: `${title(f)} · ZTHR reference docs`, brand: 'ZTHR docs', brandHref: `${up}index.html`, base: '/advocate', head, groups: [{ title: '', items: [{ href: `${up}index.html`, label: 'Overview', icon: 'doc', current: r === 'README.md' }, { href: `${up}../factory/index.html`, label: 'Factory console', icon: 'shield' }, { href: '/advocate/', label: 'The app', icon: 'route' }] }, ...nav], body: `<article class="prose">${body}</article>` }));
+    const rootRel = `${up}../`;
+    write(join(SITE, 'docs', out), ui.consoleShell({ title: `${title(f)} · ZTHR reference docs`, brand: 'ZTHR docs', brandHref: `${up}index.html`, base: fontBase(rootRel), head: head(rootRel), groups: [{ title: '', items: [{ href: `${up}index.html`, label: 'Overview', icon: 'doc', current: r === 'README.md' }, { href: `${up}../factory/index.html`, label: 'Factory console', icon: 'shield' }, { href: APP, label: 'The app', icon: 'route' }] }, ...nav], body: `<article class="prose">${body}</article>` }));
   }
   return files.length;
 }
@@ -122,7 +141,7 @@ function buildFactory(): number {
     ['cost', 'Cost', 'dollar'],
   ];
   const shell = (id: string, title: string, body: string) =>
-    ui.consoleShell({ title: `${title} · ZTHR factory`, brand: 'ZTHR factory', brandHref: 'index.html', base: '/advocate', head, groups: [{ title: 'Factory', items: PAGES.map(([p, l, ic]) => ({ href: `${p}.html`, label: l, icon: ic, current: p === id })) }, { title: 'Elsewhere', items: [{ href: '/advocate/', label: 'The app', icon: 'route' }, { href: '/advocate/admin/', label: 'App admin', icon: 'you' }, { href: '../docs/index.html', label: 'Documentation', icon: 'doc' }] }], body: `<h1>${ui.esc(title)}</h1>${body}` });
+    ui.consoleShell({ title: `${title} · ZTHR factory`, brand: 'ZTHR factory', brandHref: 'index.html', base: fontBase('../'), head: head('../'), groups: [{ title: 'Factory', items: PAGES.map(([p, l, ic]) => ({ href: `${p}.html`, label: l, icon: ic, current: p === id })) }, { title: 'Elsewhere', items: [{ href: APP, label: 'The app', icon: 'route' }, { href: `${APP}admin/`, label: 'App admin', icon: 'you' }, { href: '../docs/index.html', label: 'Documentation', icon: 'doc' }] }], body: `<h1>${ui.esc(title)}</h1>${body}` });
   const n = (x: number | undefined) => (x === undefined ? 'not measured' : x.toLocaleString('en-US'));
   const held = redteam?.results.filter((r) => r.held).length;
   const walkStates = (explore?.states ?? 0) + (crawl?.states ?? 0) + (crawlSettings?.states ?? 0);
@@ -192,6 +211,7 @@ ${ui.section('What each part proves', ui.rows(PAGES.slice(1).map(([p, l]) => ({ 
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   copyAssets();
+  buildLanding();
   const d = buildDocs();
   const f = buildFactory();
   console.log(`site built: ${d} doc pages, ${f} factory pages in ${relative(ROOT, SITE)}/`);

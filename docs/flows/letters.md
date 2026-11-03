@@ -7,7 +7,7 @@ means, what to do and by when, and offers to put each date on their calendar.
 ```mermaid
 flowchart TD
   in1[Pasted in the app] --> read
-  in2[Texted: "explain this letter: ..."] --> read
+  in2["Texted: explain this letter ..."] --> read
   in3[Forwarded by email or the API] --> read
   read[Read the letter] --> facts[Extract: sender, kind, every date with what it is for, amounts, phone numbers]
   facts --> plain[Plain explanation made only of those facts]
