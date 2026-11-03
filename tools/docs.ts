@@ -249,9 +249,7 @@ ${section('Decisions', group('adr/'))}
 Every test file names the document it verifies, and every document lists its tests. The \`docs-linked\` gate fails
 the build when either side is missing.
 
-## ${NOT_AFFILIATED.title}
-
-${NOT_AFFILIATED.body}
+<small>${NOT_AFFILIATED.body}</small>
 `;
 }
 
