@@ -29,7 +29,8 @@ ${ARTIFACT ? '' : `<script src="/assets/mermaid-11.4.1.min.js"></script>`}<scrip
 const read = <T>(p: string): T | undefined => (existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as T) : undefined);
 const write = (path: string, html: string) => {
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, html);
+  // The preview host reserves names that start with "_", so fonts live under fonts/ there.
+  writeFileSync(path, ARTIFACT ? html.replace(/_ui\/atkinson/g, 'fonts/atkinson') : html);
 };
 const walkFiles = (dir: string, ext: string): string[] => (existsSync(dir) ? readdirSync(dir).flatMap((n) => (statSync(join(dir, n)).isDirectory() ? walkFiles(join(dir, n), ext) : n.endsWith(ext) ? [join(dir, n)] : [])) : []);
 
@@ -40,8 +41,8 @@ function copyAssets(): void {
   mkdirSync(join(SITE, 'assets'), { recursive: true });
   cpSync(join(ROOT, 'node_modules/mermaid/dist/mermaid.min.js'), join(SITE, 'assets', 'mermaid-11.4.1.min.js'));
   if (ARTIFACT) {
-    mkdirSync(join(SITE, '_ui'), { recursive: true });
-    for (const f of ['atkinson-400.woff2', 'atkinson-700.woff2']) writeFileSync(join(SITE, '_ui', f), ui.uiAsset(f)!.body);
+    mkdirSync(join(SITE, 'fonts'), { recursive: true });
+    for (const f of ['atkinson-400.woff2', 'atkinson-700.woff2']) writeFileSync(join(SITE, 'fonts', f), ui.uiAsset(f)!.body);
   }
 }
 
