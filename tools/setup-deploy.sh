@@ -41,4 +41,4 @@ gcloud builds triggers run zthr-factory --region "$REGION" --branch reference-im
   sed "s#^#Build: https://console.cloud.google.com/cloud-build/builds;region=${REGION}/#;s#\$#?project=${PROJECT}#"
 echo "When that build finishes, the service is live at its run.app address:"
 echo "  gcloud run services describe advocate --region ${REGION} --format='value(status.url)'"
-echo "Then merge the route-advocate-to-cloud-run branch on the site repo: zthr.ai/advocate and /twins will serve it."
+echo "Then merge the route-advocate-to-cloud-run branch on the site repo: zthr.ai/studentadvocate and /twins will serve it."
