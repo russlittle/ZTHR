@@ -1,3 +1,4 @@
+// Verifies docs/blocks/runtime.md
 import { describe, expect, it } from 'vitest';
 import { decideContact, inQuietHours, localClock } from '@zthr/runtime';
 

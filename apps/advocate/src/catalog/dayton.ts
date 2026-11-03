@@ -281,7 +281,7 @@ export const DAYTON_CATALOG: Resource[] = [
     phone: '937-223-7217',
     url: 'https://cssmv.org/',
     eligibility: { text: 'Residents of west and northwest Dayton; call extension 1101 for eligibility.' },
-    howToApply: ['Call 937-223-7217 ext. 1101 to check eligibility.'],
+    howToApply: ['Call 937-223-7217, ext. 1101, to see if you can use it.'],
     documents: [],
     prefill: [],
     source: { url: 'https://sinclair.edu/student-life/wellness/resources/food-assistance/', license: 'public-information' },

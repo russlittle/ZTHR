@@ -1,3 +1,5 @@
+// Verifies docs/testing/gates.md
+// Verifies docs/blocks/gates.md
 import { describe, expect, it } from 'vitest';
 import { admits, checkRatchet, combine, fail, pass, unknown, verifyFloorChange, verdict } from '@zthr/gates';
 

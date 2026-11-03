@@ -90,6 +90,15 @@
     ]
   },
   {
+    "gate": "docs-linked",
+    "gateHash": "4dc1f4192ee8412d31a918078e9f6651bfb469263b45bdc3d1140ae306de0524",
+    "valid": true,
+    "cases": [
+      "planted test file with no doc",
+      "planted link to a missing doc"
+    ]
+  },
+  {
     "gate": "no-hidden-egress",
     "gateHash": "bc4e369e5c95ba8ca215387283499d7dda51f2cd299c16bff9e58dcce2179868",
     "valid": true,

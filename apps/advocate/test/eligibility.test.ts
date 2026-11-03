@@ -1,3 +1,4 @@
+// Verifies docs/flows/money.md
 import { describe, expect, it } from 'vitest';
 import { heap, lifeline, sinclairEmergencyGrant, snap } from '../src/eligibility/engine.js';
 import { makeAdvocate, maria, TODAY } from './helpers.js';

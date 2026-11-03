@@ -1,3 +1,5 @@
+// Verifies docs/flows/drafts-and-approval.md
+// Verifies docs/flows/crisis.md
 import { describe, expect, it } from 'vitest';
 import { heap, lifeline, snap } from '../src/eligibility/engine.js';
 import { checkTone, readingGrade, syllables } from '../src/domain/tone.js';

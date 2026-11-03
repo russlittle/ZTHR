@@ -1,0 +1,68 @@
+# Exhaustive walks
+
+A journey proves one path works. The walks prove there is no path that breaks. They drive the Advocate the way
+people do, from every state they can reach, until nothing new is left.
+
+## The algorithm
+
+```mermaid
+flowchart TD
+  seed[Seed: a student, at a depth] --> sig0[Signature of the starting state] --> q[(Queue)]
+  q --> pop{Anything left?}
+  pop -- no --> done([Fixpoint: every reachable state visited])
+  pop -- yes --> node[Take a state]
+  node --> acts[Every button on screen + navigation + things people type]
+  acts --> fork[Fork the world]
+  fork --> perform[Do the action]
+  perform -- throws --> v1[Violation: crashed, with the exact path]
+  perform --> check{Invariants}
+  check -- fail --> v2[Violation, with the exact path]
+  check --> sig{Seen this state before?}
+  sig -- yes --> pop
+  sig -- no --> q
+```
+
+## Two walks
+
+| Walk | Drives | Actions from each state | Checked at every step |
+| --- | --- | --- | --- |
+| Button walk (`tools/explore.ts`) | The Advocate directly | Every button on the last message, app navigation, help tiles, 16 things students type (including "1", "2", "3") | No dead end; no crash; tone gate passes at the student's depth and grade; no doubled periods or template holes; no citizenship question; no sealed fact; no other student's name; idempotent buttons are idempotent |
+| Feature walk (`tools/crawl.ts`) | The web app over HTTP | Every link and every form on the page | Status 200; one title and one h1; a main landmark; every control labeled; every link and button named; no "undefined", "NaN" or template holes; no other student's data; no dead-end page |
+
+Each runs for all twelve students, at their own depth and again at brief and walk-me-through.
+
+## Why it ends
+
+The exact state of a student multiplies independent features together (every combination of drafts, reminders and
+held time) and never reaches a fixpoint. The walk uses an abstract state: each deadline's status, each playbook's
+step, whether a draft is waiting, whether a question is pending, which sources are on, and the buttons on screen.
+Settings are independent switches, so they are set by the seeds and walked on their own instead of being multiplied
+into every path.
+
+```mermaid
+flowchart LR
+  exact[Exact state<br/>ids, timestamps, counts] -->|abstraction| abstract[Abstract state<br/>what changes behavior]
+  abstract --> finite[Finite: the walk ends]
+  settings[Settings switches] -->|seed variants + own walk| finite
+```
+
+## What the walks found and fixed
+
+Every finding is a fixture now; it cannot come back.
+
+| Finding | Walk | Fix |
+| --- | --- | --- |
+| About twenty buttons went nowhere | button | One action registry for app, text and API; `no-dead-ends` gate |
+| Replying "1" by text did nothing | button | Numbered replies run the last message's choices |
+| Crisis plans too long for brief answers | button | Brief plans list names and numbers only |
+| Catalog steps above an eighth-grade reading level | button | Catalog rewritten; web addresses no longer count as words |
+| "1:30 p.m.." doubled periods | feature, then tone gate | `sentence()` helper; the tone gate rejects doubled periods |
+| Re-uploading a syllabus duplicated every date | feature | Same title, date and course is the same deadline |
+| Pages without a heading | feature | Every page has exactly one h1 |
+| Holding the same time twice made two holds | button | Holds, reminders and drafts are idempotent |
+
+## Verified by
+
+<!-- verified-by:start -->
+- [`apps/advocate/test/walks.test.ts`](../../apps/advocate/test/walks.test.ts) (2 test definitions)
+<!-- verified-by:end -->

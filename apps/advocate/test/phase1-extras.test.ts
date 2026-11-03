@@ -1,3 +1,4 @@
+// Verifies docs/flows/planning.md
 import { describe, expect, it } from 'vitest';
 import { checkTone } from '../src/domain/tone.js';
 import { makeAdvocate, maria } from './helpers.js';

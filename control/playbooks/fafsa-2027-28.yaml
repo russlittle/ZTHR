@@ -32,7 +32,7 @@ steps:
     done_when: student-confirms
   - id: gather-letter
     kind: documents
-    text: Your aid office will ask for a letter or document from someone who knows your situation, such as a counselor, social worker, case worker, attorney, or college staff member. Bills or insurance in your own name can also help show you live apart.
+    text: Your aid office will ask for a letter from someone who knows your story, like a counselor, social worker, case worker, lawyer, or someone at the college. Bills or insurance in your own name can also show you live on your own.
     documents: [Third-party letter about your situation]
   - id: tell-aid-office
     kind: draft
@@ -46,7 +46,7 @@ steps:
     on_timeout: Check the status at studentaid.gov, or ask me to draft a note to your aid office.
   - id: verification
     kind: wait
-    text: If your college asks for verification documents, I'll list exactly what they want and help you gather it.
+    text: If your college asks you to prove what your FAFSA says, I'll list what they want and help you get it.
     timeout_days: 30
   - id: carryover-note
     kind: info

@@ -36,6 +36,21 @@ export class SealedStore {
     if (masterKey.length !== 32) throw new Error('master key must be 32 bytes');
   }
 
+  /** Every sealed record, still encrypted, for a test snapshot. */
+  dump(): [string, SealedRecord][] {
+    return [...this.records].map(([k, r]) => [k, JSON.parse(JSON.stringify(r)) as SealedRecord]);
+  }
+
+  /** Load records from a snapshot made under the same master key. */
+  load(rows: [string, SealedRecord][]): void {
+    for (const [k, r] of rows) this.records.set(k, JSON.parse(JSON.stringify(r)) as SealedRecord);
+  }
+
+  /** Copy every sealed record into another store under the same master key (a fork for testing; records stay encrypted). */
+  copyInto(other: SealedStore): void {
+    other.load(this.dump());
+  }
+
   private dataKey(studentId: string): Buffer {
     let r = this.records.get(studentId);
     if (!r) {

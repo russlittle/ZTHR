@@ -18,6 +18,8 @@ export interface World {
   a: Advocate;
   sid: string;
   deleted?: boolean;
+  /** The seed's first Advocate, kept so thawed copies share its options and keys. */
+  root?: Advocate;
 }
 
 export type Outcome = { via: 'tap'; result: ActionResult } | { via: 'text'; replies: { text: string; nextSteps: { action: string }[] }[] };
@@ -60,7 +62,9 @@ export function stateParts(w: World): string[] {
   const parts = [
     `dial:${s.dial.depth}:${s.dial.channel}:${s.chosenName === 'there' ? 'unnamed' : 'named'}`,
     `deadlines:${a.deadlines(sid).map((d) => `${d.title}/${d.done ? 'done' : d.confirmed ? 'on' : 'unconfirmed'}`).sort().join(',')}`,
-    `runs:${store.list<{ playbook: string; stepId: string; status: string }>('playbook_runs', sid).map((r) => `${r.playbook}/${r.stepId}/${r.status}`).sort().join(',')}`,
+    // A playbook's step shows in the buttons on screen while the student is in it, so its progress is not
+    // multiplied into every other feature's state (they do not interact).
+    `runs:${store.list<{ status: string }>('playbook_runs', sid).filter((r) => r.status === 'done').length}`,
     `drafts:${a.drafts(sid).some((d) => d.status === 'shown') ? 'waiting' : 'none'}:${a.drafts(sid).some((d) => d.status === 'sent') ? 'sent' : ''}`,
     `holds:${has('holds')} reminders:${has('reminders')} shifts:${a.shifts(sid).length} dismissed:${has('dismissed')}`,
     `pulse:${a.pulseState(sid).off ? 'off' : 'on'}:${store.get('pulse_pending', sid) ? 'pending' : ''}`,
@@ -154,6 +158,12 @@ export function exploreAdvocate(opts: { only?: string[]; maxNodes?: number; with
       actions: (w, last) => actions(w, last).filter((x) => opts.withTyping !== false || !x.startsWith('say:')),
       perform,
       signature,
+      // Frozen states hold plain data plus the seed's first Advocate, whose options and keys every thaw reuses.
+      freeze: (w) => ({ snap: w.a.snapshot(), sid: w.sid, deleted: w.deleted, root: w.root ?? w.a }),
+      thaw: (f) => {
+        const x = f as { snap: ReturnType<Advocate['snapshot']>; sid: string; deleted?: boolean; root: Advocate };
+        return { a: x.root.restore(x.snap), sid: x.sid, deleted: x.deleted, root: x.root };
+      },
       check: (w, step) => [...check(w, step), ...idempotency(w, step)],
       maxNodes: opts.maxNodes ?? 20_000,
     });

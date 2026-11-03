@@ -1,3 +1,4 @@
+// Verifies docs/testing/ci.md
 import { describe, expect, it } from 'vitest';
 import { measure } from '../ci-cost.js';
 

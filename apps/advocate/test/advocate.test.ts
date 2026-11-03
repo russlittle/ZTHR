@@ -1,3 +1,5 @@
+// Verifies docs/agents.md
+// Verifies docs/flows/text-onboarding.md
 import { describe, expect, it } from 'vitest';
 import { ConsentLedger } from '@zthr/runtime';
 import { makeAdvocate, maria } from './helpers.js';

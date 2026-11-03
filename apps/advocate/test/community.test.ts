@@ -1,3 +1,4 @@
+// Verifies docs/flows/community.md
 import { describe, expect, it } from 'vitest';
 import { Community, moderate } from '../src/domain/community.js';
 

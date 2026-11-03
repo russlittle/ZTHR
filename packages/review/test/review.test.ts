@@ -1,3 +1,4 @@
+// Verifies docs/blocks/review.md
 import { describe, expect, it } from 'vitest';
 import { OpenRouterClient, TwinModelClient } from '@zthr/models';
 import { parseReview, promptFor, reviewPanel, type Seat } from '@zthr/review';

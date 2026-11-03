@@ -1,3 +1,5 @@
+// Verifies docs/blocks/intent.md
+// Verifies docs/testing/journeys.md
 import { describe, expect, it } from 'vitest';
 import { fileURLToPath } from 'node:url';
 import { cardHash, loadCards, lockVerdict, runJourney } from '@zthr/intent';

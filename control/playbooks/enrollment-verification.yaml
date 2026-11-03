@@ -12,7 +12,7 @@ journeys: [persona-3a-parole-schedule-proof]
 steps:
   - id: request-certificate
     kind: checklist
-    text: Request an official enrollment certificate from your registrar's office or the National Student Clearinghouse student portal.
+    text: Ask the registrar for a letter that shows you are enrolled. You can also get one online from the National Student Clearinghouse.
     done_when: student-confirms
   - id: schedule
     kind: info

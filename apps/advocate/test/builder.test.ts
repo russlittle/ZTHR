@@ -1,3 +1,4 @@
+// Verifies docs/agents.md
 import { describe, expect, it } from 'vitest';
 import { fileURLToPath } from 'node:url';
 import { EvidenceStore } from '@zthr/evidence';

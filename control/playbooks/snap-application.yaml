@@ -33,6 +33,6 @@ steps:
     timeout_days: 30
   - id: recertify
     kind: info
-    text: When you're approved, I'll remind you before your recertification date so the benefits don't stop.
+    text: When you're approved, I'll remind you before you need to renew, so the help doesn't stop.
 recovery:
   - If the county doesn't call, I can give you the office number and what to say.

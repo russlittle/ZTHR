@@ -30,6 +30,22 @@ export class ConsentLedger {
     `);
   }
 
+  /** Every row, hashes and all, for a test snapshot. */
+  dump(): Record<string, string | number>[] {
+    return this.db.prepare('SELECT * FROM consent ORDER BY seq').all() as Record<string, string | number>[];
+  }
+
+  /** Load rows from a snapshot into an empty ledger. */
+  load(rows: Record<string, string | number>[]): void {
+    const ins = this.db.prepare('INSERT INTO consent (seq, at, student_id, kind, subject, detail, prev_hash, hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    for (const r of rows) ins.run(r.seq!, r.at!, r.student_id!, r.kind!, r.subject!, r.detail!, r.prev_hash!, r.hash!);
+  }
+
+  /** Copy every entry, hashes and all, into an empty ledger (a fork for testing). */
+  copyInto(other: ConsentLedger): void {
+    other.load(this.dump());
+  }
+
   private last(): { hash: string } | undefined {
     return this.db.prepare('SELECT hash FROM consent ORDER BY seq DESC LIMIT 1').get() as { hash: string } | undefined;
   }

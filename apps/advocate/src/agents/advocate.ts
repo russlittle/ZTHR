@@ -94,6 +94,14 @@ export interface Reminder {
 
 export type ApiScope = 'read' | 'write' | 'actions';
 
+export interface AdvocateSnapshot {
+  docs: { collection: string; id: string; student_id: string; json: string }[];
+  ledger: Record<string, string | number>[];
+  sealed: [string, import('@zthr/runtime').SealedRecord][];
+  onboarding: [string, unknown][];
+  salt: string;
+}
+
 const SPANISH_NEEDS: [NeedCategory, RegExp][] = [
   ['food', /\b(comida|hambre|despensa)\b/i],
   ['utilities', /\b(luz|electricidad|gas|agua)\b/i],
@@ -156,7 +164,9 @@ export class Advocate {
   readonly model?: ModelClient;
   readonly community: Community;
   readonly egress: Egress;
-  private readonly pseudSalt = randomBytes(32);
+  private pseudSalt = randomBytes(32);
+  private readonly opts: AdvocateOptions;
+  private readonly keys: { master: Buffer; approval: Buffer };
 
   /** Evidence is pseudonymous: subjects are keyed hashes, and no message content is recorded. */
   pseud(subject: string): string {
@@ -168,10 +178,12 @@ export class Advocate {
   }
 
   constructor(o: AdvocateOptions = {}) {
+    this.opts = o;
+    this.keys = { master: o.masterKey ?? randomBytes(32), approval: o.approvalSecret ?? randomBytes(32) };
     this.store = new AppStore();
     this.evidence = o.evidence ?? new EvidenceStore();
-    this.sealed = new SealedStore(o.masterKey ?? randomBytes(32), this.ledger);
-    this.approvals = new ApprovalService(o.approvalSecret ?? randomBytes(32));
+    this.sealed = new SealedStore(this.keys.master, this.ledger);
+    this.approvals = new ApprovalService(this.keys.approval);
     this.outbound = new OutboundGate(this.approvals, async (a) => void this.outboundLog.push(a));
     this.catalog = o.catalog ?? DAYTON_CATALOG;
     this.today = o.today ?? (() => new Date().toISOString().slice(0, 10));
@@ -181,6 +193,37 @@ export class Advocate {
     this.egress = o.egress ?? new EgressTwin();
     this.fromNumber = o.fromNumber ?? '+19375550100';
     this.playbooks = loadPlaybooks(o.playbookDir ?? fileURLToPath(new URL('../../../../control/playbooks', import.meta.url)));
+  }
+
+  /**
+   * An independent copy of everything the Advocate holds, for exhaustive testing: the walk forks the world at each
+   * state instead of replaying every path from the start. Evidence starts empty; the community is not copied.
+   */
+  fork(): Advocate {
+    return this.restore(this.snapshot());
+  }
+
+  /** Everything the Advocate holds, as plain data (small: a few kilobytes per student). */
+  snapshot(): AdvocateSnapshot {
+    return {
+      docs: this.store.db.prepare('SELECT collection, id, student_id, json FROM docs ORDER BY rowid').all() as AdvocateSnapshot['docs'],
+      ledger: this.ledger.dump(),
+      sealed: this.sealed.dump(),
+      onboarding: [...this.onboarding].map(([k, v]) => [k, structuredClone(v)]),
+      salt: this.pseudSalt.toString('hex'),
+    };
+  }
+
+  /** A new Advocate holding exactly what a snapshot holds, with this one's options and keys. */
+  restore(s: AdvocateSnapshot): Advocate {
+    const b = new Advocate({ ...this.opts, masterKey: this.keys.master, approvalSecret: this.keys.approval, evidence: new EvidenceStore() });
+    const ins = b.store.db.prepare('INSERT INTO docs (collection, id, student_id, json) VALUES (?, ?, ?, ?)');
+    for (const r of s.docs) ins.run(r.collection, r.id, r.student_id, r.json);
+    b.ledger.load(s.ledger);
+    b.sealed.load(s.sealed);
+    for (const [k, v] of s.onboarding) b.onboarding.set(k, structuredClone(v) as Onboarding);
+    b.pseudSalt = Buffer.from(s.salt, 'hex');
+    return b;
   }
 
   // ---------- students ----------
@@ -1086,7 +1129,7 @@ export class Advocate {
       studentId,
       author: 'chief-of-staff',
       urgency: 'routine',
-      text: `Added ${shifts.length === 1 ? 'your shift' : `${shifts.length} shifts`}: ${list}.${unread.length ? ` I could not read "${unread.join('", "')}". Try a day and times, like Tue 3pm-9pm.` : ''} I will plan around ${shifts.length === 1 ? 'it' : 'them'}.`,
+      text: `${sentence(`Added ${shifts.length === 1 ? 'your shift' : `${shifts.length} shifts`}: ${list}`)}${unread.length ? ` I could not read "${unread.join('", "')}". Try a day and times, like Tue 3pm-9pm.` : ''} I will plan around ${shifts.length === 1 ? 'it' : 'them'}.`,
       nextSteps: [{ label: 'See my week', action: 'week' }, { label: 'Show my day', action: 'today' }],
       why: 'From the shifts you typed.',
     };

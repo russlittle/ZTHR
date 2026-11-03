@@ -1,3 +1,4 @@
+// Verifies docs/blocks/evidence.md
 import { describe, expect, it } from 'vitest';
 import { EvidenceStore, costSummary, distribution, intentCompletion, revisionRate } from '@zthr/evidence';
 

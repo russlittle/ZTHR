@@ -57,7 +57,7 @@ export const GUIDES: Guide[] = [
     topic: 'filing taxes',
     match: /\b(tax(es)?|w-?2|1098-?t|refund)\b/i,
     steps: [
-      'Free tax preparation is available through the IRS Volunteer Income Tax Assistance program for people under its income limit.',
+      'You can get your taxes done for free through the IRS VITA program if your income is under its limit.',
       'Bring your ID, Social Security card or tax ID, every W-2 or 1099, and your 1098-T from college.',
       'Education credits can mean a bigger refund, so mention you are a student.',
     ],

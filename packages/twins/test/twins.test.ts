@@ -1,3 +1,4 @@
+// Verifies docs/blocks/twins.md
 import { describe, expect, it } from 'vitest';
 import { CalendarFeedTwin, SmsTwin, checkCalibration } from '@zthr/twins';
 

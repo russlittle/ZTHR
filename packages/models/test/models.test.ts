@@ -1,3 +1,4 @@
+// Verifies docs/blocks/models.md
 import { describe, expect, it } from 'vitest';
 import { EvidenceStore } from '@zthr/evidence';
 import { BudgetExhausted, MeteredModel, OpenRouterClient, TwinModelClient, ModelUnavailable } from '@zthr/models';

@@ -39,3 +39,25 @@ describe('explore', () => {
     expect(r.verbsSeen.set).toBe(2);
   });
 });
+
+describe('explore with fork', () => {
+  it('reaches the same states as replay, without replaying paths', () => {
+    let performs = 0;
+    const spec = (fork: boolean) =>
+      explore<{ n: number }, number>({
+        seeds: [{ name: 'z', make: () => ({ n: 0 }) }],
+        actions: (w) => (w.n < 6 ? ['inc', 'reset'] : ['reset']),
+        perform: (w, a) => (performs++, a === 'inc' ? ++w.n : (w.n = 0)),
+        signature: (w) => String(w.n),
+        freeze: fork ? (w) => ({ ...w }) : undefined,
+        thaw: fork ? (f) => ({ ...(f as { n: number }) }) : undefined,
+      });
+    performs = 0;
+    const replayed = spec(false);
+    const viaReplay = performs;
+    performs = 0;
+    const forked = spec(true);
+    expect(forked.states).toBe(replayed.states);
+    expect(performs).toBeLessThan(viaReplay);
+  });
+});

@@ -1,3 +1,5 @@
+// Verifies docs/blocks/runtime.md
+// Verifies docs/flows/drafts-and-approval.md
 import { describe, expect, it } from 'vitest';
 import { randomBytes } from 'node:crypto';
 import {

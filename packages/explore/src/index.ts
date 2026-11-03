@@ -26,6 +26,12 @@ export interface ExploreSpec<W, O> {
   signature: (world: W, last: O | undefined) => string;
   /** Invariants checked after every action. Return a list of problems; empty means fine. */
   check?: (world: W, step: Step<O>, path: string[]) => string[];
+  /**
+   * Freeze a world to plain data and thaw it back. When given, the walk keeps a frozen copy of each state to
+   * expand instead of replaying its path from the start; frozen copies are small, so wide walks fit in memory.
+   */
+  freeze?: (world: W) => unknown;
+  thaw?: (frozen: unknown) => W;
   /** Safety valve for runaway state spaces; reaching it is reported, never hidden. */
   maxNodes?: number;
 }
@@ -58,6 +64,8 @@ export function explore<W, O>(spec: ExploreSpec<W, O>): ExploreReport {
   for (const seed of spec.seeds) {
     const seen = new Set<string>();
     const queue: string[][] = [[]];
+    const frozen = new Map<string[], { data: unknown; last: O | undefined }>();
+    const keep = !!(spec.freeze && spec.thaw);
     let transitions = 0;
     let maxDepth = 0;
     let exhausted = true;
@@ -68,8 +76,9 @@ export function explore<W, O>(spec: ExploreSpec<W, O>): ExploreReport {
       return { world, last };
     };
     {
-      const { world, last } = replay([]);
-      seen.add(spec.signature(world, last));
+      const start = replay([]);
+      seen.add(spec.signature(start.world, start.last));
+      if (keep) frozen.set(queue[0]!, { data: spec.freeze!(start.world), last: start.last });
     }
     while (queue.length) {
       if (seen.size >= max) {
@@ -77,12 +86,14 @@ export function explore<W, O>(spec: ExploreSpec<W, O>): ExploreReport {
         break;
       }
       const path = queue.shift()!;
-      const base = replay(path);
+      const stored = keep ? frozen.get(path)! : undefined;
+      frozen.delete(path);
+      const base = stored ? { world: spec.thaw!(stored.data), last: stored.last } : replay(path);
       const options = [...new Set(spec.actions(base.world, base.last))];
       for (const action of options) {
         actionsSeen.add(action);
         report.verbsSeen[verbOf(action)] = (report.verbsSeen[verbOf(action)] ?? 0) + 1;
-        const { world } = replay(path);
+        const world = stored ? spec.thaw!(stored.data) : replay(path).world;
         const next = [...path, action];
         let outcome: O;
         transitions++;
@@ -98,6 +109,7 @@ export function explore<W, O>(spec: ExploreSpec<W, O>): ExploreReport {
         seen.add(sig);
         maxDepth = Math.max(maxDepth, next.length);
         queue.push(next);
+        if (keep) frozen.set(next, { data: spec.freeze!(world), last: outcome });
       }
     }
     report.seeds.push({ name: seed.name, states: seen.size, transitions, maxDepth, exhausted });

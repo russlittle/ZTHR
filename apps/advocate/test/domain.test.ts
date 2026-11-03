@@ -1,3 +1,5 @@
+// Verifies docs/flows/planning.md
+// Verifies docs/flows/money.md
 import { describe, expect, it } from 'vitest';
 import { classifyAiPolicy, parseSyllabus } from '../src/domain/syllabus.js';
 import { checkTone, readingGrade } from '../src/domain/tone.js';

@@ -24,7 +24,7 @@ steps:
     text: Post-9/11 GI Bill students verify enrollment with VA each month by text or email to keep the housing allowance coming. I'll remind you near the end of each month.
   - id: watch-payment
     kind: wait
-    text: I'm watching for your housing allowance after certification.
+    text: Once your school sends your classes to the VA, I'll watch for your housing money.
     timeout_days: 35
     on_timeout: The payment looks late. I can draft a note to your certifying official and list VA's contact options.
 recovery:

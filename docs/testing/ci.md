@@ -7,6 +7,16 @@ The GitHub workflow is manual-only, so a push never starts GitHub-hosted compute
 Playwright walk with accessibility checks, and mutation testing (nightly only). It then records the run's compute
 cost, builds the evidence page, and uploads the evidence to a Cloud Storage bucket. Any failing step fails the build.
 
+```mermaid
+flowchart LR
+  push[Push to any branch but main] --> trig[zthr-factory trigger]
+  nightly[2:17 a.m. Eastern] --> trig2[zthr-nightly trigger]
+  trig & trig2 --> start[start: cost clock, git history] --> install --> typecheck --> test --> gates --> journeys --> walk[browser walk] --> mutation{nightly?}
+  mutation -- yes --> stryker[Stryker, all CPUs]
+  mutation -- no --> skip[skip]
+  stryker & skip --> cost[record cost] --> page[evidence page] --> keep[(evidence bucket)]
+```
+
 ## One-time setup
 
 Open [Cloud Shell](https://console.cloud.google.com/cloudshell) signed in to the account that owns `zthr-ai` and run:
@@ -52,3 +62,9 @@ sure the machine has a rate in `control/ci-rates.json`; the cost step refuses a 
 
 Model review is optional and is not part of this build. To run it, set `REVIEW_API_KEY` (and `REVIEW_BASE_URL` for
 any OpenAI-compatible provider) and run `npx tsx tools/review.ts --base HEAD~1`.
+
+## Verified by
+
+<!-- verified-by:start -->
+- [`tools/test/ci-cost.test.ts`](../../tools/test/ci-cost.test.ts) (3 test definitions)
+<!-- verified-by:end -->

@@ -15,6 +15,7 @@ import { SNAP_FY2027 } from '../apps/advocate/src/eligibility/params.js';
 import type { OutboundMessage, Student } from '../apps/advocate/src/domain/types.js';
 import type { ActionResult } from '../apps/advocate/src/agents/actions.js';
 import { CONTROL, JOURNEY_DIR, OUT, ROOT, readLock } from './lib.js';
+import { links, type Links } from './doc-links.js';
 
 /**
  * Every named gate states what it protects, carries the planted defects that
@@ -339,6 +340,27 @@ const deadEndGate: Gate<Perform> = {
   ],
 };
 
+// ---- docs linked: every test names the doc it verifies, and every doc has a test ----
+
+const docsGate: Gate<() => Links> = {
+  id: 'docs-linked',
+  protects: 'Every test file names the document it verifies, that document exists, and every document is verified by a test.',
+  definition: def(links),
+  check: (read) => {
+    const l = read();
+    return l.problems.length ? fail('docs-linked', l.problems.slice(0, 4).join('; ')) : pass('docs-linked', `${l.testsToDocs.size} test files linked to ${new Set([...l.testsToDocs.values()].flat()).size} documents`);
+  },
+  falsification: [
+    { name: 'planted test file with no doc', plant: () => () => ({ testsToDocs: new Map([['x.test.ts', []]]), problems: ['x.test.ts does not say which doc it verifies'] }) },
+    { name: 'planted link to a missing doc', plant: () => () => { const l = links(); return { ...l, problems: [...l.problems, 'y.test.ts names docs/missing.md, which does not exist'] }; } },
+  ],
+};
+
+/** What each gate protects and what it is proven against, for the docs and the console. */
+export function gateCatalog(): { id: string; protects: string; plants: string[] }[] {
+  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
+}
+
 export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdict[]; proofs: Proof[] }> {
   const ev = store ?? (mkdirSync(OUT, { recursive: true }), new EvidenceStore(`${OUT}/evidence.db`));
   const proofs: Proof[] = [];
@@ -362,6 +384,7 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   await run(lockGate, () => ({ lock: readLock() }));
   await run(moderationGate, () => () => new Community(() => DAY));
   await run(deadEndGate, () => realPerform);
+  await run(docsGate, () => () => links());
   await run(egressGate, () => ({ ...sourceFiles(`${ROOT}apps/advocate/src`), ...sourceFiles(`${ROOT}packages`) }));
   writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
   return { verdicts, proofs };

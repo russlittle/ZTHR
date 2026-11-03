@@ -88,7 +88,7 @@ p{margin:.4em 0}
 .brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700;font-size:18px}
 .brand-mark{width:28px;height:28px;border-radius:9px;background:var(--action);display:grid;place-items:center;color:var(--action-ink)}
 .tabs{display:flex;gap:4px;margin-left:auto}
-.tabs a{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;color:var(--muted);text-decoration:none;font-weight:700;font-size:15px}
+.tabs a{display:flex;align-items:center;gap:6px;min-height:44px;padding:8px 12px;border-radius:999px;color:var(--muted);text-decoration:none;font-weight:700;font-size:15px}
 .tabs a[aria-current="page"]{background:var(--calm);color:var(--ink)}
 main.app{max-width:760px;margin:0 auto;padding:20px 16px 110px}
 @media (max-width:640px){

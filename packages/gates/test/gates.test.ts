@@ -1,3 +1,5 @@
+// Verifies docs/blocks/gates.md
+// Verifies docs/testing/mutation.md
 import { describe, expect, it } from 'vitest';
 import {
   checkDatum, checkRatchet, checkRegister, combine, fail, gateHash, pass, proveGate, runProvenGate, unknown, verifyFloorChange,

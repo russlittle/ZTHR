@@ -10,7 +10,7 @@
 #                    The cost clock stops at the record-cost step; the evidence page and upload after it are not counted.
 #                    Without it, the cost history holds only the current run.
 #
-# Setup: docs/ci-on-gcp.md
+# Setup: docs/testing/ci.md
 
 substitutions:
   _MUTATION: 'false'
@@ -23,7 +23,7 @@ options:
   substitution_option: ALLOW_LOOSE
   logging: CLOUD_LOGGING_ONLY
 
-timeout: 3600s
+timeout: 7200s
 
 steps:
   - id: start
@@ -68,8 +68,26 @@ steps:
     env: ['COMMIT=$COMMIT_SHA']
     args: ['-c', 'npm run journeys -- --release "$${COMMIT:-manual}"']
 
+  - id: docs
+    # Docs derived from the system are current, and every test and doc is linked both ways.
+    name: node:22-bookworm
+    entrypoint: npm
+    args: ['run', 'docs:check']
+
+  - id: explore
+    # The button walk: every student, every depth, app and text, to a fixpoint. One process per CPU.
+    name: node:22-bookworm
+    entrypoint: npm
+    args: ['run', 'explore']
+
+  - id: crawl
+    # The feature walk: every page, link and form for every student, then every combination of settings.
+    name: node:22-bookworm
+    entrypoint: bash
+    args: ['-c', 'npm run crawl && npm run crawl -- --settings']
+
   - id: walk
-    # Walk like a user: start the server, drive it by accessible names, fail on serious accessibility violations.
+    # Walk like a user in a real browser: intents with video, then every screen at two widths in two themes.
     name: node:22-bookworm
     entrypoint: bash
     args:
@@ -78,9 +96,9 @@ steps:
         set -e
         npm install --no-save playwright@1.63.0
         npx playwright install --with-deps chromium
-        ADVOCATE_TODAY=2026-11-02 PORT=8787 npx tsx apps/advocate/src/server/main.ts > server.log 2>&1 &
-        for i in $$(seq 1 30); do curl -sf localhost:8787/demo > /dev/null && break; sleep 1; done
-        npx tsx tools/ui/walk.ts http://localhost:8787 evidence-out/ui || { cat server.log; exit 1; }
+        ADVOCATE_TODAY=2026-11-02 PORT=8787 ADVOCATE_BASE=/advocate npx tsx apps/advocate/src/server/main.ts > server.log 2>&1 &
+        for i in $$(seq 1 30); do curl -sf localhost:8787/advocate/ > /dev/null && break; sleep 1; done
+        npx tsx tools/ui/walk.ts http://localhost:8787/advocate evidence-out/ui || { cat server.log; exit 1; }
 
   - id: mutation
     name: node:22-bookworm
