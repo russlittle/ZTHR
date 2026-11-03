@@ -204,7 +204,7 @@ table.t th{font-size:13px;color:var(--muted)}
 .side .grp{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:20px 10px 6px;padding-top:12px;border-top:1px solid var(--line)}
 .side .brand{margin:2px 6px 8px}
 .side a:hover{background:color-mix(in srgb,var(--calm) 60%,transparent)}
-main.con{padding:24px 28px 60px;max-width:1200px}
+main.con{padding:24px 28px 60px;max-width:1200px;min-width:0}
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:14px 0}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;box-shadow:var(--shadow)}
 .kpi .n{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
