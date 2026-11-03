@@ -98,6 +98,6 @@ export function aiPolicySentence(policy: AiPolicy, course: string): string {
     case 'unclear':
       return `${course} mentions AI but the rule isn't clear. Worth asking your instructor before using it.`;
     case 'unstated':
-      return `${course}'s syllabus doesn't say anything about AI. Ask your instructor before using it.`;
+      return `The ${course} syllabus does not say if AI is okay. Ask your instructor first.`;
   }
 }

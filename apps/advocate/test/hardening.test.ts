@@ -48,7 +48,7 @@ describe('SNAP exactness', () => {
     const a = makeAdvocate();
     const r = snap(mk(a, { monthlyGrossIncome: 900 }, { creditHours: undefined }), TODAY);
     expect(r.status).toBe('needs-info');
-    expect(r.needs).toEqual(expect.arrayContaining(['How many credit hours you are taking']));
+    expect(r.needs).toEqual(expect.arrayContaining(['How many credits you take']));
   });
 });
 

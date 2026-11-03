@@ -65,19 +65,19 @@ export function snap(s: Student, on: string): EligibilityResult {
       studentOk = true;
       reasons.push(`You meet a student exemption: ${exemptions.join('; ')}.`);
     } else if (s.enrollment.weeklyWorkHours === undefined || s.enrollment.workStudy === undefined) {
-      needs.push('How many hours a week you work, and whether you have work-study');
+      needs.push('Hours you work each week, and if you have work-study');
     } else {
       studentOk = false;
       reasons.push('Students enrolled half-time or more usually need an exemption, such as working 20 hours a week, work-study, or caring for a young child.');
     }
-    if (credits === undefined) needs.push('How many credit hours you are taking');
+    if (credits === undefined) needs.push('How many credits you take');
   }
 
   const size = Math.max(1, s.household.size);
   const gross = s.household.monthlyGrossIncome;
   let incomeOk: boolean | undefined;
   let estimate: number | undefined;
-  if (gross === undefined) needs.push('Your household income each month');
+  if (gross === undefined) needs.push('Money your home gets each month');
   else {
     const p = SNAP_FY2027.value;
     const grossLimit = at(p.gross130, size, p.grossExtra, (x) => x);
@@ -112,7 +112,7 @@ export function lifeline(s: Student, on: string): EligibilityResult {
     return { ...base, status: 'likely', reasons: [`You receive ${viaProgram.join(', ').toUpperCase()}, which qualifies.`], needs: [], estimatedMonthlyValue: p.monthlyDiscount };
   }
   const gross = s.household.monthlyGrossIncome;
-  if (gross === undefined) return { ...base, status: 'needs-info', reasons: [], needs: ['Your household income each month'] };
+  if (gross === undefined) return { ...base, status: 'needs-info', reasons: [], needs: ['Money your home gets each month'] };
   const limit = p.base + p.perAdditional * Math.max(0, s.household.size - 1);
   if (gross * 12 <= limit) return { ...base, status: 'likely', reasons: [`Household income is under $${limit.toLocaleString('en-US')} a year.`], needs: [], estimatedMonthlyValue: p.monthlyDiscount };
   return { ...base, status: 'unlikely', reasons: [`Household income is over $${limit.toLocaleString('en-US')} a year.`], needs: [] };
@@ -128,7 +128,7 @@ export function heap(s: Student, on: string): EligibilityResult {
   };
   if (!inPeriod(OHIO_HEAP_2026_27, on)) return { ...base, status: 'unconfirmed', reasons: ['HEAP limits for this season have not been verified yet.'], needs: [] };
   const gross = s.household.monthlyGrossIncome;
-  if (gross === undefined) return { ...base, status: 'needs-info', reasons: [], needs: ['Your household income each month'] };
+  if (gross === undefined) return { ...base, status: 'needs-info', reasons: [], needs: ['Money your home gets each month'] };
   const p = OHIO_HEAP_2026_27.value;
   const limit = p.annual[Math.min(s.household.size, p.annual.length) - 1]!;
   return gross * 12 <= limit
@@ -146,7 +146,7 @@ export function sinclairEmergencyGrant(s: Student): EligibilityResult {
   };
   if (s.enrollment.college !== 'sinclair') return { ...base, status: 'unlikely', reasons: ['This grant is for Sinclair students.'], needs: [] };
   const needs: string[] = [];
-  if (s.enrollment.creditHours === undefined) needs.push('How many credit hours you are taking');
+  if (s.enrollment.creditHours === undefined) needs.push('How many credits you take');
   if (s.enrollment.degreeSeeking === undefined) needs.push('Whether you are in a degree or certificate program');
   if (needs.length > 0) return { ...base, status: 'needs-info', reasons: [], needs };
   if ((s.enrollment.creditHours ?? 0) < 6) return { ...base, status: 'unlikely', reasons: ['It requires at least 6 credit hours this semester.'], needs: [] };

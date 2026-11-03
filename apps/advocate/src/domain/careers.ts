@@ -37,6 +37,7 @@ export function careerText(s: Student): string {
   ].join(' ');
 }
 
-export function fairChanceText(): string {
+export function fairChanceText(brief = false): string {
+  if (brief) return 'In Ohio, a CQE can lift bars a record puts on many jobs. You petition the court in your county. Free legal help can walk you through it.';
   return `${CQE.what} Here is how to start:\n${CQE.how.map((h, i) => `${i + 1}. ${h}`).join('\n')}\nNothing about this is saved unless you ask me to.`;
 }

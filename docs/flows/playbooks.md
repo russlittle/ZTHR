@@ -73,7 +73,7 @@ flowchart TD
   start((Start)) --> account
   account["account: Make your StudentAid.gov account if you don't have one. You'…"]
   account --> parents_question
-  parents_question{"parents-question: Can you get your parents' information and their help signing…"}
+  parents_question{"parents-question: Can your parents give you their facts and sign the FAFSA wit…"}
   parents_question -- yes --> standard_file
   parents_question -- no --> unusual_circumstances
   standard_file["standard-file: Fill out the 2027-28 FAFSA at studentaid.gov. The form is op…"]

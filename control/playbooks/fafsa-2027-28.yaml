@@ -17,7 +17,7 @@ steps:
     done_when: student-confirms
   - id: parents-question
     kind: question
-    text: Can you get your parents' information and their help signing the FAFSA?
+    text: Can your parents give you their facts and sign the FAFSA with you?
     branches:
       "yes": standard-file
       "no": unusual-circumstances
@@ -28,7 +28,7 @@ steps:
     next: submission-summary
   - id: unusual-circumstances
     kind: checklist
-    text: When the FAFSA asks, say you have unusual circumstances. You can finish it without parent information and get an estimate of your aid. Your college makes the final decision.
+    text: When the FAFSA asks, say you have unusual circumstances. You can finish it without your parents and see about how much aid you may get. Your college decides.
     done_when: student-confirms
   - id: gather-letter
     kind: documents

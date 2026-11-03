@@ -706,7 +706,7 @@ export class Advocate {
     const text = results.length
       ? `Good news. You likely qualify for ${results.length === 1 ? 'this' : `these ${results.length}`}:\n${lines.join('\n')}\nWant me to start the first one? I'll fill in what I can.`
       : needsInfo.length
-        ? `I need a bit more to check: ${[...new Set(needsInfo.flatMap((r) => r.needs))].slice(0, 2).join(', ')}.`
+        ? `To check, I need to know:\n${[...new Set(needsInfo.flatMap((r) => r.needs))].slice(0, 2).join('\n')}`
         : "I didn't find a match in the programs I check yet, but there's more help than benefits. Tell me what's hard right now and I'll look.";
     const first = results[0];
     return {
@@ -880,7 +880,7 @@ export class Advocate {
         ? 'For a paper, a second reader helps most. Try the writing center, a tutor, or a classmate who trades drafts with you.'
         : kind === 'exam'
           ? 'For a test, a tutor or a study group helps most, plus your instructor\'s office hours.'
-          : 'Your instructor\'s office hours and the tutoring center are the best places to start.';
+          : 'Start with your instructor\'s office hours or the tutoring center.';
     return {
       studentId,
       author: 'coursework-planner',
@@ -1089,7 +1089,7 @@ export class Advocate {
   /** Only when the student brings it up. Nothing is inferred, stored or opened from a sealed fact. */
   fairChanceMessage(studentId: string): OutboundMessage {
     this.ev('career', studentId, { kind: 'fair-chance' });
-    return { studentId, author: 'navigator', urgency: 'routine', text: fairChanceText(), nextSteps: [{ label: 'Get free legal help with it', action: 'need:legal' }, { label: 'Career help at my college', action: 'career' }], why: `About ${CQE.name}, from the Ohio Department of Rehabilitation and Correction.` };
+    return { studentId, author: 'navigator', urgency: 'routine', text: fairChanceText(this.student(studentId).dial.depth === 'brief'), nextSteps: [{ label: 'Get free legal help with it', action: 'need:legal' }, { label: 'Career help at my college', action: 'career' }], why: `About ${CQE.name}, from the Ohio Department of Rehabilitation and Correction.` };
   }
 
   // ---------- meal plans (PRD HH-2) ----------

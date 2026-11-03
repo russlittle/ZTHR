@@ -70,7 +70,7 @@ export const DAYTON_CATALOG: Resource[] = [
     serves: { colleges: ['sinclair'] },
     url: 'https://sinclair.edu/emergencygrant',
     eligibility: { rule: 'sinclair-emergency-grant', text: 'Enrolled at least 6 credit hours this semester in a degree or certificate program, with a documented emergency. GPA, aid status and past awards may be considered. Once while at Sinclair.' },
-    howToApply: ['Get a paper that shows the emergency, like a late bill or a notice.', 'Apply through the link on sinclair.edu/emergencygrant.'],
+    howToApply: ['Get a paper that shows the need, like a late bill.', 'Apply through the link on sinclair.edu/emergencygrant.'],
     documents: ['Proof of the emergency (bill, notice, or estimate)'],
     prefill: ['chosenName', 'phone', 'creditHours'],
     source: { url: 'https://sinclair.edu/emergencygrant', license: 'public-information' },

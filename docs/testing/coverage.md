@@ -22,42 +22,55 @@ pie showData title 768 tests
 
 ## Button walk
 
-1,434 states and 36,731 transitions across 3 seeds; every seed ran to its fixpoint; 0 violations.
+67,074 states and 2,851,974 transitions across 36 seeds; every seed ran to its fixpoint; 21920 violations.
 
 ```mermaid
 xychart-beta
   title "Button walk: transitions per student"
-  x-axis ["Maria"]
+  x-axis ["Alex", "Ana", "Darnell", "Destiny", "Jayden", "Keisha", "Linda", "Luis", "Maria", "Priya", "Sam", "Tyler"]
   y-axis "Transitions"
-  bar [15735]
+  bar [134346, 35124, 40068, 81356, 81356, 109196, 40068, 137514, 41946, 81260, 85148, 83276]
 ```
 
 | Verb | Times tried |
 | --- | --- |
-| `need` | 12,879 |
-| `situation` | 7,155 |
-| `show-draft` | 1,494 |
-| `find-help` | 1,473 |
-| `today` | 1,431 |
-| `screen` | 1,431 |
-| `week` | 1,431 |
-| `settings` | 1,431 |
-| `review-deadlines` | 1,431 |
-| `add-shifts` | 1,431 |
-| `upload-syllabus` | 1,431 |
-| `delete-account` | 1,431 |
-| `start-resource` | 882 |
-| `share` | 462 |
-| `call` | 357 |
-| `hold-block` | 126 |
-| `plan` | 98 |
-| `start-program` | 84 |
-| `dial` | 84 |
-| `why-qualify` | 42 |
-| `calendar-steps` | 42 |
-| `edit-steps` | 42 |
-| `draft-instructor-note` | 42 |
-| `approve` | 21 |
+| `say` | 1,139,016 |
+| `need` | 603,342 |
+| `situation` | 335,190 |
+| `show-draft` | 69,522 |
+| `find-help` | 67,830 |
+| `today` | 67,038 |
+| `screen` | 67,038 |
+| `week` | 67,038 |
+| `settings` | 67,038 |
+| `review-deadlines` | 67,038 |
+| `add-shifts` | 67,038 |
+| `upload-syllabus` | 67,038 |
+| `delete-account` | 67,038 |
+| `start-resource` | 30,312 |
+| `call` | 17,100 |
+| `share` | 15,696 |
+| `playbook` | 8,280 |
+| `dial` | 4,416 |
+| `draft` | 2,520 |
+| `plan` | 2,322 |
+| `hold-block` | 2,232 |
+| `start-program` | 1,728 |
+| `ask` | 1,656 |
+| `remind` | 1,656 |
+| `contact` | 1,656 |
+| `plan-next` | 1,656 |
+| `find-tutor` | 1,656 |
+| `calendar-steps` | 1,224 |
+| `edit-steps` | 1,224 |
+| `draft-instructor-note` | 1,224 |
+| `why-qualify` | 864 |
+| `approve` | 828 |
+| `screen-more` | 792 |
+| `meals` | 648 |
+| `add-date` | 648 |
+| `fair-chance` | 216 |
+| `career` | 216 |
 
 ## Feature walk
 
