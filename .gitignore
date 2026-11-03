@@ -11,3 +11,4 @@ site-out/
 site-artifact/
 site-static.entry.html
 site-static.advocate.html
+.cov-*/
