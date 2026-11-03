@@ -21,6 +21,8 @@ TZ_NAME="${TZ_NAME:-America/New_York}"
 
 say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 exists() { "$@" >/dev/null 2>&1; }
+# New service accounts take a little while to become visible to IAM; retry instead of failing.
+retry() { local n=0; until "$@" >/dev/null; do n=$((n + 1)); [ "$n" -ge 12 ] && return 1; echo "  waiting for IAM to catch up..."; sleep 10; done; }
 
 gcloud config set project "$PROJECT" >/dev/null
 NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
@@ -44,20 +46,20 @@ say "2/8 Build service account ${SA}"
 exists gcloud iam service-accounts describe "$SA" ||
   gcloud iam service-accounts create "$SA_NAME" --display-name "ZTHR factory builds"
 for role in roles/logging.logWriter roles/cloudbuild.builds.editor; do
-  gcloud projects add-iam-policy-binding "$PROJECT" --member "serviceAccount:${SA}" --role "$role" --condition None >/dev/null
+  retry gcloud projects add-iam-policy-binding "$PROJECT" --member "serviceAccount:${SA}" --role "$role" --condition None
 done
 # Cloud Scheduler runs the nightly trigger as this account, which must be allowed to act as itself.
-gcloud iam service-accounts add-iam-policy-binding "$SA" --member "serviceAccount:${SA}" \
-  --role roles/iam.serviceAccountUser >/dev/null
+retry gcloud iam service-accounts add-iam-policy-binding "$SA" --member "serviceAccount:${SA}" \
+  --role roles/iam.serviceAccountUser
 # The Cloud Build service agent stores the GitHub connection's token in Secret Manager.
-gcloud projects add-iam-policy-binding "$PROJECT" --member "serviceAccount:${CB_AGENT}" \
-  --role roles/secretmanager.admin --condition None >/dev/null
+retry gcloud projects add-iam-policy-binding "$PROJECT" --member "serviceAccount:${CB_AGENT}" \
+  --role roles/secretmanager.admin --condition None
 
 say "3/8 Evidence bucket ${BUCKET}"
 exists gcloud storage buckets describe "$BUCKET" ||
   gcloud storage buckets create "$BUCKET" --location "$REGION" --uniform-bucket-level-access
-gcloud storage buckets add-iam-policy-binding "$BUCKET" --member "serviceAccount:${SA}" \
-  --role roles/storage.objectAdmin >/dev/null
+retry gcloud storage buckets add-iam-policy-binding "$BUCKET" --member "serviceAccount:${SA}" \
+  --role roles/storage.objectAdmin
 
 say "4/8 GitHub connection"
 if ! exists gcloud builds connections describe "$CONNECTION" --region "$REGION"; then
