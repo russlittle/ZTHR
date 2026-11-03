@@ -34,7 +34,7 @@ const SAMPLE: Record<string, string> = {
   body: 'I need help with my electric bill',
 };
 const sampleFor = (url: string, name: string): string =>
-  url.endsWith('/syllabus') && name === 'text' ? 'Nov 20 Paper 1 due\nDec 4 Final exam' : url.endsWith('/shifts') && name === 'text' ? 'Tue 3pm-9pm, Thu 4-10pm' : (SAMPLE[name] ?? 'test');
+  url.endsWith('/syllabus') && name === 'text' ? 'Nov 20 Paper 1 due\nDec 4 Final exam' : url.endsWith('/letter') && name === 'text' ? 'Montgomery County Job and Family Services. Your interview is scheduled for Nov 18. Call (937) 225-4148.' : url.endsWith('/shifts') && name === 'text' ? 'Tue 3pm-9pm, Thu 4-10pm' : (SAMPLE[name] ?? 'test');
 
 const attr = (tag: string, name: string) => tag.match(new RegExp(`\\s${name}="([^"]*)"`))?.[1]?.replace(/&amp;/g, '&');
 

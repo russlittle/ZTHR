@@ -33,7 +33,7 @@ const SITUATIONS = ['eviction', 'utility-shutoff', 'car', 'no-food', 'rent-short
 export const HELP_SCREEN = [...NEEDS.map((n) => `need:${n}`), ...SITUATIONS.map((x) => `situation:${x}`)];
 
 /** Things students type, including a number to pick from the last message's options. */
-export const TYPED = ['today', 'plan', 'fafsa', 'I need food', 'what is a registrar', 'how do I sign a lease', 'can you write my essay', 'brief', 'walk me through', 'I work Tue 3pm-9pm', '1', '2', '3', 'yes', 'no', 'asdf qwerty'];
+export const TYPED = ['today', 'plan', 'fafsa', 'I need food', 'what is a registrar', 'how do I sign a lease', 'can you write my essay', 'brief', 'walk me through', 'I work Tue 3pm-9pm', 'can you make me a meal plan', 'explain this letter: FINAL NOTICE. Your electric service will be disconnected on 11/20/2026 unless $412.55 is paid.', '1', '2', '3', 'yes', 'no', 'asdf qwerty'];
 
 export const IDEMPOTENT = new Set(['mark-done', 'confirm-deadlines', 'confirm-deadline', 'dismiss', 'source-on', 'source-off', 'dial', 'pulses-off', 'pulses-on', 'hold-block', 'calendar-steps', 'remind', 'remind-meeting']);
 
