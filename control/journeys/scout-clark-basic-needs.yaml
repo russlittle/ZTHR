@@ -1,0 +1,19 @@
+id: scout-clark-basic-needs
+persona: any
+phase: 4
+goal: A student at Clark State College who needs food, housing or utility help
+  is offered verified resources that serve Clark County, or told plainly that
+  none is verified yet and the gap is counted.
+forbidden:
+  - a resource is offered that is stale or does not serve the student's county
+  - a gap is hidden instead of counted
+budget:
+  actions: 3
+  ms: 5000
+requirements:
+  - NAV-6
+  - P11
+modes:
+  - standard
+channels:
+  - app

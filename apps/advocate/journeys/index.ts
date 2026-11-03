@@ -1,4 +1,9 @@
 import type { JourneyContext, JourneyImpl } from '@zthr/intent';
+import { routedEgress, type Egress } from '@zthr/egress';
+import { startAll } from '../../campus-services/src/index.js';
+import { openAt } from '../src/integrations/campus.js';
+import { PERSONAS } from '../src/server/demo.js';
+import { COLLEGES } from '../src/domain/colleges.js';
 import { Advocate, type Delivered } from '../src/agents/advocate.js';
 import { DAYTON_CATALOG } from '../src/catalog/dayton.js';
 import { checkTone, readingGrade } from '../src/domain/tone.js';
@@ -75,6 +80,14 @@ Tue Nov 4 - Essay 2 draft due
 Thursday, November 6: Essay 2 final due
 11/18 Quiz on rhetorical appeals
 Dec 9 Final portfolio due`;
+
+/** An app wired to the synthetic campus services through its egress door, at a campus-local wall time. */
+function campusApp(localIso: string, scenario?: string, egress?: Egress) {
+  let now = new Date(`${localIso}-05:00`);
+  const e = egress ?? routedEgress(startAll(), undefined, (): Record<string, string> => (scenario ? { 'x-twin-scenario': scenario } : {}));
+  const a = new Advocate({ today: () => localIso.slice(0, 10), now: () => now, egress: e });
+  return { a, setNow: (iso: string) => void (now = new Date(`${iso}-05:00`)) };
+}
 
 export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
   'persona-1b-bill-gap': async (app, ctx) => {
@@ -323,9 +336,9 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
     ctx.act('look for food');
     const food = app.a.findHelp(s.id, 'food');
     ctx.forbid('a resource is offered that is stale or the student is ineligible for', food.options.some((o) => o.resource.id === 'house-of-bread' || o.eligibility?.status === 'unlikely'));
-    ctx.act('look for caregiving help');
+    ctx.act('look for tutoring help, which has no listed resource yet');
     const before = app.a.evidence.events('unmet_need').length;
-    const m = show(app, ctx, app.a.helpMessage(s.id, 'caregiving'));
+    const m = show(app, ctx, app.a.helpMessage(s.id, 'academic'));
     ctx.forbid('a gap is hidden instead of counted', !/couldn't find/.test(m.text) || app.a.evidence.events('unmet_need').length <= before);
   },
 
@@ -438,6 +451,191 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
     ctx.expect(offered.length > 0 || /couldn't find/.test(m.text), 'a verified resource is offered, or the gap is said plainly');
   },
 
+  'p2-food-on-campus-late': async (_app, ctx) => {
+    for (const [at, scenario] of [['2026-11-02T23:30', undefined], ['2026-11-03T03:00', undefined], ['2026-11-02T23:30', 'outage']] as const) {
+      const { a } = campusApp(at, scenario);
+      const s = PERSONAS.Jayden!(a);
+      a.setDial(s.id, { depth: ctx.mode, channel: ctx.channel });
+      await a.operator.tick();
+      const [m] = say({ a }, ctx, a.student(s.id), "what's open on campus?");
+      const feed = a.campusFeed('wright-state');
+      if (scenario === 'outage') {
+        ctx.forbid('a missing dining feed is shown as nothing being open', !m || /Nothing on campus is open/.test(m.text));
+        ctx.expect(!!m && /can't see campus dining/.test(m.text), 'says plainly it cannot see campus dining');
+        continue;
+      }
+      const { date, min } = a.localNow();
+      const reallyOpen = new Set(openAt(feed!, date, min).map((o) => o.location.name));
+      const named = (feed?.locations ?? []).filter((l) => m?.text.includes(`${l.name},`)).map((l) => l.name);
+      ctx.forbid('a place is said to be open when its posted hours say it is closed', named.some((n) => !reallyOpen.has(n)), named.join(', '));
+      ctx.expect(reallyOpen.size ? /Open now on campus/.test(m!.text) : /Nothing on campus is open right now\. .+ opens/.test(m!.text), 'what is open, or what opens next');
+      forbidTone({ a }, ctx, a.student(s.id));
+    }
+  },
+
+  'p2-bus-to-class': async (_app, ctx) => {
+    const { a, setNow } = campusApp('2026-11-02T06:30', 'snow-delays');
+    const s = PERSONAS.Maria!(a);
+    a.setDial(s.id, { depth: ctx.mode, channel: ctx.channel });
+    await a.operator.tick();
+    ctx.act('pick a home stop');
+    a.perform(s.id, 'set-stop:salem-catalpa');
+    await a.operator.tick();
+    const plan = a.commutePlans(s.id).find((p) => p.date === '2026-11-02')!;
+    ctx.forbid('a trip is offered that arrives after the class starts', a.commutePlans(s.id).some((p) => p.itineraries.some((it) => it.arrive > p.classStart)));
+    const it = plan.itineraries[0]!;
+    const dep = Number(it.depart.slice(0, 2)) * 60 + Number(it.depart.slice(3));
+    setNow(`2026-11-02T${String(Math.floor((dep - 15) / 60)).padStart(2, '0')}:${String((dep - 15) % 60).padStart(2, '0')}`);
+    await a.operator.tick();
+    const [m] = say({ a }, ctx, a.student(s.id), 'when should I leave for class?');
+    ctx.expect(!!m && m.text.startsWith('For BIO 1111'), 'says when to leave for the first class');
+    const lateBtn = m!.nextSteps.findIndex((n) => n.action.startsWith('draft:late:'));
+    ctx.expect(lateBtn === 0, 'the first choice is a note to the instructor when the bus will make the student late');
+    ctx.act('open the note');
+    const draftMsg = a.perform(s.id, m!.nextSteps[lateBtn]!.action)!.message;
+    ctx.forbid("something is sent without the student's approval", a.outboundLog.length > 0);
+    ctx.act('approve and send');
+    a.perform(s.id, draftMsg.nextSteps[0]!.action);
+    await new Promise((r) => setTimeout(r, 0));
+    ctx.expect(a.outboundLog.length === 1, 'the note goes out once, after approval');
+    setNow('2026-11-02T09:30');
+    const stale = a.nextBusMessage(s.id);
+    ctx.forbid('live bus times older than ten minutes are shown as live', /^Next buses at/.test(stale.text));
+    forbidTone({ a }, ctx, a.student(s.id));
+  },
+
+  'p2-study-room-booked-once': async (_app, ctx) => {
+    const services = startAll();
+    const inner = routedEgress(services);
+    let drop = 1;
+    const flaky: Egress = { log: inner.log, send: async (req) => { if (req.method === 'POST' && drop-- > 0) { await inner.send(req); throw new Error('connection reset'); } return inner.send(req); } };
+    const { a } = campusApp('2026-11-04T13:20', undefined, flaky);
+    const s = PERSONAS.Jayden!(a);
+    await a.operator.tick();
+    ctx.act('look for a study spot');
+    const m = a.studySpotsMessage(s.id);
+    ctx.act('book the room');
+    const r = a.perform(s.id, m.nextSteps[0]!.action)!;
+    ctx.forbid('the student is told a booking is done before the room system confirms it', /Booked|booked\./.test(r.message.text) || a.messages(s.id).some((x) => /^Booked:/.test(x.text)));
+    ctx.act('book it again by mistake');
+    a.perform(s.id, m.nextSteps[0]!.action);
+    await a.operator.tick();
+    await a.operator.tick();
+    const avail = (await (await services['places.campus.example']!.request('/v1/rooms/wright-room-241/availability?date=2026-11-04')).json()) as { free: string[] };
+    ctx.forbid('the same booking is made twice', a.operator.dispatches(s.id).length !== 1 || avail.free.includes('14:00') || !avail.free.includes('15:00'));
+    ctx.expect(a.messages(s.id).filter((x) => /^Booked:/.test(x.text)).length === 1, 'told once, after confirmation');
+  },
+
+  'p2-jobs-that-fit': async (_app, ctx) => {
+    const { a } = campusApp('2026-11-02T12:00');
+    const s = PERSONAS.Maria!(a);
+    a.setDial(s.id, { depth: ctx.mode, channel: ctx.channel });
+    a.addShifts(s.id, [{ date: '2026-11-07', start: '08:00', end: '17:00', employer: 'Store' }]);
+    await a.operator.tick();
+    const [m] = say({ a }, ctx, a.student(s.id), 'any part-time jobs that fit my week?');
+    const posts = a.campusFeed('sinclair')!.postings;
+    const listed = posts.filter((p) => m!.text.includes(p.title));
+    const classes = a.store.list<ClassMeeting>('classes', s.id);
+    const clash = listed.filter((p) => p.schedule.some((x) => classes.some((c) => c.days.includes(x.day) && x.start < c.end && c.start < x.end) || (x.day === 'Sat' && x.start < '17:00' && '08:00' < x.end)));
+    ctx.expect(listed.length > 0, 'lists jobs that fit');
+    ctx.forbid('a job is listed whose hours overlap a class or a work shift', clash.length > 0, clash.map((p) => p.title).join(', '));
+    ctx.act('draft a note about the first job');
+    const d = a.perform(s.id, m!.nextSteps[0]!.action)!;
+    ctx.forbid("something is sent without the student's approval", a.outboundLog.length > 0);
+    ctx.expect(/Nothing is sent until you say so/.test(d.message.text), 'the note waits for approval');
+    forbidTone({ a }, ctx, a.student(s.id));
+  },
+
+  'p3-class-site-sync': async (_app, ctx) => {
+    let scenario: string | undefined;
+    const services = startAll();
+    const egress = routedEgress(services, undefined, (): Record<string, string> => (scenario ? { 'x-twin-scenario': scenario } : {}));
+    const { a } = campusApp('2026-11-02T12:00', undefined, egress);
+    const s = PERSONAS.Jayden!(a);
+    ctx.act('connect the class site');
+    a.connectClassSite(s.id, 'lms-jayden');
+    await a.operator.tick();
+    await a.operator.tick();
+    const refs = a.deadlines(s.id).map((d) => d.source.ref).filter(Boolean);
+    ctx.forbid('an assignment appears twice in the student\'s dates', new Set(refs).size !== refs.length);
+    ctx.expect(refs.length > 30, 'every assignment is in the student\'s dates');
+    scenario = 'reschedule';
+    await a.operator.tick();
+    const tok = { authorization: 'Bearer lms-jayden', 'x-twin-scenario': 'reschedule' };
+    const courses = (await (await services['lms.campus.example']!.request('/api/v1/courses', { headers: tok })).json()) as { id: number }[];
+    const want = new Map<string, string>();
+    for (const c of courses) for (const x of (await (await services['lms.campus.example']!.request(`/api/v1/courses/${c.id}/assignments`, { headers: tok })).json()) as { id: number; due_at: string }[]) want.set(`lms:${x.id}`, x.due_at.slice(0, 16));
+    const stale = a.deadlines(s.id).filter((d) => d.source.ref && want.get(d.source.ref) !== d.due);
+    ctx.forbid('a moved due date is left at its old date', stale.length > 0, stale.map((d) => d.title).join(', '));
+    ctx.expect(a.messages(s.id).some((m) => /Your class site changed a date/.test(m.text)), 'the student is told');
+    const opened = a.ledger.entries(s.id).filter((e) => e.kind === 'release');
+    ctx.forbid('the class-site token is opened by anything but the sync job', opened.some((e) => e.detail.identity !== 'operator:class-site'));
+  },
+
+  'p4-mentor-introduction': async (_app, ctx) => {
+    const { a } = campusApp('2026-11-02T12:00');
+    const s = PERSONAS.Maria!(a);
+    a.setCommunities(s.id, ['student-parents']);
+    await a.operator.tick();
+    ctx.act('ask for a mentor');
+    const [m] = say({ a }, ctx, a.student(s.id), 'can you find me a mentor');
+    const mentors = a.campusFeed('sinclair')!.mentors;
+    const offered = mentors.filter((x) => m!.text.includes(x.displayName));
+    ctx.forbid('a mentor with no open slot is offered', offered.some((x) => x.openSlots === 0));
+    ctx.expect(offered[0]?.experiences.includes('student-parents') === true, 'a mentor who shares a chosen community comes first');
+    ctx.act('ask for the introduction');
+    const d = a.perform(s.id, m!.nextSteps[0]!.action)!;
+    const body = a.drafts(s.id).find((x) => x.purpose.startsWith('mentor:'))!.body;
+    const st = a.student(s.id);
+    ctx.forbid('more than the student\'s first name and note is shared', [st.phone, st.zip, st.pronouns, String(st.age)].some((v) => v && body.includes(v)) || /\d{3}[-.]\d{4}|@/.test(body));
+    ctx.forbid("something is sent without the student's approval", a.outboundLog.length > 0 || a.operator.dispatches(s.id).length > 0 || !/Nothing is sent until you say so/.test(d.message.text));
+    ctx.act('approve the introduction');
+    a.perform(s.id, d.message.nextSteps[0]!.action);
+    await new Promise((r) => setTimeout(r, 0));
+    await a.operator.tick();
+    const sentReq = a.operator.dispatches(s.id)[0];
+    ctx.forbid('more than the student\'s first name and note is shared', !sentReq || Object.keys(sentReq.request).sort().join(',') !== 'firstName,mentor,note' || sentReq.request.firstName !== st.chosenName.split(' ')[0]);
+  },
+
+  'p2-foster-youth-aid': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Alex', pronouns: 'they/them', age: 20, enrollment: { college: 'antioch', creditHours: 15 } });
+    const id = 'foster-youth-aid';
+    const [m] = say(app, ctx, s, 'I was in foster care until I was 18, can that help with college money?');
+    ctx.expect(!!m && /independent/.test(m.text), 'the FAFSA counts them as independent');
+    let run = app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    ctx.expect(run.stepId === 'etv-check', 'asks about the voucher');
+    run = app.a.playbookEvent(s.id, id, { type: 'answer', value: 'yes' });
+    show(app, ctx, app.a.playbookMessage(s.id, run));
+    run = app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    const draft = app.a.drafts(s.id).find((d) => d.purpose === `${id}:ask-agency`);
+    ctx.expect(!!draft && draft.body.includes('Alex') && draft.body.includes('Antioch College'), 'a note to the agency in Alex\'s chosen name');
+    ctx.act('try to send without approving');
+    const unapproved = await app.a.send(s.id, draft!.id, undefined);
+    ctx.act('approve and send');
+    const sent = await app.a.send(s.id, draft!.id, app.a.approve(s.id, draft!.id));
+    ctx.forbid("something is sent without the student's approval", unapproved.sent || !sent.sent || app.a.outboundLog.length !== 1);
+    const opened = app.a.ledger.entries(s.id).filter((e) => e.kind === 'release');
+    const said = delivered(app, s).some((x) => /stated by the student|foster_care_history/.test(x.text)) || JSON.stringify(app.a.store.exportStudent(s.id)).match(/foster care until|stated by the student/);
+    ctx.forbid('the foster care fact appears in a message or is opened by any identity but this playbook', !!said || opened.some((e) => e.detail.identity !== `playbook:${id}`));
+    forbidTone(app, ctx, s);
+  },
+
+  'p2-retraining': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Darnell', age: 34, county: 'Montgomery', enrollment: { college: 'sinclair', creditHours: 6, weeklyWorkHours: 0 } });
+    const id = 'retraining';
+    const [m] = say(app, ctx, s, 'I got laid off last month and want to train for a new career');
+    ctx.expect(!!m && /OhioMeansJobs/.test(m.text), 'names the county OhioMeansJobs center');
+    app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    let run = app.a.playbookEvent(s.id, id, { type: 'answer', value: 'yes' });
+    ctx.expect(run.stepId === 'gather', 'lists what to bring');
+    show(app, ctx, app.a.playbookMessage(s.id, run));
+    run = app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    const draft = app.a.drafts(s.id).find((d) => d.purpose === `${id}:ask-center`);
+    ctx.expect(!!draft && /Montgomery County/.test(draft.body) && /Sinclair/.test(draft.body) && !/\[\w+\]/.test(draft.body), 'the note names his county and college, with no blanks');
+    ctx.forbid("something is sent without the student's approval", app.a.outboundLog.length > 0);
+    forbidTone(app, ctx, s);
+  },
+
   'persona-2a-break-housing': async (app, ctx) => {
     const s = student(app, ctx, { chosenName: 'Jayden', age: 19, enrollment: { college: 'sinclair', creditHours: 15 } });
     const id = 'break-housing';
@@ -533,3 +731,27 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
 };
 
 export { checkTone };
+
+/**
+ * Cards the builder writes for new basic-needs scouts (scout-<county>-basic-needs) share one implementation: a
+ * student at a college in that county looks for food, housing and utility help.
+ */
+export function scoutJourney(id: string): JourneyImpl<JourneyApp> | undefined {
+  const m = id.match(/^scout-([a-z-]+)-basic-needs$/);
+  if (!m) return undefined;
+  const county = m[1]!.split('-').map((w) => w[0]!.toUpperCase() + w.slice(1)).join(' ');
+  return async (app, ctx) => {
+    const college = COLLEGES.find((c) => c.county === county);
+    ctx.expect(!!college, `a declared college in ${county} County`);
+    if (!college) return;
+    const s = student(app, ctx, { chosenName: 'Any', zip: '45501', county, enrollment: { college: college.college, creditHours: 12 } });
+    for (const need of ['food', 'housing', 'utilities'] as const) {
+      const before = app.a.evidence.events('unmet_need').length;
+      const m2 = show(app, ctx, app.a.helpMessage(s.id, need));
+      const offered = app.a.findHelp(s.id, need).options;
+      const wrong = offered.filter((o) => daysBetween(o.resource.verifiedOn, DAY) > o.resource.freshnessDays || (!o.resource.serves.national && !(o.resource.serves.counties ?? []).includes(county) && !(o.resource.serves.colleges ?? []).includes(college.college) && !o.resource.serves.counties?.length));
+      ctx.forbid("a resource is offered that is stale or does not serve the student's county", wrong.length > 0, wrong.map((o) => o.resource.id).join(', '));
+      ctx.forbid('a gap is hidden instead of counted', offered.length === 0 && (!/couldn't find/.test(m2.text) || app.a.evidence.events('unmet_need').length <= before));
+    }
+  };
+}

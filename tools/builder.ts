@@ -16,7 +16,7 @@ if (process.argv.includes('--simulate')) {
   const a = new Advocate({ today: () => today });
   for (let i = 0; i < 4; i++) {
     const s = a.createStudent({ chosenName: `Synthetic ${i}`, zip: '45402', enrollment: { college: 'sinclair' } });
-    a.findHelp(s.id, 'caregiving');
+    a.findHelp(s.id, 'books');
     a.connectSource(s.id, 'forwarding');
     a.forward(s.id, 'Your SNAP recertification is due. Your renewal packet is enclosed and your interview is scheduled.', { subject: 'SNAP renewal' });
   }

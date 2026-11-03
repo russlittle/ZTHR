@@ -13,7 +13,7 @@ export const JourneyCard = z.object({
   id: z.string().regex(/^[a-z0-9-]+$/),
   persona: z.string(),
   delight: z.string().optional(),
-  phase: z.number().int().min(1).max(3),
+  phase: z.number().int().min(1).max(4),
   goal: z.string().min(10),
   forbidden: z.array(z.string()).min(1),
   budget: z.object({ actions: z.number().int().positive(), ms: z.number().int().positive().default(10_000) }),

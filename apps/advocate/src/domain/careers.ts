@@ -1,4 +1,5 @@
 import type { Student } from './types.js';
+import { COLLEGES } from './colleges.js';
 
 /**
  * Career help (PRD CAR-1, CAR-3). Two things, both started by the student:
@@ -13,11 +14,8 @@ export interface CareerSource {
   source: string;
 }
 
-export const CAREER_CENTERS: Record<string, CareerSource> = {
-  sinclair: { name: 'Sinclair Student and Community Engagement', contact: '937-512-2509 or studentandcommunity@sinclair.edu', source: 'https://www.collegecentral.com/sinclair/ContactUs.cfm' },
-  'wright-state': { name: 'Wright State Career Services', contact: 'wright.edu, under Career Services', source: 'https://www.wsuguardian.com/article/2025/02/career-services-new-and-improved-location' },
-  antioch: { name: 'the Antioch College co-op office', contact: 'antiochcollege.edu', source: 'https://antiochcollege.edu' },
-};
+/** Each college's career office, from control/colleges. */
+export const CAREER_CENTERS: Record<string, CareerSource> = Object.fromEntries(COLLEGES.map((c) => [c.college, c.career]));
 
 export const CQE = {
   name: 'the Certificate of Qualification for Employment (CQE)',

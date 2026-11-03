@@ -1,4 +1,5 @@
-import { BadRequest, NotFound, campusParam, minutes, service, type CampusId } from './common.js';
+import { createHash } from 'node:crypto';
+import { BadRequest, NotFound, campusParam, clock, minutes, service, type CampusId } from './common.js';
 
 /**
  * Synthetic careers service: job postings (on and near campus, work-study, with weekly schedules and a fair-chance
@@ -80,12 +81,66 @@ export const careersInfo = {
     { method: 'GET', path: '/v1/postings', summary: 'Open postings for a campus', query: { campus: 'campus id', q: 'words in title or field', workStudy: 'true to show only work-study', maxHours: 'hours per week', fairChance: 'true to show only fair-chance employers', asOf: 'YYYY-MM-DD; postings closed before this are left out' } },
     { method: 'GET', path: '/v1/postings/:id', summary: 'One posting' },
     { method: 'GET', path: '/v1/mentors', summary: 'Mentors with open slots', query: { campus: 'campus id', field: 'field', language: 'en or es', experience: 'a shared experience, such as student-parents' } },
+    { method: 'POST', path: '/v1/mentors/:id/requests', summary: 'Ask a mentor for an introduction (send Idempotency-Key). Only a first name and a note.' },
+    { method: 'GET', path: '/v1/requests/:id', summary: 'Where a request stands: pending, then accepted with a meeting time, or declined' },
+    { method: 'GET', path: '/v1/requests', summary: 'The request made with an Idempotency-Key, if any', query: { key: 'the Idempotency-Key' } },
   ],
-  scenarios: {},
+  scenarios: { 'mentor-declines': 'every request is declined' },
 } as const;
 
+export interface MentorRequest {
+  id: string;
+  mentor: string;
+  firstName: string;
+  note: string;
+  createdAt: string;
+}
+
+/** A mentor answers two hours after a request: accepted with a meeting time, unless they have no slot left. */
+function standing(r: MentorRequest, nowIso: string, scenario: string | undefined, accepted: Map<string, Set<string>>) {
+  const m = MENTORS.find((x) => x.id === r.mentor)!;
+  if (Date.parse(nowIso) < Date.parse(r.createdAt) + 2 * 3600_000) return { ...r, status: 'pending' as const };
+  const mine = accepted.get(m.id) ?? new Set<string>();
+  if (scenario === 'mentor-declines' || (!mine.has(r.id) && mine.size >= m.openSlots)) return { ...r, status: 'declined' as const, reason: 'no open time this month' };
+  mine.add(r.id);
+  accepted.set(m.id, mine);
+  const d = new Date(Date.parse(r.createdAt) + 2 * 86400_000);
+  while ([0, 6].includes(d.getUTCDay())) d.setUTCDate(d.getUTCDate() + 1);
+  return { ...r, status: 'accepted' as const, meeting: { date: d.toISOString().slice(0, 10), time: '16:00', where: m.campus === 'any' ? 'Video call; the link comes from the career office' : 'Career center, front desk' } };
+}
+
 export function careersService() {
+  const requests = new Map<string, MentorRequest>();
+  const byKey = new Map<string, string>();
+  const accepted = new Map<string, Set<string>>();
   return service(careersInfo as never, (app) => {
+    app.post('/v1/mentors/:id/requests', async (c) => {
+      const m = MENTORS.find((x) => x.id === c.req.param('id'));
+      if (!m) throw new NotFound(`no mentor ${c.req.param('id')}`);
+      const key = c.req.header('idempotency-key');
+      if (key && byKey.has(key)) return c.json(standing(requests.get(byKey.get(key)!)!, clock(c).iso, c.req.header('x-twin-scenario'), accepted), 200);
+      const b = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+      const extra = Object.keys(b).filter((k) => k !== 'firstName' && k !== 'note');
+      if (extra.length) throw new BadRequest(`only firstName and note are accepted; got ${extra.join(', ')}`);
+      if (typeof b.firstName !== 'string' || !/^[\p{L}' -]{1,40}$/u.test(b.firstName) || typeof b.note !== 'string' || b.note.length < 10 || b.note.length > 600) throw new BadRequest('need firstName (a first name only) and a note of 10 to 600 characters');
+      if (m.openSlots <= 0) return c.json({ error: 'this mentor has no open time' }, 409);
+      const id = `req-${createHash('sha256').update(`${m.id}|${b.firstName}|${requests.size}|${key ?? ''}`).digest('hex').slice(0, 8)}`;
+      const r: MentorRequest = { id, mentor: m.id, firstName: b.firstName, note: b.note, createdAt: clock(c).iso };
+      requests.set(id, r);
+      if (key) byKey.set(key, id);
+      return c.json({ ...r, status: 'pending' }, 201);
+    });
+    app.get('/v1/requests/:id', (c) => {
+      const r = requests.get(c.req.param('id'));
+      if (!r) throw new NotFound('no such request');
+      return c.json(standing(r, clock(c).iso, c.req.header('x-twin-scenario'), accepted));
+    });
+    app.get('/v1/requests', (c) => {
+      const key = c.req.query('key');
+      if (!key) throw new BadRequest('key is required');
+      const id = byKey.get(key);
+      return c.json({ requests: id ? [standing(requests.get(id)!, clock(c).iso, c.req.header('x-twin-scenario'), accepted)] : [] });
+    });
     app.get('/v1/postings', (c) => {
       const campus = campusParam(c);
       const q = c.req.query('q')?.toLowerCase();

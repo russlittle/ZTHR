@@ -1,5 +1,13 @@
 {
   "cards": {
+    "p2-bus-to-class": "1a3e5e4ee9ff4830ae55344b6a7e5b5ab0a320e5f561cc48e5d583b6e1bc40ca",
+    "p2-food-on-campus-late": "08fe911b939fdba615b3efd87d061b45e361c01c2b3a5c74df2af119dd6905fb",
+    "p2-foster-youth-aid": "da819af914ad0039683c3086aa33f5ba7394079ee056e1525371cfeb4a794503",
+    "p2-jobs-that-fit": "7e776163677cce450326d99dc4ce94425c63f9e1524a73e26a915f9d0a085202",
+    "p2-retraining": "212ba641c523a99988d4dfe0e3eff6cf939733df28a58d9461e4e3939c1103e5",
+    "p2-study-room-booked-once": "43d04b2742177ddba1e2407a0e16b01c51b5be43dba4b4f5e95b2f7b2a6c9a13",
+    "p3-class-site-sync": "688b6fbedb9a80ff1b5fccec14549054170e2c09db8ddbeeaaec5bcc251ec445",
+    "p4-mentor-introduction": "9d85d7d6f7aa88ce24fcc28566547ee4c6b28b1d5e25d7a75a9e27789ede331d",
     "persona-10a-privacy": "eb78ddf82c534921f18333de5933aa702583c23bf387d33765a88a0423b417b2",
     "persona-10b-spanish": "0440f688750cd4cccce9df38880239fed511a8d7ee8b59170d1316b8aba0d061",
     "persona-10c-aid-that-fits": "4751dd0a00918e35ff9bd3b851879483758e4e2e4e3f14476c979caaa27620d1",
@@ -22,10 +30,11 @@
     "persona-8c-accommodation-letters": "4a1ef5ed059a35d119aa0723214c98cd2381d06918fb10f79f390104215ccf26",
     "persona-9a-simple": "bc69dfd5d10badac1d2b7c1943256725b00fd92188cef981b1abbe53779d565a",
     "persona-9b-letter-explained": "5946fc191ebcd8d7cbf61f27063efdab8562bc3140fc622b84c43e7ff4ad1522",
+    "playbook-snap-recertification": "f1fa78dea85b427d0eef9cd57a4431c4019d9d4f7ee34cc806ab7f4393ecb1e6",
     "req-crisis-routing": "425d42d5db57e9a0832f7e6ff12d8d70dff214bea5b00c5abfff8932d0a5130c",
     "req-quiet-hours": "d5f8e110ac492d47ee99ce4ac30c48a4c1eec73d517fcbbf7e7e3f36e2e25bb8",
     "req-stale-never-offered": "1dae0909077eb5eb7182b6d8014204c41d6d9d848db49e47e097a2f36e566c7b",
     "scout-montgomery-caregiving": "ad6c325b4e1911afea1f41f0ff4e920656db01f8c262783810c2a7ab827c4697",
-    "playbook-snap-recertification": "f1fa78dea85b427d0eef9cd57a4431c4019d9d4f7ee34cc806ab7f4393ecb1e6"
+    "scout-clark-basic-needs": "125eb274e64ab1ca3bfe925850e2a2885a42fd2d07281cc2bad0883f98b1ab53"
   }
 }

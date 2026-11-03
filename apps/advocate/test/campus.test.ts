@@ -335,6 +335,46 @@ describe('jobs that fit (CAR-2) and mentors (CAR-4)', () => {
   });
 });
 
+describe('the mentor network (Phase 4)', () => {
+  it('an approved introduction goes to the mentor as first name and note only, and a yes puts the meeting on the calendar', async () => {
+    const { a, setNow } = campusWorld('2026-11-02T12:00');
+    const s = PERSONAS.Maria!(a);
+    a.setCommunities(s.id, ['student-parents']);
+    await a.operator.tick();
+    const intro = a.perform(s.id, a.mentorsMessage(s.id).nextSteps[0]!.action)!;
+    expect(a.operator.dispatches(s.id)).toHaveLength(0);
+    a.perform(s.id, intro.message.nextSteps[0]!.action);
+    await new Promise((r) => setTimeout(r, 0));
+    const [d] = a.operator.dispatches(s.id);
+    expect(d).toMatchObject({ kind: 'mentor-request', status: 'queued', request: { mentor: 'm1', firstName: 'Maria' } });
+    expect(Object.keys(d!.request).sort()).toEqual(['firstName', 'mentor', 'note']);
+    await a.operator.tick();
+    expect(a.operator.dispatches(s.id)[0]!.status).toBe('sent');
+    expect(a.messages(s.id).some((m) => /said yes/.test(m.text))).toBe(false);
+    setNow('2026-11-02T14:30');
+    await a.operator.tick();
+    expect(a.operator.dispatches(s.id)[0]!.status).toBe('confirmed');
+    expect(last(a, s.id).text).toMatch(/^Dana R\. said yes\. You meet Wed, Nov 4 at 4:00 p\.m\. Career center, front desk\.$/);
+    expect(a.deadlines(s.id).some((x) => x.title === 'Meet Dana R.' && x.due === '2026-11-04T16:00' && x.kind === 'appointment')).toBe(true);
+  });
+  it('a no is told kindly, with other mentors offered', async () => {
+    const { a, setNow } = campusWorld('2026-11-02T12:00', { scenario: 'mentor-declines' });
+    const s = PERSONAS.Maria!(a);
+    const b = campusWorld('2026-11-02T12:00');
+    PERSONAS.Maria!(b.a);
+    await b.a.operator.tick();
+    a.store.put('campus_feeds', 'sinclair', '_operator', b.a.campusFeed('sinclair'));
+    const intro = a.perform(s.id, a.mentorsMessage(s.id).nextSteps[0]!.action)!;
+    a.perform(s.id, intro.message.nextSteps[0]!.action);
+    await new Promise((r) => setTimeout(r, 0));
+    await a.operator.dispatch(a.clock());
+    setNow('2026-11-02T15:00');
+    await a.operator.verify();
+    expect(last(a, s.id).text).toMatch(/can't take someone new right now\. That is about their time, not you\./);
+    expect(last(a, s.id).nextSteps[0]!.action).toBe('mentors');
+  });
+});
+
 describe('class-site sync (Phase 3)', () => {
   it('pulls every assignment once, confirmed, with the class site as the source', async () => {
     const { a } = campusWorld('2026-11-02T12:00');

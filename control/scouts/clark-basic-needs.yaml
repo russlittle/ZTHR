@@ -1,0 +1,16 @@
+scout: clark-basic-needs
+geography:
+  county: Clark
+needs:
+  - food
+  - housing
+  - utilities
+sources:
+  - url: https://www.211.org
+    kind: directory
+entries: []
+freshness_days: 45
+datum:
+  precision_min: 0.8
+owner: builder
+admitted_by: factory

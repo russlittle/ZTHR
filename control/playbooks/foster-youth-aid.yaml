@@ -1,0 +1,45 @@
+playbook: foster-youth-aid
+title: Aid for students who were in foster care
+purpose: Make sure a student who was in foster care files the FAFSA as independent and applies for the education and training voucher meant for them.
+owner: builder
+admitted_by: factory
+sources:
+  - https://studentaid.gov/apply-for-aid/fafsa/filling-out/dependency
+  - https://www.fosterclub.com/resources/ohio-education-training-voucher-etv
+  - https://ohiocasa.org/wp-content/uploads/2026/03/DCY-00050-ETV-Rack-Card.pdf
+student_grants:
+  sealed: [foster_care_history]
+  profile: [chosenName, college]
+journeys: [p2-foster-youth-aid]
+steps:
+  - id: fafsa-independent
+    kind: info
+    text: If you were in foster care at age 13 or older, the FAFSA counts you as independent. You do not need a parent's information.
+  - id: etv-check
+    kind: question
+    text: Were you in foster care at 16 or older, or did you leave care at 18 or later?
+    branches: { yes: gather, no: aid-office }
+  - id: gather
+    kind: documents
+    text: The voucher helps pay for tuition, books and supplies. Get these ready to apply.
+    documents:
+      - Proof you were in foster care, such as a letter from your caseworker or agency
+      - Your college acceptance or class schedule
+      - Your college's cost of attendance
+  - id: ask-agency
+    kind: draft
+    requires_approval: true
+    to: your county children services agency or former caseworker
+    text: "Hello, this is {chosenName}. I am a student at {college} and I was in foster care. I would like to apply for the Education and Training Voucher. Could you tell me how to start and what you need from me? Thank you."
+  - id: aid-office
+    kind: draft
+    requires_approval: true
+    to: Financial Aid
+    text: "Hello, this is {chosenName}. I was in foster care. Can you help me make sure my FAFSA shows I am independent, and tell me about any aid for students like me? Thank you."
+  - id: wait-answer
+    kind: wait
+    text: Tell me when you hear back, and I will help with the next step.
+    timeout_days: 10
+    on_timeout: It has been ten days. Want me to draft a short follow-up?
+recovery:
+  - If the voucher is not available this year, the aid office can still review your independent status and other grants.

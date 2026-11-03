@@ -37,6 +37,7 @@ export interface Proposal {
 /** Candidate sources the builder may propose for a need. A person still verifies them before any entry is shown. */
 const SOURCE_HINTS: Record<string, { url: string; kind: 'agency' | 'college' | 'directory' | 'news' }[]> = {
   caregiving: [{ url: 'https://eldercare.acl.gov', kind: 'agency' }],
+  books: [{ url: 'https://openstax.org', kind: 'directory' }],
   'mental-health': [{ url: 'https://988lifeline.org', kind: 'agency' }],
 };
 
@@ -70,6 +71,41 @@ function gate(p: Proposal): Proposal {
   }
   const ok = checks.every((c) => c.ok);
   return { ...p, checks, status: ok ? 'certified' : 'unresolved' };
+}
+
+/**
+ * A new college (PRD Phase 4: scouts for any college). Its county gets a basic-needs scout drafted with a directory
+ * as its source of record and no entries yet, so students there are told plainly what is not verified instead of
+ * being offered something unchecked. The scout fills in as its sources are checked.
+ */
+export function proposeCollege(c: { college: string; name: string; county: string }, existingScouts: { geography: { county?: string } }[], today: string): Proposal[] {
+  if (existingScouts.some((s) => s.geography.county === c.county)) return [];
+  const slug = `${c.county}-basic-needs`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  return [
+    gate({
+      id: `p-${id(`college|${c.college}`)}`,
+      kind: 'scout',
+      title: `New scout: basic needs in ${c.county} County, for ${c.name}`,
+      reason: `${c.name} was added, and no scout covers ${c.county} County.`,
+      evidence: { college: c.college, county: c.county },
+      declaration: { scout: slug, geography: { county: c.county }, needs: ['food', 'housing', 'utilities'], sources: [{ url: 'https://www.211.org', kind: 'directory' }], entries: [], freshness_days: 45, datum: { precision_min: 0.8 }, owner: 'builder', admitted_by: 'factory' },
+      journey: {
+        id: `scout-${slug}`,
+        persona: 'any',
+        phase: 4,
+        goal: `A student at ${c.name} who needs food, housing or utility help is offered verified resources that serve ${c.county} County, or told plainly that none is verified yet and the gap is counted.`,
+        forbidden: ['a resource is offered that is stale or does not serve the student\'s county', 'a gap is hidden instead of counted'],
+        budget: { actions: 3, ms: 5000 },
+        requirements: ['NAV-6', 'P11'],
+        modes: ['standard'],
+        channels: ['app'],
+      },
+      falsification: { name: 'planted entry from another county offered', plant: `a food entry serving only Montgomery County offered to a ${c.county} County student`, mustFail: 'freshness gate' },
+      checks: [],
+      status: 'unresolved',
+      createdAt: today,
+    }),
+  ];
 }
 
 export function propose(ev: EvidenceStore, o: BuilderOptions): Proposal[] {

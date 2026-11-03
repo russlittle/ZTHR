@@ -19,10 +19,10 @@ describe('the builder', () => {
   const opts = { today: '2026-11-02', existingScouts: [], existingPlaybooks: [] };
 
   it('does nothing below the threshold, so one request never spawns an agent', () => {
-    expect(propose(demand('caregiving', 2), opts)).toHaveLength(0);
+    expect(propose(demand('books', 2), opts)).toHaveLength(0);
   });
   it('drafts a scout with a journey card and falsification case once demand crosses the threshold', () => {
-    const [p] = propose(demand('caregiving', 3), opts);
+    const [p] = propose(demand('books', 3), opts);
     expect(p).toMatchObject({ kind: 'scout', status: 'certified' });
     expect(p!.journey).toBeDefined();
     expect(p!.falsification).toBeDefined();
@@ -33,7 +33,7 @@ describe('the builder', () => {
     expect(p!.checks.find((c) => !c.ok)?.detail).toMatch(/source of record/);
   });
   it('does not duplicate a scout that already covers the need', () => {
-    expect(propose(demand('caregiving', 3), { ...opts, existingScouts: [{ geography: { county: 'Montgomery' }, needs: ['caregiving'] }] })).toHaveLength(0);
+    expect(propose(demand('books', 3), { ...opts, existingScouts: [{ geography: { county: 'Montgomery' }, needs: ['books'] }] })).toHaveLength(0);
   });
   it('retires a question that almost never reveals a need', () => {
     const ev = new EvidenceStore();
@@ -67,7 +67,8 @@ describe('scouts manage themselves', () => {
     const { run, catalog } = await runScout(def, DAYTON_CATALOG, check, '2026-12-01');
     expect(run.status).toBe('retired');
     expect(run.precision).toBeCloseTo(0.6);
-    expect(catalog.every((r) => r.verifiedOn === '2026-11-02')).toBe(true);
+    // Oracle from the record: every entry keeps the date it already had.
+    expect(catalog.map((r) => r.verifiedOn)).toEqual(DAYTON_CATALOG.map((r) => r.verifiedOn));
   });
   it('unreachable sources are unknown, not confirmations', async () => {
     const { run } = await runScout(def, DAYTON_CATALOG, async () => 'unreachable', '2026-12-01');

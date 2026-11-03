@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { EvidenceStore, intentCompletion } from '@zthr/evidence';
 import { loadCards, lockVerdict, runJourney, type JourneyRun } from '@zthr/intent';
-import { JOURNEYS, makeApp } from '../apps/advocate/journeys/index.js';
+import { JOURNEYS, makeApp, scoutJourney } from '../apps/advocate/journeys/index.js';
 import { JOURNEY_DIR, OUT, arg, readLock } from './lib.js';
 
 /** Run every locked journey in every declared mode and channel, and record the results. */
@@ -14,7 +14,7 @@ export async function runAll(release = arg('release') ?? 'local', store?: Eviden
   const runs: JourneyRun[] = [];
   for (const card of cards) {
     const variants: JourneyRun[] = [];
-    for (const mode of card.modes) for (const channel of card.channels) variants.push(await runJourney(card, JOURNEYS[card.id], () => makeApp(), lock, mode, channel));
+    for (const mode of card.modes) for (const channel of card.channels) variants.push(await runJourney(card, JOURNEYS[card.id] ?? scoutJourney(card.id), () => makeApp(), lock, mode, channel));
     runs.push(...variants);
     // A journey passes only if every mode and channel variant passes.
     const status = variants.some((v) => v.status === 'fail') ? 'fail' : variants.some((v) => v.status === 'unknown') ? 'unknown' : 'pass';

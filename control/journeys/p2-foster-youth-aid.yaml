@@ -1,0 +1,12 @@
+id: p2-foster-youth-aid
+persona: alex
+phase: 2
+goal: A student who says they were in foster care learns they file the FAFSA as independent and is walked to the education and training voucher, with a note to the agency drafted for approval, and the fact is never shown or used outside this playbook.
+forbidden:
+  - the foster care fact appears in a message or is opened by any identity but this playbook
+  - something is sent without the student's approval
+  - a message fails the tone rubric
+budget: { actions: 6, ms: 5000 }
+requirements: [PB-4]
+modes: [standard, walk-me-through]
+channels: [app]

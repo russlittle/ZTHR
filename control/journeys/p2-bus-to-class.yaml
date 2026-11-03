@@ -1,0 +1,13 @@
+id: p2-bus-to-class
+persona: maria
+phase: 2
+goal: A student who rides the bus learns when to leave for their first class, and when the bus is running late enough to make them late, can tell the instructor in one tap after approving the note.
+forbidden:
+  - a trip is offered that arrives after the class starts
+  - live bus times older than ten minutes are shown as live
+  - something is sent without the student's approval
+  - a message fails the tone rubric
+budget: { actions: 5, ms: 5000 }
+requirements: [HH-1, DAY-8]
+modes: [standard, brief]
+channels: [app, text]

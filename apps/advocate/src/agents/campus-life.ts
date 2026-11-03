@@ -37,9 +37,9 @@ export function campusFoodMessage(a: Advocate, sid: string): OutboundMessage {
   const freeLine = free.length ? `\nFree food today: ${free[0]!.title}, ${time12(free[0]!.start)}, ${free[0]!.where}.` : '';
   if (!open.length) {
     const next = nextOpening(feed, date, min);
-    return msg(sid, `Nothing on campus is open right now.${next ? ` ${next}` : ''}${freeLine}`, [{ label: 'Free food this week', action: 'free-food' }, { label: 'Food help near me', action: 'need:food' }, back], 'navigator', `From campus dining hours, as of ${time12(a.localTime(feed.fetchedAt))}.`);
+    return msg(sid, `Nothing on campus is open right now.${next ? ` ${next}` : ''}${freeLine}`, [{ label: 'Free food this week', action: 'free-food' }, { label: 'Food help near me', action: 'need:food' }, back], 'navigator', sentence(`From campus dining hours, as of ${time12(a.localTime(feed.fetchedAt))}`));
   }
-  return msg(sid, `Open now on campus:\n${lines.join('\n')}${freeLine}`, [{ label: 'Free food this week', action: 'free-food' }, { label: 'Food help near me', action: 'need:food' }, back], 'navigator', `From campus dining hours and today's menus, as of ${time12(a.localTime(feed.fetchedAt))}.`);
+  return msg(sid, `Open now on campus:\n${lines.join('\n')}${freeLine}`, [{ label: 'Free food this week', action: 'free-food' }, { label: 'Food help near me', action: 'need:food' }, back], 'navigator', sentence(`From campus dining hours and today's menus, as of ${time12(a.localTime(feed.fetchedAt))}`));
 }
 
 function nextOpening(feed: CampusFeed, date: string, min: number): string | undefined {
@@ -157,7 +157,7 @@ export function nextBusMessage(a: Advocate, sid: string): OutboundMessage {
   const name = feed?.stops.find((s) => s.id === homeStop)?.name ?? homeStop;
   if (!now || a.clock().getTime() - Date.parse(now.at) > 10 * 60_000) return msg(sid, `I don't have live times for ${name} right now.`, [{ label: 'When should I leave?', action: 'leave-by' }, back], 'navigator', 'Live times are only used when they are under ten minutes old.');
   if (!now.arrivals.length) return msg(sid, sentence(`No more buses at ${name} today${now.alerts[0] ? `. ${now.alerts[0].header}` : ''}`), [{ label: 'Find a ride', action: 'need:transportation' }, back]);
-  return msg(sid, `Next buses at ${name}:\n${now.arrivals.slice(0, 3).map((x) => `- Route ${x.route} to ${x.headsign}: ${x.inMinutes} min${x.delayMinutes ? `, ${x.delayMinutes} late` : ''}.`).join('\n')}${now.alerts[0] ? `\n${sentence(now.alerts[0].header)}` : ''}`, [{ label: 'When should I leave?', action: 'leave-by' }, back], 'navigator', `Live times as of ${time12(a.localTime(now.at))}.`);
+  return msg(sid, `Next buses at ${name}:\n${now.arrivals.slice(0, 3).map((x) => `- Route ${x.route} to ${x.headsign}: ${x.inMinutes} min${x.delayMinutes ? `, ${x.delayMinutes} late` : ''}.`).join('\n')}${now.alerts[0] ? `\n${sentence(now.alerts[0].header)}` : ''}`, [{ label: 'When should I leave?', action: 'leave-by' }, back], 'navigator', sentence(`Live times as of ${time12(a.localTime(now.at))}`));
 }
 
 // ---------- jobs that fit (CAR-2) and mentors (CAR-4) ----------

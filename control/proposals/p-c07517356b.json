@@ -1,0 +1,82 @@
+{
+  "id": "p-c07517356b",
+  "kind": "scout",
+  "title": "New scout: basic needs in Clark County, for Clark State College",
+  "reason": "Clark State College was added, and no scout covers Clark County.",
+  "evidence": {
+    "college": "clark-state",
+    "county": "Clark"
+  },
+  "declaration": {
+    "scout": "clark-basic-needs",
+    "geography": {
+      "county": "Clark"
+    },
+    "needs": [
+      "food",
+      "housing",
+      "utilities"
+    ],
+    "sources": [
+      {
+        "url": "https://www.211.org",
+        "kind": "directory"
+      }
+    ],
+    "entries": [],
+    "freshness_days": 45,
+    "datum": {
+      "precision_min": 0.8
+    },
+    "owner": "builder",
+    "admitted_by": "factory"
+  },
+  "journey": {
+    "id": "scout-clark-basic-needs",
+    "persona": "any",
+    "phase": 4,
+    "goal": "A student at Clark State College who needs food, housing or utility help is offered verified resources that serve Clark County, or told plainly that none is verified yet and the gap is counted.",
+    "forbidden": [
+      "a resource is offered that is stale or does not serve the student's county",
+      "a gap is hidden instead of counted"
+    ],
+    "budget": {
+      "actions": 3,
+      "ms": 5000
+    },
+    "requirements": [
+      "NAV-6",
+      "P11"
+    ],
+    "modes": [
+      "standard"
+    ],
+    "channels": [
+      "app"
+    ]
+  },
+  "falsification": {
+    "name": "planted entry from another county offered",
+    "plant": "a food entry serving only Montgomery County offered to a Clark County student",
+    "mustFail": "freshness gate"
+  },
+  "checks": [
+    {
+      "name": "declaration parses",
+      "ok": true,
+      "detail": "scout schema valid"
+    },
+    {
+      "name": "journey card",
+      "ok": true,
+      "detail": "card valid; it will be locked on admission"
+    },
+    {
+      "name": "falsification case",
+      "ok": true,
+      "detail": "planted entry from another county offered"
+    }
+  ],
+  "status": "admitted",
+  "createdAt": "2026-11-03"
+}

@@ -1,3 +1,4 @@
+import { COLLEGES } from './colleges.js';
 import type { NeedCategory, Student } from './types.js';
 import type { Resource } from '../catalog/types.js';
 import { isFresh } from '../catalog/types.js';
@@ -18,7 +19,8 @@ export interface PlanOption {
   openNow?: boolean;
 }
 
-export const COLLEGE_COUNTY: Record<string, string> = { sinclair: 'Montgomery', 'wright-state': 'Greene', antioch: 'Greene' };
+/** Each college's county, from control/colleges. */
+export const COLLEGE_COUNTY: Record<string, string> = Object.fromEntries(COLLEGES.map((c) => [c.college, c.county]));
 
 const RULES: Record<string, (s: Student, on: string) => EligibilityResult> = {
   snap,

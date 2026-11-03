@@ -1,0 +1,12 @@
+college: sinclair
+name: Sinclair College
+short: Sinclair
+words: [sinclair]
+county: Montgomery
+state: OH
+website: https://www.sinclair.edu
+career:
+  name: Sinclair Student and Community Engagement
+  contact: 937-512-2509 or studentandcommunity@sinclair.edu
+  source: https://www.collegecentral.com/sinclair/ContactUs.cfm
+admitted_by: factory

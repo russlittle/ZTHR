@@ -42,6 +42,7 @@ sequenceDiagram
 | `GET` | `/api/v1/webhooks` | read | Your webhooks |
 | `POST` | `/api/v1/webhooks` | write | Add a webhook (https only) |
 | `DELETE` | `/api/v1/webhooks/{id}` | write | Remove a webhook |
+| `GET` | `/api/outcomes` | undefined | Outcome measures across all students; no number for fewer than five |
 
 The full description is served at `/api/openapi.json`.
 <!-- generated:api:end -->

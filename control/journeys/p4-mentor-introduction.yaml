@@ -1,0 +1,12 @@
+id: p4-mentor-introduction
+persona: maria
+phase: 4
+goal: A student who asks for a mentor is offered volunteers with open time, those who share a community the student chose first, and an introduction is drafted that shares only the student's first name and note.
+forbidden:
+  - a mentor with no open slot is offered
+  - more than the student's first name and note is shared
+  - something is sent without the student's approval
+budget: { actions: 4, ms: 5000 }
+requirements: [CAR-4]
+modes: [standard]
+channels: [app]

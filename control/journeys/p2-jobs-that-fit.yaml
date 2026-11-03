@@ -1,0 +1,12 @@
+id: p2-jobs-that-fit
+persona: maria
+phase: 2
+goal: A working student sees open jobs whose hours fit around their classes and shifts, and can send a note about one after approving it.
+forbidden:
+  - a job is listed whose hours overlap a class or a work shift
+  - something is sent without the student's approval
+  - a message fails the tone rubric
+budget: { actions: 4, ms: 5000 }
+requirements: [CAR-2]
+modes: [standard, walk-me-through]
+channels: [app, text]

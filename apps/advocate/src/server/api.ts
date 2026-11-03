@@ -1,3 +1,4 @@
+import { outcomes } from '../domain/outcomes.js';
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';
 import type { Advocate, ApiScope } from '../agents/advocate.js';
@@ -55,6 +56,7 @@ export const OPENAPI = {
     '/v1/calendar.ics': { get: { summary: 'Deadlines and held time as a calendar feed', 'x-scope': 'read' } },
     '/v1/webhooks': { get: { summary: 'Your webhooks', 'x-scope': 'read' }, post: { summary: 'Add a webhook (https only)', 'x-scope': 'write' } },
     '/v1/webhooks/{id}': { delete: { summary: 'Remove a webhook', 'x-scope': 'write' } },
+    '/outcomes': { get: { summary: 'Outcome measures across all students; no number for fewer than five', security: [] } },
   },
 } as const;
 
@@ -62,6 +64,9 @@ export function createApi(a: Advocate): Hono<Vars> {
   const api = new Hono<Vars>();
 
   api.get('/openapi.json', (c) => c.json(OPENAPI));
+
+  // Aggregates only, with small groups suppressed: safe to share without a token (Phase 4 outcome measures).
+  api.get('/outcomes', (c) => c.json(outcomes(a, a.localNow().date)));
 
   api.use('/v1/*', async (c, next) => {
     const auth = c.req.header('authorization') ?? '';

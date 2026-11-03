@@ -1,3 +1,5 @@
+import { COLLEGES } from './colleges.js';
+
 /**
  * College explained (PRD DAY-5). Plain meanings of the words colleges use,
  * plus where to ask. Exact rules differ by college, so every answer points to
@@ -26,11 +28,8 @@ export const TERMS: Term[] = [
   { term: 'advisor', match: /\badvis(o|e)r\b/i, meaning: 'An advisor helps you pick classes and plan your path to finishing. Meeting each term helps you avoid surprises.', ask: 'Advising' },
 ];
 
-export const COLLEGE_SITES: Record<string, string> = {
-  sinclair: 'https://www.sinclair.edu',
-  'wright-state': 'https://www.wright.edu',
-  antioch: 'https://antiochcollege.edu',
-};
+/** Each college's website, from control/colleges. */
+export const COLLEGE_SITES: Record<string, string> = Object.fromEntries(COLLEGES.map((c) => [c.college, c.website]));
 
 export function explain(question: string): Term | undefined {
   return TERMS.find((t) => t.match.test(question));

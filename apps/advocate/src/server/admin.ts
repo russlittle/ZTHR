@@ -1,3 +1,4 @@
+import { MIN_CELL, outcomes, type Measure } from '../domain/outcomes.js';
 import { Hono } from 'hono';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,6 +27,7 @@ export function createAdmin(a: Advocate, o: AdminOptions): Hono {
     ['proposals', 'Builder proposals', 'flask'],
     ['admissions', 'Admissions', 'check'],
     ['scouts', 'Scouts', 'route'],
+    ['outcomes', 'Outcomes', 'gauge'],
   ];
   const shell = (id: string, title: string, body: string) =>
     ui.consoleShell({ title: `${title} · Advocate admin`, brand: 'Advocate admin', brandHref: `${o.base}/admin/`, base: o.base, groups: [{ title: 'Admin', items: PAGES.map(([p, l, ic]) => ({ href: `${o.base}/admin/${p}`, label: l, icon: ic, current: p === id })) }, { title: 'Elsewhere', items: [{ href: `${o.base}/`, label: 'The app', icon: 'route' }, { href: '/factory/', label: 'Factory console', icon: 'shield' }, { href: '/docs/', label: 'Documentation', icon: 'doc' }] }], body: `<h1>${ui.esc(title)}</h1>${body}` });
@@ -83,6 +85,20 @@ ${ui.section('Evidence recorded', ui.table(['Kind', 'Count'], ev.map((e) => [e.k
         `<p class="muted">Agents build; the factory admits a change when every check passes. A listed person (${ui.esc(people.join(', ') || 'none listed')}) signs only destructive changes: loosening or removing a locked card, lowering a ratchet floor, weakening a gate, deleting data.</p>
 ${ui.section('Journey cards', ui.table(['Card', 'Changed by', 'Why', 'When'], changes.map((x) => [x.id, x.by, x.reason, x.at.slice(0, 10)])))}
 ${ui.section('Playbooks', ui.table(['Playbook', 'Content hash'], playbooks.map((p) => [p.id, p.hash])))}`,
+      ),
+    );
+  });
+
+  app.get('/outcomes', (c) => {
+    const o = outcomes(a, a.localNow().date);
+    const show = (m: Measure) => (typeof m.value === 'number' ? (m.denominator !== undefined ? `${m.value}%` : String(m.value)) : m.value === 'suppressed' ? 'fewer than 5' : 'not measured');
+    return c.html(
+      shell(
+        'outcomes',
+        'Outcomes',
+        `<p class="muted">What changed for students, across everyone. No number is shown for fewer than ${MIN_CELL} students. Persistence and credits need the college's own records and are not estimated.</p>
+${ui.kpis(o.measures.filter((m) => typeof m.value === 'number').slice(0, 6).map((m) => ({ value: show(m), label: m.label })))}
+${ui.table(['Measure', 'Value', 'Counted', 'How', 'What it cannot tell you'], o.measures.map((m) => [m.label, show(m), m.denominator !== undefined ? `${m.numerator ?? 0} of ${m.denominator}` : String(m.numerator ?? ''), m.how, m.limits]))}`,
       ),
     );
   });

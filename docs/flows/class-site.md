@@ -42,5 +42,5 @@ every opening is a line in the consent ledger.
 ## Verified by
 
 <!-- verified-by:start -->
-- [`apps/advocate/test/campus.test.ts`](../../apps/advocate/test/campus.test.ts) (36 test definitions)
+- [`apps/advocate/test/campus.test.ts`](../../apps/advocate/test/campus.test.ts) (38 test definitions)
 <!-- verified-by:end -->

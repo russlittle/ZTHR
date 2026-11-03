@@ -232,6 +232,45 @@ describe('careers', () => {
   });
 });
 
+describe('mentor requests (Phase 4)', () => {
+  const at = (iso: string) => ({ 'x-twin-clock': iso, 'content-type': 'application/json' });
+  const req = async (app: ReturnType<typeof SERVICES.careers.make>, mentor: string, body: unknown, h: Record<string, string>) => {
+    const r = await app.request(`/v1/mentors/${mentor}/requests`, { method: 'POST', body: JSON.stringify(body), headers: h });
+    return { status: r.status, body: (await r.json()) as any };
+  };
+  it('accepts only a first name and a note; anything else is refused', async () => {
+    const app = SERVICES.careers.make();
+    expect((await req(app, 'm1', { firstName: 'Maria', note: 'I would like to talk about nursing.', phone: '937-555-1001' }, at('2026-11-02T17:00:00Z'))).status).toBe(400);
+    expect((await req(app, 'm1', { firstName: 'Maria Lopez-Garcia the third, of Dayton Ohio', note: 'Hello there, mentor.' }, at('2026-11-02T17:00:00Z'))).status).toBe(400);
+    expect((await req(app, 'm1', { firstName: 'Maria', note: 'hi' }, at('2026-11-02T17:00:00Z'))).status).toBe(400);
+  });
+  it('is pending, then accepted two hours later with a weekday meeting, and the same key never makes a second request', async () => {
+    const app = SERVICES.careers.make();
+    const a = await req(app, 'm1', { firstName: 'Maria', note: 'I would like to talk about nursing.' }, { ...at('2026-11-06T17:00:00Z'), 'idempotency-key': 'k' });
+    expect(a).toMatchObject({ status: 201, body: { status: 'pending' } });
+    const again = await req(app, 'm1', { firstName: 'Maria', note: 'I would like to talk about nursing.' }, { ...at('2026-11-06T17:30:00Z'), 'idempotency-key': 'k' });
+    expect(again.body.id).toBe(a.body.id);
+    const later = (await (await app.request(`/v1/requests/${a.body.id}`, { headers: at('2026-11-06T19:01:00Z') })).json()) as any;
+    expect(later.status).toBe('accepted');
+    expect(['Sat', 'Sun']).not.toContain(weekdayOf(later.meeting.date));
+  });
+  it('a mentor never accepts more people than their open slots', async () => {
+    const app = SERVICES.careers.make();
+    const ids: string[] = [];
+    for (const n of ['Ana', 'Bea', 'Cy']) ids.push((await req(app, 'm2', { firstName: n, note: 'Could we talk about network jobs?' }, at('2026-11-02T17:00:00Z'))).body.id);
+    const st = [];
+    for (const id of ids) st.push(((await (await app.request(`/v1/requests/${id}`, { headers: at('2026-11-03T17:00:00Z') })).json()) as any).status);
+    expect(st.filter((x) => x === 'accepted')).toHaveLength(MENTORS.find((m) => m.id === 'm2')!.openSlots);
+  });
+  it('a mentor with no open time refuses at once, and the declines scenario declines', async () => {
+    const app = SERVICES.careers.make();
+    expect((await req(app, 'm7', { firstName: 'Ana', note: 'Could we talk about medical assisting?' }, at('2026-11-02T17:00:00Z'))).status).toBe(409);
+    const r = await req(app, 'm3', { firstName: 'Ana', note: 'Could we talk about running a business?' }, at('2026-11-02T17:00:00Z'));
+    const later = (await (await app.request(`/v1/requests/${r.body.id}`, { headers: { ...at('2026-11-03T17:00:00Z'), 'x-twin-scenario': 'mentor-declines' } })).json()) as any;
+    expect(later.status).toBe('declined');
+  });
+});
+
 describe('lms', () => {
   it('refuses a missing or wrong token', async () => {
     expect((await get('lms', '/api/v1/courses')).status).toBe(401);

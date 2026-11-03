@@ -83,5 +83,5 @@ vendor and checks only the schema.
 ## Verified by
 
 <!-- verified-by:start -->
-- [`apps/campus-services/test/services.test.ts`](../../apps/campus-services/test/services.test.ts) (32 test definitions)
+- [`apps/campus-services/test/services.test.ts`](../../apps/campus-services/test/services.test.ts) (36 test definitions)
 <!-- verified-by:end -->

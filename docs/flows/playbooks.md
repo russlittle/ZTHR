@@ -96,6 +96,31 @@ flowchart TD
 
 Sources: <https://abcnews4.com/news/nation-world/education-department-opens-2027-28-fafsa-early-marking-programs-earliest-launch>, <https://cdhe.colorado.gov/sites/highered/files/documents/Support_Guide_for_Unusual_Circumstances_F.pdf>. Grants: sealed family_circumstances; profile chosenName, college. Journeys: persona-11a-fafsa-without-parents.
 
+## Aid for students who were in foster care
+
+Make sure a student who was in foster care files the FAFSA as independent and applies for the education and training voucher meant for them.
+
+```mermaid
+flowchart TD
+  start((Start)) --> fafsa_independent
+  fafsa_independent["fafsa-independent: If you were in foster care at age 13 or older, the FAFSA cou…"]
+  fafsa_independent --> etv_check
+  etv_check{"etv-check: Were you in foster care at 16 or older, or did you leave car…"}
+  etv_check -- yes --> gather
+  etv_check -- no --> aid_office
+  gather[["gather: The voucher helps pay for tuition, books and supplies. Get t…"]]
+  gather --> ask_agency
+  ask_agency[/"ask-agency: Hello, this is {chosenName}. I am a student at {college} and…"/]
+  ask_agency --> wait_answer
+  aid_office[/"aid-office: Hello, this is {chosenName}. I was in foster care. Can you h…"/]
+  aid_office --> wait_answer
+  wait_answer(["wait-answer: Tell me when you hear back, and I will help with the next st…"])
+  wait_answer --> done((Done))
+  wait_answer -. after 10 days .-> wait_answer_late[/"It has been ten days. Want me to draft a short follow-up?"/]
+```
+
+Sources: <https://studentaid.gov/apply-for-aid/fafsa/filling-out/dependency>, <https://www.fosterclub.com/resources/ohio-education-training-voucher-etv>, <https://ohiocasa.org/wp-content/uploads/2026/03/DCY-00050-ETV-Rack-Card.pdf>. Grants: sealed foster_care_history; profile chosenName, college. Journeys: p2-foster-youth-aid.
+
 ## GI Bill each term
 
 Keep a student's GI Bill tuition and housing allowance paid each term, catching problems before a payment is late.
@@ -115,6 +140,29 @@ flowchart TD
 ```
 
 Sources: <https://www.colorado.edu/veterans/2021/10/20/monthly-enrollment-verification>. Grants: sealed veteran_status; profile chosenName, college. Journeys: persona-4a-gi-bill-tracked.
+
+## Paying for training after a layoff
+
+Help an adult who lost a job or needs a new career find out whether workforce training funds can pay for their program.
+
+```mermaid
+flowchart TD
+  start((Start)) --> what
+  what["what: Training money can pay for classes in jobs that are hiring, …"]
+  what --> laid_off
+  laid_off{"laid-off: Did you lose a job, or are you looking to change careers?"}
+  laid_off -- yes --> gather
+  laid_off -- no --> ask_center
+  gather[["gather: Bring these to your first visit."]]
+  gather --> ask_center
+  ask_center[/"ask-center: Hello, this is {chosenName}. I live in {county} County and I…"/]
+  ask_center --> wait_meeting
+  wait_meeting(["wait-meeting: Tell me when your meeting is set, and I will put it on your …"])
+  wait_meeting --> done((Done))
+  wait_meeting -. after 7 days .-> wait_meeting_late[/"No answer yet. Want me to find the center's phone number so "/]
+```
+
+Sources: <https://emanuals.jfs.ohio.gov/Workforce/WIOA/WIOAPL/WIOAPL-15-08-1.stm>, <https://ohiomeansjobs.ohio.gov>. Grants: profile chosenName, county, college. Journeys: p2-retraining.
 
 ## SNAP application in Ohio
 

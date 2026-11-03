@@ -1,7 +1,7 @@
 import type { Egress } from '@zthr/egress';
 import type { z } from 'zod';
 import { z as zod } from 'zod';
-import { DiningLocation, Event, Itinerary, LmsAnnouncement, LmsAssignment, LmsCourse, MenuItem, Mentor, Period, Posting, Space, Stop, Alert, Arrival, Reservation } from '../../../campus-services/src/contracts.js';
+import { DiningLocation, Event, Itinerary, LmsAnnouncement, LmsAssignment, LmsCourse, MenuItem, Mentor, Period, Posting, Space, Stop, Alert, Arrival, Reservation, MentorRequest } from '../../../campus-services/src/contracts.js';
 
 /**
  * The Advocate's side of the campus services: dining, transit, places, careers and the class site. Each is a base
@@ -31,14 +31,23 @@ export const SYNTHETIC_ENDPOINTS: CampusEndpoints = {
 export type Fetched<T> = { ok: true; data: T } | { ok: false; reason: string };
 
 export class CampusClient {
+  /**
+   * @param clock When set, the Advocate's clock is sent as X-Twin-Clock, so the synthetic services agree with it on
+   * what time it is. Real vendors are not sent it.
+   */
   constructor(
     private readonly egress: Egress,
     readonly endpoints: CampusEndpoints = SYNTHETIC_ENDPOINTS,
+    private readonly clock?: () => Date,
   ) {}
+
+  private extra(): Record<string, string> {
+    return this.clock ? { 'x-twin-clock': this.clock().toISOString() } : {};
+  }
 
   async get<S extends z.ZodTypeAny>(service: keyof CampusEndpoints, path: string, schema: S, headers: Record<string, string> = {}): Promise<Fetched<z.infer<S>>> {
     try {
-      const r = await this.egress.send({ purpose: `campus:${service}`, method: 'GET', url: `${this.endpoints[service]}${path}`, headers: { accept: 'application/json', ...headers } });
+      const r = await this.egress.send({ purpose: `campus:${service}`, method: 'GET', url: `${this.endpoints[service]}${path}`, headers: { accept: 'application/json', ...this.extra(), ...headers } });
       if (r.status !== 200) return { ok: false, reason: `${service} answered ${r.status}` };
       const parsed = schema.safeParse(JSON.parse(r.body));
       return parsed.success ? { ok: true, data: parsed.data } : { ok: false, reason: `${service} answered outside its contract` };
@@ -49,7 +58,7 @@ export class CampusClient {
 
   async post<S extends z.ZodTypeAny>(service: keyof CampusEndpoints, path: string, body: unknown, schema: S, headers: Record<string, string> = {}): Promise<Fetched<z.infer<S>> & { status?: number }> {
     try {
-      const r = await this.egress.send({ purpose: `campus:${service}`, method: 'POST', url: `${this.endpoints[service]}${path}`, body: JSON.stringify(body), headers: { 'content-type': 'application/json', ...headers } });
+      const r = await this.egress.send({ purpose: `campus:${service}`, method: 'POST', url: `${this.endpoints[service]}${path}`, body: JSON.stringify(body), headers: { 'content-type': 'application/json', ...this.extra(), ...headers } });
       if (r.status !== 200 && r.status !== 201) return { ok: false, reason: `${service} answered ${r.status}`, status: r.status };
       const parsed = schema.safeParse(JSON.parse(r.body));
       return parsed.success ? { ok: true, data: parsed.data, status: r.status } : { ok: false, reason: `${service} answered outside its contract`, status: r.status };
@@ -72,6 +81,8 @@ export const Schemas = {
   arrivals: zod.object({ arrivals: zod.array(Arrival) }),
   alerts: zod.object({ alerts: zod.array(Alert) }),
   reservation: Reservation,
+  mentorRequest: MentorRequest,
+  mentorRequests: zod.object({ requests: zod.array(MentorRequest) }),
   reservationsByKey: zod.object({ reservations: zod.array(Reservation) }),
   courses: zod.array(LmsCourse),
   assignments: zod.array(LmsAssignment),

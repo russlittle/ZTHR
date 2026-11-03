@@ -1,0 +1,14 @@
+college: clark-state
+name: Clark State College
+short: Clark State
+words:
+  - clark state
+  - clark
+county: Clark
+state: OH
+website: https://www.clarkstate.edu
+career:
+  name: Clark State Career Services
+  contact: clarkstate.edu, under Career Services
+  source: https://www.clarkstate.edu
+admitted_by: factory

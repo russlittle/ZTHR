@@ -31,12 +31,13 @@ export interface Lease {
 export interface Dispatch {
   id: string;
   studentId: string;
-  kind: 'room-booking';
-  request: { room: string; date: string; start: string; minutes: number; name: string };
+  kind: 'room-booking' | 'mentor-request';
+  /** room-booking: room, date, start, minutes, name. mentor-request: mentor, firstName, note. */
+  request: { room?: string; date?: string; start?: string; minutes?: number; name?: string; mentor?: string; firstName?: string; note?: string };
   key: string;
   status: 'queued' | 'sent' | 'ambiguous' | 'confirmed' | 'refused';
   attempts: number;
-  result?: { reservationId?: string; reason?: string };
+  result?: { reservationId?: string; requestId?: string; reason?: string; meeting?: { date: string; time: string; where: string } };
   queuedAt: string;
 }
 
@@ -229,10 +230,13 @@ export class Operator {
         this.a.notifyDispatch(d.studentId, gave);
         continue;
       }
-      const r = await this.a.campus.post('places', `/v1/rooms/${d.request.room}/reservations`, { date: d.request.date, start: d.request.start, minutes: d.request.minutes, name: d.request.name }, Schemas.reservation, { 'idempotency-key': d.key });
-      if (r.ok) this.save({ ...d, status: 'sent', attempts: d.attempts + 1, result: { reservationId: r.data.id } });
+      const r =
+        d.kind === 'mentor-request'
+          ? await this.a.campus.post('careers', `/v1/mentors/${d.request.mentor}/requests`, { firstName: d.request.firstName, note: d.request.note }, Schemas.mentorRequest, { 'idempotency-key': d.key })
+          : await this.a.campus.post('places', `/v1/rooms/${d.request.room}/reservations`, { date: d.request.date, start: d.request.start, minutes: d.request.minutes, name: d.request.name }, Schemas.reservation, { 'idempotency-key': d.key });
+      if (r.ok) this.save({ ...d, status: 'sent', attempts: d.attempts + 1, result: d.kind === 'mentor-request' ? { requestId: r.data.id } : { reservationId: r.data.id } });
       else if (r.status === 409 || r.status === 400) {
-        const done = { ...d, status: 'refused' as const, attempts: d.attempts + 1, result: { reason: r.status === 409 ? 'that time was taken' : 'the booking system refused the request' } };
+        const done = { ...d, status: 'refused' as const, attempts: d.attempts + 1, result: { reason: r.status === 409 ? (d.kind === 'mentor-request' ? 'the mentor has no open time' : 'that time was taken') : 'the request was refused' } };
         this.save(done);
         this.a.notifyDispatch(d.studentId, done);
       } else this.save({ ...d, status: 'ambiguous', attempts: d.attempts + 1, result: { reason: r.reason } });
@@ -242,6 +246,15 @@ export class Operator {
 
   async verify(): Promise<void> {
     for (const d of this.all().filter((x) => x.status === 'sent' || x.status === 'ambiguous')) {
+      if (d.kind === 'mentor-request') {
+        const m = await this.a.campus.get('careers', `/v1/requests?key=${d.key}`, Schemas.mentorRequests);
+        const found = m.ok ? m.data.requests[0] : undefined;
+        if (!found || found.status === 'pending') continue;
+        const done: Dispatch = found.status === 'accepted' ? { ...d, status: 'confirmed', result: { requestId: found.id, ...(found.meeting ? { meeting: found.meeting } : {}) } } : { ...d, status: 'refused', result: { requestId: found.id, reason: found.reason ?? 'declined' } };
+        this.save(done);
+        this.a.notifyDispatch(d.studentId, done);
+        continue;
+      }
       const r = await this.a.campus.get('places', `/v1/reservations?key=${d.key}`, Schemas.reservationsByKey);
       if (!r.ok) continue;
       const found = r.data.reservations[0];

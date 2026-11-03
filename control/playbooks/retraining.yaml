@@ -1,0 +1,41 @@
+playbook: retraining
+title: Paying for training after a layoff
+purpose: Help an adult who lost a job or needs a new career find out whether workforce training funds can pay for their program.
+owner: builder
+admitted_by: factory
+sources:
+  - https://emanuals.jfs.ohio.gov/Workforce/WIOA/WIOAPL/WIOAPL-15-08-1.stm
+  - https://ohiomeansjobs.ohio.gov
+student_grants:
+  sealed: []
+  profile: [chosenName, county, college]
+journeys: [p2-retraining]
+steps:
+  - id: what
+    kind: info
+    text: Training money can pay for classes in jobs that are hiring, like welding, trucking, health care and computer support. Your county's OhioMeansJobs center decides who gets it.
+  - id: laid-off
+    kind: question
+    text: Did you lose a job, or are you looking to change careers?
+    branches: { yes: gather, no: ask-center }
+  - id: gather
+    kind: documents
+    next: ask-center
+    text: Bring these to your first visit.
+    documents:
+      - Photo ID
+      - Proof of the layoff, such as a letter from your employer, if you have one
+      - The program you want to take and what it costs
+      - Your class schedule, if you are already enrolled
+  - id: ask-center
+    kind: draft
+    requires_approval: true
+    to: your county's OhioMeansJobs center
+    text: "Hello, this is {chosenName}. I live in {county} County and I want to train for a new career at {college}. Can workforce training funds help pay for my program, and how do I set up a first meeting? Thank you."
+  - id: wait-meeting
+    kind: wait
+    text: Tell me when your meeting is set, and I will put it on your calendar.
+    timeout_days: 7
+    on_timeout: No answer yet. Want me to find the center's phone number so you can call?
+recovery:
+  - If you do not qualify, your college's financial aid office can check other grants for adult learners.

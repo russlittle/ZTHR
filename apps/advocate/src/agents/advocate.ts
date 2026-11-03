@@ -28,6 +28,7 @@ import { COLLEGE_COUNTY, findHelp, stepsLeft, type PlanOption } from '../domain/
 import { planSteps, upcomingMessages } from '../domain/planner.js';
 import { findGuide, needsLicensed } from '../domain/lifeskills.js';
 import { COLLEGE_SITES, explain } from '../domain/college.js';
+import { collegeById, collegeFromText } from '../domain/colleges.js';
 import { prepText, type Meeting } from '../domain/meetings.js';
 import { PULSES, nextPulse, type PulseState } from '../domain/pulses.js';
 import { COMMUNITIES, Community } from '../domain/community.js';
@@ -204,7 +205,7 @@ export class Advocate {
     this.model = o.model;
     this.egress = o.egress ?? new EgressTwin();
     this.fromNumber = o.fromNumber ?? '+19375550100';
-    this.campus = new CampusClient(this.egress, o.campus ?? SYNTHETIC_ENDPOINTS);
+    this.campus = new CampusClient(this.egress, o.campus ?? SYNTHETIC_ENDPOINTS, o.campus ? undefined : () => this.now());
     this.operator = new Operator(this);
     this.playbooks = loadPlaybooks(o.playbookDir ?? fileURLToPath(new URL('../../../../control/playbooks', import.meta.url)));
   }
@@ -369,7 +370,7 @@ export class Advocate {
         ];
       }
       case 'where': {
-        const college = /wright/i.test(body) ? 'wright-state' : /antioch/i.test(body) ? 'antioch' : /sinclair/i.test(body) ? 'sinclair' : undefined;
+        const college = collegeFromText(body);
         const zip = body.match(/\b(\d{5})\b/)?.[1];
         if (!college || !zip) return ["Got it. I just need your college and ZIP code, like 'Sinclair 45402'."];
         const s = this.createStudent({ chosenName: 'there', phone, zip, enrollment: { college }, dial: textDial });
@@ -467,6 +468,8 @@ export class Advocate {
       const one = this.today_(s.id).oneThing;
       if (one?.deadlineId) return [this.deliver(this.planMessage(s.id, one.deadlineId), { force: true })];
     }
+    if (/\b(foster care|in foster|aged out of (care|foster)|former foster|foster youth|foster kid)\b/.test(t)) return [this.deliver(this.fosterYouthMessage(s.id), { force: true })];
+    if (/\b(laid off|lost my job|got fired|retrain(ing)?|career change|change careers|new career|dislocated worker)\b/.test(t)) return [this.deliver(this.playbookMessage(s.id, this.startPlaybook(s.id, 'retraining')), { force: true })];
     if (RECORD_WORDS.test(text) && /\b(job|work|hire|hiring|career|license|employ)/i.test(text)) return [this.deliver(this.fairChanceMessage(s.id), { force: true })];
     if (/\b(find a job|job search|looking for (a )?(job|work)|career|resume|internship|jobs? (near|for) me)\b/.test(t)) return [this.deliver(this.careerMessage(s.id), { force: true })];
     if (/\bfree food\b/.test(t)) return [this.deliver(this.freeFoodMessage(s.id), { force: true })];
@@ -828,6 +831,8 @@ export class Advocate {
     if (!d || d.studentId !== studentId) return { sent: false, reason: 'no such draft' };
     const r = await this.outbound.dispatch({ studentId, kind: 'email', recipient: d.recipient, content: { body: d.body } }, token);
     if (r.sent) this.store.put('drafts', d.id, studentId, { ...d, status: 'sent' });
+    // An approved introduction goes to the mentor platform as a dispatch: first name and note only, then tracked.
+    if (r.sent && d.purpose.startsWith('mentor:')) this.operator.queue({ studentId, kind: 'mentor-request', request: { mentor: d.purpose.slice(7), firstName: this.student(studentId).chosenName.split(' ')[0]!, note: d.body } }, this.now());
     this.ev('outbound', studentId, { sent: r.sent, reason: r.reason ?? null });
     return r;
   }
@@ -852,7 +857,7 @@ export class Advocate {
     const step = currentStep(def, next);
     if (step.kind === 'draft' && next.status === 'active') {
       const s = this.student(studentId);
-      const body = fillTemplate(def, step.text, { chosenName: s.chosenName, college: s.enrollment.college });
+      const body = fillTemplate(def, step.text, this.templateProfile(s));
       if (!this.drafts(studentId).some((d) => d.purpose === `${id}:${step.id}`)) this.createDraft(studentId, step.to ?? 'office', step.to ?? 'office', body, `${id}:${step.id}`);
     }
     this.ev('playbook', studentId, { playbook: id, event: ev.type, step: next.stepId, status: next.status });
@@ -878,7 +883,7 @@ export class Advocate {
     const def = this.playbooks.get(run.playbook)!;
     const step = currentStep(def, run);
     const s = this.student(studentId);
-    const text = fillTemplate(def, step.text, { chosenName: s.chosenName, college: s.enrollment.college });
+    const text = fillTemplate(def, step.text, this.templateProfile(s));
     const nextSteps =
       step.kind === 'question' && step.branches
         ? Object.keys(step.branches).map((k) => ({ label: k === 'yes' ? 'Yes' : k === 'no' ? 'No' : k, action: `playbook:${run.playbook}:answer:${k}` }))
@@ -1184,8 +1189,9 @@ export class Advocate {
 
   /** Tell the student how a queued write turned out, through the same gates as any message. */
   notifyDispatch(studentId: string, d: Dispatch): void {
+    if (d.kind === 'mentor-request') return this.notifyMentor(studentId, d);
     const space = this.campusFeed(this.student(studentId).enrollment.college)?.spaces.find((s) => s.id === d.request.room);
-    const what = `${space?.name ?? 'The room'} ${shortDate(d.request.date)} at ${time12(d.request.start)}`;
+    const what = `${space?.name ?? 'The room'} ${shortDate(d.request.date ?? "")} at ${time12(d.request.start ?? "00:00")}`;
     const text = d.status === 'confirmed' ? `Booked: ${what}.` : `${what} did not go through: ${d.result?.reason ?? 'refused'}.`;
     this.ev('dispatch', studentId, { kind: d.kind, status: d.status, attempts: d.attempts });
     this.deliver({ studentId, author: 'operator', urgency: 'routine', text, nextSteps: [{ label: 'Study spots', action: 'study-spots' }, { label: 'Show my day', action: 'today' }], why: 'The room system answered your booking.' });
@@ -1256,12 +1262,42 @@ export class Advocate {
     return { added, moved: moved.length };
   }
 
+  /** What a playbook may put in its text: only fields it declares, and only plain values. */
+  private templateProfile(s: Student): Record<string, string | number | undefined> {
+    return { chosenName: s.chosenName, college: collegeById(s.enrollment.college)?.short ?? s.enrollment.college, county: s.county ?? COLLEGE_COUNTY[s.enrollment.college], phone: s.phone, householdSize: s.household.size, monthlyGrossIncome: s.household.monthlyGrossIncome, weeklyWorkHours: s.enrollment.weeklyWorkHours };
+  }
+
+  /**
+   * A student who says they were in foster care (PB-4). The fact is sealed the moment they say it, granted only to
+   * the foster-youth playbook, and never written in the clear or repeated back. The words they used are not kept.
+   */
+  fosterYouthMessage(studentId: string): OutboundMessage {
+    if (!this.sealed.has(studentId, 'foster_care_history')) this.sealed.seal(studentId, 'foster_care_history', 'stated by the student');
+    this.grantToPlaybook(studentId, 'foster_care_history', 'foster-youth-aid');
+    this.ev('playbook_offer', studentId, { playbook: 'foster-youth-aid' });
+    return this.playbookMessage(studentId, this.startPlaybook(studentId, 'foster-youth-aid'));
+  }
+
   /** Communities the student chose. Only listed communities; never inferred from anything else. */
   setCommunities(studentId: string, list: string[]): string[] {
     const s = this.student(studentId);
     const chosen = [...new Set(list.filter((c) => (COMMUNITIES as readonly string[]).includes(c)))];
     this.store.put('students', studentId, studentId, { ...s, communities: chosen });
     return chosen;
+  }
+
+  /** A mentor's answer (Phase 4): a yes puts the meeting on the calendar; a no offers others. */
+  private notifyMentor(studentId: string, d: Dispatch): void {
+    const m = this.campusFeed(this.student(studentId).enrollment.college)?.mentors.find((x) => x.id === d.request.mentor);
+    const name = m?.displayName ?? 'The mentor';
+    this.ev('dispatch', studentId, { kind: d.kind, status: d.status, attempts: d.attempts });
+    if (d.status === 'confirmed' && d.result?.meeting) {
+      const mt = d.result.meeting;
+      this.addDeadline(studentId, { title: `Meet ${name}`, due: `${mt.date}T${mt.time}`, kind: 'appointment', durationMin: 30, source: { type: 'student', ref: `mentor:${d.request.mentor}`, line: mt.where }, confirmed: true });
+      this.deliver({ studentId, author: 'operator', urgency: 'routine', text: `${name} said yes. ${sentence(`You meet ${shortDate(mt.date)} at ${time12(mt.time)}`)} ${sentence(mt.where)}`, nextSteps: [{ label: 'See my dates', action: 'review-deadlines' }, { label: 'Show my day', action: 'today' }], why: 'The mentor answered your introduction.' });
+      return;
+    }
+    this.deliver({ studentId, author: 'operator', urgency: 'routine', text: `${name} can't take someone new right now. That is about their time, not you.`, nextSteps: [{ label: 'Other mentors', action: 'mentors' }, { label: 'Show my day', action: 'today' }], why: 'The mentor answered your introduction.' });
   }
 
   campusFoodMessage(studentId: string): OutboundMessage {

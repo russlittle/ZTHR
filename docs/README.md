@@ -21,6 +21,7 @@ flowchart LR
 
 ## Business flows
 
+- [Any college](flows/any-college.md)
 - [Campus life, the bus, jobs and mentors](flows/campus-life.md)
 - [Jobs and careers](flows/careers.md)
 - [Class-site sync](flows/class-site.md)
@@ -31,6 +32,7 @@ flowchart LR
 - [Meals for the week](flows/meals.md)
 - [Money found and short months](flows/money.md)
 - [The operator](flows/operator.md)
+- [Outcome measures](flows/outcomes.md)
 - [Deadlines, plans and held time](flows/planning.md)
 - [Playbooks](flows/playbooks.md)
 - [Signing in](flows/sign-in.md)

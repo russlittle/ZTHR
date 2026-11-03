@@ -11,6 +11,24 @@ const PROGRAM = 120;
 
 export const DAYTON_CATALOG: Resource[] = [
   {
+    id: 'eldercare-locator',
+    name: 'Eldercare Locator',
+    organization: 'U.S. Administration for Community Living',
+    categories: ['caregiving'],
+    description: 'Free help finding care for an older parent or relative, and support for the person caring for them.',
+    serves: { national: true },
+    hours: 'Mon to Fri, 8 a.m. to 9 p.m. Eastern',
+    phone: '1-800-677-1116',
+    url: 'https://eldercare.acl.gov',
+    eligibility: { text: 'Anyone caring for an older adult, or an older adult looking for help.' },
+    howToApply: ['Call 1-800-677-1116, or search by ZIP code at eldercare.acl.gov.', 'Ask for the local agency that helps caregivers in your county.'],
+    documents: [],
+    prefill: ['zip'],
+    source: { url: 'https://eldercare.acl.gov/Public/About/Contact_Info/Index.aspx', license: 'public-information' },
+    verifiedOn: '2026-11-03',
+    freshnessDays: 180,
+  },
+  {
     id: 'sinclair-food-pantry',
     name: 'Sinclair Student Food Pantry',
     organization: 'Sinclair Community College',

@@ -86,5 +86,5 @@ is a draft that shares only the student's first name and the note.
 ## Verified by
 
 <!-- verified-by:start -->
-- [`apps/advocate/test/campus.test.ts`](../../apps/advocate/test/campus.test.ts) (36 test definitions)
+- [`apps/advocate/test/campus.test.ts`](../../apps/advocate/test/campus.test.ts) (38 test definitions)
 <!-- verified-by:end -->

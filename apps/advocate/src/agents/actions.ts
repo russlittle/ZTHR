@@ -5,6 +5,7 @@ import { openBlocks, planSteps } from '../domain/planner.js';
 import { TERMS } from '../domain/college.js';
 import type { Situation } from '../domain/crisis.js';
 import * as campusLife from './campus-life.js';
+import { collegeById } from '../domain/colleges.js';
 
 /**
  * Every button the team offers, in one registry (PRD P3: every message carries a next step the student can take
@@ -262,7 +263,7 @@ export const ACTIONS: Record<string, Handler> = {
     const s = a.student(sid);
     const m = a.campusFeed(s.enrollment.college)?.mentors.find((x) => x.id === arg);
     if (!m) return { message: msg(sid, 'That mentor is not taking new people right now.', [{ label: 'Other mentors', action: 'mentors' }, back]) };
-    return showDraft(a, sid, `mentor:${m.id}`, m.displayName, `Hi ${m.displayName.split(' ')[0]}, I'm ${s.chosenName}, a student at ${s.enrollment.college === 'wright-state' ? 'Wright State' : s.enrollment.college === 'antioch' ? 'Antioch' : 'Sinclair'}. I'd like to learn about working in ${m.field}. Could we talk for 20 minutes sometime? Thank you.`, 'Only your first name and this note are shared.');
+    return showDraft(a, sid, `mentor:${m.id}`, m.displayName, `Hi ${m.displayName.split(' ')[0]}, I'm ${s.chosenName}, a student at ${collegeById(s.enrollment.college)?.short ?? 'my college'}. I'd like to learn about working in ${m.field}. Could we talk for 20 minutes sometime? Thank you.`, 'Only your first name and this note are shared.');
   },
 
   // campus life and getting there
