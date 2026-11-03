@@ -60,6 +60,12 @@ function buildLanding(): void {
   // The front of the reference site is the Student Advocate's product page, linking to the docs, the factory and the app.
   const gaHead = ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`;
   write(join(SITE, 'index.html'), productPage({ app: APP.replace(/\/$/, ''), docs: 'docs/index.html', factory: 'factory/index.html', factoryPage: (p) => `factory/${p}.html`, admin: `${APP}admin/`, fontBase: fontBase(''), head: gaHead, live: false }));
+  if (STATIC) {
+    // The host strips trailing slashes, so /reference is served from a file of that name beside the folder. Its
+    // links must still resolve inside /reference/, and in-page links must stay on the page.
+    const page = readFileSync(join(SITE, 'index.html'), 'utf8').replace('<head>', '<head><base href="/reference/">').replace(/href="#([\w-]+)"/g, 'href="/reference#$1"');
+    writeFileSync(join(ROOT, 'site-static.entry.html'), page);
+  }
   if (ARTIFACT) {
     // The preview's front page is written as page content only; the host wraps it in its own document.
     const full = readFileSync(join(SITE, 'index.html'), 'utf8');

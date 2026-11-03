@@ -9,3 +9,4 @@ evidence-out/
 .ci-start
 site-out/
 site-artifact/
+site-static.entry.html
