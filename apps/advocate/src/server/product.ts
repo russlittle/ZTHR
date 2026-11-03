@@ -22,7 +22,7 @@ export interface ProductLinks {
 }
 
 /** Said wherever someone meets the Advocate: whose it is not, where its facts come from, and why these colleges. */
-export const NOT_AFFILIATED = { title: 'Not affiliated with any college', body: 'An independent demonstration, not affiliated with or representing any college. Details about real organizations come from public sources; everything else is synthetic. The author chose colleges he graduated from (Sinclair, Wright State and Antioch) so the intent could be checked against real context.' };
+export const NOT_AFFILIATED = { title: 'Not affiliated with any college', body: 'Not affiliated with any educational institution. All data from public sources.' };
 
 const FEATURES: [string, string, string][] = [
   ['today', 'Runs your day', 'Classes, shifts, child care and due dates on one line. It holds time for the work that matters and tells you the one thing to do today.'],

@@ -49,7 +49,7 @@ describe('affiliation', () => {
     const start = startPage({ app: '/a', admin: '/a/admin/', fontBase: '', product: '/p', reference: '/r', live: true });
     for (const page of [product, start]) {
       expect(page).toContain(NOT_AFFILIATED.body);
-      expect(NOT_AFFILIATED.body).toMatch(/not affiliated with or representing any college/);
+      expect(NOT_AFFILIATED.body).toMatch(/Not affiliated with any educational institution/);
       expect(NOT_AFFILIATED.body).toMatch(/public sources/);
     }
   });

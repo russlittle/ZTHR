@@ -84,4 +84,4 @@ flowchart LR
 Every test file names the document it verifies, and every document lists its tests. The `docs-linked` gate fails
 the build when either side is missing.
 
-<small>An independent demonstration, not affiliated with or representing any college. Details about real organizations come from public sources; everything else is synthetic. The author chose colleges he graduated from (Sinclair, Wright State and Antioch) so the intent could be checked against real context.</small>
+<small>Not affiliated with any educational institution. All data from public sources.</small>
