@@ -6,7 +6,7 @@ The Advocate keeps a student's record in one document store, one collection per 
 owned by exactly one student, so export and deletion are a single query each. Three other stores sit beside it,
 each with its own guarantee.
 
-## The student's record
+## The student
 
 ```mermaid
 erDiagram
@@ -27,6 +27,13 @@ erDiagram
     string_ communities "chosen, never inferred"
     date createdAt
   }
+```
+
+## The record: schedule
+
+```mermaid
+erDiagram
+  students { string id PK  string chosenName  HelpDial dial }
   deadlines {
     string id PK
     string studentId FK "owner"
@@ -69,6 +76,34 @@ erDiagram
     date_or_date_time at
     string text
   }
+  meetings {
+    string id PK
+    string title
+    date date
+    time start
+    string_ attendees
+    string course "optional"
+  }
+  courses {
+    string course
+    enum aiPolicy
+    string aiPolicyLine "optional"
+  }
+  students ||--o{ deadlines : "has"
+  students ||--o{ classes : "attends"
+  students ||--o{ shifts : "works"
+  students ||--o{ holds : "holds time"
+  students ||--o{ reminders : "is reminded"
+  students ||--o{ meetings : "attends"
+  students ||--o{ courses : "takes"
+  deadlines ||--o{ holds : "gets time in"
+```
+
+## The record: conversation
+
+```mermaid
+erDiagram
+  students { string id PK  string chosenName  HelpDial dial }
   drafts {
     string id PK
     string studentId FK
@@ -93,6 +128,29 @@ erDiagram
   last_steps {
     NextStep_ steps
   }
+  pulse_state {
+    record asked
+    number everyDays
+    boolean off "optional"
+  }
+  pulse_pending {
+    string pulse
+  }
+  dismissed {
+    string subject
+    date at
+  }
+  students ||--o{ drafts : "approves"
+  students ||--o{ messages : "receives"
+  students ||--o| pulse_state : "answers"
+  students ||--o{ dismissed : "dismisses"
+```
+
+## The record: help and money
+
+```mermaid
+erDiagram
+  students { string id PK  string chosenName  HelpDial dial }
   playbook_runs {
     string playbook
     string studentId FK
@@ -102,14 +160,35 @@ erDiagram
     object_ history
     date waitingSince "optional"
   }
-  pulse_state {
-    record asked
-    number everyDays
-    boolean off "optional"
+  vault {
+    string name
+    date addedAt
   }
-  pulse_pending {
-    string pulse
+  money {
+    number balance
+    Bill_ bills
+    Paycheck pay "optional"
   }
+  household_plan {
+    ChildCare childCare "optional"
+    number commuteMin "optional"
+    number sleepHours "optional"
+  }
+  aid {
+    date disbursement
+  }
+  students ||--o{ playbook_runs : "runs"
+  students ||--o{ vault : "keeps"
+  students ||--o| money : "tracks"
+  students ||--o| household_plan : "plans"
+  students ||--o| aid : "expects"
+```
+
+## The record: connections
+
+```mermaid
+erDiagram
+  students { string id PK  string chosenName  HelpDial dial }
   sources {
     enum source
     date connectedAt
@@ -126,60 +205,9 @@ erDiagram
     string_ events
     string secret "signs each delivery"
   }
-  vault {
-    string name
-    date addedAt
-  }
-  money {
-    number balance
-    Bill_ bills
-    Paycheck pay "optional"
-  }
-  household_plan {
-    ChildCare childCare "optional"
-    number commuteMin "optional"
-    number sleepHours "optional"
-  }
-  meetings {
-    string id PK
-    string title
-    date date
-    time start
-    string_ attendees
-    string course "optional"
-  }
-  courses {
-    string course
-    enum aiPolicy
-    string aiPolicyLine "optional"
-  }
-  dismissed {
-    string subject
-    date at
-  }
-  aid {
-    date disbursement
-  }
-  students ||--o{ deadlines : "has"
-  students ||--o{ classes : "attends"
-  students ||--o{ shifts : "works"
-  students ||--o{ holds : "holds time"
-  students ||--o{ reminders : "is reminded"
-  students ||--o{ drafts : "approves"
-  students ||--o{ messages : "receives"
-  students ||--o{ playbook_runs : "runs"
   students ||--o{ sources : "connects"
   students ||--o{ api_tokens : "creates"
   students ||--o{ webhooks : "registers"
-  students ||--o{ vault : "keeps"
-  students ||--o| money : "tracks"
-  students ||--o| household_plan : "plans"
-  students ||--o{ meetings : "attends"
-  students ||--o{ courses : "takes"
-  students ||--o| pulse_state : "answers"
-  students ||--o{ dismissed : "dismisses"
-  students ||--o| aid : "expects"
-  deadlines ||--o{ holds : "gets time in"
 ```
 
 | Collection | Key | What it holds |

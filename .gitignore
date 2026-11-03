@@ -7,3 +7,4 @@ reports/
 dist/
 evidence-out/
 .ci-start
+site-out/

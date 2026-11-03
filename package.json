@@ -34,6 +34,7 @@
     "@types/node": "^22.10.0",
     "axe-core": "^4.14.0",
     "marked": "15.0.12",
+    "mermaid": "11.4.1",
     "tsx": "^4.19.0",
     "typescript": "~5.9.0",
     "vitest": "^3.2.0"

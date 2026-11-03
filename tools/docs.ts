@@ -30,11 +30,21 @@ const walk = (dir: string, keep: (p: string) => boolean): string[] =>
 
 export function dataModel(): string {
   const type = (t: string) => t.replace(/[^A-Za-z0-9_]/g, '_').replace(/_+/g, '_') || 'string';
-  const er = [
-    'erDiagram',
-    ...COLLECTIONS.map((c) => `  ${mermaidId(c.name)} {\n${c.fields.map((f) => `    ${type(f.type)} ${f.name}${f.name === 'id' || f.name === c.key ? ' PK' : f.name === 'studentId' || f.name === 'deadlineId' ? ' FK' : ''}${f.note ? ` "${f.note.replace(/"/g, "'")}"` : f.optional ? ' "optional"' : ''}`).join('\n')}\n  }`),
-    ...COLLECTIONS.flatMap((c) => (c.relations ?? []).map(([to, label, card]) => `  ${mermaidId(c.name)} ${card} ${mermaidId(to)} : "${label}"`)),
-  ].join('\n');
+  const entity = (c: (typeof COLLECTIONS)[number]) => `  ${mermaidId(c.name)} {\n${c.fields.map((f) => `    ${type(f.type)} ${f.name}${f.name === 'id' || f.name === c.key ? ' PK' : f.name === 'studentId' || f.name === 'deadlineId' ? ' FK' : ''}${f.note ? ` "${f.note.replace(/"/g, "'")}"` : f.optional ? ' "optional"' : ''}`).join('\n')}\n  }`;
+  const student = COLLECTIONS.find((c) => c.name === 'students')!;
+  const GROUPS = ['schedule', 'conversation', 'help and money', 'connections'] as const;
+  const erFor = (g: (typeof GROUPS)[number]) => {
+    const members = COLLECTIONS.filter((c) => c.group === g);
+    const names = new Set(members.map((c) => c.name));
+    return [
+      'erDiagram',
+      `  ${mermaidId(student.name)} { string id PK  string chosenName  HelpDial dial }`,
+      ...members.map(entity),
+      ...(student.relations ?? []).filter(([to]) => names.has(to)).map(([to, label, card]) => `  students ${card} ${mermaidId(to)} : "${label}"`),
+      ...members.flatMap((c) => (c.relations ?? []).filter(([to]) => names.has(to)).map(([to, label, card]) => `  ${mermaidId(c.name)} ${card} ${mermaidId(to)} : "${label}"`)),
+    ].join('\n');
+  };
+  const er = ['erDiagram', entity(student)].join('\n');
   const others = ['erDiagram', '  consent_ledger { int seq PK  text at  text student_id  text kind  text subject  json detail  text prev_hash  text hash }', '  consent_ledger ||--|| consent_ledger : "prev_hash chains to"', '  sealed_record { text studentId PK  text wrappedKey "data key, wrapped by the master key"  json facts "each encrypted"  json grants "fact to identities" }', '  evidence_event { int seq PK  text at  text kind  text subject "keyed hash"  json data }'].join('\n');
   return `# Data model
 
@@ -44,11 +54,13 @@ The Advocate keeps a student's record in one document store, one collection per 
 owned by exactly one student, so export and deletion are a single query each. Three other stores sit beside it,
 each with its own guarantee.
 
-## The student's record
+## The student
 
 \`\`\`mermaid
 ${er}
 \`\`\`
+
+${GROUPS.map((g) => `## The record: ${g}\n\n\`\`\`mermaid\n${erFor(g)}\n\`\`\``).join('\n\n')}
 
 | Collection | Key | What it holds |
 | --- | --- | --- |

@@ -104,6 +104,36 @@ for (const sid of ['maria', 'sam', 'ana']) {
     }
   }
 }
+// ---- part three: the published docs and factory console, if this build made them
+const origin = new URL(base).origin;
+const sitePages = await (async () => {
+  const r = await fetch(`${origin}/docs/`).catch(() => undefined);
+  if (!r || r.status !== 200) return [] as string[];
+  const { readdirSync, statSync } = await import('node:fs');
+  const files = (d: string): string[] => readdirSync(d).flatMap((n) => (statSync(`${d}/${n}`).isDirectory() ? files(`${d}/${n}`) : n.endsWith('.html') ? [`${d}/${n}`] : []));
+  return ['docs', 'factory'].flatMap((p) => files(`site-out/${p}`).map((f) => f.replace(/^site-out/, '')));
+})();
+if (sitePages.length) {
+  const page = await browser.newPage({ viewport: VIEWPORTS.desktop });
+  for (const path of sitePages) {
+    const t0 = Date.now();
+    await page.goto(`${origin}${path}`, { waitUntil: 'networkidle' });
+    const diagrams = await page.evaluate(async () => {
+      for (let i = 0; i < 40 && document.querySelectorAll('pre.mermaid:not([data-processed])').length; i++) await new Promise((r) => setTimeout(r, 100));
+      const pending = document.querySelectorAll('pre.mermaid:not([data-processed])').length;
+      const broken = Array.from(document.querySelectorAll('pre.mermaid')).filter((el) => /Syntax error|Parse error/i.test(el.textContent ?? '') || el.querySelector('.error-icon')).length;
+      return { pending, broken };
+    });
+    await inspect(page, 'site', path.replace(/\//g, '_').replace(/^_/, ''), 'light', 'desktop', t0);
+    const last = stops[stops.length - 1]!;
+    // Console pages have no sideways-scroll requirement for wide tables; diagrams must all draw.
+    last.problems = last.problems.filter((p) => !p.startsWith('scrolls sideways') && !p.startsWith('tap target'));
+    if (diagrams.pending) last.problems.push(`${diagrams.pending} diagrams did not draw`);
+    if (diagrams.broken) last.problems.push(`${diagrams.broken} diagrams have errors`);
+  }
+  await page.close();
+}
+
 await browser.close();
 
 writeFileSync(`${out}/manifest.json`, JSON.stringify({ base, at: new Date().toISOString(), stops }, null, 1));

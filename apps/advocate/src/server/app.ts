@@ -8,6 +8,8 @@ import type { NeedCategory, OutboundMessage } from '../domain/types.js';
 import { parseShifts } from '../domain/shifts.js';
 import { PERSONA_NAMES } from './demo.js';
 import { createApi } from './api.js';
+import { createAdmin } from './admin.js';
+import { fileURLToPath } from 'node:url';
 
 /**
  * The web app and the text-message webhook. Both are thin: every behavior lives in the Advocate and its action
@@ -447,6 +449,7 @@ ${ui.section('Your data', `<div class="panel" style="padding:14px 18px"><p>Every
   // ------------------------------------------------------------ integration API, calendar feed, app shell bits
 
   app.route('/api', createApi(a));
+  app.route('/admin', createAdmin(a, { base, controlDir: fileURLToPath(new URL('../../../../control', import.meta.url)) }));
 
   app.get('/s/:id/calendar.ics', (c) => c.body(a.calendarFeed(c.req.param('id')), 200, { 'content-type': 'text/calendar; charset=utf-8' }));
 

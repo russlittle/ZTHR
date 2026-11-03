@@ -1,5 +1,7 @@
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
+import { serveStatic } from '@hono/node-server/serve-static';
+import { existsSync } from 'node:fs';
 import { refuseToStartUnless } from '@zthr/runtime';
 import { realEgress } from '@zthr/egress';
 import { Advocate } from '../agents/advocate.js';
@@ -52,6 +54,13 @@ const inner = createApp(advocate, { base, demo });
 const root = new Hono({ strict: false });
 root.route(base || '/', inner);
 if (base) root.get('/', (c) => c.redirect(`${base}/`));
+// The published docs and factory console, built by tools/site.ts into site-out/.
+if (existsSync('site-out')) {
+  for (const p of ['docs', 'factory', 'assets']) {
+    root.use(`/${p}/*`, async (c, next) => (new URL(c.req.url).pathname === `/${p}` ? c.redirect(`/${p}/`) : next()));
+    root.use(`/${p}/*`, serveStatic({ root: 'site-out', rewriteRequestPath: (path) => (path.endsWith('/') ? `${path}index.html` : path) }));
+  }
+}
 
 const port = Number(process.env.PORT ?? 8080);
 serve({ fetch: root.fetch, port });
