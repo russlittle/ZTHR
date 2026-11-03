@@ -457,7 +457,7 @@ export const DAYTON_CATALOG: Resource[] = [
     serves: { national: true },
     url: 'https://www.lifelinesupport.org',
     eligibility: { rule: 'lifeline', text: 'Income at or below 135% of poverty, or receiving SNAP, Medicaid, SSI, federal public housing or a veterans pension. One per household.' },
-    howToApply: ['Apply through the National Verifier, or ask a participating phone company.'],
+    howToApply: ['Apply online with the National Verifier. Or ask a phone company that takes part.'],
     documents: ['Proof of SNAP, Medicaid or SSI, or proof of income'],
     prefill: ['chosenName', 'zip'],
     source: { url: 'https://www.usac.org/lifeline/consumer-eligibility/', license: 'public-information' },

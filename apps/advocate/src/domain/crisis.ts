@@ -61,11 +61,13 @@ export function crisisPlan(s: Student, situation: Situation, catalog: Resource[]
       options.push(o);
     }
   }
-  const top = options.slice(0, 3);
+  const brief = s.dial.depth === 'brief';
+  const top = options.slice(0, brief ? 2 : 3);
   const lines = [FIRST_STEP[situation]];
   top.forEach((o, i) => {
     const contact = o.resource.phone ? ` Call ${o.resource.phone}.` : o.resource.url ? ` ${o.resource.url}` : '';
-    lines.push(`${i + 1}. ${o.resource.name}: ${o.resource.description}${contact}`);
+    // Brief: names and numbers only; the details are one tap away.
+    lines.push(brief ? `${i + 1}. ${o.resource.name}.${contact}` : `${i + 1}. ${o.resource.name}: ${o.resource.description}${contact}`);
   });
   if (top.length === 0) lines.push('I could not find a verified resource for this near you yet. I am noting the gap, and 2-1-1 can help right now.');
   const draft = DRAFTS[situation]?.(s);

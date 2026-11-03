@@ -629,9 +629,9 @@ export class Advocate {
   moneyFoundMessage(studentId: string): OutboundMessage {
     const results = this.screen(studentId).filter((r) => r.status === 'likely');
     const needsInfo = this.screen(studentId).filter((r) => r.status === 'needs-info');
-    const lines = results.map((r) => (r.estimatedMonthlyValue ? `${r.title}: about $${r.estimatedMonthlyValue.toFixed(r.estimatedMonthlyValue % 1 ? 2 : 0)} a month${r.valueIsEstimate ? ' (estimate)' : ''}` : r.title));
+    const lines = results.map((r, i) => `${i + 1}. ${r.title}${r.estimatedMonthlyValue ? `, about $${r.estimatedMonthlyValue.toFixed(r.estimatedMonthlyValue % 1 ? 2 : 0)} a month${r.valueIsEstimate ? ' (estimate)' : ''}` : ''}`);
     const text = results.length
-      ? `You likely qualify for: ${lines.join('; ')}. Want me to start the first one? I'll fill in what I can.`
+      ? `Good news. You likely qualify for ${results.length === 1 ? 'this' : `these ${results.length}`}:\n${lines.join('\n')}\nWant me to start the first one? I'll fill in what I can.`
       : needsInfo.length
         ? `I need a bit more to check: ${[...new Set(needsInfo.flatMap((r) => r.needs))].slice(0, 2).join(', ')}.`
         : "I didn't find a match in the programs I check yet, but there's more help than benefits. Tell me what's hard right now and I'll look.";

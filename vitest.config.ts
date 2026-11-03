@@ -1,20 +1,13 @@
 import { defineConfig } from 'vitest/config';
+import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const pkg = (name: string) => fileURLToPath(new URL(`./packages/${name}/src/index.ts`, import.meta.url));
+// Every package under packages/ is importable as @zthr/<name>, so a new block needs no wiring.
+const root = fileURLToPath(new URL('./packages/', import.meta.url));
+const alias = Object.fromEntries(readdirSync(root).map((name) => [`@zthr/${name}`, `${root}${name}/src/index.ts`]));
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@zthr/gates': pkg('gates'),
-      '@zthr/evidence': pkg('evidence'),
-      '@zthr/runtime': pkg('runtime'),
-      '@zthr/intent': pkg('intent'),
-      '@zthr/twins': pkg('twins'),
-      '@zthr/review': pkg('review'),
-      '@zthr/models': pkg('models'),
-    },
-  },
+  resolve: { alias },
   test: {
     include: ['packages/*/test/**/*.test.ts', 'apps/*/test/**/*.test.ts', 'tools/test/**/*.test.ts'],
     environment: 'node',

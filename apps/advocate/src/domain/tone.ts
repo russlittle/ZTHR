@@ -46,7 +46,8 @@ export function readingGrade(text: string): number {
     .replace(/\b[\w-]+(?:\.[\w-]+)*\.(?:gov|org|com|edu|net|us)(?:\/[^\s,;]*)?/gi, 'site')
     .replace(/[\d$().,:\-+/]{4,}/g, '')
     .replace(/\b[A-Z][\w'.&-]*(?:\s+(?:of|and|the|for|de|&)?\s*[A-Z][\w'.&-]*)+/g, 'Name');
-  const sentences = Math.max(1, (clean.match(/[.!?]+(\s|$)/g) ?? []).length);
+  // A line in a list is read as its own sentence.
+  const sentences = Math.max(1, (clean.match(/[.!?]+(\s|$)|\n(?=\s*\S)/g) ?? []).length);
   const words = clean.split(/\s+/).filter((w) => /[a-z]/i.test(w));
   if (words.length === 0) return 0;
   const syl = words.reduce((s, w) => s + syllables(w), 0);

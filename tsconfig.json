@@ -15,13 +15,7 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@zthr/gates": ["packages/gates/src/index.ts"],
-      "@zthr/evidence": ["packages/evidence/src/index.ts"],
-      "@zthr/runtime": ["packages/runtime/src/index.ts"],
-      "@zthr/intent": ["packages/intent/src/index.ts"],
-      "@zthr/twins": ["packages/twins/src/index.ts"],
-      "@zthr/review": ["packages/review/src/index.ts"],
-      "@zthr/models": ["packages/models/src/index.ts"]
+      "@zthr/*": ["packages/*/src/index.ts"]
     }
   },
   "include": ["packages/*/src/**/*.ts", "packages/*/test/**/*.ts", "apps/*/src/**/*.ts", "apps/*/test/**/*.ts", "tools/**/*.ts"]
