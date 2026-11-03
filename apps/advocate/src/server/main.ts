@@ -86,6 +86,8 @@ if (existsSync('site-out')) {
   for (const p of ['docs', 'factory', 'assets']) {
     root.use(`/${p}/*`, async (c, next) => (new URL(c.req.url).pathname === `/${p}` ? c.redirect(`/${p}/`) : next()));
     root.use(`/${p}/*`, serveStatic({ root: 'site-out', rewriteRequestPath: (path) => (path.endsWith('/') ? `${path}index.html` : path) }));
+    // Hosts that strip ".html" from links (clean URLs) still land on the page.
+    root.use(`/${p}/*`, serveStatic({ root: 'site-out', rewriteRequestPath: (path) => (/\.[a-z0-9]+$/i.test(path) ? path : `${path}.html`) }));
   }
 }
 const mount = base || '/';
