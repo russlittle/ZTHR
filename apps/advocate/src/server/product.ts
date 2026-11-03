@@ -146,3 +146,12 @@ export function productPage(l: ProductLinks): string {
 </main></div>`;
   return ui.bareShell({ title: 'Student Advocate', description: 'A team that works for every student: runs their day, finds money and help they qualify for, and does the legwork.', body, base: l.fontBase, head: `<style>${css}</style>${l.head ?? ''}` });
 }
+
+/** The app's own front door: pick a student and you are signed in as them, or start by text. */
+export function startPage(l: Pick<ProductLinks, 'app' | 'admin' | 'fontBase'> & { product: string; reference: string; live: boolean }): string {
+  const students = Object.entries(PERSONA_LINES);
+  const body = `<div class="hero"><h1>Student Advocate</h1><p class="date">Pick a student and you are signed in as them. ${l.live ? 'You get a private copy of all twelve for two hours; nothing you do reaches anyone else.' : ''}</p></div>
+<div class="tiles" role="list" aria-label="Sample students" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${students.map(([n, p]) => `<div role="listitem"><a class="tile" href="${l.app}/s/${n.toLowerCase()}"><span style="display:flex;align-items:center;gap:8px">${ui.esc(n)} <span class="chip">${ui.esc(p.college)}</span></span><span class="small muted" style="font-weight:400">${ui.esc(p.line)}</span><span class="small" style="font-weight:400"><b>Try:</b> ${ui.esc(p.tries)}</span></a></div>`).join('')}</div>
+${ui.actions([{ label: 'Try it by text', href: `${l.app}/text`, icon: 'send' }, { label: 'App admin', href: l.admin, variant: 'quiet', icon: 'you' }, { label: 'About the Advocate', href: l.product, variant: 'quiet', icon: 'home' }, { label: 'Reports and docs', href: l.reference, variant: 'quiet', icon: 'shield' }])}`;
+  return ui.appShell({ title: 'Start · Student Advocate', body, base: l.fontBase, brand: 'Student Advocate', brandHref: `${l.app}/`, nav: [{ href: `${l.app}/`, label: 'Start', icon: 'today', current: true }, { href: `${l.app}/text`, label: 'Try by text', icon: 'send' }] });
+}

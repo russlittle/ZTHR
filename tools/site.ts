@@ -29,7 +29,7 @@ const STATIC = process.argv.includes('--static');
 const RELATIVE = ARTIFACT || STATIC;
 const SITE = join(ROOT, ARTIFACT ? 'site-artifact' : STATIC ? 'site-static' : 'site-out');
 const GA = process.env.SITE_GA_ID ?? 'G-0VXPS15MY4';
-const APP = ARTIFACT ? 'https://zthr.ai/advocate/' : '/advocate/';
+const APP = ARTIFACT ? 'https://zthr.ai/studentadvocate/' : '/studentadvocate/';
 /** Fonts and assets: served from the app when published, relative to the page in the self-contained copies. */
 const fontBase = (rootRel: string) => (RELATIVE ? rootRel.replace(/\/$/, '') || '.' : '/advocate');
 const head = (rootRel: string) => `${ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`}
@@ -57,14 +57,19 @@ function copyAssets(): void {
 }
 
 function buildLanding(): void {
-  // The front of the reference site is the Student Advocate's product page, linking to the docs, the factory and the app.
   const gaHead = ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`;
-  write(join(SITE, 'index.html'), productPage({ app: APP.replace(/\/$/, ''), docs: 'docs/index.html', factory: 'factory/index.html', factoryPage: (p) => `factory/${p}.html`, admin: `${APP}admin/`, fontBase: fontBase(''), head: gaHead, live: false }));
+  // zthr.ai/advocate: the product page, with links that work from the site root.
+  if (STATIC) writeFileSync(join(ROOT, 'site-static.advocate.html'), productPage({ app: '/studentadvocate', docs: '/reference/docs/index.html', factory: '/reference/factory/index.html', factoryPage: (p) => `/reference/factory/${p}.html`, admin: '/studentadvocate/admin/', fontBase: '/reference', head: gaHead, live: false }).replace(/_ui\/atkinson/g, 'fonts/atkinson'));
+  // zthr.ai/reference: the hub for the app's overview, reporting, admin tools and docs.
+  const card = (title: string, sub: string, href: string) => ({ title, sub, href });
+  const body = `<h1>Student Advocate: the reference</h1><p class="muted">Everything about the Student Advocate in one place: the app and its admin tools, how it is doing, how it was built and checked, and how it works. The Advocate is the reference application for ZTHR; every student and service in it is synthetic.</p>
+${ui.section('The app', ui.rows([card('Product page', 'What it does, who it is for, why it works, what it is worth', ARTIFACT ? 'https://zthr.ai/advocate' : '/advocate'), card('Open the app', 'Sign in as any of twelve sample students, each a private copy for two hours', APP), card('Try it by text', 'The whole Advocate as a text conversation', `${APP}text`), card('App admin', 'Catalog, moderation, scouts, admissions and outcomes; never a student\'s record', `${APP}admin/`), card('Outcome measures', 'What changed for students, never shown for fewer than five', `${APP}admin/outcomes`), card('Campus twins', 'The synthetic dining, transit, rooms, jobs and class-site APIs', ARTIFACT ? 'https://zthr.ai/twins' : '/twins')]))}
+${ui.section('Reporting', ui.rows([card('Factory overview', 'Tests, gates, walks, red team, mutation and cost for this build', 'factory/index.html'), card('Phases', 'What each phase delivers and whether it is certified', 'factory/phases.html'), card('Features', 'Everything the app does, with the journey that proves it', 'factory/features.html'), card('Sensitive data trace', 'Where each personal fact may go, and where it went', 'factory/sensitive.html'), card('Block library', 'The reusable parts, each with its own tests and mutation score', 'factory/blocks.html')]))}
+${ui.section('Documentation', ui.rows([card('Overview and architecture', 'How the system fits together, illustrated', 'docs/index.html'), card('Features', 'By phase', 'docs/features.html'), card('Glossary', 'Product and factory words in plain terms', 'docs/glossary.html'), card('Data model', 'Every collection, with ERDs', 'docs/data-model.html'), card('Data sources', 'Every outside source, with ERDs', 'docs/data-sources.html'), card('Sensitive data', 'Every field\'s class and where it may go', 'docs/flows/sensitive-data.html'), card('API', 'Ingest, export and webhooks', 'docs/api.html')]))}`;
+  write(join(SITE, 'index.html'), ui.consoleShell({ title: 'Student Advocate reference', brand: 'ZTHR reference', brandHref: 'index.html', base: fontBase(''), head: head(''), groups: [{ title: 'The app', items: [{ href: ARTIFACT ? 'https://zthr.ai/advocate' : '/advocate', label: 'Product page', icon: 'home' }, { href: APP, label: 'Open the app', icon: 'route' }, { href: `${APP}admin/`, label: 'App admin', icon: 'you' }] }, { title: 'Reporting', items: [{ href: 'factory/index.html', label: 'Factory console', icon: 'shield' }] }, { title: 'Documentation', items: [{ href: 'docs/index.html', label: 'Docs', icon: 'doc' }, { href: 'docs/glossary.html', label: 'Glossary', icon: 'book' }] }], body }));
   if (STATIC) {
-    // The host strips trailing slashes, so /reference is served from a file of that name beside the folder. Its
-    // links must still resolve inside /reference/, and in-page links must stay on the page.
-    const page = readFileSync(join(SITE, 'index.html'), 'utf8').replace('<head>', '<head><base href="/reference/">').replace(/href="#([\w-]+)"/g, 'href="/reference#$1"');
-    writeFileSync(join(ROOT, 'site-static.entry.html'), page);
+    // The host strips trailing slashes, so /reference is served from a file of that name beside the folder; its links resolve inside /reference/.
+    writeFileSync(join(ROOT, 'site-static.entry.html'), readFileSync(join(SITE, 'index.html'), 'utf8').replace('<head>', '<head><base href="/reference/">'));
   }
   if (ARTIFACT) {
     // The preview's front page is written as page content only; the host wraps it in its own document.

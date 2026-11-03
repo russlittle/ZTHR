@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 import { randomBytes } from 'node:crypto';
 import * as ui from '@zthr/ui';
-import { productPage } from './product.js';
+import { startPage } from './product.js';
 import type { Advocate, Delivered } from '../agents/advocate.js';
 import type { View } from '../agents/actions.js';
 import { friendly, relDay, shortDate, time12, weekday } from '../domain/dates.js';
@@ -24,8 +24,8 @@ export interface AppOptions {
   base?: string;
   /** Demonstration students shown on the start page. */
   demo?: { id: string; name: string; line: string }[];
-  /** Where the documentation and the factory console live, for the product page. Defaults to zthr.ai's /reference. */
-  links?: { docs: string; factory: string };
+  /** Where the product page and the reference hub live. Defaults to zthr.ai's /advocate and /reference. */
+  links?: { product: string; reference: string };
   /** Sign in with Google. When set, every student page needs the owner's session and the admin needs a listed email. */
   auth?: { clientId: string; verifier: GoogleVerifier; sessions: Sessions; adminEmailHashes: string[]; secure?: boolean };
 }
@@ -160,12 +160,8 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
 
   // ------------------------------------------------------------ start
 
-  // The front page is the product page: what the Advocate is, and a way in as any demonstration student.
-  app.get('/', (c) =>
-    c.html(
-      productPage({ app: base, docs: opts.links?.docs ?? '/reference/docs/index.html', factory: opts.links?.factory ?? '/reference/factory/index.html', factoryPage: (p) => `${opts.links?.factory?.replace(/index\.html$/, '') ?? '/reference/factory/'}${p}.html`, admin: `${base}/admin/`, fontBase: base, live: !!opts.demo?.length }),
-    ),
-  );
+  // The app's front door: pick a student (the product page lives at /advocate, the reference at /reference).
+  app.get('/', (c) => c.html(startPage({ app: base, admin: `${base}/admin/`, fontBase: base, product: opts.links?.product ?? '/advocate', reference: opts.links?.reference ?? '/reference', live: !!opts.demo?.length })));
 
   // ------------------------------------------------------------ text, in the browser and from the carrier
 
