@@ -22,55 +22,55 @@ pie showData title 768 tests
 
 ## Button walk
 
-67,074 states and 2,851,974 transitions across 36 seeds; every seed ran to its fixpoint; 21920 violations.
+128,244 states and 5,841,396 transitions across 36 seeds; every seed ran to its fixpoint; 0 violations.
 
 ```mermaid
 xychart-beta
   title "Button walk: transitions per student"
   x-axis ["Alex", "Ana", "Darnell", "Destiny", "Jayden", "Keisha", "Linda", "Luis", "Maria", "Priya", "Sam", "Tyler"]
   y-axis "Transitions"
-  bar [134346, 35124, 40068, 81356, 81356, 109196, 40068, 137514, 41946, 81260, 85148, 83276]
+  bar [147068, 136268, 150380, 197876, 197876, 109196, 150380, 150380, 101696, 197684, 206228, 202100]
 ```
 
 | Verb | Times tried |
 | --- | --- |
-| `say` | 1,139,016 |
-| `need` | 603,342 |
-| `situation` | 335,190 |
-| `show-draft` | 69,522 |
-| `find-help` | 67,830 |
-| `today` | 67,038 |
-| `screen` | 67,038 |
-| `week` | 67,038 |
-| `settings` | 67,038 |
-| `review-deadlines` | 67,038 |
-| `add-shifts` | 67,038 |
-| `upload-syllabus` | 67,038 |
-| `delete-account` | 67,038 |
-| `start-resource` | 30,312 |
-| `call` | 17,100 |
-| `share` | 15,696 |
-| `playbook` | 8,280 |
-| `dial` | 4,416 |
-| `draft` | 2,520 |
-| `plan` | 2,322 |
-| `hold-block` | 2,232 |
-| `start-program` | 1,728 |
-| `ask` | 1,656 |
-| `remind` | 1,656 |
-| `contact` | 1,656 |
-| `plan-next` | 1,656 |
-| `find-tutor` | 1,656 |
-| `calendar-steps` | 1,224 |
-| `edit-steps` | 1,224 |
-| `draft-instructor-note` | 1,224 |
-| `why-qualify` | 864 |
-| `approve` | 828 |
-| `screen-more` | 792 |
-| `meals` | 648 |
-| `add-date` | 648 |
-| `fair-chance` | 216 |
-| `career` | 216 |
+| `say` | 2,564,160 |
+| `need` | 1,153,872 |
+| `situation` | 641,040 |
+| `show-draft` | 132,528 |
+| `find-help` | 129,792 |
+| `today` | 128,208 |
+| `screen` | 128,208 |
+| `week` | 128,208 |
+| `settings` | 128,208 |
+| `review-deadlines` | 128,208 |
+| `add-shifts` | 128,208 |
+| `upload-syllabus` | 128,208 |
+| `delete-account` | 128,208 |
+| `start-resource` | 55,296 |
+| `call` | 30,024 |
+| `share` | 28,296 |
+| `playbook` | 14,400 |
+| `draft` | 8,640 |
+| `dial` | 7,680 |
+| `plan` | 4,644 |
+| `hold-block` | 4,464 |
+| `start-program` | 3,312 |
+| `ask` | 2,880 |
+| `remind` | 2,880 |
+| `contact` | 2,880 |
+| `plan-next` | 2,880 |
+| `find-tutor` | 2,880 |
+| `meals` | 2,880 |
+| `fair-chance` | 2,880 |
+| `career` | 2,880 |
+| `add-date` | 2,880 |
+| `calendar-steps` | 2,448 |
+| `edit-steps` | 2,448 |
+| `draft-instructor-note` | 2,448 |
+| `why-qualify` | 1,656 |
+| `approve` | 1,440 |
+| `screen-more` | 1,224 |
 
 ## Feature walk
 
