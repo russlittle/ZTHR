@@ -78,10 +78,12 @@ exists gcloud builds repositories describe "$REPO_NAME" --connection "$CONNECTIO
   gcloud builds repositories create "$REPO_NAME" --remote-uri "$REPO_URL" --connection "$CONNECTION" --region "$REGION"
 
 say "6/8 Triggers"
-# Every push to any branch except main (main is the website and has no factory).
+# Every push to any branch except main (main is the website and has no factory). Cloud Build branch patterns are
+# RE2, which has no negative lookahead, so "anything but main" is spelled out.
+NOT_MAIN='^(.{1,3}|[^m].*|m[^a].*|ma[^i].*|mai[^n].*|main.+)$'
 exists gcloud builds triggers describe zthr-factory --region "$REGION" ||
   gcloud builds triggers create github --name zthr-factory --region "$REGION" --repository "$REPO_PATH" \
-    --branch-pattern '^main$' --invert-regex --build-config cloudbuild.yaml --service-account "$SA_PATH" \
+    --branch-pattern "$NOT_MAIN" --build-config cloudbuild.yaml --service-account "$SA_PATH" \
     --substitutions "_EVIDENCE_BUCKET=${BUCKET}" \
     --description "Gates, journeys, tests and UI walk on every push"
 exists gcloud builds triggers describe zthr-nightly --region "$REGION" ||
