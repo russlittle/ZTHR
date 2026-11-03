@@ -58,7 +58,7 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
   const base = opts.base ?? '';
   const app = new Hono({ strict: false });
   const u = (sid: string, path = '') => `${base}/s/${encodeURIComponent(sid)}${path}`;
-  const VIEW_PATH: Record<View, string> = { today: '', money: '/money', help: '/help', settings: '/you', week: '/week', syllabus: '/syllabus', shifts: '/shifts', dates: '/dates', drafts: '/drafts', resource: '/resource', ask: '/ask', deleted: '', share: '/share' };
+  const VIEW_PATH: Record<View, string> = { today: '', money: '/money', help: '/help', settings: '/you', week: '/week', syllabus: '/syllabus', shifts: '/shifts', dates: '/dates', drafts: '/drafts', resource: '/resource', ask: '/ask', deleted: '', share: '/share', letter: '/letter' };
 
   const toAction = (sid: string, n: { label: string; action: string }, i: number): ui.Action =>
     n.action.startsWith('call:')
@@ -334,7 +334,7 @@ ${ui.section('Update what I know', ui.form({ url: u(sid, '/household'), submit: 
         `${flash(sid, c.req.query('m'))}
 <div class="hello"><h1>What's hard right now?</h1><p class="date">Pick one. I find help that fits you and do the legwork.</p></div>
 ${ui.tiles(NEEDS.map(([n, label, ic]) => ({ label, icon: ic, post: post(`need:${n}`) })), 'Kinds of help')}
-${ui.section('Something went wrong?', ui.tiles(SITUATIONS.map(([x, label]) => ({ label, icon: 'alert', post: post(`situation:${x}`) })), 'Situations'))}
+${ui.section('Something went wrong?', ui.tiles([...SITUATIONS.map(([x, label]) => ({ label, icon: 'alert', post: post(`situation:${x}`) })), { label: 'Explain a letter I got', icon: 'doc', href: u(sid, '/letter') }], 'Situations'))}
 ${ui.note({ kind: 'safety', title: 'Need to talk to someone now?', body: 'Call or text 988 any time, day or night. If you are in danger, call 911.', actions: [{ label: 'Call or text 988', href: 'tel:988', variant: 'call', icon: 'phone' }] })}`,
         'help',
       ),
@@ -363,6 +363,20 @@ ${ui.actions([...(r.url ? [{ label: 'Open the application', href: r.url }] : [])
   });
 
   app.get('/s/:id/resource', (c) => c.redirect(u(c.req.param('id'), '/help')));
+
+  app.get('/s/:id/letter', (c) => {
+    const sid = c.req.param('id');
+    return c.html(page(sid, 'Explain a letter', `${flash(sid, c.req.query('m'))}<div class="hello"><h1>Explain a letter</h1><p class="date">Paste a letter or notice. I say who it is from, what it means, what to do and by when. Nothing is sent anywhere.</p></div>${ui.form({ url: u(sid, '/letter'), submit: 'Explain it', fields: [{ name: 'text', label: 'The letter', multiline: 10, placeholder: 'Dear resident, ...' }] })}`, 'help'));
+  });
+
+  app.post('/s/:id/letter', async (c) => {
+    const sid = c.req.param('id');
+    const f = await c.req.parseBody();
+    const text = String(f.text ?? '').slice(0, 20000);
+    const m = text.trim() ? (a.model ? (await a.letterMessageWithModel(sid, text)).message : a.letterMessage(sid, text)) : { studentId: sid, author: 'navigator', urgency: 'routine' as const, text: 'Paste the letter and I will explain it.', nextSteps: [{ label: 'Show my day', action: 'today' }] };
+    const d = a.deliver(m, { force: true });
+    return c.redirect(`${u(sid, '/letter')}?m=${d.id}`);
+  });
 
   app.get('/s/:id/share', (c) => {
     const sid = c.req.param('id');
@@ -408,6 +422,7 @@ ${ui.section('Your things', ui.rows([
   { title: 'Add a syllabus', sub: 'I find every date in it', href: u(sid, '/syllabus') },
   { title: 'Messages I drafted', sub: 'Nothing is sent until you say so', href: u(sid, '/drafts') },
   { title: 'Ask your Advocate', sub: 'Anything about school, money or life', href: u(sid, '/ask') },
+  { title: 'Explain a letter', sub: 'What it means, what to do, by when', href: u(sid, '/letter') },
 ]))}
 ${ui.section('How I talk with you', `<div class="panel" style="padding:14px 18px"><p>Right now: <b>${depthLabel[s.dial.depth]}</b>. Quiet from ${ui.esc(time12(s.dial.quietStart))} to ${ui.esc(time12(s.dial.quietEnd))}.</p>${ui.actions((['brief', 'standard', 'walk-me-through'] as const).map((d) => toAction(sid, { label: depthLabel[d], action: `dial:${d}` }, d === s.dial.depth ? 0 : 1)))}</div>`)}
 ${ui.section('What I can see', ui.rows((['calendar', 'forwarding', 'learning-feed', 'location'] as const).map((src) => ({ title: { calendar: 'Your calendar', forwarding: 'Emails you forward', 'learning-feed': 'Your class site', location: 'Your location' }[src], chip: a.hasSource(sid, src) ? { text: 'On', tone: 'ok' as const } : { text: 'Off' }, actions: [toAction(sid, a.hasSource(sid, src) ? { label: 'Turn off', action: `source-off:${src}` } : { label: 'Turn on', action: `source-on:${src}` }, 1)] }))))}

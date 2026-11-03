@@ -13,7 +13,7 @@ import type { Situation } from '../domain/crisis.js';
  *
  * A result always carries a message, so the text channel can answer. It may also name a screen for the app.
  */
-export type View = 'today' | 'money' | 'help' | 'settings' | 'week' | 'syllabus' | 'shifts' | 'dates' | 'drafts' | 'resource' | 'ask' | 'deleted' | 'share';
+export type View = 'today' | 'money' | 'help' | 'settings' | 'week' | 'syllabus' | 'shifts' | 'dates' | 'drafts' | 'resource' | 'ask' | 'deleted' | 'share' | 'letter';
 
 export interface ActionResult {
   message: OutboundMessage;
@@ -220,6 +220,10 @@ export const ACTIONS: Record<string, Handler> = {
       const term = TERMS.find((t) => t.term === arg.slice(4));
       return showDraft(a, sid, `ask:${arg.slice(4)}`, term?.ask ?? 'the office', `Hello, this is ${s.chosenName}. I have a question about ${term?.term ?? 'a college rule'} and how it applies to me. Could you tell me what I need to know or do? Thank you.`, 'Offices answer questions like this every day.');
     }
+    if (arg.startsWith('letter:')) {
+      const to = decodeURIComponent(arg.slice(7)) || 'the sender';
+      return showDraft(a, sid, `letter:${to}`, to, `Hello, this is ${s.chosenName}. I got your letter and want to make sure I understand it. What exactly do you need from me, and by what date? Thank you.`, 'Asking is always okay.');
+    }
     return showDraft(a, sid, 'aid-office', 'Financial Aid', `Hello, this is ${s.chosenName}. I got a message about verification for my financial aid. Could you tell me exactly which documents you need from me and the deadline? Thank you.`, 'Asking early keeps your aid on time.');
   },
   approve: (a, sid, arg) => {
@@ -234,6 +238,15 @@ export const ACTIONS: Record<string, Handler> = {
     const d = arg ? a.draftFor(sid, arg) : a.drafts(sid).find((x) => x.status === 'shown');
     if (!d) return { message: msg(sid, 'No drafts are waiting.', [back]), view: 'drafts' };
     return { message: msg(sid, `Here is the draft to ${d.to}:\n"${d.body}"\nNothing is sent until you say so.`, [{ label: 'Send it', action: `approve:${d.id}` }, back]), view: 'drafts', viewArg: arg };
+  },
+
+  // letters
+  letter: (_a, sid) => ({ message: msg(sid, 'Paste the letter, or forward the email it came in. I will say what it means, what to do and by when.', [back], 'navigator'), view: 'letter' }),
+  'add-date': (a, sid, arg) => {
+    const [date, label] = [arg.slice(0, 10), decodeURIComponent(arg.slice(11) || 'Date from a letter')];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return ACTIONS.letter!(a, sid, '');
+    a.addDeadline(sid, { title: label, due: date, kind: /court|interview|appointment/i.test(label) ? 'appointment' : 'other', source: { type: 'student', line: 'From a letter' }, confirmed: true });
+    return { message: msg(sid, sentence(`Added: ${label}, ${shortDate(date)}. I will remind you before it`), [{ label: 'See my dates', action: 'review-deadlines' }, back]), view: 'dates' };
   },
 
   // pulses and settings

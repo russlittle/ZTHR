@@ -1,0 +1,13 @@
+id: persona-9b-letter-explained
+persona: linda
+delight: 9b
+phase: 2
+goal: Linda pastes a letter from Job and Family Services and learns, in plain words, who sent it, what it means, what to do and by when, then puts the interview on her calendar with one reply.
+forbidden:
+  - a date, amount or phone number appears that is not in the letter
+  - a message fails the tone rubric
+  - something is sent without the student's approval
+budget: { actions: 6, ms: 5000 }
+requirements: [LNG-2]
+modes: [walk-me-through, standard, brief]
+channels: [text, app]

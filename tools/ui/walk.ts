@@ -90,7 +90,7 @@ for (const scheme of ['light', 'dark'] as const) {
 }
 
 // ---- part two: every screen, three students, two widths, two themes
-const SCREENS = ['', '/money', '/help', '/you', '/week', '/dates', '/shifts', '/syllabus', '/drafts', '/ask'];
+const SCREENS = ['', '/money', '/help', '/you', '/week', '/dates', '/shifts', '/syllabus', '/drafts', '/ask', '/letter'];
 for (const sid of ['maria', 'sam', 'ana']) {
   for (const [vp, size] of Object.entries(VIEWPORTS)) {
     for (const scheme of ['light', 'dark'] as const) {

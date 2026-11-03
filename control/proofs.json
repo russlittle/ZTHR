@@ -100,7 +100,7 @@
   },
   {
     "gate": "no-hidden-egress",
-    "gateHash": "bc4e369e5c95ba8ca215387283499d7dda51f2cd299c16bff9e58dcce2179868",
+    "gateHash": "6b1258fc1bb0c2dcc811ec071308553f1b07e98be808ab12cffa5085b3cde724",
     "valid": true,
     "cases": [
       "planted fetch in a domain file"

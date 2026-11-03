@@ -393,6 +393,23 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
     forbidTone(app, ctx, s);
   },
 
+  'persona-9b-letter-explained': async (app, ctx) => {
+    const s = student(app, ctx, { chosenName: 'Linda', age: 46, household: { size: 2, monthlyGrossIncome: 1400 }, enrollment: { college: 'sinclair', creditHours: 6, weeklyWorkHours: 20 } });
+    const letter = 'Montgomery County Job and Family Services\nYour SNAP interview is scheduled for Nov 18 at 10:00 AM. Please call (937) 225-4148 if you cannot attend.';
+    const [m] = say(app, ctx, s, `explain this letter: ${letter}`);
+    ctx.expect(!!m && /Job and Family Services/.test(m.text), 'says who sent it');
+    ctx.expect(!!m && /renew|interview/i.test(m.text), 'says what it means and what to do');
+    ctx.expect(!!m && /November 18/.test(m.text), 'says by when');
+    const pick = m!.nextSteps.findIndex((n) => n.action.startsWith('add-date:2026-11-18'));
+    ctx.expect(pick === 0, 'the first choice puts the interview on the calendar');
+    say(app, ctx, s, '1');
+    ctx.expect(app.a.deadlines(s.id).some((d) => d.due === '2026-11-18' && d.kind === 'appointment'), 'the interview is on the calendar');
+    const invented = delivered(app, s).some((x) => [...x.text.matchAll(/(\(\d{3}\)\s?|\b\d{3}[-.\s])\d{3}[-.\s]\d{4}\b/g)].some((p) => p[0].trim() !== '(937) 225-4148') || /\$\s?\d/.test(x.text));
+    ctx.forbid('a date, amount or phone number appears that is not in the letter', invented);
+    ctx.forbid("something is sent without the student's approval", app.a.outboundLog.length > 0);
+    forbidTone(app, ctx, s);
+  },
+
   'persona-2a-break-housing': async (app, ctx) => {
     const s = student(app, ctx, { chosenName: 'Jayden', age: 19, enrollment: { college: 'sinclair', creditHours: 15 } });
     const id = 'break-housing';

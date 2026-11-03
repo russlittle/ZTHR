@@ -36,6 +36,8 @@ import { crisisReplyEs, detectSpanish, t as tr } from '../domain/i18n.js';
 import { addDays, sentence, shortDate, time12, weekday } from '../domain/dates.js';
 import { AppStore } from '../domain/store.js';
 import { parseShifts } from '../domain/shifts.js';
+import { explainLetter, factsPreserved, letterText, type Letter } from '../domain/letters.js';
+import { sandwich } from '@zthr/runtime';
 import { ACTIONS, type ActionResult } from './actions.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
 import { buildToday, renderToday, type TodayView } from '../domain/today.js';
@@ -416,6 +418,9 @@ export class Advocate {
     const shiftsTyped = parseShifts(text.replace(/^(i )?(work|shifts?:?)\s+/i, ''), this.today());
     if (/^(i )?(work|shifts?)\b/i.test(t) && shiftsTyped.shifts.length) return [this.deliver(this.addShiftsMessage(s.id, shiftsTyped.shifts, shiftsTyped.unread), { force: true })];
     if (/\b[A-Z]{2,4}\s?\d{3,4}\b.*\b(room|building)\b/i.test(text) && /\b(moved|new room|changed|now in)\b/i.test(t)) return [this.deliver(this.applyRoomChange(s.id, text), { force: true })];
+    if (/^(explain|what does|what's|whats)\b.{0,30}\bletter\b/i.test(t) || (text.length > 280 && /\b(dear|notice|re:|sincerely|account number|case number)\b/i.test(text))) {
+      return [this.deliver(this.letterMessage(s.id, text.replace(/^(explain|what does|what's|whats)\b[^:\n]*[:\n]?/i, '')), { force: true })];
+    }
     const situation = detectSituation(text);
     if (situation) return [this.deliver(this.crisis(s.id, situation).message, { force: true })];
     if (/^(today|my day|schedule|what'?s today)\b/.test(t)) return [this.deliver(this.todayMessage(s.id), { force: true })];
@@ -1060,6 +1065,66 @@ export class Advocate {
       options: bookOptions(m, s.enrollment.college),
       beforeAid: !!(aid && m.neededBy && m.neededBy < aid),
     }));
+  }
+
+  // ---------- letters (PRD LNG-2) ----------
+
+  /** A letter explained from its own words: who, what it means, what to do, by when. */
+  letterMessage(studentId: string, text: string, meta: { from?: string; subject?: string } = {}, rewritten?: string): OutboundMessage {
+    const l = explainLetter(text, this.today(), meta);
+    this.ev('letter', studentId, { kind: l.kind, dates: l.dates.length, rewritten: !!rewritten });
+    return {
+      studentId,
+      author: 'navigator',
+      urgency: l.urgent ? 'time-sensitive' : 'routine',
+      text: rewritten ?? letterText(l),
+      nextSteps: [
+        ...l.dates.slice(0, 2).map((d) => ({ label: `Put ${d.label.toLowerCase()} on my calendar`, action: `add-date:${d.date}:${encodeURIComponent(d.label)}` })),
+        ...(l.helpNeed ? [{ label: 'Find help with this', action: `need:${l.helpNeed}` }] : []),
+        { label: 'Draft a question to the sender', action: `draft:letter:${encodeURIComponent(l.sender ?? 'the sender')}` },
+      ],
+      why: 'Every date, amount and phone number here comes from the letter you shared. Nothing was sent anywhere.',
+    };
+  }
+
+  /**
+   * The same explanation, rewritten by a model when one is configured, inside the deterministic sandwich: the
+   * letter is screened first, and the rewrite is kept only if every fact survives and it passes the tone gate.
+   * Otherwise the student gets the deterministic explanation. No model is ever the floor.
+   */
+  async letterMessageWithModel(studentId: string, text: string, meta: { from?: string; subject?: string } = {}): Promise<{ message: OutboundMessage; usedModel: boolean; reason?: string }> {
+    const l: Letter = explainLetter(text, this.today(), meta);
+    const plain = letterText(l);
+    const s = this.student(studentId);
+    if (!this.model) return { message: this.letterMessage(studentId, text, meta), usedModel: false, reason: 'no model configured' };
+    const model = this.model;
+    const r = await sandwich<string, string>(
+      {
+        pre: (input) => (screen(input).crisis ? { ok: false, reason: 'crisis words: the safety reply comes first' } : input.length > 20000 ? { ok: false, reason: 'too long' } : { ok: true }),
+        model: async () =>
+          (
+            await model.complete({
+              model: 'letter-rewriter',
+              purpose: 'letter-explainer',
+              maxTokens: 400,
+              temperature: 0.2,
+              messages: [
+                { role: 'system', content: 'Rewrite this explanation of a letter for a student, warmly and in plain words at an 8th-grade reading level. Keep every date, dollar amount and phone number exactly as written. Add no new facts. No scolding. Under 900 characters.' },
+                { role: 'user', content: plain },
+              ],
+            })
+          ).text.trim(),
+        post: (out) => {
+          const f = factsPreserved(l, out);
+          if (!f.ok) return f;
+          const tone = checkTone({ text: out, nextSteps: [{ label: 'x', action: 'x' }], urgency: 'routine' }, s.dial.depth, s.dial.readingGrade, s.dial.language);
+          return tone.ok ? { ok: true } : { ok: false, reason: `tone: ${tone.problems.join('; ')}` };
+        },
+        fallback: () => plain,
+      },
+      text,
+    );
+    return { message: this.letterMessage(studentId, text, meta, r.usedModel ? r.output : undefined), usedModel: r.usedModel, reason: r.reason };
   }
 
   // ---------- actions: one registry for app, text and journeys ----------

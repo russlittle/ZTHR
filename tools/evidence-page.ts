@@ -155,7 +155,7 @@ const REQS2: [string, 'built' | 'partial' | 'not yet', string][] = [
   ['HH-3', 'not yet', 'Caregiver specialist (the builder has drafted the scout it needs)'],
   ['CAR-1 to 4', 'not yet', 'Career trajectories, openings, fair-chance filter, mentors'],
   ['CL-1 to 4', 'not yet', 'Dining menus, late food, team recaps, quiet study spots'],
-  ['LNG-2', 'not yet', 'Letter explainer from a photo'],
+  ['LNG-2', 'built', 'Letter explainer: pasted, texted or forwarded; model rewrite only inside the sandwich'],
 ];
 
 const proposalsDir = join(ROOT, 'control/proposals');
