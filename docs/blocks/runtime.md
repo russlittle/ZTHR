@@ -17,6 +17,14 @@ flowchart TB
   work --> sealed[(Sealed facts: per-student keys)]
 ```
 
+## Use it for
+
+The safety screen, sealed facts and their consent ledger, approval tokens and the outbound gate, refusing to start misconfigured, and the deterministic sandwich.
+
+## Not for
+
+The app's own business rules.
+
 ## Verified by
 
 <!-- verified-by:start -->

@@ -105,5 +105,50 @@
     "cases": [
       "planted fetch in a domain file"
     ]
+  },
+  {
+    "gate": "pattern-coverage",
+    "gateHash": "2b875b39253f5feb0cb073d4276ed15a526fb4ce18b58a8b5bcb927d47c97cf0",
+    "valid": true,
+    "cases": [
+      "planted map missing a pattern",
+      "planted proof that does not exist"
+    ]
+  },
+  {
+    "gate": "findings-register",
+    "gateHash": "632a7ae48af522dfd6504bffd94a41c770167935497800634d1dcb40084b67c8",
+    "valid": true,
+    "cases": [
+      "planted expired finding",
+      "planted finding with no owner"
+    ]
+  },
+  {
+    "gate": "zero-bypass",
+    "gateHash": "3debb42e2ae0829ae3b99adbdbf78ef37dc3b63e03fb79f19e128b3b416b08eb",
+    "valid": true,
+    "cases": [
+      "planted pipeline without the gates step",
+      "planted step allowed to fail",
+      "planted step that swallows failure"
+    ]
+  },
+  {
+    "gate": "authorship-tiers",
+    "gateHash": "1f87e495db719493080563c91f6d45b2166e275abd8df6490edb3752f700e75d",
+    "valid": true,
+    "cases": [
+      "planted tier with no guard",
+      "planted open tier first"
+    ]
+  },
+  {
+    "gate": "held-out",
+    "gateHash": "987f0ab15c2316ec26d0fe458e891426118811a70f63cfde424d56422422d8ff",
+    "valid": true,
+    "cases": [
+      "planted rule written against a held-out line"
+    ]
   }
 ]

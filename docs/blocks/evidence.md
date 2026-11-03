@@ -12,6 +12,14 @@ erDiagram
   MODEL_CALLS }o--|| PRICES : "priced by"
 ```
 
+## Use it for
+
+An append-only, pseudonymous record of what the factory and the product did, for the console, the app admin and outcome measures.
+
+## Not for
+
+Message content, anything that identifies a student, or application state (that belongs in the store).
+
 ## Verified by
 
 <!-- verified-by:start -->

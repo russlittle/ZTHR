@@ -20,6 +20,14 @@ stateDiagram-v2
 Also here: ratchets (floors that only rise, reset only by listed people in a ledger), datums, and the findings
 register.
 
+## Use it for
+
+Named checks that must go red on planted defects before they count, with proofs pinned to their definitions, and ratchets that only tighten.
+
+## Not for
+
+Ordinary unit tests, or any check that has never been seen to fail.
+
 ## Verified by
 
 <!-- verified-by:start -->

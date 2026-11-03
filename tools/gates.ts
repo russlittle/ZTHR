@@ -1,7 +1,8 @@
-import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { parse as parseYaml } from 'yaml';
 import { join } from 'node:path';
 import { EvidenceStore } from '@zthr/evidence';
-import { type Gate, type Proof, fail, pass, proveGate, runProvenGate, type Verdict } from '@zthr/gates';
+import { type Gate, type Proof, type RegisteredFinding, checkRegister, fail, pass, proveGate, runProvenGate, type Verdict } from '@zthr/gates';
 import { loadCards, lockVerdict, type Lock } from '@zthr/intent';
 import { ApprovalService, OutboundGate, screen as realScreen, type OutboundAction, type SafetyResult } from '@zthr/runtime';
 import { randomBytes } from 'node:crypto';
@@ -52,7 +53,7 @@ const realDispatcher = (): Dispatcher => {
   return { dispatch: (a, t) => gate.dispatch(a, t), sent };
 };
 
-const HELD_OUT_CRISIS = ['I want to end my life', 'thinking about suicide again', "I don't want to wake up tomorrow", 'he hit me last night and I am scared', 'I overdosed on my meds'];
+const HELD_OUT_CRISIS = readFileSync(`${CONTROL}/heldout/crisis.txt`, 'utf8').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
 
 type FindFn = (catalog: Resource[]) => string[];
 const realFind: FindFn = (catalog) => {
@@ -227,7 +228,7 @@ const egressGate: Gate<Record<string, string>> = {
 };
 
 type CommunityFactory = () => { post: Community['post']; visible: Community['visible'] };
-const HELD_OUT_POSTS = ['DM me 937 555 0111 for answers to the quiz', 'selling xanax and adderall', 'pay me on cash app send $30 first', 'I will beat up him after class', 'free stuff at https://tinyurl.com/x'];
+const HELD_OUT_POSTS = readFileSync(`${CONTROL}/heldout/community.txt`, 'utf8').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
 const moderationGate: Gate<CommunityFactory> = {
   id: 'community-moderation',
   protects: 'Harmful or risky posts never surface in the community (PRD COM-5).',
@@ -356,9 +357,129 @@ const docsGate: Gate<() => Links> = {
   ],
 };
 
+// ---- the factory's own rules (Patterns 6, 7, 13, 32 and the pattern map) ----
+
+const readYaml = <T>(p: string): T => parseYaml(readFileSync(`${CONTROL}/${p}`, 'utf8')) as T;
+const exists = (p: string) => existsSync(`${ROOT}${p}`);
+
+type PatternMap = { patterns: { n: number; name: string; implemented_in: string[]; verified_by: string[]; gate?: string }[] };
+const patternGate: Gate<{ map: PatternMap; gates: string[]; exists: (p: string) => boolean }> = {
+  id: 'pattern-coverage',
+  protects: 'All 33 ZTHR patterns are implemented, each points at files that exist, and each is proven by a test (and a gate where it names one).',
+  definition: 'every n in 1..33 present once; implemented_in and verified_by paths exist; verified_by is a test file; a named gate is in the catalog',
+  check: ({ map, gates, exists: ex }) => {
+    const bad: string[] = [];
+    for (let n = 1; n <= 33; n++) if (map.patterns.filter((p) => p.n === n).length !== 1) bad.push(`pattern ${n} missing or doubled`);
+    for (const p of map.patterns) {
+      for (const f of [...p.implemented_in, ...p.verified_by]) if (!ex(f)) bad.push(`${p.n}: ${f} does not exist`);
+      if (!p.verified_by.length || p.verified_by.some((f) => !/\.test\.ts$/.test(f))) bad.push(`${p.n}: not proven by a test file`);
+      if (p.gate && !gates.includes(p.gate)) bad.push(`${p.n}: gate ${p.gate} is not in the catalog`);
+    }
+    return bad.length ? fail('pattern-coverage', bad.slice(0, 4).join('; ')) : pass('pattern-coverage', `33 patterns, each implemented and proven`);
+  },
+  falsification: [
+    { name: 'planted map missing a pattern', plant: () => ({ map: { patterns: readYaml<PatternMap>('patterns.yaml').patterns.filter((p) => p.n !== 25) }, gates: gateIds(), exists }) },
+    { name: 'planted proof that does not exist', plant: () => ({ map: { patterns: readYaml<PatternMap>('patterns.yaml').patterns.map((p) => (p.n === 1 ? { ...p, verified_by: ['apps/advocate/test/nowhere.test.ts'] } : p)) }, gates: gateIds(), exists }) },
+  ],
+};
+
+type Register = { findings: (RegisteredFinding & { finding: string })[] };
+const registerGate: Gate<{ reg: Register; now: Date }> = {
+  id: 'findings-register',
+  protects: 'Every finding we have not fixed is written down with a reason, an owner and an expiry, and none has expired (Pattern 13).',
+  definition: def(checkRegister),
+  check: ({ reg, now }) => {
+    const v = checkRegister(reg.findings.map((f) => ({ ...f, expires: String(f.expires) })), now);
+    const vague = reg.findings.filter((f) => !f.finding || f.finding.length < 20);
+    return v.status !== 'pass' ? v : vague.length ? fail('findings-register', `findings with no description: ${vague.map((f) => f.id).join(', ')}`) : v;
+  },
+  falsification: [
+    { name: 'planted expired finding', plant: () => ({ reg: { findings: [{ id: 'old', gate: 'x', finding: 'A finding accepted long ago and never fixed.', reason: 'was fine then', owner: 'claude-agent', expires: '2026-01-01' }] }, now: new Date('2026-11-03') }) },
+    { name: 'planted finding with no owner', plant: () => ({ reg: { findings: [{ id: 'nobody', gate: 'x', finding: 'A finding that nobody owns at all.', reason: 'r', owner: '', expires: '2027-01-01' }] }, now: new Date('2026-11-03') }) },
+  ],
+};
+
+type Pipeline = { steps: { id: string; allowFailure?: boolean; allow_failure?: unknown; args?: string[] }[] };
+const zeroBypassGate: Gate<{ required: { check: string; step: string }[]; pipeline: Pipeline }> = {
+  id: 'zero-bypass',
+  protects: 'Every required check runs in the live pipeline, none may fail and none can be skipped (Pattern 7).',
+  definition: 'each required step is present in cloudbuild.yaml, has no allowFailure, and its command has no "exit 0" or "|| true" escape',
+  check: ({ required, pipeline }) => {
+    const bad: string[] = [];
+    for (const r of required) {
+      const st = pipeline.steps.find((s) => s.id === r.step);
+      if (!st) bad.push(`${r.check}: no ${r.step} step`);
+      else if (st.allowFailure || st.allow_failure) bad.push(`${r.check}: allowed to fail`);
+      else if ((st.args ?? []).join(' ').match(/\|\|\s*true|;\s*exit 0\s*$/m)) bad.push(`${r.check}: can be skipped`);
+    }
+    return bad.length ? fail('zero-bypass', bad.join('; ')) : pass('zero-bypass', `${required.length} required checks in the live pipeline, none skippable`);
+  },
+  falsification: [
+    { name: 'planted pipeline without the gates step', plant: () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: { steps: livePipeline().steps.filter((s) => s.id !== 'gates') } }) },
+    { name: 'planted step allowed to fail', plant: () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: { steps: livePipeline().steps.map((s) => (s.id === 'test' ? { ...s, allowFailure: true } : s)) } }) },
+    { name: 'planted step that swallows failure', plant: () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: { steps: livePipeline().steps.map((s) => (s.id === 'journeys' ? { ...s, args: ['-c', 'npm run journeys || true'] } : s)) } }) },
+  ],
+};
+const livePipeline = () => parseYaml(readFileSync(`${ROOT}cloudbuild.yaml`, 'utf8')) as Pipeline;
+
+type Tiers = { tiers: { tier: string; guard: string; paths: string[] }[] };
+const GUARDS = ['journey-lock', 'ratchet', 'gate-proofs', 'certify', 'docs-check', 'pipeline'];
+const tiersGate: Gate<{ tiers: Tiers; files: string[] }> = {
+  id: 'authorship-tiers',
+  protects: 'Every file belongs to an authorship tier and every tier names a guard that enforces it; the open tier comes last (Pattern 6).',
+  definition: 'first matching tier by path prefix; every file matched; every guard known; open ("") last',
+  check: ({ tiers, files }) => {
+    const bad: string[] = [];
+    for (const t of tiers.tiers) if (!GUARDS.includes(t.guard)) bad.push(`${t.tier}: unknown guard ${t.guard}`);
+    const last = tiers.tiers[tiers.tiers.length - 1];
+    if (!last || !last.paths.includes('')) bad.push('the open tier must come last');
+    const unmatched = files.filter((f) => !tiers.tiers.some((t) => t.paths.some((p) => f.startsWith(p))));
+    if (unmatched.length) bad.push(`no tier: ${unmatched.slice(0, 3).join(', ')}`);
+    const counts = Object.fromEntries(tiers.tiers.map((t) => [t.tier, 0]));
+    for (const f of files) {
+      const t = tiers.tiers.find((x) => x.paths.some((p) => f.startsWith(p)));
+      if (t) counts[t.tier]!++;
+    }
+    return bad.length ? fail('authorship-tiers', bad.join('; ')) : pass('authorship-tiers', Object.entries(counts).map(([k, v]) => `${k} ${v}`).join(', '));
+  },
+  falsification: [
+    { name: 'planted tier with no guard', plant: () => ({ tiers: { tiers: [{ tier: 'locked', guard: 'hope', paths: ['control/journeys/'] }, { tier: 'open', guard: 'pipeline', paths: [''] }] }, files: ['control/journeys/x.yaml'] }) },
+    { name: 'planted open tier first', plant: () => ({ tiers: { tiers: [{ tier: 'open', guard: 'pipeline', paths: [''] }, { tier: 'locked', guard: 'journey-lock', paths: ['control/journeys/'] }] }, files: ['control/journeys/x.yaml'] }) },
+  ],
+};
+
+const RULE_FILES = ['packages/runtime/src/safety.ts', 'apps/advocate/src/domain/crisis.ts', 'apps/advocate/src/domain/community.ts', 'apps/advocate/src/domain/i18n.ts'];
+const heldOutLines = (f: string) => readFileSync(`${CONTROL}/heldout/${f}`, 'utf8').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+const heldOutGate: Gate<{ held: string[]; rules: Record<string, string> }> = {
+  id: 'held-out',
+  protects: 'No rule is written against its own evaluation set: a held-out line that appears in a rule is caught, to be retired (Pattern 32).',
+  definition: 'no active held-out line (case-insensitive) appears verbatim in any rule source',
+  check: ({ held, rules }) => {
+    const leaked = held.filter((h) => Object.values(rules).some((src) => src.toLowerCase().includes(h.toLowerCase())));
+    return leaked.length ? fail('held-out', `held-out lines in rules (retire them): ${leaked.join(' | ')}`) : pass('held-out', `${held.length} held-out lines, none in ${Object.keys(rules).length} rule files`);
+  },
+  falsification: [{ name: 'planted rule written against a held-out line', plant: () => ({ held: heldOutLines('crisis.txt'), rules: { 'safety.ts': `const CRISIS = [/${heldOutLines('crisis.txt')[0]}/i];` } }) }],
+};
+
+const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate].map((g) => g.id);
+
+function repoFiles(): string[] {
+  const out: string[] = [];
+  const walk = (d: string) => {
+    for (const n of readdirSync(`${ROOT}${d}`)) {
+      if (['node_modules', '.git', 'evidence-out', 'site-out', 'site-artifact', 'reports', '.stryker-tmp'].includes(n)) continue;
+      const p = d ? `${d}/${n}` : n;
+      if (statSync(`${ROOT}${p}`).isDirectory()) walk(p);
+      else out.push(p);
+    }
+  };
+  walk('');
+  return out;
+}
+
 /** What each gate protects and what it is proven against, for the docs and the console. */
 export function gateCatalog(): { id: string; protects: string; plants: string[] }[] {
-  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
+  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
 }
 
 export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdict[]; proofs: Proof[] }> {
@@ -386,6 +507,11 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   await run(deadEndGate, () => realPerform);
   await run(docsGate, () => () => links());
   await run(egressGate, () => ({ ...sourceFiles(`${ROOT}apps/advocate/src`), ...sourceFiles(`${ROOT}packages`) }));
+  await run(patternGate, () => ({ map: readYaml<PatternMap>('patterns.yaml'), gates: gateIds(), exists }));
+  await run(registerGate, () => ({ reg: readYaml<Register>('register.yaml'), now: new Date() }));
+  await run(zeroBypassGate, () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: livePipeline() }));
+  await run(tiersGate, () => ({ tiers: readYaml<Tiers>('authorship.yaml'), files: repoFiles() }));
+  await run(heldOutGate, () => ({ held: [...heldOutLines('crisis.txt'), ...heldOutLines('community.txt')], rules: Object.fromEntries(RULE_FILES.map((f) => [f, readFileSync(`${ROOT}${f}`, 'utf8')])) }));
   writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
   return { verdicts, proofs };
 }

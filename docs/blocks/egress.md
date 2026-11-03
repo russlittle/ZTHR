@@ -12,6 +12,14 @@ flowchart LR
   e -- allowed --> net((Internet)) --> log[(Recorded: purpose, host, status)]
 ```
 
+## Use it for
+
+Every network call app code makes: webhooks, the weather service, campus services, sign-in keys. Each names its purpose and goes only to a host the app declared. `routedEgress` runs services in-process behind the same door; `EgressTwin` records without leaving the machine.
+
+## Not for
+
+Model calls (they go through the models block), inbound requests, or retry policy (callers decide; writes use idempotency keys and are verified).
+
 ## Verified by
 
 <!-- verified-by:start -->

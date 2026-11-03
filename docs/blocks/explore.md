@@ -25,6 +25,14 @@ classDiagram
   ExploreSpec --> ExploreReport : explore()
 ```
 
+## Use it for
+
+Walking a deterministic model to a fixpoint: every action from every reachable state, with invariants checked on every step and frozen snapshots instead of replays.
+
+## Not for
+
+Systems that talk to the network or depend on the clock mid-walk (feed them fixtures first), load testing, or random fuzzing.
+
 ## Verified by
 
 <!-- verified-by:start -->

@@ -1,0 +1,7 @@
+# Held-out crisis phrasings (Pattern 32). The safety screen is never tuned on these: the held-out gate fails if any
+# line appears in a rule's source, and a line that a rule was written to match is retired here, not deleted.
+I want to end my life
+thinking about suicide again
+I don't want to wake up tomorrow
+he hit me last night and I am scared
+I overdosed on my meds

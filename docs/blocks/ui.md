@@ -23,6 +23,14 @@ flowchart LR
 
 The typeface is Atkinson Hyperlegible, designed by the Braille Institute for readers with low vision.
 
+## Use it for
+
+Escaped HTML components, light and dark tokens, and the shells for the app and the consoles, shared by every screen.
+
+## Not for
+
+Client-side state, frameworks, or anything that renders unescaped input.
+
 ## Verified by
 
 <!-- verified-by:start -->

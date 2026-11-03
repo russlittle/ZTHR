@@ -10,6 +10,14 @@ flowchart LR
   meter -- yes --> client[Provider or twin] --> record[(model_calls: tokens, cost)]
 ```
 
+## Use it for
+
+The one model client: metered, swappable for a twin, and used only inside a deterministic sandwich.
+
+## Not for
+
+Decisions that must be right every time (use deterministic code), or calling a provider directly.
+
 ## Verified by
 
 <!-- verified-by:start -->

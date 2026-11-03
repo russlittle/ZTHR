@@ -4,6 +4,14 @@ Optional multi-family model review. When a provider is configured, three model f
 commit and a fourth after; each role has things it may not do. Without a provider, admission rests on the
 deterministic gates, journeys and walks.
 
+## Use it for
+
+Configuring a review panel of several model families and the shape of their verdicts.
+
+## Not for
+
+Replacing gates, or review by a single model family.
+
 ## Verified by
 
 <!-- verified-by:start -->

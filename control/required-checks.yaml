@@ -1,0 +1,13 @@
+# Zero-bypass admission (Pattern 7). Every check the factory requires before a change is admitted, and the
+# pipeline step that runs it. The zero-bypass gate compares this list with the live pipeline (cloudbuild.yaml):
+# a missing step, a step allowed to fail, or a step that can be skipped fails the gate.
+required:
+  - { check: typecheck, step: typecheck }
+  - { check: unit and integration tests, step: test }
+  - { check: proven gates, step: gates }
+  - { check: locked journeys, step: journeys }
+  - { check: docs derived and fresh, step: docs }
+  - { check: exhaustive button walk, step: explore }
+  - { check: exhaustive page walk, step: crawl }
+  - { check: browser walk, step: walk }
+  - { check: campus service contracts, step: contract }

@@ -1,0 +1,28 @@
+# Authorship tiers by consequence (Pattern 6). The higher the stakes of a file, the less an agent may author it
+# directly. First matching tier wins; every file in the repository belongs to a tier, and every tier names the
+# guard that enforces it.
+tiers:
+  - tier: locked
+    meaning: Goals the work is judged by. Changed only through npm run lock; loosening or removing needs a listed person.
+    guard: journey-lock
+    paths: [control/journeys/, control/lock.json, control/journey-changes.jsonl]
+  - tier: person
+    meaning: Who may sign destructive changes, and the record of resets.
+    guard: ratchet
+    paths: [control/people.json, control/ratchet-resets.jsonl, control/ratchets.json]
+  - tier: proven
+    meaning: The checks themselves. A change re-proves the gate against its planted defects before it counts.
+    guard: gate-proofs
+    paths: [tools/gates.ts, packages/gates/, control/proofs.json, control/required-checks.yaml, control/heldout/, control/register.yaml, control/authorship.yaml, control/patterns.yaml, cloudbuild.yaml]
+  - tier: admitted
+    meaning: Declarations agents draft and the factory admits when every check passes.
+    guard: certify
+    paths: [control/playbooks/, control/scouts/, control/colleges/, control/proposals/, control/admissions.jsonl, control/review.yaml, control/ci-rates.json]
+  - tier: generated
+    meaning: Written only by tools from the system; a hand edit fails the freshness check.
+    guard: docs-check
+    paths: [docs/data-model.md, docs/testing/coverage.md, docs/testing/gates.md, docs/flows/playbooks.md, apps/campus-services/fixtures/]
+  - tier: open
+    meaning: Product and test code, written by agents and admitted by the gates, journeys and walks.
+    guard: pipeline
+    paths: ['']

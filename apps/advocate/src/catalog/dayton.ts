@@ -21,7 +21,7 @@ export const DAYTON_CATALOG: Resource[] = [
     phone: '1-800-677-1116',
     url: 'https://eldercare.acl.gov',
     eligibility: { text: 'Anyone caring for an older adult, or an older adult looking for help.' },
-    howToApply: ['Call 1-800-677-1116, or search by ZIP code at eldercare.acl.gov.', 'Ask for the local agency that helps caregivers in your county.'],
+    howToApply: ['Call 1-800-677-1116, or search by ZIP code at eldercare.acl.gov.', 'Ask who helps caregivers in your county.'],
     documents: [],
     prefill: ['zip'],
     source: { url: 'https://eldercare.acl.gov/Public/About/Contact_Info/Index.aspx', license: 'public-information' },

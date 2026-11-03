@@ -1,0 +1,2 @@
+# Held-out lines retired because a rule was written to match them. They stay as regression tests, not as evidence
+# that the rules generalize.

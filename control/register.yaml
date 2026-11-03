@@ -1,0 +1,27 @@
+# Register, don't suppress (Pattern 13). Every finding we have not fixed yet: what it is, why it is accepted for
+# now, who owns it, and when the acceptance expires. An expired entry fails the findings-register gate.
+findings:
+  - id: review-panel-not-configured
+    gate: multi-family-review
+    finding: The multi-family review panel (control/review.yaml) has no model provider configured in this build, so admission rests on the deterministic gates and journeys.
+    reason: Model review is optional for adopters; the pipeline reports it as not measured rather than passed.
+    owner: claude-agent
+    expires: 2027-02-01
+  - id: spanish-partial
+    gate: journeys
+    finding: Spanish covers text onboarding, finding help and crisis replies; other screens answer in English.
+    reason: Phase 2 slice; the remaining screens are scheduled with a walk invariant that fails on any English sentence to a Spanish student.
+    owner: claude-agent
+    expires: 2027-01-15
+  - id: vitest-rpc-timeout
+    gate: tests
+    finding: Vitest reports one "Timeout calling onTaskUpdate" error on full runs while every test passes; the long exhaustive tests block the worker's event loop.
+    reason: Not a test failure; split the long walks into their own worker pool.
+    owner: claude-agent
+    expires: 2026-12-15
+  - id: persistence-not-measured
+    gate: outcomes
+    finding: Persistence and credits are not measured.
+    reason: They need a college's records for students who opt in (Phase 4 pilot); they are never estimated from app activity.
+    owner: claude-agent
+    expires: 2027-06-01

@@ -47,6 +47,7 @@ flowchart LR
 - [Gates](testing/gates.md)
 - [Intent journeys](testing/journeys.md)
 - [Mutation testing and ratchets](testing/mutation.md)
+- [The 33 patterns, in operation](testing/patterns.md)
 - [The red team](testing/redteam.md)
 - [Walking in a real browser](testing/ui-walk.md)
 

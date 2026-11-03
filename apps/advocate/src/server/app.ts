@@ -125,7 +125,7 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
       const s = exists(c.req.param('id')) ? a.student(c.req.param('id')) : undefined;
       return me && s && s.account === me.subjectKey ? next() : c.redirect(`${base}/signin`);
     });
-    app.use('/admin/*', async (c, next) => (auth.adminEmailHashes.includes(who(c)?.emailHash ?? '') ? next() : c.redirect(`${base}/signin`)));
+    if (auth.adminEmailHashes.length) app.use('/admin/*', async (c, next) => (auth.adminEmailHashes.includes(who(c)?.emailHash ?? '') ? next() : c.redirect(`${base}/signin`)));
     app.get('/signin', (c) => {
       const csrf = randomBytes(16).toString('hex');
       setCookie(c, 'g_csrf_token', csrf, { path: base || '/', sameSite: 'Lax', secure: auth.secure, maxAge: 600 });
@@ -527,7 +527,8 @@ ${ui.section('Your data', `<div class="panel" style="padding:14px 18px"><p>Every
   // ------------------------------------------------------------ integration API, calendar feed, app shell bits
 
   app.route('/api', createApi(a));
-  app.route('/admin', createAdmin(a, { base, controlDir: fileURLToPath(new URL('../../../../control', import.meta.url)) }));
+  // Authorization by absence (Pattern 30): with sign-in on and no admin listed, the admin is not mounted at all.
+  if (!auth || auth.adminEmailHashes.length) app.route('/admin', createAdmin(a, { base, controlDir: fileURLToPath(new URL('../../../../control', import.meta.url)) }));
 
   app.get('/s/:id/calendar.ics', (c) => c.body(a.calendarFeed(c.req.param('id')), 200, { 'content-type': 'text/calendar; charset=utf-8' }));
 

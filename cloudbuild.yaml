@@ -75,6 +75,12 @@ steps:
     entrypoint: npm
     args: ['run', 'docs:check']
 
+  - id: contract
+    # Every campus service answers its 21 contract probes and matches its recorded fixtures (Pattern 33).
+    name: node:22-bookworm
+    entrypoint: npm
+    args: ['run', 'contract']
+
   - id: explore
     # The button walk: every depth, app and text, to a fixpoint, one process per CPU. Nightly walks all twelve
     # students; a push walks four whose settings differ most (standard, brief, walk-me-through at grade 6, out of area).
@@ -171,4 +177,21 @@ steps:
           --image "us-central1-docker.pkg.dev/$$PROJECT/zthr/advocate:$$COMMIT" \
           --service-account "zthr-advocate@$$PROJECT.iam.gserviceaccount.com" \
           --allow-unauthenticated --memory 1Gi --cpu 1 --min-instances 0 --max-instances 2 --concurrency 40 \
-          --labels "commit=$${COMMIT:0:12}" --quiet
+          --labels "commit=$${COMMIT:0:12}" --set-env-vars "BUILD_COMMIT=$$COMMIT" --quiet
+
+  - id: verify-serving
+    # Done means serving (Pattern 23): what answers on the public URL is the commit that passed, or the build fails.
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    env: ['BRANCH=$BRANCH_NAME', 'PROJECT=$PROJECT_ID', 'COMMIT=$COMMIT_SHA', 'DEPLOY=$_DEPLOY_BRANCH']
+    args:
+      - -c
+      - |
+        if [ "$$BRANCH" != "$$DEPLOY" ]; then echo "Not deploying $$BRANCH."; exit 0; fi
+        url=$$(gcloud run services describe advocate --project "$$PROJECT" --region us-central1 --format 'value(status.url)')
+        for i in 1 2 3 4 5 6; do
+          got=$$(curl -fsS "$$url/healthz" | sed -n 's/.*"commit":"\([0-9a-f]*\)".*/\1/p')
+          [ "$$got" = "$$COMMIT" ] && { echo "serving $$got"; exit 0; }
+          sleep 10
+        done
+        echo "serving '$$got', expected $$COMMIT"; exit 1

@@ -1,0 +1,27 @@
+# Roles defined by what they are denied (Pattern 20). Each limit is structural, and each names the test that
+# proves it holds.
+roles:
+  - role: navigator, chief of staff and other agents
+    denied:
+      - { what: sending anything without the student's approval token, proven_by: apps/advocate/test/advocate.test.ts }
+      - { what: opening a sealed fact not granted to them, proven_by: apps/advocate/test/roles.test.ts }
+      - { what: reaching the network except through the egress door, proven_by: tools/gates.ts }
+  - role: playbook
+    denied:
+      - { what: reading any sealed fact it does not declare, proven_by: apps/advocate/test/roles.test.ts }
+  - role: builder
+    denied:
+      - { what: admitting its own drafts (the factory's checks decide), proven_by: apps/advocate/test/roles.test.ts }
+      - { what: drafting a playbook that reads sealed facts, proven_by: apps/advocate/test/builder.test.ts }
+  - role: operator
+    denied:
+      - { what: running jobs outside its list, proven_by: apps/advocate/test/roles.test.ts }
+      - { what: opening any sealed fact except the class-site token, proven_by: apps/advocate/test/campus.test.ts }
+      - { what: telling a student a write is done before it is confirmed, proven_by: apps/advocate/test/campus.test.ts }
+  - role: app admin
+    denied:
+      - { what: seeing any student's record, messages or sealed facts, proven_by: apps/advocate/test/roles.test.ts }
+  - role: API token
+    denied:
+      - { what: reaching another student's data, proven_by: apps/advocate/test/api.test.ts }
+      - { what: acting beyond the scopes the student chose, proven_by: apps/advocate/test/api.test.ts }

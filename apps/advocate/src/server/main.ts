@@ -145,7 +145,8 @@ function rewrite(req: Request): Request {
 }
 
 if (base) root.get('/', (c) => c.redirect(`${base}/`));
-root.get('/healthz', (c) => c.json({ ok: true, sandboxes: sandboxes.size }));
+// Done means serving (Pattern 23): the pipeline compares this commit with the one that passed.
+root.get('/healthz', (c) => c.json({ ok: true, commit: process.env.BUILD_COMMIT ?? 'local', sandboxes: sandboxes.size }));
 
 const port = Number(process.env.PORT ?? 8080);
 serve({ fetch: root.fetch, port });

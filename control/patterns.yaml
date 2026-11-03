@@ -1,0 +1,36 @@
+# Every ZTHR pattern (zthr.ai, v1), where this reference implements it, and what proves it. The pattern-coverage
+# gate fails if a pattern is missing, a path does not exist, or a pattern names a gate that is not in the catalog.
+patterns:
+  - { n: 1, name: Governed Foundation, implemented_in: [packages/runtime/src/governor.ts, packages/runtime/src/ledger.ts, apps/advocate/src/server/auth.ts, cloudbuild.yaml], verified_by: [packages/runtime/test/runtime.test.ts, apps/advocate/test/auth.test.ts] }
+  - { n: 2, name: Parts Catalog with Purpose Notes, implemented_in: [packages, docs/blocks], verified_by: [tools/test/patterns.test.ts] }
+  - { n: 3, name: Test the Part Where It Lives, implemented_in: [apps/advocate/test/harness/world.ts, apps/advocate/test/harness/crawl.ts], verified_by: [apps/advocate/test/schema.test.ts, tools/test/ui-walk.test.ts] }
+  - { n: 4, name: Single Source, Generated Mirrors, implemented_in: [tools/docs.ts, apps/advocate/src/domain/schema.ts, control/colleges], verified_by: [apps/advocate/test/schema.test.ts, apps/advocate/test/colleges.test.ts] }
+  - { n: 5, name: Describe, Never Write, implemented_in: [apps/advocate/src/builder/builder.ts, tools/certify.ts, tools/admit.ts], verified_by: [apps/advocate/test/builder.test.ts, apps/advocate/test/roles.test.ts] }
+  - { n: 6, name: Authorship Tiers by Consequence, implemented_in: [control/authorship.yaml, tools/lock.ts], verified_by: [tools/test/patterns.test.ts], gate: authorship-tiers }
+  - { n: 7, name: Zero-Bypass Admission, implemented_in: [control/required-checks.yaml, cloudbuild.yaml], verified_by: [tools/test/patterns.test.ts], gate: zero-bypass }
+  - { n: 8, name: Prove the Gate Can Fail, implemented_in: [packages/gates/src/gate.ts, tools/gates.ts, control/proofs.json], verified_by: [packages/gates/test/gates.test.ts] }
+  - { n: 9, name: Unknown Is a State, implemented_in: [packages/gates/src/verdict.ts, apps/advocate/src/integrations/campus.ts], verified_by: [packages/gates/test/gates.test.ts, apps/advocate/test/campus.test.ts] }
+  - { n: 10, name: Ratchet, implemented_in: [packages/gates/src/ratchet.ts, control/ratchets.json], verified_by: [packages/gates/test/gates.test.ts] }
+  - { n: 11, name: Mutation-Measured Tests, implemented_in: [stryker.config.json, docs/testing/mutation.md], verified_by: [packages/gates/test/gates.test.ts] }
+  - { n: 12, name: Measure From the Datum, implemented_in: [packages/gates/src/datum.ts, control/scouts], verified_by: [packages/gates/test/gates.test.ts, apps/advocate/test/builder.test.ts] }
+  - { n: 13, name: Register, Don't Suppress, implemented_in: [packages/gates/src/register.ts, control/register.yaml], verified_by: [tools/test/patterns.test.ts], gate: findings-register }
+  - { n: 14, name: Documentation Derived From the System, implemented_in: [tools/docs.ts, tools/doc-links.ts], verified_by: [tools/test/patterns.test.ts], gate: docs-linked }
+  - { n: 15, name: Intent as the Primary Datum, implemented_in: [packages/intent/src/index.ts, control/journeys, apps/advocate/journeys/index.ts], verified_by: [packages/intent/test/intent.test.ts] }
+  - { n: 16, name: Walk Like a User, implemented_in: [tools/ui/walk.ts], verified_by: [tools/test/ui-walk.test.ts] }
+  - { n: 17, name: Oracles From the Record, implemented_in: [tools/gates.ts, apps/advocate/src/eligibility/params.ts], verified_by: [apps/campus-services/test/services.test.ts, apps/advocate/test/outcomes.test.ts], gate: snap-income-oracle }
+  - { n: 18, name: Locked Intent, implemented_in: [control/lock.json, tools/lock.ts], verified_by: [packages/intent/test/intent.test.ts], gate: journey-lock }
+  - { n: 19, name: The Determinism Ladder, implemented_in: [apps/advocate/src/integrations/campus.ts, apps/advocate/src/domain/letters.ts], verified_by: [apps/advocate/test/letters.test.ts, apps/advocate/test/campus.test.ts] }
+  - { n: 20, name: Roles Defined by What They Are Denied, implemented_in: [control/roles.yaml], verified_by: [apps/advocate/test/roles.test.ts] }
+  - { n: 21, name: Multi-Family Review, implemented_in: [packages/review/src/index.ts, control/review.yaml], verified_by: [packages/review/test/review.test.ts] }
+  - { n: 22, name: Diversity of Representation, implemented_in: [apps/advocate/test/reconcile.test.ts], verified_by: [apps/advocate/test/reconcile.test.ts] }
+  - { n: 23, name: Done Means Serving, implemented_in: [cloudbuild.yaml, apps/advocate/src/server/main.ts], verified_by: [tools/test/patterns.test.ts] }
+  - { n: 24, name: The Persistent Operator, implemented_in: [apps/advocate/src/operator/operator.ts], verified_by: [apps/advocate/test/campus.test.ts] }
+  - { n: 25, name: A Dispatch Is Not a Result, implemented_in: [apps/advocate/src/operator/operator.ts], verified_by: [apps/advocate/test/campus.test.ts] }
+  - { n: 26, name: Leases, implemented_in: [apps/advocate/src/operator/operator.ts], verified_by: [apps/advocate/test/campus.test.ts] }
+  - { n: 27, name: Bounded by Structure, implemented_in: [apps/advocate/src/operator/operator.ts, packages/egress/src/index.ts], verified_by: [apps/advocate/test/roles.test.ts] }
+  - { n: 28, name: The Deterministic Sandwich, implemented_in: [packages/runtime/src/sandwich.ts], verified_by: [apps/advocate/test/letters.test.ts, packages/runtime/test/runtime.test.ts] }
+  - { n: 29, name: Refuse to Start Misconfigured, implemented_in: [packages/runtime/src/sandwich.ts, apps/advocate/src/server/main.ts], verified_by: [packages/runtime/test/runtime.test.ts] }
+  - { n: 30, name: Authorization by Absence, implemented_in: [apps/advocate/src/server/app.ts, apps/advocate/src/server/api.ts], verified_by: [apps/advocate/test/roles.test.ts, apps/advocate/test/api.test.ts] }
+  - { n: 31, name: "Fail Closed, Keep Serving the User", implemented_in: [apps/advocate/src/agents/campus-life.ts, packages/runtime/src/safety.ts], verified_by: [apps/advocate/test/campus.test.ts, apps/advocate/test/redteam.test.ts] }
+  - { n: 32, name: Held Out Means Held Out, implemented_in: [control/heldout], verified_by: [tools/test/patterns.test.ts], gate: held-out }
+  - { n: 33, name: Twin What You Don't Own, implemented_in: [packages/twins/src/index.ts, apps/campus-services, tools/contract.ts], verified_by: [packages/twins/test/twins.test.ts, apps/campus-services/test/services.test.ts] }

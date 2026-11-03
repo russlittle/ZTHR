@@ -13,6 +13,14 @@ erDiagram
   LOCK ||--|{ CARD : "pins sha256 of"
 ```
 
+## Use it for
+
+Journey cards: whole user goals with forbidden outcomes and budgets, locked by hash and run in every mode and channel.
+
+## Not for
+
+Unit-level assertions, or editing a goal so that a change passes.
+
 ## Verified by
 
 <!-- verified-by:start -->

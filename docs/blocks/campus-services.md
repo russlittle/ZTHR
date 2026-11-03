@@ -80,6 +80,14 @@ matches the fixture recorded from the synthetic service. A synthetic service tha
 before any test can trust it. `npm run contract -- --base transit=https://...` sends the same probes to a real
 vendor and checks only the schema.
 
+## Use it for
+
+Standing in for a college's vendors while building and testing: real HTTP, contracts, fixtures and bad-day scenarios.
+
+## Not for
+
+Production data, or anything the Advocate decides; it only answers like a vendor would.
+
 ## Verified by
 
 <!-- verified-by:start -->

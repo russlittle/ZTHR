@@ -66,9 +66,9 @@ export const MENTORS: Mentor[] = [
   { id: 'm1', campus: 'sinclair', displayName: 'Dana R.', field: 'healthcare', role: 'Nurse, Sinclair graduate', languages: ['en'], experiences: ['student-parents', 'first-generation'], openSlots: 2 },
   { id: 'm2', campus: 'sinclair', displayName: 'Marcus T.', field: 'technology', role: 'Network technician', languages: ['en'], experiences: ['adult-learners', 'veterans'], openSlots: 1 },
   { id: 'm3', campus: 'any', displayName: 'Lucía M.', field: 'business', role: 'Small business owner', languages: ['en', 'es'], experiences: ['first-generation'], openSlots: 3 },
-  { id: 'm4', campus: 'wright-state', displayName: 'Priya S.', field: 'science', role: 'Lab manager', languages: ['en'], experiences: ['first-generation'], openSlots: 2 },
+  { id: 'm4', campus: 'wright-state', displayName: 'Nadia S.', field: 'science', role: 'Lab manager', languages: ['en'], experiences: ['first-generation'], openSlots: 2 },
   { id: 'm5', campus: 'any', displayName: 'James W.', field: 'logistics', role: 'Operations supervisor, second-chance hire', languages: ['en'], experiences: ['fair-chance'], openSlots: 2 },
-  { id: 'm6', campus: 'antioch', displayName: 'Sam K.', field: 'education', role: 'Teacher', languages: ['en'], experiences: ['lgbtq', 'disabled-students'], openSlots: 1 },
+  { id: 'm6', campus: 'antioch', displayName: 'Jordan K.', field: 'education', role: 'Teacher', languages: ['en'], experiences: ['lgbtq', 'disabled-students'], openSlots: 1 },
   { id: 'm7', campus: 'any', displayName: 'Rosa G.', field: 'healthcare', role: 'Medical assistant', languages: ['en', 'es'], experiences: ['student-parents'], openSlots: 0 },
 ];
 
