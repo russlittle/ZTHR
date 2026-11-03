@@ -1,0 +1,29 @@
+{
+  "request": {
+    "path": "/api/v1/courses",
+    "headers": {
+      "authorization": "Bearer lms-demo"
+    }
+  },
+  "status": 200,
+  "body": [
+    {
+      "name": "Health Care Administration",
+      "course_code": "HCA 3100",
+      "id": 19990,
+      "term": "Fall 2026"
+    },
+    {
+      "name": "Medical Terminology",
+      "course_code": "HIM 1101",
+      "id": 19991,
+      "term": "Fall 2026"
+    },
+    {
+      "name": "English Composition I",
+      "course_code": "ENG 1101",
+      "id": 19992,
+      "term": "Fall 2026"
+    }
+  ]
+}

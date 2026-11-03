@@ -21,13 +21,16 @@ flowchart LR
 
 ## Business flows
 
+- [Campus life, the bus, jobs and mentors](flows/campus-life.md)
 - [Jobs and careers](flows/careers.md)
+- [Class-site sync](flows/class-site.md)
 - [Community](flows/community.md)
 - [When something goes wrong](flows/crisis.md)
 - [Drafts and approval](flows/drafts-and-approval.md)
 - [Explaining a letter](flows/letters.md)
 - [Meals for the week](flows/meals.md)
 - [Money found and short months](flows/money.md)
+- [The operator](flows/operator.md)
 - [Deadlines, plans and held time](flows/planning.md)
 - [Playbooks](flows/playbooks.md)
 - [Signing in](flows/sign-in.md)
@@ -47,6 +50,7 @@ flowchart LR
 
 ## Building blocks
 
+- [Campus services](blocks/campus-services.md)
 - [@zthr/egress](blocks/egress.md)
 - [@zthr/evidence](blocks/evidence.md)
 - [@zthr/explore](blocks/explore.md)

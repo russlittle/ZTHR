@@ -1,0 +1,29 @@
+{
+  "request": {
+    "path": "/v1/open-now?campus=wright-state&at=2026-11-03T04:30:00Z",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "campus": "wright-state",
+    "at": "2026-11-03T04:30:00.000Z",
+    "open": [
+      {
+        "id": "wright-state-late",
+        "campus": "wright-state",
+        "name": "Night Owl Market",
+        "kind": "market",
+        "building": "Hamilton Hall",
+        "lat": 39.7806,
+        "lon": -84.0628,
+        "accepts": [
+          "card",
+          "meal-plan",
+          "campus-card"
+        ],
+        "period": "Late night",
+        "closes": "01:00"
+      }
+    ]
+  }
+}

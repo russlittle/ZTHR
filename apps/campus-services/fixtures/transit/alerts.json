@@ -1,0 +1,22 @@
+{
+  "request": {
+    "path": "/realtime/v1/alerts?at=2026-11-26T15:00:00Z",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "at": "2026-11-26T15:00:00.000Z",
+    "alerts": [
+      {
+        "id": "holiday-2026-11-26",
+        "effect": "NO_SERVICE",
+        "header": "Thanksgiving: no service",
+        "routes": [
+          "1",
+          "2",
+          "11"
+        ]
+      }
+    ]
+  }
+}

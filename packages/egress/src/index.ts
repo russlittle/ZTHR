@@ -78,3 +78,37 @@ export class EgressTwin implements Egress {
     return r;
   }
 }
+
+/** Anything with a fetch handler, such as a Hono app. */
+export interface FetchHandler {
+  fetch(req: Request): Response | Promise<Response>;
+}
+
+/**
+ * Routes requests for the listed hosts to in-process services instead of the network, and sends everything else
+ * through `fallback` (or refuses it). Used to run synthetic campus services inside the demo and the tests: the
+ * app's code path is the same `send` it uses against real vendors, only the transport differs.
+ */
+export function routedEgress(routes: Record<string, FetchHandler>, fallback?: Egress, headers: () => Record<string, string> = () => ({})): Egress {
+  const log: Egress['log'] = [];
+  return {
+    log,
+    async send(req) {
+      const host = hostOf(req.url);
+      const target = routes[host];
+      if (!target) {
+        if (!fallback) {
+          log.push({ at: new Date().toISOString(), purpose: req.purpose, method: req.method, host, status: 'refused' });
+          throw new EgressRefused(`${host} is not on the egress allow-list`);
+        }
+        const r = await fallback.send(req);
+        log.push(fallback.log[fallback.log.length - 1] ?? { at: new Date().toISOString(), purpose: req.purpose, method: req.method, host, status: r.status });
+        return r;
+      }
+      const r = await target.fetch(new Request(req.url, { method: req.method, body: req.body, headers: { ...headers(), ...req.headers } }));
+      const body = await r.text();
+      log.push({ at: new Date().toISOString(), purpose: req.purpose, method: req.method, host, status: r.status });
+      return { status: r.status, body };
+    },
+  };
+}

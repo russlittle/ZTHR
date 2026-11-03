@@ -40,5 +40,9 @@ export const PERSONAS: Record<string, Builder> = {
 export const PERSONA_NAMES = Object.keys(PERSONAS);
 
 export function seedDemo(a: Advocate): Student[] {
-  return PERSONA_NAMES.map((n) => PERSONAS[n]!(a));
+  const all = PERSONA_NAMES.map((n) => PERSONAS[n]!(a));
+  // In the demonstration, Maria rides the bus and Jayden's class site is connected, so those features are live.
+  a.setCommute('maria', { mode: 'bus', homeStop: 'salem-catalpa' });
+  a.connectClassSite('jayden', 'lms-jayden');
+  return all;
 }

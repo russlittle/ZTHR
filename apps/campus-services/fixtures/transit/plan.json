@@ -1,0 +1,92 @@
+{
+  "request": {
+    "path": "/plan/v1?from=salem-catalpa&to=wright-union&date=2026-11-02&arriveBy=09:00",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "from": "salem-catalpa",
+    "to": "wright-union",
+    "date": "2026-11-02",
+    "itineraries": [
+      {
+        "legs": [
+          {
+            "route": "1",
+            "routeName": "Third Street Crosstown",
+            "trip": "r1-0-0730-20261102",
+            "from": "salem-catalpa",
+            "to": "hub",
+            "depart": "07:30",
+            "arrive": "07:50"
+          },
+          {
+            "route": "2",
+            "routeName": "Campus Connector",
+            "trip": "r2-0-0800-20261102",
+            "from": "hub",
+            "to": "wright-union",
+            "depart": "08:00",
+            "arrive": "08:31"
+          }
+        ],
+        "depart": "07:30",
+        "arrive": "08:31",
+        "minutes": 61,
+        "transfers": 1
+      },
+      {
+        "legs": [
+          {
+            "route": "1",
+            "routeName": "Third Street Crosstown",
+            "trip": "r1-0-0710-20261102",
+            "from": "salem-catalpa",
+            "to": "hub",
+            "depart": "07:10",
+            "arrive": "07:30"
+          },
+          {
+            "route": "2",
+            "routeName": "Campus Connector",
+            "trip": "r2-0-0800-20261102",
+            "from": "hub",
+            "to": "wright-union",
+            "depart": "08:00",
+            "arrive": "08:31"
+          }
+        ],
+        "depart": "07:10",
+        "arrive": "08:31",
+        "minutes": 81,
+        "transfers": 1
+      },
+      {
+        "legs": [
+          {
+            "route": "1",
+            "routeName": "Third Street Crosstown",
+            "trip": "r1-0-0650-20261102",
+            "from": "salem-catalpa",
+            "to": "hub",
+            "depart": "06:50",
+            "arrive": "07:10"
+          },
+          {
+            "route": "2",
+            "routeName": "Campus Connector",
+            "trip": "r2-0-0730-20261102",
+            "from": "hub",
+            "to": "wright-union",
+            "depart": "07:30",
+            "arrive": "08:01"
+          }
+        ],
+        "depart": "06:50",
+        "arrive": "08:01",
+        "minutes": 71,
+        "transfers": 1
+      }
+    ]
+  }
+}

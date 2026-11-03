@@ -1,0 +1,132 @@
+{
+  "request": {
+    "path": "/api/v1/courses/19990/assignments",
+    "headers": {
+      "authorization": "Bearer lms-demo"
+    }
+  },
+  "status": 200,
+  "body": [
+    {
+      "id": 1999001,
+      "name": "Assignment 1",
+      "due_at": "2026-08-27T23:59:00-05:00",
+      "points_possible": 50,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999001",
+      "course_id": 19990
+    },
+    {
+      "id": 1999002,
+      "name": "Assignment 2",
+      "due_at": "2026-09-10T23:59:00-05:00",
+      "points_possible": 50,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999002",
+      "course_id": 19990
+    },
+    {
+      "id": 1999003,
+      "name": "Assignment 3",
+      "due_at": "2026-09-24T23:59:00-05:00",
+      "points_possible": 50,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999003",
+      "course_id": 19990
+    },
+    {
+      "id": 1999004,
+      "name": "Assignment 4",
+      "due_at": "2026-10-01T23:59:00-05:00",
+      "points_possible": 50,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999004",
+      "course_id": 19990
+    },
+    {
+      "id": 1999005,
+      "name": "Assignment 5",
+      "due_at": "2026-10-08T23:59:00-05:00",
+      "points_possible": 50,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999005",
+      "course_id": 19990
+    },
+    {
+      "id": 1999006,
+      "name": "Assignment 6",
+      "due_at": "2026-10-22T23:59:00-05:00",
+      "points_possible": 50,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999006",
+      "course_id": 19990
+    },
+    {
+      "id": 1999007,
+      "name": "Assignment 7",
+      "due_at": "2026-10-29T23:59:00-05:00",
+      "points_possible": 50,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999007",
+      "course_id": 19990
+    },
+    {
+      "id": 1999008,
+      "name": "Assignment 8",
+      "due_at": "2026-11-05T23:59:00-05:00",
+      "points_possible": 50,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999008",
+      "course_id": 19990
+    },
+    {
+      "id": 1999009,
+      "name": "Assignment 9",
+      "due_at": "2026-11-19T23:59:00-05:00",
+      "points_possible": 50,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999009",
+      "course_id": 19990
+    },
+    {
+      "id": 1999010,
+      "name": "Assignment 10",
+      "due_at": "2026-12-03T23:59:00-05:00",
+      "points_possible": 50,
+      "submission_types": [
+        "online_upload"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999010",
+      "course_id": 19990
+    },
+    {
+      "id": 1999099,
+      "name": "Final exam",
+      "due_at": "2026-12-10T10:00:00-05:00",
+      "points_possible": 100,
+      "submission_types": [
+        "on_paper"
+      ],
+      "html_url": "https://lms.example/courses/19990/assignments/1999099",
+      "course_id": 19990
+    }
+  ]
+}

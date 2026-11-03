@@ -1,0 +1,14 @@
+{
+  "request": {
+    "path": "/api/v1/users/self",
+    "headers": {
+      "authorization": "Bearer lms-demo"
+    }
+  },
+  "status": 200,
+  "body": {
+    "id": 1999,
+    "name": "Demo student",
+    "short_name": "Demo student"
+  }
+}

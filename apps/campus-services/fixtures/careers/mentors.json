@@ -1,0 +1,26 @@
+{
+  "request": {
+    "path": "/v1/mentors?campus=sinclair&field=healthcare",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "mentors": [
+      {
+        "id": "m1",
+        "campus": "sinclair",
+        "displayName": "Dana R.",
+        "field": "healthcare",
+        "role": "Nurse, Sinclair graduate",
+        "languages": [
+          "en"
+        ],
+        "experiences": [
+          "student-parents",
+          "first-generation"
+        ],
+        "openSlots": 2
+      }
+    ]
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "request": {
+    "path": "/v1/events?campus=sinclair&from=2026-11-02&days=7",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "campus": "sinclair",
+    "from": "2026-11-02",
+    "days": 7,
+    "events": [
+      {
+        "id": "sinclair-20261102-1",
+        "campus": "sinclair",
+        "date": "2026-11-02",
+        "start": "14:30",
+        "end": "15:30",
+        "title": "Resume workshop",
+        "kind": "workshop",
+        "tags": [
+          "career"
+        ],
+        "where": "Building 14",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261102-0",
+        "campus": "sinclair",
+        "date": "2026-11-02",
+        "start": "16:30",
+        "end": "17:30",
+        "title": "FAFSA help session",
+        "kind": "workshop",
+        "tags": [
+          "money"
+        ],
+        "where": "Building 14",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261103-1",
+        "campus": "sinclair",
+        "date": "2026-11-03",
+        "start": "11:00",
+        "end": "12:00",
+        "title": "Club fair",
+        "kind": "social",
+        "tags": [
+          "social"
+        ],
+        "where": "Building 6",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261103-0",
+        "campus": "sinclair",
+        "date": "2026-11-03",
+        "start": "17:00",
+        "end": "19:00",
+        "title": "Club fair",
+        "kind": "social",
+        "tags": [
+          "social"
+        ],
+        "where": "Building 14",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261103-2",
+        "campus": "sinclair",
+        "date": "2026-11-03",
+        "start": "17:30",
+        "end": "18:30",
+        "title": "Veterans coffee hour",
+        "kind": "meetup",
+        "tags": [
+          "veterans",
+          "free-food"
+        ],
+        "where": "Building 6",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261104-0",
+        "campus": "sinclair",
+        "date": "2026-11-04",
+        "start": "18:00",
+        "end": "19:00",
+        "title": "FAFSA help session",
+        "kind": "workshop",
+        "tags": [
+          "money"
+        ],
+        "where": "Building 6",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261105-0",
+        "campus": "sinclair",
+        "date": "2026-11-05",
+        "start": "12:00",
+        "end": "13:30",
+        "title": "Free pizza and study night",
+        "kind": "free-food",
+        "tags": [
+          "free-food"
+        ],
+        "where": "Building 6",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261106-2",
+        "campus": "sinclair",
+        "date": "2026-11-06",
+        "start": "13:30",
+        "end": "15:30",
+        "title": "Free pizza and study night",
+        "kind": "free-food",
+        "tags": [
+          "free-food"
+        ],
+        "where": "Building 14",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261106-1",
+        "campus": "sinclair",
+        "date": "2026-11-06",
+        "start": "14:00",
+        "end": "15:00",
+        "title": "Tutoring drop-in: math",
+        "kind": "tutoring",
+        "tags": [
+          "academic"
+        ],
+        "where": "Building 14",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261106-0",
+        "campus": "sinclair",
+        "date": "2026-11-06",
+        "start": "16:30",
+        "end": "18:30",
+        "title": "Student parents meetup",
+        "kind": "meetup",
+        "tags": [
+          "student-parents",
+          "free-food"
+        ],
+        "where": "Building 6",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261107-0",
+        "campus": "sinclair",
+        "date": "2026-11-07",
+        "start": "13:30",
+        "end": "15:00",
+        "title": "FAFSA help session",
+        "kind": "workshop",
+        "tags": [
+          "money"
+        ],
+        "where": "Building 6",
+        "free": true
+      },
+      {
+        "id": "sinclair-20261107-1",
+        "campus": "sinclair",
+        "date": "2026-11-07",
+        "start": "14:00",
+        "end": "15:00",
+        "title": "Free pizza and study night",
+        "kind": "free-food",
+        "tags": [
+          "free-food"
+        ],
+        "where": "Building 6",
+        "free": true
+      }
+    ],
+    "campusName": "Sinclair College"
+  }
+}

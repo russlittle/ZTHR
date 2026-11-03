@@ -20,7 +20,7 @@ export interface CollectionDef {
   /** Kept only as long as needed; not part of the student's lasting record. */
   transient?: boolean;
   /** Which part of the record it belongs to, for drawing. */
-  group?: 'schedule' | 'conversation' | 'help and money' | 'connections';
+  group?: 'schedule' | 'conversation' | 'help and money' | 'connections' | 'campus';
 }
 
 const f = (name: string, type: string, note?: string, optional = false): FieldDef => ({ name, type, note, optional });
@@ -36,7 +36,7 @@ export const COLLECTIONS: CollectionDef[] = [
       ['deadlines', 'has', '||--o{'], ['classes', 'attends', '||--o{'], ['shifts', 'works', '||--o{'], ['holds', 'holds time', '||--o{'], ['reminders', 'is reminded', '||--o{'],
       ['drafts', 'approves', '||--o{'], ['messages', 'receives', '||--o{'], ['playbook_runs', 'runs', '||--o{'], ['sources', 'connects', '||--o{'], ['api_tokens', 'creates', '||--o{'],
       ['webhooks', 'registers', '||--o{'], ['vault', 'keeps', '||--o{'], ['money', 'tracks', '||--o|'], ['household_plan', 'plans', '||--o|'], ['meetings', 'attends', '||--o{'],
-      ['courses', 'takes', '||--o{'], ['pulse_state', 'answers', '||--o|'], ['dismissed', 'dismisses', '||--o{'], ['aid', 'expects', '||--o|'],
+      ['courses', 'takes', '||--o{'], ['pulse_state', 'answers', '||--o|'], ['dismissed', 'dismisses', '||--o{'], ['aid', 'expects', '||--o|'], ['commute_plans', 'rides', '||--o{'], ['transit_now', 'waits at', '||--o|'], ['dispatches', 'asks for', '||--o{'],
     ],
   },
   { group: 'schedule', name: 'deadlines', purpose: 'Every date that matters: assignments, exams, aid, bills, appointments. Found dates stay unconfirmed until the student checks them.', key: 'id', fields: [f('id', 'string'), f('studentId', 'string', 'owner'), f('title', 'string'), f('due', 'date or date-time'), o('course', 'string'), f('kind', 'enum', 'assignment, exam, reading, college, aid, benefit, bill, appointment, other'), f('source', 'object', 'where it was found, with the line'), f('confirmed', 'boolean'), o('effortHours', 'number'), o('durationMin', 'number'), o('done', 'boolean')], relations: [['holds', 'gets time in', '||--o{']] },
@@ -55,7 +55,12 @@ export const COLLECTIONS: CollectionDef[] = [
   { group: 'connections', name: 'webhooks', purpose: 'Where the student asked to be notified. Https only; payloads carry ids, never message text.', key: 'id', fields: [f('id', 'string'), f('url', 'url'), f('events', 'string[]'), f('secret', 'string', 'signs each delivery')] },
   { group: 'help and money', name: 'vault', purpose: 'Names of documents the student keeps; contents are sealed.', key: 'student:name', fields: [f('name', 'string'), f('addedAt', 'date')] },
   { group: 'help and money', name: 'money', purpose: 'Balance, bills and pay, for spotting a short month ahead of time.', key: 'student', fields: [f('balance', 'number'), f('bills', 'Bill[]'), o('pay', 'Paycheck')] },
-  { group: 'help and money', name: 'household_plan', purpose: 'Child care hours, commute and sleep, for the week solver.', key: 'student', fields: [o('childCare', 'ChildCare'), o('commuteMin', 'number'), o('sleepHours', 'number')] },
+  { group: 'help and money', name: 'household_plan', purpose: 'Child care hours, commute and sleep, for the week solver.', key: 'student', fields: [o('childCare', 'ChildCare'), o('commuteMin', 'number'), o('sleepHours', 'number'), o('commuteMode', 'enum', 'bus, car, walk'), o('homeStop', 'string', 'transit stop id the student picked')] },
+  { group: 'campus', name: 'commute_plans', purpose: 'Bus trips that get the student to their first class each day, from the transit planner.', key: 'student|date', fields: [f('date', 'date'), f('course', 'string'), f('classStart', 'time'), f('from', 'string', 'stop id'), f('to', 'string', 'stop id'), f('itineraries', 'Itinerary[]'), o('notice', 'string'), f('fetchedAt', 'date-time')], transient: true },
+  { group: 'campus', name: 'transit_now', purpose: 'Live arrivals and alerts at the student\'s stop; used only while under ten minutes old.', key: 'student', fields: [f('stop', 'string'), f('at', 'date-time'), f('arrivals', 'Arrival[]'), f('alerts', 'Alert[]')], transient: true },
+  { group: 'campus', name: 'dispatches', purpose: 'Writes the student asked for (room bookings), each sent once with an idempotency key and confirmed by looking it up.', key: 'idempotency key', fields: [f('id', 'string'), f('studentId', 'string'), f('kind', 'enum', 'room-booking'), f('request', 'object'), f('key', 'string'), f('status', 'enum', 'queued, sent, ambiguous, confirmed, refused'), f('attempts', 'number'), o('result', 'object'), f('queuedAt', 'date-time')] },
+  { group: 'campus', name: 'campus_feeds', purpose: 'What the operator last fetched from each campus service: dining, places, careers and transit stops. Shared, not about any student.', key: 'campus', fields: [f('campus', 'string'), f('fetchedAt', 'date-time'), f('locations', 'DiningLocation[]'), f('hours', 'record'), f('menus', 'record'), f('spaces', 'Space[]'), f('events', 'Event[]'), f('postings', 'Posting[]'), f('mentors', 'Mentor[]'), f('stops', 'Stop[]'), f('unknown', 'string[]', 'parts that could not be fetched')], transient: true },
+  { group: 'campus', name: 'leases', purpose: 'Which operator holds which job, with a heartbeat, so two never run the same job.', key: 'job', fields: [f('job', 'string'), f('holder', 'string'), f('until', 'date-time'), f('beats', 'number')], transient: true },
   { group: 'schedule', name: 'meetings', purpose: 'Group meetings to prepare for.', key: 'id', fields: [f('id', 'string'), f('title', 'string'), f('date', 'date'), f('start', 'time'), f('attendees', 'string[]'), o('course', 'string')] },
   { group: 'schedule', name: 'courses', purpose: 'Each course and its AI policy, read from the syllabus.', key: 'student:course', fields: [f('course', 'string'), f('aiPolicy', 'enum'), o('aiPolicyLine', 'string')] },
   { group: 'conversation', name: 'dismissed', purpose: 'Alerts the student said are fine.', key: 'student:subject', fields: [f('subject', 'string'), f('at', 'date')] },

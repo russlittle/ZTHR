@@ -1,4 +1,5 @@
 // Verifies docs/testing/exploration.md (the feature walk: every page, link and form, for every student).
+import { applyCampus, campusSeedDocs } from './campus.js';
 import { explore, type ExploreReport } from '@zthr/explore';
 import { Hono } from 'hono';
 import { Advocate } from '../../src/agents/advocate.js';
@@ -102,6 +103,7 @@ export const SETTINGS_ACTION = /action=(dial|source-on|source-off|pulses-on|puls
 
 export async function crawlAdvocate(opts: { only?: string[]; maxNodes?: number; settingsOnly?: boolean } = {}): Promise<ExploreReport & { routes: string[] }> {
   const routes = new Set<string>();
+  const campus = await campusSeedDocs();
   const merged: ExploreReport & { routes: string[] } = { seeds: [], states: 0, transitions: 0, actionsSeen: [], verbsSeen: {}, violations: [], exhausted: true, routes: [] };
   const seeds = PERSONA_NAMES.filter((n) => !opts.only || opts.only.includes(n)).flatMap((n) => (opts.settingsOnly ? [[n, 'own']] : [[n, 'own'], [n, 'brief'], [n, 'walk-me-through']]) as [string, string][]);
   for (const [name, dial] of seeds) {
@@ -109,6 +111,7 @@ export async function crawlAdvocate(opts: { only?: string[]; maxNodes?: number; 
     const make = (): CrawlWorld => {
       const a = new Advocate({ today: () => DAY, now: () => new Date(`${DAY}T15:00:00Z`) });
       const s = PERSONAS[name]!(a);
+      applyCampus(a, s.id, campus);
       if (dial !== 'own') a.setDial(s.id, { depth: dial as 'brief' | 'walk-me-through' });
       return { a, sid: s.id, app: new Hono({ strict: false }).route(BASE, createApp(a, { base: BASE })) as unknown as Hono };
     };

@@ -213,6 +213,7 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
     const sid = c.req.param('id');
     const s = a.student(sid);
     const weather = await a.weatherMessage(sid);
+    const commute = a.commuteSettings(sid).mode === 'bus' && a.commutePlans(sid).some((p) => p.date === a.today_(sid).date) ? a.leaveByMessage(sid) : undefined;
     const v = a.today_(sid);
     const date = v.date;
     const stops: ui.Stop[] = [
@@ -238,7 +239,7 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
 <div class="hello"><h1>${ui.esc(greeting)}</h1><p class="date">${ui.esc(friendly(date))}</p></div>
 ${stops.length ? ui.dayLine(stops, `Your ${weekday(date)}`) : ui.note({ body: 'Nothing on your calendar today. Add your classes or shifts and I will plan around them.', actions: [toAction(sid, { label: 'Add a syllabus', action: 'upload-syllabus' }, 0), toAction(sid, { label: 'Add my work shifts', action: 'add-shifts' }, 1)] })}
 ${one ? ui.note({ kind: 'one', title: 'If you do one thing today', body: `${one.title}. ${one.why}.`, actions: today.nextSteps.map((n, i) => toAction(sid, n, i)) }) : ''}
-${[weather, money, pulse, ...conflicts, ...ahead].filter((m): m is OutboundMessage => !!m).map((m) => noteFor(sid, m)).join('')}
+${[commute, weather, money, pulse, ...conflicts, ...ahead].filter((m): m is OutboundMessage => !!m).map((m) => noteFor(sid, m)).join('')}
 ${unconfirmed ? ui.note({ kind: 'plan', from: 'Class planner', body: `${unconfirmed} date${unconfirmed === 1 ? '' : 's'} from your syllabus need a quick look before I plan around them.`, actions: [toAction(sid, { label: 'Check the dates', action: 'review-deadlines' }, 0)] }) : ''}
 ${ui.section('Coming up', ui.rows(comingUp.map((d) => ({ title: d.title, sub: `${d.course ? `${d.course}, ` : ''}${relDay(date, d.due)}`, actions: [toAction(sid, { label: 'Done', action: `mark-done:${d.id}` }, 1)] })), 'Nothing due in the next week.'), `<a href="${u(sid, '/week')}">See the week</a>`)}
 ${ui.section('Ask your Advocate', ui.form({ url: u(sid, '/say'), submit: 'Send', fields: [{ name: 'text', label: 'Message', placeholder: 'Try: plan my essay, I need food, what is a registrar' }] }))}`,
@@ -379,6 +380,7 @@ ${ui.section('Update what I know', ui.form({ url: u(sid, '/household'), submit: 
 <div class="hello"><h1>What's hard right now?</h1><p class="date">Pick one. I find help that fits you and do the legwork.</p></div>
 ${ui.tiles(NEEDS.map(([n, label, ic]) => ({ label, icon: ic, post: post(`need:${n}`) })), 'Kinds of help')}
 ${ui.section('Something went wrong?', ui.tiles([...SITUATIONS.map(([x, label]) => ({ label, icon: 'alert', post: post(`situation:${x}`) })), { label: 'Explain a letter I got', icon: 'doc', href: u(sid, '/letter') }, { label: 'Plan a week of meals', icon: 'food', href: u(sid, '/meals') }, { label: 'Find a job or career help', icon: 'route', post: post('career') }], 'Situations'))}
+${ui.section('On campus', ui.tiles([{ label: 'Food on campus now', icon: 'food', post: post('campus-food') }, { label: 'Free food this week', icon: 'food', post: post('free-food') }, { label: 'Study spots', icon: 'book', post: post('study-spots') }, { label: 'Bus to class', icon: 'bus', post: post('leave-by') }, { label: 'Jobs that fit my week', icon: 'route', post: post('jobs-fit') }, { label: 'Talk to a mentor', icon: 'talk', post: post('mentors') }], 'On campus'))}
 ${ui.note({ kind: 'safety', title: 'Need to talk to someone now?', body: 'Call or text 988 any time, day or night. If you are in danger, call 911.', actions: [{ label: 'Call or text 988', href: 'tel:988', variant: 'call', icon: 'phone' }] })}`,
         'help',
       ),

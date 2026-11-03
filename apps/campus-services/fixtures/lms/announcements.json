@@ -1,0 +1,32 @@
+{
+  "request": {
+    "path": "/api/v1/announcements",
+    "headers": {
+      "authorization": "Bearer lms-demo"
+    }
+  },
+  "status": 200,
+  "body": [
+    {
+      "id": 139930,
+      "title": "Room change for next week",
+      "message": "Class meets in Building 12, room 210 next Tuesday.",
+      "posted_at": "2026-10-30T15:00:00-04:00",
+      "context_code": "course_19990"
+    },
+    {
+      "id": 139937,
+      "title": "Office hours this week",
+      "message": "Office hours are Wednesday 2 to 4 p.m.",
+      "posted_at": "2026-10-30T15:00:00-04:00",
+      "context_code": "course_19991"
+    },
+    {
+      "id": 139944,
+      "title": "Office hours this week",
+      "message": "Office hours are Wednesday 2 to 4 p.m.",
+      "posted_at": "2026-10-30T15:00:00-04:00",
+      "context_code": "course_19992"
+    }
+  ]
+}

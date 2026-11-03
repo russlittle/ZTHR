@@ -5,7 +5,8 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { existsSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { refuseToStartUnless } from '@zthr/runtime';
-import { realEgress } from '@zthr/egress';
+import { realEgress, routedEgress } from '@zthr/egress';
+import { SERVICES, SERVICE_IDS, startAll } from '../../../campus-services/src/index.js';
 import { Advocate } from '../agents/advocate.js';
 import { createApp } from './app.js';
 import { seedDemo } from './demo.js';
@@ -45,34 +46,51 @@ const LINES: Record<string, string> = {
   Keisha: 'Moved to Atlanta mid-degree.',
 };
 
-function build(): Hono {
+// One set of synthetic campus services for the whole demo; their state (room bookings) is shared like a real one.
+const campusServices = startAll();
+const operators = new Set<Advocate>();
+// The operator runs every minute for each live copy (Pattern 24); leases keep each job single (Pattern 26).
+setInterval(() => {
+  for (const a of operators) void a.operator.tick().catch(() => undefined);
+}, 60_000).unref();
+
+function build(): { app: Hono; advocate: Advocate } {
+  const allow = (process.env.ADVOCATE_EGRESS_ALLOW ?? '').split(',').filter(Boolean);
+  // Campus services: the synthetic ones in-process for the demo; in production, real vendors on the allow-list.
+  const egress = demoMode ? routedEgress(campusServices) : realEgress(allow);
   const advocate = new Advocate({
     today: fixedToday ? () => fixedToday : undefined,
     masterKey: hex32(process.env.ADVOCATE_MASTER_KEY),
     approvalSecret: hex32(process.env.ADVOCATE_APPROVAL_SECRET),
-    // Webhooks leave only through the egress block; in the demo they go to a recording twin.
-    egress: demoMode ? undefined : realEgress((process.env.ADVOCATE_EGRESS_ALLOW ?? '').split(',').filter(Boolean)),
+    egress,
+    ...(process.env.CAMPUS_ENDPOINTS ? { campus: JSON.parse(process.env.CAMPUS_ENDPOINTS) } : {}),
   });
   const demo = demoMode ? seedDemo(advocate).map((s) => ({ id: s.id, name: s.chosenName, line: LINES[s.chosenName] ?? '' })) : [];
+  operators.add(advocate);
+  void advocate.operator.tick();
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const secret = hex32(process.env.ADVOCATE_SESSION_SECRET);
   const sessions = clientId && secret ? new Sessions(secret) : undefined;
   const auth = clientId && sessions ? { clientId, verifier: new GoogleVerifier(realEgress(['www.googleapis.com']), clientId), sessions, adminEmailHashes: (process.env.ADMIN_EMAILS ?? '').split(',').filter(Boolean).map((e) => sessions.emailHash(e.trim())), secure: production } : undefined;
-  return createApp(advocate, { base, demo, auth });
+  return { app: createApp(advocate, { base, demo, auth }), advocate };
 }
 
 // One copy per visitor in the demo, kept while they use it; the oldest idle copy goes first.
 const MAX = Number(process.env.ADVOCATE_SANDBOXES ?? 150);
 const IDLE_MS = 2 * 60 * 60 * 1000;
-const sandboxes = new Map<string, { app: Hono; seen: number }>();
-const shared = demoMode ? undefined : build();
+const sandboxes = new Map<string, { app: Hono; advocate: Advocate; seen: number }>();
+const shared = demoMode ? undefined : build().app;
 function appFor(id: string): Hono {
   const now = Date.now();
-  for (const [k, v] of sandboxes) if (now - v.seen > IDLE_MS) sandboxes.delete(k);
+  for (const [k, v] of sandboxes) if (now - v.seen > IDLE_MS) { sandboxes.delete(k); operators.delete(v.advocate); }
   let s = sandboxes.get(id);
   if (!s) {
-    if (sandboxes.size >= MAX) sandboxes.delete([...sandboxes].sort((a, b) => a[1].seen - b[1].seen)[0]![0]);
-    s = { app: build(), seen: now };
+    if (sandboxes.size >= MAX) {
+      const [k, v] = [...sandboxes].sort((a, b) => a[1].seen - b[1].seen)[0]!;
+      sandboxes.delete(k);
+      operators.delete(v.advocate);
+    }
+    s = { ...build(), seen: now };
     sandboxes.set(id, s);
   }
   s.seen = now;
@@ -80,6 +98,19 @@ function appFor(id: string): Hono {
 }
 
 const root = new Hono({ strict: false });
+
+// The synthetic campus services, public, so anyone can call them like real endpoints: /twins/<service>/openapi.json
+if (demoMode) {
+  for (const id of SERVICE_IDS) {
+    const svc = campusServices[SERVICES[id].host]!;
+    root.all(`/twins/${id}/*`, (c) => {
+      const u = new URL(c.req.url);
+      u.pathname = u.pathname.slice(`/twins/${id}`.length) || '/';
+      return svc.fetch(new Request(u, c.req.raw));
+    });
+  }
+  root.get('/twins', (c) => c.json({ services: SERVICE_IDS.map((id) => ({ id, title: SERVICES[id].info.title, openapi: `/twins/${id}/openapi.json`, endpoints: SERVICES[id].info.endpoints.map((e) => `${e.method} /twins/${id}${e.path}`) })) }));
+}
 
 // The published docs and factory console, built by tools/site.ts into site-out/.
 if (existsSync('site-out')) {

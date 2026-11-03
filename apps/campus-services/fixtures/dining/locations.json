@@ -1,0 +1,53 @@
+{
+  "request": {
+    "path": "/v1/locations?campus=sinclair",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "campus": "sinclair",
+    "locations": [
+      {
+        "id": "sinclair-commons",
+        "campus": "sinclair",
+        "name": "Third Street Commons",
+        "kind": "dining-hall",
+        "building": "Building 8",
+        "lat": 39.7577,
+        "lon": -84.1979,
+        "accepts": [
+          "card",
+          "cash",
+          "campus-card"
+        ]
+      },
+      {
+        "id": "sinclair-perk",
+        "campus": "sinclair",
+        "name": "The Perk Coffee Bar",
+        "kind": "cafe",
+        "building": "Building 7",
+        "lat": 39.757,
+        "lon": -84.1983,
+        "accepts": [
+          "card",
+          "cash",
+          "campus-card"
+        ]
+      },
+      {
+        "id": "sinclair-market",
+        "campus": "sinclair",
+        "name": "Library Grab and Go",
+        "kind": "grab-and-go",
+        "building": "Building 6",
+        "lat": 39.758,
+        "lon": -84.1989,
+        "accepts": [
+          "card",
+          "campus-card"
+        ]
+      }
+    ]
+  }
+}

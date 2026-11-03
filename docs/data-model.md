@@ -174,6 +174,8 @@ erDiagram
     ChildCare childCare "optional"
     number commuteMin "optional"
     number sleepHours "optional"
+    enum commuteMode "bus, car, walk"
+    string homeStop "transit stop id the student picked"
   }
   aid {
     date disbursement
@@ -231,6 +233,11 @@ erDiagram
 | `vault` | student:name | Names of documents the student keeps; contents are sealed. |
 | `money` | student | Balance, bills and pay, for spotting a short month ahead of time. |
 | `household_plan` | student | Child care hours, commute and sleep, for the week solver. |
+| `commute_plans` (transient) | student|date | Bus trips that get the student to their first class each day, from the transit planner. |
+| `transit_now` (transient) | student | Live arrivals and alerts at the student's stop; used only while under ten minutes old. |
+| `dispatches` | idempotency key | Writes the student asked for (room bookings), each sent once with an idempotency key and confirmed by looking it up. |
+| `campus_feeds` (transient) | campus | What the operator last fetched from each campus service: dining, places, careers and transit stops. Shared, not about any student. |
+| `leases` (transient) | job | Which operator holds which job, with a heartbeat, so two never run the same job. |
 | `meetings` | id | Group meetings to prepare for. |
 | `courses` | student:course | Each course and its AI policy, read from the syllabus. |
 | `dismissed` | student:subject | Alerts the student said are fine. |

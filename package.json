@@ -27,7 +27,9 @@
     "docs:check": "tsx tools/docs.ts --check",
     "explore": "tsx tools/explore.ts",
     "crawl": "tsx tools/crawl.ts",
-    "walk": "tsx tools/ui/walk.ts"
+    "walk": "tsx tools/ui/walk.ts",
+    "campus": "tsx apps/campus-services/src/main.ts",
+    "contract": "tsx tools/contract.ts"
   },
   "devDependencies": {
     "@stryker-mutator/core": "^9.0.0",

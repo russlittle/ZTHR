@@ -1,0 +1,27 @@
+{
+  "request": {
+    "path": "/gtfs/v1/stops?near=39.7573,-84.1985&radius=600",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "stops": [
+      {
+        "id": "sinclair-3rd",
+        "name": "Third St and Robert Dr (Sinclair)",
+        "lat": 39.7583,
+        "lon": -84.1993,
+        "campus": "sinclair",
+        "distance": 131
+      },
+      {
+        "id": "sinclair-5th",
+        "name": "Fifth St and Perry St (Sinclair)",
+        "lat": 39.7561,
+        "lon": -84.1969,
+        "campus": "sinclair",
+        "distance": 191
+      }
+    ]
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "request": {
+    "path": "/v1/locations/sinclair-commons/hours?date=2026-11-23&days=7",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "location": "sinclair-commons",
+    "days": [
+      {
+        "date": "2026-11-23",
+        "periods": [
+          {
+            "name": "Breakfast",
+            "open": "07:00",
+            "close": "10:00"
+          },
+          {
+            "name": "Lunch",
+            "open": "10:30",
+            "close": "14:00"
+          },
+          {
+            "name": "Dinner",
+            "open": "16:30",
+            "close": "19:30"
+          }
+        ]
+      },
+      {
+        "date": "2026-11-24",
+        "periods": [
+          {
+            "name": "Breakfast",
+            "open": "07:00",
+            "close": "10:00"
+          },
+          {
+            "name": "Lunch",
+            "open": "10:30",
+            "close": "14:00"
+          },
+          {
+            "name": "Dinner",
+            "open": "16:30",
+            "close": "19:30"
+          }
+        ]
+      },
+      {
+        "date": "2026-11-25",
+        "periods": [
+          {
+            "name": "Breakfast",
+            "open": "07:00",
+            "close": "10:00"
+          },
+          {
+            "name": "Lunch",
+            "open": "10:30",
+            "close": "14:00"
+          },
+          {
+            "name": "Dinner",
+            "open": "16:30",
+            "close": "19:30"
+          }
+        ]
+      },
+      {
+        "date": "2026-11-26",
+        "periods": [],
+        "closedReason": "Thanksgiving break"
+      },
+      {
+        "date": "2026-11-27",
+        "periods": [],
+        "closedReason": "Thanksgiving break"
+      },
+      {
+        "date": "2026-11-28",
+        "periods": [],
+        "closedReason": "Thanksgiving break"
+      },
+      {
+        "date": "2026-11-29",
+        "periods": [],
+        "closedReason": "Thanksgiving break"
+      }
+    ]
+  }
+}

@@ -30,7 +30,7 @@ import { findGuide, needsLicensed } from '../domain/lifeskills.js';
 import { COLLEGE_SITES, explain } from '../domain/college.js';
 import { prepText, type Meeting } from '../domain/meetings.js';
 import { PULSES, nextPulse, type PulseState } from '../domain/pulses.js';
-import { Community } from '../domain/community.js';
+import { COMMUNITIES, Community } from '../domain/community.js';
 import { solveWeek, type ChildCare } from '../domain/week.js';
 import { crisisReplyEs, detectSpanish, t as tr } from '../domain/i18n.js';
 import { addDays, sentence, shortDate, time12, weekday } from '../domain/dates.js';
@@ -41,6 +41,9 @@ import { forecast, impactOf, weatherNote } from '../domain/weather.js';
 import { mealPlan, mealPlanText, type MealPlan } from '../domain/meals.js';
 import { CQE, RECORD_WORDS, careerText, fairChanceText } from '../domain/careers.js';
 import { sandwich } from '@zthr/runtime';
+import { CampusClient, Schemas, SYNTHETIC_ENDPOINTS, type CampusEndpoints, type CampusFeed, type CommutePlan, type TransitNow } from '../integrations/campus.js';
+import { Operator, type Dispatch } from '../operator/operator.js';
+import * as campusLife from './campus-life.js';
 import { ACTIONS, type ActionResult } from './actions.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
 import { buildToday, renderToday, type TodayView } from '../domain/today.js';
@@ -136,6 +139,8 @@ export interface AdvocateOptions {
   /** 32-byte keys; production reads them from secret storage and refuses to start without them. */
   masterKey?: Buffer;
   approvalSecret?: Buffer;
+  /** Base URLs of the college's campus services. Defaults to the synthetic services' hosts. */
+  campus?: CampusEndpoints;
 }
 
 const NEED_WORDS: [NeedCategory, RegExp][] = [
@@ -169,6 +174,8 @@ export class Advocate {
   readonly model?: ModelClient;
   readonly community: Community;
   readonly egress: Egress;
+  readonly campus: CampusClient;
+  readonly operator: Operator;
   private pseudSalt = randomBytes(32);
   private readonly opts: AdvocateOptions;
   private readonly keys: { master: Buffer; approval: Buffer };
@@ -197,6 +204,8 @@ export class Advocate {
     this.model = o.model;
     this.egress = o.egress ?? new EgressTwin();
     this.fromNumber = o.fromNumber ?? '+19375550100';
+    this.campus = new CampusClient(this.egress, o.campus ?? SYNTHETIC_ENDPOINTS);
+    this.operator = new Operator(this);
     this.playbooks = loadPlaybooks(o.playbookDir ?? fileURLToPath(new URL('../../../../control/playbooks', import.meta.url)));
   }
 
@@ -460,6 +469,13 @@ export class Advocate {
     }
     if (RECORD_WORDS.test(text) && /\b(job|work|hire|hiring|career|license|employ)/i.test(text)) return [this.deliver(this.fairChanceMessage(s.id), { force: true })];
     if (/\b(find a job|job search|looking for (a )?(job|work)|career|resume|internship|jobs? (near|for) me)\b/.test(t)) return [this.deliver(this.careerMessage(s.id), { force: true })];
+    if (/\bfree food\b/.test(t)) return [this.deliver(this.freeFoodMessage(s.id), { force: true })];
+    if (/\b(what'?s open|open now|where can i (eat|get food)|food on campus|dining( hall)?|cafeteria|eat on campus|late(-| )night food|hungry late)\b/.test(t)) return [this.deliver(this.campusFoodMessage(s.id), { force: true })];
+    if (/\b(study (spot|space|room)s?|place to study|quiet place|book a (study )?room|library hours)\b/.test(t)) return [this.deliver(this.studySpotsMessage(s.id), { force: true })];
+    if (/\b(next bus|bus times?|is (my|the) bus (late|running)|when('?s| is) the bus)\b/.test(t)) return [this.deliver(this.nextBusMessage(s.id), { force: true })];
+    if (/\b(when (should|do) i leave|leave by|which bus|bus to (class|school|campus)|take the bus)\b/.test(t)) return [this.deliver(this.leaveByMessage(s.id), { force: true })];
+    if (/\b(mentor|someone (in|who works in) (the|my) field)\b/.test(t)) return [this.deliver(this.mentorsMessage(s.id), { force: true })];
+    if (/\b(jobs? (that )?fits?|part[- ]time (job|work)|work[- ]study (job|jobs)|jobs? on campus|campus jobs?|job openings?)\b/.test(t)) return [this.deliver(this.jobsMessage(s.id), { force: true })];
     if (/\b(meal plan|what (should|can) i (cook|make|eat)|groceries on a budget|cheap meals)\b/.test(t)) return [this.deliver(this.mealPlanMessage(s.id), { force: true })];
     if (/\bfafsa\b/.test(t)) return [this.deliver(this.playbookMessage(s.id, this.startPlaybook(s.id, 'fafsa-2027-28')), { force: true })];
     if (/\b(qualify|benefits|money found|screen)\b/.test(t)) return [this.deliver(this.moneyFoundMessage(s.id), { force: true })];
@@ -1099,13 +1115,188 @@ export class Advocate {
 
   careerMessage(studentId: string): OutboundMessage {
     this.ev('career', studentId, { kind: 'career-help' });
-    return { studentId, author: 'navigator', urgency: 'routine', text: careerText(this.student(studentId)), nextSteps: [{ label: 'Draft a note to career services', action: 'draft:career' }, { label: 'Jobs if you have a record', action: 'fair-chance' }], why: 'Career help at your college is free for students.' };
+    return { studentId, author: 'navigator', urgency: 'routine', text: careerText(this.student(studentId)), nextSteps: [{ label: 'Jobs that fit my week', action: 'jobs-fit' }, { label: 'Draft a note to career services', action: 'draft:career' }, { label: 'Talk to a mentor', action: 'mentors' }, { label: 'Jobs if you have a record', action: 'fair-chance' }], why: 'Career help at your college is free for students.' };
   }
 
   /** Only when the student brings it up. Nothing is inferred, stored or opened from a sealed fact. */
   fairChanceMessage(studentId: string): OutboundMessage {
     this.ev('career', studentId, { kind: 'fair-chance' });
-    return { studentId, author: 'navigator', urgency: 'routine', text: fairChanceText(this.student(studentId).dial.depth === 'brief'), nextSteps: [{ label: 'Get free legal help with it', action: 'need:legal' }, { label: 'Career help at my college', action: 'career' }], why: `About ${CQE.name}, from the Ohio Department of Rehabilitation and Correction.` };
+    return { studentId, author: 'navigator', urgency: 'routine', text: fairChanceText(this.student(studentId).dial.depth === 'brief'), nextSteps: [{ label: 'Fair-chance employers hiring now', action: 'jobs-fair-chance' }, { label: 'Get free legal help with it', action: 'need:legal' }, { label: 'Career help at my college', action: 'career' }], why: `About ${CQE.name}, from the Ohio Department of Rehabilitation and Correction.` };
+  }
+
+  // ---------- clock, campus feeds and the operator (Patterns 24 to 27) ----------
+
+  clock(): Date {
+    return this.now();
+  }
+
+  /** Campus-local minutes after midnight for an instant. */
+  private nyMinutes(d: Date): number {
+    const p = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(d);
+    return Number(p.find((x) => x.type === 'hour')!.value) * 60 + Number(p.find((x) => x.type === 'minute')!.value);
+  }
+
+  /** The student's day and the campus-local minute now. The day follows the app's calendar, the minute its clock. */
+  localNow(): { date: string; min: number } {
+    return { date: this.today(), min: this.nyMinutes(this.now()) };
+  }
+
+  localDate(_now: Date): string {
+    return this.today();
+  }
+
+  /** Campus-local HH:MM for an ISO instant. */
+  localTime(iso: string): string {
+    const m = this.nyMinutes(new Date(iso));
+    return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  }
+
+  studentIds(): string[] {
+    return (this.store.db.prepare("SELECT id FROM docs WHERE collection = 'students' ORDER BY rowid").all() as { id: string }[]).map((r) => r.id);
+  }
+
+  campusFeed(campus: string): CampusFeed | undefined {
+    return this.store.get<CampusFeed>('campus_feeds', campus);
+  }
+
+  commuteSettings(studentId: string): { mode?: 'bus' | 'car' | 'walk'; homeStop?: string } {
+    const h = this.store.get<{ commuteMode?: 'bus' | 'car' | 'walk'; homeStop?: string }>('household_plan', studentId) ?? {};
+    return { mode: h.commuteMode, homeStop: h.homeStop };
+  }
+
+  setCommute(studentId: string, c: { mode?: 'bus' | 'car' | 'walk'; homeStop?: string }): void {
+    const h = this.store.get<Record<string, unknown>>('household_plan', studentId) ?? {};
+    this.store.put('household_plan', studentId, studentId, { ...h, ...(c.mode ? { commuteMode: c.mode } : {}), ...(c.homeStop !== undefined ? { homeStop: c.homeStop } : {}) });
+    for (const p of this.commutePlans(studentId)) this.store.remove('commute_plans', `${studentId}|${p.date}`);
+  }
+
+  commutePlans(studentId: string): CommutePlan[] {
+    return this.store.list<CommutePlan>('commute_plans', studentId).sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  transitNow(studentId: string): TransitNow | undefined {
+    return this.store.get<TransitNow>('transit_now', studentId);
+  }
+
+  classSiteConnected(studentId: string): boolean {
+    return this.hasSource(studentId, 'learning-feed') && this.sealed.has(studentId, 'class_site_token');
+  }
+
+  /** Tell the student how a queued write turned out, through the same gates as any message. */
+  notifyDispatch(studentId: string, d: Dispatch): void {
+    const space = this.campusFeed(this.student(studentId).enrollment.college)?.spaces.find((s) => s.id === d.request.room);
+    const what = `${space?.name ?? 'The room'} ${shortDate(d.request.date)} at ${time12(d.request.start)}`;
+    const text = d.status === 'confirmed' ? `Booked: ${what}.` : `${what} did not go through: ${d.result?.reason ?? 'refused'}.`;
+    this.ev('dispatch', studentId, { kind: d.kind, status: d.status, attempts: d.attempts });
+    this.deliver({ studentId, author: 'operator', urgency: 'routine', text, nextSteps: [{ label: 'Study spots', action: 'study-spots' }, { label: 'Show my day', action: 'today' }], why: 'The room system answered your booking.' });
+  }
+
+  // ---------- class site (PRD Phase 3: class-site sync) ----------
+
+  /**
+   * Connect the student's class site. The access token is sealed: only the operator's class-site job can open it,
+   * and every opening is in the consent ledger. Disconnecting removes the token and the grant.
+   */
+  connectClassSite(studentId: string, token: string): void {
+    this.sealed.seal(studentId, 'class_site_token', token);
+    this.sealed.grant(studentId, 'class_site_token', 'operator:class-site');
+    this.connectSource(studentId, 'learning-feed');
+  }
+
+  disconnectClassSite(studentId: string): void {
+    if (this.sealed.has(studentId, 'class_site_token')) this.sealed.remove(studentId, 'class_site_token');
+    this.disconnectSource(studentId, 'learning-feed');
+  }
+
+  /**
+   * Pull every assignment from the class site into the student's dates. An assignment is matched by its id on the
+   * class site, so a re-sync never duplicates, and a due date moved on the class site moves here, with a message.
+   * Dates found this way are confirmed: they come from the instructor's own site, not from reading a document.
+   */
+  async syncClassSite(studentId: string): Promise<{ added: number; moved: number; unknown?: string }> {
+    const token = this.sealed.open(studentId, 'class_site_token', 'operator:class-site', 'sync assignments from the class site');
+    const h = { authorization: `Bearer ${token}` };
+    const courses = await this.campus.get('lms', '/api/v1/courses', Schemas.courses, h);
+    if (!courses.ok) return { added: 0, moved: 0, unknown: courses.reason };
+    let added = 0;
+    const moved: string[] = [];
+    const existing = new Map(this.deadlines(studentId).filter((d) => d.source.ref?.startsWith('lms:')).map((d) => [d.source.ref!, d]));
+    for (const c of courses.data) {
+      const as = await this.campus.get('lms', `/api/v1/courses/${c.id}/assignments`, Schemas.assignments, h);
+      if (!as.ok) continue;
+      for (const x of as.data) {
+        if (!x.due_at) continue;
+        const due = x.due_at.slice(0, 16);
+        const ref = `lms:${x.id}`;
+        const kind = /exam|quiz|test/i.test(x.name) ? 'exam' : 'assignment';
+        const was = existing.get(ref);
+        if (was) {
+          if (was.due !== due) {
+            this.store.put('deadlines', was.id, studentId, { ...was, due });
+            if (due.slice(0, 10) >= this.today()) moved.push(`${c.course_code} ${x.name} moved to ${shortDate(due)}`);
+          }
+          continue;
+        }
+        this.store.put('deadlines', `dl_${createHash('sha256').update(`${studentId}|${ref}`).digest('hex').slice(0, 8)}`, studentId, { id: `dl_${createHash('sha256').update(`${studentId}|${ref}`).digest('hex').slice(0, 8)}`, studentId, title: x.name, course: c.course_code, due, kind, source: { type: 'calendar-feed', ref, line: x.html_url }, confirmed: true, effortHours: kind === 'exam' ? 4 : Math.max(1, Math.round(x.points_possible / 25)) } satisfies Deadline);
+        added++;
+      }
+    }
+    const ann = await this.campus.get('lms', '/api/v1/announcements', Schemas.announcements, h);
+    if (ann.ok) {
+      for (const n of ann.data.filter((x) => /room|moved|building/i.test(`${x.title} ${x.message}`))) {
+        const code = courses.data.find((c) => n.context_code === `course_${c.id}`)?.course_code;
+        if (code && !this.store.get('dismissed', `${studentId}:ann:${n.id}`)) {
+          this.store.put('dismissed', `${studentId}:ann:${n.id}`, studentId, { subject: `ann:${n.id}`, at: this.today() });
+          this.deliver(this.applyRoomChange(studentId, `${code} ${n.message}`, n.title));
+        }
+      }
+    }
+    if (moved.length) this.deliver({ studentId, author: 'chief-of-staff', urgency: 'time-sensitive', text: `Your class site changed a date. ${moved.map((m) => sentence(m)).join(' ')}`, nextSteps: [{ label: 'See my dates', action: 'review-deadlines' }, { label: 'Show my day', action: 'today' }], why: 'From your class site.' });
+    this.ev('class_site_sync', studentId, { added, moved: moved.length });
+    return { added, moved: moved.length };
+  }
+
+  /** Communities the student chose. Only listed communities; never inferred from anything else. */
+  setCommunities(studentId: string, list: string[]): string[] {
+    const s = this.student(studentId);
+    const chosen = [...new Set(list.filter((c) => (COMMUNITIES as readonly string[]).includes(c)))];
+    this.store.put('students', studentId, studentId, { ...s, communities: chosen });
+    return chosen;
+  }
+
+  campusFoodMessage(studentId: string): OutboundMessage {
+    this.ev('campus', studentId, { kind: 'food' });
+    return campusLife.campusFoodMessage(this, studentId);
+  }
+
+  freeFoodMessage(studentId: string): OutboundMessage {
+    this.ev('campus', studentId, { kind: 'free-food' });
+    return campusLife.freeFoodMessage(this, studentId);
+  }
+
+  studySpotsMessage(studentId: string): OutboundMessage {
+    this.ev('campus', studentId, { kind: 'study' });
+    return campusLife.studySpotsMessage(this, studentId);
+  }
+
+  leaveByMessage(studentId: string): OutboundMessage {
+    this.ev('campus', studentId, { kind: 'leave-by' });
+    return campusLife.leaveByMessage(this, studentId);
+  }
+
+  nextBusMessage(studentId: string): OutboundMessage {
+    this.ev('campus', studentId, { kind: 'next-bus' });
+    return campusLife.nextBusMessage(this, studentId);
+  }
+
+  jobsMessage(studentId: string, opts: { fairChance?: boolean } = {}): OutboundMessage {
+    this.ev('career', studentId, { kind: 'jobs-fit' });
+    return campusLife.jobsMessage(this, studentId, opts);
+  }
+
+  mentorsMessage(studentId: string): OutboundMessage {
+    this.ev('career', studentId, { kind: 'mentors' });
+    return campusLife.mentorsMessage(this, studentId);
   }
 
   // ---------- meal plans (PRD HH-2) ----------

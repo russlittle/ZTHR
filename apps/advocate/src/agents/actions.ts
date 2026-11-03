@@ -4,6 +4,7 @@ import { addDays, relDay, sentence, shortDate, time12 } from '../domain/dates.js
 import { openBlocks, planSteps } from '../domain/planner.js';
 import { TERMS } from '../domain/college.js';
 import type { Situation } from '../domain/crisis.js';
+import * as campusLife from './campus-life.js';
 
 /**
  * Every button the team offers, in one registry (PRD P3: every message carries a next step the student can take
@@ -221,6 +222,15 @@ export const ACTIONS: Record<string, Handler> = {
       return showDraft(a, sid, `ask:${arg.slice(4)}`, term?.ask ?? 'the office', `Hello, this is ${s.chosenName}. I have a question about ${term?.term ?? 'a college rule'} and how it applies to me. Could you tell me what I need to know or do? Thank you.`, 'Offices answer questions like this every day.');
     }
     if (arg === 'career') return showDraft(a, sid, 'career', 'career services', `Hello, this is ${s.chosenName}. I'm a student and I would like help finding a job that fits my classes. Could I set up a time to meet, and what should I bring? Thank you.`, 'Career offices are glad to hear from students.');
+    if (arg.startsWith('job:')) {
+      const p = a.campusFeed(s.enrollment.college)?.postings.find((x) => x.id === arg.slice(4));
+      if (!p) return { message: msg(sid, 'That posting is no longer open.', [{ label: 'Jobs that fit', action: 'jobs-fit' }, back]) };
+      return showDraft(a, sid, `job:${p.id}`, p.employer, `Hello, this is ${s.chosenName}. I'm a student and I'm interested in the ${p.title} job. The hours fit my class schedule. What is the best way to apply, and is there anything I should send? Thank you.`, 'A short note shows you are serious.');
+    }
+    if (arg.startsWith('late:')) {
+      const course = decodeURIComponent(arg.slice(5));
+      return showDraft(a, sid, `late:${course}`, `your ${course} instructor`, `Hello, this is ${s.chosenName} from ${course}. My bus is running late today, so I may be a few minutes late to class. I will come in quietly. Thank you for understanding.`, 'A quick note before class is all it takes.');
+    }
     if (arg.startsWith('letter:')) {
       const to = decodeURIComponent(arg.slice(7)) || 'the sender';
       return showDraft(a, sid, `letter:${to}`, to, `Hello, this is ${s.chosenName}. I got your letter and want to make sure I understand it. What exactly do you need from me, and by what date? Thank you.`, 'Asking is always okay.');
@@ -244,6 +254,34 @@ export const ACTIONS: Record<string, Handler> = {
   // careers
   career: (a, sid) => ({ message: a.careerMessage(sid), view: 'help' }),
   'fair-chance': (a, sid) => ({ message: a.fairChanceMessage(sid) }),
+
+  'jobs-fit': (a, sid) => ({ message: a.jobsMessage(sid), view: 'help' }),
+  'jobs-fair-chance': (a, sid) => ({ message: a.jobsMessage(sid, { fairChance: true }), view: 'help' }),
+  mentors: (a, sid) => ({ message: a.mentorsMessage(sid), view: 'help' }),
+  'mentor-intro': (a, sid, arg) => {
+    const s = a.student(sid);
+    const m = a.campusFeed(s.enrollment.college)?.mentors.find((x) => x.id === arg);
+    if (!m) return { message: msg(sid, 'That mentor is not taking new people right now.', [{ label: 'Other mentors', action: 'mentors' }, back]) };
+    return showDraft(a, sid, `mentor:${m.id}`, m.displayName, `Hi ${m.displayName.split(' ')[0]}, I'm ${s.chosenName}, a student at ${s.enrollment.college === 'wright-state' ? 'Wright State' : s.enrollment.college === 'antioch' ? 'Antioch' : 'Sinclair'}. I'd like to learn about working in ${m.field}. Could we talk for 20 minutes sometime? Thank you.`, 'Only your first name and this note are shared.');
+  },
+
+  // campus life and getting there
+  'campus-food': (a, sid) => ({ message: a.campusFoodMessage(sid), view: 'help' }),
+  'free-food': (a, sid) => ({ message: a.freeFoodMessage(sid), view: 'help' }),
+  'study-spots': (a, sid) => ({ message: a.studySpotsMessage(sid), view: 'help' }),
+  'book-room': (a, sid, arg) => ({ message: campusLife.bookRoom(a, sid, arg), view: 'help' }),
+  'leave-by': (a, sid) => ({ message: a.leaveByMessage(sid), view: 'today' }),
+  'next-bus': (a, sid) => ({ message: a.nextBusMessage(sid), view: 'today' }),
+  'set-stop': (a, sid, arg) => {
+    if (!arg) {
+      a.setCommute(sid, { homeStop: '' });
+      return { message: a.leaveByMessage(sid), view: 'today' };
+    }
+    const stop = a.campusFeed(a.student(sid).enrollment.college)?.stops.find((s) => s.id === arg);
+    if (!stop) return { message: msg(sid, 'I don\'t know that stop.', [{ label: 'Pick my stop', action: 'leave-by' }, back]) };
+    a.setCommute(sid, { mode: 'bus', homeStop: stop.id });
+    return { message: msg(sid, `Got it: you leave from ${stop.name}. I will plan your bus to class each morning.`, [{ label: 'Next bus', action: 'next-bus' }, back]), view: 'today' };
+  },
 
   // meals
   'meal-plan': (a, sid) => ({ message: a.mealPlanMessage(sid), view: 'meals' }),

@@ -3,6 +3,7 @@ import { cpus } from 'node:os';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ExploreReport } from '@zthr/explore';
 import { exploreAdvocate } from '../apps/advocate/test/harness/world.js';
+import { campusSeedDocs } from '../apps/advocate/test/harness/campus.js';
 import { PERSONA_NAMES } from '../apps/advocate/src/server/demo.js';
 import { OUT } from './lib.js';
 
@@ -53,14 +54,15 @@ async function runParallel(names: string[]): Promise<ExploreReport> {
   return merged;
 }
 
+const campus = await campusSeedDocs();
 if (childOut) {
-  const r = exploreAdvocate({ only, maxNodes: max, withTyping: typing });
+  const r = exploreAdvocate({ only, maxNodes: max, withTyping: typing, campus });
   writeFileSync(childOut, JSON.stringify(r));
   process.exit(r.violations.length || !r.exhausted ? 1 : 0);
 }
 
 const names = only ?? PERSONA_NAMES;
-const r = args.includes('--serial') || names.length === 1 ? exploreAdvocate({ only: names, maxNodes: max, withTyping: typing }) : await runParallel(names);
+const r = args.includes('--serial') || names.length === 1 ? exploreAdvocate({ only: names, maxNodes: max, withTyping: typing, campus }) : await runParallel(names);
 mkdirSync(OUT, { recursive: true });
 writeFileSync(`${OUT}/explore.json`, JSON.stringify({ ...r, ms: Date.now() - t0 }, null, 1));
 for (const s of r.seeds) console.log(`${s.name.padEnd(22)} states ${String(s.states).padStart(6)}  transitions ${String(s.transitions).padStart(7)}  depth ${s.maxDepth}  ${s.exhausted ? 'exhausted' : 'CUT SHORT'}`);

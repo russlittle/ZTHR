@@ -1,0 +1,48 @@
+{
+  "request": {
+    "path": "/gtfs/v1/stops/hub/departures?date=2026-11-02&from=07:00&limit=5",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "stop": "hub",
+    "date": "2026-11-02",
+    "departures": [
+      {
+        "trip": "r2-0-0700-20261102",
+        "route": "r2",
+        "headsign": "Student Union (Wright State)",
+        "stop": "hub",
+        "time": "07:00"
+      },
+      {
+        "trip": "r1-1-0650-20261102",
+        "route": "r1",
+        "headsign": "Salem Ave and Catalpa Dr",
+        "stop": "hub",
+        "time": "07:05"
+      },
+      {
+        "trip": "r1-0-0650-20261102",
+        "route": "r1",
+        "headsign": "Xenia Ave and Smithville Rd",
+        "stop": "hub",
+        "time": "07:10"
+      },
+      {
+        "trip": "r1-1-0710-20261102",
+        "route": "r1",
+        "headsign": "Salem Ave and Catalpa Dr",
+        "stop": "hub",
+        "time": "07:25"
+      },
+      {
+        "trip": "r1-0-0710-20261102",
+        "route": "r1",
+        "headsign": "Xenia Ave and Smithville Rd",
+        "stop": "hub",
+        "time": "07:30"
+      }
+    ]
+  }
+}

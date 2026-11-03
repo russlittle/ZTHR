@@ -1,0 +1,109 @@
+{
+  "request": {
+    "path": "/v1/menus?location=sinclair-commons&date=2026-11-02&period=Lunch",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "location": "sinclair-commons",
+    "date": "2026-11-02",
+    "period": "Lunch",
+    "items": [
+      {
+        "id": "sinclair-commons-chicken-rice-bowl",
+        "name": "Chicken rice bowl",
+        "station": "Bowls",
+        "price": 6.5,
+        "calories": 650,
+        "tags": [
+          "gluten-free",
+          "halal"
+        ],
+        "allergens": [
+          "soy"
+        ]
+      },
+      {
+        "id": "sinclair-commons-turkey-sandwich",
+        "name": "Turkey sandwich",
+        "station": "Deli",
+        "price": 5.25,
+        "calories": 480,
+        "tags": [],
+        "allergens": [
+          "wheat"
+        ]
+      },
+      {
+        "id": "sinclair-commons-fruit-cup",
+        "name": "Fruit cup",
+        "station": "Market",
+        "price": 2,
+        "calories": 90,
+        "tags": [
+          "vegan",
+          "vegetarian",
+          "gluten-free"
+        ],
+        "allergens": []
+      },
+      {
+        "id": "sinclair-commons-hummus-and-pita-box",
+        "name": "Hummus and pita box",
+        "station": "Market",
+        "price": 4,
+        "calories": 390,
+        "tags": [
+          "vegan",
+          "vegetarian"
+        ],
+        "allergens": [
+          "wheat",
+          "sesame"
+        ]
+      },
+      {
+        "id": "sinclair-commons-peanut-butter-and-banana-wrap",
+        "name": "Peanut butter and banana wrap",
+        "station": "Market",
+        "price": 3.25,
+        "calories": 430,
+        "tags": [
+          "vegetarian"
+        ],
+        "allergens": [
+          "peanut",
+          "wheat"
+        ]
+      },
+      {
+        "id": "sinclair-commons-pasta-marinara",
+        "name": "Pasta marinara",
+        "station": "Pasta",
+        "price": 4.5,
+        "calories": 560,
+        "tags": [
+          "vegan",
+          "vegetarian"
+        ],
+        "allergens": [
+          "wheat"
+        ]
+      },
+      {
+        "id": "sinclair-commons-veggie-stir-fry",
+        "name": "Veggie stir fry",
+        "station": "Wok",
+        "price": 6,
+        "calories": 470,
+        "tags": [
+          "vegan",
+          "vegetarian"
+        ],
+        "allergens": [
+          "soy"
+        ]
+      }
+    ]
+  }
+}

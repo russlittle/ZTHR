@@ -1,4 +1,5 @@
 // Verifies docs/testing/exploration.md (the exhaustive walk of every button, in app and text).
+import { applyCampus, type SeedDoc } from './campus.js';
 import { explore, hash, type ExploreReport, type Step } from '@zthr/explore';
 import { Advocate } from '../../src/agents/advocate.js';
 import type { ActionResult } from '../../src/agents/actions.js';
@@ -30,10 +31,10 @@ export const NAV = ['today', 'screen', 'find-help', 'week', 'settings', 'review-
 export const SETTINGS = ['pulses-on', 'pulses-off', 'dial:brief', 'dial:standard', 'dial:walk-me-through', 'source-on:calendar', 'source-off:calendar', 'source-on:forwarding', 'source-off:forwarding', 'source-on:learning-feed', 'source-off:learning-feed', 'source-on:location', 'source-off:location'];
 const NEEDS: NeedCategory[] = ['food', 'housing', 'utilities', 'money', 'transportation', 'phone-internet', 'childcare', 'legal', 'mental-health'];
 const SITUATIONS = ['eviction', 'utility-shutoff', 'car', 'no-food', 'rent-short'];
-export const HELP_SCREEN = [...NEEDS.map((n) => `need:${n}`), ...SITUATIONS.map((x) => `situation:${x}`)];
+export const HELP_SCREEN = [...NEEDS.map((n) => `need:${n}`), ...SITUATIONS.map((x) => `situation:${x}`), 'campus-food', 'free-food', 'study-spots', 'leave-by', 'jobs-fit', 'mentors'];
 
 /** Things students type, including a number to pick from the last message's options. */
-export const TYPED = ['today', 'plan', 'fafsa', 'I need food', 'what is a registrar', 'how do I sign a lease', 'can you write my essay', 'brief', 'walk me through', 'I work Tue 3pm-9pm', 'can you make me a meal plan', 'I am looking for a job', 'can I get a job with a felony', 'explain this letter: FINAL NOTICE. Your electric service will be disconnected on 11/20/2026 unless $412.55 is paid.', '1', '2', '3', 'yes', 'no', 'asdf qwerty'];
+export const TYPED = ['today', 'plan', 'fafsa', 'I need food', 'what is a registrar', 'how do I sign a lease', 'can you write my essay', 'brief', 'walk me through', 'I work Tue 3pm-9pm', 'can you make me a meal plan', 'I am looking for a job', 'can I get a job with a felony', "what's open on campus", 'next bus', 'jobs that fit my week', 'explain this letter: FINAL NOTICE. Your electric service will be disconnected on 11/20/2026 unless $412.55 is paid.', '1', '2', '3', 'yes', 'no', 'asdf qwerty'];
 
 export const IDEMPOTENT = new Set(['mark-done', 'confirm-deadlines', 'confirm-deadline', 'dismiss', 'source-on', 'source-off', 'dial', 'pulses-off', 'pulses-on', 'hold-block', 'calendar-steps', 'remind', 'remind-meeting']);
 
@@ -69,6 +70,8 @@ export function stateParts(w: World): string[] {
     `holds:${has('holds')} reminders:${has('reminders')} shifts:${a.shifts(sid).length} dismissed:${has('dismissed')}`,
     `pulse:${a.pulseState(sid).off ? 'off' : 'on'}:${store.get('pulse_pending', sid) ? 'pending' : ''}`,
     `sources:${['calendar', 'forwarding', 'learning-feed', 'location'].filter((x) => a.hasSource(sid, x)).join(',')}`,
+    `commute:${a.commuteSettings(sid).mode ?? ''}:${a.commuteSettings(sid).homeStop ? 'stop' : ''}`,
+    `dispatches:${a.operator.dispatches(sid).map((d) => d.status).sort().join(',')}`,
   ];
   return parts;
 }
@@ -130,7 +133,7 @@ export function idempotency(w: World, step: Step<Outcome>): string[] {
 }
 
 /** Each student as seeded, and again at each other depth, so every path is walked at every depth. */
-export function personaSeeds(only?: string[], depths: ('own' | 'brief' | 'standard' | 'walk-me-through')[] = ['own', 'brief', 'walk-me-through']) {
+export function personaSeeds(only?: string[], depths: ('own' | 'brief' | 'standard' | 'walk-me-through')[] = ['own', 'brief', 'walk-me-through'], campus?: SeedDoc[]) {
   return PERSONA_NAMES
     .filter((n) => !only || only.includes(n))
     .flatMap((name) =>
@@ -139,6 +142,7 @@ export function personaSeeds(only?: string[], depths: ('own' | 'brief' | 'standa
         make: (): World => {
           const a = new Advocate({ today: () => DAY, now: () => new Date(`${DAY}T15:00:00Z`) });
           const s = PERSONAS[name]!(a);
+          if (campus) applyCampus(a, s.id, campus);
           if (depth !== 'own') a.setDial(s.id, { depth });
           return { a, sid: s.id };
         },
@@ -146,11 +150,11 @@ export function personaSeeds(only?: string[], depths: ('own' | 'brief' | 'standa
     );
 }
 
-export function exploreAdvocate(opts: { only?: string[]; maxNodes?: number; withTyping?: boolean } = {}): ExploreReport {
+export function exploreAdvocate(opts: { only?: string[]; maxNodes?: number; withTyping?: boolean; campus?: SeedDoc[] } = {}): ExploreReport {
   const names = PERSONA_NAMES;
   const reports: ExploreReport[] = [];
   const merged: ExploreReport = { seeds: [], states: 0, transitions: 0, actionsSeen: [], verbsSeen: {}, violations: [], exhausted: true };
-  for (const seed of personaSeeds(opts.only)) {
+  for (const seed of personaSeeds(opts.only, undefined, opts.campus)) {
     const others = names.filter((n) => n !== seed.name.split('/')[0]);
     const check = invariants(others, ['synthetic sealed fact for the demonstration']);
     const r = explore<World, Outcome>({

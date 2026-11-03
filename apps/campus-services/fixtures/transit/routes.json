@@ -1,0 +1,90 @@
+{
+  "request": {
+    "path": "/gtfs/v1/routes",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "routes": [
+      {
+        "route_id": "r1",
+        "route_short_name": "1",
+        "route_long_name": "Third Street Crosstown",
+        "route_color": "0B6E99",
+        "stops": [
+          "salem-catalpa",
+          "salem-hillcrest",
+          "sinclair-3rd",
+          "hub",
+          "huffman-linden",
+          "xenia-smithville"
+        ],
+        "service": {
+          "weekday": {
+            "headway": 20,
+            "first": "05:30",
+            "last": "23:10"
+          },
+          "saturday": {
+            "headway": 30,
+            "first": "07:00",
+            "last": "21:00"
+          },
+          "sunday": {
+            "headway": 60,
+            "first": "08:00",
+            "last": "19:00"
+          }
+        }
+      },
+      {
+        "route_id": "r2",
+        "route_short_name": "2",
+        "route_long_name": "Campus Connector",
+        "route_color": "B5651D",
+        "stops": [
+          "hub",
+          "sinclair-5th",
+          "linden-ave",
+          "wright-colonel",
+          "wright-union"
+        ],
+        "service": {
+          "weekday": {
+            "headway": 30,
+            "first": "06:00",
+            "last": "22:30"
+          },
+          "saturday": {
+            "headway": 60,
+            "first": "08:00",
+            "last": "18:00"
+          }
+        }
+      },
+      {
+        "route_id": "r11",
+        "route_short_name": "11",
+        "route_long_name": "Fairborn and Yellow Springs",
+        "route_color": "4B7F52",
+        "stops": [
+          "wright-union",
+          "fairborn-main",
+          "ys-xenia"
+        ],
+        "service": {
+          "weekday": {
+            "headway": 60,
+            "first": "06:15",
+            "last": "21:15"
+          },
+          "saturday": {
+            "headway": 120,
+            "first": "08:15",
+            "last": "18:15"
+          }
+        }
+      }
+    ]
+  }
+}

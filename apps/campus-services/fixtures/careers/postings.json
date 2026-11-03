@@ -1,0 +1,136 @@
+{
+  "request": {
+    "path": "/v1/postings?campus=sinclair",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "campus": "sinclair",
+    "postings": [
+      {
+        "id": "sinclair-job-1",
+        "campus": "sinclair",
+        "title": "Library desk assistant",
+        "employer": "Sinclair Library",
+        "onCampus": true,
+        "workStudy": true,
+        "pay": 13.5,
+        "hoursPerWeek": 12,
+        "schedule": [
+          {
+            "day": "Mon",
+            "start": "13:00",
+            "end": "17:00"
+          },
+          {
+            "day": "Wed",
+            "start": "13:00",
+            "end": "17:00"
+          },
+          {
+            "day": "Fri",
+            "start": "09:00",
+            "end": "13:00"
+          }
+        ],
+        "fairChance": false,
+        "field": "office",
+        "closes": "2026-11-20"
+      },
+      {
+        "id": "sinclair-job-2",
+        "campus": "sinclair",
+        "title": "Tutoring center front desk",
+        "employer": "Sinclair Tutoring",
+        "onCampus": true,
+        "workStudy": true,
+        "pay": 13.5,
+        "hoursPerWeek": 15,
+        "schedule": [],
+        "fairChance": false,
+        "field": "education",
+        "closes": "2026-11-30"
+      },
+      {
+        "id": "sinclair-job-3",
+        "campus": "sinclair",
+        "title": "Warehouse associate, evenings",
+        "employer": "Regional distribution center (synthetic)",
+        "onCampus": false,
+        "workStudy": false,
+        "pay": 18.25,
+        "hoursPerWeek": 15,
+        "schedule": [
+          {
+            "day": "Mon",
+            "start": "18:00",
+            "end": "23:00"
+          },
+          {
+            "day": "Tue",
+            "start": "18:00",
+            "end": "23:00"
+          },
+          {
+            "day": "Thu",
+            "start": "18:00",
+            "end": "23:00"
+          }
+        ],
+        "fairChance": true,
+        "field": "logistics",
+        "closes": "2026-12-05"
+      },
+      {
+        "id": "sinclair-job-4",
+        "campus": "sinclair",
+        "title": "Patient access representative",
+        "employer": "Downtown clinic (synthetic)",
+        "onCampus": false,
+        "workStudy": false,
+        "pay": 17,
+        "hoursPerWeek": 17,
+        "schedule": [
+          {
+            "day": "Sat",
+            "start": "08:00",
+            "end": "16:30"
+          },
+          {
+            "day": "Sun",
+            "start": "08:00",
+            "end": "16:30"
+          }
+        ],
+        "fairChance": true,
+        "field": "healthcare",
+        "closes": "2026-11-25"
+      },
+      {
+        "id": "sinclair-job-5",
+        "campus": "sinclair",
+        "title": "IT help desk, part time",
+        "employer": "Sinclair IT",
+        "onCampus": true,
+        "workStudy": false,
+        "pay": 15,
+        "hoursPerWeek": 8,
+        "schedule": [
+          {
+            "day": "Tue",
+            "start": "08:00",
+            "end": "12:00"
+          },
+          {
+            "day": "Thu",
+            "start": "08:00",
+            "end": "12:00"
+          }
+        ],
+        "fairChance": false,
+        "field": "technology",
+        "closes": "2026-12-01"
+      }
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "request": {
+    "path": "/realtime/v1/arrivals?stop=sinclair-5th&at=2026-11-02T13:00:00Z",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "stop": "sinclair-5th",
+    "at": "2026-11-02T13:00:00.000Z",
+    "arrivals": [
+      {
+        "trip": "r2-0-0800-20261102",
+        "route": "2",
+        "headsign": "Student Union (Wright State)",
+        "scheduled": "08:04",
+        "predicted": "08:06",
+        "delayMinutes": 2,
+        "inMinutes": 6
+      },
+      {
+        "trip": "r2-1-0800-20261102",
+        "route": "2",
+        "headsign": "Downtown Transit Hub",
+        "scheduled": "08:27",
+        "predicted": "08:27",
+        "delayMinutes": 0,
+        "inMinutes": 27
+      },
+      {
+        "trip": "r2-0-0830-20261102",
+        "route": "2",
+        "headsign": "Student Union (Wright State)",
+        "scheduled": "08:34",
+        "predicted": "08:36",
+        "delayMinutes": 2,
+        "inMinutes": 36
+      },
+      {
+        "trip": "r2-1-0830-20261102",
+        "route": "2",
+        "headsign": "Downtown Transit Hub",
+        "scheduled": "08:57",
+        "predicted": "08:57",
+        "delayMinutes": 0,
+        "inMinutes": 57
+      },
+      {
+        "trip": "r2-0-0900-20261102",
+        "route": "2",
+        "headsign": "Student Union (Wright State)",
+        "scheduled": "09:04",
+        "predicted": "09:04",
+        "delayMinutes": 0,
+        "inMinutes": 64
+      }
+    ]
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "request": {
+    "path": "/v1/search?campus=sinclair&tag=vegan&at=2026-11-02T17:00:00Z",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "campus": "sinclair",
+    "at": "2026-11-02T17:00:00.000Z",
+    "items": [
+      {
+        "id": "sinclair-market-coffee-small",
+        "name": "Coffee, small",
+        "station": "Coffee",
+        "price": 1.75,
+        "calories": 5,
+        "tags": [
+          "vegan",
+          "vegetarian",
+          "gluten-free"
+        ],
+        "allergens": [],
+        "location": "sinclair-market",
+        "locationName": "Library Grab and Go",
+        "closes": "22:00"
+      },
+      {
+        "id": "sinclair-commons-fruit-cup",
+        "name": "Fruit cup",
+        "station": "Market",
+        "price": 2,
+        "calories": 90,
+        "tags": [
+          "vegan",
+          "vegetarian",
+          "gluten-free"
+        ],
+        "allergens": [],
+        "location": "sinclair-commons",
+        "locationName": "Third Street Commons",
+        "closes": "14:00"
+      },
+      {
+        "id": "sinclair-perk-oatmeal-bar",
+        "name": "Oatmeal bar",
+        "station": "Hot cereal",
+        "price": 2.25,
+        "calories": 300,
+        "tags": [
+          "vegan",
+          "vegetarian"
+        ],
+        "allergens": [],
+        "location": "sinclair-perk",
+        "locationName": "The Perk Coffee Bar",
+        "closes": "20:00"
+      },
+      {
+        "id": "sinclair-market-lentil-soup",
+        "name": "Lentil soup",
+        "station": "Soup",
+        "price": 3.25,
+        "calories": 260,
+        "tags": [
+          "vegan",
+          "vegetarian",
+          "gluten-free"
+        ],
+        "allergens": [],
+        "location": "sinclair-market",
+        "locationName": "Library Grab and Go",
+        "closes": "22:00"
+      },
+      {
+        "id": "sinclair-commons-hummus-and-pita-box",
+        "name": "Hummus and pita box",
+        "station": "Market",
+        "price": 4,
+        "calories": 390,
+        "tags": [
+          "vegan",
+          "vegetarian"
+        ],
+        "allergens": [
+          "wheat",
+          "sesame"
+        ],
+        "location": "sinclair-commons",
+        "locationName": "Third Street Commons",
+        "closes": "14:00"
+      },
+      {
+        "id": "sinclair-perk-hummus-and-pita-box",
+        "name": "Hummus and pita box",
+        "station": "Market",
+        "price": 4.25,
+        "calories": 390,
+        "tags": [
+          "vegan",
+          "vegetarian"
+        ],
+        "allergens": [
+          "wheat",
+          "sesame"
+        ],
+        "location": "sinclair-perk",
+        "locationName": "The Perk Coffee Bar",
+        "closes": "20:00"
+      },
+      {
+        "id": "sinclair-market-hummus-and-pita-box",
+        "name": "Hummus and pita box",
+        "station": "Market",
+        "price": 4.25,
+        "calories": 390,
+        "tags": [
+          "vegan",
+          "vegetarian"
+        ],
+        "allergens": [
+          "wheat",
+          "sesame"
+        ],
+        "location": "sinclair-market",
+        "locationName": "Library Grab and Go",
+        "closes": "22:00"
+      },
+      {
+        "id": "sinclair-commons-pasta-marinara",
+        "name": "Pasta marinara",
+        "station": "Pasta",
+        "price": 4.5,
+        "calories": 560,
+        "tags": [
+          "vegan",
+          "vegetarian"
+        ],
+        "allergens": [
+          "wheat"
+        ],
+        "location": "sinclair-commons",
+        "locationName": "Third Street Commons",
+        "closes": "14:00"
+      },
+      {
+        "id": "sinclair-commons-veggie-stir-fry",
+        "name": "Veggie stir fry",
+        "station": "Wok",
+        "price": 6,
+        "calories": 470,
+        "tags": [
+          "vegan",
+          "vegetarian"
+        ],
+        "allergens": [
+          "soy"
+        ],
+        "location": "sinclair-commons",
+        "locationName": "Third Street Commons",
+        "closes": "14:00"
+      }
+    ]
+  }
+}

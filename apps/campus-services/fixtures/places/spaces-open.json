@@ -1,0 +1,123 @@
+{
+  "request": {
+    "path": "/v1/spaces/open-now?campus=sinclair&at=2026-11-02T23:00:00Z",
+    "headers": {}
+  },
+  "status": 200,
+  "body": {
+    "campus": "sinclair",
+    "at": "2026-11-02T23:00:00.000Z",
+    "open": [
+      {
+        "id": "sinclair-library",
+        "campus": "sinclair",
+        "name": "Library quiet floor",
+        "building": "Building 6",
+        "kind": "library",
+        "noise": "quiet",
+        "outlets": true,
+        "bookable": false,
+        "seats": 120,
+        "hours": {
+          "Mon": [
+            "07:30",
+            "22:00"
+          ],
+          "Tue": [
+            "07:30",
+            "22:00"
+          ],
+          "Wed": [
+            "07:30",
+            "22:00"
+          ],
+          "Thu": [
+            "07:30",
+            "22:00"
+          ],
+          "Fri": [
+            "07:30",
+            "17:00"
+          ],
+          "Sat": [
+            "09:00",
+            "15:00"
+          ]
+        },
+        "closes": "22:00"
+      },
+      {
+        "id": "sinclair-room-6142",
+        "campus": "sinclair",
+        "name": "Study room 6142",
+        "building": "Building 6",
+        "kind": "study-room",
+        "noise": "group",
+        "outlets": true,
+        "bookable": true,
+        "seats": 6,
+        "hours": {
+          "Mon": [
+            "08:00",
+            "21:00"
+          ],
+          "Tue": [
+            "08:00",
+            "21:00"
+          ],
+          "Wed": [
+            "08:00",
+            "21:00"
+          ],
+          "Thu": [
+            "08:00",
+            "21:00"
+          ],
+          "Fri": [
+            "08:00",
+            "17:00"
+          ]
+        },
+        "closes": "21:00"
+      },
+      {
+        "id": "sinclair-lab-14",
+        "campus": "sinclair",
+        "name": "Open computer lab",
+        "building": "Building 14",
+        "kind": "computer-lab",
+        "noise": "quiet",
+        "outlets": true,
+        "bookable": false,
+        "seats": 60,
+        "hours": {
+          "Mon": [
+            "07:00",
+            "22:00"
+          ],
+          "Tue": [
+            "07:00",
+            "22:00"
+          ],
+          "Wed": [
+            "07:00",
+            "22:00"
+          ],
+          "Thu": [
+            "07:00",
+            "22:00"
+          ],
+          "Fri": [
+            "07:00",
+            "22:00"
+          ],
+          "Sat": [
+            "08:00",
+            "16:00"
+          ]
+        },
+        "closes": "22:00"
+      }
+    ]
+  }
+}
