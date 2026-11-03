@@ -5,20 +5,25 @@
 ## Tests by package
 
 ```mermaid
-pie showData title 985 tests
-  "apps/advocate" : 755
+pie showData title 1092 tests
+  "apps/advocate" : 762
   "apps/campus-services" : 65
   "packages/ui" : 52
-  "tools/test" : 27
+  "tools/test" : 37
   "packages/runtime" : 27
   "packages/gates" : 22
-  "packages/egress" : 9
+  "packages/intent" : 18
+  "packages/egress" : 17
+  "packages/review" : 15
+  "packages/operator" : 14
+  "packages/plain-language" : 11
+  "packages/twin-service" : 10
+  "packages/models" : 9
+  "packages/store" : 8
+  "packages/twins" : 8
   "packages/evidence" : 6
-  "packages/intent" : 6
-  "packages/review" : 6
+  "packages/privacy" : 6
   "packages/explore" : 5
-  "packages/twins" : 3
-  "packages/models" : 2
 ```
 
 ## Button walk

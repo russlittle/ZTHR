@@ -21,6 +21,9 @@ export interface ProductLinks {
   live: boolean;
 }
 
+/** Said wherever someone meets the Advocate: whose it is not, where its facts come from, and why these colleges. */
+export const NOT_AFFILIATED = { title: 'Not affiliated with any college', body: 'The Student Advocate is an independent demonstration. It is not affiliated with, endorsed by, or acting for Sinclair College, Wright State University, Antioch College, Clark State College or any other institution, and it does not represent them in any way. Program names, phone numbers and other details about real organizations come from public sources and may be out of date; every student, schedule, menu, bus time and campus record in it is synthetic. The author chose the Dayton area and these colleges because he knows them firsthand, having attended and graduated from Sinclair and Wright State, so the intent behind every feature could be checked against real context about the students these schools serve.' };
+
 const FEATURES: [string, string, string][] = [
   ['today', 'Runs your day', 'Classes, shifts, child care and due dates on one line. It holds time for the work that matters and tells you the one thing to do today.'],
   ['money', 'Finds money you are missing', 'Checks SNAP, phone and heating help, and campus emergency grants against what you told it, using the agencies\' own published limits.'],
@@ -142,7 +145,8 @@ export function productPage(l: ProductLinks): string {
   <a href="${l.factoryPage('sensitive')}"><b>Sensitive data trace</b><span>Where each personal fact may go, and where it actually went</span></a>
   <a href="${l.factoryPage('twins')}"><b>Campus twins</b><span>Dining, transit, rooms, jobs and class sites as synthetic APIs</span></a>
 </div></section>
-<footer class="pp-foot">Student Advocate is the reference application for ZTHR, a pattern language for software built by AI. Every student, college service and record in the demonstration is synthetic. It is not affiliated with, or endorsed by, any college named. Code under the Apache License 2.0.</footer>
+<section class="pp-sec" aria-labelledby="aff"><div class="pp-note" style="background:var(--surface)"><h2 id="aff" style="font-size:19px;margin:0 0 6px">${NOT_AFFILIATED.title}</h2><p style="margin:0">${ui.esc(NOT_AFFILIATED.body)}</p></div></section>
+<footer class="pp-foot">Student Advocate is the reference application for ZTHR, a pattern language for software built by AI. Not affiliated with any college. Code under the Apache License 2.0.</footer>
 </main></div>`;
   return ui.bareShell({ title: 'Student Advocate', description: 'A team that works for every student: runs their day, finds money and help they qualify for, and does the legwork.', body, base: l.fontBase, head: `<style>${css}</style>${l.head ?? ''}` });
 }
@@ -152,6 +156,7 @@ export function startPage(l: Pick<ProductLinks, 'app' | 'admin' | 'fontBase'> & 
   const students = Object.entries(PERSONA_LINES);
   const body = `<div class="hero"><h1>Student Advocate</h1><p class="date">Pick a student and you are signed in as them. ${l.live ? 'You get a private copy of all twelve for two hours; nothing you do reaches anyone else.' : ''}</p></div>
 <div class="tiles" role="list" aria-label="Sample students" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${students.map(([n, p]) => `<div role="listitem"><a class="tile" href="${l.app}/s/${n.toLowerCase()}"><span style="display:flex;align-items:center;gap:8px">${ui.esc(n)} <span class="chip">${ui.esc(p.college)}</span></span><span class="small muted" style="font-weight:400">${ui.esc(p.line)}</span><span class="small" style="font-weight:400"><b>Try:</b> ${ui.esc(p.tries)}</span></a></div>`).join('')}</div>
-${ui.actions([{ label: 'Try it by text', href: `${l.app}/text`, icon: 'send' }, { label: 'App admin', href: l.admin, variant: 'quiet', icon: 'you' }, { label: 'About the Advocate', href: l.product, variant: 'quiet', icon: 'home' }, { label: 'Reports and docs', href: l.reference, variant: 'quiet', icon: 'shield' }])}`;
+${ui.actions([{ label: 'Try it by text', href: `${l.app}/text`, icon: 'send' }, { label: 'App admin', href: l.admin, variant: 'quiet', icon: 'you' }, { label: 'About the Advocate', href: l.product, variant: 'quiet', icon: 'home' }, { label: 'Reports and docs', href: l.reference, variant: 'quiet', icon: 'shield' }])}
+<p class="small muted" style="margin-top:28px"><b>${NOT_AFFILIATED.title}.</b> ${ui.esc(NOT_AFFILIATED.body)}</p>`;
   return ui.appShell({ title: 'Start · Student Advocate', body, base: l.fontBase, brand: 'Student Advocate', brandHref: `${l.app}/`, nav: [{ href: `${l.app}/`, label: 'Start', icon: 'today', current: true }, { href: `${l.app}/text`, label: 'Try by text', icon: 'send' }] });
 }

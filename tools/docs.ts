@@ -8,6 +8,7 @@ import { ROOT } from './lib.js';
 import { sourcesPage } from './sources.js';
 import { sensitivePage } from './sensitive.js';
 import { featuresPage } from './features.js';
+import { NOT_AFFILIATED } from '../apps/advocate/src/server/product.js';
 
 /**
  * Documentation derived from the system (Pattern 14).
@@ -247,6 +248,10 @@ ${section('Building blocks', group('blocks/'))}
 ${section('Decisions', group('adr/'))}
 Every test file names the document it verifies, and every document lists its tests. The \`docs-linked\` gate fails
 the build when either side is missing.
+
+## ${NOT_AFFILIATED.title}
+
+${NOT_AFFILIATED.body}
 `;
 }
 

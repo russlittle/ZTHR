@@ -41,3 +41,16 @@ describe('glossary', () => {
     expect(new Set(terms).size).toBe(terms.length);
   });
 });
+
+describe('affiliation', () => {
+  it('the product page and the app\'s front door both say no college is affiliated, and where facts came from', async () => {
+    const { NOT_AFFILIATED, productPage, startPage } = await import('../../apps/advocate/src/server/product.js');
+    const product = productPage({ app: '/a', docs: '/d', factory: '/f', factoryPage: (p) => p, admin: '/a/admin/', fontBase: '', live: true });
+    const start = startPage({ app: '/a', admin: '/a/admin/', fontBase: '', product: '/p', reference: '/r', live: true });
+    for (const page of [product, start]) {
+      expect(page).toContain(NOT_AFFILIATED.title);
+      expect(page).toContain('public sources');
+      expect(page).toContain('does not represent them in any way');
+    }
+  });
+});

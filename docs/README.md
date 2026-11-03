@@ -83,3 +83,7 @@ flowchart LR
 
 Every test file names the document it verifies, and every document lists its tests. The `docs-linked` gate fails
 the build when either side is missing.
+
+## Not affiliated with any college
+
+The Student Advocate is an independent demonstration. It is not affiliated with, endorsed by, or acting for Sinclair College, Wright State University, Antioch College, Clark State College or any other institution, and it does not represent them in any way. Program names, phone numbers and other details about real organizations come from public sources and may be out of date; every student, schedule, menu, bus time and campus record in it is synthetic. The author chose the Dayton area and these colleges because he knows them firsthand, having attended and graduated from Sinclair and Wright State, so the intent behind every feature could be checked against real context about the students these schools serve.
