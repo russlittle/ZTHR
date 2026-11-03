@@ -83,6 +83,20 @@
         }
       },
       {
+        "source": "/twins",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/twins/**",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
