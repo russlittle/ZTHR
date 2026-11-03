@@ -71,5 +71,5 @@ flowchart LR
 ## Verified by
 
 <!-- verified-by:start -->
-- [`tools/test/features.test.ts`](../tools/test/features.test.ts) (7 test definitions)
+- [`tools/test/features.test.ts`](../tools/test/features.test.ts) (8 test definitions)
 <!-- verified-by:end -->
