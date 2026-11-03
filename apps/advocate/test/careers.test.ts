@@ -41,10 +41,10 @@ describe('fair-chance hiring, only when the student brings it up', () => {
   });
   it('the sealed fact is never opened or shown, even when Darnell asks himself', () => {
     const { a, sid } = fresh('Darnell');
-    const before = a.ledger.entries(sid).filter((e) => e.kind === 'open').length;
+    const before = a.ledger.entries(sid).filter((e) => e.kind === 'release').length;
     const [m] = a.converse(sid, 'can I get a job with a felony');
     expect(m!.text).not.toContain('synthetic sealed fact');
-    expect(a.ledger.entries(sid).filter((e) => e.kind === 'open').length).toBe(before);
+    expect(a.ledger.entries(sid).filter((e) => e.kind === 'release').length).toBe(before);
   });
   it('saves nothing about the record', () => {
     const { a, sid } = fresh('Tyler');
