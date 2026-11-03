@@ -81,20 +81,28 @@ steps:
     entrypoint: npm
     args: ['run', 'contract']
 
+  - id: fetch-walks
+    # The last full walk and the lines it executed, so a push can tell whether its change could alter the walk.
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    env: ['BUCKET=$_EVIDENCE_BUCKET']
+    args: ['-c', 'mkdir -p evidence-out/last; if [ -n "$$BUCKET" ]; then gcloud storage cp "$$BUCKET/latest/walks/*" evidence-out/last/ 2>/dev/null || echo "No full walk saved yet."; fi']
+
   - id: explore
-    # The button walk: every depth, app and text, to a fixpoint, one process per CPU. Nightly walks all twelve
-    # students; a push walks four whose settings differ most (standard, brief, walk-me-through at grade 6, out of area).
+    # The button walk: every depth, app and text, to a fixpoint, one process per CPU, under coverage. Nightly walks
+    # all twelve students. A push walks only if a line the last full walk executed (or data the app reads) changed;
+    # then it walks four whose settings differ most (standard, brief, walk-me-through at grade 6, out of area).
     name: node:22-bookworm
     entrypoint: bash
     env: ['FULL=$_MUTATION']
-    args: ['-c', 'if [ "$$FULL" = "true" ]; then npm run explore; else npm run explore -- Maria,Ana,Sam,Keisha; fi']
+    args: ['-c', 'if [ "$$FULL" = "true" ]; then tools/walk-ci.sh explore true npx tsx tools/explore.ts; else tools/walk-ci.sh explore false npx tsx tools/explore.ts Maria,Ana,Sam,Keisha; fi']
 
   - id: crawl
-    # The feature walk: every page, link and form, then every combination of settings. Same split as above.
+    # The feature walk: every page, link and form, then every combination of settings. Same selection as above.
     name: node:22-bookworm
     entrypoint: bash
     env: ['FULL=$_MUTATION']
-    args: ['-c', 'if [ "$$FULL" = "true" ]; then npm run crawl && npm run crawl -- --settings; else npm run crawl -- Maria,Ana,Sam,Keisha && npm run crawl -- Maria --settings; fi']
+    args: ['-c', 'if [ "$$FULL" = "true" ]; then tools/walk-ci.sh crawl true npx tsx tools/crawl.ts && tools/walk-ci.sh crawl-settings true npx tsx tools/crawl.ts --settings; else tools/walk-ci.sh crawl false npx tsx tools/crawl.ts Maria,Ana,Sam,Keisha && tools/walk-ci.sh crawl-settings false npx tsx tools/crawl.ts Maria --settings; fi']
 
   - id: walk
     # Walk like a user in a real browser: intents with video, then every screen at two widths in two themes.
@@ -156,7 +164,7 @@ steps:
   - id: keep-evidence
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: bash
-    env: ['BUCKET=$_EVIDENCE_BUCKET', 'COMMIT=$COMMIT_SHA', 'BUILD=$BUILD_ID']
+    env: ['BUCKET=$_EVIDENCE_BUCKET', 'COMMIT=$COMMIT_SHA', 'BUILD=$BUILD_ID', 'BRANCH=$BRANCH_NAME', 'DEPLOY=$_DEPLOY_BRANCH']
     args:
       - -c
       - |
@@ -164,6 +172,7 @@ steps:
         gcloud storage cp evidence-out/ci-cost.json "$$BUCKET/costs/$${BUILD:-manual-$$(date +%s)}.json"
         gcloud storage cp -r evidence-out control/proofs.json "$$BUCKET/runs/$${COMMIT:-manual}/"
         if [ -d reports ]; then gcloud storage cp -r reports "$$BUCKET/runs/$${COMMIT:-manual}/"; fi
+        if [ "$_MUTATION" = "true" ] && [ "$$BRANCH" = "$$DEPLOY" ]; then for w in explore crawl crawl-settings; do gcloud storage cp "evidence-out/$$w.json" "evidence-out/$$w-coverage.json" "$$BUCKET/latest/walks/" 2>/dev/null || true; done; fi
         if [ -f reports/mutation.json ] && [ "$_MUTATION" = "true" ]; then gcloud storage cp reports/mutation.json "$$BUCKET/latest/mutation.json"; gcloud storage cp -r reports/blocks "$$BUCKET/latest/"; fi
 
   - id: site

@@ -126,12 +126,13 @@
   },
   {
     "gate": "zero-bypass",
-    "gateHash": "3debb42e2ae0829ae3b99adbdbf78ef37dc3b63e03fb79f19e128b3b416b08eb",
+    "gateHash": "fbf44a6a070ac21b034398960ee24ef3bdce783fcada4c33403d50a051954af8",
     "valid": true,
     "cases": [
       "planted pipeline without the gates step",
       "planted step allowed to fail",
-      "planted step that swallows failure"
+      "planted step that swallows failure",
+      "planted script that skips its walk without carrying evidence"
     ]
   },
   {

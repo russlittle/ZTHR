@@ -46,6 +46,31 @@ flowchart LR
   settings[Settings switches] -->|seed variants + own walk| finite
 ```
 
+## Walk only when the walk could see the change
+
+A walk runs under coverage, which records every source line it executed. On a later commit the change is diffed
+against the walked commit, and a walk is needed only if a hunk touches or borders an executed line, or changes data
+the app reads while it runs (playbooks, colleges, scouts, dependency versions). A change inside a function the walk
+never ran, such as an API handler the page walk never calls, cannot alter what the walk saw, so the earlier report
+is carried forward for the new commit and says so. The nightly run walks every student regardless and saves the
+coverage that pushes are compared against.
+
+```mermaid
+flowchart TB
+  push([A push]) --> last[(Last full walk and the lines it executed)]
+  last --> diff{Diff since the walked commit}
+  diff -- touches an executed line --> walk[Walk under coverage]
+  diff -- changes data the app reads --> walk
+  diff -- only lines the walk never ran --> carry[Carry the report forward, naming the walked commit]
+  walk --> rec[Record executed lines with the report]
+  carry --> cert[Certificate for this commit]
+  rec --> cert
+  nightly([Nightly]) --> full[Walk all twelve students under coverage] --> save[(Saved as the last full walk)]
+```
+
+The one sanctioned skip is marked in the pipeline script, and the \`zero-bypass\` gate reads the scripts the
+required steps run, so any other way of skipping a walk fails the build.
+
 ## What the walks found and fixed
 
 Every finding is a fixture now; it cannot come back.
@@ -65,4 +90,5 @@ Every finding is a fixture now; it cannot come back.
 
 <!-- verified-by:start -->
 - [`apps/advocate/test/walks.test.ts`](../../apps/advocate/test/walks.test.ts) (2 test definitions)
+- [`tools/test/walk-coverage.test.ts`](../../tools/test/walk-coverage.test.ts) (9 test definitions)
 <!-- verified-by:end -->

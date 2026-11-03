@@ -400,17 +400,23 @@ const registerGate: Gate<{ reg: Register; now: Date }> = {
 };
 
 type Pipeline = { steps: { id: string; allowFailure?: boolean; allow_failure?: unknown; args?: string[] }[] };
-const zeroBypassGate: Gate<{ required: { check: string; step: string }[]; pipeline: Pipeline }> = {
+const zeroBypassGate: Gate<{ required: { check: string; step: string }[]; pipeline: Pipeline; scripts?: Record<string, string> }> = {
   id: 'zero-bypass',
   protects: 'Every required check runs in the live pipeline, none may fail and none can be skipped (Pattern 7).',
-  definition: 'each required step is present in cloudbuild.yaml, has no allowFailure, and its command has no "exit 0" or "|| true" escape',
-  check: ({ required, pipeline }) => {
+  definition: 'each required step is present in cloudbuild.yaml, has no allowFailure, and neither its command nor any script it runs has an "exit 0" or "|| true" escape; the one sanctioned skip is a line marked zthr:carry, which hands over a carried report for this commit',
+  check: ({ required, pipeline, scripts = {} }) => {
     const bad: string[] = [];
+    const escape = /\|\|\s*true|(?:;|&&)\s*exit 0\s*$/m;
     for (const r of required) {
       const st = pipeline.steps.find((s) => s.id === r.step);
       if (!st) bad.push(`${r.check}: no ${r.step} step`);
       else if (st.allowFailure || st.allow_failure) bad.push(`${r.check}: allowed to fail`);
-      else if ((st.args ?? []).join(' ').match(/\|\|\s*true|;\s*exit 0\s*$/m)) bad.push(`${r.check}: can be skipped`);
+      else {
+        const cmd = (st.args ?? []).join(' ');
+        const run = [...cmd.matchAll(/(tools\/[\w-]+\.sh)/g)].map((m) => scripts[m[1]!] ?? '').join('\n');
+        const body = `${cmd}\n${run}`.split('\n').filter((l) => !l.includes('# zthr:carry')).join('\n');
+        if (escape.test(body)) bad.push(`${r.check}: can be skipped`);
+      }
     }
     return bad.length ? fail('zero-bypass', bad.join('; ')) : pass('zero-bypass', `${required.length} required checks in the live pipeline, none skippable`);
   },
@@ -418,6 +424,7 @@ const zeroBypassGate: Gate<{ required: { check: string; step: string }[]; pipeli
     { name: 'planted pipeline without the gates step', plant: () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: { steps: livePipeline().steps.filter((s) => s.id !== 'gates') } }) },
     { name: 'planted step allowed to fail', plant: () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: { steps: livePipeline().steps.map((s) => (s.id === 'test' ? { ...s, allowFailure: true } : s)) } }) },
     { name: 'planted step that swallows failure', plant: () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: { steps: livePipeline().steps.map((s) => (s.id === 'journeys' ? { ...s, args: ['-c', 'npm run journeys || true'] } : s)) } }) },
+    { name: 'planted script that skips its walk without carrying evidence', plant: () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: livePipeline(), scripts: { 'tools/walk-ci.sh': 'if [ "$2" != "true" ]; then exit 0\nfi && exit 0' } }) },
   ],
 };
 const livePipeline = () => parseYaml(readFileSync(`${ROOT}cloudbuild.yaml`, 'utf8')) as Pipeline;
@@ -567,7 +574,7 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   await run(egressGate, () => ({ ...sourceFiles(`${ROOT}apps/advocate/src`), ...sourceFiles(`${ROOT}packages`) }));
   await run(patternGate, () => ({ map: readYaml<PatternMap>('patterns.yaml'), gates: gateIds(), exists }));
   await run(registerGate, () => ({ reg: readYaml<Register>('register.yaml'), now: new Date() }));
-  await run(zeroBypassGate, () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: livePipeline() }));
+  await run(zeroBypassGate, () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: livePipeline(), scripts: Object.fromEntries(readdirSync(`${ROOT}tools`).filter((f) => f.endsWith('.sh')).map((f) => [`tools/${f}`, readFileSync(`${ROOT}tools/${f}`, 'utf8')])) }));
   await run(tiersGate, () => ({ tiers: readYaml<Tiers>('authorship.yaml'), files: repoFiles() }));
   await run(heldOutGate, () => ({ held: [...heldOutLines('crisis.txt'), ...heldOutLines('community.txt')], rules: Object.fromEntries(RULE_FILES.map((f) => [f, readFileSync(`${ROOT}${f}`, 'utf8')])) }));
   const { runTrace } = await import('../apps/advocate/test/harness/trace.js');
