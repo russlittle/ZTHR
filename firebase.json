@@ -34,6 +34,14 @@
     ],
     "rewrites": [
       {
+        "source": "/studentadvocate",
+        "destination": "/studentadvocate-pending.html"
+      },
+      {
+        "source": "/studentadvocate/**",
+        "destination": "/studentadvocate-pending.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
