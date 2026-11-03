@@ -9,7 +9,7 @@ import { gateCatalog } from './gates.js';
 import { parse as parseYaml } from 'yaml';
 import { SERVICES, SERVICE_IDS } from '../apps/campus-services/src/index.js';
 import { links } from './doc-links.js';
-import { JOURNEY_DIR, OUT, ROOT } from './lib.js';
+import { JOURNEY_DIR, OUT, ROOT, headCommit } from './lib.js';
 
 /**
  * Builds the public site the factory publishes next to the app:
@@ -196,8 +196,10 @@ ${ui.section('What each part proves', ui.rows(PAGES.slice(1).map(([p, l]) => ({ 
   write(join(SITE, 'factory', 'redteam.html'), shell('redteam', 'Red team', redteam ? `${ui.kpis(corpora.map((c) => { const rs = redteam.results.filter((r) => r.corpus === c); return { value: `${rs.filter((r) => r.held).length} / ${rs.length}`, label: c }; }))}${corpora.map((c) => ui.section(c, ui.table(['Attack', 'Must happen', 'Result'], redteam.results.filter((r) => r.corpus === c).map((r) => [ui.esc(r.attack), ui.esc(r.expect), r.held ? ui.chip('held', 'ok') : ui.chip('got through', 'bad')]), { raw: [true, false, true] }))).join('')}` : '<p>Not measured in this build.</p>'));
 
   // feature walks
+  const HEAD = headCommit();
+  const measuredAt = (r: WalkReport & { commit?: string }) => (r.commit === HEAD ? `<p class="small">${ui.chip(`measured at ${HEAD}`, 'ok')}</p>` : `<p class="small">${ui.chip(r.commit ? `measured at ${r.commit}, an earlier commit` : 'measured at an earlier commit', 'warn')} The walk for this commit has not finished.</p>`);
   const walkSection = (title: string, r: WalkReport | undefined, unit: string) =>
-    r ? ui.section(title, `${ui.kpis([{ value: n(r.states), label: 'states' }, { value: n(r.transitions), label: unit }, { value: r.seeds.every((s) => s.exhausted) ? 'yes' : 'no', label: 'every seed reached its fixpoint' }, { value: n(r.violations.length), label: 'violations' }])}${ui.table(['Seed', 'States', unit, 'Deepest path', 'Fixpoint'], r.seeds.map((s) => [s.name, n(s.states), n(s.transitions), s.maxDepth, s.exhausted ? 'reached' : 'cut short']))}${r.violations.length ? ui.table(['Seed', 'Path', 'Problem'], r.violations.slice(0, 50).map((v) => [v.seed, v.path.slice(-4).join(' > '), v.problem])) : ''}`) : ui.section(title, '<p class="muted">Not measured in this build.</p>');
+    r ? ui.section(title, `${measuredAt(r)}${ui.kpis([{ value: n(r.states), label: 'states' }, { value: n(r.transitions), label: unit }, { value: r.seeds.every((s) => s.exhausted) ? 'yes' : 'no', label: 'every seed reached its fixpoint' }, { value: n(r.violations.length), label: 'violations' }])}${ui.table(['Seed', 'States', unit, 'Deepest path', 'Fixpoint'], r.seeds.map((s) => [s.name, n(s.states), n(s.transitions), s.maxDepth, s.exhausted ? 'reached' : 'cut short']))}${r.violations.length ? ui.table(['Seed', 'Path', 'Problem'], r.violations.slice(0, 50).map((v) => [v.seed, v.path.slice(-4).join(' > '), v.problem])) : ''}`) : ui.section(title, '<p class="muted">Not measured in this build.</p>');
   write(join(SITE, 'factory', 'feature-walks.html'), shell('feature-walks', 'Feature walks', `<p class="muted">The button walk drives the Advocate directly: every button, the navigation and sixteen things students type, from every state, until nothing new is left. The feature walk drives the web app: every link and every form on every page. Both check invariants at every step. <a href="../docs/testing/exploration.html">How they work</a>.</p>${walkSection('Button walk', explore, 'transitions')}${explore ? ui.section('Buttons tried, by verb', ui.table(['Verb', 'Times tried'], Object.entries(explore.verbsSeen).sort((a, b) => b[1] - a[1]).map(([v, c]) => [v, n(c)]))) : ''}${walkSection('Feature walk', crawl, 'links and forms followed')}${crawl?.routes ? `<p class="small muted">Routes reached: ${crawl.routes.map((r) => `<code>${ui.esc(r)}</code>`).join(' ')}</p>` : ''}${walkSection('Settings walk', crawlSettings, 'switches flipped')}`));
 
   // browser walk
