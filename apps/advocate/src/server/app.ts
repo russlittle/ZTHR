@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
+import { randomBytes } from 'node:crypto';
 import * as ui from '@zthr/ui';
 import type { Advocate, Delivered } from '../agents/advocate.js';
 import type { View } from '../agents/actions.js';
@@ -9,6 +10,7 @@ import { parseShifts } from '../domain/shifts.js';
 import { PERSONA_NAMES } from './demo.js';
 import { createApi } from './api.js';
 import { createAdmin } from './admin.js';
+import type { GoogleVerifier, Sessions } from './auth.js';
 import { fileURLToPath } from 'node:url';
 
 /**
@@ -21,6 +23,8 @@ export interface AppOptions {
   base?: string;
   /** Demonstration students shown on the start page. */
   demo?: { id: string; name: string; line: string }[];
+  /** Sign in with Google. When set, every student page needs the owner's session and the admin needs a listed email. */
+  auth?: { clientId: string; verifier: GoogleVerifier; sessions: Sessions; adminEmailHashes: string[]; secure?: boolean };
 }
 
 const NEEDS: [NeedCategory, string, string][] = [
@@ -106,6 +110,45 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
     return f ? c.body(f.body as unknown as ArrayBuffer, 200, { 'content-type': f.type, 'cache-control': 'public, max-age=31536000, immutable' }) : c.notFound();
   });
 
+  // ------------------------------------------------------------ sign-in (production)
+
+  const auth = opts.auth;
+  if (auth) {
+    const who = (c: Parameters<Parameters<typeof app.use>[1]>[0]) => auth.sessions.read(getCookie(c, 'adv_session'));
+    app.use('/s/:id/*', async (c, next) => {
+      const me = who(c);
+      const s = exists(c.req.param('id')) ? a.student(c.req.param('id')) : undefined;
+      return me && s && s.account === me.subjectKey ? next() : c.redirect(`${base}/signin`);
+    });
+    app.use('/s/:id', async (c, next) => {
+      const me = who(c);
+      const s = exists(c.req.param('id')) ? a.student(c.req.param('id')) : undefined;
+      return me && s && s.account === me.subjectKey ? next() : c.redirect(`${base}/signin`);
+    });
+    app.use('/admin/*', async (c, next) => (auth.adminEmailHashes.includes(who(c)?.emailHash ?? '') ? next() : c.redirect(`${base}/signin`)));
+    app.get('/signin', (c) => {
+      const csrf = randomBytes(16).toString('hex');
+      setCookie(c, 'g_csrf_token', csrf, { path: base || '/', sameSite: 'Lax', secure: auth.secure, maxAge: 600 });
+      return c.html(page(undefined, 'Sign in', `<div class="hello"><h1>Sign in</h1><p class="date">Use your Google account. Your Advocate belongs to you; no one at a college can see it.</p></div><script src="https://accounts.google.com/gsi/client" async></script><div id="g_id_onload" data-client_id="${ui.esc(auth.clientId)}" data-login_uri="${ui.esc(`${base}/auth/google`)}" data-ux_mode="redirect"></div><div class="g_id_signin" data-type="standard" data-shape="pill" data-text="signin_with"></div>`));
+    });
+    app.post('/auth/google', async (c) => {
+      const f = await c.req.parseBody();
+      const csrf = getCookie(c, 'g_csrf_token');
+      if (!csrf || csrf !== String(f.g_csrf_token ?? '')) return c.html(page(undefined, 'Sign in', ui.note({ title: 'That sign-in did not go through', body: 'Please try again from the sign-in page.', actions: [{ label: 'Sign in', href: `${base}/signin` }] })), 400);
+      const v = await auth.verifier.verify(String(f.credential ?? ''));
+      if (!v.ok) return c.html(page(undefined, 'Sign in', ui.note({ title: 'That sign-in did not go through', body: 'Google could not confirm it. Please try again.', why: v.reason, actions: [{ label: 'Sign in', href: `${base}/signin` }] })), 401);
+      const key = auth.sessions.subjectKey(v.claims.sub);
+      const s = a.findByAccount(key) ?? a.createStudent({ chosenName: (v.claims.name ?? 'there').split(' ')[0]!, zip: '00000', account: key });
+      setCookie(c, 'adv_session', auth.sessions.issue(key, v.claims.email), { path: base || '/', httpOnly: true, sameSite: 'Lax', secure: auth.secure, maxAge: 12 * 3600 });
+      if (auth.adminEmailHashes.includes(auth.sessions.emailHash(v.claims.email)) && c.req.query('to') === 'admin') return c.redirect(`${base}/admin/`);
+      return c.redirect(u(s.id));
+    });
+    app.post('/signout', (c) => {
+      setCookie(c, 'adv_session', '', { path: base || '/', maxAge: 0 });
+      return c.redirect(`${base}/`);
+    });
+  }
+
   app.use('/s/:id/*', async (c, next) => (exists(c.req.param('id')) ? next() : c.html(page(undefined, 'Not found', ui.note({ title: 'That student is not here', body: 'The link may be old, or the account was deleted.', actions: [{ label: 'Go to the start', href: `${base}/` }] })), 404)));
   app.use('/s/:id', async (c, next) => (exists(c.req.param('id')) ? next() : c.html(page(undefined, 'Not found', ui.note({ title: 'That student is not here', body: 'The link may be old, or the account was deleted.', actions: [{ label: 'Go to the start', href: `${base}/` }] })), 404)));
 
@@ -166,9 +209,10 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
 
   // ------------------------------------------------------------ today
 
-  app.get('/s/:id', (c) => {
+  app.get('/s/:id', async (c) => {
     const sid = c.req.param('id');
     const s = a.student(sid);
+    const weather = await a.weatherMessage(sid);
     const v = a.today_(sid);
     const date = v.date;
     const stops: ui.Stop[] = [
@@ -194,7 +238,7 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
 <div class="hello"><h1>${ui.esc(greeting)}</h1><p class="date">${ui.esc(friendly(date))}</p></div>
 ${stops.length ? ui.dayLine(stops, `Your ${weekday(date)}`) : ui.note({ body: 'Nothing on your calendar today. Add your classes or shifts and I will plan around them.', actions: [toAction(sid, { label: 'Add a syllabus', action: 'upload-syllabus' }, 0), toAction(sid, { label: 'Add my work shifts', action: 'add-shifts' }, 1)] })}
 ${one ? ui.note({ kind: 'one', title: 'If you do one thing today', body: `${one.title}. ${one.why}.`, actions: today.nextSteps.map((n, i) => toAction(sid, n, i)) }) : ''}
-${[money, pulse, ...conflicts, ...ahead].filter((m): m is OutboundMessage => !!m).map((m) => noteFor(sid, m)).join('')}
+${[weather, money, pulse, ...conflicts, ...ahead].filter((m): m is OutboundMessage => !!m).map((m) => noteFor(sid, m)).join('')}
 ${unconfirmed ? ui.note({ kind: 'plan', from: 'Class planner', body: `${unconfirmed} date${unconfirmed === 1 ? '' : 's'} from your syllabus need a quick look before I plan around them.`, actions: [toAction(sid, { label: 'Check the dates', action: 'review-deadlines' }, 0)] }) : ''}
 ${ui.section('Coming up', ui.rows(comingUp.map((d) => ({ title: d.title, sub: `${d.course ? `${d.course}, ` : ''}${relDay(date, d.due)}`, actions: [toAction(sid, { label: 'Done', action: `mark-done:${d.id}` }, 1)] })), 'Nothing due in the next week.'), `<a href="${u(sid, '/week')}">See the week</a>`)}
 ${ui.section('Ask your Advocate', ui.form({ url: u(sid, '/say'), submit: 'Send', fields: [{ name: 'text', label: 'Message', placeholder: 'Try: plan my essay, I need food, what is a registrar' }] }))}`,

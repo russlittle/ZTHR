@@ -31,7 +31,7 @@ export const COLLECTIONS: CollectionDef[] = [
     name: 'students',
     purpose: 'Who the student is and how they want to be helped. Sealed facts are never stored here.',
     key: 'id',
-    fields: [f('id', 'string', 'stable id'), o('phone', 'string'), f('chosenName', 'string'), o('pronouns', 'string'), f('zip', 'string'), o('county', 'string'), o('age', 'number'), o('goal', 'string'), f('dial', 'HelpDial', 'depth, channel, reading grade, language, quiet hours'), f('household', 'Household', 'size, income, children'), f('enrollment', 'Enrollment', 'college, credits, work hours'), o('receives', 'object', 'benefits already received'), f('helpAreas', 'string[]'), o('communities', 'string[]', 'chosen, never inferred'), f('createdAt', 'date')],
+    fields: [f('id', 'string', 'stable id'), o('phone', 'string'), f('chosenName', 'string'), o('pronouns', 'string'), f('zip', 'string'), o('county', 'string'), o('age', 'number'), o('goal', 'string'), f('dial', 'HelpDial', 'depth, channel, reading grade, language, quiet hours'), f('household', 'Household', 'size, income, children'), f('enrollment', 'Enrollment', 'college, credits, work hours'), o('receives', 'object', 'benefits already received'), f('helpAreas', 'string[]'), o('communities', 'string[]', 'chosen, never inferred'), o('account', 'string', 'keyed hash of the sign-in subject'), f('createdAt', 'date')],
     relations: [
       ['deadlines', 'has', '||--o{'], ['classes', 'attends', '||--o{'], ['shifts', 'works', '||--o{'], ['holds', 'holds time', '||--o{'], ['reminders', 'is reminded', '||--o{'],
       ['drafts', 'approves', '||--o{'], ['messages', 'receives', '||--o{'], ['playbook_runs', 'runs', '||--o{'], ['sources', 'connects', '||--o{'], ['api_tokens', 'creates', '||--o{'],

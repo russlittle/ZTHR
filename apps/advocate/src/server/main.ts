@@ -9,6 +9,7 @@ import { realEgress } from '@zthr/egress';
 import { Advocate } from '../agents/advocate.js';
 import { createApp } from './app.js';
 import { seedDemo } from './demo.js';
+import { GoogleVerifier, Sessions } from './auth.js';
 
 /**
  * Starts the Advocate. In production it refuses to start without its secrets and a sign-in provider
@@ -23,6 +24,7 @@ refuseToStartUnless([
   { name: 'master key', check: () => demoMode || !!hex32(process.env.ADVOCATE_MASTER_KEY) || 'ADVOCATE_MASTER_KEY must be 32 bytes of hex in production' },
   { name: 'approval secret', check: () => demoMode || !!hex32(process.env.ADVOCATE_APPROVAL_SECRET) || 'ADVOCATE_APPROVAL_SECRET must be 32 bytes of hex in production' },
   { name: 'sign-in', check: () => demoMode || !!process.env.GOOGLE_CLIENT_ID || 'production requires Google sign-in (GOOGLE_CLIENT_ID)' },
+  { name: 'session secret', check: () => demoMode || !!hex32(process.env.ADVOCATE_SESSION_SECRET) || 'ADVOCATE_SESSION_SECRET must be 32 bytes of hex in production' },
 ]);
 
 const fixedToday = process.env.ADVOCATE_TODAY;
@@ -52,7 +54,11 @@ function build(): Hono {
     egress: demoMode ? undefined : realEgress((process.env.ADVOCATE_EGRESS_ALLOW ?? '').split(',').filter(Boolean)),
   });
   const demo = demoMode ? seedDemo(advocate).map((s) => ({ id: s.id, name: s.chosenName, line: LINES[s.chosenName] ?? '' })) : [];
-  return createApp(advocate, { base, demo });
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const secret = hex32(process.env.ADVOCATE_SESSION_SECRET);
+  const sessions = clientId && secret ? new Sessions(secret) : undefined;
+  const auth = clientId && sessions ? { clientId, verifier: new GoogleVerifier(realEgress(['www.googleapis.com']), clientId), sessions, adminEmailHashes: (process.env.ADMIN_EMAILS ?? '').split(',').filter(Boolean).map((e) => sessions.emailHash(e.trim())), secure: production } : undefined;
+  return createApp(advocate, { base, demo, auth });
 }
 
 // One copy per visitor in the demo, kept while they use it; the oldest idle copy goes first.

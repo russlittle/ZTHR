@@ -25,6 +25,7 @@ erDiagram
     object receives "benefits already received"
     string_ helpAreas
     string_ communities "chosen, never inferred"
+    string account "keyed hash of the sign-in subject"
     date createdAt
   }
 ```

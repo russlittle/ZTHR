@@ -73,6 +73,8 @@ export interface Student {
   enrollment: Enrollment;
   receives?: { snap?: boolean; medicaid?: boolean; ssi?: boolean; tanf?: boolean; pell?: boolean };
   helpAreas: NeedCategory[];
+  /** The signed-in account that owns this record: a keyed hash of the Google subject, never the identifier. */
+  account?: string;
   /** Communities the student chose to join; they filter what the student sees and are never inferred. */
   communities?: string[];
   createdAt: string;

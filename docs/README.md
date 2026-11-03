@@ -28,7 +28,9 @@ flowchart LR
 - [Money found and short months](flows/money.md)
 - [Deadlines, plans and held time](flows/planning.md)
 - [Playbooks](flows/playbooks.md)
+- [Signing in](flows/sign-in.md)
 - [Starting by text](flows/text-onboarding.md)
+- [Weather and roads](flows/weather.md)
 
 ## How it is tested
 

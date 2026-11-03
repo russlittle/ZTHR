@@ -37,6 +37,7 @@ import { addDays, sentence, shortDate, time12, weekday } from '../domain/dates.j
 import { AppStore } from '../domain/store.js';
 import { parseShifts } from '../domain/shifts.js';
 import { explainLetter, factsPreserved, letterText, type Letter } from '../domain/letters.js';
+import { forecast, impactOf, weatherNote } from '../domain/weather.js';
 import { sandwich } from '@zthr/runtime';
 import { ACTIONS, type ActionResult } from './actions.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
@@ -245,6 +246,7 @@ export class Advocate {
       enrollment: { college: 'sinclair', ...(p.enrollment ?? {}) },
       receives: p.receives ?? {},
       helpAreas: p.helpAreas ?? [],
+      ...(p.account ? { account: p.account } : {}),
       createdAt: this.today(),
     };
     this.store.put('students', s.id, s.id, s);
@@ -316,6 +318,11 @@ export class Advocate {
 
   private asText(d: Delivered): string {
     return d.nextSteps.length ? `${d.text}\n${d.nextSteps.map((n, i) => `${i + 1}) ${n.label}`).join('\n')}` : d.text;
+  }
+
+  findByAccount(account: string): Student | undefined {
+    const rows = this.store.db.prepare("SELECT json FROM docs WHERE collection = 'students'").all() as { json: string }[];
+    return rows.map((r) => JSON.parse(r.json) as Student).find((s) => s.account === account);
   }
 
   findByPhone(phone: string): Student | undefined {
@@ -1065,6 +1072,27 @@ export class Advocate {
       options: bookOptions(m, s.enrollment.college),
       beforeAid: !!(aid && m.neededBy && m.neededBy < aid),
     }));
+  }
+
+  // ---------- weather and roads (PRD DAY-8) ----------
+
+  /** A note only when today's weather changes how to get to the first class or shift. */
+  async weatherMessage(studentId: string): Promise<OutboundMessage | undefined> {
+    const s = this.student(studentId);
+    let periods;
+    try {
+      periods = await forecast(this.egress, s.zip);
+    } catch {
+      return undefined;
+    }
+    const today = periods[0];
+    if (!today) return undefined;
+    const v = this.today_(studentId);
+    const first = [...v.classes.map((c) => ({ what: c.course, start: c.start })), ...v.shifts.map((x) => ({ what: 'work', start: x.start }))].sort((a, b) => a.start.localeCompare(b.start))[0];
+    const text = weatherNote(today, first);
+    if (!text) return undefined;
+    this.ev('weather', studentId, { severity: impactOf(today).severity });
+    return { studentId, author: 'chief-of-staff', urgency: impactOf(today).severity === 2 ? 'time-sensitive' : 'routine', text, nextSteps: [{ label: 'Show my day', action: 'today' }, { label: 'Getting around help', action: 'need:transportation' }], why: 'From the National Weather Service forecast for your area. Only your town is used, never your address.' };
   }
 
   // ---------- letters (PRD LNG-2) ----------

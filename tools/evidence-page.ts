@@ -150,7 +150,7 @@ const REQS2: [string, 'built' | 'partial' | 'not yet', string][] = [
   ['LNG-1', 'partial', 'Spanish for starting by text, crisis replies and help found'],
   ['Builder', 'built', 'Drafts scouts, playbooks and retirements from evidence; cannot admit its own work'],
   ['Scouts', 'built', 'Refresh what sources confirm; retire below their datum'],
-  ['DAY-8', 'not yet', 'Weather and road conditions'],
+  ['DAY-8', 'built', 'Weather and roads: a heads-up only when it changes the trip'],
   ['HH-2', 'not yet', 'Meal plans with SNAP grocery delivery'],
   ['HH-3', 'not yet', 'Caregiver specialist (the builder has drafted the scout it needs)'],
   ['CAR-1 to 4', 'not yet', 'Career trajectories, openings, fair-chance filter, mentors'],
