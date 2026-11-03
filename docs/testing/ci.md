@@ -43,6 +43,25 @@ It finishes by starting the first run and printing its link. Defaults can be cha
 
 Run a build by hand from a checkout: `gcloud builds submit --project zthr-ai --config cloudbuild.yaml .`
 
+## Deploying
+
+A passing build on `reference-implementation` builds the container and deploys it to Cloud Run as `advocate`. The
+service holds the demonstration, its admin, the API, the published docs and the factory console. Deploys are off
+until a person turns them on:
+
+```sh
+bash <(curl -sL https://raw.githubusercontent.com/russlittle/ZTHR/reference-implementation/tools/setup-deploy.sh)
+```
+
+```mermaid
+flowchart LR
+  pass[All steps pass] --> site[Build docs and console] --> image[Container image] --> run[Cloud Run: advocate]
+  run --> fb[zthr.ai/advocate, /docs, /factory through Firebase Hosting]
+```
+
+The service runs as an account with no roles. Each visitor to the demonstration gets their own copy of the twelve
+students, so nothing one visitor does changes what the next one sees.
+
 ## Cost
 
 The build runs on an 8-vCPU machine (`E2_HIGHCPU_8`) so the suite and the nightly mutation run finish quickly.

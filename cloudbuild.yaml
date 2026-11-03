@@ -13,6 +13,7 @@
 # Setup: docs/testing/ci.md
 
 substitutions:
+  _DEPLOY_BRANCH: ''  # set on the trigger by tools/setup-deploy.sh once deploying is allowed
   _MUTATION: 'false'
   _KIND: 'push'
   _EVIDENCE_BUCKET: ''
@@ -111,7 +112,7 @@ steps:
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: bash
     env: ['BUCKET=$_EVIDENCE_BUCKET']
-    args: ['-c', 'mkdir -p evidence-out; if [ -n "$$BUCKET" ]; then gcloud storage cat "$$BUCKET/costs/*.json" > evidence-out/ci-costs.jsonl 2>/dev/null || { : > evidence-out/ci-costs.jsonl; echo "No cost history yet."; }; fi']
+    args: ['-c', 'mkdir -p evidence-out reports; if [ -n "$$BUCKET" ]; then gcloud storage cat "$$BUCKET/costs/*.json" > evidence-out/ci-costs.jsonl 2>/dev/null || { : > evidence-out/ci-costs.jsonl; echo "No cost history yet."; }; [ -f reports/mutation.json ] || gcloud storage cp "$$BUCKET/latest/mutation.json" reports/mutation.json 2>/dev/null || echo "No nightly mutation report yet."; fi']
 
   - id: record-cost
     name: node:22-bookworm
@@ -135,3 +136,36 @@ steps:
         gcloud storage cp evidence-out/ci-cost.json "$$BUCKET/costs/$${BUILD:-manual-$$(date +%s)}.json"
         gcloud storage cp -r evidence-out control/proofs.json "$$BUCKET/runs/$${COMMIT:-manual}/"
         if [ -d reports ]; then gcloud storage cp -r reports "$$BUCKET/runs/$${COMMIT:-manual}/"; fi
+        if [ -f reports/mutation.json ] && [ "$_MUTATION" = "true" ]; then gcloud storage cp reports/mutation.json "$$BUCKET/latest/mutation.json"; fi
+
+  - id: site
+    # The published docs and factory console, from everything this run recorded.
+    name: node:22-bookworm
+    entrypoint: npx
+    args: ['tsx', 'tools/site.ts']
+
+  - id: image
+    # Only the main line of the reference implementation is deployed; other branches stop after the evidence.
+    name: gcr.io/cloud-builders/docker
+    entrypoint: bash
+    env: ['BRANCH=$BRANCH_NAME', 'PROJECT=$PROJECT_ID', 'COMMIT=$COMMIT_SHA', 'DEPLOY=$_DEPLOY_BRANCH']
+    args:
+      - -c
+      - |
+        if [ "$$BRANCH" != "$$DEPLOY" ]; then echo "Not deploying $$BRANCH."; exit 0; fi
+        docker build -t "us-central1-docker.pkg.dev/$$PROJECT/zthr/advocate:$$COMMIT" .
+        docker push "us-central1-docker.pkg.dev/$$PROJECT/zthr/advocate:$$COMMIT"
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    env: ['BRANCH=$BRANCH_NAME', 'PROJECT=$PROJECT_ID', 'COMMIT=$COMMIT_SHA', 'DEPLOY=$_DEPLOY_BRANCH']
+    args:
+      - -c
+      - |
+        if [ "$$BRANCH" != "$$DEPLOY" ]; then echo "Not deploying $$BRANCH."; exit 0; fi
+        gcloud run deploy advocate --project "$$PROJECT" --region us-central1 \
+          --image "us-central1-docker.pkg.dev/$$PROJECT/zthr/advocate:$$COMMIT" \
+          --service-account "zthr-advocate@$$PROJECT.iam.gserviceaccount.com" \
+          --allow-unauthenticated --memory 1Gi --cpu 1 --min-instances 0 --max-instances 2 --concurrency 40 \
+          --labels "commit=$${COMMIT:0:12}" --quiet
