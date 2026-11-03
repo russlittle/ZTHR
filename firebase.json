@@ -40,8 +40,8 @@
     ],
     "redirects": [
       {
-        "source": "/advocate/:path*",
-        "destination": "/studentadvocate/:path*",
+        "regex": "^/advocate/(.+)$",
+        "destination": "/studentadvocate/:1",
         "type": 301
       }
     ]
