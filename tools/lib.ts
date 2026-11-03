@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { Lock } from '@zthr/intent';
@@ -15,4 +16,13 @@ export function readLock(): Lock {
 export function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
   return i >= 0 ? process.argv[i + 1] : undefined;
+}
+
+/** The commit this checkout is at, so every report says which code it measured. */
+export function headCommit(): string {
+  try {
+    return execSync('git rev-parse --short HEAD', { cwd: ROOT, encoding: 'utf8' }).trim();
+  } catch {
+    return 'uncommitted';
+  }
 }

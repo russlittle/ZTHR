@@ -129,6 +129,13 @@ steps:
     env: ['CI_MACHINE=E2_HIGHCPU_8', 'CI_KIND=$_KIND', 'BUILD_ID=$BUILD_ID', 'COMMIT=$COMMIT_SHA']
     args: ['tsx', 'tools/ci-cost.ts']
 
+  - id: certify-phase
+    # Phase certificates for this commit: every gate, journey, walk, contract and mutation result from this build.
+    # A report from another commit, or a walk of fewer than twelve students, is "not measured", never a pass.
+    name: node:22-bookworm
+    entrypoint: npm
+    args: ['run', 'certify-phase']
+
   - id: evidence-page
     name: node:22-bookworm
     entrypoint: npm

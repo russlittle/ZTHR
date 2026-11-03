@@ -6,6 +6,8 @@ import * as ui from '@zthr/ui';
 import { loadCards } from '@zthr/intent';
 import { COLLECTIONS } from '../apps/advocate/src/domain/schema.js';
 import { gateCatalog } from './gates.js';
+import { parse as parseYaml } from 'yaml';
+import { SERVICES, SERVICE_IDS } from '../apps/campus-services/src/index.js';
 import { links } from './doc-links.js';
 import { JOURNEY_DIR, OUT, ROOT } from './lib.js';
 
@@ -146,6 +148,8 @@ function buildFactory(): number {
     ['mutation', 'Mutation', 'bolt'],
     ['docs-qa', 'Docs and links', 'doc'],
     ['data', 'Data model', 'book'],
+    ['twins', 'Campus twins', 'bus'],
+    ['patterns', 'The 33 patterns', 'list'],
     ['cost', 'Cost', 'dollar'],
   ];
   const shell = (id: string, title: string, body: string) =>
@@ -167,16 +171,22 @@ ${ui.kpis([
   { value: mutScore ? `${mutScore.score.toFixed(1)}%` : 'not measured', label: 'mutation score' },
   { value: uiManifest ? n(uiManifest.stops.length) : 'not measured', label: 'browser stops checked' },
 ])}
-${ui.section('What each part proves', ui.rows(PAGES.slice(1).map(([p, l]) => ({ title: l, href: `${p}.html`, sub: { phases: 'What each phase delivers and whether the factory certified it', gates: 'The checks that must fail on planted defects before they count', redteam: 'Attacks real people send, and whether the app held', 'feature-walks': 'Every button and every page, for every student, to a fixpoint', 'ui-walk': 'A real browser: accessibility, layout, screenshots and video', intent: 'The goals students actually have, run in every mode and channel', tests: 'Every test, grouped by file, with the document it verifies', mutation: 'Whether the tests notice when the code is wrong', 'docs-qa': 'Every test linked to a document and every document to a test', data: 'Every collection the app keeps', cost: 'What the factory spent to run itself' }[p] })))) }`));
+${ui.section('What each part proves', ui.rows(PAGES.slice(1).map(([p, l]) => ({ title: l, href: `${p}.html`, sub: { phases: 'What each phase delivers and whether the factory certified it', gates: 'The checks that must fail on planted defects before they count', redteam: 'Attacks real people send, and whether the app held', 'feature-walks': 'Every button and every page, for every student, to a fixpoint', 'ui-walk': 'A real browser: accessibility, layout, screenshots and video', intent: 'The goals students actually have, run in every mode and channel', tests: 'Every test, grouped by file, with the document it verifies', mutation: 'Whether the tests notice when the code is wrong', 'docs-qa': 'Every test linked to a document and every document to a test', data: 'Every collection the app keeps', cost: 'What the factory spent to run itself', twins: 'The campus services the Advocate talks to, and their contracts', patterns: 'All 33 patterns, where each lives and what proves it' }[p] })))) }`));
 
   // phases
   const PHASES: { n: number; name: string; items: [string, string][] }[] = [
     { n: 1, name: 'Run my day', items: [['Today, plans and held time', 'built'], ['Money and benefits checks', 'built'], ['Finding help and crisis plans', 'built'], ['FAFSA and SNAP playbooks', 'built'], ['Starting by text', 'built'], ['Every button works, app and text', 'built']] },
-    { n: 2, name: 'Household, career and campus life', items: [['Week solver with child care and commute', 'built'], ['GI Bill, accommodations, break housing, enrollment playbooks', 'built'], ['Community with moderation', 'built'], ['Spanish, first slice', 'partial'], ['Meal plans sized to SNAP, with one shopping list', 'built'], ['Caregivers: the builder drafted the scout and the factory certified it', 'built'], ['Career help at each college, and the fair-chance (CQE) path when the student asks', 'built'], ['Job openings and mentors', 'not yet'], ['Campus life: dining, late food, study spots', 'not yet'], ['Weather and roads, from the National Weather Service through the egress block', 'built'], ['Letter explainer, with an optional model rewrite inside the sandwich', 'built']] },
-    { n: 3, name: 'Integrations', items: [['Integration API: ingest, export, webhooks', 'built'], ['Calendar feed', 'built'], ['One door to the network', 'built'], ['App admin', 'built'], ['Sign in with Google', 'built'], ['Class-site and calendar sync', 'not yet']] },
-    { n: 4, name: 'Any college, and proof it works', items: [['Red team', 'built'], ['Scouts that build each college’s list', 'partial'], ['Mentor and peer network', 'not yet'], ['Model-assisted features through twins', 'not yet'], ['Outcome measures', 'not yet']] },
+    { n: 2, name: 'Household, career and campus life', items: [['Week solver with child care and commute', 'built'], ['GI Bill, accommodations, break housing, enrollment, SNAP recertification playbooks', 'built'], ['Foster-youth aid and retraining playbooks', 'built'], ['Community with moderation', 'built'], ['Meal plans sized to SNAP, with one shopping list', 'built'], ['Caregivers: Eldercare Locator and a county scout the factory admitted', 'built'], ['Career help at each college, and the fair-chance (CQE) path when the student asks', 'built'], ['Jobs that fit around classes and shifts', 'built'], ['Campus food open now, late food and free food', 'built'], ['Study spots, and room booking confirmed by the room system', 'built'], ['Bus to class with live delays, and a late note to draft', 'built'], ['Spanish: text start, finding help and crisis; other screens registered', 'partial']] },
+    { n: 3, name: 'Integrations', items: [['Integration API: ingest, export, webhooks', 'built'], ['Calendar feed and calendar ingest', 'built'], ['Class-site sync: assignments, moved dates, room changes', 'built'], ['Synthetic campus services with contracts and fixtures', 'built'], ['The operator: leases, dispatches verified by lookup', 'built'], ['One door to the network', 'built'], ['App admin', 'built'], ['Sign in with Google', 'built']] },
+    { n: 4, name: 'Any college, and proof it works', items: [['Red team', 'built'], ['Any college: declared once, county scouts drafted by the builder (Clark State added)', 'built'], ['Mentor network: introductions sent, answers tracked', 'built'], ['Letter explainer with a model inside a deterministic sandwich', 'built'], ['Outcome measures with small-group suppression', 'built'], ['Persistence and credits: needs a college pilot', 'not measured']] },
   ];
-  write(join(SITE, 'factory', 'phases.html'), shell('phases', 'Phases', `<p class="muted">A phase is certified when every gate passes with a valid proof, both walks reach their fixpoint with no violations, every journey for the phase passes, and mutation is at or above its floor. No person signs a feature; people govern the gates themselves. Certificates are pinned to a commit.</p>${PHASES.map((p) => ui.section(`Phase ${p.n}: ${p.name}`, ui.rows(p.items.map(([t, s]) => ({ title: t, chip: { text: s, tone: s === 'built' ? 'ok' : s === 'partial' ? 'warn' : undefined } }))))).join('')}`));
+  const certs = read<{ phase: number; commit: string; at: string; certified: boolean; checks: { check: string; status: string; detail: string }[] }[]>(join(OUT, 'certificates.json')) ?? [];
+  const certFor = (n: number) => {
+    const c = certs.find((x) => x.phase === n);
+    if (!c) return '<p class="small muted">No certificate in this build.</p>';
+    return `<p>${c.certified ? ui.chip(`certified at ${c.commit}`, 'ok') : ui.chip(`not certified at ${c.commit}`, 'warn')}</p>${ui.table(['Check', 'Result', 'Detail'], c.checks.map((k) => [ui.esc(k.check), k.status === 'pass' ? ui.chip('pass', 'ok') : k.status === 'fail' ? ui.chip('fail', 'bad') : ui.chip('not measured', 'warn'), ui.esc(k.detail)]), { raw: [false, true, false] })}`;
+  };
+  write(join(SITE, 'factory', 'phases.html'), shell('phases', 'Phases', `<p class="muted">A phase is certified when every gate passes with a valid proof, both walks reach their fixpoint with no violations, every journey for the phase passes, and mutation is at or above its floor. No person signs a feature; people govern the gates themselves. Certificates are pinned to a commit.</p>${PHASES.map((p) => ui.section(`Phase ${p.n}: ${p.name}`, `${certFor(p.n)}${ui.rows(p.items.map(([t, s]) => ({ title: t, chip: { text: s, tone: s === 'built' ? 'ok' : s === 'partial' ? 'warn' : undefined } })))}`)).join('')}`));
 
   // gates
   write(join(SITE, 'factory', 'gates.html'), shell('gates', 'Guardrails', `<p class="muted">A gate counts only after every planted defect makes it fail. Its proof is pinned to a hash of its definition; change the gate and the proof must be made again.</p>${ui.table(['Gate', 'Protects', 'Planted defects that must fail it', 'Proof'], gates.map((g) => { const p = proofs.find((x) => x.gate === g.id); return [`<code>${ui.esc(g.id)}</code>`, ui.esc(g.protects), ui.esc(g.plants.join('; ')), p ? `${p.valid ? ui.chip('valid', 'ok') : ui.chip('invalid', 'bad')} <span class="small muted">${ui.esc(p.gateHash.slice(0, 12))}</span>` : ui.chip('not proven', 'warn')]; }), { raw: [true, false, false, true] })}`));
@@ -220,6 +230,30 @@ ${ui.section('What each part proves', ui.rows(PAGES.slice(1).map(([p, l]) => ({ 
   // cost
   const total = costs.reduce((s, c) => s + c.costUsd, 0);
   write(join(SITE, 'factory', 'cost.html'), shell('cost', 'Cost', costs.length ? `${ui.kpis([{ value: n(costs.length), label: 'factory runs recorded' }, { value: `$${total.toFixed(2)}`, label: 'all time, list price' }, { value: `${(costs.reduce((s, c) => s + c.minutes, 0) / costs.length).toFixed(1)} min`, label: 'average run' }, { value: '$0.00', label: 'model spend by the product' }])}${ui.table(['Finished', 'Kind', 'Machine', 'Minutes', 'Cost'], costs.slice(-40).reverse().map((c) => [c.finishedAt.slice(0, 16).replace('T', ' '), c.kind, c.machine, c.minutes.toFixed(1), `$${c.costUsd.toFixed(4)}`]))}` : '<p class="muted">Cost is recorded by each Cloud Build run; none in this build yet.</p>'));
+  // twins
+  const contract = read<{ at: string; results: { service: string; probe: string; path: string; ok: boolean; problems: string[] }[] }>(join(OUT, 'contract.json'));
+  write(
+    join(SITE, 'factory', 'twins.html'),
+    shell(
+      'twins',
+      'Campus twins',
+      `<p class="muted">Synthetic services shaped like a college's vendors. The Advocate reaches them only through its egress door, and each is held to a contract: ${contract ? `${contract.results.filter((r) => r.ok).length} of ${contract.results.length} probes pass` : 'not measured in this build'}. <a href="../docs/blocks/campus-services.html">How they work</a>. Try them: <a href="${APP.replace(/advocate\/$/, '')}twins">zthr.ai/twins</a>.</p>
+${SERVICE_IDS.map((id) => { const sv = SERVICES[id]; const probes = (contract?.results ?? []).filter((r) => r.service === id); return ui.section(`${sv.info.title}`, `<p class="small muted"><code>${ui.esc(sv.host)}</code> · ${ui.esc(sv.info.description)}</p>${ui.table(['Endpoint', 'What it answers'], sv.info.endpoints.map((e) => [`<code>${ui.esc(e.method)} ${ui.esc(e.path)}</code>`, ui.esc(e.summary)]), { raw: [true, false] })}${Object.keys(sv.info.scenarios).length ? `<p class="small">Bad-day scenarios: ${Object.entries(sv.info.scenarios).map(([k, v]) => `<code>${ui.esc(k)}</code> ${ui.esc(v)}`).join('; ')}</p>` : ''}${probes.length ? ui.table(['Contract probe', 'Request', 'Result'], probes.map((r) => [ui.esc(r.probe), `<code>${ui.esc(r.path)}</code>`, r.ok ? ui.chip('meets contract', 'ok') : ui.chip(r.problems.join('; '), 'bad')]), { raw: [false, true, true] }) : ''}`); }).join('')}`,
+    ),
+  );
+
+  // patterns
+  const pmap = parseYaml(readFileSync(join(ROOT, 'control', 'patterns.yaml'), 'utf8')) as { patterns: { n: number; name: string; implemented_in: string[]; verified_by: string[]; gate?: string }[] };
+  const GH = 'https://github.com/russlittle/ZTHR/blob/reference-implementation/';
+  write(
+    join(SITE, 'factory', 'patterns.html'),
+    shell(
+      'patterns',
+      'The 33 patterns',
+      `<p class="muted">Every pattern in the ZTHR pattern language, where this build implements it, and what proves it. The <code>pattern-coverage</code> gate fails if any is missing. <a href="../docs/testing/patterns.html">The map, explained</a>.</p>${ui.table(['#', 'Pattern', 'Implemented in', 'Proven by', 'Gate'], pmap.patterns.map((p) => [String(p.n), ui.esc(p.name), p.implemented_in.map((f) => `<a href="${GH}${ui.esc(f)}"><code>${ui.esc(f)}</code></a>`).join('<br>'), p.verified_by.map((f) => `<a href="${GH}${ui.esc(f)}"><code>${ui.esc(f.split('/').pop()!)}</code></a>`).join('<br>'), p.gate ? (proofs.find((x) => x.gate === p.gate)?.valid ? ui.chip(p.gate, 'ok') : ui.chip(p.gate, 'warn')) : '']), { raw: [false, false, true, true, true] })}`,
+    ),
+  );
+
   return PAGES.length;
 }
 

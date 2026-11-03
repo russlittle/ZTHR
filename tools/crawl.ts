@@ -3,7 +3,7 @@ import { cpus } from 'node:os';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { crawlAdvocate } from '../apps/advocate/test/harness/crawl.js';
 import { PERSONA_NAMES } from '../apps/advocate/src/server/demo.js';
-import { OUT } from './lib.js';
+import { OUT, headCommit } from './lib.js';
 
 /**
  * Run the feature walk over the web app: one process per student, as many at once as there are CPUs.
@@ -58,7 +58,7 @@ async function runParallel(names: string[]): Promise<Report> {
 const names = only ?? PERSONA_NAMES;
 const r = args.includes('--serial') || names.length === 1 ? await crawlAdvocate({ only: names, settingsOnly }) : await runParallel(names);
 mkdirSync(OUT, { recursive: true });
-writeFileSync(`${OUT}/crawl${settingsOnly ? '-settings' : ''}.json`, JSON.stringify({ ...r, ms: Date.now() - t0 }, null, 1));
+writeFileSync(`${OUT}/crawl${settingsOnly ? '-settings' : ''}.json`, JSON.stringify({ ...r, ms: Date.now() - t0, commit: headCommit(), only: names }, null, 1));
 for (const s of r.seeds) console.log(`${s.name.padEnd(22)} page-states ${String(s.states).padStart(5)}  links+forms ${String(s.transitions).padStart(6)}  depth ${s.maxDepth}  ${s.exhausted ? 'exhausted' : 'CUT SHORT'}`);
 const kinds = new Map<string, { n: number; path: string[]; seed: string }>();
 for (const v of r.violations) {

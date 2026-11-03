@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { realEgress, routedEgress, type Egress } from '@zthr/egress';
 import { PROBES } from '../apps/campus-services/src/contracts.js';
 import { SERVICES, startAll, type ServiceId } from '../apps/campus-services/src/index.js';
-import { ROOT } from './lib.js';
+import { OUT, ROOT } from './lib.js';
 
 /**
  * Contract check for campus services (Pattern 33).
@@ -31,6 +31,7 @@ const egressFor = (id: ServiceId): Egress => (bases[id] ? realEgress([new URL(ba
 
 let failed = 0;
 let checked = 0;
+const results: { service: string; probe: string; path: string; ok: boolean; problems: string[] }[] = [];
 for (const p of PROBES) {
   if (external && !bases[p.service]) continue;
   const base = bases[p.service] ?? `https://${SERVICES[p.service].host}`;
@@ -50,7 +51,12 @@ for (const p of PROBES) {
     else if (JSON.stringify((JSON.parse(readFileSync(file, 'utf8')) as { body: unknown }).body) !== JSON.stringify(body)) problems.push('drifted from its recorded fixture');
   }
   console.log(`${problems.length ? 'FAIL' : 'pass'}  ${p.service.padEnd(8)} ${p.name.padEnd(14)} ${problems.join(' | ')}`);
+  results.push({ service: p.service, probe: p.name, path: p.path, ok: !problems.length, problems });
   if (problems.length) failed++;
 }
 console.log(`\n${checked - failed}/${checked} probes meet the contract${record ? ' (fixtures recorded)' : ''}`);
+if (!external) {
+  mkdirSync(OUT, { recursive: true });
+  writeFileSync(`${OUT}/contract.json`, JSON.stringify({ at: new Date().toISOString(), results }, null, 1));
+}
 process.exit(failed ? 1 : 0);

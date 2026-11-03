@@ -5,7 +5,7 @@ import type { ExploreReport } from '@zthr/explore';
 import { exploreAdvocate } from '../apps/advocate/test/harness/world.js';
 import { campusSeedDocs } from '../apps/advocate/test/harness/campus.js';
 import { PERSONA_NAMES } from '../apps/advocate/src/server/demo.js';
-import { OUT } from './lib.js';
+import { OUT, headCommit } from './lib.js';
 
 /**
  * Run the button walk and write the report.
@@ -64,7 +64,7 @@ if (childOut) {
 const names = only ?? PERSONA_NAMES;
 const r = args.includes('--serial') || names.length === 1 ? exploreAdvocate({ only: names, maxNodes: max, withTyping: typing, campus }) : await runParallel(names);
 mkdirSync(OUT, { recursive: true });
-writeFileSync(`${OUT}/explore.json`, JSON.stringify({ ...r, ms: Date.now() - t0 }, null, 1));
+writeFileSync(`${OUT}/explore.json`, JSON.stringify({ ...r, ms: Date.now() - t0, commit: headCommit(), only: names }, null, 1));
 for (const s of r.seeds) console.log(`${s.name.padEnd(22)} states ${String(s.states).padStart(6)}  transitions ${String(s.transitions).padStart(7)}  depth ${s.maxDepth}  ${s.exhausted ? 'exhausted' : 'CUT SHORT'}`);
 const byProblem = new Map<string, { n: number; path: string[]; seed: string }>();
 for (const v of r.violations) {

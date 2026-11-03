@@ -24,6 +24,7 @@
     "signoff": "tsx tools/signoff.ts",
     "certify": "tsx tools/certify.ts",
     "add-college": "tsx tools/add-college.ts",
+    "certify-phase": "tsx tools/certify-phase.ts",
     "docs": "tsx tools/docs.ts",
     "docs:check": "tsx tools/docs.ts --check",
     "explore": "tsx tools/explore.ts",
