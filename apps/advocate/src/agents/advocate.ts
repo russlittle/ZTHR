@@ -326,9 +326,10 @@ export class Advocate {
     if (o.stage === 'start' && detectSpanish(body)) o.language = 'es';
     const lang = o.language ?? 'en';
     const safety = screen(body);
-    if (safety.crisis || (lang === 'es' && /\b(matarme|suicid|quitarme la vida|no quiero vivir|me pega)\b/i.test(body))) {
-      this.ev('safety_route', phone, { categories: safety.categories, before: 'account', language: lang });
-      return [lang === 'es' ? crisisReplyEs(true, /\bme pega\b/i.test(body)) : crisisReply(safety.categories)];
+    if (safety.crisis) {
+      const es = lang === 'es' || /\b(me\s+quiero|quiero\s+morir|matarme|suicid|quitarme|no\s+quiero\s+vivir|me\s+pega|me\s+golpea|me\s+maltrata|me\s+quiere\s+matar)\b/i.test(body);
+      this.ev('safety_route', phone, { categories: safety.categories, before: 'account', language: es ? 'es' : lang });
+      return [es ? crisisReplyEs(true, safety.categories.includes('abuse') || safety.categories.includes('danger-from-others')) : crisisReply(safety.categories)];
     }
     this.onboarding.set(phone, o);
     const textDial = { ...DEFAULT_DIAL, channel: 'text' as const, language: lang };

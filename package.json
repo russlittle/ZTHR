@@ -33,6 +33,7 @@
     "@stryker-mutator/vitest-runner": "^9.0.0",
     "@types/node": "^22.10.0",
     "axe-core": "^4.14.0",
+    "marked": "15.0.12",
     "tsx": "^4.19.0",
     "typescript": "~5.9.0",
     "vitest": "^3.2.0"

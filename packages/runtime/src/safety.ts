@@ -23,15 +23,24 @@ const PATTERNS: Record<CrisisCategory, RegExp[]> = {
     /\bbetter\s+off\s+(dead|without\s+me)\b/i,
     /\boverdos(e|ed|ing)\b/i,
     /\btoo\s+many\s+(pills|tablets)\b/i,
+    /\bunaliv(e|ing)\b/i,
+    /\b(disappear|vanish)\s+(forever|for\s+good)\b/i,
+    /\b(no\s?one|nobody)\s+would\s+(care|notice|miss\s+me)\b.*\b(gone|dead|died|disappeared)\b/i,
+    /\b(plan|planning)\s+to\s+(end\s+my\s+life|kill\s+myself)\b/i,
+    // Spanish: the same words students use, routed the same way.
+    /\b(me\s+quiero\s+matar|quiero\s+morir(me)?|matarme|suicid(arme|io)|quitarme\s+la\s+vida|no\s+quiero\s+vivir)\b/i,
   ],
   'danger-from-others': [
     /\b(he|she|they|someone)\s+(is\s+)?(threaten(ing|ed)?|going\s+to\s+(hurt|kill))\s+(me|to)\b/i,
+    /\b(he|she|they)('s|'re|\s+is|\s+are)\s+(threaten(ing|ed)?\s+to\s+(kill|hurt)|going\s+to\s+(kill|hurt))\s+me\b/i,
+    /\bme\s+quiere\s+matar\b/i,
     /\bnot\s+safe\s+(at\s+home|here|right\s+now)\b/i,
     /\b(afraid|scared)\s+(he|she|they)('ll|\s+will)\s+(hurt|kill)\b/i,
     /\bsomeone\s+is\s+following\s+me\b/i,
   ],
   'medical-emergency': [/\b(can'?t|cannot)\s+breathe\b/i, /\bchest\s+pain\b/i, /\bseizure\b/i, /\bunconscious\b/i],
-  abuse: [/\b(he|she|they|my\s+(partner|boyfriend|girlfriend|husband|wife))\s+(hit|hits|beat|beats|choked|chokes|hurt|hurts)\s+me\b/i, /\babus(e|ing|ive)\b.*\b(me|my)\b/i],
+  abuse: [
+    /\b(me\s+pega|me\s+golpea|me\s+maltrata)\b/i,/\b(he|she|they|my\s+(partner|boyfriend|girlfriend|husband|wife))\s+(hit|hits|beat|beats|choked|chokes|hurt|hurts)\s+me\b/i, /\babus(e|ing|ive)\b.*\b(me|my)\b/i],
 };
 
 export function screen(message: string): SafetyResult {

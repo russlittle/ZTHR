@@ -32,13 +32,13 @@ export interface Post {
 export const COMMUNITIES = ['first-generation', 'student-parents', 'veterans', 'lgbtq', 'adult-learners', 'commuters', 'black-students', 'disabled-students'] as const;
 
 const FILTERS: [RegExp, string][] = [
-  [/\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b/, 'contains a phone number; contact is shared only when both people agree'],
+  [/(\(\d{3}\)\s?|\b\d{3}[-.\s]?)\d{3}[-.\s]?\d{4}\b/, 'contains a phone number; contact is shared only when both people agree'],
   [/[\w.+-]+@[\w-]+\.[\w.]+/, 'contains an email address; contact is shared only when both people agree'],
   [/\b\d{2,5}\s+\w+\s+(st|street|ave|avenue|rd|road|dr|drive|blvd|lane|ln)\b/i, 'contains a street address'],
-  [/\b(kill|hurt|beat up|shoot)\s+(you|him|her|them)\b/i, 'contains a threat; a person will review it'],
-  [/\b(selling|sell|buy)\b.*\b(adderall|xanax|pills|weed|gun|vape)\b|\b(adderall|xanax)\b/i, 'offers something that cannot be traded here'],
+  [/\b(kill|hurt|beat up|shoot|stab|jump)\s+(you|him|her|them)\b|\bbeat\s+(you|him|her|them)\s+up\b/i, 'contains a threat; a person will review it'],
+  [/\b(selling|sell|buy|want|need|got)\b.*\b(adderall|xanax|pills|weed|gun|vape|percs?|molly|coke)\b|\b(adderall|xanax|weed|percs?)\b/i, 'offers something that cannot be traded here'],
   [/\b(venmo|cash ?app|paypal|zelle)\b.*\b(send|pay)\b/i, 'asks for payment; the community is for free help'],
-  [/https?:\/\//i, 'contains a link; links can hide scams'],
+  [/https?:\/\/|\bwww\.|\b[\w-]+\.(ly|link|gl|io|co|com|net|org|me|xyz|info)\/\S*/i, 'contains a link; links can hide scams'],
 ];
 const SAFETY = /\b(kill|hurt|shoot)\b/i;
 
