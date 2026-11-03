@@ -38,6 +38,7 @@ import { AppStore } from '../domain/store.js';
 import { parseShifts } from '../domain/shifts.js';
 import { explainLetter, factsPreserved, letterText, type Letter } from '../domain/letters.js';
 import { forecast, impactOf, weatherNote } from '../domain/weather.js';
+import { mealPlan, mealPlanText, type MealPlan } from '../domain/meals.js';
 import { sandwich } from '@zthr/runtime';
 import { ACTIONS, type ActionResult } from './actions.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
@@ -455,6 +456,7 @@ export class Advocate {
       const one = this.today_(s.id).oneThing;
       if (one?.deadlineId) return [this.deliver(this.planMessage(s.id, one.deadlineId), { force: true })];
     }
+    if (/\b(meal plan|what (should|can) i (cook|make|eat)|groceries on a budget|cheap meals)\b/.test(t)) return [this.deliver(this.mealPlanMessage(s.id), { force: true })];
     if (/\bfafsa\b/.test(t)) return [this.deliver(this.playbookMessage(s.id, this.startPlaybook(s.id, 'fafsa-2027-28')), { force: true })];
     if (/\b(qualify|benefits|money found|screen)\b/.test(t)) return [this.deliver(this.moneyFoundMessage(s.id), { force: true })];
     const need = NEED_WORDS.find(([, re]) => re.test(text))?.[0];
@@ -1072,6 +1074,28 @@ export class Advocate {
       options: bookOptions(m, s.enrollment.college),
       beforeAid: !!(aid && m.neededBy && m.neededBy < aid),
     }));
+  }
+
+  // ---------- meal plans (PRD HH-2) ----------
+
+  mealPlan(studentId: string): MealPlan {
+    const s = this.student(studentId);
+    const snap = this.screen(studentId).find((r) => r.program === 'snap' && r.status === 'likely');
+    return mealPlan(s.household.size, { monthlyFoodMoney: snap?.estimatedMonthlyValue });
+  }
+
+  mealPlanMessage(studentId: string): OutboundMessage {
+    const s = this.student(studentId);
+    const p = this.mealPlan(studentId);
+    this.ev('meal_plan', studentId, { people: p.people, budgeted: !!p.weeklyBudget });
+    return {
+      studentId,
+      author: 'money-and-life-coach',
+      urgency: 'routine',
+      text: mealPlanText(p, s.dial.depth === 'brief'),
+      nextSteps: [{ label: 'See the plan and shopping list', action: 'meals' }, { label: 'Find free food near me', action: 'need:food' }],
+      why: p.weeklyBudget ? 'Sized for your household, with your SNAP estimate split across the month.' : 'Sized for your household. Tell me your food budget and I will fit it.',
+    };
   }
 
   // ---------- weather and roads (PRD DAY-8) ----------

@@ -25,6 +25,7 @@ flowchart LR
 - [When something goes wrong](flows/crisis.md)
 - [Drafts and approval](flows/drafts-and-approval.md)
 - [Explaining a letter](flows/letters.md)
+- [Meals for the week](flows/meals.md)
 - [Money found and short months](flows/money.md)
 - [Deadlines, plans and held time](flows/planning.md)
 - [Playbooks](flows/playbooks.md)

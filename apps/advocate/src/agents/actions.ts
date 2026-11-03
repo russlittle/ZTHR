@@ -13,7 +13,7 @@ import type { Situation } from '../domain/crisis.js';
  *
  * A result always carries a message, so the text channel can answer. It may also name a screen for the app.
  */
-export type View = 'today' | 'money' | 'help' | 'settings' | 'week' | 'syllabus' | 'shifts' | 'dates' | 'drafts' | 'resource' | 'ask' | 'deleted' | 'share' | 'letter';
+export type View = 'today' | 'money' | 'help' | 'settings' | 'week' | 'syllabus' | 'shifts' | 'dates' | 'drafts' | 'resource' | 'ask' | 'deleted' | 'share' | 'letter' | 'meals';
 
 export interface ActionResult {
   message: OutboundMessage;
@@ -239,6 +239,10 @@ export const ACTIONS: Record<string, Handler> = {
     if (!d) return { message: msg(sid, 'No drafts are waiting.', [back]), view: 'drafts' };
     return { message: msg(sid, `Here is the draft to ${d.to}:\n"${d.body}"\nNothing is sent until you say so.`, [{ label: 'Send it', action: `approve:${d.id}` }, back]), view: 'drafts', viewArg: arg };
   },
+
+  // meals
+  'meal-plan': (a, sid) => ({ message: a.mealPlanMessage(sid), view: 'meals' }),
+  meals: (a, sid) => ({ message: a.mealPlanMessage(sid), view: 'meals' }),
 
   // letters
   letter: (_a, sid) => ({ message: msg(sid, 'Paste the letter, or forward the email it came in. I will say what it means, what to do and by when.', [back], 'navigator'), view: 'letter' }),

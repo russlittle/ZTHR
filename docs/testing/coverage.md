@@ -57,14 +57,14 @@ xychart-beta
 
 ## Feature walk
 
-528 page-states and 4,302 links and forms across 3 seeds; 0 violations. Routes reached: `/advocate/s/:id`, `/advocate/s/:id/action`, `/advocate/s/:id/drafts`, `/advocate/s/:id/help`, `/advocate/s/:id/money`, `/advocate/s/:id/resource/:rid`, `/advocate/s/:id/say`, `/advocate/s/:id/share`, `/advocate/s/:id/shifts`, `/advocate/s/:id/week`, `/advocate/s/:id/you`.
+34,146 page-states and 283,704 links and forms across 36 seeds; 0 violations. Routes reached: `/advocate/s/:id`, `/advocate/s/:id/action`, `/advocate/s/:id/ask`, `/advocate/s/:id/dates`, `/advocate/s/:id/drafts`, `/advocate/s/:id/help`, `/advocate/s/:id/money`, `/advocate/s/:id/resource/:rid`, `/advocate/s/:id/say`, `/advocate/s/:id/share`, `/advocate/s/:id/shifts`, `/advocate/s/:id/syllabus`, `/advocate/s/:id/week`, `/advocate/s/:id/you`.
 
 ```mermaid
 xychart-beta
   title "Feature walk: links and forms followed per student"
-  x-axis ["Maria"]
+  x-axis ["Maria", "Jayden", "Darnell", "Ana", "Tyler", "Priya", "Destiny", "Sam", "Linda", "Luis", "Alex", "Keisha"]
   y-axis "Transitions"
-  bar [1434]
+  bar [5642, 11622, 5344, 5152, 11718, 11334, 11622, 11334, 5344, 5296, 5152, 5008]
 ```
 
 ## Verified by

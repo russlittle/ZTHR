@@ -62,7 +62,7 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
   const base = opts.base ?? '';
   const app = new Hono({ strict: false });
   const u = (sid: string, path = '') => `${base}/s/${encodeURIComponent(sid)}${path}`;
-  const VIEW_PATH: Record<View, string> = { today: '', money: '/money', help: '/help', settings: '/you', week: '/week', syllabus: '/syllabus', shifts: '/shifts', dates: '/dates', drafts: '/drafts', resource: '/resource', ask: '/ask', deleted: '', share: '/share', letter: '/letter' };
+  const VIEW_PATH: Record<View, string> = { today: '', money: '/money', help: '/help', settings: '/you', week: '/week', syllabus: '/syllabus', shifts: '/shifts', dates: '/dates', drafts: '/drafts', resource: '/resource', ask: '/ask', deleted: '', share: '/share', letter: '/letter', meals: '/meals' };
 
   const toAction = (sid: string, n: { label: string; action: string }, i: number): ui.Action =>
     n.action.startsWith('call:')
@@ -378,7 +378,7 @@ ${ui.section('Update what I know', ui.form({ url: u(sid, '/household'), submit: 
         `${flash(sid, c.req.query('m'))}
 <div class="hello"><h1>What's hard right now?</h1><p class="date">Pick one. I find help that fits you and do the legwork.</p></div>
 ${ui.tiles(NEEDS.map(([n, label, ic]) => ({ label, icon: ic, post: post(`need:${n}`) })), 'Kinds of help')}
-${ui.section('Something went wrong?', ui.tiles([...SITUATIONS.map(([x, label]) => ({ label, icon: 'alert', post: post(`situation:${x}`) })), { label: 'Explain a letter I got', icon: 'doc', href: u(sid, '/letter') }], 'Situations'))}
+${ui.section('Something went wrong?', ui.tiles([...SITUATIONS.map(([x, label]) => ({ label, icon: 'alert', post: post(`situation:${x}`) })), { label: 'Explain a letter I got', icon: 'doc', href: u(sid, '/letter') }, { label: 'Plan a week of meals', icon: 'food', href: u(sid, '/meals') }], 'Situations'))}
 ${ui.note({ kind: 'safety', title: 'Need to talk to someone now?', body: 'Call or text 988 any time, day or night. If you are in danger, call 911.', actions: [{ label: 'Call or text 988', href: 'tel:988', variant: 'call', icon: 'phone' }] })}`,
         'help',
       ),
@@ -407,6 +407,23 @@ ${ui.actions([...(r.url ? [{ label: 'Open the application', href: r.url }] : [])
   });
 
   app.get('/s/:id/resource', (c) => c.redirect(u(c.req.param('id'), '/help')));
+
+  app.get('/s/:id/meals', (c) => {
+    const sid = c.req.param('id');
+    const p = a.mealPlan(sid);
+    return c.html(
+      page(
+        sid,
+        'Meals for the week',
+        `${flash(sid, c.req.query('m'))}<div class="hello"><h1>Meals for the week</h1><p class="date">${ui.esc(`Simple meals for ${p.people === 1 ? 'one person' : `${p.people} people`}${p.weeklyBudget ? `, for about $${p.weeklyBudget} a week from your SNAP estimate` : ''}. SNAP covers all of it.`)}</p></div>
+${ui.table(['Day', 'Breakfast', 'Lunch', 'Dinner'], p.meals.map((m) => [m.day, m.breakfast, m.lunch, m.dinner]))}
+${ui.section('Shopping list', ui.rows(p.shopping.map((x) => ({ title: x.item, sub: x.amount }))))}
+${ui.section('Ways to stretch it', ui.rows(p.tips.map((t) => ({ title: t }))))}
+${ui.actions([{ label: 'Buy with SNAP online', href: 'https://www.fns.usda.gov/snap/online-purchasing', variant: 'quiet' }, toAction(sid, { label: 'Find free food near me', action: 'need:food' }, 0)])}`,
+        'help',
+      ),
+    );
+  });
 
   app.get('/s/:id/letter', (c) => {
     const sid = c.req.param('id');
