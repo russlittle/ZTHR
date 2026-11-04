@@ -63,6 +63,7 @@ function buildLanding(): void {
   // zthr.ai/reference: the hub for the app's overview, reporting, admin tools and docs.
   const card = (title: string, sub: string, href: string) => ({ title, sub, href });
   const body = `<h1>Student Advocate: the reference</h1><p class="muted">Everything about the Student Advocate in one place: the app and its admin tools, how it is doing, how it was built and checked, and how it works. The Advocate is the reference application for ZTHR; every student and service in it is synthetic.</p>
+${ui.section('The case', ui.rows([card('What an AI factory can build, and what it is worth', 'The business and technical write-up: what the Advocate does, why it can be trusted, how the factory works, the economics and the potential', 'case.html')]))}
 ${ui.section('The app', ui.rows([card('Product page', 'What it does, who it is for, why it works, what it is worth', ARTIFACT ? 'https://zthr.ai/advocate' : '/advocate'), card('Open the app', 'Sign in as any of twelve sample students, each a private copy for two hours', APP), card('Try it by text', 'The whole Advocate as a text conversation', `${APP}text`), card('App admin', 'Catalog, moderation, scouts, admissions and outcomes; never a student\'s record', `${APP}admin/`), card('Outcome measures', 'What changed for students, never shown for fewer than five', `${APP}admin/outcomes`), card('Campus twins', 'The synthetic dining, transit, rooms, jobs and class-site APIs', ARTIFACT ? 'https://zthr.ai/twins' : '/twins')]))}
 ${ui.section('Reporting', ui.rows([card('Factory overview', 'Tests, gates, walks, red team, mutation and cost for this build', 'factory/index.html'), card('Phases', 'What each phase delivers and whether it is certified', 'factory/phases.html'), card('Features', 'Everything the app does, with the journey that proves it', 'factory/features.html'), card('Sensitive data trace', 'Where each personal fact may go, and where it went', 'factory/sensitive.html'), card('Block library', 'The reusable parts, each with its own tests and mutation score', 'factory/blocks.html')]))}
 ${ui.section('Documentation', ui.rows([card('Overview and architecture', 'How the system fits together, illustrated', 'docs/index.html'), card('Features', 'By phase', 'docs/features.html'), card('Glossary', 'Product and factory words in plain terms', 'docs/glossary.html'), card('Data model', 'Every collection, with ERDs', 'docs/data-model.html'), card('Data sources', 'Every outside source, with ERDs', 'docs/data-sources.html'), card('Sensitive data', 'Every field\'s class and where it may go', 'docs/flows/sensitive-data.html'), card('API', 'Ingest, export and webhooks', 'docs/api.html')]))}
@@ -80,6 +81,37 @@ ${ui.section('Source and discussion', ui.rows([card('The full source', 'The app,
     const bodyHtml = full.slice(full.indexOf('<body>') + 6, full.lastIndexOf('</body>'));
     write(join(SITE, 'index.html'), `<title>ZTHR Reference</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n${style}<style>main.con{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 60px}</style>\n${bodyHtml}`);
   }
+}
+
+/** The case: what the factory built and what it is worth, as one readable page beside the evidence it cites. */
+function buildCase(): void {
+  const src = join(ROOT, 'writeups', 'the-case.md');
+  if (!existsSync(src)) return;
+  const marked = new Marked({
+    renderer: {
+      code({ text, lang }) {
+        return lang === 'mermaid' ? `<pre class="mermaid">${ui.esc(text)}</pre>` : `<pre tabindex="0"><code>${ui.esc(text)}</code></pre>`;
+      },
+    },
+  });
+  const body = marked.parse(readFileSync(src, 'utf8')) as string;
+  const title = readFileSync(src, 'utf8').match(/^# (.+)$/m)![1]!;
+  const css = `.cs-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:860px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
+.cs-top nav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}.cs-top nav a{padding:7px 11px;border-radius:999px;font-weight:700;font-size:14px;color:var(--muted);text-decoration:none}.cs-top nav a:hover{background:var(--calm);color:var(--ink)}
+article.case{max-width:860px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
+article.case h1{font-size:clamp(30px,4.4vw,46px);line-height:1.08;letter-spacing:-.02em;text-wrap:balance;margin:18px 0 14px}
+article.case h1+p{font-size:19px;color:var(--muted)}
+article.case h2{font-size:26px;margin:44px 0 10px;text-wrap:balance}
+article.case p,article.case li{max-width:70ch}
+article.case table{border-collapse:collapse;width:100%;font-size:15.5px;margin:14px 0;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+article.case th,article.case td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+article.case th{font-size:13px;color:var(--muted);background:var(--calm)}
+article.case thead:has(th:empty){display:none}
+article.case .mermaid{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin:16px 0;overflow:auto;box-shadow:var(--shadow)}
+article.case code{background:var(--calm);padding:1px 5px;border-radius:5px}
+@media (max-width:640px){article.case table{display:block;overflow-x:auto}}`;
+  const nav = `<header class="cs-top"><a class="brand" href="${ARTIFACT ? 'https://zthr.ai' : '/'}"><span class="brand-mark">${ui.icon('shield', 18)}</span>ZTHR</a><nav aria-label="Elsewhere"><a href="${ARTIFACT ? 'https://zthr.ai/advocate' : '/advocate'}">The product</a><a href="${APP}">The app</a><a href="factory/index.html">Evidence</a><a href="docs/index.html">Docs</a><a href="https://github.com/russlittle/ZTHR/tree/reference-implementation">Source</a></nav></header>`;
+  write(join(SITE, 'case.html'), ui.bareShell({ title: `${title} · ZTHR`, description: 'The Student Advocate, built entirely by AI agents under ZTHR fixtures: what it does, why it can be trusted, how the factory works, what it costs and what it could mean.', base: fontBase(''), head: `${head('')}<style>${css}</style>`, body: `${nav}<main id="main"><article class="case">${body}</article></main>` }));
 }
 
 function buildDocs(): number {
@@ -287,6 +319,7 @@ ${SERVICE_IDS.map((id) => { const sv = SERVICES[id]; const probes = (contract?.r
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   copyAssets();
   buildLanding();
+  buildCase();
   const d = buildDocs();
   const f = buildFactory();
   console.log(`site built: ${d} doc pages, ${f} factory pages in ${relative(ROOT, SITE)}/`);

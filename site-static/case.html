@@ -1,0 +1,395 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>What an AI factory can build, and what it is worth · ZTHR</title><meta name="description" content="The Student Advocate, built entirely by AI agents under ZTHR fixtures: what it does, why it can be trusted, how the factory works, what it costs and what it could mean."><meta name="theme-color" content="#0d6a5b"><style>
+@font-face{font-family:"Atkinson Hyperlegible";src:url("./fonts/atkinson-400.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Atkinson Hyperlegible";src:url("./fonts/atkinson-700.woff2") format("woff2");font-weight:700;font-display:swap}
+:root{--paper:#f4f6f3;--surface:#ffffff;--ink:#16231f;--muted:#566660;--line:#d6ded9;--action:#0d6a5b;--action-ink:#ffffff;--mark:#f2b233;--mark-ink:#3b2a00;--alert:#a8432c;--calm:#e6efe9;--focus:#1b5fd1;--r-lg:18px;--r-md:12px;--r-sm:8px;--shadow:0 1px 2px rgba(22,35,31,.06),0 2px 8px rgba(22,35,31,.05);--shadow-lg:0 2px 4px rgba(22,35,31,.06),0 10px 28px rgba(22,35,31,.09);--tint:color-mix(in srgb,var(--action) 9%,var(--surface));color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0e1513;--surface:#151f1c;--ink:#e6eee9;--muted:#9bb0a8;--line:#2a3833;--action:#5fcfb6;--action-ink:#06231d;--mark:#f2b233;--mark-ink:#2a1d00;--alert:#f08a6c;--calm:#1b2a25;--focus:#8db4ff;--shadow:0 1px 2px rgba(0,0,0,.35);--shadow-lg:0 8px 24px rgba(0,0,0,.4);color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0e1513;--surface:#151f1c;--ink:#e6eee9;--muted:#9bb0a8;--line:#2a3833;--action:#5fcfb6;--action-ink:#06231d;--mark:#f2b233;--mark-ink:#2a1d00;--alert:#f08a6c;--calm:#1b2a25;--focus:#8db4ff;--shadow:0 1px 2px rgba(0,0,0,.35);--shadow-lg:0 8px 24px rgba(0,0,0,.4);color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--action);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 12px;border-radius:8px;z-index:10}.skip:focus{left:8px}
+h1,h2,h3{line-height:1.2;margin:0}
+h1{font-size:30px;letter-spacing:-.01em}
+h2{font-size:21px}
+h3{font-size:17px}
+p{margin:.4em 0}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.ic{flex:none;vertical-align:-5px}
+/* app shell */
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1120px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700;font-size:18px}
+.brand-mark{width:30px;height:30px;border-radius:10px;background:linear-gradient(140deg,var(--action),color-mix(in srgb,var(--action) 70%,var(--ink)));box-shadow:var(--shadow);display:grid;place-items:center;color:var(--action-ink)}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tabs a{display:flex;align-items:center;gap:6px;min-height:44px;padding:8px 12px;border-radius:999px;color:var(--muted);text-decoration:none;font-weight:700;font-size:15px}
+.tabs a:hover{color:var(--ink);background:color-mix(in srgb,var(--calm) 60%,transparent)}
+.tabs a[aria-current="page"]{background:var(--calm);color:var(--ink)}
+main.app{max-width:1120px;margin:0 auto;padding:20px 16px 110px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:760px;margin:0 auto}
+@media (max-width:640px){
+ .top{backdrop-filter:none;background:var(--paper)}
+ .tabs{position:fixed;left:0;right:0;bottom:0;margin:0;justify-content:space-around;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+ .tabs a{flex-direction:column;gap:2px;font-size:12px;padding:6px 10px;border-radius:12px}
+ h1{font-size:26px}
+}
+/* page heading */
+.hello{margin:8px 0 18px}
+.hello .date{color:var(--muted);font-size:15px;margin-top:4px}
+.hero{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--tint),var(--surface) 70%);border:1px solid var(--line);border-radius:22px;padding:22px 24px;margin:6px 0 18px;box-shadow:var(--shadow)}
+.hero::after{content:"";position:absolute;right:-70px;top:-70px;width:200px;height:200px;border-radius:50%;background:color-mix(in srgb,var(--mark) 18%,transparent);pointer-events:none}
+.hero>*{position:relative;z-index:1}
+@media (max-width:640px){.hero{padding:18px}.hero h1{font-size:26px}.hero::after{width:120px;height:120px;right:-50px;top:-50px}}
+.hero h1{font-size:32px}
+.hero .date{color:var(--muted);font-size:15px;margin-top:4px}
+.glance{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;position:relative;z-index:1}
+.glance span{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.glance span.g-warn{border-color:color-mix(in srgb,var(--mark) 70%,var(--line));background:color-mix(in srgb,var(--mark) 16%,var(--surface))}
+.glance span.g-alert{border-color:color-mix(in srgb,var(--alert) 55%,var(--line));color:var(--alert)}
+/* Today: the feed, with the day and what is coming up beside it on a wide screen */
+.today{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"day" "feed" "side";gap:0 28px}
+.t-day{grid-area:day}.t-feed{grid-area:feed;min-width:0}.t-side{grid-area:side;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 18px;box-shadow:var(--shadow)}
+.card>h2{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:2px 0 8px}
+@media (min-width:1040px){.today{grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:auto 1fr;grid-template-areas:"feed day" "feed side";align-items:start}.t-feed>.note:first-child{margin-top:0}.t-side>.sec:first-child{margin-top:22px}}
+/* notes: what the team says */
+.note{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 20px 16px 24px;margin:14px 0;box-shadow:var(--shadow)}
+.note::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:5px;border-radius:0 4px 4px 0;background:var(--line)}
+.note.k-one::before{background:var(--mark)}
+.note.k-heads::before{background:var(--alert)}
+.note.k-plan::before{background:var(--action)}
+.note.k-safety{border-color:var(--alert)}.note.k-safety::before{background:var(--alert)}
+.note.k-one{background:linear-gradient(135deg,color-mix(in srgb,var(--mark) 12%,var(--surface)),var(--surface) 60%);box-shadow:var(--shadow-lg)}
+.note .tag{position:absolute;top:14px;right:16px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,var(--alert) 14%,var(--surface));color:var(--alert)}
+.note h2{font-size:18px;margin-bottom:4px}
+.note .body{white-space:pre-line}
+.note .from{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.note .from .av{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--tint);color:var(--action)}
+details.why{margin-top:8px;font-size:14px;color:var(--muted)}
+details.why summary{cursor:pointer;width:max-content}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+form.inline{display:inline}
+.btn{font:inherit;font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:9px 16px;border-radius:999px;border:1.5px solid var(--action);background:var(--action);color:var(--action-ink);cursor:pointer;text-decoration:none}
+.btn.quiet{background:var(--surface);color:var(--action);border-color:color-mix(in srgb,var(--action) 35%,var(--line))}
+.btn.quiet:hover{background:var(--tint);filter:none}
+.btn.call{background:var(--mark);border-color:var(--mark);color:var(--mark-ink)}
+.btn.danger{background:transparent;color:var(--alert);border-color:var(--alert)}
+.btn{transition:background .15s,filter .15s,transform .15s}.btn:hover{filter:brightness(1.06)}.btn:active{transform:translateY(1px)}
+/* the day: a route line with stops */
+.day{list-style:none;margin:6px 0 4px;padding:0;position:relative}
+.day::before{content:"";position:absolute;left:68px;top:10px;bottom:10px;width:3px;background:var(--line);border-radius:2px}
+.day li{display:grid;grid-template-columns:56px 28px 1fr;align-items:start;gap:0;padding:6px 0;min-height:44px}
+.day .t{font-size:14px;color:var(--muted);text-align:right;padding-top:3px;font-variant-numeric:tabular-nums}
+.day .dot{width:15px;height:15px;border-radius:50%;margin:5px 0 0 6.5px;background:var(--surface);border:3px solid var(--muted);position:relative;z-index:1}
+.day .s-class .dot{border-color:var(--action)}
+.day .s-shift .dot{border-color:var(--ink);background:var(--ink)}
+.day .s-hold .dot{border-color:var(--mark);background:var(--mark)}
+.day .s-due .dot{border-color:var(--alert)}
+.day .s-now .dot{width:11px;height:11px;margin-left:8.5px;border:0;background:var(--focus)}
+.day .s-now .what{color:var(--focus);font-weight:700;font-size:14px;padding-top:2px}
+.day .what b{display:block}
+.day .what span{font-size:14px;color:var(--muted)}
+/* sections and lists */
+.sec{margin:28px 0 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:6px 18px;box-shadow:var(--shadow)}
+.rows{list-style:none;margin:0;padding:0}
+.rows li{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.rows li:last-child{border-bottom:0}
+.rows .grow{flex:1;min-width:0}
+.rows .grow b{display:block}
+.rows .grow span{font-size:14px;color:var(--muted)}
+.chip{display:inline-block;font-size:13px;padding:2px 9px;border-radius:999px;background:var(--calm);color:var(--ink);font-weight:700}
+.chip.ok{background:color-mix(in srgb,var(--action) 18%,transparent)}
+.chip.warn{background:color-mix(in srgb,var(--mark) 30%,transparent)}
+.chip.bad{background:color-mix(in srgb,var(--alert) 20%,transparent)}
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:10px 0}
+.tile{display:flex;flex-direction:column;gap:10px;align-items:flex-start;min-height:104px;padding:16px;border-radius:var(--r-lg);background:var(--surface);border:1px solid var(--line);color:var(--ink);font:inherit;font-weight:700;text-align:left;cursor:pointer;width:100%;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s,border-color .15s}
+.tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:color-mix(in srgb,var(--action) 40%,var(--line))}
+.tile .ic{color:var(--action);background:var(--tint);border-radius:10px;padding:7px;width:38px;height:38px}
+/* big number */
+.figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.figure .n{font-size:44px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+/* forms */
+label{display:block;font-weight:700;margin:12px 0 6px}
+input,textarea,select{font:inherit;width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:var(--r-sm);background:var(--surface);color:var(--ink)}
+.hint{font-size:14px;color:var(--muted);margin-top:4px}
+/* week */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.week .d{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:8px;min-height:140px}
+.week .d h3{font-size:13px;color:var(--muted);margin-bottom:6px}
+.week .b{font-size:12px;border-radius:7px;padding:4px 6px;margin:4px 0;background:var(--calm);line-height:1.3}
+.week .b.class{border-left:4px solid var(--action)}
+.week .b.shift{border-left:4px solid var(--ink)}
+.week .b.study,.week .b.hold{border-left:4px solid var(--mark)}
+.week .b.pickup,.week .b.drop-off{border-left:4px solid var(--alert)}
+.week .b.due{border-left:4px solid var(--alert);font-weight:700}
+.week .prob{font-size:12px;color:var(--alert);font-weight:700}
+@media (max-width:640px){.week{grid-template-columns:1fr}.week .d{min-height:0}.rows li{flex-wrap:wrap}.rows .grow{flex-basis:100%}}
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+table.t th,table.t td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.t th{font-size:13px;color:var(--muted)}
+.empty{padding:22px;text-align:center;color:var(--muted)}
+/* console shell */
+.console{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+.side a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--ink);text-decoration:none;font-weight:700;font-size:15px}
+.side a[aria-current="page"]{background:var(--calm)}
+.side .grp{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:20px 10px 6px;padding-top:12px;border-top:1px solid var(--line)}
+.side .brand{margin:2px 6px 8px}
+.side a:hover{background:color-mix(in srgb,var(--calm) 60%,transparent)}
+main.con{padding:24px 28px 60px;max-width:1200px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:14px 0}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;box-shadow:var(--shadow)}
+.kpi .n{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:14px;color:var(--muted)}
+.bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}.bar>i{display:block;height:100%;background:var(--action)}
+pre.code{background:var(--calm);padding:12px;border-radius:var(--r-sm);overflow:auto;font-size:13px}
+@media (max-width:860px){.console{grid-template-columns:1fr}.side{position:static;height:auto;display:flex;flex-wrap:wrap;gap:4px}.side .grp{flex-basis:100%;margin:10px 10px 2px;padding-top:8px}main.con{padding:16px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style><script async src="https://www.googletagmanager.com/gtag/js?id=G-12ENZ47TSG"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-12ENZ47TSG');</script>
+<script src="assets/mermaid-11.4.1.min.js"></script><script>window.mermaid&&mermaid.initialize({startOnLoad:true,theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'neutral',securityLevel:'strict'});</script>
+<style>.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style><style>.cs-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:860px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
+.cs-top nav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}.cs-top nav a{padding:7px 11px;border-radius:999px;font-weight:700;font-size:14px;color:var(--muted);text-decoration:none}.cs-top nav a:hover{background:var(--calm);color:var(--ink)}
+article.case{max-width:860px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
+article.case h1{font-size:clamp(30px,4.4vw,46px);line-height:1.08;letter-spacing:-.02em;text-wrap:balance;margin:18px 0 14px}
+article.case h1+p{font-size:19px;color:var(--muted)}
+article.case h2{font-size:26px;margin:44px 0 10px;text-wrap:balance}
+article.case p,article.case li{max-width:70ch}
+article.case table{border-collapse:collapse;width:100%;font-size:15.5px;margin:14px 0;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+article.case th,article.case td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+article.case th{font-size:13px;color:var(--muted);background:var(--calm)}
+article.case thead:has(th:empty){display:none}
+article.case .mermaid{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin:16px 0;overflow:auto;box-shadow:var(--shadow)}
+article.case code{background:var(--calm);padding:1px 5px;border-radius:5px}
+@media (max-width:640px){article.case table{display:block;overflow-x:auto}}</style></head><body><a class="skip" href="#main">Skip to content</a><header class="cs-top"><a class="brand" href="/"><span class="brand-mark"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg></span>ZTHR</a><nav aria-label="Elsewhere"><a href="/advocate">The product</a><a href="/studentadvocate/">The app</a><a href="factory/index.html">Evidence</a><a href="docs/index.html">Docs</a><a href="https://github.com/russlittle/ZTHR/tree/reference-implementation">Source</a></nav></header><main id="main"><article class="case"><h1>What an AI factory can build, and what it is worth</h1>
+<p>The Student Advocate is a complete, working application built entirely by AI agents under ZTHR fixtures: a
+student-facing team that runs a student&#39;s day, finds the money and help they qualify for, and does the legwork to
+get it. It exists to answer one question with evidence instead of argument: <strong>can software written by AI be
+trusted, if the environment it is built in decides what is admitted?</strong></p>
+<p>This page makes the case from both sides: what the application is worth to the people it serves, and what the
+factory that built it means for anyone who builds software.</p>
+<h2>At a glance</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Built by</strong></td>
+<td>AI agents, inside a factory of gates, locked intent and exhaustive walks. No person wrote the code; a person signs only destructive changes.</td>
+</tr>
+<tr>
+<td><strong>Elapsed time</strong></td>
+<td>About two days, from an empty repository to a deployed application with four phases of features, five synthetic campus services, fifteen reusable blocks and full documentation.</td>
+</tr>
+<tr>
+<td><strong>Size</strong></td>
+<td>About 20,000 lines of TypeScript and 3,800 lines of documentation, every data structure drawn as an ERD.</td>
+</tr>
+<tr>
+<td><strong>Evidence</strong></td>
+<td>1,116 tests; 20 gates, each proven able to fail; 36 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student; a planted-marker trace of every sensitive field, with no leaks.</td>
+</tr>
+<tr>
+<td><strong>Cost to run</strong></td>
+<td>No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The app scales to zero when no one is using it.</td>
+</tr>
+<tr>
+<td><strong>Open</strong></td>
+<td>Every test, gate, walk, decision and line of source is public.</td>
+</tr>
+</tbody></table>
+<h2>The problem it solves</h2>
+<p>Students who stop out rarely do so over ability. They stop out over a few hundred dollars, a missed form, a bus that never
+came, a shift that collided with an exam. Help exists for most of it: emergency grants, benefits, food programs,
+child care, mentors. Finding it, qualifying for it and doing the paperwork is the barrier, and the students who
+most need the help have the least time to do that work.</p>
+<pre class="mermaid">flowchart LR
+  life[A hard week: rent short, shift moved, bus late] --&gt; gap{Help exists, but}
+  gap --&gt; find[Finding it]
+  gap --&gt; qualify[Knowing you qualify]
+  gap --&gt; work[Doing the paperwork]
+  find &amp; qualify &amp; work --&gt; stop[Stopping out]
+  adv([The Advocate]) -. does the finding, checking and drafting .-&gt; gap
+  adv --&gt; stay[Staying in school]</pre><h2>What the Advocate does</h2>
+<table>
+<thead>
+<tr>
+<th>For the student</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Runs their day</td>
+<td>Classes, shifts, child care and due dates on one line; time held for the work that matters; the one thing to do today.</td>
+</tr>
+<tr>
+<td>Finds money they are missing</td>
+<td>SNAP, phone and heating help and campus emergency grants checked against the agencies&#39; published limits, with the rule shown.</td>
+</tr>
+<tr>
+<td>Finds help and does the legwork</td>
+<td>Verified, current programs nearby, what to bring, and a drafted message the student approves before anything is sent.</td>
+</tr>
+<tr>
+<td>Handles campus life</td>
+<td>What is open to eat now, free food today, a study room booked and confirmed, when to leave for the bus with live delays.</td>
+</tr>
+<tr>
+<td>Keeps up with classes</td>
+<td>Reads the syllabus and the class site, follows moved due dates, plans the work into the time available.</td>
+</tr>
+<tr>
+<td>Opens doors to work</td>
+<td>Jobs that fit around classes and shifts, a fair-chance path when the student asks, an introduction to a mentor.</td>
+</tr>
+</tbody></table>
+<p>It works by text or in the app, at the reading level and length the student chooses, and it never scolds. Crisis
+words go straight to 988 before anything else. Nothing leaves on a student&#39;s behalf without their approval of the
+exact words.</p>
+<h2>Why it can be trusted with this</h2>
+<p>A student&#39;s money, benefits, family and history are the most sensitive facts they have. The Advocate is built so
+that trust does not depend on anyone&#39;s good intentions.</p>
+<pre class="mermaid">flowchart TB
+  fact[A fact comes in] --&gt; cls{Its class}
+  cls -- personal or sensitive --&gt; own[(Kept for the student; shown back only to them)]
+  cls -- sealed --&gt; sealed[(Encrypted with the student&#39;s own key)]
+  cls -- secret --&gt; hashed[Hashed or encrypted; never shown]
+  own -. approved exact words only .-&gt; out[Sent with approval]
+  own -. never .-&gt; logs[(Evidence, ledger, admin, outcomes, logs)]</pre><ul>
+<li><strong>Every field is classified</strong>, and every build plants a unique marker in each personal, sensitive and secret
+field, uses the app the way a student would, and searches every place data can land. A marker found where its
+class may not go fails the build, naming the field and the place.</li>
+<li><strong>One door to the network.</strong> The app can reach only the hosts it declared; anything else is refused and recorded.</li>
+<li><strong>Counts never point at a person.</strong> Outcome measures are never shown for a group smaller than five.</li>
+<li><strong>The public server is hardened</strong> against the obvious attacks: floods, oversized requests, injected script,
+framing, forged sessions and attempts to reach other hosts. <a href="docs/security.html">Each attack, what stops it and what proves it</a>.</li>
+</ul>
+<h2>How the factory works</h2>
+<p>The application is the example. The factory is the point. Agents write code; the factory decides what is admitted,
+by checks that are themselves proven, against intent that the agents cannot edit.</p>
+<pre class="mermaid">flowchart TB
+  intent[Intent: a student&#39;s goal in plain words, locked by hash] --&gt; build[Agents build]
+  build --&gt; gates{20 gates, each proven to fail on planted defects}
+  gates --&gt; walks{Every button and page, for every student, walked to a fixpoint}
+  walks --&gt; trace{Sensitive-data trace}
+  trace --&gt; admit[Admitted by the factory]
+  admit --&gt; serve[Deployed; the public address must serve the commit that passed]
+  gates &amp; walks &amp; trace -- any failure --&gt; back[Back to the agents, with the reason]
+  person([A person]) -. signs only destructive changes .-&gt; admit</pre><table>
+<thead>
+<tr>
+<th>Fixture</th>
+<th>What it guarantees</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Locked intent</strong></td>
+<td>Each user goal is a card in plain words with outcomes that must never happen, locked by hash. The change being judged cannot edit the goal it is judged by.</td>
+</tr>
+<tr>
+<td><strong>Gates proven to fail</strong></td>
+<td>A check counts only after every planted defect makes it fail; the proof is pinned to the check&#39;s own definition.</td>
+</tr>
+<tr>
+<td><strong>Exhaustive walks</strong></td>
+<td>Every button and every page, for every student, at every depth, until nothing new is left, checking tone, privacy and dead ends at every step.</td>
+</tr>
+<tr>
+<td><strong>Walk only what changed</strong></td>
+<td>Each walk records the lines it executed; a later change re-walks only what could alter what the walk saw.</td>
+</tr>
+<tr>
+<td><strong>Unknown is a state</strong></td>
+<td>Anything not measured in a build says &quot;not measured&quot;; it never counts as a pass.</td>
+</tr>
+<tr>
+<td><strong>Register, don&#39;t hide</strong></td>
+<td>Every known gap has an owner and an expiry date, in the open.</td>
+</tr>
+<tr>
+<td><strong>Reusable blocks</strong></td>
+<td>Fifteen parts, each with its own tests and mutation score, inherited by the app, never copied.</td>
+</tr>
+</tbody></table>
+<p>The factory finds what review misses. In building the Advocate it found, without being asked: a webhook signing
+secret in a student&#39;s export, document names in a permanent ledger, a brief-mode answer too long to deliver, a
+bus plan that took a transfer when a direct route existed, and a synthetic mentor sharing a first name with a
+student. Each became a fixture, so it cannot return.</p>
+<h2>The economics</h2>
+<pre class="mermaid">flowchart LR
+  change[Each change] -- minutes of build time --&gt; checked[Tests, gates, journeys, spot-check walks]
+  night[Each night] -- hours of compute --&gt; full[Full walks on a rotation; certification]
+  checked &amp; full --&gt; evidence[(Public evidence)]</pre><ul>
+<li><strong>The product costs almost nothing to run.</strong> It makes no model calls in normal use, and it scales to zero.</li>
+<li><strong>The cost is compute, not people.</strong> More fixtures cost machine time, which is cheap next to unverified output.
+The exhaustive walks are the one cost that grows with the application; more cores shorten the night without
+changing the total.</li>
+<li><strong>Speed is safe because of the fixtures, not despite them.</strong> Two days of agent output would be a large pile of
+unverified code without them; with them it is an application whose every claim is checked on every change.</li>
+</ul>
+<h2>What it could mean, used well</h2>
+<p><strong>For colleges.</strong> A support layer that reaches every student at any hour, in their own words, for the price of a
+small server. A new college is one declaration file; local help is kept current by scouts the factory admits.
+Outcomes are measured without ever exposing a person.</p>
+<p><strong>For anyone who builds software.</strong> The people who know a domain (advisors, nurses, caseworkers, engineers) can
+state what users must be able to do and what must never happen, and get software built to that intent, with
+evidence anyone can inspect. People govern the gates and sign destructive changes; the factory does the rest.</p>
+<p><strong>What &quot;used well&quot; requires:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Checks independent of the builder</td>
+<td>The strongest evidence comes from checks the author cannot influence: held-out cases, oracles from the record, planted markers, models from other families reviewing.</td>
+</tr>
+<tr>
+<td>Intent from people who know the work</td>
+<td>Journey cards are only as good as the understanding behind them.</td>
+</tr>
+<tr>
+<td>Real oracles where they exist</td>
+<td>Synthetic services prove the app against a contract; a real vendor&#39;s feed proves the contract against the world.</td>
+</tr>
+<tr>
+<td>Compute for the walks</td>
+<td>Exhaustive evidence is the strongest the factory produces, and it is paid for in machine time.</td>
+</tr>
+<tr>
+<td>People governing the gates</td>
+<td>The factory admits features; people decide what the gates are and sign anything destructive.</td>
+</tr>
+</tbody></table>
+<h2>Where it stands</h2>
+<p>Built and deployed: all four phases of features, the factory and its evidence, the block library and the
+documentation. Open, each with an owner and a date:</p>
+<ul>
+<li><strong>Phase certificates</strong> wait for the nightly rotation to give every student a full walk that holds for the
+current code.</li>
+<li><strong>Spanish</strong> covers starting by text, finding help and crisis replies; the remaining screens are scheduled.</li>
+<li><strong>Six blocks</strong> score under the 80% mutation target on their own tests; their floors only rise.</li>
+<li><strong>Model review from several families</strong> is designed and switched off until providers are configured.</li>
+<li><strong>Persistence and credits</strong> need a college&#39;s records for students who opt in; they are never estimated.</li>
+</ul>
+<h2>Take part</h2>
+<ul>
+<li><a href="https://zthr.ai/studentadvocate/">Try the app</a> as any of twelve sample students.</li>
+<li><a href="factory/index.html">Read the evidence</a>: every gate, walk, test and trace from the latest build.</li>
+<li><a href="https://github.com/russlittle/ZTHR/tree/reference-implementation">Read the source</a> and the
+<a href="docs/index.html">documentation</a>.</li>
+<li><a href="https://github.com/russlittle/ZTHR/discussions">Join the discussion</a>: questions, objections and experience
+reports.</li>
+<li><strong>Pilot it or sponsor compute.</strong> A college pilot would measure what matters most, whether students stay; donated
+compute would let every student be walked every night.</li>
+</ul>
+<p>Not affiliated with any educational institution. All data from public sources.</p>
+</article></main></body></html>

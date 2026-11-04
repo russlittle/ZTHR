@@ -138,6 +138,7 @@ export function productPage(l: ProductLinks): string {
 
 <section class="pp-sec" aria-labelledby="built"><h2 id="built">Built by the ZTHR factory</h2><p class="sub">No person wrote this code. Agents built it inside fixtures that decide what is admitted: gates proven able to fail, intent locked in plain words, every button walked for every student. All of it is public.</p>
 <div class="pp-built">
+  <a href="https://zthr.ai/reference/case"><b>The case</b><span>What an AI factory can build, and what it is worth: the business and technical write-up</span></a>
   <a href="${l.factory}"><b>The factory console</b><span>Phases, guardrails, red team, walks, every test, mutation, cost</span></a>
   <a href="${l.docs}"><b>The documentation</b><span>Architecture, flows, data model, API, glossary, every diagram</span></a>
   <a href="${l.factoryPage('features')}"><b>Every feature</b><span>What it does, by phase, with the journey that proves it</span></a>
