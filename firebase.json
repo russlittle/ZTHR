@@ -34,43 +34,35 @@
     ],
     "rewrites": [
       {
-        "source": "/studentadvocate",
-        "run": {
-          "serviceId": "advocate",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/studentadvocate/**",
-        "run": {
-          "serviceId": "advocate",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/twins",
-        "run": {
-          "serviceId": "advocate",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/twins/**",
-        "run": {
-          "serviceId": "advocate",
-          "region": "us-central1"
-        }
-      },
-      {
         "source": "**",
         "destination": "/index.html"
       }
     ],
     "redirects": [
       {
-        "regex": "^/advocate/(.+)$",
-        "destination": "/studentadvocate/:1",
+        "regex": "^/advocate/(?P<rest>.+)$",
+        "destination": "/studentadvocate/:rest",
         "type": 301
+      },
+      {
+        "source": "/studentadvocate",
+        "destination": "https://advocate-fsy7whk33q-uc.a.run.app/studentadvocate/",
+        "type": 302
+      },
+      {
+        "regex": "^/studentadvocate/(?P<rest>.*)$",
+        "destination": "https://advocate-fsy7whk33q-uc.a.run.app/studentadvocate/:rest",
+        "type": 302
+      },
+      {
+        "source": "/twins",
+        "destination": "https://advocate-fsy7whk33q-uc.a.run.app/twins",
+        "type": 302
+      },
+      {
+        "regex": "^/twins/(?P<rest>.*)$",
+        "destination": "https://advocate-fsy7whk33q-uc.a.run.app/twins/:rest",
+        "type": 302
       }
     ]
   }
