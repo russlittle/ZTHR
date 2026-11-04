@@ -54,9 +54,10 @@ describe('zero-bypass admission (Pattern 7) and done means serving (Pattern 23)'
   });
   it('after deploying, the pipeline checks that the public URL serves the commit that passed', () => {
     expect(ids.indexOf('verify-serving')).toBe(ids.indexOf('deploy') + 1);
-    expect(pipeline.steps.find((s) => s.id === 'verify-serving')!.args!.join(' ')).toMatch(/healthz[\s\S]*COMMIT[\s\S]*exit 1/);
+    expect(pipeline.steps.find((s) => s.id === 'verify-serving')!.args!.join(' ')).toMatch(/studentadvocate\/version[\s\S]*COMMIT[\s\S]*exit 1/);
     expect(pipeline.steps.find((s) => s.id === 'deploy')!.args!.join(' ')).toMatch(/BUILD_COMMIT=\$\$COMMIT/);
     expect(readFileSync(`${ROOT}apps/advocate/src/server/main.ts`, 'utf8')).toMatch(/commit: process\.env\.BUILD_COMMIT/);
+    expect(readFileSync(`${ROOT}apps/advocate/src/server/app.ts`, 'utf8')).toMatch(/app\.get\('\/version'[^\n]*commit: process\.env\.BUILD_COMMIT/);
   });
 });
 

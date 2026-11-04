@@ -211,6 +211,7 @@ steps:
 
   - id: verify-serving
     # Done means serving (Pattern 23): what answers on the public URL is the commit that passed, or the build fails.
+    # Cloud Run reserves paths ending in "z" (such as /healthz), so the app reports its commit at /studentadvocate/version.
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: bash
     env: ['BRANCH=$BRANCH_NAME', 'PROJECT=$PROJECT_ID', 'COMMIT=$COMMIT_SHA', 'DEPLOY=$_DEPLOY_BRANCH']
@@ -220,7 +221,7 @@ steps:
         if [ "$$BRANCH" != "$$DEPLOY" ]; then echo "Not deploying $$BRANCH."; exit 0; fi
         url=$$(gcloud run services describe advocate --project "$$PROJECT" --region us-central1 --format 'value(status.url)')
         for i in 1 2 3 4 5 6; do
-          got=$$(curl -fsS "$$url/healthz" | sed -n 's/.*"commit":"\([0-9a-f]*\)".*/\1/p')
+          got=$$(curl -fsS "$$url/studentadvocate/version" | sed -n 's/.*"commit":"\([0-9a-f]*\)".*/\1/p')
           [ "$$got" = "$$COMMIT" ] && { echo "serving $$got"; exit 0; }
           sleep 10
         done

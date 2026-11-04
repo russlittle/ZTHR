@@ -541,6 +541,9 @@ ${ui.section('Your data', `<div class="panel" style="padding:14px 18px"><p>Every
   app.get('/manifest.webmanifest', (c) => c.json({ name: 'Student Advocate', short_name: 'Advocate', start_url: `${base}/`, display: 'standalone', background_color: ui.TOKENS.light.paper, theme_color: ui.TOKENS.light.action, icons: [{ src: `${base}/icon.svg`, sizes: 'any', type: 'image/svg+xml' }] }));
   app.get('/icon.svg', (c) => c.body(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="${ui.TOKENS.light.action}"/><circle cx="20" cy="44" r="5" fill="#fff"/><circle cx="44" cy="20" r="5" fill="${ui.TOKENS.light.mark}"/><path d="M25 44h12a9 9 0 0 0 0-18H27a9 9 0 0 1 0-18h12" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg>`, 200, { 'content-type': 'image/svg+xml' }));
   app.get('/healthz', (c) => c.json({ ok: true }));
+  // Done means serving (Pattern 23): which commit answers here. Cloud Run reserves paths ending in "z", so the
+  // pipeline reads this one rather than /healthz.
+  app.get('/version', (c) => c.json({ ok: true, commit: process.env.BUILD_COMMIT ?? 'local' }));
 
   void PERSONA_NAMES;
   return app;
