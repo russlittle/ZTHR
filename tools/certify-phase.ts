@@ -43,7 +43,7 @@ shared.push({ check: 'gate proofs', status: proofs.length && !invalid.length ? '
 for (const [name, w] of [['button walk', explore], ['page walk', crawl]] as const) {
   if (!w) shared.push({ check: name, status: 'not measured', detail: 'not run in this build' });
   else if (w.commit !== commit) shared.push({ check: name, status: 'not measured', detail: `report is from ${w.commit ?? 'an unrecorded commit'}, not ${commit}` });
-  else if (w.only && w.only.length < 12) shared.push({ check: name, status: 'not measured', detail: `walked ${w.only.length} of 12 students` });
+  else if (w.only && w.only.length < 12) shared.push({ check: name, status: 'not measured', detail: `full walks that hold for this commit cover ${w.only.length} of 12 students; the rotation walks the rest` });
   else shared.push({ check: name, status: w.violations.length || !w.exhausted ? 'fail' : 'pass', detail: `${w.states.toLocaleString('en-US')} states, ${w.violations.length} violations, ${w.exhausted ? 'every seed exhausted' : 'cut short'}${w.carried ? `; carried from ${w.carried.from.slice(0, 7)}, no executed line changed` : ''}` });
 }
 shared.push(contract ? { check: 'campus contracts', status: contract.results.every((r) => r.ok) ? 'pass' : 'fail', detail: `${contract.results.filter((r) => r.ok).length} of ${contract.results.length} probes` } : { check: 'campus contracts', status: 'not measured', detail: 'not run' });

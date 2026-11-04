@@ -70,4 +70,5 @@ for (const v of r.violations) {
 }
 console.log(`\n${r.routes.length} routes: ${r.routes.join(' ')}\n${r.states} page-states, ${r.transitions} links and forms followed, ${r.violations.length} violations (${kinds.size} kinds), ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 for (const [k, e] of [...kinds].sort((a, b) => b[1].n - a[1].n).slice(0, 30)) console.log(`${String(e.n).padStart(5)}  ${k}\n       ${e.seed}: ${e.path.slice(-3).join(' > ').slice(0, 300)}`);
-process.exit(r.violations.length || !r.exhausted ? 1 : 0);
+// A bounded walk (--max) is a spot check: cut short by design, so only a violation fails it.
+process.exit(r.violations.length || (!r.exhausted && !max) ? 1 : 0);

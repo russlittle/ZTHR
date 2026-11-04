@@ -29,11 +29,31 @@ flowchart TD
 | Button walk (`tools/explore.ts`) | The Advocate directly | Every button on the last message, app navigation, help tiles, 16 things students type (including "1", "2", "3") | No dead end; no crash; tone gate passes at the student's depth and grade; no doubled periods or template holes; no citizenship question; no sealed fact; no other student's name; idempotent buttons are idempotent |
 | Feature walk (`tools/crawl.ts`) | The web app over HTTP | Every link and every form on the page | Status 200; one title and one h1; a main landmark; every control labeled; every link and button named; no "undefined", "NaN" or template holes; no other student's data; no dead-end page |
 
-Each runs for all twelve students, at their own depth and again at brief and walk-me-through, every night. Only
-that full walk can certify a phase. On a push, the walk carries forward when nothing it executed has changed
-(below); otherwise a spot check walks four students whose settings differ most, bounded at 150 states per seed,
-and fails the build on any violation. Each student at each depth is an independent walk, so the full set runs one
-per CPU: more cores shorten the night, while the total compute stays the same.
+Each runs for every student, at their own depth and again at brief and walk-me-through, to a fixpoint. Full walks
+run on a nightly rotation of four students: first those whose saved walk no longer holds, then those walked longest
+ago. Each student's walk is saved with the lines it executed, and stays valid for later commits until a change
+touches one of those lines or the data the app reads. A phase certifies only when all twelve students have a full
+walk that still holds for the commit. Every push is checked too: if every saved walk still holds, they carry
+forward; otherwise a spot check walks four students whose settings differ most, bounded at 150 states per seed,
+and fails the build on any violation. Each student at each depth is an independent walk, so more compute means
+more students a night.
+
+```mermaid
+flowchart LR
+  subgraph night[Each night]
+    plan[Which saved walks still hold?] --> pick[Tonight: stale first, then oldest, four students]
+    pick --> walk[Walk to a fixpoint under coverage] --> save[(Saved per student, with executed lines)]
+  end
+  subgraph push[Each push]
+    check{Every saved walk still holds?} -- yes --> carry[Carry them forward]
+    check -- no --> spot[Spot check: four students, 150 states per seed]
+  end
+  save --> check
+  save --> cert{All twelve hold for this commit?}
+  carry --> cert
+  cert -- yes --> ok[Phase can certify]
+  cert -- no --> nm[Not measured: names the students still to walk]
+```
 
 ## Why it ends
 
@@ -57,7 +77,7 @@ against the walked commit, and a walk is needed only if a hunk touches or border
 the app reads while it runs (playbooks, colleges, scouts, dependency versions). A change inside a function the walk
 never ran, such as an API handler the page walk never calls, cannot alter what the walk saw, so the earlier report
 is carried forward for the new commit and says so. The nightly run walks every student regardless and saves the
-coverage that pushes are compared against.
+coverage that pushes are compared against, one student at a time.
 
 ```mermaid
 flowchart TB
@@ -95,4 +115,5 @@ Every finding is a fixture now; it cannot come back.
 <!-- verified-by:start -->
 - [`apps/advocate/test/walks.test.ts`](../../apps/advocate/test/walks.test.ts) (2 test definitions)
 - [`tools/test/walk-coverage.test.ts`](../../tools/test/walk-coverage.test.ts) (9 test definitions)
+- [`tools/test/walk-rotation.test.ts`](../../tools/test/walk-rotation.test.ts) (4 test definitions)
 <!-- verified-by:end -->

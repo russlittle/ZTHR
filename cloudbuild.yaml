@@ -83,28 +83,28 @@ steps:
     args: ['run', 'contract']
 
   - id: fetch-walks
-    # The last full walk and the lines it executed, so a push can tell whether its change could alter the walk.
+    # Every student's last full walk and the lines it executed, so this build can tell which walks still hold.
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: bash
     env: ['BUCKET=$_EVIDENCE_BUCKET']
-    args: ['-c', 'mkdir -p evidence-out/last; if [ -n "$$BUCKET" ]; then gcloud storage cp "$$BUCKET/latest/walks/*" evidence-out/last/ 2>/dev/null || echo "No full walk saved yet."; fi']
+    args: ['-c', 'mkdir -p evidence-out/last; if [ -n "$$BUCKET" ]; then for w in explore crawl; do gcloud storage cp -r "$$BUCKET/latest/walks/$$w" evidence-out/last/ 2>/dev/null || echo "No saved $$w walks yet."; done; fi']
 
   - id: explore
-    # The button walk, under coverage, one process per CPU. Nightly: every student, every depth, app and text, to a
-    # fixpoint; only this certifies a phase. A push: if nothing the last full walk executed (nor data the app reads)
-    # changed, that walk carries forward; otherwise a spot check of four students whose settings differ most
-    # (standard, brief, walk-me-through at grade 6, out of area), bounded per seed, which still fails on any violation.
+    # The button walk, one process per CPU. Nightly: a rotation of four students walked to a fixpoint under coverage
+    # (those whose saved walks no longer hold, then the oldest); a phase certifies once all twelve have a full walk that
+    # still holds for this commit. A push: carry the saved walks forward if all still hold, otherwise spot-check four
+    # students whose settings differ most, bounded at 150 states per seed, failing on any violation.
     name: node:22-bookworm
     entrypoint: bash
     env: ['FULL=$_MUTATION']
-    args: ['-c', 'if [ "$$FULL" = "true" ]; then tools/walk-ci.sh explore true npx tsx tools/explore.ts; else tools/walk-ci.sh explore false npx tsx tools/explore.ts Maria,Ana,Sam,Keisha --max 150; fi']
+    args: ['-c', 'tools/walk-ci.sh explore "$$FULL"']
 
   - id: crawl
-    # The feature walk: every page, link and form, then every combination of settings. Same split as above.
+    # The feature walk: every page, link and form, on the same rotation; then every combination of settings.
     name: node:22-bookworm
     entrypoint: bash
     env: ['FULL=$_MUTATION']
-    args: ['-c', 'if [ "$$FULL" = "true" ]; then tools/walk-ci.sh crawl true npx tsx tools/crawl.ts && tools/walk-ci.sh crawl-settings true npx tsx tools/crawl.ts --settings; else tools/walk-ci.sh crawl false npx tsx tools/crawl.ts Maria,Ana,Sam,Keisha --max 150 && tools/walk-ci.sh crawl-settings false npx tsx tools/crawl.ts Maria --settings; fi']
+    args: ['-c', 'tools/walk-ci.sh crawl "$$FULL" && if [ "$$FULL" = "true" ]; then npx tsx tools/crawl.ts --settings; else npx tsx tools/crawl.ts Maria --settings; fi']
 
   - id: walk
     # Walk like a user in a real browser: intents with video, then every screen at two widths in two themes.
@@ -174,7 +174,7 @@ steps:
         gcloud storage cp evidence-out/ci-cost.json "$$BUCKET/costs/$${BUILD:-manual-$$(date +%s)}.json"
         gcloud storage cp -r evidence-out control/proofs.json "$$BUCKET/runs/$${COMMIT:-manual}/"
         if [ -d reports ]; then gcloud storage cp -r reports "$$BUCKET/runs/$${COMMIT:-manual}/"; fi
-        if [ "$_MUTATION" = "true" ] && [ "$$BRANCH" = "$$DEPLOY" ]; then for w in explore crawl crawl-settings; do gcloud storage cp "evidence-out/$$w.json" "evidence-out/$$w-coverage.json" "$$BUCKET/latest/walks/" 2>/dev/null || true; done; fi
+        if [ "$_MUTATION" = "true" ] && [ "$$BRANCH" = "$$DEPLOY" ] && [ -d evidence-out/walks ]; then gcloud storage cp -r evidence-out/walks/* "$$BUCKET/latest/walks/"; fi
         if [ -f reports/mutation.json ] && [ "$_MUTATION" = "true" ]; then gcloud storage cp reports/mutation.json "$$BUCKET/latest/mutation.json"; gcloud storage cp -r reports/blocks "$$BUCKET/latest/"; fi
 
   - id: site

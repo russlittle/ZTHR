@@ -74,7 +74,7 @@ const campus = await campusSeedDocs();
 if (childOut) {
   const r = exploreAdvocate({ only, maxNodes: max, withTyping: typing, campus });
   writeFileSync(childOut, JSON.stringify(r));
-  process.exit(r.violations.length || !r.exhausted ? 1 : 0);
+  process.exit(r.violations.length || (!r.exhausted && !max) ? 1 : 0);
 }
 
 // A long walk can run in parts on a small machine (--part a, --part b), then --merge joins the parts of one commit.
@@ -104,4 +104,5 @@ for (const v of r.violations) {
 }
 console.log(`\n${r.states} states, ${r.transitions} transitions, ${r.actionsSeen.length} distinct actions, ${Object.keys(r.verbsSeen).length} verbs, ${r.violations.length} violations (${byProblem.size} kinds), ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 for (const [k, e] of [...byProblem].sort((a, b) => b[1].n - a[1].n).slice(0, 40)) console.log(`${String(e.n).padStart(5)}  ${k}\n       ${e.seed}: ${e.path.join(' > ')}`);
-process.exit(r.violations.length || !r.exhausted ? 1 : 0);
+// A bounded walk (--max) is a spot check: cut short by design, so only a violation fails it.
+process.exit(r.violations.length || (!r.exhausted && !max) ? 1 : 0);
