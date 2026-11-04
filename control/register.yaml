@@ -25,3 +25,9 @@ findings:
     reason: These blocks were first tested through the app; their own suites are being grown block by block, guided by surviving mutants.
     owner: claude-agent
     expires: 2027-01-15
+  - id: zod-major-upgrade
+    gate: dependencies
+    finding: The schema library (zod 3) has a high-severity advisory, memory exhaustion while validating oversized constrained collections; the fix is zod 4, a breaking change.
+    reason: Every untrusted input is capped at 256 KB before validation, which bounds the attack; the upgrade is scheduled with its own walk.
+    owner: claude-agent
+    expires: 2026-12-15

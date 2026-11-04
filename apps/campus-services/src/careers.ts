@@ -124,6 +124,13 @@ export function careersService() {
       if (extra.length) throw new BadRequest(`only firstName and note are accepted; got ${extra.join(', ')}`);
       if (typeof b.firstName !== 'string' || !/^[\p{L}' -]{1,40}$/u.test(b.firstName) || typeof b.note !== 'string' || b.note.length < 10 || b.note.length > 600) throw new BadRequest('need firstName (a first name only) and a note of 10 to 600 characters');
       if (m.openSlots <= 0) return c.json({ error: 'this mentor has no open time' }, 409);
+      // A public twin holds what anyone posts, so it is bounded: sane keys, and the oldest requests go first.
+      if (key && key.length > 100) throw new BadRequest('an idempotency key is at most 100 characters');
+      if (requests.size >= 5000) {
+        const oldest = requests.keys().next().value!;
+        requests.delete(oldest);
+        for (const [k, v] of byKey) if (v === oldest) byKey.delete(k);
+      }
       const id = `req-${createHash('sha256').update(`${m.id}|${b.firstName}|${requests.size}|${key ?? ''}`).digest('hex').slice(0, 8)}`;
       const r: MentorRequest = { id, mentor: m.id, firstName: b.firstName, note: b.note, createdAt: clock(c).iso };
       requests.set(id, r);

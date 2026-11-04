@@ -56,7 +56,9 @@ const VIEWPORTS = { phone: { width: 390, height: 844 }, desktop: { width: 1280, 
 
 // ---- part one: intents, by accessible name, with video
 for (const scheme of ['light', 'dark'] as const) {
-  const ctx = await browser.newContext({ viewport: VIEWPORTS.phone, colorScheme: scheme, recordVideo: { dir: `${out}/video`, size: VIEWPORTS.phone } });
+  // The accessibility checker is injected as an inline script, which the app's content security policy rightly
+  // refuses; the test browser may bypass the policy for the checker. The app itself still runs under it.
+  const ctx = await browser.newContext({ viewport: VIEWPORTS.phone, colorScheme: scheme, bypassCSP: true, recordVideo: { dir: `${out}/video`, size: VIEWPORTS.phone } });
   const page = await ctx.newPage();
   const t0 = Date.now();
   const at = (step: string) => inspect(page, 'rent-short', step, scheme, 'phone', t0);
@@ -94,7 +96,7 @@ const SCREENS = ['', '/money', '/help', '/you', '/week', '/dates', '/shifts', '/
 for (const sid of ['maria', 'sam', 'ana']) {
   for (const [vp, size] of Object.entries(VIEWPORTS)) {
     for (const scheme of ['light', 'dark'] as const) {
-      const page = await browser.newPage({ viewport: size, colorScheme: scheme });
+      const page = await browser.newPage({ viewport: size, colorScheme: scheme, bypassCSP: true });
       for (const s of SCREENS) {
         const t0 = Date.now();
         await page.goto(`${base}/s/${sid}${s}`);
@@ -114,7 +116,7 @@ const sitePages = await (async () => {
   return ['docs', 'factory'].flatMap((p) => files(`site-out/${p}`).map((f) => f.replace(/^site-out/, '')));
 })();
 if (sitePages.length) {
-  const page = await browser.newPage({ viewport: VIEWPORTS.desktop });
+  const page = await browser.newPage({ viewport: VIEWPORTS.desktop, bypassCSP: true });
   for (const path of sitePages) {
     const t0 = Date.now();
     await page.goto(`${origin}${path}`, { waitUntil: 'networkidle' });

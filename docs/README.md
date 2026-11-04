@@ -21,6 +21,7 @@ flowchart LR
 - [Data sources](data-sources.md)
 - [Features](features.md)
 - [Glossary](glossary.md)
+- [Security](security.md)
 
 ## Business flows
 

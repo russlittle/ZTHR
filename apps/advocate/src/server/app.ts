@@ -161,7 +161,7 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
   // ------------------------------------------------------------ start
 
   // The app's front door: pick a student (the product page lives at /advocate, the reference at /reference).
-  app.get('/', (c) => c.html(startPage({ app: base, admin: `${base}/admin/`, fontBase: base, product: opts.links?.product ?? '/advocate', reference: opts.links?.reference ?? '/reference', live: !!opts.demo?.length })));
+  app.get('/', (c) => c.html(startPage({ app: base, admin: `${base}/admin/`, fontBase: base, product: opts.links?.product ?? 'https://zthr.ai/advocate', reference: opts.links?.reference ?? 'https://zthr.ai/reference', live: !!opts.demo?.length })));
 
   // ------------------------------------------------------------ text, in the browser and from the carrier
 
@@ -186,8 +186,12 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
   });
   app.post('/text', async (c) => {
     const f = await c.req.parseBody();
-    const phone = String(f.phone ?? getCookie(c, 'demo_phone') ?? '+19375550123');
-    const body = String(f.body ?? '');
+    // The demo thread is this browser's own number; a posted number is used only if it is a plausible US number.
+    const posted = String(f.phone ?? '');
+    const phone = /^\+1\d{10}$/.test(posted) ? posted : (getCookie(c, 'demo_phone') ?? '+19375550123');
+    const body = String(f.body ?? '').slice(0, 1600);
+    // Bounded: a demo copy holds at most 200 conversations, so no one can grow it without limit.
+    if (!threads.has(phone) && !a.findByPhone(phone) && threads.size >= 200) return c.html(textPage(phone, [{ who: 'advocate', text: 'This demonstration copy is full. Open it again in a new browser session to start over.' }]), 429);
     const replies = a.textIn(phone, body);
     const t = threads.get(phone) ?? [];
     t.push({ who: 'you', text: body }, ...replies.map((r) => ({ who: 'advocate' as const, text: r })));

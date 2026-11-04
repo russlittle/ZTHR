@@ -1,6 +1,8 @@
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
+import { bodyLimit } from 'hono/body-limit';
+import { Window, clientOf, rateLimit, securityHeaders } from './guard.js';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { existsSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
@@ -99,6 +101,14 @@ function appFor(id: string): Hono {
 
 const root = new Hono({ strict: false });
 
+// Guards for a public server (guard.ts): security headers, a body size limit, and a per-client request rate.
+root.use('*', securityHeaders());
+root.use('*', bodyLimit({ maxSize: 256 * 1024, onError: (c) => c.text('That request is too large.', 413) }));
+root.use('*', rateLimit(new Window(Number(process.env.ADVOCATE_RATE_PER_MIN ?? 600), 60_000)));
+// Starting a demo sandbox builds twelve students; a client may start only a few an hour, so no one can push
+// other visitors' sandboxes out by starting new ones.
+const sandboxStarts = new Window(Number(process.env.ADVOCATE_SANDBOX_STARTS_PER_HOUR ?? 40), 60 * 60 * 1000);
+
 // The synthetic campus services, public, so anyone can call them like real endpoints: /twins/<service>/openapi.json
 if (demoMode) {
   for (const id of SERVICE_IDS) {
@@ -125,6 +135,8 @@ const mount = base || '/';
 root.all(`${mount === '/' ? '' : mount}/*`, async (c) => {
   if (shared) return shared.fetch(rewrite(c.req.raw));
   let id = getCookie(c, 'adv_demo');
+  const fresh = !id || !/^[a-f0-9]{32}$/.test(id) || !sandboxes.has(id);
+  if (fresh && !sandboxStarts.take(clientOf(c))) return c.text('Too many new demonstration sessions from this address. Please try again in an hour.', 429);
   if (!id || !/^[a-f0-9]{32}$/.test(id)) {
     id = randomBytes(16).toString('hex');
     setCookie(c, 'adv_demo', id, { path: mount, httpOnly: true, sameSite: 'Lax', secure: production, maxAge: 7200 });

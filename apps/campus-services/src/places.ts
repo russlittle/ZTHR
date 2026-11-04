@@ -120,6 +120,13 @@ export function placesService() {
       if (key && byKey.has(key)) return c.json(reservations.get(byKey.get(key)!)!, 200);
       const b = (await c.req.json().catch(() => ({}))) as { date?: string; start?: string; minutes?: number; name?: string };
       if (!b.date || !/^\d{4}-\d{2}-\d{2}$/.test(b.date) || !b.start || !/^\d{2}:\d{2}$/.test(b.start) || !b.minutes || b.minutes % 30 || b.minutes > 180 || !b.name) throw new BadRequest('need date, start (HH:MM), minutes (30 to 180, in 30s) and name');
+      // A public twin holds what anyone posts, so it is bounded: short names, sane keys, and the oldest bookings go first.
+      if (b.name.length > 60 || (key && key.length > 100)) throw new BadRequest('name is at most 60 characters and an idempotency key at most 100');
+      if (reservations.size >= 5000) {
+        const oldest = reservations.keys().next().value!;
+        reservations.delete(oldest);
+        for (const [k, v] of byKey) if (v === oldest) byKey.delete(k);
+      }
       const free = slots(s, b.date);
       for (let m = minutes(b.start); m < minutes(b.start) + b.minutes; m += 30) if (!free.includes(hhmm(m))) return c.json({ error: 'that time is taken or the room is closed' }, 409);
       const id = `res-${createHash('sha256').update(`${s.id}|${b.date}|${b.start}|${b.name}|${reservations.size}`).digest('hex').slice(0, 8)}`;

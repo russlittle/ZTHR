@@ -132,4 +132,5 @@ flowchart LR
 
 <!-- verified-by:start -->
 - [`apps/advocate/test/api.test.ts`](../apps/advocate/test/api.test.ts) (33 test definitions)
+- [`apps/advocate/test/version.test.ts`](../apps/advocate/test/version.test.ts) (2 test definitions)
 <!-- verified-by:end -->

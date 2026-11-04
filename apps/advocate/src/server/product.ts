@@ -96,7 +96,7 @@ export function productPage(l: ProductLinks): string {
 .pp-foot{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
 @media (max-width:860px){.pp-hero{grid-template-columns:1fr;padding-top:16px}.pp-top nav a.opt{display:none}}`;
   const body = `<div class="pp">
-<header class="pp-top"><a class="brand" href="${l.app}/"><span class="brand-mark">${ui.icon('route', 18)}</span>Student Advocate</a><nav aria-label="Product"><a class="opt" href="#what">What it does</a><a class="opt" href="#why">Why it works</a><a href="#try">Try it</a><a href="${l.docs}">Docs</a><a href="${l.factory}">Factory</a></nav></header>
+<header class="pp-top"><a class="brand" href="${l.app}/"><span class="brand-mark">${ui.icon('route', 18)}</span>Student Advocate</a><nav aria-label="Product"><a class="opt" href="#what">What it does</a><a class="opt" href="#why">Why it works</a><a href="#try">Try it</a><a href="${l.docs}">Docs</a><a href="${l.factory}">Factory</a><a class="opt" href="https://github.com/russlittle/ZTHR/tree/reference-implementation">Source</a></nav></header>
 <main id="main">
 <section class="pp-hero">
   <div>
@@ -144,6 +144,9 @@ export function productPage(l: ProductLinks): string {
   <a href="${l.factoryPage('blocks')}"><b>The block library</b><span>Fifteen reusable parts, each with its own tests and mutation score</span></a>
   <a href="${l.factoryPage('sensitive')}"><b>Sensitive data trace</b><span>Where each personal fact may go, and where it actually went</span></a>
   <a href="${l.factoryPage('twins')}"><b>Campus twins</b><span>Dining, transit, rooms, jobs and class sites as synthetic APIs</span></a>
+  <a href="https://github.com/russlittle/ZTHR/tree/reference-implementation"><b>The full source</b><span>The app, blocks, gates, pipeline and every journey card</span></a>
+  <a href="https://github.com/russlittle/ZTHR/discussions"><b>Discuss it</b><span>Questions, experience reports and objections, in the open</span></a>
+  <a href="https://zthr.ai"><b>ZTHR</b><span>The pattern language this was built with</span></a>
 </div></section>
 <footer class="pp-foot">Student Advocate is the reference application for ZTHR, a pattern language for software built by AI. ${ui.esc(NOT_AFFILIATED.body)} Code under the Apache License 2.0.</footer>
 </main></div>`;
