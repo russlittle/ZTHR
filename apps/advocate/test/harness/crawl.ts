@@ -128,7 +128,10 @@ export async function crawlAdvocate(opts: { only?: string[]; maxNodes?: number; 
       }
       return w;
     };
+    let steps = 0;
     while (queue.length && seen.size < (opts.maxNodes ?? 4000)) {
+      // In-process requests settle as microtasks and never yield; give timers and the test runner a turn.
+      if (++steps % 20 === 0) await new Promise((r) => setImmediate(r));
       const path = queue.shift()!;
       const w = await replay(path);
       const page = w.page!;

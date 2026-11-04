@@ -13,12 +13,6 @@ findings:
     reason: Phase 2 slice; the remaining screens are scheduled with a walk invariant that fails on any English sentence to a Spanish student.
     owner: claude-agent
     expires: 2027-01-15
-  - id: vitest-rpc-timeout
-    gate: tests
-    finding: Vitest reports one "Timeout calling onTaskUpdate" error on full runs while every test passes; the long exhaustive tests block the worker's event loop.
-    reason: Not a test failure; split the long walks into their own worker pool.
-    owner: claude-agent
-    expires: 2026-12-15
   - id: persistence-not-measured
     gate: outcomes
     finding: Persistence and credits are not measured.
