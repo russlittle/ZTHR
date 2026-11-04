@@ -28,66 +28,76 @@ pie showData title 1092 tests
 
 ## Button walk
 
-128,244 states and 5,841,396 transitions across 36 seeds; every seed ran to its fixpoint; 0 violations.
+1,977 states and 27,844 transitions across 12 seeds; some seeds were cut short; 0 violations.
 
 ```mermaid
 xychart-beta
   title "Button walk: transitions per student"
-  x-axis ["Alex", "Ana", "Darnell", "Destiny", "Jayden", "Keisha", "Linda", "Luis", "Maria", "Priya", "Sam", "Tyler"]
+  x-axis ["Ana", "Keisha", "Maria", "Sam"]
   y-axis "Transitions"
-  bar [147068, 136268, 150380, 197876, 197876, 109196, 150380, 150380, 101696, 197684, 206228, 202100]
+  bar [1856, 1626, 1807, 1861]
 ```
 
 | Verb | Times tried |
 | --- | --- |
-| `say` | 2,564,160 |
-| `need` | 1,153,872 |
-| `situation` | 641,040 |
-| `show-draft` | 132,528 |
-| `find-help` | 129,792 |
-| `today` | 128,208 |
-| `screen` | 128,208 |
-| `week` | 128,208 |
-| `settings` | 128,208 |
-| `review-deadlines` | 128,208 |
-| `add-shifts` | 128,208 |
-| `upload-syllabus` | 128,208 |
-| `delete-account` | 128,208 |
-| `start-resource` | 55,296 |
-| `call` | 30,024 |
-| `share` | 28,296 |
-| `playbook` | 14,400 |
-| `draft` | 8,640 |
-| `dial` | 7,680 |
-| `plan` | 4,644 |
-| `hold-block` | 4,464 |
-| `start-program` | 3,312 |
-| `ask` | 2,880 |
-| `remind` | 2,880 |
-| `contact` | 2,880 |
-| `plan-next` | 2,880 |
-| `find-tutor` | 2,880 |
-| `meals` | 2,880 |
-| `fair-chance` | 2,880 |
-| `career` | 2,880 |
-| `add-date` | 2,880 |
-| `calendar-steps` | 2,448 |
-| `edit-steps` | 2,448 |
-| `draft-instructor-note` | 2,448 |
-| `why-qualify` | 1,656 |
-| `approve` | 1,440 |
-| `screen-more` | 1,224 |
+| `say` | 11,753 |
+| `need` | 4,599 |
+| `situation` | 2,555 |
+| `show-draft` | 547 |
+| `find-help` | 519 |
+| `today` | 511 |
+| `screen` | 511 |
+| `week` | 511 |
+| `settings` | 511 |
+| `review-deadlines` | 511 |
+| `add-shifts` | 511 |
+| `upload-syllabus` | 511 |
+| `campus-food` | 511 |
+| `free-food` | 511 |
+| `study-spots` | 511 |
+| `leave-by` | 511 |
+| `jobs-fit` | 511 |
+| `mentors` | 511 |
+| `delete-account` | 511 |
+| `start-resource` | 246 |
+| `call` | 88 |
+| `dial` | 56 |
+| `set-stop` | 39 |
+| `add-date` | 32 |
+| `draft` | 32 |
+| `share` | 32 |
+| `mentor-intro` | 24 |
+| `playbook` | 24 |
+| `book-room` | 14 |
+| `ask` | 12 |
+| `remind` | 12 |
+| `contact` | 12 |
+| `plan-next` | 12 |
+| `find-tutor` | 12 |
+| `screen-more` | 11 |
+| `plan` | 10 |
+| `start-program` | 7 |
+| `calendar-steps` | 6 |
+| `edit-steps` | 6 |
+| `why-qualify` | 5 |
+| `meals` | 4 |
+| `fair-chance` | 4 |
+| `jobs-fair-chance` | 4 |
+| `career` | 4 |
+| `approve` | 4 |
+| `next-bus` | 3 |
+| `draft-instructor-note` | 2 |
 
 ## Feature walk
 
-34,146 page-states and 283,704 links and forms across 36 seeds; 0 violations. Routes reached: `/advocate/s/:id`, `/advocate/s/:id/action`, `/advocate/s/:id/ask`, `/advocate/s/:id/dates`, `/advocate/s/:id/drafts`, `/advocate/s/:id/help`, `/advocate/s/:id/money`, `/advocate/s/:id/resource/:rid`, `/advocate/s/:id/say`, `/advocate/s/:id/share`, `/advocate/s/:id/shifts`, `/advocate/s/:id/syllabus`, `/advocate/s/:id/week`, `/advocate/s/:id/you`.
+1,800 page-states and 16,371 links and forms across 12 seeds; 0 violations. Routes reached: `/advocate/s/:id`, `/advocate/s/:id/action`, `/advocate/s/:id/ask`, `/advocate/s/:id/dates`, `/advocate/s/:id/drafts`, `/advocate/s/:id/help`, `/advocate/s/:id/letter`, `/advocate/s/:id/meals`, `/advocate/s/:id/money`, `/advocate/s/:id/resource/:rid`, `/advocate/s/:id/say`, `/advocate/s/:id/share`, `/advocate/s/:id/shifts`, `/advocate/s/:id/syllabus`, `/advocate/s/:id/week`, `/advocate/s/:id/you`.
 
 ```mermaid
 xychart-beta
   title "Feature walk: links and forms followed per student"
-  x-axis ["Maria", "Jayden", "Darnell", "Ana", "Tyler", "Priya", "Destiny", "Sam", "Linda", "Luis", "Alex", "Keisha"]
+  x-axis ["Ana", "Keisha", "Maria", "Sam"]
   y-axis "Transitions"
-  bar [5642, 11622, 5344, 5152, 11718, 11334, 11622, 11334, 5344, 5296, 5152, 5008]
+  bar [1303, 1282, 1451, 1421]
 ```
 
 ## Verified by

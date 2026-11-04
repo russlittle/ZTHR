@@ -7,17 +7,18 @@ import { OUT, headCommit } from './lib.js';
 
 /**
  * Run the feature walk over the web app: one process per student, as many at once as there are CPUs.
- *   tsx tools/crawl.ts [Name,Name] [--settings] [--serial]
+ *   tsx tools/crawl.ts [Name,Name] [--settings] [--serial] [--max N]   (--max bounds page states per seed: a spot check)
  */
 type Report = Awaited<ReturnType<typeof crawlAdvocate>>;
 const args = process.argv.slice(2);
 const only = args[0] && !args[0].startsWith('--') ? args[0].split(',') : undefined;
 const settingsOnly = args.includes('--settings');
+const max = args.includes('--max') ? Number(args[args.indexOf('--max') + 1]) || undefined : undefined;
 const childOut = args.includes('--child') ? args[args.indexOf('--child') + 1] : undefined;
 const t0 = Date.now();
 
 if (childOut) {
-  const r = await crawlAdvocate({ only, settingsOnly });
+  const r = await crawlAdvocate({ only, settingsOnly, ...(max ? { maxNodes: max } : {}) });
   writeFileSync(childOut, JSON.stringify(r));
   process.exit(0);
 }
@@ -32,7 +33,7 @@ async function runParallel(names: string[]): Promise<Report> {
         const name = queue.shift()!;
         const file = `${OUT}/crawl/${name}${settingsOnly ? '-settings' : ''}.json`;
         await new Promise<void>((resolve, reject) => {
-          const p = spawn(process.execPath, [...process.execArgv, process.argv[1]!, name, '--child', file, ...(settingsOnly ? ['--settings'] : [])], { stdio: ['ignore', 'ignore', 'inherit'] });
+          const p = spawn(process.execPath, [...process.execArgv, process.argv[1]!, name, '--child', file, ...(settingsOnly ? ['--settings'] : []), ...(max ? ['--max', String(max)] : [])], { stdio: ['ignore', 'ignore', 'inherit'] });
           p.on('exit', (code) => (code === 0 ? resolve() : reject(new Error(`${name} crawl exited ${code}`))));
         });
         results.push(JSON.parse(readFileSync(file, 'utf8')) as Report);
@@ -56,7 +57,7 @@ async function runParallel(names: string[]): Promise<Report> {
 }
 
 const names = only ?? PERSONA_NAMES;
-const r = args.includes('--serial') || names.length === 1 ? await crawlAdvocate({ only: names, settingsOnly }) : await runParallel(names);
+const r = args.includes('--serial') || names.length === 1 ? await crawlAdvocate({ only: names, settingsOnly, ...(max ? { maxNodes: max } : {}) }) : await runParallel(names);
 mkdirSync(OUT, { recursive: true });
 writeFileSync(`${OUT}/crawl${settingsOnly ? '-settings' : ''}.json`, JSON.stringify({ ...r, ms: Date.now() - t0, commit: headCommit(), only: names }, null, 1));
 for (const s of r.seeds) console.log(`${s.name.padEnd(22)} page-states ${String(s.states).padStart(5)}  links+forms ${String(s.transitions).padStart(6)}  depth ${s.maxDepth}  ${s.exhausted ? 'exhausted' : 'CUT SHORT'}`);

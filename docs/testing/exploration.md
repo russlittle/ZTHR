@@ -29,7 +29,11 @@ flowchart TD
 | Button walk (`tools/explore.ts`) | The Advocate directly | Every button on the last message, app navigation, help tiles, 16 things students type (including "1", "2", "3") | No dead end; no crash; tone gate passes at the student's depth and grade; no doubled periods or template holes; no citizenship question; no sealed fact; no other student's name; idempotent buttons are idempotent |
 | Feature walk (`tools/crawl.ts`) | The web app over HTTP | Every link and every form on the page | Status 200; one title and one h1; a main landmark; every control labeled; every link and button named; no "undefined", "NaN" or template holes; no other student's data; no dead-end page |
 
-Each runs for all twelve students, at their own depth and again at brief and walk-me-through.
+Each runs for all twelve students, at their own depth and again at brief and walk-me-through, every night. Only
+that full walk can certify a phase. On a push, the walk carries forward when nothing it executed has changed
+(below); otherwise a spot check walks four students whose settings differ most, bounded at 150 states per seed,
+and fails the build on any violation. Each student at each depth is an independent walk, so the full set runs one
+per CPU: more cores shorten the night, while the total compute stays the same.
 
 ## Why it ends
 

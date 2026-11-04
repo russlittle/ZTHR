@@ -24,7 +24,8 @@ options:
   substitution_option: ALLOW_LOOSE
   logging: CLOUD_LOGGING_ONLY
 
-timeout: 7200s
+# Pushes take minutes (spot checks); the nightly run walks every student to a fixpoint and needs hours.
+timeout: 21600s
 
 steps:
   - id: start
@@ -89,20 +90,21 @@ steps:
     args: ['-c', 'mkdir -p evidence-out/last; if [ -n "$$BUCKET" ]; then gcloud storage cp "$$BUCKET/latest/walks/*" evidence-out/last/ 2>/dev/null || echo "No full walk saved yet."; fi']
 
   - id: explore
-    # The button walk: every depth, app and text, to a fixpoint, one process per CPU, under coverage. Nightly walks
-    # all twelve students. A push walks only if a line the last full walk executed (or data the app reads) changed;
-    # then it walks four whose settings differ most (standard, brief, walk-me-through at grade 6, out of area).
+    # The button walk, under coverage, one process per CPU. Nightly: every student, every depth, app and text, to a
+    # fixpoint; only this certifies a phase. A push: if nothing the last full walk executed (nor data the app reads)
+    # changed, that walk carries forward; otherwise a spot check of four students whose settings differ most
+    # (standard, brief, walk-me-through at grade 6, out of area), bounded per seed, which still fails on any violation.
     name: node:22-bookworm
     entrypoint: bash
     env: ['FULL=$_MUTATION']
-    args: ['-c', 'if [ "$$FULL" = "true" ]; then tools/walk-ci.sh explore true npx tsx tools/explore.ts; else tools/walk-ci.sh explore false npx tsx tools/explore.ts Maria,Ana,Sam,Keisha; fi']
+    args: ['-c', 'if [ "$$FULL" = "true" ]; then tools/walk-ci.sh explore true npx tsx tools/explore.ts; else tools/walk-ci.sh explore false npx tsx tools/explore.ts Maria,Ana,Sam,Keisha --max 150; fi']
 
   - id: crawl
-    # The feature walk: every page, link and form, then every combination of settings. Same selection as above.
+    # The feature walk: every page, link and form, then every combination of settings. Same split as above.
     name: node:22-bookworm
     entrypoint: bash
     env: ['FULL=$_MUTATION']
-    args: ['-c', 'if [ "$$FULL" = "true" ]; then tools/walk-ci.sh crawl true npx tsx tools/crawl.ts && tools/walk-ci.sh crawl-settings true npx tsx tools/crawl.ts --settings; else tools/walk-ci.sh crawl false npx tsx tools/crawl.ts Maria,Ana,Sam,Keisha && tools/walk-ci.sh crawl-settings false npx tsx tools/crawl.ts Maria --settings; fi']
+    args: ['-c', 'if [ "$$FULL" = "true" ]; then tools/walk-ci.sh crawl true npx tsx tools/crawl.ts && tools/walk-ci.sh crawl-settings true npx tsx tools/crawl.ts --settings; else tools/walk-ci.sh crawl false npx tsx tools/crawl.ts Maria,Ana,Sam,Keisha --max 150 && tools/walk-ci.sh crawl-settings false npx tsx tools/crawl.ts Maria --settings; fi']
 
   - id: walk
     # Walk like a user in a real browser: intents with video, then every screen at two widths in two themes.

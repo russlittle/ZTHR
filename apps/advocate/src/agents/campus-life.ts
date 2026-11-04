@@ -181,11 +181,16 @@ const when = (p: PostingT) => (p.schedule.length ? p.schedule.map((s) => `${s.da
 export function jobsMessage(a: Advocate, sid: string, opts: { fairChance?: boolean } = {}): OutboundMessage {
   const feed = feedFor(a, sid);
   if (!feed || feed.unknown.some((u) => u.startsWith('postings'))) return cantSee(sid, 'job postings', [{ label: 'Career help at my college', action: 'career' }]);
-  const fit = jobsThatFit(a, sid, opts).slice(0, 3);
+  const brief = a.student(sid).dial.depth === 'brief';
+  const all = jobsThatFit(a, sid, opts);
+  // Brief mode: the best fit, with only pay and hours, and how many more there are.
+  const fit = all.slice(0, brief ? 1 : 3);
   if (!fit.length) return msg(sid, `No open posting fits around your classes and shifts right now${opts.fairChance ? ' from a fair-chance employer' : ''}.`, [{ label: 'Career help at my college', action: 'career' }, back]);
   return msg(
     sid,
-    `${fit.length} ${fit.length === 1 ? 'job fits' : 'jobs fit'} around your classes and shifts:\n${fit.map((p) => `- ${sentence(`${p.title}, ${p.employer}: ${money(p.pay)} an hour, ${when(p)}${p.workStudy ? ', work-study' : ''}`)}`).join('\n')}`,
+    brief
+      ? `Best fit around your classes and shifts: ${sentence(`${fit[0]!.title}, ${money(fit[0]!.pay)} an hour`)}${all.length > 1 ? ` ${all.length - 1} more fit too.` : ''}`
+      : `${fit.length} ${fit.length === 1 ? 'job fits' : 'jobs fit'} around your classes and shifts:\n${fit.map((p) => `- ${sentence(`${p.title}, ${p.employer}: ${money(p.pay)} an hour, ${when(p)}${p.workStudy ? ', work-study' : ''}`)}`).join('\n')}`,
     [{ label: `Draft a note about ${fit[0]!.title}`, action: `draft:job:${fit[0]!.id}` }, { label: 'Talk to a mentor', action: 'mentors' }, back],
     'navigator',
     'Postings from the college job board, checked against your class and work times.',
