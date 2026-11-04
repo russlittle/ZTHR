@@ -5,11 +5,11 @@
 ## Tests by package
 
 ```mermaid
-pie showData title 1092 tests
-  "apps/advocate" : 762
+pie showData title 1116 tests
+  "apps/advocate" : 772
   "apps/campus-services" : 65
   "packages/ui" : 52
-  "tools/test" : 37
+  "tools/test" : 51
   "packages/runtime" : 27
   "packages/gates" : 22
   "packages/intent" : 18

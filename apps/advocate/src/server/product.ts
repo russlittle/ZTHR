@@ -96,7 +96,7 @@ export function productPage(l: ProductLinks): string {
 .pp-foot{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
 @media (max-width:860px){.pp-hero{grid-template-columns:1fr;padding-top:16px}.pp-top nav a.opt{display:none}}`;
   const body = `<div class="pp">
-<header class="pp-top"><a class="brand" href="${l.app}/"><span class="brand-mark">${ui.icon('route', 18)}</span>Student Advocate</a><nav aria-label="Product"><a class="opt" href="#what">What it does</a><a class="opt" href="#why">Why it works</a><a href="#try">Try it</a><a href="${l.docs}">Docs</a><a href="${l.factory}">Factory</a><a class="opt" href="https://github.com/russlittle/ZTHR/tree/reference-implementation">Source</a></nav></header>
+<header class="pp-top"><a class="brand" href="${l.app}/"><span class="brand-mark">${ui.icon('route', 18)}</span>Student Advocate</a><nav aria-label="On this page"><a class="opt" href="#what">What it does</a><a class="opt" href="#why">Why it works</a><a href="#try">Pick a student</a></nav></header>
 <main id="main">
 <section class="pp-hero">
   <div>
@@ -151,7 +151,7 @@ export function productPage(l: ProductLinks): string {
 </div></section>
 <footer class="pp-foot">Student Advocate is the reference application for ZTHR, a pattern language for software built by AI. ${ui.esc(NOT_AFFILIATED.body)} Code under the Apache License 2.0.</footer>
 </main></div>`;
-  return ui.bareShell({ title: 'Student Advocate', description: 'A team that works for every student: runs their day, finds money and help they qualify for, and does the legwork.', body, base: l.fontBase, head: `<style>${css}</style>${l.head ?? ''}` });
+  return ui.bareShell({ theme: 'student', surface: 'product', title: 'Student Advocate', description: 'A team that works for every student: runs their day, finds money and help they qualify for, and does the legwork.', body, base: l.fontBase, head: `<style>${css}</style>${l.head ?? ''}` });
 }
 
 /** The app's own front door: pick a student and you are signed in as them, or start by text. */
@@ -161,5 +161,5 @@ export function startPage(l: Pick<ProductLinks, 'app' | 'admin' | 'fontBase'> & 
 <div class="tiles" role="list" aria-label="Sample students" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${students.map(([n, p]) => `<div role="listitem"><a class="tile" href="${l.app}/s/${n.toLowerCase()}"><span style="display:flex;align-items:center;gap:8px">${ui.esc(n)} <span class="chip">${ui.esc(p.college)}</span></span><span class="small muted" style="font-weight:400">${ui.esc(p.line)}</span><span class="small" style="font-weight:400"><b>Try:</b> ${ui.esc(p.tries)}</span></a></div>`).join('')}</div>
 ${ui.actions([{ label: 'Try it by text', href: `${l.app}/text`, icon: 'send' }, { label: 'App admin', href: l.admin, variant: 'quiet', icon: 'you' }, { label: 'About the Advocate', href: l.product, variant: 'quiet', icon: 'home' }, { label: 'Reports and docs', href: l.reference, variant: 'quiet', icon: 'shield' }])}
 <p class="small muted" style="margin-top:28px">${ui.esc(NOT_AFFILIATED.body)}</p>`;
-  return ui.appShell({ title: 'Start · Student Advocate', body, base: l.fontBase, brand: 'Student Advocate', brandHref: `${l.app}/`, nav: [{ href: `${l.app}/`, label: 'Start', icon: 'today', current: true }, { href: `${l.app}/text`, label: 'Try by text', icon: 'send' }] });
+  return ui.appShell({ theme: 'student', surface: 'app', title: 'Start · Student Advocate', body, base: l.fontBase, brand: 'Student Advocate', brandHref: `${l.app}/`, nav: [{ href: `${l.app}/`, label: 'Start', icon: 'today', current: true }, { href: `${l.app}/text`, label: 'Try by text', icon: 'send' }] });
 }

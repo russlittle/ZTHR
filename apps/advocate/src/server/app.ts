@@ -93,7 +93,7 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
   ];
 
   const page = (sid: string | undefined, title: string, body: string, current = '', wide = false) =>
-    ui.appShell({ title: `${title} · Student Advocate`, body, base, wide, brand: 'Student Advocate', brandHref: sid ? u(sid) : `${base}/`, nav: sid ? nav(sid, current) : [{ href: `${base}/`, label: 'Start', icon: 'today' }, { href: `${base}/text`, label: 'Try by text', icon: 'send' }] });
+    ui.appShell({ title: `${title} · Student Advocate`, body, base, wide, theme: 'student', surface: 'app', brand: 'Student Advocate', brandHref: sid ? u(sid) : `${base}/`, nav: sid ? nav(sid, current) : [{ href: `${base}/`, label: 'Start', icon: 'today' }, { href: `${base}/text`, label: 'Try by text', icon: 'send' }] });
 
   /** A message produced by the last tap, shown at the top of the screen it led to. */
   const flash = (sid: string, id: string | undefined) => {

@@ -20,10 +20,31 @@ export const join = (...parts: (string | false | undefined | null)[]): string =>
 
 // ---------------------------------------------------------------- tokens
 
-export const TOKENS = {
-  light: { paper: '#f4f6f3', surface: '#ffffff', ink: '#16231f', muted: '#566660', line: '#d6ded9', action: '#0d6a5b', actionInk: '#ffffff', mark: '#f2b233', markInk: '#3b2a00', alert: '#a8432c', calm: '#e6efe9', focus: '#1b5fd1' },
-  dark: { paper: '#0e1513', surface: '#151f1c', ink: '#e6eee9', muted: '#9bb0a8', line: '#2a3833', action: '#5fcfb6', actionInk: '#06231d', mark: '#f2b233', markInk: '#2a1d00', alert: '#f08a6c', calm: '#1b2a25', focus: '#8db4ff' },
+/**
+ * Three themes, one per audience, so a person always knows where they are:
+ *  - student: the app students use (and its product page): teal and amber.
+ *  - admin: the app's staff side, a deeper variation of the same family with a dark side menu.
+ *  - factory: the verification tooling (evidence, docs, the case, the map): blueprint blue.
+ * Every theme defines the same tokens, light and dark.
+ */
+const common = { bar: '#10141f', barInk: '#e8ebf5', barMuted: '#9aa3bd', dotApp: '#3cc3a2', dotAdmin: '#e2a32a', dotFactory: '#8796ff' };
+export const THEMES = {
+  student: {
+    light: { ...common, paper: '#f4f6f3', surface: '#ffffff', ink: '#16231f', muted: '#566660', line: '#d6ded9', action: '#0d6a5b', actionInk: '#ffffff', mark: '#f2b233', markInk: '#3b2a00', alert: '#a8432c', calm: '#e6efe9', focus: '#1b5fd1', side: '#ffffff', sideInk: '#16231f', sideMuted: '#566660', sideActive: '#e6efe9' },
+    dark: { ...common, paper: '#0e1513', surface: '#151f1c', ink: '#e6eee9', muted: '#9bb0a8', line: '#2a3833', action: '#5fcfb6', actionInk: '#06231d', mark: '#f2b233', markInk: '#2a1d00', alert: '#f08a6c', calm: '#1b2a25', focus: '#8db4ff', side: '#151f1c', sideInk: '#e6eee9', sideMuted: '#9bb0a8', sideActive: '#1b2a25' },
+  },
+  admin: {
+    light: { ...common, paper: '#edf2f0', surface: '#ffffff', ink: '#13221d', muted: '#52645d', line: '#cfdad5', action: '#0a5a4c', actionInk: '#ffffff', mark: '#e2a32a', markInk: '#3b2a00', alert: '#a8432c', calm: '#e0ebe6', focus: '#1b5fd1', side: '#0f3a32', sideInk: '#e3f0eb', sideMuted: '#94bdb1', sideActive: '#1d5a4c' },
+    dark: { ...common, paper: '#0b1311', surface: '#121c19', ink: '#e3ece8', muted: '#98ada5', line: '#26342f', action: '#4fc4a9', actionInk: '#05231c', mark: '#e2a32a', markInk: '#2a1d00', alert: '#f08a6c', calm: '#18261f', focus: '#8db4ff', side: '#08201b', sideInk: '#d7ebe4', sideMuted: '#7fa89b', sideActive: '#174034' },
+  },
+  factory: {
+    light: { ...common, paper: '#f3f5fb', surface: '#ffffff', ink: '#151a2e', muted: '#575f7c', line: '#d7dbec', action: '#3245c2', actionInk: '#ffffff', mark: '#0e9fb3', markInk: '#03262b', alert: '#b2412a', calm: '#e7eaf8', focus: '#b4590b', side: '#ffffff', sideInk: '#151a2e', sideMuted: '#575f7c', sideActive: '#e7eaf8' },
+    dark: { ...common, paper: '#0d1020', surface: '#141a2e', ink: '#e5e8f6', muted: '#9ba3c4', line: '#283152', action: '#93a4ff', actionInk: '#0b1030', mark: '#4fd3e3', markInk: '#03262b', alert: '#f08a6c', calm: '#1b2340', focus: '#ffb36b', side: '#11162a', sideInk: '#e5e8f6', sideMuted: '#9ba3c4', sideActive: '#1f2950' },
+  },
 } as const;
+export type Theme = keyof typeof THEMES;
+/** The student theme, kept under its old name for the app's manifest and icon. */
+export const TOKENS = THEMES.student;
 
 const vars = (t: Record<string, string>) => Object.entries(t).map(([k, v]) => `--${k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}:${v}`).join(';');
 
@@ -61,13 +82,14 @@ export function icon(name: keyof typeof ICONS | string, size = 22): string {
 
 // ---------------------------------------------------------------- styles
 
-export function styles(base = ''): string {
+export function styles(base = '', theme: Theme = 'student'): string {
+  const T = THEMES[theme];
   return `
 @font-face{font-family:"Atkinson Hyperlegible";src:url("${base}/_ui/atkinson-400.woff2") format("woff2");font-weight:400;font-display:swap}
 @font-face{font-family:"Atkinson Hyperlegible";src:url("${base}/_ui/atkinson-700.woff2") format("woff2");font-weight:700;font-display:swap}
-:root{${vars(TOKENS.light)};--r-lg:18px;--r-md:12px;--r-sm:8px;--shadow:0 1px 2px rgba(22,35,31,.06),0 2px 8px rgba(22,35,31,.05);--shadow-lg:0 2px 4px rgba(22,35,31,.06),0 10px 28px rgba(22,35,31,.09);--tint:color-mix(in srgb,var(--action) 9%,var(--surface));color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${vars(TOKENS.dark)};--shadow:0 1px 2px rgba(0,0,0,.35);--shadow-lg:0 8px 24px rgba(0,0,0,.4);color-scheme:dark}}
-:root[data-theme="dark"]{${vars(TOKENS.dark)};--shadow:0 1px 2px rgba(0,0,0,.35);--shadow-lg:0 8px 24px rgba(0,0,0,.4);color-scheme:dark}
+:root{${vars(T.light)};--r-lg:18px;--r-md:12px;--r-sm:8px;--shadow:0 1px 2px rgba(22,35,31,.06),0 2px 8px rgba(22,35,31,.05);--shadow-lg:0 2px 4px rgba(22,35,31,.06),0 10px 28px rgba(22,35,31,.09);--tint:color-mix(in srgb,var(--action) 9%,var(--surface));color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${vars(T.dark)};--shadow:0 1px 2px rgba(0,0,0,.35);--shadow-lg:0 8px 24px rgba(0,0,0,.4);color-scheme:dark}}
+:root[data-theme="dark"]{${vars(T.dark)};--shadow:0 1px 2px rgba(0,0,0,.35);--shadow-lg:0 8px 24px rgba(0,0,0,.4);color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -82,6 +104,18 @@ p{margin:.4em 0}
 .muted{color:var(--muted)}
 .small{font-size:14px}
 .ic{flex:none;vertical-align:-5px}
+/* the bar across every surface: where you are, and every other place, grouped by theme */
+.zbar{background:var(--bar);color:var(--bar-ink);font-size:13px}
+.zbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:4px 14px;flex-wrap:wrap;padding:6px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px))}
+.zbar a{color:var(--bar-ink);text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.zbar a:hover{background:rgba(255,255,255,.1)}
+.zbar a[aria-current="page"]{background:rgba(255,255,255,.16);font-weight:700}
+.zbar .zg{display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap}
+.zbar .zl{color:var(--bar-muted);font-weight:700;margin-right:4px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.zbar .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.zbar .d-app{background:var(--dot-app)}.zbar .d-admin{background:var(--dot-admin)}.zbar .d-factory{background:var(--dot-factory)}
+.zbar .zmap{margin-left:auto;border:1px solid rgba(255,255,255,.25);font-weight:700}
+@media (max-width:640px){.zbar-in{gap:2px 8px}.zbar .zmap{margin-left:0}}
 /* app shell */
 .top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .top-in{max-width:1120px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:16px}
@@ -198,12 +232,13 @@ table.t th{font-size:13px;color:var(--muted)}
 .empty{padding:22px;text-align:center;color:var(--muted)}
 /* console shell */
 .console{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
-.side{background:var(--surface);border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:0;height:100vh;overflow:auto}
-.side a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--ink);text-decoration:none;font-weight:700;font-size:15px}
-.side a[aria-current="page"]{background:var(--calm)}
-.side .grp{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:20px 10px 6px;padding-top:12px;border-top:1px solid var(--line)}
+.side{background:var(--side);color:var(--side-ink);border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+.side a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--side-ink);text-decoration:none;font-weight:700;font-size:15px}
+.side a[aria-current="page"]{background:var(--side-active)}
+.side .grp{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--side-muted);margin:20px 10px 6px;padding-top:12px;border-top:1px solid var(--line)}
 .side .brand{margin:2px 6px 8px}
-.side a:hover{background:color-mix(in srgb,var(--calm) 60%,transparent)}
+.side a:hover{background:color-mix(in srgb,var(--side-active) 70%,transparent)}
+.side .brand{color:var(--side-ink)}
 main.con{padding:24px 28px 60px;max-width:1200px;min-width:0}
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:14px 0}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;box-shadow:var(--shadow)}
@@ -246,23 +281,49 @@ export interface ShellOpts {
   description?: string;
   /** The body uses the full width (it lays itself out); otherwise it is set at a comfortable reading width. */
   wide?: boolean;
+  /** Which theme the surface wears. */
+  theme?: Theme;
+  /** Which surface this page belongs to; shows the bar with every other surface. */
+  surface?: Surface;
 }
 
-const head = (o: ShellOpts) => `<!doctype html><html lang="${esc(o.lang ?? 'en')}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>${esc(o.title)}</title>${o.description ? `<meta name="description" content="${esc(o.description)}">` : ''}<meta name="theme-color" content="${TOKENS.light.action}"><style>${styles(o.base ?? '')}</style>${o.head ?? ''}</head>`;
+/** Every surface, once, with one label each. The bar on every page is drawn from this list. */
+export const SURFACES = [
+  { key: 'product', group: 'app', label: 'About the app', href: 'https://zthr.ai/advocate' },
+  { key: 'app', group: 'app', label: 'Use the app', href: 'https://zthr.ai/studentadvocate/' },
+  { key: 'admin', group: 'admin', label: 'App admin', href: 'https://zthr.ai/studentadvocate/admin/' },
+  { key: 'evidence', group: 'factory', label: 'Evidence', href: 'https://zthr.ai/reference/factory/' },
+  { key: 'docs', group: 'factory', label: 'Docs', href: 'https://zthr.ai/reference/docs/' },
+  { key: 'case', group: 'factory', label: 'The case', href: 'https://zthr.ai/reference/case' },
+  { key: 'map', group: 'map', label: 'Map: how it fits together', href: 'https://zthr.ai/reference' },
+  { key: 'zthr', group: 'zthr', label: 'ZTHR', href: 'https://zthr.ai/' },
+] as const;
+export type Surface = (typeof SURFACES)[number]['key'];
+
+/** The bar across the top of every surface. */
+export function zbar(current?: Surface): string {
+  const link = (k: Surface) => {
+    const x = SURFACES.find((s) => s.key === k)!;
+    return `<a href="${x.href}"${k === current ? ' aria-current="page"' : ''}${k === 'map' ? ' class="zmap"' : ''}>${esc(x.label)}</a>`;
+  };
+  return `<nav class="zbar" aria-label="All of the Student Advocate and ZTHR"><div class="zbar-in">${link('zthr')}<span class="zg"><span class="zl"><i class="dot d-app"></i>Student Advocate</span>${link('product')}${link('app')}<span class="zl" style="margin-left:6px"><i class="dot d-admin"></i></span>${link('admin')}</span><span class="zg"><span class="zl"><i class="dot d-factory"></i>Factory</span>${link('evidence')}${link('docs')}${link('case')}</span>${link('map')}</div></nav>`;
+}
+
+const head = (o: ShellOpts) => `<!doctype html><html lang="${esc(o.lang ?? 'en')}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>${esc(o.title)}</title>${o.description ? `<meta name="description" content="${esc(o.description)}">` : ''}<meta name="theme-color" content="${THEMES[o.theme ?? 'student'].light.action}"><style>${styles(o.base ?? '', o.theme ?? 'student')}</style>${o.head ?? ''}</head>`;
 
 export function appShell(o: ShellOpts): string {
   const nav = (o.nav ?? []).map((n) => `<a href="${esc(n.href)}"${n.current ? ' aria-current="page"' : ''}>${n.icon ? icon(n.icon, 20) : ''}<span>${esc(n.label)}</span></a>`).join('');
-  return `${head(o)}<body><a class="skip" href="#main">Skip to content</a><header class="top"><div class="top-in"><a class="brand" href="${esc(o.brandHref ?? '/')}"><span class="brand-mark">${icon('route', 18)}</span>${esc(o.brand ?? 'App')}</a>${nav ? `<nav class="tabs" aria-label="Main">${nav}</nav>` : ''}</div></header><main id="main" class="app">${o.wide ? o.body : `<div class="page">${o.body}</div>`}</main></body></html>`;
+  return `${head(o)}<body><a class="skip" href="#main">Skip to content</a>${o.surface ? zbar(o.surface) : ''}<header class="top"><div class="top-in"><a class="brand" href="${esc(o.brandHref ?? '/')}"><span class="brand-mark">${icon('route', 18)}</span>${esc(o.brand ?? 'App')}</a>${nav ? `<nav class="tabs" aria-label="Main">${nav}</nav>` : ''}</div></header><main id="main" class="app">${o.wide ? o.body : `<div class="page">${o.body}</div>`}</main></body></html>`;
 }
 
 /** A page that lays itself out entirely (a product or landing page): the design system, a skip link, and the body. */
 export function bareShell(o: ShellOpts): string {
-  return `${head(o)}<body><a class="skip" href="#main">Skip to content</a>${o.body}</body></html>`;
+  return `${head(o)}<body><a class="skip" href="#main">Skip to content</a>${o.surface ? zbar(o.surface) : ''}${o.body}</body></html>`;
 }
 
 export function consoleShell(o: ShellOpts & { groups?: { title: string; items: NavItem[] }[] }): string {
   const side = (o.groups ?? [{ title: '', items: o.nav ?? [] }]).map((g) => `${g.title ? `<div class="grp">${esc(g.title)}</div>` : ''}${g.items.map((n) => `<a href="${esc(n.href)}"${n.current ? ' aria-current="page"' : ''}>${n.icon ? icon(n.icon, 18) : ''}${esc(n.label)}</a>`).join('')}`).join('');
-  return `${head(o)}<body><a class="skip" href="#main">Skip to content</a><div class="console"><nav class="side" aria-label="Console"><a class="brand" href="${esc(o.brandHref ?? '/')}"><span class="brand-mark">${icon('shield', 18)}</span>${esc(o.brand ?? 'Console')}</a>${side}</nav><main id="main" class="con">${o.body}</main></div></body></html>`;
+  return `${head(o)}<body><a class="skip" href="#main">Skip to content</a>${o.surface ? zbar(o.surface) : ''}<div class="console"><nav class="side" aria-label="Console"><a class="brand" href="${esc(o.brandHref ?? '/')}"><span class="brand-mark">${icon('shield', 18)}</span>${esc(o.brand ?? 'Console')}</a>${side}</nav><main id="main" class="con">${o.body}</main></div></body></html>`;
 }
 
 // ---------------------------------------------------------------- components
@@ -396,7 +457,8 @@ export function weekGrid(days: WeekDay[]): string {
 }
 
 export function table(headers: string[], body: (string | number)[][], opts: { raw?: boolean[]; caption?: string } = {}): string {
-  return `<div class="panel" style="overflow:auto"><table class="t">${opts.caption ? `<caption class="small muted" style="text-align:left;padding:8px 0">${esc(opts.caption)}</caption>` : ''}<thead><tr>${headers.map((h) => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c, i) => `<td>${opts.raw?.[i] ? String(c) : esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  // A table may scroll sideways; its panel is a named region a keyboard can reach and scroll.
+  return `<div class="panel" style="overflow:auto" tabindex="0" role="region" aria-label="${esc(opts.caption ?? headers.filter(Boolean).join(', ') ?? 'Table')}"><table class="t">${opts.caption ? `<caption class="small muted" style="text-align:left;padding:8px 0">${esc(opts.caption)}</caption>` : ''}<thead><tr>${headers.map((h) => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c, i) => `<td>${opts.raw?.[i] ? String(c) : esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 
 export function kpis(items: { value: string | number; label: string }[]): string {

@@ -30,7 +30,7 @@ export function createAdmin(a: Advocate, o: AdminOptions): Hono {
     ['outcomes', 'Outcomes', 'gauge'],
   ];
   const shell = (id: string, title: string, body: string) =>
-    ui.consoleShell({ title: `${title} · Advocate admin`, brand: 'Advocate admin', brandHref: `${o.base}/admin/`, base: o.base, groups: [{ title: 'Admin', items: PAGES.map(([p, l, ic]) => ({ href: `${o.base}/admin/${p}`, label: l, icon: ic, current: p === id })) }, { title: 'Elsewhere', items: [{ href: `${o.base}/`, label: 'The app', icon: 'route' }, { href: '/factory/', label: 'Factory console', icon: 'shield' }, { href: '/docs/', label: 'Documentation', icon: 'doc' }] }], body: `<h1>${ui.esc(title)}</h1>${body}` });
+    ui.consoleShell({ title: `${title} · App admin`, brand: 'App admin', brandHref: `${o.base}/admin/`, base: o.base, theme: 'admin', surface: 'admin', groups: [{ title: 'App admin', items: PAGES.map(([p, l, ic]) => ({ href: `${o.base}/admin/${p}`, label: l, icon: ic, current: p === id })) }], body: `<h1>${ui.esc(title)}</h1>${body}` });
   const day = () => new Date().toISOString().slice(0, 10);
   const control = (sub: string) => join(o.controlDir, sub);
   const yamlDir = (sub: string) => (existsSync(control(sub)) ? readdirSync(control(sub)).filter((f) => f.endsWith('.yaml')).map((f) => ({ file: f, body: readFileSync(join(control(sub), f), 'utf8') })) : []);

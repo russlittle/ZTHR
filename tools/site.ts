@@ -60,16 +60,33 @@ function buildLanding(): void {
   const gaHead = ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`;
   // zthr.ai/advocate: the product page, with links that work from the site root.
   if (STATIC) writeFileSync(join(ROOT, 'site-static.advocate.html'), productPage({ app: '/studentadvocate', docs: '/reference/docs/index.html', factory: '/reference/factory/index.html', factoryPage: (p) => `/reference/factory/${p}.html`, admin: '/studentadvocate/admin/', fontBase: '/reference', head: gaHead, live: false }).replace(/_ui\/atkinson/g, 'fonts/atkinson'));
-  // zthr.ai/reference: the hub for the app's overview, reporting, admin tools and docs.
+  // zthr.ai/reference: the map. One page that shows every surface, what each is for, and how they link.
   const card = (title: string, sub: string, href: string) => ({ title, sub, href });
-  const body = `<h1>Student Advocate: the reference</h1><p class="muted">Everything about the Student Advocate in one place: the app and its admin tools, how it is doing, how it was built and checked, and how it works. The Advocate is the reference application for ZTHR; every student and service in it is synthetic.</p>
-${ui.section('The case', ui.rows([card('What an AI factory can build, and what it is worth', 'The business and technical write-up: what the Advocate does, why it can be trusted, how the factory works, the economics and the potential', 'case.html')]))}
-${ui.section('The app', ui.rows([card('Product page', 'What it does, who it is for, why it works, what it is worth', ARTIFACT ? 'https://zthr.ai/advocate' : '/advocate'), card('Open the app', 'Sign in as any of twelve sample students, each a private copy for two hours', APP), card('Try it by text', 'The whole Advocate as a text conversation', `${APP}text`), card('App admin', 'Catalog, moderation, scouts, admissions and outcomes; never a student\'s record', `${APP}admin/`), card('Outcome measures', 'What changed for students, never shown for fewer than five', `${APP}admin/outcomes`), card('Campus twins', 'The synthetic dining, transit, rooms, jobs and class-site APIs', ARTIFACT ? 'https://zthr.ai/twins' : '/twins')]))}
-${ui.section('Reporting', ui.rows([card('Factory overview', 'Tests, gates, walks, red team, mutation and cost for this build', 'factory/index.html'), card('Phases', 'What each phase delivers and whether it is certified', 'factory/phases.html'), card('Features', 'Everything the app does, with the journey that proves it', 'factory/features.html'), card('Sensitive data trace', 'Where each personal fact may go, and where it went', 'factory/sensitive.html'), card('Block library', 'The reusable parts, each with its own tests and mutation score', 'factory/blocks.html')]))}
-${ui.section('Documentation', ui.rows([card('Overview and architecture', 'How the system fits together, illustrated', 'docs/index.html'), card('Features', 'By phase', 'docs/features.html'), card('Glossary', 'Product and factory words in plain terms', 'docs/glossary.html'), card('Data model', 'Every collection, with ERDs', 'docs/data-model.html'), card('Data sources', 'Every outside source, with ERDs', 'docs/data-sources.html'), card('Sensitive data', 'Every field\'s class and where it may go', 'docs/flows/sensitive-data.html'), card('API', 'Ingest, export and webhooks', 'docs/api.html')]))}
-${ui.section('Source and discussion', ui.rows([card('The full source', 'The app, the blocks, the gates, the pipeline and every journey card, on GitHub', 'https://github.com/russlittle/ZTHR/tree/reference-implementation'), card('Discuss it', 'Questions, experience reports and objections, in the open', 'https://github.com/russlittle/ZTHR/discussions'), card('ZTHR', 'The pattern language this was built with', ARTIFACT ? 'https://zthr.ai' : '/')]))}
+  const Z = (p: string) => `https://zthr.ai${p}`;
+  const diagram = `flowchart LR
+  subgraph app[Student Advocate]
+    product[About the app] --> use[Use the app]
+    use --- admin[App admin]
+  end
+  subgraph factory[Factory]
+    evidence[Evidence] --- docs[Docs]
+    docs --- case[The case]
+  end
+  zthr[ZTHR: the pattern language] -- built with --> factory
+  factory -- builds and checks every change to --> app
+  classDef a fill:#e6efe9,stroke:#0d6a5b,color:#16231f
+  classDef d fill:#fbefd6,stroke:#b07a12,color:#3b2a00
+  classDef f fill:#e7eaf8,stroke:#3245c2,color:#151a2e
+  class product,use a
+  class admin d
+  class evidence,docs,case f`;
+  const body = `<h1>Map: how it fits together</h1><p class="muted">The Student Advocate is the reference application for ZTHR. Two kinds of surface sit side by side, each with its own color: the app itself, which students and staff use, and the factory, which built it and checks every change. The bar at the top of every page links all of them.</p>
+<pre class="mermaid">${ui.esc(diagram)}</pre>
+${ui.section('Student Advocate: the app', ui.rows([card('About the app', 'What it does, who it is for, why it can be trusted, what it is worth', Z('/advocate')), card('Use the app', 'Sign in as any of twelve sample students; each visitor gets a private copy for two hours', Z('/studentadvocate/')), card('Use the app by text', 'The whole Advocate as a text conversation', Z('/studentadvocate/text')), card('App admin', 'Catalog, moderation, scouts, admissions and outcome measures; never a student\'s record', Z('/studentadvocate/admin/')), card('Campus twins', 'The synthetic dining, transit, rooms, jobs and class-site services the app talks to', Z('/twins'))]))}
+${ui.section('Factory: how it was built and checked', ui.rows([card('The case', 'What an AI factory can build, and what it is worth: the business and technical write-up', 'case.html'), card('Evidence', 'Every gate, walk, test, mutation score and trace from the latest build', 'factory/index.html'), card('Phases', 'What each phase delivers and whether it is certified', 'factory/phases.html'), card('Features', 'Everything the app does, with the journey that proves it', 'factory/features.html'), card('Sensitive data trace', 'Where each personal fact may go, and where it went', 'factory/sensitive.html'), card('Block library', 'The reusable parts, each with its own tests and mutation score', 'factory/blocks.html'), card('Docs', 'Architecture, flows, data model, data sources, security, API and glossary', 'docs/index.html')]))}
+${ui.section('Source and discussion', ui.rows([card('The full source', 'The app, the blocks, the gates, the pipeline and every journey card, on GitHub', 'https://github.com/russlittle/ZTHR/tree/reference-implementation'), card('Discussion', 'Questions, experience reports and objections, in the open', 'https://github.com/russlittle/ZTHR/discussions'), card('ZTHR', 'The pattern language this was built with', Z('/'))]))}
 <p class="small muted" style="margin-top:32px">${ui.esc(NOT_AFFILIATED.body)}</p>`;
-  write(join(SITE, 'index.html'), ui.consoleShell({ title: 'Student Advocate reference', brand: 'ZTHR reference', brandHref: 'index.html', base: fontBase(''), head: head(''), groups: [{ title: 'The app', items: [{ href: ARTIFACT ? 'https://zthr.ai/advocate' : '/advocate', label: 'Product page', icon: 'home' }, { href: APP, label: 'Open the app', icon: 'route' }, { href: `${APP}admin/`, label: 'App admin', icon: 'you' }] }, { title: 'Reporting', items: [{ href: 'factory/index.html', label: 'Factory console', icon: 'shield' }] }, { title: 'Documentation', items: [{ href: 'docs/index.html', label: 'Docs', icon: 'doc' }, { href: 'docs/glossary.html', label: 'Glossary', icon: 'book' }] }], body }));
+  write(join(SITE, 'index.html'), ui.consoleShell({ title: 'Map · Student Advocate and ZTHR', brand: 'Map', brandHref: 'index.html', base: fontBase(''), head: head(''), theme: 'factory', surface: 'map', groups: [{ title: 'Start with', items: [{ href: 'case.html', label: 'The case', icon: 'doc' }, { href: Z('/studentadvocate/'), label: 'Use the app', icon: 'route' }, { href: 'factory/index.html', label: 'Evidence', icon: 'shield' }] }], body }));
   if (STATIC) {
     // The host strips trailing slashes, so /reference is served from a file of that name beside the folder; its links resolve inside /reference/.
     writeFileSync(join(ROOT, 'site-static.entry.html'), readFileSync(join(SITE, 'index.html'), 'utf8').replace('<head>', '<head><base href="/reference/">'));
@@ -96,9 +113,7 @@ function buildCase(): void {
   });
   const body = marked.parse(readFileSync(src, 'utf8')) as string;
   const title = readFileSync(src, 'utf8').match(/^# (.+)$/m)![1]!;
-  const css = `.cs-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;max-width:860px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
-.cs-top nav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}.cs-top nav a{padding:7px 11px;border-radius:999px;font-weight:700;font-size:14px;color:var(--muted);text-decoration:none}.cs-top nav a:hover{background:var(--calm);color:var(--ink)}
-article.case{max-width:860px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
+  const css = `article.case{max-width:860px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
 article.case h1{font-size:clamp(30px,4.4vw,46px);line-height:1.08;letter-spacing:-.02em;text-wrap:balance;margin:18px 0 14px}
 article.case h1+p{font-size:19px;color:var(--muted)}
 article.case h2{font-size:26px;margin:44px 0 10px;text-wrap:balance}
@@ -110,8 +125,7 @@ article.case thead:has(th:empty){display:none}
 article.case .mermaid{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin:16px 0;overflow:auto;box-shadow:var(--shadow)}
 article.case code{background:var(--calm);padding:1px 5px;border-radius:5px}
 @media (max-width:640px){article.case table{display:block;overflow-x:auto}}`;
-  const nav = `<header class="cs-top"><a class="brand" href="${ARTIFACT ? 'https://zthr.ai' : '/'}"><span class="brand-mark">${ui.icon('shield', 18)}</span>ZTHR</a><nav aria-label="Elsewhere"><a href="${ARTIFACT ? 'https://zthr.ai/advocate' : '/advocate'}">The product</a><a href="${APP}">The app</a><a href="factory/index.html">Evidence</a><a href="docs/index.html">Docs</a><a href="https://github.com/russlittle/ZTHR/tree/reference-implementation">Source</a></nav></header>`;
-  write(join(SITE, 'case.html'), ui.bareShell({ title: `${title} · ZTHR`, description: 'The Student Advocate, built entirely by AI agents under ZTHR fixtures: what it does, why it can be trusted, how the factory works, what it costs and what it could mean.', base: fontBase(''), head: `${head('')}<style>${css}</style>`, body: `${nav}<main id="main"><article class="case">${body}</article></main>` }));
+  write(join(SITE, 'case.html'), ui.bareShell({ theme: 'factory', surface: 'case', title: `${title} · ZTHR`, description: 'The Student Advocate, built entirely by AI agents under ZTHR fixtures: what it does, why it can be trusted, how the factory works, what it costs and what it could mean.', base: fontBase(''), head: `${head('')}<style>${css}</style>`, body: `<main id="main"><article class="case">${body}</article></main>` }));
 }
 
 function buildDocs(): number {
@@ -146,7 +160,7 @@ function buildDocs(): number {
     const body = marked.parse(readFileSync(f, 'utf8').replace(/<!--[\s\S]*?-->/g, '')) as string;
     const nav = groups.map(([g, keep]) => ({ title: g, items: files.map(rel).filter(keep).sort().map((x) => ({ href: `${up}${x.replace(/\.md$/, '.html')}`, label: title(join(ROOT, 'docs', x)), current: x === r })) }));
     const rootRel = `${up}../`;
-    write(join(SITE, 'docs', out), ui.consoleShell({ title: `${title(f)} · ZTHR reference docs`, brand: 'ZTHR docs', brandHref: `${up}index.html`, base: fontBase(rootRel), head: head(rootRel), groups: [{ title: '', items: [{ href: `${up}index.html`, label: 'Overview', icon: 'doc', current: r === 'README.md' }, { href: `${up}../factory/index.html`, label: 'Factory console', icon: 'shield' }, { href: APP, label: 'The app', icon: 'route' }] }, ...nav], body: `<article class="prose">${body}</article>` }));
+    write(join(SITE, 'docs', out), ui.consoleShell({ title: `${title(f)} · Docs · ZTHR factory`, brand: 'Docs', brandHref: `${up}index.html`, base: fontBase(rootRel), head: head(rootRel), theme: 'factory', surface: 'docs', groups: [{ title: '', items: [{ href: `${up}index.html`, label: 'Docs home', icon: 'doc', current: r === 'README.md' }] }, ...nav], body: `<article class="prose">${body}</article>` }));
   }
   return files.length;
 }
@@ -189,7 +203,7 @@ function buildFactory(): number {
 
   // The console's menu, in buckets: what was built, how it is kept safe, how it is verified, what it is made of.
   const NAV: { title: string; pages: [string, string, string][] }[] = [
-    { title: 'The build', pages: [['index', 'Overview', 'gauge'], ['phases', 'Phases', 'list'], ['features', 'Features', 'check'], ['patterns', 'The 33 patterns', 'list']] },
+    { title: 'The build', pages: [['index', 'Summary', 'gauge'], ['phases', 'Phases', 'list'], ['features', 'Features', 'check'], ['patterns', 'The 33 patterns', 'list']] },
     { title: 'Safety', pages: [['gates', 'Guardrails', 'shield'], ['redteam', 'Red team', 'alert'], ['sensitive', 'Sensitive data trace', 'you']] },
     { title: 'QA verification', pages: [['feature-walks', 'Feature walks', 'route'], ['ui-walk', 'Browser walk', 'today'], ['intent', 'Intent walks', 'check'], ['tests', 'Every test', 'flask'], ['mutation', 'Mutation', 'bolt'], ['docs-qa', 'Docs and links', 'doc']] },
     { title: 'Parts and data', pages: [['blocks', 'Block library', 'list'], ['data', 'Data model', 'book'], ['sources', 'Data sources', 'book'], ['twins', 'Campus twins', 'bus']] },
@@ -197,19 +211,19 @@ function buildFactory(): number {
   ];
   const PAGES = NAV.flatMap((g) => g.pages);
   const shell = (id: string, title: string, body: string) =>
-    ui.consoleShell({ title: `${title} · ZTHR factory`, brand: 'ZTHR factory', brandHref: 'index.html', base: fontBase('../'), head: head('../'), groups: [...NAV.map((g) => ({ title: g.title, items: g.pages.map(([p, l, ic]) => ({ href: `${p}.html`, label: l, icon: ic, current: p === id })) })), { title: 'Elsewhere', items: [{ href: APP, label: 'The app', icon: 'route' }, { href: `${APP}admin/`, label: 'App admin', icon: 'you' }, { href: '../docs/index.html', label: 'Documentation', icon: 'doc' }] }], body: `<h1>${ui.esc(title)}</h1>${body}` });
+    ui.consoleShell({ title: `${title} · Evidence · ZTHR factory`, brand: 'Evidence', brandHref: 'index.html', base: fontBase('../'), head: head('../'), theme: 'factory', surface: 'evidence', groups: NAV.map((g) => ({ title: g.title, items: g.pages.map(([p, l, ic]) => ({ href: `${p}.html`, label: l, icon: ic, current: p === id })) })), body: `<h1>${ui.esc(title)}</h1>${body}` });
   const n = (x: number | undefined) => (x === undefined ? 'not measured' : x.toLocaleString('en-US'));
   const held = redteam?.results.filter((r) => r.held).length;
   const walkStates = (explore?.states ?? 0) + (crawl?.states ?? 0) + (crawlSettings?.states ?? 0);
 
   // overview
-  write(join(SITE, 'factory', 'index.html'), shell('index', 'The factory', `
+  write(join(SITE, 'factory', 'index.html'), shell('index', 'Evidence: summary', `
 <p class="muted">Everything here was recorded by the factory while building and testing the Student Advocate. Numbers come from this build's reports; anything not run in this build says "not measured".</p>
 ${ui.kpis([
   { value: tests ? `${n(tests.numPassedTests)} / ${n(tests.numTotalTests)}` : 'not measured', label: 'tests passing' },
   { value: `${proofs.filter((p) => p.valid).length} / ${gates.length}`, label: 'gates proven able to fail' },
   { value: `${cards.length}`, label: 'locked intent journeys' },
-  { value: explore ? n(explore.transitions + (crawl?.transitions ?? 0) + (crawlSettings?.transitions ?? 0)) : 'not measured', label: 'steps walked to a fixpoint' },
+  { value: explore ? n(explore.transitions + (crawl?.transitions ?? 0) + (crawlSettings?.transitions ?? 0)) : 'not measured', label: 'steps walked (see the walks for which reached a fixpoint)' },
   { value: walkStates ? n(walkStates) : 'not measured', label: 'states reached' },
   { value: redteam ? `${held} / ${redteam.results.length}` : 'not measured', label: 'red-team attacks held' },
   { value: mutScore ? `${mutScore.score.toFixed(1)}%` : 'not measured', label: 'mutation score' },
@@ -304,7 +318,7 @@ ${SERVICE_IDS.map((id) => { const sv = SERVICES[id]; const probes = (contract?.r
 
   // sensitive data trace
   const tr = read<{ at: string; commit?: string; canaries: { field: string; cls: string }[]; findings: { field: string; sink: string; allowed: boolean }[]; leaks: { field: string; sink: string }[]; unexercised: string[]; sealedNowhere: string[]; sinks: string[]; policy: Record<string, string[]> }>(join(OUT, 'sensitive-trace.json'));
-  write(join(SITE, 'factory', 'sensitive.html'), shell('sensitive', 'Sensitive data trace', tr ? `<p class="muted">A unique marker was planted in every personal, sensitive and secret field. A student then used the app by text, on the web and through the API, sent a mentor introduction and registered a webhook. Every place data can land was searched for every marker. <a href="../docs/flows/sensitive-data.html">How it works, and every field's class</a>.</p>${tr.commit ? `<p class="small">${ui.chip(`measured at ${tr.commit}`, tr.commit === HEAD_ ? 'ok' : 'warn')}</p>` : ''}${ui.kpis([{ value: String(tr.canaries.length), label: 'markers planted' }, { value: String(tr.findings.length), label: 'sightings, all checked' }, { value: String(tr.leaks.length), label: 'leaks' }, { value: String(tr.sealedNowhere.length), label: 'sealed facts and secrets seen nowhere' }])}${ui.section('Where each marker turned up', `<div style="overflow-x:auto">${ui.table(['Field', 'Class', ...tr.sinks], tr.canaries.map((c) => [`<code>${ui.esc(c.field)}</code>`, ui.chip(c.cls, c.cls === 'secret' ? 'bad' : c.cls === 'sensitive' ? 'warn' : undefined), ...tr.sinks.map((k) => { const f = tr.findings.find((x) => x.field === c.field && x.sink === k); return f ? (f.allowed ? '<span title="allowed">✓</span>' : ui.chip('leak', 'bad')) : '<span class="muted">·</span>'; })]), { raw: [true, true, ...tr.sinks.map(() => true)] })}</div><p class="small muted">✓ the marker was found there and its class may go there. · not found. A leak fails the <code>sensitive-data</code> gate.</p>`)}${ui.section('Where each class may go', ui.table(['Place', 'Personal', 'Sensitive', 'Secret'], tr.sinks.map((k) => [ui.esc(k), tr.policy.personal!.includes(k) ? 'yes' : 'no', tr.policy.sensitive!.includes(k) ? 'yes' : 'no', 'no'])))}` : '<p class="muted">Not measured in this build.</p>'));
+  write(join(SITE, 'factory', 'sensitive.html'), shell('sensitive', 'Sensitive data trace', tr ? `<p class="muted">A unique marker was planted in every personal, sensitive and secret field. A student then used the app by text, on the web and through the API, sent a mentor introduction and registered a webhook. Every place data can land was searched for every marker. <a href="../docs/flows/sensitive-data.html">How it works, and every field's class</a>.</p>${tr.commit ? `<p class="small">${ui.chip(`measured at ${tr.commit}`, tr.commit === HEAD_ ? 'ok' : 'warn')}</p>` : ''}${ui.kpis([{ value: String(tr.canaries.length), label: 'markers planted' }, { value: String(tr.findings.length), label: 'sightings, all checked' }, { value: String(tr.leaks.length), label: 'leaks' }, { value: String(tr.sealedNowhere.length), label: 'sealed facts and secrets seen nowhere' }])}${ui.section('Where each marker turned up', `<div style="overflow-x:auto" tabindex="0" role="region" aria-label="Where each marker turned up, by field and place">${ui.table(['Field', 'Class', ...tr.sinks], tr.canaries.map((c) => [`<code>${ui.esc(c.field)}</code>`, ui.chip(c.cls, c.cls === 'secret' ? 'bad' : c.cls === 'sensitive' ? 'warn' : undefined), ...tr.sinks.map((k) => { const f = tr.findings.find((x) => x.field === c.field && x.sink === k); return f ? (f.allowed ? '<span title="allowed">✓</span>' : ui.chip('leak', 'bad')) : '<span class="muted">·</span>'; })]), { raw: [true, true, ...tr.sinks.map(() => true)] })}</div><p class="small muted">✓ the marker was found there and its class may go there. · not found. A leak fails the <code>sensitive-data</code> gate.</p>`)}${ui.section('Where each class may go', ui.table(['Place', 'Personal', 'Sensitive', 'Secret'], tr.sinks.map((k) => [ui.esc(k), tr.policy.personal!.includes(k) ? 'yes' : 'no', tr.policy.sensitive!.includes(k) ? 'yes' : 'no', 'no'])))}` : '<p class="muted">Not measured in this build.</p>'));
 
   // block library
   const bl = read<{ at: string; commit: string; blocks: { name: string; purpose: string; floor: number; tests: number; srcLines: number; consumers: string[]; doc?: string; mutation?: { score: number; killed: number; survived: number; noCoverage: number; valid: number; commit?: string } }[] }>(join(OUT, 'blocks.json'));

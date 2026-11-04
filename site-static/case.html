@@ -1,9 +1,9 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>What an AI factory can build, and what it is worth · ZTHR</title><meta name="description" content="The Student Advocate, built entirely by AI agents under ZTHR fixtures: what it does, why it can be trusted, how the factory works, what it costs and what it could mean."><meta name="theme-color" content="#0d6a5b"><style>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>What an AI factory can build, and what it is worth · ZTHR</title><meta name="description" content="The Student Advocate, built entirely by AI agents under ZTHR fixtures: what it does, why it can be trusted, how the factory works, what it costs and what it could mean."><meta name="theme-color" content="#3245c2"><style>
 @font-face{font-family:"Atkinson Hyperlegible";src:url("./fonts/atkinson-400.woff2") format("woff2");font-weight:400;font-display:swap}
 @font-face{font-family:"Atkinson Hyperlegible";src:url("./fonts/atkinson-700.woff2") format("woff2");font-weight:700;font-display:swap}
-:root{--paper:#f4f6f3;--surface:#ffffff;--ink:#16231f;--muted:#566660;--line:#d6ded9;--action:#0d6a5b;--action-ink:#ffffff;--mark:#f2b233;--mark-ink:#3b2a00;--alert:#a8432c;--calm:#e6efe9;--focus:#1b5fd1;--r-lg:18px;--r-md:12px;--r-sm:8px;--shadow:0 1px 2px rgba(22,35,31,.06),0 2px 8px rgba(22,35,31,.05);--shadow-lg:0 2px 4px rgba(22,35,31,.06),0 10px 28px rgba(22,35,31,.09);--tint:color-mix(in srgb,var(--action) 9%,var(--surface));color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0e1513;--surface:#151f1c;--ink:#e6eee9;--muted:#9bb0a8;--line:#2a3833;--action:#5fcfb6;--action-ink:#06231d;--mark:#f2b233;--mark-ink:#2a1d00;--alert:#f08a6c;--calm:#1b2a25;--focus:#8db4ff;--shadow:0 1px 2px rgba(0,0,0,.35);--shadow-lg:0 8px 24px rgba(0,0,0,.4);color-scheme:dark}}
-:root[data-theme="dark"]{--paper:#0e1513;--surface:#151f1c;--ink:#e6eee9;--muted:#9bb0a8;--line:#2a3833;--action:#5fcfb6;--action-ink:#06231d;--mark:#f2b233;--mark-ink:#2a1d00;--alert:#f08a6c;--calm:#1b2a25;--focus:#8db4ff;--shadow:0 1px 2px rgba(0,0,0,.35);--shadow-lg:0 8px 24px rgba(0,0,0,.4);color-scheme:dark}
+:root{--bar:#10141f;--bar-ink:#e8ebf5;--bar-muted:#9aa3bd;--dot-app:#3cc3a2;--dot-admin:#e2a32a;--dot-factory:#8796ff;--paper:#f3f5fb;--surface:#ffffff;--ink:#151a2e;--muted:#575f7c;--line:#d7dbec;--action:#3245c2;--action-ink:#ffffff;--mark:#0e9fb3;--mark-ink:#03262b;--alert:#b2412a;--calm:#e7eaf8;--focus:#b4590b;--side:#ffffff;--side-ink:#151a2e;--side-muted:#575f7c;--side-active:#e7eaf8;--r-lg:18px;--r-md:12px;--r-sm:8px;--shadow:0 1px 2px rgba(22,35,31,.06),0 2px 8px rgba(22,35,31,.05);--shadow-lg:0 2px 4px rgba(22,35,31,.06),0 10px 28px rgba(22,35,31,.09);--tint:color-mix(in srgb,var(--action) 9%,var(--surface));color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bar:#10141f;--bar-ink:#e8ebf5;--bar-muted:#9aa3bd;--dot-app:#3cc3a2;--dot-admin:#e2a32a;--dot-factory:#8796ff;--paper:#0d1020;--surface:#141a2e;--ink:#e5e8f6;--muted:#9ba3c4;--line:#283152;--action:#93a4ff;--action-ink:#0b1030;--mark:#4fd3e3;--mark-ink:#03262b;--alert:#f08a6c;--calm:#1b2340;--focus:#ffb36b;--side:#11162a;--side-ink:#e5e8f6;--side-muted:#9ba3c4;--side-active:#1f2950;--shadow:0 1px 2px rgba(0,0,0,.35);--shadow-lg:0 8px 24px rgba(0,0,0,.4);color-scheme:dark}}
+:root[data-theme="dark"]{--bar:#10141f;--bar-ink:#e8ebf5;--bar-muted:#9aa3bd;--dot-app:#3cc3a2;--dot-admin:#e2a32a;--dot-factory:#8796ff;--paper:#0d1020;--surface:#141a2e;--ink:#e5e8f6;--muted:#9ba3c4;--line:#283152;--action:#93a4ff;--action-ink:#0b1030;--mark:#4fd3e3;--mark-ink:#03262b;--alert:#f08a6c;--calm:#1b2340;--focus:#ffb36b;--side:#11162a;--side-ink:#e5e8f6;--side-muted:#9ba3c4;--side-active:#1f2950;--shadow:0 1px 2px rgba(0,0,0,.35);--shadow-lg:0 8px 24px rgba(0,0,0,.4);color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -18,6 +18,18 @@ p{margin:.4em 0}
 .muted{color:var(--muted)}
 .small{font-size:14px}
 .ic{flex:none;vertical-align:-5px}
+/* the bar across every surface: where you are, and every other place, grouped by theme */
+.zbar{background:var(--bar);color:var(--bar-ink);font-size:13px}
+.zbar-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:4px 14px;flex-wrap:wrap;padding:6px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px))}
+.zbar a{color:var(--bar-ink);text-decoration:none;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.zbar a:hover{background:rgba(255,255,255,.1)}
+.zbar a[aria-current="page"]{background:rgba(255,255,255,.16);font-weight:700}
+.zbar .zg{display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap}
+.zbar .zl{color:var(--bar-muted);font-weight:700;margin-right:4px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.zbar .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.zbar .d-app{background:var(--dot-app)}.zbar .d-admin{background:var(--dot-admin)}.zbar .d-factory{background:var(--dot-factory)}
+.zbar .zmap{margin-left:auto;border:1px solid rgba(255,255,255,.25);font-weight:700}
+@media (max-width:640px){.zbar-in{gap:2px 8px}.zbar .zmap{margin-left:0}}
 /* app shell */
 .top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .top-in{max-width:1120px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:16px}
@@ -134,12 +146,13 @@ table.t th{font-size:13px;color:var(--muted)}
 .empty{padding:22px;text-align:center;color:var(--muted)}
 /* console shell */
 .console{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
-.side{background:var(--surface);border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:0;height:100vh;overflow:auto}
-.side a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--ink);text-decoration:none;font-weight:700;font-size:15px}
-.side a[aria-current="page"]{background:var(--calm)}
-.side .grp{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:20px 10px 6px;padding-top:12px;border-top:1px solid var(--line)}
+.side{background:var(--side);color:var(--side-ink);border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+.side a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--side-ink);text-decoration:none;font-weight:700;font-size:15px}
+.side a[aria-current="page"]{background:var(--side-active)}
+.side .grp{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--side-muted);margin:20px 10px 6px;padding-top:12px;border-top:1px solid var(--line)}
 .side .brand{margin:2px 6px 8px}
-.side a:hover{background:color-mix(in srgb,var(--calm) 60%,transparent)}
+.side a:hover{background:color-mix(in srgb,var(--side-active) 70%,transparent)}
+.side .brand{color:var(--side-ink)}
 main.con{padding:24px 28px 60px;max-width:1200px;min-width:0}
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:14px 0}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;box-shadow:var(--shadow)}
@@ -164,7 +177,7 @@ article.case th{font-size:13px;color:var(--muted);background:var(--calm)}
 article.case thead:has(th:empty){display:none}
 article.case .mermaid{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin:16px 0;overflow:auto;box-shadow:var(--shadow)}
 article.case code{background:var(--calm);padding:1px 5px;border-radius:5px}
-@media (max-width:640px){article.case table{display:block;overflow-x:auto}}</style></head><body><a class="skip" href="#main">Skip to content</a><header class="cs-top"><a class="brand" href="/"><span class="brand-mark"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg></span>ZTHR</a><nav aria-label="Elsewhere"><a href="/advocate">The product</a><a href="/studentadvocate/">The app</a><a href="factory/index.html">Evidence</a><a href="docs/index.html">Docs</a><a href="https://github.com/russlittle/ZTHR/tree/reference-implementation">Source</a></nav></header><main id="main"><article class="case"><h1>What an AI factory can build, and what it is worth</h1>
+@media (max-width:640px){article.case table{display:block;overflow-x:auto}}</style></head><body><a class="skip" href="#main">Skip to content</a><nav class="zbar" aria-label="All of the Student Advocate and ZTHR"><div class="zbar-in"><a href="https://zthr.ai/">ZTHR</a><span class="zg"><span class="zl"><i class="dot d-app"></i>Student Advocate</span><a href="https://zthr.ai/advocate">About the app</a><a href="https://zthr.ai/studentadvocate/">Use the app</a><span class="zl" style="margin-left:6px"><i class="dot d-admin"></i></span><a href="https://zthr.ai/studentadvocate/admin/">App admin</a></span><span class="zg"><span class="zl"><i class="dot d-factory"></i>Factory</span><a href="https://zthr.ai/reference/factory/">Evidence</a><a href="https://zthr.ai/reference/docs/">Docs</a><a href="https://zthr.ai/reference/case" aria-current="page">The case</a></span><a href="https://zthr.ai/reference" class="zmap">Map: how it fits together</a></div></nav><main id="main"><article class="case"><h1>What an AI factory can build, and what it is worth</h1>
 <p>The Student Advocate is a complete, working application built entirely by AI agents under ZTHR fixtures: a
 student-facing team that runs a student&#39;s day, finds the money and help they qualify for, and does the legwork to
 get it. It exists to answer one question with evidence instead of argument: <strong>can software written by AI be
