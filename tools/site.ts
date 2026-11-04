@@ -28,7 +28,7 @@ const ARTIFACT = process.argv.includes('--artifact');
 const STATIC = process.argv.includes('--static');
 const RELATIVE = ARTIFACT || STATIC;
 const SITE = join(ROOT, ARTIFACT ? 'site-artifact' : STATIC ? 'site-static' : 'site-out');
-const GA = process.env.SITE_GA_ID ?? 'G-0VXPS15MY4';
+const GA = process.env.SITE_GA_ID ?? 'G-12ENZ47TSG';
 const APP = ARTIFACT ? 'https://zthr.ai/studentadvocate/' : '/studentadvocate/';
 /** Fonts and assets: served from the app when published, relative to the page in the self-contained copies. */
 const fontBase = (rootRel: string) => (RELATIVE ? rootRel.replace(/\/$/, '') || '.' : '/advocate');
