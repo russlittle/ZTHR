@@ -35,11 +35,31 @@
     "rewrites": [
       {
         "source": "/studentadvocate",
-        "destination": "/studentadvocate-pending.html"
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
       },
       {
         "source": "/studentadvocate/**",
-        "destination": "/studentadvocate-pending.html"
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/twins",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/twins/**",
+        "run": {
+          "serviceId": "advocate",
+          "region": "us-central1"
+        }
       },
       {
         "source": "**",
