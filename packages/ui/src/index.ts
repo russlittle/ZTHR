@@ -115,7 +115,12 @@ p{margin:.4em 0}
 .zbar .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
 .zbar .d-app{background:var(--dot-app)}.zbar .d-admin{background:var(--dot-admin)}.zbar .d-factory{background:var(--dot-factory)}
 .zbar .zmap{margin-left:auto;border:1px solid rgba(255,255,255,.25);font-weight:700}
-@media (max-width:640px){.zbar-in{gap:2px 8px}.zbar .zmap{margin-left:0}}
+.zbar .znarrow{display:none}
+.zbar summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px max(16px,env(safe-area-inset-right,0px)) 9px max(16px,env(safe-area-inset-left,0px));font-weight:700;min-height:40px}
+.zbar summary::-webkit-details-marker{display:none}
+.zbar .zall{margin-left:auto;color:var(--bar-muted);font-weight:700;border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:2px 8px}
+.zbar details[open] .zall{background:rgba(255,255,255,.14)}
+@media (max-width:640px){.zbar .zwide{display:none}.zbar .znarrow{display:block}.zbar-in{gap:2px 8px;padding-top:0}.zbar .zmap{margin-left:0}}
 /* app shell */
 .top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .top-in{max-width:1120px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:16px}
@@ -300,13 +305,16 @@ export const SURFACES = [
 ] as const;
 export type Surface = (typeof SURFACES)[number]['key'];
 
-/** The bar across the top of every surface. */
+/** The bar across the top of every surface. On a phone it folds into one line that names where you are. */
 export function zbar(current?: Surface): string {
   const link = (k: Surface) => {
     const x = SURFACES.find((s) => s.key === k)!;
     return `<a href="${x.href}"${k === current ? ' aria-current="page"' : ''}${k === 'map' ? ' class="zmap"' : ''}>${esc(x.label)}</a>`;
   };
-  return `<nav class="zbar" aria-label="All of the Student Advocate and ZTHR"><div class="zbar-in">${link('zthr')}<span class="zg"><span class="zl"><i class="dot d-app"></i>Student Advocate</span>${link('product')}${link('app')}<span class="zl" style="margin-left:6px"><i class="dot d-admin"></i></span>${link('admin')}</span><span class="zg"><span class="zl"><i class="dot d-factory"></i>Factory</span>${link('evidence')}${link('docs')}${link('case')}</span>${link('map')}</div></nav>`;
+  const groups = `${link('zthr')}<span class="zg"><span class="zl"><i class="dot d-app"></i>Student Advocate</span>${link('product')}${link('app')}<span class="zl" style="margin-left:6px"><i class="dot d-admin"></i></span>${link('admin')}</span><span class="zg"><span class="zl"><i class="dot d-factory"></i>Factory</span>${link('evidence')}${link('docs')}${link('case')}</span>${link('map')}`;
+  const here = SURFACES.find((s) => s.key === current);
+  const dot = here ? (here.group === 'app' ? 'd-app' : here.group === 'admin' ? 'd-admin' : 'd-factory') : 'd-factory';
+  return `<nav class="zbar" aria-label="All of the Student Advocate and ZTHR"><div class="zbar-in zwide">${groups}</div><details class="znarrow"><summary><i class="dot ${dot}"></i><span>${esc(here?.label ?? 'ZTHR')}</span><span class="zall">All parts</span></summary><div class="zbar-in">${groups}</div></details></nav>`;
 }
 
 const head = (o: ShellOpts) => `<!doctype html><html lang="${esc(o.lang ?? 'en')}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>${esc(o.title)}</title>${o.description ? `<meta name="description" content="${esc(o.description)}">` : ''}<meta name="theme-color" content="${THEMES[o.theme ?? 'student'].light.action}"><style>${styles(o.base ?? '', o.theme ?? 'student')}</style>${o.head ?? ''}</head>`;
