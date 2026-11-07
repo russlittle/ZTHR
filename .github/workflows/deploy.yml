@@ -14,6 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Every link lands where it should
+        # A broken link stops the deploy; the live site stays as it was.
+        run: python3 -I tools/linkcheck.py .
+
       - name: Check for Firebase credentials
         id: creds
         env:
