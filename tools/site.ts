@@ -1,5 +1,5 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { basename, dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Marked } from 'marked';
 import * as ui from '@zthr/ui';
@@ -37,10 +37,23 @@ ${ARTIFACT ? '' : `<script src="${STATIC ? rootRel : '/'}assets/mermaid-11.4.1.m
 <style>.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style>`;
 
 const read = <T>(p: string): T | undefined => (existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as T) : undefined);
+/**
+ * zthr.ai strips trailing slashes, so a folder's page is served at /reference/factory, not /reference/factory/, and
+ * a browser would resolve its relative links one folder too high. Each published page therefore names its own
+ * folder, and its in-page links name the page's own address.
+ */
+export function anchorToPublished(html: string, rel: string): string {
+  const dir = dirname(rel) === '.' ? '' : dirname(rel).split(sep).join('/');
+  const name = basename(rel, '.html');
+  const page = `/reference${dir ? `/${dir}` : ''}${name === 'index' ? '' : `/${name}`}`;
+  return html.replace('<head>', `<head><base href="/reference/${dir ? `${dir}/` : ''}">`).replace(/href="#([^"]+)"/g, `href="${page}#$1"`);
+}
 const write = (path: string, html: string) => {
   mkdirSync(dirname(path), { recursive: true });
   // The preview host reserves names that start with "_", so fonts live under fonts/ there.
-  writeFileSync(path, RELATIVE ? html.replace(/_ui\/atkinson/g, 'fonts/atkinson') : html);
+  let out = RELATIVE ? html.replace(/_ui\/atkinson/g, 'fonts/atkinson') : html;
+  if (STATIC && path.startsWith(SITE) && path.endsWith('.html')) out = anchorToPublished(out, relative(SITE, path));
+  writeFileSync(path, out);
 };
 const walkFiles = (dir: string, ext: string): string[] => (existsSync(dir) ? readdirSync(dir).flatMap((n) => (statSync(join(dir, n)).isDirectory() ? walkFiles(join(dir, n), ext) : n.endsWith(ext) ? [join(dir, n)] : [])) : []);
 
@@ -89,7 +102,7 @@ ${ui.section('Source and discussion', ui.rows([card('The full source', 'The app,
   write(join(SITE, 'index.html'), ui.consoleShell({ title: 'Map · Student Advocate and ZTHR', brand: 'Map', brandHref: 'index.html', base: fontBase(''), head: head(''), theme: 'factory', surface: 'map', groups: [{ title: 'Start with', items: [{ href: 'case.html', label: 'The case', icon: 'doc' }, { href: Z('/studentadvocate/'), label: 'Use the app', icon: 'route' }, { href: 'factory/index.html', label: 'Evidence', icon: 'shield' }] }], body }));
   if (STATIC) {
     // The host strips trailing slashes, so /reference is served from a file of that name beside the folder; its links resolve inside /reference/.
-    writeFileSync(join(ROOT, 'site-static.entry.html'), readFileSync(join(SITE, 'index.html'), 'utf8').replace('<head>', '<head><base href="/reference/">'));
+    writeFileSync(join(ROOT, 'site-static.entry.html'), readFileSync(join(SITE, 'index.html'), 'utf8'));
   }
   if (ARTIFACT) {
     // The preview's front page is written as page content only; the host wraps it in its own document.
@@ -293,7 +306,7 @@ ${NAV.map((g) => ui.section(g.title, ui.rows(g.pages.filter(([p]) => p !== 'inde
     shell(
       'twins',
       'Campus twins',
-      `<p class="muted">Synthetic services shaped like a college's vendors. The Advocate reaches them only through its egress door, and each is held to a contract: ${contract ? `${contract.results.filter((r) => r.ok).length} of ${contract.results.length} probes pass` : 'not measured in this build'}. <a href="../docs/blocks/campus-services.html">How they work</a>. Try them: <a href="${APP.replace(/advocate\/$/, '')}twins">zthr.ai/twins</a>.</p>
+      `<p class="muted">Synthetic services shaped like a college's vendors. The Advocate reaches them only through its egress door, and each is held to a contract: ${contract ? `${contract.results.filter((r) => r.ok).length} of ${contract.results.length} probes pass` : 'not measured in this build'}. <a href="../docs/blocks/campus-services.html">How they work</a>. Try them: <a href="https://zthr.ai/twins">zthr.ai/twins</a>.</p>
 ${SERVICE_IDS.map((id) => { const sv = SERVICES[id]; const probes = (contract?.results ?? []).filter((r) => r.service === id); return ui.section(`${sv.info.title}`, `<p class="small muted"><code>${ui.esc(sv.host)}</code> · ${ui.esc(sv.info.description)}</p>${ui.table(['Endpoint', 'What it answers'], sv.info.endpoints.map((e) => [`<code>${ui.esc(e.method)} ${ui.esc(e.path)}</code>`, ui.esc(e.summary)]), { raw: [true, false] })}${Object.keys(sv.info.scenarios).length ? `<p class="small">Bad-day scenarios: ${Object.entries(sv.info.scenarios).map(([k, v]) => `<code>${ui.esc(k)}</code> ${ui.esc(v)}`).join('; ')}</p>` : ''}${probes.length ? ui.table(['Contract probe', 'Request', 'Result'], probes.map((r) => [ui.esc(r.probe), `<code>${ui.esc(r.path)}</code>`, r.ok ? ui.chip('meets contract', 'ok') : ui.chip(r.problems.join('; '), 'bad')]), { raw: [false, true, true] }) : ''}`); }).join('')}`,
     ),
   );
