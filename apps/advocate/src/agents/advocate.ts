@@ -45,6 +45,8 @@ import { sandwich } from '@zthr/runtime';
 import { CampusClient, Schemas, SYNTHETIC_ENDPOINTS, type CampusEndpoints, type CampusFeed, type CommutePlan, type TransitNow } from '../integrations/campus.js';
 import { Operator, type Dispatch } from '../operator/operator.js';
 import * as campusLife from './campus-life.js';
+import * as academics from './academics.js';
+import type { Gradebook, GradeItem } from '../domain/academics.js';
 import { ACTIONS, type ActionResult } from './actions.js';
 import { aiPolicySentence, parseSyllabus, type AiPolicy } from '../domain/syllabus.js';
 import { buildToday, renderToday, type TodayView } from '../domain/today.js';
@@ -441,6 +443,8 @@ export class Advocate {
     if (/^(explain|what does|what's|whats)\b.{0,30}\bletter\b/i.test(t) || (text.length > 280 && /\b(dear|notice|re:|sincerely|account number|case number)\b/i.test(text))) {
       return [this.deliver(this.letterMessage(s.id, text.replace(/^(explain|what does|what's|whats)\b[^:\n]*[:\n]?/i, '')), { force: true })];
     }
+    const school = this.academicIntent(s.id, text);
+    if (school) return [this.deliver(school, { force: true })];
     const situation = detectSituation(text);
     if (situation) return [this.deliver(this.crisis(s.id, situation).message, { force: true })];
     if (/^(today|my day|schedule|what'?s today)\b/.test(t)) return [this.deliver(this.todayMessage(s.id), { force: true })];
@@ -814,7 +818,7 @@ export class Advocate {
   draftFor(studentId: string, purpose: string): Draft | undefined {
     const waiting = this.drafts(studentId).find((d) => d.purpose === purpose && d.status === 'shown');
     if (waiting) return waiting;
-    const template = DRAFTS[purpose as Situation]?.(this.student(studentId));
+    const template = Object.hasOwn(DRAFTS, purpose) ? DRAFTS[purpose as Situation]?.(this.student(studentId)) : undefined;
     return template ? this.createDraft(studentId, template.to, template.to, template.body, purpose) : undefined;
   }
 
@@ -1439,12 +1443,112 @@ export class Advocate {
     return { message: this.letterMessage(studentId, text, meta, r.usedModel ? r.output : undefined), usedModel: r.usedModel, reason: r.reason };
   }
 
+  // ---------- staying enrolled: grades, standing, aid progress, degree, sharing (Phase 5) ----------
+
+  /** Questions about grades, standing, aid progress, dropping and degree progress, and typed scores. */
+  private academicIntent(studentId: string, text: string): OutboundMessage | undefined {
+    const t = text.toLowerCase();
+    // "What is SAP?" and "how do I drop a class?" are questions about how college works, answered by the glossary
+    // with the office that decides; this handles questions about the student's own record.
+    if (/^\s*(what('?s| is| does| are)|how do (i|you|students))\b/.test(t) && !/\b(my|i need|[a-z]{2,4}\s?\d{4})\b/i.test(t)) return undefined;
+    const course = text.match(/\b([A-Z]{2,4})\s?(\d{4}L?)\b/i);
+    const code = course ? `${course[1]!.toUpperCase()} ${course[2]!.toUpperCase()}` : undefined;
+    const score = text.match(/\b(?:got|scored|made|received)\s+(?:an?\s+)?(\d{1,3}(?:\.\d+)?)\s*(?:\/|out of)\s*(\d{1,3})\b(?:\s+on\s+(?:the\s+|my\s+)?([a-z0-9 ]{2,30}?))?(?:\s+in\s+|\s*$)/i);
+    if (score && code) {
+      const g = this.recordScore(studentId, code, (score[3] ?? 'score').trim(), Number(score[1]), Number(score[2]));
+      if (g) return academics.finalNeedMessage(this, studentId, code);
+    }
+    if (/\b(need|have to get|must get)\b.{0,30}\b(on|for)\b.{0,20}\bfinal\b|\bwhat do i need\b.{0,30}\b(pass|final|grade)/.test(t)) return academics.finalNeedMessage(this, studentId, code);
+    if (/\b(drop|withdraw( from)?)\b.{0,25}\b(class|course|classes|courses|semester|term)\b|\b(drop|withdraw)\s+[a-z]{2,4}\s?\d{4}/i.test(text) || (code && /\b(drop|withdraw|quit)\b/.test(t))) return academics.dropMessage(this, studentId, code);
+    if (/\b(lose|keep|losing|cut off|stop)\b.{0,20}\b(financial aid|my aid|pell|aid)\b|\bsatisfactory academic progress\b|\bsap\b|\bsap appeal\b/.test(t)) return academics.aidProgressMessage(this, studentId);
+    if (/\b(my grades?|my gpa|what'?s my gpa|academic standing|on probation|how am i doing in)\b/.test(t)) return code ? academics.finalNeedMessage(this, studentId, code) : academics.schoolMessage(this, studentId);
+    if (/\b(degree progress|how (many|much) (credits|classes) (do i have )?left|when (will|do) i graduate|transfer 36|credits (left|to graduate))\b/.test(t)) return academics.degreeMessage(this, studentId);
+    if (/\b(share|send)\b.{0,20}\b(with|to)\b.{0,10}\b(my )?(advisor|counselor|coach|mentor)\b/.test(t)) return this.perform(studentId, 'advisor-share')!.message;
+    return undefined;
+  }
+
+  academicRecord(studentId: string): academics.AcademicRecord {
+    return this.store.get<academics.AcademicRecord>('academic', studentId) ?? { transcript: [] };
+  }
+
+  setAcademic(studentId: string, r: academics.AcademicRecord): void {
+    this.student(studentId);
+    this.store.put('academic', studentId, studentId, r);
+  }
+
+  gradebooks(studentId: string): Gradebook[] {
+    return this.store.list<Gradebook>('gradebooks', studentId).sort((a, b) => a.course.localeCompare(b.course));
+  }
+
+  setGradebook(studentId: string, g: Gradebook): void {
+    this.store.put('gradebooks', `${studentId}:${g.course}`, studentId, g);
+    this.ev('grades', studentId, { source: g.source, items: g.items.length });
+  }
+
+  /** A score the student typed: fills the matching ungraded item, or adds one to the category it names. */
+  recordScore(studentId: string, course: string, title: string, score: number, outOf: number): Gradebook | undefined {
+    const g = this.gradebooks(studentId).find((b) => b.course.replace(/\s/g, '').toLowerCase() === course.replace(/\s/g, '').toLowerCase());
+    if (!g || !(outOf > 0) || score < 0 || score > outOf * 1.5) return undefined;
+    const key = title.toLowerCase();
+    const match = g.items.find((i) => i.score === undefined && i.title.toLowerCase() === key) ?? g.items.find((i) => i.score === undefined && key.includes(i.category.toLowerCase().replace(/s$/, '')));
+    const cat = g.categories.find((c) => key.includes(c.name.toLowerCase().replace(/s$/, ''))) ?? g.categories[0]!;
+    const items: GradeItem[] = match ? g.items.map((i) => (i === match ? { ...i, score, outOf } : i)) : [...g.items, { category: cat.name, title, score, outOf }];
+    const next = { ...g, items, source: g.source };
+    this.setGradebook(studentId, next);
+    return next;
+  }
+
+  academicView(studentId: string): academics.AcademicView {
+    return academics.academicView(this, studentId);
+  }
+
+  shares(studentId: string): academics.Share[] {
+    return this.store.list<academics.Share>('shares', studentId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  /** A read-only link for an advisor or anyone the student chooses: scoped, expiring, revocable, and recorded. */
+  createShare(studentId: string, label: string, scopes: academics.ShareScope[], days: number): { token: string; share: academics.Share } {
+    this.student(studentId);
+    const r = academics.createShare(this, studentId, label, scopes, days);
+    if (!r.share.scopes.length) throw new Error('choose what to share');
+    this.store.put('shares', r.share.id, studentId, r.share);
+    this.ledger.append(studentId, 'grant', `share:${r.share.id.slice(0, 12)}`, { scopes: r.share.scopes.join(','), expires: r.share.expiresAt });
+    this.ev('share_created', studentId, { scopes: r.share.scopes.length, days });
+    return r;
+  }
+
+  revokeShare(studentId: string, shareId: string): boolean {
+    const sh = this.store.get<academics.Share>('shares', shareId);
+    if (!sh || sh.studentId !== studentId || sh.revokedAt) return false;
+    this.store.put('shares', sh.id, studentId, { ...sh, revokedAt: this.clock().toISOString() });
+    this.ledger.append(studentId, 'revoke', `share:${sh.id.slice(0, 12)}`, {});
+    return true;
+  }
+
+  /** Whether a live share has this token, without opening it (for routing a visitor to the right copy). */
+  hasShare(token: string): boolean {
+    return typeof token === 'string' && token.length >= 20 && token.length <= 64 && academics.shareLive(this.store.get<academics.Share>('shares', academics.tokenHash(token)), this.clock());
+  }
+
+  /** Opens a share by its token; every view is recorded in the student's ledger. Undefined when unknown, expired or revoked. */
+  openShare(token: string): academics.Share | undefined {
+    if (typeof token !== 'string' || token.length < 20 || token.length > 64) return undefined;
+    const sh = this.store.get<academics.Share>('shares', academics.tokenHash(token));
+    if (!academics.shareLive(sh, this.clock())) return undefined;
+    const next = { ...sh!, views: sh!.views + 1 };
+    this.store.put('shares', sh!.id, sh!.studentId, next);
+    this.ledger.append(sh!.studentId, 'release', `share:${sh!.id.slice(0, 12)}`, { identity: 'share-link', scopes: sh!.scopes.join(',') });
+    this.ev('share_viewed', sh!.studentId, {});
+    return next;
+  }
+
   // ---------- actions: one registry for app, text and journeys ----------
 
   /** Run a next-step action. Undefined only for a verb no handler knows, which the no-dead-ends gate forbids. */
   perform(studentId: string, action: string): ActionResult | undefined {
     const [verb, ...rest] = action.split(':');
-    const handler = ACTIONS[verb!];
+    // Only the registry's own verbs: a name like "valueOf" or "constructor" must not reach the object's prototype.
+    const handler = Object.hasOwn(ACTIONS, verb!) ? ACTIONS[verb!] : undefined;
     if (!handler) {
       this.ev('dead_end', studentId, { verb });
       return undefined;

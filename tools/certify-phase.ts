@@ -56,7 +56,7 @@ if (mutation && floor !== undefined) {
 } else shared.push({ check: 'mutation', status: 'not measured', detail: 'mutation runs nightly' });
 
 const cards = loadCards(JOURNEY_DIR);
-const certificates = [1, 2, 3, 4].map((phase) => {
+const certificates = [...new Set(cards.map((c) => c.phase))].sort((a, b) => a - b).map((phase) => {
   const mine = cards.filter((c) => c.phase <= phase);
   const results = mine.map((c) => ({ id: c.id, status: (journeys.get(c.id)?.status as string | undefined) ?? 'not measured' }));
   const bad = results.filter((r) => r.status !== 'pass');

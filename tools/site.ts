@@ -198,7 +198,8 @@ function buildFactory(): number {
   const crawl = read<WalkReport>(join(OUT, 'crawl.json'));
   const crawlSettings = read<WalkReport>(join(OUT, 'crawl-settings.json'));
   const redteam = read<{ at: string; results: { corpus: string; attack: string; expect: string; held: boolean; detail?: string }[] }>(join(OUT, 'redteam.json'));
-  const uiManifest = read<{ stops: { walk: string; step: string; scheme: string; viewport: string; url: string; screenshot: string; problems: string[] }[] }>(join(OUT, 'ui', 'manifest.json'));
+  const uiManifest = read<{ stops: { walk: string; step: string; scheme: string; viewport: string; url: string; screenshot: string; problems: string[]; review?: number }[] }>(join(OUT, 'ui', 'manifest.json'));
+  const load = read<{ at: string; visitors: number; seconds: number; requests: number; perSecond: number; p50: number; p95: number; p99: number; max: number; errors: number; budgetP95: number; byPath: Record<string, { requests: number; p50: number; p95: number }> }>(join(OUT, 'load.json'));
   const mutation = read<{ files: Record<string, { mutants: { status: string; mutatorName: string; replacement?: string; location: { start: { line: number } } }[] }> }>(join(ROOT, 'reports', 'mutation.json'));
   const proofs = read<{ gate: string; gateHash: string; valid: boolean; cases: string[] }[]>(join(ROOT, 'control', 'proofs.json')) ?? [];
   const ratchetList = read<{ id: string; floor: number }[]>(join(ROOT, 'control', 'ratchets.json')) ?? [];
@@ -219,7 +220,7 @@ function buildFactory(): number {
   const NAV: { title: string; pages: [string, string, string][] }[] = [
     { title: 'The build', pages: [['index', 'Summary', 'gauge'], ['phases', 'Phases', 'list'], ['features', 'Features', 'check'], ['patterns', 'The 33 patterns', 'list']] },
     { title: 'Safety', pages: [['gates', 'Guardrails', 'shield'], ['redteam', 'Red team', 'alert'], ['sensitive', 'Sensitive data trace', 'you']] },
-    { title: 'QA verification', pages: [['feature-walks', 'Feature walks', 'route'], ['ui-walk', 'Browser walk', 'today'], ['intent', 'Intent walks', 'check'], ['tests', 'Every test', 'flask'], ['mutation', 'Mutation', 'bolt'], ['docs-qa', 'Docs and links', 'doc']] },
+    { title: 'QA verification', pages: [['feature-walks', 'Feature walks', 'route'], ['ui-walk', 'Browser walk', 'today'], ['intent', 'Intent walks', 'check'], ['accessibility', 'Accessibility', 'you'], ['robustness', 'Robustness and load', 'bolt'], ['tests', 'Every test', 'flask'], ['mutation', 'Mutation', 'bolt'], ['docs-qa', 'Docs and links', 'doc']] },
     { title: 'Parts and data', pages: [['blocks', 'Block library', 'list'], ['data', 'Data model', 'book'], ['sources', 'Data sources', 'book'], ['twins', 'Campus twins', 'bus']] },
     { title: 'Operations', pages: [['cost', 'Cost', 'dollar']] },
   ];
@@ -229,6 +230,41 @@ function buildFactory(): number {
   const n = (x: number | undefined) => (x === undefined ? 'not measured' : x.toLocaleString('en-US'));
   const held = redteam?.results.filter((r) => r.held).length;
   const walkStates = (explore?.states ?? 0) + (crawl?.states ?? 0) + (crawlSettings?.states ?? 0);
+
+  // accessibility: the statement and its evidence
+  {
+    const app = uiManifest?.stops.filter((x) => x.walk !== 'site') ?? [];
+    const site = uiManifest?.stops.filter((x) => x.walk === 'site') ?? [];
+    const clean = (xs: typeof app) => xs.filter((x) => !x.problems.length).length;
+    write(join(SITE, 'factory', 'accessibility.html'), shell('accessibility', 'Accessibility', `<p class="muted">The Student Advocate is built to meet WCAG 2.2 at level AA and to work with screen readers. This page is the conformance statement, and the evidence from this build behind it. <a href="../docs/accessibility.html">How it is built and tested</a>.</p>
+${ui.readings([
+  { label: 'App screens with no WCAG 2.2 A or AA violation', value: uiManifest ? clean(app) : undefined, of: app.length || undefined, floor: app.length || undefined, note: 'Five students, every screen, phone and desktop, light and dark, reflow at 320 px, and a shared link', words: { pass: 'Conforms', fail: 'Fails' } },
+  { label: 'Docs and evidence pages with no violation', value: uiManifest && site.length ? clean(site) : undefined, of: site.length || undefined, floor: site.length || undefined, words: { pass: 'Conforms', fail: 'Fails' } },
+  { label: 'Checks left for a person to review', value: uiManifest ? app.reduce((n, x) => n + (x.review ?? 0), 0) : undefined, note: 'What axe cannot decide by itself, mostly contrast over the soft gradient. That case is computed instead: every text color is held to 4.5:1 over the strongest point of every color field, in both themes (packages/ui/test/contrast.test.ts)' },
+])}
+${ui.section('What is checked at every stop', ui.table(['WCAG 2.2', 'How'], [
+  ['1.1.1, 4.1.2 Names, roles and values', 'axe, and the accessibility tree: every link, button, field, checkbox and image has a name'],
+  ['1.3.1, 2.4.6 Structure, headings and labels', 'One level-1 heading, no skipped levels, a main region, every field labelled'],
+  ['1.4.3, 1.4.11 Contrast', 'axe, in light and dark themes'],
+  ['1.4.10 Reflow', 'Every screen at 320 CSS pixels, with no sideways scroll'],
+  ['1.4.12 Text spacing', 'The spacing override applied; nothing cut off'],
+  ['2.1.1, 2.4.7 Keyboard and focus', 'Every control reached by Tab, with a visible focus ring'],
+  ['2.4.11 Focus not obscured', 'At each tab stop, nothing drawn over the focused control'],
+  ['2.5.8 Target size', 'axe, and 44 px for buttons and tabs'],
+  ['3.1.1 Language', 'Each page states its language'],
+]))}
+${ui.section('Known limits', '<ul><li>Automated checks cover what a machine can decide. Manual testing with NVDA, JAWS, VoiceOver and TalkBack by people who use them every day is the next step and is not yet done.</li><li>Spanish covers starting by text, finding help and crisis replies; other screens are in English (on the register).</li><li>Diagrams on the docs pages have text equivalents in the tables beside them.</li></ul>')}
+${uiManifest ? ui.section('Every stop', ui.table(['Where', 'Theme and width', 'Result'], [...app, ...site].map((x) => [`${x.walk} ${x.step}`, `${x.scheme}, ${x.viewport}`, x.problems.length ? ui.chip(x.problems.join('; ').slice(0, 120), 'bad') : ui.chip('conforms', 'ok')]), { raw: [false, false, true] })) : '<p class="muted">Not measured in this build.</p>'}`));
+    write(join(SITE, 'factory', 'robustness.html'), shell('robustness', 'Robustness and load', `<p class="muted">Generated input, campus services failing on purpose, a restore of the whole app, and many visitors at once. <a href="../docs/testing/robustness.html">How it works and what it found</a>.</p>
+${load ? ui.readings([
+  { label: 'Requests answered under 500', value: load.requests - load.errors, of: load.requests, floor: load.requests, note: `${load.visitors} visitors for ${load.seconds} seconds, ${load.perSecond} requests a second`, words: { pass: 'Held', fail: 'Errors' } },
+  { label: 'Median response', value: load.p50, note: 'milliseconds' },
+  { label: '95th percentile', value: load.p95, of: load.budgetP95, ceiling: load.budgetP95, note: `milliseconds; the budget is ${load.budgetP95}`, words: { pass: 'Within budget', fail: 'Over budget' } },
+  { label: '99th percentile', value: load.p99, note: 'milliseconds' },
+]) : '<p class="muted">The load test runs in the pipeline after the browser walk; not measured in this build.</p>'}
+${load ? ui.section('By screen', ui.table(['Screen', 'Requests', 'Median ms', '95th percentile ms'], Object.entries(load.byPath).map(([k, v]) => [k, n(v.requests), String(v.p50), String(v.p95)]))) : ''}
+${ui.section('Generated input and failing services', ui.table(['Check', 'Result'], (tests?.testResults.find((f) => f.name.endsWith('robustness.test.ts'))?.assertionResults ?? []).map((t) => [[...t.ancestorTitles.slice(-1), t.title].join(': '), t.status === 'passed' ? ui.chip('passed', 'ok') : ui.chip(t.status, 'bad')]), { raw: [false, true] }))}`));
+  }
 
   // overview
   write(join(SITE, 'factory', 'index.html'), shell('index', 'Evidence: summary', `

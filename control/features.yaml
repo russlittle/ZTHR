@@ -184,3 +184,36 @@ phases:
         status: not measured
         screens: []
         journeys: []
+  - n: 5
+    name: Stay enrolled
+    features:
+      - name: Grades from the syllabus
+        what: Each class's grade so far from the syllabus weights and the graded work, from the class site or typed in, and what the final needs for each letter.
+        status: built
+        screens: [School]
+        journeys: [p5-what-on-the-final]
+      - name: Standing and aid progress
+        what: Academic standing under each college's own rule, and Satisfactory Academic Progress at its thresholds, measured now and projected to the end of the term.
+        status: built
+        screens: [School]
+        journeys: [p5-aid-progress-appeal]
+      - name: Appealing to keep aid
+        what: A checklist for an aid appeal with the open window, the documents that help, and a note to the advisor the student approves.
+        status: built
+        screens: [School, Help]
+        journeys: [p5-aid-progress-appeal]
+      - name: Drop, withdraw or stay
+        what: Each choice side by side on today's date, from the college's calendar, with the refund, the transcript, aid progress, any aid-probation plan, and the federal aid return estimate.
+        status: built
+        screens: [School]
+        journeys: [p5-drop-or-withdraw]
+      - name: Degree progress and Ohio Transfer 36
+        what: Credits left in each area of a published pathway, the transfer core, and a finish term at the student's pace.
+        status: built
+        screens: [School]
+        journeys: [p5-degree-progress]
+      - name: Share with an advisor
+        what: A read-only link the student controls, showing only what they chose, for as long as they chose, with every view recorded.
+        status: built
+        screens: [School]
+        journeys: [p5-share-with-advisor]

@@ -6,6 +6,7 @@ import { TERMS } from '../domain/college.js';
 import type { Situation } from '../domain/crisis.js';
 import * as campusLife from './campus-life.js';
 import { collegeById } from '../domain/colleges.js';
+import * as academics from './academics.js';
 
 /**
  * Every button the team offers, in one registry (PRD P3: every message carries a next step the student can take
@@ -15,7 +16,7 @@ import { collegeById } from '../domain/colleges.js';
  *
  * A result always carries a message, so the text channel can answer. It may also name a screen for the app.
  */
-export type View = 'today' | 'money' | 'help' | 'settings' | 'week' | 'syllabus' | 'shifts' | 'dates' | 'drafts' | 'resource' | 'ask' | 'deleted' | 'share' | 'letter' | 'meals';
+export type View = 'today' | 'money' | 'help' | 'settings' | 'week' | 'syllabus' | 'shifts' | 'dates' | 'drafts' | 'resource' | 'ask' | 'deleted' | 'share' | 'letter' | 'meals' | 'school' | 'drop' | 'advisor-share' | 'degree';
 
 export interface ActionResult {
   message: OutboundMessage;
@@ -64,6 +65,16 @@ const PREPARE: Record<string, string[]> = {
 };
 
 export const ACTIONS: Record<string, Handler> = {
+  school: (a, sid) => ({ message: academics.schoolMessage(a, sid), view: 'school' }),
+  'final-need': (a, sid, arg) => ({ message: academics.finalNeedMessage(a, sid, arg || undefined), view: 'school' }),
+  drop: (a, sid, arg) => ({ message: academics.dropMessage(a, sid, arg || undefined), view: 'drop', viewArg: arg }),
+  'aid-progress': (a, sid) => ({ message: academics.aidProgressMessage(a, sid), view: 'school' }),
+  degree: (a, sid) => ({ message: academics.degreeMessage(a, sid), view: 'degree' }),
+  'advisor-share': (a, sid, arg) => ({
+    message: msg(sid, `You can make a read-only link for your advisor, or anyone you choose. You pick what it shows and how long it works, you can turn it off any time, and you'll see each time it's opened. Links are made on the Share screen in the app, so the link itself is never stored in your messages.`, [back]),
+    view: 'advisor-share',
+    viewArg: arg,
+  }),
   today: (a, sid) => ({ message: a.todayMessage(sid), view: 'today' }),
   settings: (a, sid) => {
     const s = a.student(sid);
@@ -105,10 +116,10 @@ export const ACTIONS: Record<string, Handler> = {
   situation: (a, sid, arg) => ({ message: a.crisis(sid, (SITUATIONS.includes(arg as Situation) ? arg : 'no-food') as Situation).message, view: 'help' }),
   call: (_a, sid, arg) => ({ message: msg(sid, `Call ${arg === '988' ? 'or text 988' : arg}. ${arg === '211' ? '2-1-1 answers any time and knows local help.' : arg === '988' ? 'Someone answers any time, day or night.' : 'Tell them you are a student; it often opens more options.'}`, [back]) }),
   contact: (_a, sid, arg) => {
-    const c = CONTACTS[arg] ?? { name: arg };
+    const c = (Object.hasOwn(CONTACTS, arg) ? CONTACTS[arg] : undefined) ?? { name: arg };
     return { message: msg(sid, `${c.name}${c.phone ? `: call ${c.phone}` : ''}${c.url ? `${c.phone ? ' or visit' : ': visit'} ${c.url}` : ''}. Want help getting ready first?`, [...(c.phone ? [{ label: `Call ${c.name}`, action: `call:${c.phone}` }] : []), back]) };
   },
-  prepare: (_a, sid, arg) => ({ message: msg(sid, `Bring these and you will get more out of it:\n${(PREPARE[arg] ?? PREPARE.legal!).map((x, i) => `${i + 1}. ${x}`).join('\n')}`, [{ label: 'Set a reminder', action: `remind:getting ready (${arg})` }, back]) }),
+  prepare: (_a, sid, arg) => ({ message: msg(sid, `Bring these and you will get more out of it:\n${((Object.hasOwn(PREPARE, arg) ? PREPARE[arg] : undefined) ?? PREPARE.legal!).map((x, i) => `${i + 1}. ${x}`).join('\n')}`, [{ label: 'Set a reminder', action: `remind:getting ready (${arg})` }, back]) }),
   share: (a, sid, arg) => {
     const sh = a.shareText(sid, arg || undefined);
     return { message: msg(sid, `You can send this to a friend:\n"${sh.text}"`, [back]), view: 'share', viewArg: arg };

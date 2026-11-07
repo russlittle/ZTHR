@@ -20,6 +20,40 @@ export const CollegeDef = z.object({
   website: z.string().url(),
   career: z.object({ name: z.string(), contact: z.string(), source: z.string().url() }),
   admitted_by: z.enum(['factory', 'person']),
+  /** Standing, aid progress, refunds and term dates, each from the college's published policy (Phase 5). */
+  academic: z
+    .object({
+      level: z.enum(['associate', 'bachelor']),
+      standing: z.object({ kind: z.enum(['consecutive-term', 'cumulative-after-hours']), goodGpa: z.number(), afterHours: z.number().optional(), ladder: z.array(z.string()).optional(), source: z.string().url() }),
+      sap: z.object({
+        gpa: z.number(),
+        pace: z.number(),
+        maxTimeframe: z.number(),
+        evaluated: z.string(),
+        statuses: z.string(),
+        appeal: z.array(z.object({ term: z.string(), opens: z.string(), closes: z.string(), planDue: z.string().optional() })).optional(),
+        how: z.string(),
+        source: z.string().url(),
+      }),
+      refund: z.string(),
+      refundSource: z.string().url().optional(),
+      terms: z.array(
+        z.object({
+          term: z.string(),
+          start: z.string(),
+          classesEnd: z.string(),
+          end: z.string(),
+          endNote: z.string().optional(),
+          refund100By: z.string(),
+          withdrawBy: z.string(),
+          breaks: z.array(z.object({ from: z.string(), to: z.string(), name: z.string() })),
+          source: z.string().url(),
+          sourceNote: z.string().optional(),
+        }),
+      ),
+      termsNote: z.string().optional(),
+    })
+    .optional(),
 });
 export type CollegeDef = z.infer<typeof CollegeDef>;
 

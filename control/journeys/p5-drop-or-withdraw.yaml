@@ -1,0 +1,13 @@
+id: p5-drop-or-withdraw
+persona: destiny
+phase: 5
+goal: A student on aid probation who is thinking about dropping a class sees every choice side by side for today, from the college's published calendar, with what each does to her transcript, her aid progress, her probation plan, and any federal aid she would owe back.
+forbidden:
+  - a choice whose deadline has passed is offered as available
+  - an aid return figure disagrees with the federal Return of Title IV formula
+  - a date is stated that the college did not publish
+  - the student is told to do something rather than shown the choices
+budget: { actions: 4, ms: 5000 }
+requirements: [ACA-3, ACA-4]
+modes: [standard]
+channels: [app]

@@ -12,18 +12,18 @@ the field and the place. The latest run is on the factory console's Sensitive da
 
 | Class | Means | Fields |
 | --- | --- | --- |
-| public | Published facts anyone may read | 14 |
-| internal | Ids, times, statuses and settings that say nothing about the student alone | 62 |
-| personal | Identifies or describes the student: name, phone, schedule, what they wrote | 55 |
-| sensitive | Special-category: money, benefits, family, identity, which help they need, sealed facts | 13 |
+| public | Published facts anyone may read | 15 |
+| internal | Ids, times, statuses and settings that say nothing about the student alone | 69 |
+| personal | Identifies or describes the student: name, phone, schedule, what they wrote | 62 |
+| sensitive | Special-category: money, benefits, family, identity, which help they need, sealed facts | 18 |
 | secret | Credentials: stored only hashed or encrypted, never shown | 1 |
 
 ```mermaid
 pie showData title Fields by class
-  "public" : 14
-  "internal" : 62
-  "personal" : 55
-  "sensitive" : 13
+  "public" : 15
+  "internal" : 69
+  "personal" : 62
+  "sensitive" : 18
   "secret" : 1
 ```
 
@@ -175,6 +175,18 @@ flowchart TB
 | `meetings.course` | personal |  |
 | `courses.course` | personal |  |
 | `dismissed.subject` | personal |  |
+| `academic.program` | personal | declared program id |
+| `academic.programCredits` | personal |  |
+| `academic.transcript` | sensitive | course, credits, grade, term |
+| `academic.aid` | sensitive | federal aid paid this term |
+| `academic.charges` | sensitive | tuition and fees this term |
+| `academic.aidProbation` | sensitive | term, plan GPA and pace, after an approved appeal |
+| `gradebooks.course` | personal |  |
+| `gradebooks.credits` | personal |  |
+| `gradebooks.categories` | personal | name and weight |
+| `gradebooks.items` | sensitive | title, score, out of |
+| `shares.label` | personal | who it is for, in the student's words |
+| `shares.scopes` | personal | schedule, school, degree, plan |
 | `aid.disbursement` | sensitive |  |
 
 ## Sealed facts
@@ -218,6 +230,9 @@ Each field's class is shown beside it. A collection is as sensitive as its most 
 | `meetings` | personal |
 | `courses` | personal |
 | `dismissed` | personal |
+| `academic` | sensitive |
+| `gradebooks` | sensitive |
+| `shares` | personal |
 | `aid` | sensitive |
 
 ### student
@@ -453,6 +468,38 @@ erDiagram
     string holder "internal"
     date_time until "internal"
     number beats "internal"
+  }
+```
+
+### school
+
+```mermaid
+erDiagram
+  academic {
+    string program "personal"
+    number programCredits "personal"
+    TranscriptCourse_list transcript "sensitive"
+    AidDisbursed aid "sensitive"
+    number charges "sensitive"
+    object aidProbation "sensitive"
+  }
+  gradebooks {
+    string course "personal"
+    number credits "personal"
+    GradeCategory_list categories "personal"
+    GradeItem_list items "sensitive"
+    enum source "internal"
+    object scale "public"
+  }
+  shares {
+    string id PK "internal"
+    string studentId "internal"
+    string label "personal"
+    enum_list scopes "personal"
+    date_time createdAt "internal"
+    date_time expiresAt "internal"
+    date_time revokedAt "internal"
+    number views "internal"
   }
 ```
 

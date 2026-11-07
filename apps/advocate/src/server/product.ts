@@ -31,6 +31,8 @@ const FEATURES: [string, string, string][] = [
   ['bus', 'Handles campus life', 'What is open to eat right now, free food today, a quiet room booked and confirmed, and when to leave for the bus with live delays.'],
   ['book', 'Keeps up with your classes', 'Reads your syllabus and your class site, moves a date when your instructor moves it, and plans the work in the time you have.'],
   ['route', 'Opens doors to work', 'Jobs that fit around your classes and shifts, a fair-chance path when you ask for it, and an introduction to a mentor in your field.'],
+  ['cap', 'Keeps you enrolled', 'Your grade so far and what the final needs, whether you keep your financial aid, and every choice about dropping a class side by side, with the aid that would go back.'],
+  ['you', 'Brings in your advisor, your way', 'A read-only link you control: only what you choose to show, for as long as you choose, and you see each time it is opened.'],
 ];
 
 const PRINCIPLES: [string, string][] = [
@@ -115,7 +117,7 @@ export function productPage(l: ProductLinks): string {
 <section class="pp-sec" aria-labelledby="who"><h2 id="who">Who it is for</h2><p class="sub">Students who carry more than classes: the ones most likely to stop out for reasons that have nothing to do with ability.</p>
 <div class="pp-who"><span>Working students</span><span>Student parents</span><span>First in their family</span><span>Adults returning to school</span><span>Students short on food or rent</span><span>Students who were in foster care</span><span>Veterans</span><span>Students who prefer texting</span></div></section>
 
-<section class="pp-sec" id="what" aria-labelledby="what-h"><h2 id="what-h">What it does</h2><p class="sub">Six things a good advisor, a benefits navigator and a well-organized friend would do, all at once, by app or by text.</p>
+<section class="pp-sec" id="what" aria-labelledby="what-h"><h2 id="what-h">What it does</h2><p class="sub">Eight things a good advisor, a benefits navigator and a well-organized friend would do, all at once, by app or by text.</p>
 <div class="pp-grid">${FEATURES.map(([ic, t, d]) => `<div class="pp-card">${ui.icon(ic, 26)}<h3>${ui.esc(t)}</h3><p>${ui.esc(d)}</p></div>`).join('')}</div></section>
 
 <section class="pp-sec" aria-labelledby="how"><h2 id="how">How it works</h2><p class="sub">A small team of specialist agents behind one friendly voice, with every step a student can see.</p>

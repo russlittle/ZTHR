@@ -9,6 +9,10 @@ html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
 a{color:var(--action);text-underline-offset:3px}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+html{scroll-padding-top:96px;scroll-padding-bottom:24px}
+@media (max-width:640px){html{scroll-padding-bottom:110px}}
+.prose,.case{overflow-wrap:anywhere}
+table.t td a{display:inline-block;padding:3px 0;min-height:24px}
 .skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 12px;border-radius:8px;z-index:10}.skip:focus{left:8px}
 h1,h2,h3{line-height:1.2;margin:0}
 h1{font-size:30px;letter-spacing:-.01em}
@@ -136,7 +140,7 @@ input,textarea,select{font:inherit;width:100%;padding:11px 12px;border:1.5px sol
 /* week */
 .week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .week .d{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:8px;min-height:140px}
-.week .d h3{font-size:13px;color:var(--muted);margin-bottom:6px}
+.week .d h2{font-size:13px;color:var(--muted);margin-bottom:6px}
 .week .b{font-size:12px;border-radius:7px;padding:4px 6px;margin:4px 0;background:var(--calm);line-height:1.3}
 .week .b.class{border-left:4px solid var(--action)}
 .week .b.shift{border-left:4px solid var(--ink)}
@@ -166,12 +170,39 @@ main.con{padding:24px 28px 60px;max-width:1200px;min-width:0}
 .bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}.bar>i{display:block;height:100%;background:var(--action)}
 pre.code{background:var(--calm);padding:12px;border-radius:var(--r-sm);overflow:auto;font-size:13px}
 @media (max-width:860px){.console{grid-template-columns:1fr}.side{position:static;height:auto;display:flex;flex-wrap:wrap;gap:4px}.side .grp{flex-basis:100%;margin:10px 10px 2px;padding-top:8px}main.con{padding:16px}}
+/* readings: what was measured, what it must reach, whether it held */
+.readings{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin:18px 0 8px;padding:6px 22px}
+.reading{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(120px,.8fr) minmax(0,1.6fr) 104px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none}
+.reading:last-child{border-bottom:0}
+a.reading:hover .l{color:var(--action)}
+.reading .l{font-family:var(--display);font-weight:650;font-size:17px}
+.reading .l small{display:block;font-family:"Atkinson Hyperlegible",system-ui,sans-serif;font-weight:400;font-size:13px;color:var(--muted)}
+.reading .v{font-family:var(--display);font-size:26px;font-weight:650;letter-spacing:-.02em;text-align:right;white-space:nowrap}
+.reading .v span{font-size:15px;color:var(--muted);font-weight:500;letter-spacing:0}
+.gauge{position:relative;height:12px;border-radius:6px;background:var(--r-gauge,var(--line))}
+.gauge i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--action)}
+.gauge b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);border-radius:1px}
+.gauge.none{background:repeating-linear-gradient(90deg,var(--r-gauge,var(--line)) 0 6px,transparent 6px 10px)}
+.state{justify-self:end;display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:14px}
+.state::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor}
+.state.pass{color:var(--r-pass,#1d7a55)}.state.fail{color:var(--r-fail,var(--alert))}.state.unk{color:var(--r-unk,#8a6a12)}.state.count{color:var(--muted)}.state.count::before{border-radius:2px;width:9px;height:9px}
+.reading.fail .gauge i{background:var(--r-fail,var(--alert))}
+@media (max-width:760px){.reading{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px}.reading .gauge{grid-column:1/-1;order:3}.reading .state{order:4;grid-column:1/-1;justify-self:start}.readings{padding:4px 16px}}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:16px 0 8px}
+.choice{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 18px;min-width:0}
+.choice h2{font-size:18px;margin:0 0 6px}
+.choice.off{opacity:.92}.choice.off h2{color:var(--muted)}
+.choice dl{margin:10px 0 0;display:grid;gap:2px}
+.choice dt{font-size:13px;font-weight:700;color:var(--muted);margin-top:8px}
+.choice dd{margin:0;font-size:15px}
+.visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.checks{border:0;padding:0;margin:0 0 14px}.checks legend{font-weight:700;margin-bottom:6px}.check{display:flex;align-items:center;gap:10px;font-weight:400;min-height:44px}.check input{width:24px;height:24px;flex:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 @font-face{font-family:"Bricolage Grotesque";src:url("./fonts/bricolage.woff2") format("woff2");font-weight:200 800;font-display:swap}
-:root{--display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;--rule:rgba(11,102,128,.06);--pass:#1d7a55;--fail:#b2412a;--unk:#8a6a12;--gauge:#dfe8ed}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--rule:rgba(95,208,230,.05);--pass:#5fd39e;--fail:#f08a6c;--unk:#e8c066;--gauge:#1d2f38}}
-:root[data-theme="dark"]{--rule:rgba(95,208,230,.05);--pass:#5fd39e;--fail:#f08a6c;--unk:#e8c066;--gauge:#1d2f38}
+:root{--display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;--rule:rgba(11,102,128,.06);--r-pass:#1d7a55;--r-fail:#b2412a;--r-unk:#8a6a12;--r-gauge:#dfe8ed}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--rule:rgba(95,208,230,.05);--r-pass:#5fd39e;--r-fail:#f08a6c;--r-unk:#e8c066;--r-gauge:#1d2f38}}
+:root[data-theme="dark"]{--rule:rgba(95,208,230,.05);--r-pass:#5fd39e;--r-fail:#f08a6c;--r-unk:#e8c066;--r-gauge:#1d2f38}
 h1,h2,h3,.brand{font-family:var(--display);letter-spacing:-.015em}
 h1{font-size:clamp(30px,3.4vw,40px);font-weight:700;line-height:1.08}
 h2{font-weight:650}
@@ -205,24 +236,6 @@ code{font-size:.9em;background:color-mix(in srgb,var(--action) 8%,transparent);p
 .rows .grow>a b::after{content:"";display:inline-block;width:7px;height:7px;margin-left:9px;border:solid var(--action);border-width:2px 2px 0 0;transform:translateY(-2px) rotate(45deg)}
 .rows .grow>a:hover b{color:var(--action)}
 .rows li{padding:14px 0}
-/* readings: what was measured, what it must reach, whether it held */
-.readings{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin:18px 0 8px;padding:6px 22px}
-.reading{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(120px,.8fr) minmax(0,1.6fr) 104px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none}
-.reading:last-child{border-bottom:0}
-a.reading:hover .l{color:var(--action)}
-.reading .l{font-family:var(--display);font-weight:650;font-size:17px}
-.reading .l small{display:block;font-family:"Atkinson Hyperlegible",system-ui,sans-serif;font-weight:400;font-size:13px;color:var(--muted)}
-.reading .v{font-family:var(--display);font-size:26px;font-weight:650;letter-spacing:-.02em;text-align:right;white-space:nowrap}
-.reading .v span{font-size:15px;color:var(--muted);font-weight:500;letter-spacing:0}
-.gauge{position:relative;height:12px;border-radius:6px;background:var(--gauge)}
-.gauge i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--action)}
-.gauge b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);border-radius:1px}
-.gauge.none{background:repeating-linear-gradient(90deg,var(--gauge) 0 6px,transparent 6px 10px)}
-.state{justify-self:end;display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:14px}
-.state::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor}
-.state.pass{color:var(--pass)}.state.fail{color:var(--fail)}.state.unk{color:var(--unk)}.state.count{color:var(--muted)}.state.count::before{border-radius:2px;width:9px;height:9px}
-.reading.fail .gauge i{background:var(--fail)}
-@media (max-width:760px){.reading{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px}.reading .gauge{grid-column:1/-1;order:3}.reading .state{order:4;grid-column:1/-1;justify-self:start}.readings{padding:4px 16px}}
 /* long-form writing in the factory */
 .prose{max-width:76ch}
 .prose h2{margin-top:1.6em}

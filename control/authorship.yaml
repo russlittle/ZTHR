@@ -17,7 +17,7 @@ tiers:
   - tier: admitted
     meaning: Declarations agents draft and the factory admits when every check passes.
     guard: certify
-    paths: [control/playbooks/, control/scouts/, control/colleges/, control/proposals/, control/admissions.jsonl, control/review.yaml, control/ci-rates.json]
+    paths: [control/playbooks/, control/scouts/, control/colleges/, control/programs/, control/proposals/, control/admissions.jsonl, control/review.yaml, control/ci-rates.json]
   - tier: generated
     meaning: Written only by tools from the system; a hand edit fails the freshness check.
     guard: docs-check

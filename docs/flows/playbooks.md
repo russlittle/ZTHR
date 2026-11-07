@@ -164,6 +164,31 @@ flowchart TD
 
 Sources: <https://emanuals.jfs.ohio.gov/Workforce/WIOA/WIOAPL/WIOAPL-15-08-1.stm>, <https://ohiomeansjobs.ohio.gov>. Grants: profile chosenName, county, college. Journeys: p2-retraining.
 
+## Appealing to keep your financial aid
+
+Help a student keep their aid. They tell the aid office what got in the way, and make a plan to catch up.
+
+```mermaid
+flowchart TD
+  start((Start)) --> what
+  what["what: To keep federal aid, you need a 2.0 GPA. You also need to fi…"]
+  what --> circumstance
+  circumstance{"circumstance: Did something outside your control make it hard to finish yo…"}
+  circumstance -- yes --> gather
+  circumstance -- no --> plan
+  gather[["gather: Proof from someone else makes an appeal stronger. Gather wha…"]]
+  gather --> plan
+  plan["plan: Most appeals need a plan you make with your advisor. For exa…"]
+  plan --> ask_advisor
+  ask_advisor[/"ask-advisor: Hello, this is {chosenName}. My financial aid progress is un…"/]
+  ask_advisor --> wait_meeting
+  wait_meeting(["wait-meeting: Tell me when the meeting is set. I'll put it on your calenda…"])
+  wait_meeting --> done((Done))
+  wait_meeting -. after 5 days .-> wait_meeting_late[/"No meeting yet. Want me to find your advisor's office hours "/]
+```
+
+Sources: <https://www.law.cornell.edu/cfr/text/34/668.34>, <https://wright.edu/raiderconnect/financial-aid/satisfactory-academic-progress>, <https://www.sinclair.edu/services/welcome/finaid/financial-aid-policies/>. Grants: profile chosenName, college. Journeys: p5-aid-progress-appeal.
+
 ## SNAP application in Ohio
 
 Carry a student from a likely SNAP match to a decision, including the student exemption, the interview and verification.

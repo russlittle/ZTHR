@@ -173,5 +173,33 @@
       "planted block with no purpose page",
       "planted app copy of a block function"
     ]
+  },
+  {
+    "gate": "r2t4-oracle",
+    "gateHash": "ce2a49cf9cc31d11454144dbed51c30c2d4ca7c53d1b466b7daaec23f0c5c33d",
+    "valid": true,
+    "cases": [
+      "planted count that keeps scheduled breaks in the term",
+      "planted estimate with no 50% grant protection"
+    ]
+  },
+  {
+    "gate": "sap-oracle",
+    "gateHash": "7ceede46f990547469fdc7bca2909800066a16e91fb175b684882ab3b5bc5377",
+    "valid": true,
+    "cases": [
+      "planted measure that leaves W out of attempted credits",
+      "planted rounding of pace to a whole percent"
+    ]
+  },
+  {
+    "gate": "share-scope",
+    "gateHash": "cd82bd9f38a51df2521c62137acdeb38214810d8ea68fb7026ebb252791f84cf",
+    "valid": true,
+    "cases": [
+      "planted link that shows every part",
+      "planted link that keeps working after it is turned off",
+      "planted message that repeats the link"
+    ]
   }
 ]

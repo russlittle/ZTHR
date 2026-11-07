@@ -241,6 +241,9 @@ erDiagram
 | `meetings` | id | Group meetings to prepare for. |
 | `courses` | student:course | Each course and its AI policy, read from the syllabus. |
 | `dismissed` | student:subject | Alerts the student said are fine. |
+| `academic` | student | The student's record for staying enrolled: program, finished and current courses with grades, and the aid and charges this term, for standing, aid progress and the withdrawal estimate. |
+| `gradebooks` | student:course | Each class's graded categories from the syllabus and the scores in them, from the class site or typed by the student. |
+| `shares` | sha256(token) | Read-only links the student made for an advisor or anyone they choose. Only a hash of the link is kept; each view is in the consent ledger. |
 | `aid` | student | When financial aid is expected, for book timing. |
 
 ## The other stores

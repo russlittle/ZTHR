@@ -139,6 +139,15 @@ if (existsSync('site-out')) {
   }
 }
 const mount = base || '/';
+// A shared link is opened by someone without the student's demo cookie (their advisor), so it is routed to the copy
+// that holds it, without starting a new copy. A link no copy holds is gone: expired, turned off, or its copy ended.
+root.get(`${mount === '/' ? '' : mount}/shared/:token`, async (c) => {
+  if (shared) return shared.fetch(rewrite(c.req.raw));
+  const token = c.req.param('token');
+  for (const s of sandboxes.values()) if (s.advocate.hasShare(token)) return s.app.fetch(rewrite(c.req.raw));
+  c.header('Cache-Control', 'no-store');
+  return c.html('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Link not available</title><main style="font:18px/1.5 system-ui;max-width:40rem;margin:3rem auto;padding:0 16px"><h1>This link isn\'t available</h1><p>It may have expired or been turned off by the student who made it.</p></main></html>', 410);
+});
 root.all(`${mount === '/' ? '' : mount}/*`, async (c) => {
   if (shared) return shared.fetch(rewrite(c.req.raw));
   let id = getCookie(c, 'adv_demo');

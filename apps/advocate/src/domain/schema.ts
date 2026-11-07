@@ -8,7 +8,7 @@ import type { CollectionDef as BlockCollectionDef, DataClass, FieldDef } from '@
 export type { DataClass, FieldDef };
 export interface CollectionDef extends BlockCollectionDef {
   /** Which part of the record it belongs to, for drawing. */
-  group?: 'schedule' | 'conversation' | 'help and money' | 'connections' | 'campus';
+  group?: 'schedule' | 'conversation' | 'help and money' | 'connections' | 'campus' | 'school';
 }
 
 const f = (name: string, type: string, note?: string, optional = false): FieldDef => ({ name, type, ...(note ? { note } : {}), optional });
@@ -25,6 +25,7 @@ const DECLARED: CollectionDef[] = [
       ['drafts', 'approves', '||--o{'], ['messages', 'receives', '||--o{'], ['playbook_runs', 'runs', '||--o{'], ['sources', 'connects', '||--o{'], ['api_tokens', 'creates', '||--o{'],
       ['webhooks', 'registers', '||--o{'], ['vault', 'keeps', '||--o{'], ['money', 'tracks', '||--o|'], ['household_plan', 'plans', '||--o|'], ['meetings', 'attends', '||--o{'],
       ['courses', 'takes', '||--o{'], ['pulse_state', 'answers', '||--o|'], ['dismissed', 'dismisses', '||--o{'], ['aid', 'expects', '||--o|'], ['commute_plans', 'rides', '||--o{'], ['transit_now', 'waits at', '||--o|'], ['dispatches', 'asks for', '||--o{'],
+      ['academic', 'keeps a record in', '||--o|'], ['gradebooks', 'is graded in', '||--o{'], ['shares', 'shares through', '||--o{'],
     ],
   },
   { group: 'schedule', name: 'deadlines', purpose: 'Every date that matters: assignments, exams, aid, bills, appointments. Found dates stay unconfirmed until the student checks them.', key: 'id', fields: [f('id', 'string'), f('studentId', 'string', 'owner'), f('title', 'string'), f('due', 'date or date-time'), o('course', 'string'), f('kind', 'enum', 'assignment, exam, reading, college, aid, benefit, bill, appointment, other'), f('source', 'object', 'where it was found, with the line'), f('confirmed', 'boolean'), o('effortHours', 'number'), o('durationMin', 'number'), o('done', 'boolean')], relations: [['holds', 'gets time in', '||--o{']] },
@@ -52,6 +53,9 @@ const DECLARED: CollectionDef[] = [
   { group: 'schedule', name: 'meetings', purpose: 'Group meetings to prepare for.', key: 'id', fields: [f('id', 'string'), f('title', 'string'), f('date', 'date'), f('start', 'time'), f('attendees', 'string[]'), o('course', 'string')] },
   { group: 'schedule', name: 'courses', purpose: 'Each course and its AI policy, read from the syllabus.', key: 'student:course', fields: [f('course', 'string'), f('aiPolicy', 'enum'), o('aiPolicyLine', 'string')] },
   { group: 'conversation', name: 'dismissed', purpose: 'Alerts the student said are fine.', key: 'student:subject', fields: [f('subject', 'string'), f('at', 'date')] },
+  { group: 'school', name: 'academic', purpose: 'The student\'s record for staying enrolled: program, finished and current courses with grades, and the aid and charges this term, for standing, aid progress and the withdrawal estimate.', key: 'student', fields: [o('program', 'string', 'declared program id'), o('programCredits', 'number'), f('transcript', 'TranscriptCourse[]', 'course, credits, grade, term'), o('aid', 'AidDisbursed', 'federal aid paid this term'), o('charges', 'number', 'tuition and fees this term'), o('aidProbation', 'object', 'term, plan GPA and pace, after an approved appeal')] },
+  { group: 'school', name: 'gradebooks', purpose: 'Each class\'s graded categories from the syllabus and the scores in them, from the class site or typed by the student.', key: 'student:course', fields: [f('course', 'string'), f('credits', 'number'), f('categories', 'GradeCategory[]', 'name and weight'), f('items', 'GradeItem[]', 'title, score, out of'), f('source', 'enum', 'class-site, student'), o('scale', 'object', 'lowest percent for each letter')] },
+  { group: 'school', name: 'shares', purpose: 'Read-only links the student made for an advisor or anyone they choose. Only a hash of the link is kept; each view is in the consent ledger.', key: 'sha256(token)', fields: [f('id', 'string', 'sha256 of the link token'), f('studentId', 'string'), f('label', 'string', 'who it is for, in the student\'s words'), f('scopes', 'enum[]', 'schedule, school, degree, plan'), f('createdAt', 'date-time'), f('expiresAt', 'date-time'), o('revokedAt', 'date-time'), f('views', 'number')] },
   { group: 'help and money', name: 'aid', purpose: 'When financial aid is expected, for book timing.', key: 'student', fields: [f('disbursement', 'date')] },
 ];
 
@@ -80,6 +84,10 @@ export const CLASSIFICATION: Record<string, DataClass> = {
   'playbook_runs.playbook': 'sensitive', 'playbook_runs.history': 'sensitive',
   'vault.name': 'sensitive', 'money.balance': 'sensitive', 'money.bills': 'sensitive', 'money.pay': 'sensitive', 'aid.disbursement': 'sensitive',
   'household_plan.childCare': 'sensitive', 'household_plan.commuteMin': 'personal', 'household_plan.sleepHours': 'personal', 'household_plan.commuteMode': 'personal', 'household_plan.homeStop': 'personal',
+  // school: education records are sensitive
+  'academic.program': 'personal', 'academic.programCredits': 'personal', 'academic.transcript': 'sensitive', 'academic.aid': 'sensitive', 'academic.charges': 'sensitive', 'academic.aidProbation': 'sensitive',
+  'gradebooks.course': 'personal', 'gradebooks.credits': 'personal', 'gradebooks.categories': 'personal', 'gradebooks.items': 'sensitive', 'gradebooks.scale': 'public',
+  'shares.label': 'personal', 'shares.scopes': 'personal',
   // connections
   'api_tokens.label': 'personal', 'webhooks.url': 'personal', 'webhooks.secret': 'secret',
   // campus

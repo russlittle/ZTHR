@@ -10,3 +10,22 @@ career:
   contact: 937-512-2509 or studentandcommunity@sinclair.edu
   source: https://www.collegecentral.com/sinclair/ContactUs.cfm
 admitted_by: factory
+academic:
+  level: associate
+  standing:
+    kind: consecutive-term
+    goodGpa: 2.0
+    ladder: [Academic Intervention, Academic Probation, Academic Dismissal]
+    source: https://www.sinclair.edu/services/welcome/academic-advising/academic-status/
+  sap:
+    gpa: 2.0
+    pace: 66.67
+    maxTimeframe: 1.5
+    evaluated: Not stated on the public financial aid page; the full policy is linked from it.
+    statuses: The public page states the three measures and links the full policy for statuses and appeals.
+    how: Ask the Financial Aid office about an appeal; the full Satisfactory Academic Progress policy explains the process.
+    source: https://www.sinclair.edu/services/welcome/finaid/financial-aid-policies/
+  refund: Full-term classes withdrawn by the eighth calendar day of the term, counting weekends, get a 100% refund; after that, none. A Tuition Refund Appeal is possible for a medical emergency or a death in the immediate family.
+  refundSource: https://www.sinclair.edu/refund
+  terms: []
+  termsNote: Sinclair's Fall 2026 term dates were not available from a public source when this was built, so drop and withdrawal dates are shown as not known and the student is sent to the registration calendar.

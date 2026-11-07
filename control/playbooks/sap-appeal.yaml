@@ -1,0 +1,44 @@
+playbook: sap-appeal
+title: Appealing to keep your financial aid
+purpose: Help a student keep their aid. They tell the aid office what got in the way, and make a plan to catch up.
+owner: builder
+admitted_by: factory
+sources:
+  - https://www.law.cornell.edu/cfr/text/34/668.34
+  - https://wright.edu/raiderconnect/financial-aid/satisfactory-academic-progress
+  - https://www.sinclair.edu/services/welcome/finaid/financial-aid-policies/
+student_grants:
+  sealed: []
+  profile: [chosenName, college]
+journeys: [p5-aid-progress-appeal]
+steps:
+  - id: what
+    kind: info
+    text: To keep federal aid, you need a 2.0 GPA. You also need to finish about two out of three credits you try. Did something outside your control get in the way? Maybe you were sick, or lost someone, or had work you could not turn down. Then you can appeal. If it is approved, you get one more term of aid and a plan to catch up.
+  - id: circumstance
+    kind: question
+    text: Did something outside your control make it hard to finish your classes?
+    branches: { yes: gather, no: plan }
+  - id: gather
+    kind: documents
+    next: plan
+    text: Proof from someone else makes an appeal stronger. Gather what fits.
+    documents:
+      - A short letter from a doctor, counselor or employer about what happened, or a record that shows it
+      - Your work schedule from those terms, if work hours were the problem
+      - What has changed now, in your own words
+  - id: plan
+    kind: info
+    text: Most appeals need a plan you make with your advisor. For example, a 2.0 GPA next term and finishing every class you start. I can set up your week so the plan fits around work.
+  - id: ask-advisor
+    kind: draft
+    requires_approval: true
+    to: your academic advisor
+    text: "Hello, this is {chosenName}. My financial aid progress is under the line at {college}, and I want to appeal. Could we meet this week to make an academic plan for my appeal? Thank you."
+  - id: wait-meeting
+    kind: wait
+    text: Tell me when the meeting is set. I'll put it on your calendar and remind you before the appeal closes.
+    timeout_days: 5
+    on_timeout: No meeting yet. Want me to find your advisor's office hours or the financial aid office's number?
+recovery:
+  - If the appeal is not approved, you can still earn aid back. Take classes without federal aid until your record is back over the line. The aid office can tell you what that takes.

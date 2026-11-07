@@ -6,6 +6,8 @@ import { startPage } from './product.js';
 import type { Advocate, Delivered } from '../agents/advocate.js';
 import type { View } from '../agents/actions.js';
 import { COLLEGES } from '../domain/colleges.js';
+import * as acad from '../agents/academics.js';
+import { currentGrade } from '../domain/academics.js';
 import { friendly, relDay, shortDate, time12, weekday } from '../domain/dates.js';
 import type { NeedCategory, OutboundMessage } from '../domain/types.js';
 import { parseShifts } from '../domain/shifts.js';
@@ -64,11 +66,14 @@ const FROM_ICON: Record<string, string> = { 'Your Advocate': 'route', 'Help find
 
 const fromLabel = (author: string) => FROM[author] ?? (author.startsWith('playbook:') ? 'Checklist' : 'Your Advocate');
 
+/** User input, cut to at most n characters without splitting a character, with any broken surrogate repaired. */
+const clip = (v: unknown, n: number, fallback = ''): string => Array.from(String(v ?? fallback).replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '\uFFFD')).slice(0, n).join('');
+
 export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
   const base = opts.base ?? '';
   const app = new Hono({ strict: false });
   const u = (sid: string, path = '') => `${base}/s/${encodeURIComponent(sid)}${path}`;
-  const VIEW_PATH: Record<View, string> = { today: '', money: '/money', help: '/help', settings: '/you', week: '/week', syllabus: '/syllabus', shifts: '/shifts', dates: '/dates', drafts: '/drafts', resource: '/resource', ask: '/ask', deleted: '', share: '/share', letter: '/letter', meals: '/meals' };
+  const VIEW_PATH: Record<View, string> = { today: '', money: '/money', help: '/help', settings: '/you', week: '/week', syllabus: '/syllabus', shifts: '/shifts', dates: '/dates', drafts: '/drafts', resource: '/resource', ask: '/ask', deleted: '', share: '/share', letter: '/letter', meals: '/meals', school: '/school', drop: '/school/drop', 'advisor-share': '/advisor', degree: '/school/degree' };
 
   const toAction = (sid: string, n: { label: string; action: string }, i: number): ui.Action =>
     n.action.startsWith('call:')
@@ -89,6 +94,7 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
   const nav = (sid: string, current: string): ui.NavItem[] => [
     { href: u(sid), label: 'Today', icon: 'today', current: current === 'today' },
     { href: u(sid, '/money'), label: 'Money', icon: 'money', current: current === 'money' },
+    { href: u(sid, '/school'), label: 'School', icon: 'cap', current: current === 'school' },
     { href: u(sid, '/help'), label: 'Help', icon: 'help', current: current === 'help' },
     { href: u(sid, '/you'), label: 'You', icon: 'you', current: current === 'you' },
   ];
@@ -190,7 +196,7 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
     // The demo thread is this browser's own number; a posted number is used only if it is a plausible US number.
     const posted = String(f.phone ?? '');
     const phone = /^\+1\d{10}$/.test(posted) ? posted : (getCookie(c, 'demo_phone') ?? '+19375550123');
-    const body = String(f.body ?? '').slice(0, 1600);
+    const body = clip(f.body, 1600, '');
     // Bounded: a demo copy holds at most 200 conversations, so no one can grow it without limit.
     if (!threads.has(phone) && !a.findByPhone(phone) && threads.size >= 200) return c.html(textPage(phone, [{ who: 'advocate', text: 'This demonstration copy is full. Open it again in a new browser session to start over.' }]), 429);
     const replies = a.textIn(phone, body);
@@ -322,7 +328,7 @@ ${ui.section('Ask your Advocate', ui.form({ url: u(sid, '/say'), submit: 'Send',
   app.post('/s/:id/syllabus', async (c) => {
     const sid = c.req.param('id');
     const f = await c.req.parseBody();
-    const r = a.uploadSyllabus(sid, String(f.course || 'Course').slice(0, 20), String(f.text ?? '').slice(0, 20000), `${a.today_(sid).date.slice(0, 4)}-08-24`);
+    const r = a.uploadSyllabus(sid, clip(f.course, 20, 'Course'), clip(f.text, 20000, ''), `${a.today_(sid).date.slice(0, 4)}-08-24`);
     const d = a.deliver(r.message, { force: true });
     return c.redirect(`${u(sid, '/dates')}?m=${d.id}`);
   });
@@ -337,7 +343,7 @@ ${ui.section('Ask your Advocate', ui.form({ url: u(sid, '/say'), submit: 'Send',
   app.post('/s/:id/shifts', async (c) => {
     const sid = c.req.param('id');
     const f = await c.req.parseBody();
-    const parsed = parseShifts(String(f.text ?? '').slice(0, 2000), a.today_(sid).date);
+    const parsed = parseShifts(clip(f.text, 2000, ''), a.today_(sid).date);
     const m = parsed.shifts.length ? a.addShiftsMessage(sid, parsed.shifts, parsed.unread) : { studentId: sid, author: 'chief-of-staff', urgency: 'routine' as const, text: 'I could not read those. Try a day and times, like Tue 3pm-9pm.', nextSteps: [{ label: 'Show my day', action: 'today' }] };
     const d = a.deliver(m, { force: true });
     return c.redirect(`${u(sid, '/shifts')}?m=${d.id}`);
@@ -382,6 +388,197 @@ ${ui.section('Update what I know', ui.form({ url: u(sid, '/household'), submit: 
     a.updateStudent(sid, { household: { ...s.household, size: Math.max(1, Math.min(20, num(f.size) ?? s.household.size)), monthlyGrossIncome: num(f.income) ?? s.household.monthlyGrossIncome }, enrollment: { ...s.enrollment, weeklyWorkHours: num(f.work) ?? s.enrollment.weeklyWorkHours } });
     const d = a.deliver(a.moneyFoundMessage(sid), { force: true });
     return c.redirect(`${u(sid, '/money')}?m=${d.id}`);
+  });
+
+  // ------------------------------------------------------------ school: grades, standing, aid progress, degree (Phase 5)
+
+  const gradeReadings = (v: acad.AcademicView) => {
+    const sp = v.college.academic?.sap;
+    const sapC = (r: 'gpa' | 'pace' | 'max-timeframe') => v.sap?.checks.find((x) => x.rule === r);
+    const pace = sapC('pace');
+    const max = sapC('max-timeframe');
+    return ui.readings([
+      { label: 'Cumulative GPA', value: v.gpa, of: 4, places: 2, floor: sp?.gpa, note: sp ? `${v.college.short} needs ${sp.gpa.toFixed(1)} to keep aid` : 'Every finished class with a letter grade', words: { pass: 'On track', fail: 'Under the line' } },
+      { label: 'Credits completed of credits tried', value: pace?.value, of: 100, floor: sp?.pace, unit: '%', note: v.sap ? `${v.sap.earned} of ${v.sap.attempted} credits; W and F count as tried` : 'Starts after your first finished term', words: { pass: 'On track', fail: 'Under the line' } },
+      ...(max?.need ? [{ label: 'Credits tried, of the most aid covers', value: max.value, of: max.need, ceiling: max.need, note: `${Math.round((sp?.maxTimeframe ?? 1.5) * 100)}% of a ${v.programCredits}-credit program`, words: { pass: 'Within the limit', fail: 'Over the limit' } } as ui.Reading] : []),
+    ]);
+  };
+
+  app.get('/s/:id/school', (c) => {
+    const sid = c.req.param('id');
+    const v = a.academicView(sid);
+    const s = a.student(sid);
+    const current = v.record.transcript.filter((x) => !x.grade);
+    const classRows = v.books.map((b) => {
+      const cats = b.categories.map((k) => {
+        const items = b.items.filter((i) => i.category === k.name && i.score !== undefined);
+        return items.length ? `${k.name} ${Math.round((items.reduce((n, i) => n + i.score!, 0) / items.reduce((n, i) => n + i.outOf, 0)) * 100)}%` : `${k.name} not graded yet`;
+      });
+      return {
+        title: `${b.course}${b.now ? `: ${b.now.letter}, ${b.now.percent}%` : ''}`,
+        sub: `${cats.join(', ')}. ${b.source === 'class-site' ? 'From your class site.' : 'Scores you entered.'}`,
+        chip: b.now ? { text: b.now.letter, tone: (b.now.letter === 'A' || b.now.letter === 'B' ? 'ok' : b.now.letter === 'C' ? undefined : 'warn') as 'ok' | 'warn' | undefined } : { text: 'No grades yet' },
+        actions: [toAction(sid, { label: 'What I need on the final', action: `final-need:${b.course}` }, 1)],
+      };
+    });
+    const standingNote = v.standing ? ui.note({ kind: v.standing.status === 'good' ? 'info' : 'heads', title: v.standing.label, body: `${v.standing.why} ${v.college.short}'s rule is in its published policy.`, actions: [{ label: 'Read the policy', href: v.college.academic!.standing.source }] }) : '';
+    const aid = a.deliver(acad.aidProgressMessage(a, sid), { force: true });
+    return c.html(
+      page(
+        sid,
+        'School',
+        `${flash(sid, c.req.query('m'))}
+<div class="hello"><h1>School</h1><p class="date">${ui.esc([v.college.name, v.term?.term, current.length ? `${current.reduce((n, x) => n + x.credits, 0)} credits this term` : s.enrollment.creditHours ? `${s.enrollment.creditHours} credits` : ''].filter(Boolean).join(', '))}</p></div>
+${ui.section('Keeping your aid and your standing', `${gradeReadings(v)}${standingNote}${noteFor(sid, aid)}`)}
+${ui.section('Your classes', classRows.length ? ui.rows(classRows) : ui.rows([], 'No grades yet. Connect your class site or add a score below.'))}
+${v.books.length ? ui.section('Add a score', ui.form({ url: u(sid, '/score'), submit: 'Add the score', fields: [{ name: 'course', label: 'Class', type: 'select', options: v.books.map((b) => ({ value: b.course, label: b.course })), required: true }, { name: 'title', label: 'What it was for', placeholder: 'Exam 2, Quiz 4, Lab 3' }, { name: 'score', label: 'Your score', type: 'number' }, { name: 'outOf', label: 'Out of', type: 'number', value: '100' }] })) : ''}
+${v.degree ? ui.section('Your degree', ui.readings([{ label: v.degree.program.name, value: v.degree.earned, of: v.degree.program.credits, note: `${v.degree.inProgress} credits in progress${v.degree.finish ? `; at your pace you finish in ${v.degree.finish}` : ''}`, href: u(sid, '/school/degree') }, ...(v.degree.ot36 ? [{ label: 'Ohio Transfer 36', value: v.degree.ot36.done, of: v.degree.ot36.need, floor: v.degree.ot36.need, note: 'These core credits transfer to any Ohio public university', words: { pass: 'Complete', fail: 'In progress' }, href: u(sid, '/school/degree') } as ui.Reading] : [])]), `<a href="${u(sid, '/school/degree')}">Every requirement</a>`) : ''}
+${ui.section('Choices and help', ui.rows([
+  { title: 'Thinking about dropping a class?', sub: 'Each choice side by side: refund, transcript, aid progress and any aid you would owe back.', href: u(sid, '/school/drop') },
+  { title: 'Share with my advisor', sub: 'A read-only link you control: what it shows, for how long, and who opened it.', href: u(sid, '/advisor') },
+]))}`,
+        'school',
+      ),
+    );
+  });
+
+  app.post('/s/:id/score', async (c) => {
+    const sid = c.req.param('id');
+    const f = await c.req.parseBody();
+    const score = Number(f.score);
+    const outOf = Number(f.outOf);
+    const ok = Number.isFinite(score) && Number.isFinite(outOf) && a.recordScore(sid, clip(f.course, 12, ''), clip(f.title, 40, 'score'), score, outOf);
+    const d = a.deliver(ok ? acad.finalNeedMessage(a, sid, String(f.course)) : { studentId: sid, author: 'academic-coach', urgency: 'routine', text: 'I could not add that score. Check the class, and that the score is a number no bigger than one and a half times the points it was out of.', nextSteps: [{ label: 'My classes and standing', action: 'school' }] }, { force: true });
+    return c.redirect(`${u(sid, '/school')}?m=${d.id}#latest`);
+  });
+
+  app.get('/s/:id/school/drop', (c) => {
+    const sid = c.req.param('id');
+    const course = c.req.query('course') ?? undefined;
+    const d = acad.dropOptions(a, sid, course);
+    const v = a.academicView(sid);
+    const current = v.record.transcript.filter((x) => !x.grade);
+    const picker = current.length ? ui.form({ url: u(sid, '/school/drop/pick'), submit: 'Show this class', fields: [{ name: 'course', label: 'Which class', type: 'select', value: d.course?.course, options: current.map((x) => ({ value: x.course, label: `${x.course}, ${x.credits} credits` })) }] }) : '';
+    // One card per choice, with the same rows in the same order, so choices compare side by side on a computer and stack on a phone.
+    const choiceCards = `<div class="choices" role="list" aria-label="Your choices, side by side">${d.options
+      .map((o) => {
+        const rows: [string, string][] = [['When', o.when], ['On your transcript', o.transcript], ['Aid progress after', o.aidProgress], ...(o.plan ? [['Your aid plan', o.plan.replace(/^Term plan: /, '')] as [string, string]] : []), ['Money', o.aidReturn ?? (o.choice === 'drop' ? o.refund : o.refund)]];
+        return `<section class="choice${o.available ? '' : ' off'}" role="listitem" aria-labelledby="ch-${o.choice}"><h2 id="ch-${o.choice}">${ui.esc(o.title)}</h2>${o.available ? '' : ui.chip('Not available now', 'warn')}<dl>${rows.map(([k, v]) => `<dt>${ui.esc(k)}</dt><dd>${ui.esc(v)}</dd>`).join('')}</dl></section>`;
+      })
+      .join('')}</div><p class="small muted">Aid progress counts the classes with grades so far.</p>`;
+    const r = d.r2t4;
+    const termReading = d.term ? ui.readings([{ label: `${d.term.term} completed`, value: r ? Math.round(r.percentCompleted * 1000) / 10 : undefined, of: 100, floor: 60, unit: '%', note: `After ${friendly(r?.sixtyPercentDay ?? d.term.end)}, every dollar of federal aid is earned`, words: { pass: 'Past the 60% point', fail: 'Before the 60% point' } }]) : '';
+    return c.html(
+      page(
+        sid,
+        'Drop or withdraw',
+        `${flash(sid, c.req.query('m'))}
+<div class="hello"><h1>Drop, withdraw or stay</h1><p class="date">What each choice does${d.course ? ` for ${ui.esc(d.course.course)}` : ''}, on ${ui.esc(friendly(a.localNow().date))}.</p></div>
+${picker}
+${d.options.length ? choiceCards : `<div class="panel" style="padding:18px"><p>${ui.esc(d.note ?? '')}</p></div>`}
+${termReading}
+${v.college.academic?.termsNote && !d.term ? `<p class="small muted">${ui.esc(v.college.academic.termsNote)}</p>` : ''}
+<p class="small muted">${ui.esc(`These are estimates from ${d.term ? `${d.term.term} dates` : "the college's policy"}${d.term?.endNote ? ` (${d.term.endNote})` : ''} and the federal Return of Title IV rule. Your advisor and the financial aid office make the official decisions.`)}${d.term ? ` <a href="${ui.esc(d.term.source)}">Term dates</a>.` : ''}</p>
+${ui.actions([toAction(sid, { label: 'Share this with my advisor', action: 'advisor-share:school' }, 0), toAction(sid, { label: 'What do I need on my finals?', action: 'final-need' }, 1)])}`,
+        'school',
+      ),
+    );
+  });
+
+  app.post('/s/:id/school/drop/pick', async (c) => {
+    const sid = c.req.param('id');
+    const f = await c.req.parseBody();
+    return c.redirect(`${u(sid, '/school/drop')}?course=${encodeURIComponent(clip(f.course, 12, ''))}`);
+  });
+
+  app.get('/s/:id/school/degree', (c) => {
+    const sid = c.req.param('id');
+    const v = a.academicView(sid);
+    if (!v.degree) return c.html(page(sid, 'Degree', `<div class="hello"><h1>Your degree</h1></div>${noteFor(sid, a.deliver(acad.degreeMessage(a, sid), { force: true }))}`, 'school'));
+    const d = v.degree;
+    return c.html(
+      page(
+        sid,
+        'Degree',
+        `<div class="hello"><h1>Your degree</h1><p class="date">${ui.esc(`${d.program.name}: ${d.earned} of ${d.program.credits} credits, ${d.inProgress} in progress.`)}</p></div>
+${ui.readings(d.areas.map((x) => ({ label: x.area, value: x.done + x.inProgress, of: x.need, floor: x.need, note: [x.courses.length ? `Done: ${x.courses.join(', ')}` : '', x.inProgress ? `${x.inProgress} in progress` : '', x.done + x.inProgress < x.need ? `Courses that count: ${x.left.join(', ')}` : '', x.note ?? ''].filter(Boolean).join('. '), words: { pass: 'Covered', fail: 'Still open' } })))}
+<p class="small muted">${ui.esc(d.program.note ?? '')} <a href="${ui.esc(d.program.source)}">The published pathway</a>.</p>`,
+        'school',
+      ),
+    );
+  });
+
+  // ------------------------------------------------------------ sharing with an advisor
+
+  const SCOPE_OPTIONS = Object.entries(acad.SHARE_SCOPES).map(([value, label]) => ({ value, label }));
+  const advisorPage = (sid: string, fresh?: { token: string; share: acad.Share; origin: string }, flashId?: string) => {
+    const today = a.localNow().date;
+    const list = a.shares(sid);
+    const link = fresh ? `${fresh.origin}${base}/shared/${fresh.token}` : '';
+    return page(
+      sid,
+      'Share with an advisor',
+      `${flashId ? flash(sid, flashId) : ''}<div class="hello"><h1>Share with an advisor</h1><p class="date">A read-only link. You choose what it shows and how long it works, and you can turn it off any time.</p></div>
+${fresh ? `<section class="note k-one" aria-labelledby="new-link" role="status"><h2 id="new-link">Your link is ready</h2><div class="body">Send this to ${ui.esc(fresh.share.label)}. It is shown only now; I keep only a fingerprint of it.</div><p><label for="link-text" class="visually-hidden">The link</label><input id="link-text" readonly value="${ui.esc(link)}"></p></section>` : ''}
+${ui.section('Make a link', ui.form({ url: u(sid, '/advisor'), submit: 'Make the link', fields: [{ name: 'label', label: 'Who is it for?', placeholder: 'My advisor, Ms. Rivera', value: 'My advisor' }, { name: 'scopes', label: 'What it shows', type: 'checks', options: SCOPE_OPTIONS, value: 'school,schedule' }, { name: 'days', label: 'How long it works', type: 'select', value: '7', options: acad.SHARE_DAYS.map((d) => ({ value: String(d), label: d === 1 ? '1 day' : `${d} days` })) }] }))}
+${ui.section('Your links', ui.rows(list.map((x) => {
+  const live = acad.shareLive(x, a.clock());
+  return { title: x.label, sub: `${x.scopes.map((k) => acad.SHARE_SCOPES[k]).join('; ')}. ${x.revokedAt ? 'Turned off.' : live ? `Works ${acad.daysLeft(x, today)} more day${acad.daysLeft(x, today) === 1 ? '' : 's'}.` : 'Expired.'} Opened ${x.views} time${x.views === 1 ? '' : 's'}.`, chip: { text: live ? 'On' : 'Off', tone: live ? ('ok' as const) : undefined }, actions: live ? [{ label: `Turn off the link for ${x.label}`, post: { url: u(sid, '/advisor/off'), fields: { id: x.id } }, variant: 'quiet' as const }] : [] };
+}), 'No links yet.'))}`,
+      'school',
+    );
+  };
+
+  app.get('/s/:id/advisor', (c) => c.html(advisorPage(c.req.param('id'), undefined, c.req.query('m'))));
+
+  app.post('/s/:id/advisor', async (c) => {
+    const sid = c.req.param('id');
+    const f = await c.req.parseBody({ all: true });
+    const scopes = ([] as unknown[]).concat(f.scopes ?? []).map(String).filter((x): x is acad.ShareScope => Object.hasOwn(acad.SHARE_SCOPES, x));
+    const days = acad.SHARE_DAYS.includes(Number(f.days) as 1) ? Number(f.days) : 7;
+    if (!scopes.length) {
+      const d = a.deliver({ studentId: sid, author: 'academic-coach', urgency: 'routine', text: 'Pick at least one thing for the link to show.', nextSteps: [{ label: 'My classes and standing', action: 'school' }] }, { force: true });
+      return c.redirect(`${u(sid, '/advisor')}?m=${d.id}#latest`);
+    }
+    const origin = new URL(c.req.url).origin.replace(/^http:\/\/(?!localhost|127\.)/, 'https://');
+    const fresh = a.createShare(sid, clip(f.label, 60, 'My advisor').replace(/[<>]/g, ''), scopes, days);
+    c.header('Cache-Control', 'no-store');
+    return c.html(advisorPage(sid, { ...fresh, origin }));
+  });
+
+  app.post('/s/:id/advisor/off', async (c) => {
+    const sid = c.req.param('id');
+    const f = await c.req.parseBody();
+    a.revokeShare(sid, String(f.id ?? ''));
+    return c.redirect(u(sid, '/advisor'));
+  });
+
+  app.get('/shared/:token', (c) => {
+    c.header('Cache-Control', 'no-store');
+    c.header('Referrer-Policy', 'no-referrer');
+    c.header('X-Robots-Tag', 'noindex, nofollow');
+    const sh = a.openShare(c.req.param('token'));
+    if (!sh) return c.html(ui.bareShell({ theme: 'student', title: 'Link not available', base, body: `<main id="main" class="page"><h1>This link isn't available</h1><p>It may have expired or been turned off by the student who made it.</p></main>` }), 410);
+    const sid = sh.studentId;
+    const st = a.student(sid);
+    const parts: string[] = [];
+    if (sh.scopes.includes('school')) {
+      const v = a.academicView(sid);
+      parts.push(ui.section('Classes, standing and aid progress', `${gradeReadings(v)}${v.standing ? `<p><b>${ui.esc(v.standing.label)}.</b> ${ui.esc(v.standing.why)}</p>` : ''}${ui.table(['Class', 'Grade now', 'Graded so far'], v.books.map((b) => [b.course, b.now ? `${b.now.letter}, ${b.now.percent}%` : 'No grades yet', b.now ? `${b.now.graded}% of the grade` : '']), { caption: 'Current classes' })}`));
+    }
+    if (sh.scopes.includes('degree')) {
+      const v = a.academicView(sid);
+      parts.push(ui.section('Degree progress', v.degree ? ui.readings(v.degree.areas.map((x) => ({ label: x.area, value: x.done + x.inProgress, of: x.need, floor: x.need, words: { pass: 'Covered', fail: 'Still open' } }))) : '<p>No program on file.</p>'));
+    }
+    if (sh.scopes.includes('schedule')) {
+      const w = a.week(sid);
+      parts.push(ui.section('This week', ui.table(['Day', 'Time', 'What'], w.blocks.filter((b) => b.kind !== 'sleep').slice(0, 60).map((b) => [shortDate(b.date), `${time12(b.start)} to ${time12(b.end)}`, b.label]), { caption: 'Classes, work and held study time' })));
+    }
+    if (sh.scopes.includes('plan')) {
+      const t = a.today_(sid);
+      parts.push(ui.section('What they are working on', ui.rows([...(t.oneThing ? [{ title: `Focus: ${t.oneThing.title}`, sub: t.oneThing.why }] : []), ...a.deadlines(sid).filter((d) => d.confirmed && !d.done).slice(0, 12).map((d) => ({ title: d.title, sub: `${d.course ? `${d.course}, ` : ''}due ${friendly(d.due.slice(0, 10))}` }))], 'Nothing open.')));
+    }
+    return c.html(ui.bareShell({ theme: 'student', title: `Shared by ${st.chosenName}`, base, head: '<meta name="robots" content="noindex,nofollow">', body: `<main id="main" class="page"><div class="hello"><h1>${ui.esc(`Shared by ${st.chosenName}`)}</h1><p class="date">${ui.esc(`For ${sh.label}. Read-only, until ${friendly(sh.expiresAt.slice(0, 10))}. ${st.chosenName} sees each time this is opened and can turn it off.`)}</p></div>${parts.join('')}<p class="small muted">From the Student Advocate. Grades and aid progress are computed from published rules; the college makes official decisions.</p></main>` }));
   });
 
   // ------------------------------------------------------------ help
@@ -452,7 +649,7 @@ ${ui.actions([{ label: 'Buy with SNAP online', href: 'https://www.fns.usda.gov/s
   app.post('/s/:id/letter', async (c) => {
     const sid = c.req.param('id');
     const f = await c.req.parseBody();
-    const text = String(f.text ?? '').slice(0, 20000);
+    const text = clip(f.text, 20000, '');
     const m = text.trim() ? (a.model ? (await a.letterMessageWithModel(sid, text)).message : a.letterMessage(sid, text)) : { studentId: sid, author: 'navigator', urgency: 'routine' as const, text: 'Paste the letter and I will explain it.', nextSteps: [{ label: 'Show my day', action: 'today' }] };
     const d = a.deliver(m, { force: true });
     return c.redirect(`${u(sid, '/letter')}?m=${d.id}`);
@@ -508,7 +705,8 @@ ${ui.section('How I talk with you', `<div class="panel" style="padding:14px 18px
 ${ui.section('What I can see', ui.rows((['calendar', 'forwarding', 'learning-feed', 'location'] as const).map((src) => ({ title: { calendar: 'Your calendar', forwarding: 'Emails you forward', 'learning-feed': 'Your class site', location: 'Your location' }[src], chip: a.hasSource(sid, src) ? { text: 'On', tone: 'ok' as const } : { text: 'Off' }, actions: [toAction(sid, a.hasSource(sid, src) ? { label: 'Turn off', action: `source-off:${src}` } : { label: 'Turn on', action: `source-on:${src}` }, 1)] }))))}
 ${ui.section('Quick questions', ui.rows([{ title: ps.off ? 'Off' : `On, at most every ${ps.everyDays} days`, sub: 'One optional question now and then, so I can offer help before it is needed.', actions: [toAction(sid, ps.off ? { label: 'Turn on', action: 'pulses-on' } : { label: 'Turn off', action: 'pulses-off' }, 1)] }]))}
 ${ui.section('Your record of consent', ui.rows(ledger.map((e) => ({ title: `${e.kind} ${e.subject}`, sub: e.at.slice(0, 16).replace('T', ' ') })), 'Nothing yet.'))}
-${ui.section('Your data', `<div class="panel" style="padding:14px 18px"><p>Everything I keep is yours. Download it, connect it to other tools, or delete it.</p>${ui.actions([{ label: 'Download everything', href: u(sid, '/export'), variant: 'quiet' }, { label: 'Calendar feed', href: u(sid, '/calendar.ics'), variant: 'quiet' }, toAction(sid, { label: 'Share the Advocate', action: 'share' }, 1), { label: 'Delete everything', post: { url: u(sid, '/action'), fields: { action: 'delete-account' } }, variant: 'danger' }])}</div>`)}`,
+${ui.section('Your data', `<div class="panel" style="padding:14px 18px"><p>Everything I keep is yours. Download it, connect it to other tools, or delete it.</p>${ui.actions([{ label: 'Download everything', href: u(sid, '/export'), variant: 'quiet' }, { label: 'Calendar feed', href: u(sid, '/calendar.ics'), variant: 'quiet' }, toAction(sid, { label: 'Share the Advocate', action: 'share' }, 1), { label: 'Delete everything', post: { url: u(sid, '/action'), fields: { action: 'delete-account' } }, variant: 'danger' }])}</div>`)}
+<p class="small muted">Built to meet WCAG 2.2 AA and to work with screen readers. <a href="https://zthr.ai/reference/factory/accessibility">Accessibility statement</a>.</p>`,
         'you',
       ),
     );
@@ -536,6 +734,7 @@ ${ui.section('Your data', `<div class="panel" style="padding:14px 18px"><p>Every
       const q = new URLSearchParams({ m: d.id });
       if (r.view === 'share' && r.viewArg) q.set('r', r.viewArg);
       if (r.view === 'drafts' && r.viewArg) q.set('p', r.viewArg);
+      if (r.view === 'drop' && r.viewArg) q.set('course', r.viewArg);
       return c.redirect(`${u(sid, path)}?${q}#latest`);
     }
     return c.html(page(sid, 'Your Advocate', `<div class="hello"><h1>Your Advocate</h1></div>${noteFor(sid, d, { id: 'latest' })}${ui.actions([{ label: 'Back to today', href: u(sid), variant: 'quiet' }])}`, 'today'));

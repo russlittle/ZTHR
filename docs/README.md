@@ -14,6 +14,7 @@ flowchart LR
 
 ## The system
 
+- [Accessibility](accessibility.md)
 - [The agent team](agents.md)
 - [Integration API](api.md)
 - [Architecture](architecture.md)
@@ -41,6 +42,7 @@ flowchart LR
 - [Playbooks](flows/playbooks.md)
 - [Sensitive data](flows/sensitive-data.md)
 - [Signing in](flows/sign-in.md)
+- [Staying enrolled: grades, standing, aid progress and the choice to leave a class](flows/stay-enrolled.md)
 - [Starting by text](flows/text-onboarding.md)
 - [Weather and roads](flows/weather.md)
 
@@ -54,6 +56,7 @@ flowchart LR
 - [Mutation testing and ratchets](testing/mutation.md)
 - [The 33 patterns, in operation](testing/patterns.md)
 - [The red team](testing/redteam.md)
+- [Robustness: generated inputs, failing services, load and restore](testing/robustness.md)
 - [Walking in a real browser](testing/ui-walk.md)
 
 ## Building blocks

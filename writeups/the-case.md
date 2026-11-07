@@ -13,9 +13,10 @@ factory that built it means for anyone who builds software.
 | | |
 | --- | --- |
 | **Built by** | AI agents, inside a factory of gates, locked intent and exhaustive walks. No person wrote the code; a person signs only destructive changes. |
-| **Elapsed time** | About two days, from an empty repository to a deployed application with four phases of features, five synthetic campus services, fifteen reusable blocks and full documentation. |
-| **Size** | About 20,000 lines of TypeScript and 3,800 lines of documentation, every data structure drawn as an ERD. |
-| **Evidence** | 1,116 tests; 20 gates, each proven able to fail; 36 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student; a planted-marker trace of every sensitive field, with no leaks. |
+| **Elapsed time** | Days, from an empty repository to a deployed application with five phases of features, five synthetic campus services, fifteen reusable blocks and full documentation. |
+| **Direction** | About 125 prompts from the author, from the idea to the deployed application. |
+| **Size** | About 22,000 lines of TypeScript and 4,200 lines of documentation, every data structure drawn as an ERD. |
+| **Evidence** | 1,191 tests; 23 gates, each proven able to fail; 41 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student; 433 browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks. |
 | **Cost to run** | No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The app scales to zero when no one is using it. |
 | **Open** | Every test, gate, walk, decision and line of source is public. |
 
@@ -46,9 +47,11 @@ flowchart LR
 | Finds help and does the legwork | Verified, current programs nearby, what to bring, and a drafted message the student approves before anything is sent. |
 | Handles campus life | What is open to eat now, free food today, a study room booked and confirmed, when to leave for the bus with live delays. |
 | Keeps up with classes | Reads the syllabus and the class site, follows moved due dates, plans the work into the time available. |
+| Keeps them enrolled | Grades from the syllabus weights and what the final needs, academic standing, financial-aid progress with an appeal when it slips, every choice about dropping a class side by side with the aid that would go back, and degree progress on the state's transfer pathway. |
+| Brings in their advisor, on their terms | A read-only link the student controls: only the parts they choose, for as long as they choose, with every view recorded. Early alert, run by the student. |
 | Opens doors to work | Jobs that fit around classes and shifts, a fair-chance path when the student asks, an introduction to a mentor. |
 
-It works by text or in the app, at the reading level and length the student chooses, and it never scolds. Crisis
+It works by text or in the app, at the reading level and length the student chooses, with a screen reader or without, and it never scolds. Crisis
 words go straight to 988 before anything else. Nothing leaves on a student's behalf without their approval of the
 exact words.
 
@@ -101,11 +104,15 @@ flowchart TB
 | **Unknown is a state** | Anything not measured in a build says "not measured"; it never counts as a pass. |
 | **Register, don't hide** | Every known gap has an owner and an expiry date, in the open. |
 | **Reusable blocks** | Fifteen parts, each with its own tests and mutation score, inherited by the app, never copied. |
+| **Published rules as oracles** | Financial-aid progress, the federal aid-return formula and SNAP limits are checked against the regulation and the Handbook's own worked cases, to the cent. |
+| **Generated input** | Any text, form, JSON or action name, thousands of times a night; services failing five ways each. Nothing may crash or show a student a programming artifact. |
+| **Accessible by construction** | Every screen held to WCAG 2.2 AA and read the way a screen reader reads it, on every change. |
 
 The factory finds what review misses. In building the Advocate it found, without being asked: a webhook signing
 secret in a student's export, document names in a permanent ledger, a brief-mode answer too long to deliver, a
-bus plan that took a transfer when a direct route existed, and a synthetic mentor sharing a first name with a
-student. Each became a fixture, so it cannot return.
+bus plan that took a transfer when a direct route existed, a synthetic mentor sharing a first name with a
+student, an action name that reached JavaScript's built-in methods, and text that could split a character and
+crash a redirect. Each became a fixture, so it cannot return.
 
 ## The economics
 
@@ -145,7 +152,7 @@ evidence anyone can inspect. People govern the gates and sign destructive change
 
 ## Where it stands
 
-Built and deployed: all four phases of features, the factory and its evidence, the block library and the
+Built and deployed: all five phases of features, the factory and its evidence, the block library and the
 documentation. Open, each with an owner and a date:
 
 - **Phase certificates** wait for the nightly rotation to give every student a full walk that holds for the
@@ -154,6 +161,10 @@ documentation. Open, each with an owner and a date:
 - **Six blocks** score under the 80% mutation target on their own tests; their floors only rise.
 - **Model review from several families** is designed and switched off until providers are configured.
 - **Persistence and credits** need a college's records for students who opt in; they are never estimated.
+- **Screen readers in people's hands.** Every build is checked automatically; testing with people who use NVDA,
+  JAWS, VoiceOver and TalkBack every day is next.
+- **Sinclair's term dates** were not published in a form that could be read; until they are, its students see
+  them as not known rather than guessed.
 
 ## Take part
 

@@ -14,8 +14,8 @@ describe('cards', () => {
     expect(JourneyCard.parse({ ...card, budget: { actions: 1 } }).budget.ms).toBe(10_000);
   });
   it('refuse bad ids, phases, short goals and no forbidden outcomes', () => {
-    for (const bad of [{ id: 'Pay Rent' }, { phase: 5 }, { phase: 0 }, { goal: 'short' }, { forbidden: [] }, { budget: { actions: 0 } }]) expect(JourneyCard.safeParse({ ...card, ...bad }).success).toBe(false);
-    expect(JourneyCard.safeParse({ ...card, phase: 4 }).success).toBe(true);
+    for (const bad of [{ id: 'Pay Rent' }, { phase: 10 }, { phase: 0 }, { goal: 'short' }, { forbidden: [] }, { budget: { actions: 0 } }]) expect(JourneyCard.safeParse({ ...card, ...bad }).success).toBe(false);
+    expect(JourneyCard.safeParse({ ...card, phase: 5 }).success).toBe(true);
   });
   it('load sorted from a folder of YAML, ignoring other files', () => {
     const d = mkdtempSync(join(tmpdir(), 'cards-'));

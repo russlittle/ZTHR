@@ -1,0 +1,21 @@
+program: sinclair-aa-sociology
+college: sinclair
+name: Associate of Arts, sociology transfer pathway
+level: associate
+credits: 61
+source: https://dam.assets.ohio.gov/image/upload/transfercredit.ohio.gov/files/transfer/pathways/SNCL_Sociology.pdf
+note: Ohio's published transfer pathway for Sinclair sociology. Completing Ohio Transfer 36 guarantees those credits transfer to any Ohio public college or university.
+ot36:
+  source: https://www.starkstate.edu/admissions/ohiotransfer36/
+  total: 36
+areas:
+  - { area: English composition, need: 3, courses: [ENG 1101] }
+  - { area: Oral communication, need: 3, courses: [COM 2211] }
+  - { area: Mathematics, statistics and logic, need: 3, courses: [MAT 1450] }
+  - { area: Arts and humanities, need: 6, courses: [LIT 2230, THE 1101], note: two different disciplines }
+  - { area: Social and behavioral sciences, need: 6, courses: [SOC 1101, PSY 1100], note: two different disciplines }
+  - { area: Natural sciences, need: 6, courses: [BIO 1111, BIO 1211], note: one with a lab }
+  - { area: Second writing course, need: 3, courses: [ENG 1201], ot36: false }
+  - { area: Sociology courses, need: 9, courses: [SOC 1115, SOC 2205, SOC 2215], ot36: false }
+  - { area: First year experience, need: 1, courses: [SCC 1101], ot36: false }
+admitted_by: factory

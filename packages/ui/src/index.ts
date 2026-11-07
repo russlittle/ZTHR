@@ -30,7 +30,7 @@ export const join = (...parts: (string | false | undefined | null)[]): string =>
 const common = { bar: '#10141f', barInk: '#e8ebf5', barMuted: '#9aa3bd', dotApp: '#9a8cff', dotAdmin: '#ffc83d', dotFactory: '#4fd3e3' };
 export const THEMES = {
   student: {
-    light: { ...common, paper: '#f5f6fb', surface: '#ffffff', ink: '#14152b', muted: '#5a5d78', line: '#e1e3ef', action: '#5145e8', actionInk: '#ffffff', mark: '#ffc83d', markInk: '#3a2700', alert: '#d23a52', calm: '#eeedfd', focus: '#1b5fd1', side: '#ffffff', sideInk: '#14152b', sideMuted: '#5a5d78', sideActive: '#eeedfd' },
+    light: { ...common, paper: '#f5f6fb', surface: '#ffffff', ink: '#14152b', muted: '#464962', line: '#e1e3ef', action: '#3f33c0', actionInk: '#ffffff', mark: '#ffc83d', markInk: '#3a2700', alert: '#d23a52', calm: '#eeedfd', focus: '#1b5fd1', side: '#ffffff', sideInk: '#14152b', sideMuted: '#5a5d78', sideActive: '#eeedfd' },
     dark: { ...common, paper: '#0b0b16', surface: '#16172a', ink: '#ecedf8', muted: '#a3a6c4', line: '#2a2c48', action: '#a99dff', actionInk: '#120c3a', mark: '#ffc83d', markInk: '#2a1d00', alert: '#ff7d92', calm: '#1f1d40', focus: '#8db4ff', side: '#16172a', sideInk: '#ecedf8', sideMuted: '#a3a6c4', sideActive: '#1f1d40' },
   },
   admin: {
@@ -52,6 +52,7 @@ const vars = (t: Record<string, string>) => Object.entries(t).map(([k, v]) => `-
 
 const ICONS: Record<string, string> = {
   today: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  cap: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/><path d="M22 9v6"/>',
   money: '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v.01M18 15v.01"/>',
   help: '<path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/>',
   you: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
@@ -95,6 +96,10 @@ html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
 a{color:var(--action);text-underline-offset:3px}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+html{scroll-padding-top:96px;scroll-padding-bottom:24px}
+@media (max-width:640px){html{scroll-padding-bottom:110px}}
+.prose,.case{overflow-wrap:anywhere}
+table.t td a{display:inline-block;padding:3px 0;min-height:24px}
 .skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 12px;border-radius:8px;z-index:10}.skip:focus{left:8px}
 h1,h2,h3{line-height:1.2;margin:0}
 h1{font-size:30px;letter-spacing:-.01em}
@@ -222,7 +227,7 @@ input,textarea,select{font:inherit;width:100%;padding:11px 12px;border:1.5px sol
 /* week */
 .week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .week .d{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:8px;min-height:140px}
-.week .d h3{font-size:13px;color:var(--muted);margin-bottom:6px}
+.week .d h2{font-size:13px;color:var(--muted);margin-bottom:6px}
 .week .b{font-size:12px;border-radius:7px;padding:4px 6px;margin:4px 0;background:var(--calm);line-height:1.3}
 .week .b.class{border-left:4px solid var(--action)}
 .week .b.shift{border-left:4px solid var(--ink)}
@@ -252,6 +257,33 @@ main.con{padding:24px 28px 60px;max-width:1200px;min-width:0}
 .bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}.bar>i{display:block;height:100%;background:var(--action)}
 pre.code{background:var(--calm);padding:12px;border-radius:var(--r-sm);overflow:auto;font-size:13px}
 @media (max-width:860px){.console{grid-template-columns:1fr}.side{position:static;height:auto;display:flex;flex-wrap:wrap;gap:4px}.side .grp{flex-basis:100%;margin:10px 10px 2px;padding-top:8px}main.con{padding:16px}}
+/* readings: what was measured, what it must reach, whether it held */
+.readings{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin:18px 0 8px;padding:6px 22px}
+.reading{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(120px,.8fr) minmax(0,1.6fr) 104px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none}
+.reading:last-child{border-bottom:0}
+a.reading:hover .l{color:var(--action)}
+.reading .l{font-family:var(--display);font-weight:650;font-size:17px}
+.reading .l small{display:block;font-family:"Atkinson Hyperlegible",system-ui,sans-serif;font-weight:400;font-size:13px;color:var(--muted)}
+.reading .v{font-family:var(--display);font-size:26px;font-weight:650;letter-spacing:-.02em;text-align:right;white-space:nowrap}
+.reading .v span{font-size:15px;color:var(--muted);font-weight:500;letter-spacing:0}
+.gauge{position:relative;height:12px;border-radius:6px;background:var(--r-gauge,var(--line))}
+.gauge i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--action)}
+.gauge b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);border-radius:1px}
+.gauge.none{background:repeating-linear-gradient(90deg,var(--r-gauge,var(--line)) 0 6px,transparent 6px 10px)}
+.state{justify-self:end;display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:14px}
+.state::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor}
+.state.pass{color:var(--r-pass,#1d7a55)}.state.fail{color:var(--r-fail,var(--alert))}.state.unk{color:var(--r-unk,#8a6a12)}.state.count{color:var(--muted)}.state.count::before{border-radius:2px;width:9px;height:9px}
+.reading.fail .gauge i{background:var(--r-fail,var(--alert))}
+@media (max-width:760px){.reading{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px}.reading .gauge{grid-column:1/-1;order:3}.reading .state{order:4;grid-column:1/-1;justify-self:start}.readings{padding:4px 16px}}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:16px 0 8px}
+.choice{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 18px;min-width:0}
+.choice h2{font-size:18px;margin:0 0 6px}
+.choice.off{opacity:.92}.choice.off h2{color:var(--muted)}
+.choice dl{margin:10px 0 0;display:grid;gap:2px}
+.choice dt{font-size:13px;font-weight:700;color:var(--muted);margin-top:8px}
+.choice dd{margin:0;font-size:15px}
+.visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.checks{border:0;padding:0;margin:0 0 14px}.checks legend{font-weight:700;margin-bottom:6px}.check{display:flex;align-items:center;gap:10px;font-weight:400;min-height:44px}.check input{width:24px;height:24px;flex:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 ${theme === 'student' ? studentLayer(base) : theme === 'factory' ? factoryLayer(base) : theme === 'admin' ? adminLayer(base) : ''}`;
 }
@@ -281,9 +313,9 @@ table.t th{border-bottom:1.5px solid var(--ink)}
 function factoryLayer(base: string): string {
   return `
 @font-face{font-family:"Bricolage Grotesque";src:url("${base}/_ui/bricolage.woff2") format("woff2");font-weight:200 800;font-display:swap}
-:root{--display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;--rule:rgba(11,102,128,.06);--pass:#1d7a55;--fail:#b2412a;--unk:#8a6a12;--gauge:#dfe8ed}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--rule:rgba(95,208,230,.05);--pass:#5fd39e;--fail:#f08a6c;--unk:#e8c066;--gauge:#1d2f38}}
-:root[data-theme="dark"]{--rule:rgba(95,208,230,.05);--pass:#5fd39e;--fail:#f08a6c;--unk:#e8c066;--gauge:#1d2f38}
+:root{--display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;--rule:rgba(11,102,128,.06);--r-pass:#1d7a55;--r-fail:#b2412a;--r-unk:#8a6a12;--r-gauge:#dfe8ed}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--rule:rgba(95,208,230,.05);--r-pass:#5fd39e;--r-fail:#f08a6c;--r-unk:#e8c066;--r-gauge:#1d2f38}}
+:root[data-theme="dark"]{--rule:rgba(95,208,230,.05);--r-pass:#5fd39e;--r-fail:#f08a6c;--r-unk:#e8c066;--r-gauge:#1d2f38}
 h1,h2,h3,.brand{font-family:var(--display);letter-spacing:-.015em}
 h1{font-size:clamp(30px,3.4vw,40px);font-weight:700;line-height:1.08}
 h2{font-weight:650}
@@ -317,24 +349,6 @@ code{font-size:.9em;background:color-mix(in srgb,var(--action) 8%,transparent);p
 .rows .grow>a b::after{content:"";display:inline-block;width:7px;height:7px;margin-left:9px;border:solid var(--action);border-width:2px 2px 0 0;transform:translateY(-2px) rotate(45deg)}
 .rows .grow>a:hover b{color:var(--action)}
 .rows li{padding:14px 0}
-/* readings: what was measured, what it must reach, whether it held */
-.readings{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin:18px 0 8px;padding:6px 22px}
-.reading{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(120px,.8fr) minmax(0,1.6fr) 104px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none}
-.reading:last-child{border-bottom:0}
-a.reading:hover .l{color:var(--action)}
-.reading .l{font-family:var(--display);font-weight:650;font-size:17px}
-.reading .l small{display:block;font-family:"Atkinson Hyperlegible",system-ui,sans-serif;font-weight:400;font-size:13px;color:var(--muted)}
-.reading .v{font-family:var(--display);font-size:26px;font-weight:650;letter-spacing:-.02em;text-align:right;white-space:nowrap}
-.reading .v span{font-size:15px;color:var(--muted);font-weight:500;letter-spacing:0}
-.gauge{position:relative;height:12px;border-radius:6px;background:var(--gauge)}
-.gauge i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--action)}
-.gauge b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);border-radius:1px}
-.gauge.none{background:repeating-linear-gradient(90deg,var(--gauge) 0 6px,transparent 6px 10px)}
-.state{justify-self:end;display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:14px}
-.state::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor}
-.state.pass{color:var(--pass)}.state.fail{color:var(--fail)}.state.unk{color:var(--unk)}.state.count{color:var(--muted)}.state.count::before{border-radius:2px;width:9px;height:9px}
-.reading.fail .gauge i{background:var(--fail)}
-@media (max-width:760px){.reading{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px}.reading .gauge{grid-column:1/-1;order:3}.reading .state{order:4;grid-column:1/-1;justify-self:start}.readings{padding:4px 16px}}
 /* long-form writing in the factory */
 .prose{max-width:76ch}
 .prose h2{margin-top:1.6em}
@@ -366,7 +380,7 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
  */
 function studentLayer(base: string): string {
   const lines = { light: '--l-class:#2f6bff;--l-work:#ff7a1a;--l-care:#ec4899;--l-hold:#14b8a6;--l-due:#e5384f;--l-money:#f5b400;--l-route:#5145e8', dark: '--l-class:#6f9bff;--l-work:#ff9a52;--l-care:#ff79b6;--l-hold:#3fd9c4;--l-due:#ff7d92;--l-money:#ffc83d;--l-route:#a99dff' };
-  const DARK = `${lines.dark};--paper:#0b0b16;--line:#2a2c48;--board:#100e2e;--board-2:#241a5c;--board-ink:#f4f3ff;--board-muted:#aaa5dc;--on-route:#120c3a;--glass:rgba(22,23,44,.72);--glass-line:rgba(255,255,255,.07);--g1:rgba(110,86,255,.42);--g2:rgba(0,170,255,.24);--g3:rgba(255,80,160,.22);--g4:rgba(255,190,60,.10);--lift:0 12px 34px -16px rgba(0,0,0,.6)`;
+  const DARK = `${lines.dark};--paper:#0b0b16;--line:#2a2c48;--board:#100e2e;--board-2:#241a5c;--board-ink:#f4f3ff;--board-muted:#aaa5dc;--on-route:#120c3a;--glass:rgba(22,23,44,.72);--glass-line:rgba(255,255,255,.07);--g1:rgba(110,86,255,.42);--g2:rgba(0,170,255,.24);--g3:rgba(255,80,160,.22);--g4:rgba(255,190,60,.10);--lift:0 12px 34px -16px rgba(0,0,0,.6);--r-pass:#5fd39e;--r-unk:#e8c066;--r-fail:#ff7d92`;
   return `
 @font-face{font-family:"Bricolage Grotesque";src:url("${base}/_ui/bricolage.woff2") format("woff2");font-weight:200 800;font-display:swap}
 :root{${lines.light};--display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;--paper:#f5f6fb;--line:#e1e3ef;--board:#15123d;--board-2:#2b1d6e;--board-ink:#f4f3ff;--board-muted:#b6b2e6;--on-route:#ffffff;--glass:rgba(255,255,255,.78);--glass-line:rgba(255,255,255,.9);--g1:rgba(110,86,255,.38);--g2:rgba(0,190,255,.30);--g3:rgba(255,92,170,.26);--g4:rgba(255,190,60,.22);--lift:0 1px 2px rgba(20,21,43,.04),0 10px 30px -14px rgba(60,50,160,.22)}
@@ -378,12 +392,12 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
 .t-day .card{position:relative;overflow:hidden}
 .t-day .card::before{content:"";position:absolute;right:-20%;top:-40%;width:70%;height:120%;background:radial-gradient(closest-side,rgba(130,110,255,.35),transparent);pointer-events:none}
 .t-day .card>*{position:relative}
-.panel,.card,.note,.tile,.kpi,.week .d,.glance span,.tabs{background:var(--glass);border-color:var(--glass-line);box-shadow:var(--lift);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
-.top{background:transparent!important;backdrop-filter:none}
+.panel,.card,.note,.tile,.kpi,.week .d,.glance span,.tabs,.choice{background:var(--glass);border-color:var(--glass-line);box-shadow:var(--lift);-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%)}
+.top{background:color-mix(in srgb,var(--paper) 80%,transparent)!important;-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
 h1,h2,h3,.brand,.figure .n{font-family:var(--display);letter-spacing:-.015em}
 h1{font-weight:700}h2{font-weight:650}
 /* header: quiet, with the tabs as one segmented control */
-.top{background:color-mix(in srgb,var(--paper) 88%,transparent);border-bottom:0}
+.top{border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
 .brand{font-size:19px;font-weight:700}
 .brand-mark{border-radius:10px;background:linear-gradient(135deg,#6f5cff,#2f9bff);color:#fff;box-shadow:0 6px 16px -6px rgba(81,69,232,.6)}
 .tabs{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px;gap:2px}
@@ -466,6 +480,7 @@ input,textarea,select{border-radius:12px;padding:12px 14px}
 input:focus,textarea:focus,select:focus{border-color:var(--l-route);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--l-route) 22%,transparent)}
 /* phone: an app's bottom bar */
 @media (max-width:640px){
+ .top{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:var(--paper)!important}
  .tabs{background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);border:0;border-top:1px solid var(--line);border-radius:0;padding:6px 6px calc(8px + env(safe-area-inset-bottom))}
  .tabs a{border-radius:12px;min-height:52px;font-size:12px}
  .tabs a[aria-current="page"]{background:color-mix(in srgb,var(--l-route) 14%,var(--surface));color:var(--l-route)}
@@ -486,7 +501,7 @@ a.tile,a.tile:hover{text-decoration:none;color:var(--ink)}
 .page:has(.week){max-width:1088px}
 .week .d{min-width:0;border-radius:16px;padding:10px;box-shadow:none}
 @media (max-width:900px){.week .d{min-width:128px}}
-.week .d h3{font-family:var(--display);font-size:14px;color:var(--ink);font-weight:650}
+.week .d h2{font-family:var(--display);font-size:14px;color:var(--ink);font-weight:650}
 .week .b{--bc:var(--l-route);font-size:13px;border-radius:9px;padding:6px 8px;border-left:4px solid var(--bc);background:color-mix(in srgb,var(--bc) 11%,var(--surface))}
 .week .b.class{--bc:var(--l-class)}.week .b.shift{--bc:var(--l-work)}.week .b.study,.week .b.hold{--bc:var(--l-hold)}.week .b.pickup,.week .b.drop-off{--bc:var(--l-care)}.week .b.due{--bc:var(--l-due)}
 .week .d .b{border-left-color:var(--bc)}
@@ -607,7 +622,9 @@ export interface NoteOpts {
 /** Something the team says to the person, with why they are seeing it and what they can do next. */
 export function note(n: NoteOpts): string {
   const tag = n.kind === 'heads' ? 'Heads up' : n.kind === 'safety' ? 'Right now' : '';
-  return `<section class="note k-${n.kind ?? 'info'}"${n.id ? ` id="${esc(n.id)}"` : ''}${n.title ? ` aria-label="${esc(n.title)}"` : ''}>${tag ? `<span class="tag">${tag}</span>` : ''}${n.from ? `<div class="from">${n.icon ? `<span class="av">${icon(n.icon, 16)}</span>` : ''}${esc(n.from)}</div>` : ''}${n.title ? `<h2>${esc(n.title)}</h2>` : ''}<div class="body">${esc(n.body)}</div>${n.why ? `<details class="why"><summary>Why am I seeing this?</summary><p>${esc(n.why)}</p></details>` : ''}${actions(n.actions ?? [])}</section>`;
+  // The note a tap produced is a status message (WCAG 4.1.3): announced, and the target the address points to.
+  const live = n.id === 'latest' ? ' role="status" tabindex="-1"' : '';
+  return `<section class="note k-${n.kind ?? 'info'}"${n.id ? ` id="${esc(n.id)}"` : ''}${live}${n.title ? ` aria-label="${esc(n.title)}"` : ''}>${tag ? `<span class="tag">${tag}</span>` : ''}${n.from ? `<div class="from">${n.icon ? `<span class="av">${icon(n.icon, 16)}</span>` : ''}${esc(n.from)}</div>` : ''}${n.title ? `<h2>${esc(n.title)}</h2>` : ''}<div class="body">${esc(n.body)}</div>${n.why ? `<details class="why"><summary>Why am I seeing this?</summary><p>${esc(n.why)}</p></details>` : ''}${actions(n.actions ?? [])}</section>`;
 }
 
 export interface Stop {
@@ -681,12 +698,22 @@ export interface Field {
   hint?: string;
   multiline?: number;
   type?: string;
+  /** For a choice: 'select' draws a menu, 'checks' a group of checkboxes (value is a comma list of the checked ones). */
+  options?: { value: string; label: string }[];
+  required?: boolean;
 }
 
 export function form(o: { url: string; fields: Field[]; submit: string; hidden?: Record<string, string> }): string {
   return `<form method="post" action="${esc(o.url)}">${Object.entries(o.hidden ?? {}).map(([k, v]) => `<input type="hidden" name="${esc(k)}" value="${esc(v)}">`).join('')}${o.fields
     .map((f) => {
       const id = `f-${esc(f.name).replace(/[^\w-]/g, "_")}`;
+      if (f.type === 'checks' && f.options) {
+        const on = new Set((f.value ?? '').split(','));
+        return `<fieldset class="checks"><legend>${esc(f.label)}</legend>${f.options.map((o, i) => `<label class="check" for="${id}-${i}"><input type="checkbox" name="${esc(f.name)}" value="${esc(o.value)}" id="${id}-${i}"${on.has(o.value) ? ' checked' : ''}> ${esc(o.label)}</label>`).join('')}${f.hint ? `<div class="hint">${esc(f.hint)}</div>` : ''}</fieldset>`;
+      }
+      if (f.type === 'select' && f.options) {
+        return `<label for="${id}">${esc(f.label)}</label><select id="${id}" name="${esc(f.name)}"${f.required ? ' required' : ''}>${f.options.map((o) => `<option value="${esc(o.value)}"${o.value === f.value ? ' selected' : ''}>${esc(o.label)}</option>`).join('')}</select>${f.hint ? `<div class="hint" id="${id}-hint">${esc(f.hint)}</div>` : ''}`;
+      }
       const ctl = f.multiline ? `<textarea id="${id}" name="${esc(f.name)}" rows="${f.multiline}"${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''}>${esc(f.value ?? '')}</textarea>` : `<input id="${id}" name="${esc(f.name)}" type="${esc(f.type ?? 'text')}" value="${esc(f.value ?? '')}"${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''}>`;
       return `<label for="${id}">${esc(f.label)}</label>${ctl}${f.hint ? `<div class="hint">${esc(f.hint)}</div>` : ''}`;
     })
@@ -701,7 +728,7 @@ export interface WeekDay {
 
 export function weekGrid(days: WeekDay[]): string {
   return `<div class="week">${days
-    .map((d) => `<section class="d" aria-label="${esc(d.label)}"><h3>${esc(d.label)}</h3>${d.blocks.map((b) => `<div class="b ${esc(b.kind)}"><b>${esc(b.time)}</b> ${esc(b.title)}</div>`).join('')}${d.problem ? `<div class="prob">${esc(d.problem)}</div>` : ''}${d.blocks.length || d.problem ? '' : '<div class="small muted">Open</div>'}</section>`)
+    .map((d) => `<section class="d" aria-label="${esc(d.label)}"><h2 class="dh">${esc(d.label)}</h2>${d.blocks.map((b) => `<div class="b ${esc(b.kind)}"><b>${esc(b.time)}</b> ${esc(b.title)}</div>`).join('')}${d.problem ? `<div class="prob">${esc(d.problem)}</div>` : ''}${d.blocks.length || d.problem ? '' : '<div class="small muted">Open</div>'}</section>`)
     .join('')}</div>`;
 }
 
@@ -717,9 +744,15 @@ export interface Reading {
   of?: number;
   /** What the value must reach; with it the reading passes or fails. */
   floor?: number;
+  /** What the value must stay at or under (a limit rather than a target). */
+  ceiling?: number;
   unit?: string;
   note?: string;
   href?: string;
+  /** Decimal places to show (a GPA reads 3.00, not 3). */
+  places?: number;
+  /** Words for the states, when Held and Below floor are not the reader's words. */
+  words?: { pass: string; fail: string };
 }
 
 /** Measurements against their tolerances. A reading with no value says "not measured"; it never counts as a pass. */
@@ -728,10 +761,12 @@ export function readings(items: Reading[]): string {
   return `<div class="readings">${items
     .map((r) => {
       const measured = r.value !== undefined;
-      const state = !measured ? ['unk', 'Not measured'] : r.floor === undefined ? ['count', 'Recorded'] : r.value! >= r.floor ? ['pass', 'Held'] : ['fail', 'Below floor'];
+      const w = r.words ?? { pass: 'Held', fail: r.ceiling !== undefined ? 'Over the limit' : 'Below floor' };
+      const state = !measured ? ['unk', 'Not measured'] : r.ceiling !== undefined ? (r.value! <= r.ceiling ? ['pass', w.pass] : ['fail', w.fail]) : r.floor === undefined ? ['count', 'Recorded'] : r.value! >= r.floor ? ['pass', w.pass] : ['fail', w.fail];
+      const mark = r.floor ?? r.ceiling;
       const scale = r.of ?? 0;
-      const gauge = measured && scale ? `<div class="gauge" role="img" aria-label="${esc(`${fmt(r.value!)} of ${fmt(scale)}${r.floor !== undefined ? `, must reach ${fmt(r.floor)}` : ''}`)}"><i style="width:${Math.max(0, Math.min(100, (r.value! / scale) * 100)).toFixed(1)}%"></i>${r.floor !== undefined && r.floor < scale ? `<b style="left:${((r.floor / scale) * 100).toFixed(1)}%"></b>` : ''}</div>` : `<div class="gauge none" aria-hidden="true"></div>`;
-      const v = !measured ? '<span>not measured</span>' : r.unit === '%' ? `${r.value}<span>%</span>` : `${fmt(r.value!)}${r.of !== undefined && r.unit !== '%' ? `<span> / ${fmt(r.of)}</span>` : ''}`;
+      const gauge = measured && scale ? `<div class="gauge" role="img" aria-label="${esc(`${fmt(r.value!)} of ${fmt(scale)}${r.floor !== undefined ? `, must reach ${fmt(r.floor)}` : r.ceiling !== undefined ? `, must stay at or under ${fmt(r.ceiling)}` : ''}`)}"><i style="width:${Math.max(0, Math.min(100, (r.value! / scale) * 100)).toFixed(1)}%"></i>${mark !== undefined && mark < scale ? `<b style="left:${((mark / scale) * 100).toFixed(1)}%"></b>` : ''}</div>` : `<div class="gauge none" aria-hidden="true"></div>`;
+      const v = !measured ? '<span>not measured</span>' : r.unit === '%' ? `${Number(r.value!.toFixed(1))}<span>%</span>` : `${r.places !== undefined ? r.value!.toFixed(r.places) : fmt(r.value!)}${r.of !== undefined && r.unit !== '%' ? `<span> / ${fmt(r.of)}</span>` : ''}`;
       const inner = `<span class="l">${esc(r.label)}${r.note ? `<small>${esc(r.note)}</small>` : ''}</span><span class="v">${v}</span>${gauge}<span class="state ${state[0]}">${state[1]}</span>`;
       return r.href ? `<a class="reading ${state[0]}" href="${esc(r.href)}">${inner}</a>` : `<div class="reading ${state[0]}">${inner}</div>`;
     })

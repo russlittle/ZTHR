@@ -17,6 +17,12 @@ import type { OutboundMessage, Student } from '../apps/advocate/src/domain/types
 import type { ActionResult } from '../apps/advocate/src/agents/actions.js';
 import { CONTROL, JOURNEY_DIR, OUT, ROOT, readLock } from './lib.js';
 import { links, type Links } from './doc-links.js';
+import { r2t4, HANDBOOK_CASE_2, type PaymentPeriod, type AidDisbursed, type R2T4Result } from '../apps/advocate/src/domain/r2t4.js';
+import { sap, type AcademicPolicy, type SapResult, type TranscriptCourse } from '../apps/advocate/src/domain/academics.js';
+import { COLLEGES } from '../apps/advocate/src/domain/colleges.js';
+import * as academics from '../apps/advocate/src/agents/academics.js';
+import { PERSONAS } from '../apps/advocate/src/server/demo.js';
+import { createApp } from '../apps/advocate/src/server/app.js';
 
 /**
  * Every named gate states what it protects, carries the planted defects that
@@ -40,7 +46,11 @@ function productMessages(): MessageSet {
   a.addDeadline(s.id, { title: 'Lab 3', course: 'BIO 1111', due: '2026-10-30', kind: 'assignment', effortHours: 3, source: { type: 'student' }, confirmed: true });
   a.setMoney(s.id, 100, [{ name: 'Rent', amount: 900, dueDay: 1, kind: 'rent' }], { amount: 300, next: '2026-11-20', everyDays: 14 });
   const crisis = (['eviction', 'utility-shutoff', 'car', 'no-food', 'rent-short'] as const).map((x) => a.crisis(s.id, x).message);
-  return [a.todayMessage(s.id), ...a.lookAhead(s.id), a.moneyCheck(s.id)!, a.moneyFoundMessage(s.id), ...crisis, a.helpMessage(s.id, 'food'), a.helpMessage(s.id, 'caregiving'), a.explainMessage(s.id, 'what is a registrar')!, a.guideMessage(s.id, 'how do I sign a lease')!].filter(Boolean);
+  const school = (['Destiny', 'Tyler', 'Linda', 'Priya', 'Maria'] as const).flatMap((n) => {
+    const id = PERSONAS[n]!(a).id;
+    return [academics.schoolMessage(a, id), academics.finalNeedMessage(a, id), academics.aidProgressMessage(a, id), academics.dropMessage(a, id), academics.degreeMessage(a, id)];
+  });
+  return [...school, a.todayMessage(s.id), ...a.lookAhead(s.id), a.moneyCheck(s.id)!, a.moneyFoundMessage(s.id), ...crisis, a.helpMessage(s.id, 'food'), a.helpMessage(s.id, 'caregiving'), a.explainMessage(s.id, 'what is a registrar')!, a.guideMessage(s.id, 'how do I sign a lease')!].filter(Boolean);
 }
 
 interface Dispatcher {
@@ -262,7 +272,15 @@ export function richStudent(): { a: Advocate; sid: string; seeds: OutboundMessag
   a.setMoney(sid, 100, [{ name: 'Rent', amount: 900, dueDay: 1, kind: 'rent' }, { name: 'Electric', amount: 120, dueDay: 10, kind: 'utility' }], { amount: 300, next: '2026-11-20', everyDays: 14 });
   a.connectSource(sid, 'forwarding');
   const mt = a.addMeeting(sid, { title: 'Group project', date: '2026-11-04', start: '18:00', attendees: ['Ana', 'Lee'], course: 'ENG 1101' });
+  // A school record under the aid-progress line, with a gradebook, so the School buttons are walked too.
+  a.setAcademic(sid, { programCredits: 60, transcript: [{ course: 'ENG 1101', credits: 3, grade: 'W', term: 'Spring 2026' }, { course: 'PSY 1100', credits: 3, grade: 'C', term: 'Spring 2026' }, { course: 'BIO 1111', credits: 4, term: 'Fall 2026' }] });
+  a.setGradebook(sid, { course: 'BIO 1111', credits: 4, source: 'student', categories: [{ name: 'Exams', weight: 60 }, { name: 'Final exam', weight: 40 }], items: [{ category: 'Exams', title: 'Exam 1', score: 71, outOf: 100 }, { category: 'Final exam', title: 'Final exam', outOf: 100 }] });
   const seeds: OutboundMessage[] = [
+    academics.schoolMessage(a, sid),
+    academics.aidProgressMessage(a, sid),
+    academics.finalNeedMessage(a, sid),
+    academics.dropMessage(a, sid),
+    academics.degreeMessage(a, sid),
     a.todayMessage(sid),
     ...a.lookAhead(sid),
     a.moneyCheck(sid),
@@ -526,7 +544,113 @@ function ownExports(dir: string): Record<string, string[]> {
   return out;
 }
 
-const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate].map((g) => g.id);
+// ---- staying enrolled: the federal aid formulas and the student's control of what is shared (Phase 5) ----
+
+type R2T4Fn = (p: PaymentPeriod, lastDay: string, aid: AidDisbursed, charges: number) => R2T4Result;
+function r2t4Oracle(fn: R2T4Fn): string[] {
+  const H = HANDBOOK_CASE_2;
+  const bad: string[] = [];
+  const r = fn(H.period, H.lastDay, H.aid, H.charges);
+  for (const [k, v] of Object.entries(H.expect)) if ((r as unknown as Record<string, number>)[k] !== v) bad.push(`Handbook case 2 ${k}: ${(r as unknown as Record<string, number>)[k]} not ${v}`);
+  const late = fn(H.period, '2026-04-20', H.aid, H.charges);
+  if (!late.allEarned || late.unearned !== 0) bad.push('after 60% all aid must be earned');
+  const tiny = fn(H.period, H.lastDay, { pell: 100 }, 0);
+  if (tiny.studentGrantReturn !== 0) bad.push('a grant overpayment of $50 or less is not owed');
+  return bad;
+}
+const r2t4Gate: Gate<R2T4Fn> = {
+  id: 'r2t4-oracle',
+  protects: 'The withdrawal estimate reproduces the Federal Student Aid Handbook\'s worked case to the cent, earns everything after 60%, and waives grant overpayments of $50 or less (34 CFR 668.22).',
+  definition: def(r2t4Oracle),
+  check: (fn) => {
+    const bad = r2t4Oracle(fn);
+    return bad.length ? fail('r2t4-oracle', bad.join('; ')) : pass('r2t4-oracle', 'Handbook case 2 matches; 60% and $50 rules hold');
+  },
+  falsification: [
+    { name: 'planted count that keeps scheduled breaks in the term', plant: () => (p: PaymentPeriod, d: string, aid: AidDisbursed, c: number) => r2t4({ ...p, breaks: [] }, d, aid, c) },
+    { name: 'planted estimate with no 50% grant protection', plant: () => (p: PaymentPeriod, d: string, aid: AidDisbursed, c: number) => { const x = r2t4(p, d, aid, c); return { ...x, studentGrantReturn: x.studentInitialDue - x.studentLoanRepay }; } },
+  ],
+};
+
+type SapFn = (t: TranscriptCourse[], p: AcademicPolicy['sap'], credits?: number) => SapResult;
+function sapOracle(fn: SapFn): string[] {
+  const bad: string[] = [];
+  const row = (course: string, credits: number, grade: TranscriptCourse['grade']): TranscriptCourse => ({ course, credits, grade, term: 'Fall 2025' });
+  for (const c of COLLEGES.filter((x) => x.academic)) {
+    const p = c.academic!.sap;
+    const credits = c.academic!.level === 'bachelor' ? 120 : 60;
+    const ok = (t: TranscriptCourse[], rule: string) => fn(t, p, credits).checks.find((x) => x.rule === rule)!.meets;
+    // pace at the line passes and just under fails (in hundredths of a percent)
+    const at = Math.ceil(p.pace * 100);
+    if (ok([row('A', at, 'A'), row('B', 10000 - at, 'W')], 'pace') !== true) bad.push(`${c.short}: ${at / 100}% must meet ${p.pace}%`);
+    if (ok([row('A', at - 2, 'A'), row('B', 10002 - at, 'W')], 'pace') !== false) bad.push(`${c.short}: under ${p.pace}% must not meet`);
+    if (ok([row('A', 3, 'B'), row('B', 3, 'D')], 'gpa') !== (2.0 >= p.gpa)) bad.push(`${c.short}: a 2.0 GPA against ${p.gpa}`);
+    const max = Math.floor(credits * p.maxTimeframe);
+    if (ok([row('A', max, 'C')], 'max-timeframe') !== true || ok([row('A', max + 1, 'C')], 'max-timeframe') !== false) bad.push(`${c.short}: the limit is ${max} attempted credits`);
+    if (fn([row('A', 3, 'W'), row('B', 3, 'A')], p, credits).attempted !== 6) bad.push(`${c.short}: a W counts as attempted`);
+    if (fn([row('T', 6, 'TR')], p, credits).earned !== 6) bad.push(`${c.short}: transfer credit counts as earned`);
+  }
+  return bad;
+}
+const sapGate: Gate<SapFn> = {
+  id: 'sap-oracle',
+  protects: 'Satisfactory Academic Progress is measured exactly at each college\'s declared GPA, pace and 150% limit, with W counted as attempted and transfer credit as both attempted and earned (34 CFR 668.34).',
+  definition: def(sapOracle),
+  check: (fn) => {
+    const bad = sapOracle(fn);
+    return bad.length ? fail('sap-oracle', bad.join('; ')) : pass('sap-oracle', `${COLLEGES.filter((x) => x.academic).length} colleges checked at their thresholds`);
+  },
+  falsification: [
+    { name: 'planted measure that leaves W out of attempted credits', plant: () => (t: TranscriptCourse[], p: AcademicPolicy['sap'], c?: number) => sap(t.filter((x) => x.grade !== 'W'), p, c) },
+    { name: 'planted rounding of pace to a whole percent', plant: () => (t: TranscriptCourse[], p: AcademicPolicy['sap'], c?: number) => { const r = sap(t, p, c); return { ...r, checks: r.checks.map((k) => (k.rule === 'pace' && k.value !== undefined ? { ...k, value: Math.round(k.value), meets: Math.round(k.value) >= p.pace } : k)) }; } },
+  ],
+};
+
+/** A link opened with a set of scopes, and what it showed, what was stored, and how a revoked or expired one answered. */
+type ShareProbe = () => Promise<{ scopes: string[]; html: string; marker: string; stored: string; token: string; revoked: number; expired: number }[]>;
+const realShareProbe: ShareProbe = async () => {
+  const out = [];
+  for (const scopes of [['school'], ['degree'], ['schedule'], ['plan'], ['school', 'degree', 'schedule', 'plan']] as academics.ShareScope[][]) {
+    const a = new Advocate({ today: () => DAY, now: () => new Date(`${DAY}T15:00:00Z`) });
+    const id = PERSONAS.Tyler!(a).id;
+    const marker = `SEALED-${randomBytes(4).toString('hex')}`;
+    a.seal(id, 'justice_involvement', marker);
+    const web = createApp(a);
+    const { token, share } = a.createShare(id, 'Advisor', scopes, 7);
+    const html = await (await web.request(`/shared/${token}`)).text();
+    const stored = JSON.stringify(a.store.exportStudent(id)) + JSON.stringify(a.messages(id));
+    a.revokeShare(id, share.id);
+    const revoked = (await web.request(`/shared/${token}`)).status;
+    const { token: t2, share: s2 } = a.createShare(id, 'Old', scopes, 1);
+    a.store.put('shares', s2.id, id, { ...s2, expiresAt: '2026-11-01T00:00:00.000Z' });
+    const expired = (await web.request(`/shared/${t2}`)).status;
+    out.push({ scopes, html, marker, stored, token, revoked, expired });
+  }
+  return out;
+};
+const SECTION: Record<string, RegExp> = { school: /Classes, standing and aid progress/, degree: /Degree progress/, schedule: /This week/, plan: /What they are working on/ };
+const shareGate: Gate<ShareProbe> = {
+  id: 'share-scope',
+  protects: 'A link the student shares shows only the parts they chose, never a sealed fact, stops working when turned off or expired, and is never stored in a form that could be read back.',
+  definition: def(realShareProbe) + Object.values(SECTION).join(),
+  check: async (probe) => {
+    const bad: string[] = [];
+    for (const r of await probe()) {
+      for (const [k, re] of Object.entries(SECTION)) if (re.test(r.html) !== r.scopes.includes(k)) bad.push(`${r.scopes.join('+')}: ${k} ${re.test(r.html) ? 'shown' : 'missing'}`);
+      if (r.html.includes(r.marker)) bad.push(`${r.scopes.join('+')}: sealed fact shown`);
+      if (r.stored.includes(r.token)) bad.push(`${r.scopes.join('+')}: link stored`);
+      if (r.revoked !== 410 || r.expired !== 410) bad.push(`${r.scopes.join('+')}: revoked ${r.revoked}, expired ${r.expired}`);
+    }
+    return bad.length ? fail('share-scope', bad.slice(0, 4).join('; ')) : pass('share-scope', 'five scope sets: only what was chosen, nothing sealed, nothing kept, off means off');
+  },
+  falsification: [
+    { name: 'planted link that shows every part', plant: () => async () => (await realShareProbe()).map((r) => ({ ...r, html: `${r.html} Classes, standing and aid progress Degree progress This week What they are working on` })) },
+    { name: 'planted link that keeps working after it is turned off', plant: () => async () => (await realShareProbe()).map((r) => ({ ...r, revoked: 200 })) },
+    { name: 'planted message that repeats the link', plant: () => async () => (await realShareProbe()).map((r) => ({ ...r, stored: r.stored + r.token })) },
+  ],
+};
+
+const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate].map((g) => g.id);
 
 function repoFiles(): string[] {
   const out: string[] = [];
@@ -544,7 +668,7 @@ function repoFiles(): string[] {
 
 /** What each gate protects and what it is proven against, for the docs and the console. */
 export function gateCatalog(): { id: string; protects: string; plants: string[] }[] {
-  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
+  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
 }
 
 export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdict[]; proofs: Proof[] }> {
@@ -586,6 +710,9 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   const blockExports = Object.fromEntries(blockNames().map((b) => [b, Object.values(ownExports(`${ROOT}packages/${b}/src`)).flat()]));
   const appExports = Object.fromEntries(['advocate', 'campus-services'].flatMap((app) => Object.entries(ownExports(`${ROOT}apps/${app}/src`))));
   await run(blockGate, () => ({ blocks: blockNames().map(report), appExports, blockExports }));
+  await run(r2t4Gate, () => r2t4);
+  await run(sapGate, () => sap);
+  await run(shareGate, () => realShareProbe);
   writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
   return { verdicts, proofs };
 }

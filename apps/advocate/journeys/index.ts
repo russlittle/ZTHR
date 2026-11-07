@@ -7,9 +7,13 @@ import { COLLEGES } from '../src/domain/colleges.js';
 import { Advocate, type Delivered } from '../src/agents/advocate.js';
 import { DAYTON_CATALOG } from '../src/catalog/dayton.js';
 import { checkTone, readingGrade } from '../src/domain/tone.js';
-import { daysBetween } from '../src/domain/dates.js';
+import { daysBetween, friendly } from '../src/domain/dates.js';
 import { leadDays } from '../src/domain/planner.js';
 import { DEFAULT_DIAL, type ClassMeeting, type Shift, type Student } from '../src/domain/types.js';
+import { currentGrade, type Gradebook } from '../src/domain/academics.js';
+import { dropOptions } from '../src/agents/academics.js';
+import { programById } from '../src/domain/degree.js';
+import { createApp } from '../src/server/app.js';
 
 /**
  * Journey implementations for the locked cards in control/journeys. Each one
@@ -89,7 +93,134 @@ function campusApp(localIso: string, scenario?: string, egress?: Egress) {
   return { a, setNow: (iso: string) => void (now = new Date(`${iso}-05:00`)) };
 }
 
+/** A demo student, set to the card's mode and channel, with a phone for text. */
+function persona(app: JourneyApp, ctx: JourneyContext, name: string): Student {
+  const st = PERSONAS[name]!(app.a);
+  phoneSeq += 1;
+  app.a.updateStudent(st.id, { phone: `+1937555${String(2000 + phoneSeq).slice(-4)}` });
+  app.a.setDial(st.id, { depth: ctx.mode, channel: ctx.channel });
+  return app.a.student(st.id);
+}
+
+/** The final score a letter needs, found by trying every score: an oracle independent of the algebra in neededFor. */
+function needByTrying(g: Gradebook, finalCat: string, floor: number): number | undefined {
+  const exact = (x: number) => {
+    let w = 0;
+    let sum = 0;
+    for (const c of g.categories) {
+      const its = g.items.filter((i) => i.category === c.name && (i.score !== undefined || c.name === finalCat));
+      if (!its.length) continue;
+      const got = its.reduce((n, i) => n + (i.score ?? (x / 100) * i.outOf), 0);
+      sum += (got / its.reduce((n, i) => n + i.outOf, 0)) * 100 * c.weight;
+      w += c.weight;
+    }
+    return sum / w;
+  };
+  for (let x = 0; x <= 1000; x++) if (exact(x / 10) >= floor - 1e-9) return x / 10;
+  return undefined;
+}
+
+const P5: Record<string, JourneyImpl<JourneyApp>> = {
+  'p5-what-on-the-final': async (app, ctx) => {
+    const s = persona(app, ctx, 'Priya');
+    const [m] = say(app, ctx, s, 'what do I need on the final in CHM 1210?');
+    const g = app.a.gradebooks(s.id).find((b) => b.course === 'CHM 1210')!;
+    const fin = g.categories.find((c) => /final/i.test(c.name))!.name;
+    const scale = { A: 90, B: 80, C: 70, D: 60 };
+    ctx.expect(!!m && /CHM 1210/.test(m.text), 'answers for CHM 1210');
+    for (const [letter, floor] of Object.entries(scale)) {
+      const truth = needByTrying(g, fin, floor);
+      const said = m!.text.match(new RegExp(`([\\d.]+)% (?:on it gets you an? ${letter}|keeps your ${letter})`));
+      ctx.forbid('a letter is offered as reachable when it needs more than 100% on the final', !!said && truth === undefined, letter);
+      ctx.forbid('a figure disagrees with the syllabus weights and the graded work', !!said && truth !== undefined && Math.abs(Number(said[1]) - truth) > 0.1, `${letter}: said ${said?.[1]}, truth ${truth}`);
+    }
+    ctx.expect(/out of reach/.test(m!.text) === (needByTrying(g, fin, 90) === undefined), 'says when an A is out of reach');
+    forbidTone(app, ctx, s);
+  },
+
+  'p5-drop-or-withdraw': async (app, ctx) => {
+    const s = persona(app, ctx, 'Destiny');
+    ctx.act('ask about dropping ACC 2010');
+    const r = app.a.perform(s.id, 'drop:ACC 2010')!;
+    const d = dropOptions(app.a, s.id, 'ACC 2010');
+    const term = COLLEGES.find((c) => c.college === 'wright-state')!.academic!.terms[0]!;
+    ctx.expect(d.options.length === 4, 'stay, drop, withdraw and withdraw from everything');
+    ctx.forbid('a choice whose deadline has passed is offered as available', d.options.some((o) => (o.choice === 'drop' && DAY > term.refund100By && o.available) || (o.choice === 'withdraw' && DAY > term.withdrawBy && o.available)));
+    // Independent count: days in the term, minus breaks of five or more days, and the share completed by today.
+    const days = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86_400_000) + 1;
+    const brk = term.breaks.filter((x) => days(x.from, x.to) >= 5).reduce((n, x) => n + days(x.from, x.to), 0);
+    const share = Math.round(((days(term.start, DAY) - term.breaks.filter((x) => x.to < DAY && days(x.from, x.to) >= 5).reduce((n, x) => n + days(x.from, x.to), 0)) / (days(term.start, term.end) - brk)) * 1000) / 1000;
+    ctx.forbid('an aid return figure disagrees with the federal Return of Title IV formula', !d.r2t4 || d.r2t4.percentCompleted !== share || d.r2t4.allEarned !== share > 0.6 || (d.r2t4.allEarned && d.r2t4.unearned !== 0), JSON.stringify({ share, got: d.r2t4?.percentCompleted }));
+    const declared = new Set([term.start, term.end, term.refund100By, term.withdrawBy, term.classesEnd, d.r2t4?.sixtyPercentDay, DAY].filter(Boolean).map((x) => friendly(x!)));
+    const stated = [...r.message.text.matchAll(/(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), [A-Z][a-z]+ \d{1,2}/g)].map((x) => x[0]);
+    ctx.forbid('a date is stated that the college did not publish', stated.some((x) => ![...declared].some((y) => y.startsWith(x))), stated.join(', '));
+    ctx.forbid('the student is told to do something rather than shown the choices', /\b(you should|i recommend|you need to) (drop|withdraw|stay)\b/i.test(r.message.text));
+    ctx.expect(d.options.every((o) => !!o.plan), 'each choice shows its effect on the probation plan');
+  },
+
+  'p5-aid-progress-appeal': async (app, ctx) => {
+    const s = persona(app, ctx, 'Linda');
+    const [m] = say(app, ctx, s, 'will I keep my financial aid?');
+    const t = app.a.academicRecord(s.id).transcript.filter((c) => c.grade);
+    const att = t.reduce((n, c) => n + c.credits, 0);
+    const earned = t.filter((c) => c.grade !== 'W' && c.grade !== 'F' && c.grade !== 'I').reduce((n, c) => n + c.credits, 0);
+    ctx.expect(!!m && /under Sinclair's aid-progress rule/.test(m.text) && m.text.includes(`${Math.round((earned / att) * 10000) / 100}%`), 'names the measure and the figure');
+    const ok = persona(app, ctx, 'Priya');
+    const [m2] = say(app, ctx, ok, 'will I keep my financial aid?');
+    ctx.forbid('the student is told she is under the rule when she meets it', !m2 || /under .* rule/.test(m2.text));
+    const id = 'sap-appeal';
+    show(app, ctx, app.a.playbookMessage(s.id, app.a.startPlaybook(s.id, id)));
+    app.a.playbookEvent(s.id, id, { type: 'confirm' });
+    app.a.playbookEvent(s.id, id, { type: 'answer', value: 'yes' });
+    let tries = 0;
+    while (!app.a.drafts(s.id).some((x) => x.purpose === `${id}:ask-advisor`) && tries++ < 4) show(app, ctx, app.a.playbookMessage(s.id, app.a.playbookEvent(s.id, id, { type: 'confirm' })));
+    const draft = app.a.drafts(s.id).find((x) => x.purpose === `${id}:ask-advisor`);
+    ctx.expect(!!draft && draft.body.includes('Linda') && /Sinclair/.test(draft.body), 'a note to her advisor in her name');
+    const unapproved = await app.a.send(s.id, draft!.id, undefined);
+    ctx.act('approve and send');
+    const sent = await app.a.send(s.id, draft!.id, app.a.approve(s.id, draft!.id));
+    ctx.forbid("something is sent without the student's approval", unapproved.sent || !sent.sent || app.a.outboundLog.length !== 1);
+    forbidTone(app, ctx, s);
+  },
+
+  'p5-share-with-advisor': async (app, ctx) => {
+    const s = persona(app, ctx, 'Tyler');
+    app.a.seal(s.id, 'justice_involvement', 'SEALED-JOURNEY-MARKER');
+    const web = createApp(app.a);
+    ctx.act('make a link that shows degree progress');
+    const { token, share } = app.a.createShare(s.id, 'Advisor', ['degree'], 7);
+    const open = async () => web.request(`/shared/${token}`);
+    const r1 = await open();
+    const body = await r1.text();
+    ctx.expect(r1.status === 200 && /Shared by Tyler/.test(body) && /English composition/.test(body), 'the advisor sees degree progress');
+    ctx.forbid('a sealed fact or anything outside the chosen parts is shown through the link', /SEALED-JOURNEY-MARKER/.test(body) || /This week|What they are working on|Classes, standing and aid progress|Grocery|room \d/.test(body));
+    ctx.expect(app.a.shares(s.id)[0]!.views === 1 && app.a.ledger.entries(s.id).some((e) => e.kind === 'release' && e.subject.startsWith('share:')), 'the student sees it was opened');
+    ctx.forbid('the link itself is kept anywhere it could be read back', JSON.stringify(app.a.store.exportStudent(s.id)).includes(token) || app.a.messages(s.id).some((m) => m.text.includes(token)));
+    ctx.act('turn the link off');
+    app.a.revokeShare(s.id, share.id);
+    const r2 = await open();
+    const { token: t2, share: sh2 } = app.a.createShare(s.id, 'Old', ['degree'], 1);
+    app.a.store.put('shares', sh2.id, s.id, { ...sh2, expiresAt: '2026-11-01T00:00:00.000Z' });
+    const r3 = await web.request(`/shared/${t2}`);
+    ctx.forbid('the link works after it is turned off or expires', r2.status !== 410 || r3.status !== 410);
+  },
+
+  'p5-degree-progress': async (app, ctx) => {
+    const s = persona(app, ctx, 'Tyler');
+    const rec = app.a.academicRecord(s.id);
+    app.a.setAcademic(s.id, { ...rec, transcript: [...rec.transcript, { course: 'THE 1101', credits: 3, grade: 'F', term: 'Spring 2026' }, { course: 'SOC 1101', credits: 3, grade: 'B', term: 'Summer 2026', repeat: true }] });
+    const [m] = say(app, ctx, s, 'how many credits do I have left?');
+    const v = app.a.academicView(s.id);
+    const p = programById('sinclair-aa-sociology')!;
+    ctx.expect(!!m && /Ohio Transfer 36/.test(m.text) && /At your pace you finish in/.test(m.text), 'credits left, the transfer core and a finish term');
+    const counted = v.degree!.areas.flatMap((a) => a.courses);
+    ctx.forbid('a course is counted twice, or a failed or withdrawn course is counted as done', new Set(counted).size !== counted.length || counted.includes('THE 1101'));
+    ctx.forbid('progress is shown against requirements the published pathway does not contain', v.degree!.areas.some((a) => !p.areas.some((x) => x.area === a.area && x.need === a.need)));
+  },
+};
+
 export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
+  ...P5,
   'persona-1b-bill-gap': async (app, ctx) => {
     const s = student(app, ctx, {
       chosenName: 'Maria',

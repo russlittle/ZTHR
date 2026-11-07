@@ -1,0 +1,12 @@
+id: p5-aid-progress-appeal
+persona: linda
+phase: 5
+goal: A student whose record is under the aid-progress rule learns which measure and by how much, is walked through an appeal with the documents that help, and has a note to her advisor that goes nowhere until she approves it.
+forbidden:
+  - the student is told she is under the rule when she meets it
+  - something is sent without the student's approval
+  - a message fails the tone rubric
+budget: { actions: 6, ms: 5000 }
+requirements: [ACA-2]
+modes: [standard, walk-me-through]
+channels: [app, text]

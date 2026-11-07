@@ -31,3 +31,15 @@ findings:
     reason: Every untrusted input is capped at 256 KB before validation, which bounds the attack; the upgrade is scheduled with its own walk.
     owner: claude-agent
     expires: 2026-12-15
+  - id: screen-readers-not-tested-by-people
+    gate: ui-walk
+    finding: Accessibility is checked automatically on every build (every WCAG 2.2 A and AA rule axe tests, the accessibility tree, focus, text spacing, reflow and contrast); it has not yet been tested with NVDA, JAWS, VoiceOver and TalkBack by people who use them.
+    reason: Automated checks cover what a machine can decide; testing with screen reader users needs people, and is the next step.
+    owner: claude-agent
+    expires: 2027-02-01
+  - id: sinclair-term-dates-unknown
+    gate: journeys
+    finding: Sinclair's Fall 2026 term dates were not available from a public source, so Sinclair students see drop and withdrawal dates as not known and are sent to the registration calendar.
+    reason: The app never guesses a date; the dates go into control/colleges/sinclair.yaml when the calendar can be read.
+    owner: claude-agent
+    expires: 2027-01-15

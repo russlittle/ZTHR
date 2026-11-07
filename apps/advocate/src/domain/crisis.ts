@@ -70,7 +70,7 @@ export function crisisPlan(s: Student, situation: Situation, catalog: Resource[]
     lines.push(brief ? `${i + 1}. ${o.resource.name}.${contact}` : `${i + 1}. ${o.resource.name}: ${o.resource.description}${contact}`);
   });
   if (top.length === 0) lines.push('I could not find a verified resource for this near you yet. I am noting the gap, and 2-1-1 can help right now.');
-  const draft = DRAFTS[situation]?.(s);
+  const draft = Object.hasOwn(DRAFTS, situation) ? DRAFTS[situation]?.(s) : undefined;
   const nextSteps = [
     ...(draft ? [{ label: `See the message to your ${draft.to}`, action: `show-draft:${situation}` }] : []),
     ...top.slice(0, 2).map((o) => ({ label: `Start: ${o.resource.name}`, action: `start-resource:${o.resource.id}` })),

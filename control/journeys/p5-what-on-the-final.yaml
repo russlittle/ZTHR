@@ -1,0 +1,12 @@
+id: p5-what-on-the-final
+persona: priya
+phase: 5
+goal: A student who asks what they need on a final hears, for each class, the score that keeps their grade and the score for the next letter, from the syllabus weights and their graded work, and is never told a letter is reachable when it is not.
+forbidden:
+  - a letter is offered as reachable when it needs more than 100% on the final
+  - a figure disagrees with the syllabus weights and the graded work
+  - a message fails the tone rubric
+budget: { actions: 4, ms: 5000 }
+requirements: [ACA-1]
+modes: [standard, brief]
+channels: [app, text]

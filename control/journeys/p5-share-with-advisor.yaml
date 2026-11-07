@@ -1,0 +1,12 @@
+id: p5-share-with-advisor
+persona: tyler
+phase: 5
+goal: A student makes a link for an advisor that shows only what he chose, sees when it is opened, and turns it off, after which it shows nothing.
+forbidden:
+  - a sealed fact or anything outside the chosen parts is shown through the link
+  - the link works after it is turned off or expires
+  - the link itself is kept anywhere it could be read back
+budget: { actions: 5, ms: 5000 }
+requirements: [ACA-6]
+modes: [standard]
+channels: [app]

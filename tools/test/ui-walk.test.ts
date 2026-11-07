@@ -13,6 +13,14 @@ describe('the browser walk covers every screen', () => {
   it('checks accessibility, headings, tap targets and sideways scroll', () => {
     for (const needle of ['axe.run', "querySelectorAll('h1')", '43.5', 'scrollWidth']) expect(walk).toContain(needle);
   });
+  it('checks every WCAG 2.2 A and AA rule, and fails on any violation whatever its impact', () => {
+    expect(walk).toContain("['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']");
+    expect(walk).toContain("runOnly: { type: 'tag'");
+    expect(walk).not.toMatch(/impact === 'serious'/);
+  });
+  it('reads what a screen reader is given, and checks focus, text spacing and reflow', () => {
+    for (const needle of ['ariaSnapshot()', 'focusNotObscured', 'textSpacing', 'width: 320', 'documentElement.lang']) expect(walk).toContain(needle);
+  });
   it('walks phone and desktop, light and dark', () => {
     expect(walk).toMatch(/phone: \{ width: 390/);
     expect(walk).toMatch(/desktop: \{ width: 1280/);

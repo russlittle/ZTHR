@@ -9,7 +9,7 @@ import { JOURNEY_DIR, ROOT } from '../lib.js';
 describe('features list', () => {
   const phases = loadFeatures();
   const cards = loadCards(JOURNEY_DIR);
-  it('covers phases 1 to 4 in order', () => expect(phases.map((p) => p.n)).toEqual([1, 2, 3, 4]));
+  it('covers phases 1 to 5 in order', () => expect(phases.map((p) => p.n)).toEqual([1, 2, 3, 4, 5]));
   it('names only journeys that exist', () => {
     const ids = new Set(cards.map((c) => c.id));
     for (const f of phases.flatMap((p) => p.features)) for (const j of f.journeys) expect(ids.has(j), `${f.name}: ${j}`).toBe(true);

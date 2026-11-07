@@ -10,3 +10,33 @@ career:
   contact: wright.edu, under Career Services
   source: https://www.wsuguardian.com/article/2025/02/career-services-new-and-improved-location
 admitted_by: factory
+academic:
+  level: bachelor
+  standing:
+    kind: cumulative-after-hours
+    goodGpa: 2.0
+    afterHours: 12
+    source: https://policy.wright.edu/3350
+  sap:
+    gpa: 2.0
+    pace: 67
+    maxTimeframe: 1.5
+    evaluated: Once a year, at the end of spring term, including the summer before.
+    statuses: Satisfactory meets every measure. Unsatisfactory means no federal aid until an appeal is approved or the record is brought back up without aid. Probation follows an approved appeal, for one term, with an academic progress plan of a 2.0 term GPA and 67% of term hours completed.
+    appeal:
+      - { term: Spring 2027, opens: '2026-10-31', closes: '2027-03-26', planDue: '2027-04-09' }
+      - { term: Summer 2027, opens: '2027-03-27', closes: '2027-05-28' }
+    how: The online SAP Appeal Form in WINGS, with a detailed explanation, what has changed, and documents from a third party. Decisions take one to two weeks and are final.
+    source: https://wright.edu/raiderconnect/financial-aid/satisfactory-academic-progress
+  refund: Full refund for full-term classes dropped by the 100% refund date on the academic calendar.
+  terms:
+    - term: Fall 2026
+      start: '2026-08-24'
+      classesEnd: '2026-12-05'
+      end: '2026-12-12'
+      endNote: Finals begin Monday, December 7, and the calendar does not list the last day of finals, so the term is taken to end Saturday, December 12.
+      refund100By: '2026-09-04'
+      withdrawBy: '2026-10-23'
+      breaks: [{ from: '2026-11-25', to: '2026-11-29', name: Thanksgiving break }]
+      source: https://acadcalendar.com/?p=6646
+      sourceNote: Restates the Wright State Enrollment Services academic calendar (wright.edu/enrollment-services/academic-calendar).
