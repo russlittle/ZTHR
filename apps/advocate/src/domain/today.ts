@@ -28,6 +28,9 @@ export function buildToday(today: string, classes: ClassMeeting[], shifts: Shift
   };
 }
 
+/** Ends a sentence once, even when it already ends in a time like 11:00 p.m. */
+const sentence = (t: string): string => (t.endsWith('.') ? t : `${t}.`);
+
 export function renderToday(v: TodayView, s: Student, depth: Depth = s.dial.depth): string {
   const name = s.chosenName;
   const cls = v.classes.map((c) => `${c.course} at ${time12(c.start)}${c.building ? `, ${c.building}${c.room ? ` room ${c.room}` : ''}` : ''}`);
@@ -35,13 +38,13 @@ export function renderToday(v: TodayView, s: Student, depth: Depth = s.dial.dept
   const due = v.dueSoon.map((d) => `${d.title}${d.course ? ` (${d.course})` : ''} due ${friendly(d.due)}`);
   if (depth === 'brief') {
     const parts = [cls.length ? cls.join('; ') : 'No classes', sh.length ? sh.join('; ') : '', v.oneThing ? `Focus: ${v.oneThing.title}` : ''].filter(Boolean);
-    return parts.join('. ') + '.';
+    return parts.map(sentence).join(' ');
   }
   const lines = [`Good morning, ${name}. Here's ${friendly(v.date)}.`];
-  lines.push(cls.length ? `Classes: ${cls.join('; ')}.` : 'No classes today.');
-  if (sh.length) lines.push(`Work: ${sh.join('; ')}.`);
-  if (due.length) lines.push(`Coming up: ${due.join('; ')}.`);
-  if (v.oneThing) lines.push(`If you do one thing today: ${v.oneThing.title}. ${v.oneThing.why}.`);
+  lines.push(cls.length ? sentence(`Classes: ${cls.join('; ')}`) : 'No classes today.');
+  if (sh.length) lines.push(sentence(`Work: ${sh.join('; ')}`));
+  if (due.length) lines.push(sentence(`Coming up: ${due.join('; ')}`));
+  if (v.oneThing) lines.push(`If you do one thing today: ${sentence(v.oneThing.title)} ${sentence(v.oneThing.why)}`);
   if (depth === 'walk-me-through' && v.oneThing) lines.push('Reply PLAN and I will break it into small steps with times.');
   return lines.join('\n');
 }

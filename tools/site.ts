@@ -33,7 +33,7 @@ const APP = ARTIFACT ? 'https://zthr.ai/studentadvocate/' : '/studentadvocate/';
 /** Fonts and assets: served from the app when published, relative to the page in the self-contained copies. */
 const fontBase = (rootRel: string) => (RELATIVE ? rootRel.replace(/\/$/, '') || '.' : '/advocate');
 const head = (rootRel: string) => `${ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`}
-${ARTIFACT ? '' : `<script src="${STATIC ? rootRel : '/'}assets/mermaid-11.4.1.min.js"></script>`}<script>window.mermaid&&mermaid.initialize({startOnLoad:true,theme:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'neutral',securityLevel:'strict'});</script>
+${ARTIFACT ? '' : `<script src="${STATIC ? rootRel : '/'}assets/mermaid-11.4.1.min.js"></script>`}<script>window.mermaid&&(function(){var d=matchMedia('(prefers-color-scheme: dark)').matches;mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:'base',themeVariables:d?{fontFamily:'Atkinson Hyperlegible, system-ui, sans-serif',fontSize:'15px',background:'#141a2e',primaryColor:'#1b2340',primaryBorderColor:'#93a4ff',primaryTextColor:'#e5e8f6',secondaryColor:'#11303a',tertiaryColor:'#141a2e',lineColor:'#9ba3c4',textColor:'#e5e8f6',clusterBkg:'#11162a',clusterBorder:'#283152',edgeLabelBackground:'#141a2e',noteBkgColor:'#1f2950',noteTextColor:'#e5e8f6'}:{fontFamily:'Atkinson Hyperlegible, system-ui, sans-serif',fontSize:'15px',background:'#ffffff',primaryColor:'#eef0fb',primaryBorderColor:'#3245c2',primaryTextColor:'#151a2e',secondaryColor:'#e4f5f7',tertiaryColor:'#ffffff',lineColor:'#575f7c',textColor:'#151a2e',clusterBkg:'#f7f8fd',clusterBorder:'#c9cfe8',edgeLabelBackground:'#ffffff',noteBkgColor:'#fff6e0',noteTextColor:'#151a2e'}})})();</script>
 <style>.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style>`;
 
 const read = <T>(p: string): T | undefined => (existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as T) : undefined);
@@ -51,7 +51,7 @@ export function anchorToPublished(html: string, rel: string): string {
 const write = (path: string, html: string) => {
   mkdirSync(dirname(path), { recursive: true });
   // The preview host reserves names that start with "_", so fonts live under fonts/ there.
-  let out = RELATIVE ? html.replace(/_ui\/atkinson/g, 'fonts/atkinson') : html;
+  let out = RELATIVE ? html.replace(/_ui\/(atkinson|bricolage)/g, 'fonts/$1') : html;
   if (STATIC && path.startsWith(SITE) && path.endsWith('.html')) out = anchorToPublished(out, relative(SITE, path));
   writeFileSync(path, out);
 };
@@ -65,14 +65,14 @@ function copyAssets(): void {
   cpSync(join(ROOT, 'node_modules/mermaid/dist/mermaid.min.js'), join(SITE, 'assets', 'mermaid-11.4.1.min.js'));
   if (RELATIVE) {
     mkdirSync(join(SITE, 'fonts'), { recursive: true });
-    for (const f of ['atkinson-400.woff2', 'atkinson-700.woff2']) writeFileSync(join(SITE, 'fonts', f), ui.uiAsset(f)!.body);
+    for (const f of ['atkinson-400.woff2', 'atkinson-700.woff2', 'bricolage.woff2']) writeFileSync(join(SITE, 'fonts', f), ui.uiAsset(f)!.body);
   }
 }
 
 function buildLanding(): void {
   const gaHead = ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`;
   // zthr.ai/advocate: the product page, with links that work from the site root.
-  if (STATIC) writeFileSync(join(ROOT, 'site-static.advocate.html'), productPage({ app: '/studentadvocate', docs: '/reference/docs/index.html', factory: '/reference/factory/index.html', factoryPage: (p) => `/reference/factory/${p}.html`, admin: '/studentadvocate/admin/', fontBase: '/reference', head: gaHead, live: false }).replace(/_ui\/atkinson/g, 'fonts/atkinson'));
+  if (STATIC) writeFileSync(join(ROOT, 'site-static.advocate.html'), productPage({ app: '/studentadvocate', docs: '/reference/docs/index.html', factory: '/reference/factory/index.html', factoryPage: (p) => `/reference/factory/${p}.html`, admin: '/studentadvocate/admin/', fontBase: '/reference', head: gaHead, live: false }).replace(/_ui\/(atkinson|bricolage)/g, 'fonts/$1'));
   // zthr.ai/reference: the map. One page that shows every surface, what each is for, and how they link.
   const card = (title: string, sub: string, href: string) => ({ title, sub, href });
   const Z = (p: string) => `https://zthr.ai${p}`;
@@ -201,7 +201,8 @@ function buildFactory(): number {
   const uiManifest = read<{ stops: { walk: string; step: string; scheme: string; viewport: string; url: string; screenshot: string; problems: string[] }[] }>(join(OUT, 'ui', 'manifest.json'));
   const mutation = read<{ files: Record<string, { mutants: { status: string; mutatorName: string; replacement?: string; location: { start: { line: number } } }[] }> }>(join(ROOT, 'reports', 'mutation.json'));
   const proofs = read<{ gate: string; gateHash: string; valid: boolean; cases: string[] }[]>(join(ROOT, 'control', 'proofs.json')) ?? [];
-  const ratchets = read<Record<string, { floor: number }>>(join(ROOT, 'control', 'ratchets.json'));
+  const ratchetList = read<{ id: string; floor: number }[]>(join(ROOT, 'control', 'ratchets.json')) ?? [];
+  const ratchets = { mutation: ratchetList.find((r) => r.id === 'mutation-score') };
   const costs = existsSync(join(OUT, 'ci-costs.jsonl')) ? readFileSync(join(OUT, 'ci-costs.jsonl'), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as { finishedAt: string; minutes: number; costUsd: number; kind: string; machine: string }) : [];
   const gates = gateCatalog();
   const cards = loadCards(JOURNEY_DIR);
@@ -232,15 +233,15 @@ function buildFactory(): number {
   // overview
   write(join(SITE, 'factory', 'index.html'), shell('index', 'Evidence: summary', `
 <p class="muted">Everything here was recorded by the factory while building and testing the Student Advocate. Numbers come from this build's reports; anything not run in this build says "not measured".</p>
-${ui.kpis([
-  { value: tests ? `${n(tests.numPassedTests)} / ${n(tests.numTotalTests)}` : 'not measured', label: 'tests passing' },
-  { value: `${proofs.filter((p) => p.valid).length} / ${gates.length}`, label: 'gates proven able to fail' },
-  { value: `${cards.length}`, label: 'locked intent journeys' },
-  { value: explore ? n(explore.transitions + (crawl?.transitions ?? 0) + (crawlSettings?.transitions ?? 0)) : 'not measured', label: 'steps walked (see the walks for which reached a fixpoint)' },
-  { value: walkStates ? n(walkStates) : 'not measured', label: 'states reached' },
-  { value: redteam ? `${held} / ${redteam.results.length}` : 'not measured', label: 'red-team attacks held' },
-  { value: mutScore ? `${mutScore.score.toFixed(1)}%` : 'not measured', label: 'mutation score' },
-  { value: uiManifest ? n(uiManifest.stops.length) : 'not measured', label: 'browser stops checked' },
+${ui.readings([
+  { label: 'Tests passing', href: 'tests.html', value: tests?.numPassedTests, of: tests?.numTotalTests, floor: tests?.numTotalTests },
+  { label: 'Gates proven able to fail', href: 'gates.html', value: proofs.filter((p) => p.valid).length, of: gates.length, floor: gates.length },
+  { label: 'Red-team attacks held', href: 'redteam.html', value: held, of: redteam?.results.length, floor: redteam?.results.length },
+  { label: 'Mutation score', href: 'mutation.html', value: mutScore ? Number(mutScore.score.toFixed(1)) : undefined, of: 100, floor: ratchets?.mutation?.floor, unit: '%', note: ratchets?.mutation?.floor ? `floor ${ratchets.mutation.floor}%, only rises` : undefined },
+  { label: 'Browser stops with no problems', href: 'ui-walk.html', value: uiManifest ? uiManifest.stops.filter((x) => !x.problems.length).length : undefined, of: uiManifest?.stops.length, floor: uiManifest?.stops.length },
+  { label: 'Locked intent journeys', href: 'intent.html', value: cards.length },
+  { label: 'Steps walked', href: 'feature-walks.html', value: explore ? explore.transitions + (crawl?.transitions ?? 0) + (crawlSettings?.transitions ?? 0) : undefined, note: 'across every student, to a fixpoint where noted' },
+  { label: 'States reached', href: 'feature-walks.html', value: walkStates || undefined },
 ])}
 ${NAV.map((g) => ui.section(g.title, ui.rows(g.pages.filter(([p]) => p !== 'index').map(([p, l]) => ({ title: l, href: `${p}.html`, sub: ({ features: 'Everything the app does, by phase, with the journey that proves it', sensitive: 'Every personal and sensitive field, where it may go, and where a planted canary actually went', blocks: 'The reusable parts this app is built from, each with its own tests and mutation score', sources: 'Every outside source the app reads, with an ERD of what each returns', phases: 'What each phase delivers and whether the factory certified it', gates: 'The checks that must fail on planted defects before they count', redteam: 'Attacks real people send, and whether the app held', 'feature-walks': 'Every button and every page, for every student, to a fixpoint', 'ui-walk': 'A real browser: accessibility, layout, screenshots and video', intent: 'The goals students actually have, run in every mode and channel', tests: 'Every test, grouped by file, with the document it verifies', mutation: 'Whether the tests notice when the code is wrong', 'docs-qa': 'Every test linked to a document and every document to a test', data: 'Every collection the app keeps', cost: 'What the factory spent to run itself', twins: 'The campus services the Advocate talks to, and their contracts', patterns: 'All 33 patterns, where each lives and what proves it' } as Record<string, string>)[p] }))))).join('')}`));
 

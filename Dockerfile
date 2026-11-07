@@ -8,7 +8,7 @@ COPY control control
 RUN npm ci --no-audit --no-fund && npm cache clean --force
 # Built by the factory in this same run: docs and console pages, screenshots and video.
 COPY site-out site-out
-ENV NODE_ENV=production ADVOCATE_DEMO=1 ADVOCATE_BASE=/studentadvocate ADVOCATE_TODAY=2026-11-02 PORT=8080
+ENV NODE_ENV=production ADVOCATE_DEMO=1 ADVOCATE_BASE=/studentadvocate ADVOCATE_TODAY=2026-11-02 ADVOCATE_CLOCK=07:30 PORT=8080
 EXPOSE 8080
 USER node
 CMD ["node", "--import", "tsx", "apps/advocate/src/server/main.ts"]

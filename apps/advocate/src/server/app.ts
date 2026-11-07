@@ -5,6 +5,7 @@ import * as ui from '@zthr/ui';
 import { startPage } from './product.js';
 import type { Advocate, Delivered } from '../agents/advocate.js';
 import type { View } from '../agents/actions.js';
+import { COLLEGES } from '../domain/colleges.js';
 import { friendly, relDay, shortDate, time12, weekday } from '../domain/dates.js';
 import type { NeedCategory, OutboundMessage } from '../domain/types.js';
 import { parseShifts } from '../domain/shifts.js';
@@ -216,12 +217,18 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
     const commute = a.commuteSettings(sid).mode === 'bus' && a.commutePlans(sid).some((p) => p.date === a.today_(sid).date) ? a.leaveByMessage(sid) : undefined;
     const v = a.today_(sid);
     const date = v.date;
-    const stops: ui.Stop[] = [
+    const stops: (ui.Stop & { at: string })[] = [
       ...v.classes.map((k) => ({ time: time12(k.start).replace(':00', ''), title: k.course, sub: [k.building, k.room ? `room ${k.room}` : ''].filter(Boolean).join(', '), kind: 'class' as const, at: k.start })),
       ...v.shifts.map((x) => ({ time: time12(x.start).replace(':00', ''), title: 'Work', sub: `${x.employer ?? ''}${x.employer ? ', ' : ''}until ${time12(x.end)}`, kind: 'shift' as const, at: x.start })),
       ...a.holds(sid).filter((h) => h.date === date).map((h) => ({ time: time12(h.start).replace(':00', ''), title: h.title, sub: `Held until ${time12(h.end)}`, kind: 'hold' as const, at: h.start })),
       ...a.deadlines(sid).filter((d) => !d.done && d.confirmed && d.due.slice(0, 10) === date).map((d) => ({ time: d.due.length > 10 ? time12(d.due.slice(11, 16)).replace(':00', '') : 'Today', title: `${d.title} due`, sub: d.course, kind: 'due' as const, at: d.due.length > 10 ? d.due.slice(11, 16) : '23:59' })),
     ].sort((x, y) => x.at.localeCompare(y.at));
+    if (stops.length) {
+      const m = a.localNow().min;
+      const at = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+      const i = stops.findIndex((x) => x.at > at);
+      stops.splice(i < 0 ? stops.length : i, 0, { time: time12(at), title: i < 0 ? 'Now. The rest of the day is yours.' : 'Now', kind: "now" as const, at });
+    }
     const money = a.moneyCheck(sid);
     const pulse = a.pulse(sid);
     const ahead = a.lookAhead(sid);
@@ -238,7 +245,7 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
       { text: comingUp.length ? `${comingUp.length} due this week` : 'Nothing else due this week', icon: 'check' },
       ...(money ? [{ text: 'Money needs a look', tone: 'warn' as const, icon: 'money' }] : []),
     ]);
-    const feed = `${one ? ui.note({ kind: 'one', title: 'If you do one thing today', body: `${one.title}. ${one.why}.`, actions: today.nextSteps.map((n, i) => toAction(sid, n, i)) }) : ''}
+    const feed = `${one ? ui.note({ kind: 'one', title: 'If you do one thing today', body: `${one.title.replace(/\.$/, '')}. ${one.why.replace(/\.$/, '')}.`, actions: today.nextSteps.map((n, i) => toAction(sid, n, i)) }) : ''}
 ${[commute, weather, money, pulse, ...conflicts, ...ahead].filter((m): m is OutboundMessage => !!m).map((m) => noteFor(sid, m)).join('')}
 ${unconfirmed ? ui.note({ kind: 'plan', from: 'Class planner', icon: 'book', body: `${unconfirmed} date${unconfirmed === 1 ? '' : 's'} from your syllabus need a quick look before I plan around them.`, actions: [toAction(sid, { label: 'Check the dates', action: 'review-deadlines' }, 0)] }) : ''}`;
     const dayName = new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
@@ -487,7 +494,7 @@ ${ui.actions([{ label: 'Buy with SNAP online', href: 'https://www.fns.usda.gov/s
       page(
         sid,
         'You',
-        `${flash(sid, c.req.query('m'))}<div class="hello"><h1>${ui.esc(s.chosenName)}</h1><p class="date">${ui.esc([s.pronouns, s.enrollment.college.replace('-', ' '), s.enrollment.creditHours ? `${s.enrollment.creditHours} credits` : ''].filter(Boolean).join(', '))}</p></div>
+        `${flash(sid, c.req.query('m'))}<div class="hello"><h1>${ui.esc(s.chosenName)}</h1><p class="date">${ui.esc([s.pronouns, COLLEGES.find((k) => k.college === s.enrollment.college)?.name ?? s.enrollment.college, s.enrollment.creditHours ? `${s.enrollment.creditHours} credits` : ''].filter(Boolean).join(', '))}</p></div>
 ${ui.section('Your things', ui.rows([
   { title: 'Your week', sub: 'Classes, work, pickups and study time', href: u(sid, '/week') },
   { title: 'Your dates', sub: 'Every deadline I found, and where', href: u(sid, '/dates') },

@@ -31,6 +31,12 @@ refuseToStartUnless([
 ]);
 
 const fixedToday = process.env.ADVOCATE_TODAY;
+// The demonstration runs on one school day so every visitor sees the same story the walks checked. With a clock set
+// (HH:MM, campus time), that day starts at the clock when the server starts and runs forward in real time, wrapping
+// every twelve hours, so a visitor in the evening still sees a day ahead of the student rather than one already over.
+const fixedClock = process.env.ADVOCATE_CLOCK;
+const started = Date.now();
+const demoNow = fixedToday && fixedClock && /^\d{2}:\d{2}$/.test(fixedClock) ? () => new Date(Date.parse(`${fixedToday}T${fixedClock}:00-05:00`) + ((Date.now() - started) % (12 * 3600_000))) : undefined;
 const base = process.env.ADVOCATE_BASE ?? '';
 
 const LINES: Record<string, string> = {
@@ -62,6 +68,7 @@ function build(): { app: Hono; advocate: Advocate } {
   const egress = demoMode ? routedEgress(campusServices) : realEgress(allow);
   const advocate = new Advocate({
     today: fixedToday ? () => fixedToday : undefined,
+    ...(demoNow ? { now: demoNow } : {}),
     masterKey: hex32(process.env.ADVOCATE_MASTER_KEY),
     approvalSecret: hex32(process.env.ADVOCATE_APPROVAL_SECRET),
     egress,

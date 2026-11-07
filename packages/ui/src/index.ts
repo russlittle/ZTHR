@@ -253,7 +253,235 @@ main.con{padding:24px 28px 60px;max-width:1200px;min-width:0}
 pre.code{background:var(--calm);padding:12px;border-radius:var(--r-sm);overflow:auto;font-size:13px}
 @media (max-width:860px){.console{grid-template-columns:1fr}.side{position:static;height:auto;display:flex;flex-wrap:wrap;gap:4px}.side .grp{flex-basis:100%;margin:10px 10px 2px;padding-top:8px}main.con{padding:16px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+${theme === 'student' ? studentLayer(base) : theme === 'factory' ? factoryLayer(base) : theme === 'admin' ? adminLayer(base) : ''}`;
+}
+
+/** The app's admin: the student app's type and green, arranged as a quiet console of counts. */
+function adminLayer(base: string): string {
+  return `
+@font-face{font-family:"Bricolage Grotesque";src:url("${base}/_ui/bricolage.woff2") format("woff2");font-weight:200 800;font-display:swap}
+:root{--display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif}
+h1,h2,h3,.brand,.kpi .n{font-family:var(--display);letter-spacing:-.015em}
+.side .grp{text-transform:none;letter-spacing:0;font-size:13px}
+.side a{font-weight:600}
+.panel,.card,.kpi{box-shadow:none}
+.kpis{gap:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.kpi{border:0;border-radius:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:none;padding:16px 18px;margin:0 -1px -1px 0}
+.kpi .n{font-size:32px;font-weight:650;font-variant-numeric:tabular-nums}
+table.t th{border-bottom:1.5px solid var(--ink)}
+@media (max-width:860px){.side{flex-wrap:nowrap;overflow-x:auto;padding:8px 12px;scrollbar-width:none}.side .grp,.side .brand{display:none}.side a{flex:none;white-space:nowrap}}
 `;
+}
+
+/**
+ * The factory: an inspection report. Pages are drafted in blue ink on cool paper ruled faintly like graph paper,
+ * every figure is set in tabular numerals, and the summary reads as measurements against tolerances: each check
+ * shows what was measured, what it must reach, and whether it held, with "not measured" as its own state.
+ */
+function factoryLayer(base: string): string {
+  return `
+@font-face{font-family:"Bricolage Grotesque";src:url("${base}/_ui/bricolage.woff2") format("woff2");font-weight:200 800;font-display:swap}
+:root{--display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;--rule:rgba(50,69,194,.055);--pass:#1d7a55;--fail:#b2412a;--unk:#8a6a12;--gauge:#e3e6f4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--rule:rgba(147,164,255,.05);--pass:#5fd39e;--fail:#f08a6c;--unk:#e8c066;--gauge:#232b4a}}
+:root[data-theme="dark"]{--rule:rgba(147,164,255,.05);--pass:#5fd39e;--fail:#f08a6c;--unk:#e8c066;--gauge:#232b4a}
+h1,h2,h3,.brand{font-family:var(--display);letter-spacing:-.015em}
+h1{font-size:clamp(30px,3.4vw,40px);font-weight:700;line-height:1.08}
+h2{font-weight:650}
+main.con,body>main{background-image:linear-gradient(var(--rule) 1px,transparent 1px),linear-gradient(90deg,var(--rule) 1px,transparent 1px);background-size:24px 24px}
+main.con{max-width:none;padding:30px clamp(16px,3vw,44px) 72px}
+main.con>*{max-width:1080px}
+main.con>h1+p.muted,main.con>h1+p{font-size:17px;max-width:72ch}
+table.t,.kpi .n,.reading .v{font-variant-numeric:tabular-nums}
+/* sidebar: plain section names, the current page marked by an ink rule */
+.side .grp{text-transform:none;letter-spacing:0;font-size:13px;color:var(--side-muted);font-weight:700}
+.side a{font-weight:600;border-radius:8px;position:relative}
+.side a[aria-current="page"]{background:var(--side-active);color:var(--action)}
+.side a[aria-current="page"]::before{content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--action)}
+.side .brand-mark{border-radius:8px;background:var(--action)}
+/* panels: flat sheets with a hairline, no drop shadows */
+.panel,.card,.kpi{box-shadow:none}
+.panel{border-radius:14px}
+.sec h2{font-size:21px}
+table.t th{font-size:13px;font-weight:700;color:var(--muted);border-bottom:1.5px solid var(--ink)}
+table.t td{padding:10px 8px}
+table.t tr:hover td{background:color-mix(in srgb,var(--action) 4%,transparent)}
+code{font-size:.9em;background:color-mix(in srgb,var(--action) 8%,transparent);padding:1px 5px;border-radius:5px}
+/* the readout strip: figures in one sheet, divided by rules, never a wall of cards */
+.kpis{gap:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.kpi{border:0;border-radius:0;border-right:1px solid var(--line);background:none;padding:16px 18px}
+.kpi:last-child{border-right:0}
+.kpi .n{font-family:var(--display);font-size:30px;font-weight:650;letter-spacing:-.02em}
+/* navigation lists read as an index with arrows, not as prose links */
+.rows .grow>a{text-decoration:none;color:var(--ink);display:block}
+.rows .grow>a b{font-family:var(--display);font-weight:650;font-size:17px}
+.rows .grow>a b::after{content:"";display:inline-block;width:7px;height:7px;margin-left:9px;border:solid var(--action);border-width:2px 2px 0 0;transform:translateY(-2px) rotate(45deg)}
+.rows .grow>a:hover b{color:var(--action)}
+.rows li{padding:14px 0}
+/* readings: what was measured, what it must reach, whether it held */
+.readings{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin:18px 0 8px;padding:6px 22px}
+.reading{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(120px,.8fr) minmax(0,1.6fr) 104px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none}
+.reading:last-child{border-bottom:0}
+a.reading:hover .l{color:var(--action)}
+.reading .l{font-family:var(--display);font-weight:650;font-size:17px}
+.reading .l small{display:block;font-family:"Atkinson Hyperlegible",system-ui,sans-serif;font-weight:400;font-size:13px;color:var(--muted)}
+.reading .v{font-family:var(--display);font-size:26px;font-weight:650;letter-spacing:-.02em;text-align:right;white-space:nowrap}
+.reading .v span{font-size:15px;color:var(--muted);font-weight:500;letter-spacing:0}
+.gauge{position:relative;height:12px;border-radius:6px;background:var(--gauge)}
+.gauge i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--action)}
+.gauge b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ink);border-radius:1px}
+.gauge.none{background:repeating-linear-gradient(90deg,var(--gauge) 0 6px,transparent 6px 10px)}
+.state{justify-self:end;display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:14px}
+.state::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor}
+.state.pass{color:var(--pass)}.state.fail{color:var(--fail)}.state.unk{color:var(--unk)}.state.count{color:var(--muted)}.state.count::before{border-radius:2px;width:9px;height:9px}
+.reading.fail .gauge i{background:var(--fail)}
+@media (max-width:760px){.reading{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px}.reading .gauge{grid-column:1/-1;order:3}.reading .state{order:4;grid-column:1/-1;justify-self:start}.readings{padding:4px 16px}}
+/* long-form writing in the factory */
+.prose{max-width:76ch}
+.prose h2{margin-top:1.6em}
+.prose a{color:var(--action)}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:none}
+.chip{border-radius:7px}
+@media (max-width:860px){main.con>*{max-width:none}}
+/* a list that is only links reads as an index of pages */
+.prose ul:has(>li>a:only-child){list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 24px;border-top:1px solid var(--line)}
+.prose ul:has(>li>a:only-child)>li{border-bottom:1px solid var(--line);margin:0}
+.prose ul:has(>li>a:only-child)>li>a{display:block;padding:11px 0;text-decoration:none;color:var(--ink);font-weight:700}
+.prose ul:has(>li>a:only-child)>li>a:hover{color:var(--action)}
+/* phone: the page list becomes one scrolling row under the bar, so the page itself comes first */
+@media (max-width:860px){
+ .side{flex-wrap:nowrap;overflow-x:auto;gap:4px;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line);scrollbar-width:none;position:sticky;top:0;z-index:4}
+ .side .grp,.side .brand{display:none}
+ .side a{flex:none;white-space:nowrap;padding:8px 12px;font-size:14px}
+ .side a[aria-current="page"]::before{display:none}
+ .side a .ic{display:none}
+}
+`;
+}
+
+/**
+ * The student app: a transit map of the day. Each kind of commitment is a line color (class, work, care, held
+ * time, due, money), the route on Today is the spine of the app, and the one thing to do today is the single bold
+ * block. Everything else is flat and quiet. Bricolage Grotesque sets headings; Atkinson Hyperlegible stays for
+ * reading, chosen for low-vision readers.
+ */
+function studentLayer(base: string): string {
+  const lines = { light: '--l-class:#2f5bea;--l-work:#e8590c;--l-care:#d6336c;--l-hold:#7c4ddb;--l-due:#c92a2a;--l-money:#d99a00;--l-route:#0b6e5a', dark: '--l-class:#7b9bff;--l-work:#ff9a5c;--l-care:#ff7aa8;--l-hold:#b394ff;--l-due:#ff8080;--l-money:#ffc94d;--l-route:#4fd1b0' };
+  return `
+@font-face{font-family:"Bricolage Grotesque";src:url("${base}/_ui/bricolage.woff2") format("woff2");font-weight:200 800;font-display:swap}
+:root{${lines.light};--display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;--paper:#f4f7f5;--line:#dfe6e2;--board:#0d3b31;--board-ink:#f1faf6;--board-muted:#a5c9bd;--on-route:#ffffff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${lines.dark};--paper:#0c1412;--line:#24322d;--board:#10261f;--board-ink:#eef8f4;--board-muted:#93b8ac;--on-route:#05231c}}
+:root[data-theme="dark"]{${lines.dark};--paper:#0c1412;--line:#24322d;--board:#10261f;--board-ink:#eef8f4;--board-muted:#93b8ac;--on-route:#05231c}
+h1,h2,h3,.brand,.figure .n{font-family:var(--display);letter-spacing:-.015em}
+h1{font-weight:700}h2{font-weight:650}
+/* header: quiet, with the tabs as one segmented control */
+.top{background:color-mix(in srgb,var(--paper) 88%,transparent);border-bottom:0}
+.brand{font-size:19px;font-weight:700}
+.brand-mark{border-radius:9px;background:var(--l-route);box-shadow:none}
+.tabs{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px;gap:2px}
+.tabs a{border-radius:10px;min-height:44px;padding:8px 14px}
+.tabs a[aria-current="page"]{background:var(--l-route);color:var(--on-route)}
+.tabs a[aria-current="page"] .ic{color:var(--on-route)}
+/* greeting: type does the work, no card */
+.hero{background:none;border:0;box-shadow:none;padding:12px 0 6px;margin:0 0 14px;overflow:visible}
+.hero::after{display:none}
+.hero h1{font-size:clamp(34px,5vw,48px);font-weight:700;line-height:1.02}
+.hero .date{font-size:17px;margin-top:6px}
+.glance{margin-top:16px;gap:8px}
+.glance span{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:7px 12px;font-size:14px}
+.glance span .ic{color:var(--l-route)}
+.glance span.g-warn{background:color-mix(in srgb,var(--l-money) 16%,var(--surface));border-color:color-mix(in srgb,var(--l-money) 55%,var(--line))}
+.glance span.g-warn .ic{color:color-mix(in srgb,var(--l-money) 70%,var(--ink))}
+/* the route: the day as a transit line on a dark board, the one bold thing on the screen */
+.t-day .card{--l-class:#7b9bff;--l-work:#ff9a5c;--l-care:#ff7aa8;--l-hold:#b394ff;--l-due:#ff8080;--l-money:#ffc94d;background:var(--board);color:var(--board-ink);border:1px solid var(--board);box-shadow:none;border-radius:26px;padding:22px 22px 14px;margin:0 0 18px}
+.t-day .card>h2{font-family:var(--display);text-transform:none;letter-spacing:-.015em;font-size:26px;font-weight:700;color:var(--board-ink);margin:0 0 14px}
+.day{margin:0}
+.day::before{display:none}
+.day li{grid-template-columns:84px 30px minmax(0,1fr);padding:0;min-height:64px;position:relative}
+.day li::after{content:"";position:absolute;left:96px;top:24px;bottom:-6px;width:6px;border-radius:3px;background:var(--lc,var(--board-muted))}
+.day li:last-child::after{display:none}
+.day .t{font-family:var(--display);font-size:16px;font-weight:600;color:var(--board-ink);padding-top:5px;white-space:nowrap;text-align:right;padding-right:12px}
+.day .dot{width:24px;height:24px;margin:4px 0 0 3px;border:6px solid var(--lc,var(--board-muted));background:var(--board);z-index:2}
+.day .what{padding:4px 0 14px 10px}
+.day .what b{font-size:18px;color:var(--board-ink)}
+.day .what span{color:var(--board-muted);font-size:15px}
+.day .s-class{--lc:var(--l-class)}.day .s-shift{--lc:var(--l-work)}.day .s-hold{--lc:var(--l-hold)}.day .s-due{--lc:var(--l-due)}
+.t-day .day li .dot{border-color:var(--lc,var(--board-muted));background:var(--board)}
+.t-day .day li.s-now .dot{background:#fff}
+.day .what b{font-family:var(--display);font-weight:650;letter-spacing:-.005em}
+.day .s-now{min-height:40px}.day .s-now::after{background:color-mix(in srgb,var(--board-muted) 45%,transparent)}
+.day .s-now .t{color:var(--board-ink);opacity:.8;font-size:14px}
+.day .s-now .dot{width:16px;height:16px;margin:6px 0 0 7px;border:0;background:#fff;box-shadow:0 0 0 5px color-mix(in srgb,#fff 22%,transparent)}
+.day .s-now .what{color:var(--board-ink);font-size:14px;font-weight:700;padding-top:3px}
+.day-key{display:flex;flex-wrap:wrap;gap:6px 16px;margin:4px 0 4px;padding-top:12px;border-top:1px solid color-mix(in srgb,var(--board-ink) 14%,transparent);font-size:13px;color:var(--board-muted)}
+.day-key span{display:inline-flex;align-items:center;gap:6px}
+.day-key i{width:14px;height:6px;border-radius:3px;background:var(--k)}
+@media (min-width:1040px){.today{grid-template-columns:minmax(0,1fr) 340px;grid-template-areas:"day side" "feed side"}.t-side>.sec:first-child{margin-top:0}}
+/* notes: flat, the speaker first, the line color of what it is about */
+.note{box-shadow:none;border-radius:20px;padding:18px 20px 18px 24px}
+.note::before{top:18px;bottom:18px;width:5px;border-radius:0 4px 4px 0}
+.note.k-heads::before{background:var(--l-due)}.note.k-plan::before{background:var(--l-class)}
+.note .from{color:var(--ink);font-size:14px}
+.note .from .av{background:color-mix(in srgb,var(--l-route) 14%,var(--surface));color:var(--l-route);border-radius:9px}
+.note .tag{border-radius:8px;text-transform:none;letter-spacing:0;font-size:13px;background:color-mix(in srgb,var(--l-due) 12%,var(--surface));color:var(--l-due)}
+/* the one thing: a plain card whose sentence is set large */
+.note.k-one{background:var(--surface);border:1px solid var(--line);box-shadow:none}
+.note.k-one::before{background:var(--l-route)}
+.note.k-one h2{font-family:var(--display);font-size:15px;font-weight:650;color:var(--l-route);margin-bottom:6px}
+.note.k-one .body{font-family:var(--display);font-size:clamp(21px,2.6vw,25px);font-weight:600;line-height:1.22;letter-spacing:-.01em}
+.note.k-info::before{display:none}
+.t-feed>h2{font-size:22px;margin:22px 0 10px}
+/* buttons: rounded rectangles, the route color */
+.btn{border-radius:14px;min-height:46px;padding:10px 18px;background:var(--l-route);border-color:var(--l-route)}
+.btn.quiet{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.quiet .ic{color:var(--l-route)}
+.btn.quiet:hover{background:color-mix(in srgb,var(--l-route) 8%,var(--surface))}
+.btn.call{background:var(--l-money);border-color:var(--l-money);color:#2a1d00}
+/* sections and lists: flat, separated by space and hairlines */
+.sec h2{font-size:22px}
+.panel{box-shadow:none;border-radius:20px}
+.card{box-shadow:none;border-radius:20px}
+.rows li{padding:14px 0}
+.kpi{box-shadow:none;border-radius:18px}
+/* help tiles: each a different line color, flat */
+.tile{box-shadow:none;border-radius:20px;min-height:116px;padding:18px;font-family:var(--display);font-size:17px;font-weight:650;transition:border-color .15s,background .15s}
+.tile:hover{transform:none;box-shadow:none;border-color:var(--tc,var(--l-route));background:color-mix(in srgb,var(--tc,var(--l-route)) 6%,var(--surface))}
+.tile .ic{background:color-mix(in srgb,var(--tc,var(--l-route)) 14%,var(--surface));color:var(--tc,var(--l-route));border-radius:12px;width:42px;height:42px;padding:9px}
+.tiles>*:nth-child(6n+1) .tile{--tc:var(--l-route)}.tiles>*:nth-child(6n+2) .tile{--tc:var(--l-class)}.tiles>*:nth-child(6n+3) .tile{--tc:var(--l-work)}
+.tiles>*:nth-child(6n+4) .tile{--tc:var(--l-care)}.tiles>*:nth-child(6n+5) .tile{--tc:var(--l-hold)}.tiles>*:nth-child(6n+6) .tile{--tc:var(--l-money)}
+/* week: the same line colors as the route */
+.week .d{border-radius:16px}
+.week .b.class{border-left-color:var(--l-class)}.week .b.shift{border-left-color:var(--l-work)}.week .b.study,.week .b.hold{border-left-color:var(--l-hold)}
+.week .b.pickup,.week .b.drop-off{border-left-color:var(--l-care)}.week .b.due{border-left-color:var(--l-due)}
+input,textarea,select{border-radius:12px;padding:12px 14px}
+input:focus,textarea:focus,select:focus{border-color:var(--l-route);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--l-route) 22%,transparent)}
+/* phone: an app's bottom bar */
+@media (max-width:640px){
+ .tabs{background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);border:0;border-top:1px solid var(--line);border-radius:0;padding:6px 6px calc(8px + env(safe-area-inset-bottom))}
+ .tabs a{border-radius:12px;min-height:52px;font-size:12px}
+ .tabs a[aria-current="page"]{background:color-mix(in srgb,var(--l-route) 14%,var(--surface));color:var(--l-route)}
+ .tabs a[aria-current="page"] .ic{color:var(--l-route)}
+ .hero h1{font-size:34px}
+ .glance{flex-wrap:nowrap;overflow-x:auto;margin-left:-16px;margin-right:-16px;padding:0 16px 4px;scrollbar-width:none}
+ .glance span{white-space:nowrap;flex:none}
+ .t-day .card{border-radius:22px;padding:18px 14px 10px}
+ .day li{grid-template-columns:76px 30px minmax(0,1fr)}.day li::after{left:88px}.day .t{font-size:14px;padding-right:8px}
+}
+a.tile,a.tile:hover{text-decoration:none;color:var(--ink)}
+/* lists of places to go read as navigation, not as links in prose */
+.rows .grow>a{text-decoration:none;color:var(--ink);display:block}
+.rows .grow>a b::after{content:"";display:inline-block;width:7px;height:7px;margin-left:8px;border:solid var(--l-route);border-width:2px 2px 0 0;transform:translateY(-2px) rotate(45deg)}
+.rows .grow>a:hover b{color:var(--l-route)}
+/* the week: the same line colors, as tinted blocks */
+.week{gap:8px;overflow-x:auto}
+.page:has(.week){max-width:1088px}
+.week .d{min-width:0;border-radius:16px;padding:10px;box-shadow:none}
+@media (max-width:900px){.week .d{min-width:128px}}
+.week .d h3{font-family:var(--display);font-size:14px;color:var(--ink);font-weight:650}
+.week .b{--bc:var(--l-route);font-size:13px;border-radius:9px;padding:6px 8px;border-left:4px solid var(--bc);background:color-mix(in srgb,var(--bc) 11%,var(--surface))}
+.week .b.class{--bc:var(--l-class)}.week .b.shift{--bc:var(--l-work)}.week .b.study,.week .b.hold{--bc:var(--l-hold)}.week .b.pickup,.week .b.drop-off{--bc:var(--l-care)}.week .b.due{--bc:var(--l-due)}
+.week .d .b{border-left-color:var(--bc)}
+.figure{box-shadow:none}
+.figure .n{color:var(--l-route)}`;
 }
 
 // ---------------------------------------------------------------- assets
@@ -261,7 +489,7 @@ pre.code{background:var(--calm);padding:12px;border-radius:var(--r-sm);overflow:
 const assetDir = fileURLToPath(new URL('../assets/', import.meta.url));
 /** Static files a shell references, served by the host app under `${base}/_ui/`. */
 export function uiAsset(name: string): { body: Uint8Array; type: string } | undefined {
-  if (!/^atkinson-(400|700)\.woff2$/.test(name)) return undefined;
+  if (!/^(atkinson-(400|700)|bricolage)\.woff2$/.test(name)) return undefined;
   return { body: readFileSync(`${assetDir}${name}`), type: 'font/woff2' };
 }
 
@@ -382,12 +610,15 @@ export interface Stop {
 /** A day as a route line with stops: classes, shifts, held time, things due, and where "now" is. */
 export function dayLine(stops: Stop[], label = 'Your day'): string {
   if (!stops.length) return '';
-  return `<ol class="day" aria-label="${esc(label)}">${stops.map((s) => `<li class="s-${s.kind}"><span class="t">${esc(s.time)}</span><span class="dot"></span><span class="what">${s.kind === 'now' ? esc(s.title) : `<b>${esc(s.title)}</b>${s.sub ? `<span>${esc(s.sub)}</span>` : ''}`}</span></li>`).join('')}</ol>`;
+  const KEY: [Stop['kind'], string, string][] = [['class', 'Class', 'var(--l-class)'], ['shift', 'Work', 'var(--l-work)'], ['hold', 'Held for you', 'var(--l-hold)'], ['due', 'Due', 'var(--l-due)']];
+  const kinds = new Set(stops.map((s) => s.kind));
+  const key = KEY.filter(([k]) => kinds.has(k));
+  return `<ol class="day" aria-label="${esc(label)}">${stops.map((s) => `<li class="s-${s.kind}"><span class="t">${esc(s.time)}</span><span class="dot"></span><span class="what">${s.kind === 'now' ? esc(s.title) : `<b>${esc(s.title)}</b>${s.sub ? `<span>${esc(s.sub)}</span>` : ''}`}</span></li>`).join('')}</ol>${key.length > 1 ? `<p class="day-key">${key.map(([, name, c]) => `<span><i style="--k:${c}"></i>${name}</span>`).join('')}</p>` : ''}`;
 }
 
 /** Small facts at a glance, for the top of a screen. */
 export function glance(items: { text: string; tone?: 'warn' | 'alert'; icon?: string }[]): string {
-  return items.length ? `<div class="glance">${items.map((g) => `<span${g.tone ? ` class="g-${g.tone}"` : ''}>${g.icon ? icon(g.icon, 16) : ''}${esc(g.text)}</span>`).join('')}</div>` : '';
+  return items.length ? `<div class="glance" tabindex="0" role="region" aria-label="At a glance">${items.map((g) => `<span${g.tone ? ` class="g-${g.tone}"` : ''}>${g.icon ? icon(g.icon, 16) : ''}${esc(g.text)}</span>`).join('')}</div>` : '';
 }
 
 /** A titled card, for side panels. */
@@ -467,6 +698,34 @@ export function weekGrid(days: WeekDay[]): string {
 export function table(headers: string[], body: (string | number)[][], opts: { raw?: boolean[]; caption?: string } = {}): string {
   // A table may scroll sideways; its panel is a named region a keyboard can reach and scroll.
   return `<div class="panel" style="overflow:auto" tabindex="0" role="region" aria-label="${esc(opts.caption ?? headers.filter(Boolean).join(', ') ?? 'Table')}"><table class="t">${opts.caption ? `<caption class="small muted" style="text-align:left;padding:8px 0">${esc(opts.caption)}</caption>` : ''}<thead><tr>${headers.map((h) => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c, i) => `<td>${opts.raw?.[i] ? String(c) : esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+
+export interface Reading {
+  label: string;
+  value: number | undefined;
+  /** The full scale; with it a gauge is drawn. */
+  of?: number;
+  /** What the value must reach; with it the reading passes or fails. */
+  floor?: number;
+  unit?: string;
+  note?: string;
+  href?: string;
+}
+
+/** Measurements against their tolerances. A reading with no value says "not measured"; it never counts as a pass. */
+export function readings(items: Reading[]): string {
+  const fmt = (x: number) => x.toLocaleString('en-US');
+  return `<div class="readings">${items
+    .map((r) => {
+      const measured = r.value !== undefined;
+      const state = !measured ? ['unk', 'Not measured'] : r.floor === undefined ? ['count', 'Recorded'] : r.value! >= r.floor ? ['pass', 'Held'] : ['fail', 'Below floor'];
+      const scale = r.of ?? 0;
+      const gauge = measured && scale ? `<div class="gauge" role="img" aria-label="${esc(`${fmt(r.value!)} of ${fmt(scale)}${r.floor !== undefined ? `, must reach ${fmt(r.floor)}` : ''}`)}"><i style="width:${Math.max(0, Math.min(100, (r.value! / scale) * 100)).toFixed(1)}%"></i>${r.floor !== undefined && r.floor < scale ? `<b style="left:${((r.floor / scale) * 100).toFixed(1)}%"></b>` : ''}</div>` : `<div class="gauge none" aria-hidden="true"></div>`;
+      const v = !measured ? '<span>not measured</span>' : r.unit === '%' ? `${r.value}<span>%</span>` : `${fmt(r.value!)}${r.of !== undefined && r.unit !== '%' ? `<span> / ${fmt(r.of)}</span>` : ''}`;
+      const inner = `<span class="l">${esc(r.label)}${r.note ? `<small>${esc(r.note)}</small>` : ''}</span><span class="v">${v}</span>${gauge}<span class="state ${state[0]}">${state[1]}</span>`;
+      return r.href ? `<a class="reading ${state[0]}" href="${esc(r.href)}">${inner}</a>` : `<div class="reading ${state[0]}">${inner}</div>`;
+    })
+    .join('')}</div>`;
 }
 
 export function kpis(items: { value: string | number; label: string }[]): string {
