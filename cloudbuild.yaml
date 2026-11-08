@@ -124,6 +124,8 @@ steps:
         npx tsx tools/ui/walk.ts http://localhost:8787/studentadvocate evidence-out/ui || { cat server.log; exit 1; }
         # Every link and button, clicked, then every one on the screen it leads to, down to depth 8, for five students.
         npx tsx tools/ui/deep.ts http://localhost:8787/studentadvocate evidence-out/deep || { cat server.log; exit 1; }
+        # No word drawn across two lines, on every published page and every student's main screens.
+        npx tsx tools/ui/words.ts site-out http://localhost:8787/studentadvocate
         # Many visitors at once against the same server: fails on any 500 or a 95th percentile over budget.
         npx tsx tools/load.ts http://localhost:8787/studentadvocate 25 30 || { cat server.log; exit 1; }
 

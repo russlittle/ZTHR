@@ -17,7 +17,7 @@ factory that built it means for anyone who builds software.
 | **Direction** | About 125 prompts from the author, from the idea to the deployed application. |
 | **Size** | About 22,000 lines of TypeScript and 4,200 lines of documentation, every data structure drawn as an ERD. |
 | **Evidence** | 1,192 tests; 23 gates, each proven able to fail; 41 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student, and 886 controls clicked in a real browser down to seven screens deep; 454 browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks. |
-| **Cost to run** | No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The app scales to zero when no one is using it. |
+| **Cost to run** | No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The public demo runs on one small server, so a visitor's session holds from start to finish. |
 | **Open** | Every test, gate, walk, decision and line of source is public. |
 
 ## The problem it solves
@@ -123,7 +123,7 @@ flowchart LR
   checked & full --> evidence[(Public evidence)]
 ```
 
-- **The product costs almost nothing to run.** It makes no model calls in normal use, and it scales to zero.
+- **The product costs almost nothing to run.** It makes no model calls in normal use; the public demo is one small server, and a school running its own copy can let it scale to zero between visits.
 - **The cost is compute, not people.** More fixtures cost machine time, which is cheap next to unverified output.
   The exhaustive walks are the one cost that grows with the application; more cores shorten the night without
   changing the total.

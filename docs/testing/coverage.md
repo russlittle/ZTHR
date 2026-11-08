@@ -90,14 +90,14 @@ xychart-beta
 
 ## Feature walk
 
-1,800 page-states and 16,371 links and forms across 12 seeds; 0 violations. Routes reached: `/advocate/s/:id`, `/advocate/s/:id/action`, `/advocate/s/:id/ask`, `/advocate/s/:id/dates`, `/advocate/s/:id/drafts`, `/advocate/s/:id/help`, `/advocate/s/:id/letter`, `/advocate/s/:id/meals`, `/advocate/s/:id/money`, `/advocate/s/:id/resource/:rid`, `/advocate/s/:id/say`, `/advocate/s/:id/share`, `/advocate/s/:id/shifts`, `/advocate/s/:id/syllabus`, `/advocate/s/:id/week`, `/advocate/s/:id/you`.
+1,800 page-states and 17,325 links and forms across 12 seeds; 0 violations. Routes reached: `/advocate/s/:id`, `/advocate/s/:id/action`, `/advocate/s/:id/advisor`, `/advocate/s/:id/ask`, `/advocate/s/:id/dates`, `/advocate/s/:id/delete`, `/advocate/s/:id/drafts`, `/advocate/s/:id/help`, `/advocate/s/:id/letter`, `/advocate/s/:id/meals`, `/advocate/s/:id/money`, `/advocate/s/:id/resource/:rid`, `/advocate/s/:id/say`, `/advocate/s/:id/school`, `/advocate/s/:id/school/drop`, `/advocate/s/:id/share`, `/advocate/s/:id/shifts`, `/advocate/s/:id/syllabus`, `/advocate/s/:id/week`, `/advocate/s/:id/you`.
 
 ```mermaid
 xychart-beta
   title "Feature walk: links and forms followed per student"
   x-axis ["Ana", "Keisha", "Maria", "Sam"]
   y-axis "Transitions"
-  bar [1303, 1282, 1451, 1421]
+  bar [1388, 1372, 1520, 1495]
 ```
 
 ## Verified by

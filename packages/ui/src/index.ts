@@ -98,7 +98,7 @@ a{color:var(--action);text-underline-offset:3px}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
 html{scroll-padding-top:96px;scroll-padding-bottom:24px}
 @media (max-width:640px){html{scroll-padding-bottom:110px}}
-.prose,.case{overflow-wrap:anywhere}
+.prose,.case{overflow-wrap:break-word}
 table.t td a{display:inline-block;padding:3px 0;min-height:24px}
 .skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 12px;border-radius:8px;z-index:10}.skip:focus{left:8px}
 h1,h2,h3{line-height:1.2;margin:0}

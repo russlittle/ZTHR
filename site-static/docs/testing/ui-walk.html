@@ -11,7 +11,7 @@ a{color:var(--action);text-underline-offset:3px}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
 html{scroll-padding-top:96px;scroll-padding-bottom:24px}
 @media (max-width:640px){html{scroll-padding-bottom:110px}}
-.prose,.case{overflow-wrap:anywhere}
+.prose,.case{overflow-wrap:break-word}
 table.t td a{display:inline-block;padding:3px 0;min-height:24px}
 .skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 12px;border-radius:8px;z-index:10}.skip:focus{left:8px}
 h1,h2,h3{line-height:1.2;margin:0}
@@ -397,7 +397,8 @@ records video.</p>
   click --&gt; check{Loaded, one heading, no artifacts,&lt;br/&gt;no browser errors, something changed,&lt;br/&gt;no &#39;not available&#39;?}
   check -- yes --&gt; next[Queue the new screen, one level deeper]
   check -- no --&gt; fail[Build fails, naming the path of clicks]
-  next --&gt; find</pre><p>A control fails if it answers with an error, lands on a screen without exactly one level-1 heading, shows a programming artifact, logs a browser error, does nothing, or answers &quot;not available&quot;. Any failure stops the build.</p>
+  next --&gt; find</pre><p>Words are checked whole (<code>tools/ui/words.ts</code>): every published page and every student&#39;s main screens, at desktop and phone widths in light and dark, with every heading, table cell, link, button, label and list item measured. A word drawn across two lines fails the build; long addresses and code may break.</p>
+<p>A control fails if it answers with an error, lands on a screen without exactly one level-1 heading, shows a programming artifact, logs a browser error, does nothing, or answers &quot;not available&quot;. Any failure stops the build.</p>
 <h2>Verified by</h2>
 <ul>
 <li><a href="https://github.com/russlittle/ZTHR/blob/reference-implementation/tools/test/ui-walk.test.ts">`tools/test/ui-walk.test.ts`</a> (5 test definitions)</li>

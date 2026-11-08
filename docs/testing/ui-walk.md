@@ -52,6 +52,8 @@ flowchart LR
   next --> find
 ```
 
+Words are checked whole (`tools/ui/words.ts`): every published page and every student's main screens, at desktop and phone widths in light and dark, with every heading, table cell, link, button, label and list item measured. A word drawn across two lines fails the build; long addresses and code may break.
+
 A control fails if it answers with an error, lands on a screen without exactly one level-1 heading, shows a programming artifact, logs a browser error, does nothing, or answers "not available". Any failure stops the build.
 
 ## Verified by
