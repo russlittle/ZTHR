@@ -197,6 +197,68 @@ a.reading:hover .l{color:var(--action)}
 .choice dd{margin:0;font-size:15px}
 .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .checks{border:0;padding:0;margin:0 0 14px}.checks legend{font-weight:700;margin-bottom:6px}.check{display:flex;align-items:center;gap:10px;font-weight:400;min-height:44px}.check input{width:24px;height:24px;flex:none}
+
+/* ---- controls: one look and behaviour for every button, field and choice ---- */
+a{text-underline-offset:3px;text-decoration-thickness:1.5px}
+.btn{position:relative;justify-content:center;text-align:center;line-height:1.2;-webkit-tap-highlight-color:transparent;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.btn .ic{flex:none}
+.btn[disabled],.btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed;transform:none}
+.btn.busy{pointer-events:none}
+.btn.busy>span{opacity:0}
+.btn.busy::after{content:"";position:absolute;inset:0;margin:auto;width:18px;height:18px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:zspin .7s linear infinite}
+@keyframes zspin{to{transform:rotate(360deg)}}
+.btn.danger:hover{background:color-mix(in srgb,var(--alert) 10%,transparent)}
+.btn.danger.solid{background:var(--alert);border-color:var(--alert);color:var(--on-alert,#fff)}
+.field{margin:0 0 14px}
+.field label{margin:0 0 6px}
+input,textarea,select{min-height:48px;transition:border-color .15s,box-shadow .15s}
+input:hover,textarea:hover,select:hover{border-color:color-mix(in srgb,var(--ink) 35%,var(--line))}
+input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--alert)}
+input[readonly]{background:color-mix(in srgb,var(--ink) 4%,var(--surface))}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+select{-webkit-appearance:none;appearance:none;padding-right:44px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23767993' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+input[type=checkbox]{accent-color:var(--l-route,var(--action))}
+.check{padding:4px 0;cursor:pointer}
+.check:hover{color:var(--l-route,var(--action))}
+/* disclosure */
+details.why summary{list-style:none;display:inline-flex;align-items:center;gap:8px;min-height:32px;font-weight:600;border-radius:8px;width:max-content;max-width:100%}
+details.why summary::-webkit-details-marker{display:none}
+details.why summary::before{content:"";width:7px;height:7px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(-45deg);transition:transform .15s;flex:none}
+details.why[open] summary::before{transform:rotate(45deg)}
+details.why summary:hover{color:var(--ink)}
+details.why p{margin:6px 0 0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink)}
+/* switch */
+.sw{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:4px 6px;border:0;background:none;cursor:pointer;font:inherit;font-weight:700;color:var(--ink);border-radius:999px;-webkit-tap-highlight-color:transparent}
+.sw-track{width:52px;height:32px;border-radius:999px;background:color-mix(in srgb,var(--ink) 10%,var(--surface));box-shadow:inset 0 0 0 2px var(--muted);position:relative;flex:none;transition:background .2s,box-shadow .2s}
+.sw-thumb{position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.sw[aria-checked="true"] .sw-track{background:var(--l-route,var(--action));box-shadow:none}
+.sw[aria-checked="true"] .sw-thumb{transform:translateX(20px);background:#fff}
+.sw-text{font-size:14px;color:var(--muted);min-width:2em;text-align:left}
+.sw:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sw.busy .sw-thumb{opacity:.6}
+/* segmented choice */
+.seg{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:16px;background:color-mix(in srgb,var(--ink) 6%,var(--surface));border:1px solid var(--line);max-width:100%}
+.seg form.inline{display:flex}.seg-b{width:100%}
+@media (max-width:640px){.seg{display:grid;width:100%}.seg-b{padding:8px 6px;font-size:14px;line-height:1.2}}
+.seg-b{font:inherit;font-weight:700;font-size:15px;min-height:44px;padding:8px 18px;border-radius:12px;border:0;background:transparent;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.seg-b:hover{color:var(--ink)}
+.seg-b[aria-pressed="true"]{background:var(--surface);color:var(--l-route,var(--action));box-shadow:0 1px 3px color-mix(in srgb,var(--ink) 18%,transparent),0 0 0 1px var(--line)}
+.seg-b:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* copy */
+.copy{display:flex;gap:8px;align-items:stretch;margin-top:10px}
+.copy input{flex:1;min-width:0}
+.copy .btn.copied{border-color:var(--r-pass,#1d7a55);color:var(--r-pass,#1d7a55)}
+/* whole rows are the link, with their buttons on top */
+.rows li{position:relative}
+.rows .grow>a::after{content:"";position:absolute;inset:0;border-radius:12px}
+.rows li .btn,.rows li form,.rows li .sw{position:relative;z-index:1}
+.rows li:has(.sw){flex-wrap:nowrap;align-items:center}
+.rows li:has(>.grow>a):hover{background:color-mix(in srgb,var(--l-route,var(--action)) 5%,transparent);border-radius:12px}
+/* on a phone, a note's buttons line up full width, the first one first */
+@media (max-width:640px){.note .acts{display:grid;grid-template-columns:1fr}.note .acts form.inline{display:block}.note .acts .btn{width:100%}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 @font-face{font-family:"Bricolage Grotesque";src:url("../../fonts/bricolage.woff2") format("woff2");font-weight:200 800;font-display:swap}
@@ -260,10 +322,10 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
 <script src="../../assets/mermaid-11.4.1.min.js"></script><script>window.mermaid&&(function(){var d=matchMedia('(prefers-color-scheme: dark)').matches;mermaid.initialize({startOnLoad:true,securityLevel:'strict',theme:'base',themeVariables:d?{fontFamily:'Atkinson Hyperlegible, system-ui, sans-serif',fontSize:'15px',background:'#111e25',primaryColor:'#13303a',primaryBorderColor:'#5fd0e6',primaryTextColor:'#e3edf2',secondaryColor:'#1d2a40',tertiaryColor:'#111e25',lineColor:'#97abb6',textColor:'#e3edf2',clusterBkg:'#0e1a20',clusterBorder:'#22343e',edgeLabelBackground:'#111e25',noteBkgColor:'#173842',noteTextColor:'#e3edf2'}:{fontFamily:'Atkinson Hyperlegible, system-ui, sans-serif',fontSize:'15px',background:'#ffffff',primaryColor:'#e8f4f7',primaryBorderColor:'#0b6680',primaryTextColor:'#12202a',secondaryColor:'#eeedfd',tertiaryColor:'#ffffff',lineColor:'#53636f',textColor:'#12202a',clusterBkg:'#f6f9fa',clusterBorder:'#c8d6de',edgeLabelBackground:'#ffffff',noteBkgColor:'#fff6e0',noteTextColor:'#12202a'}})})();</script>
 <style>.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style></head><body><a class="skip" href="/reference/docs/testing/coverage#main">Skip to content</a><nav class="zbar" aria-label="All of the Student Advocate and ZTHR"><div class="zbar-in zwide"><a href="https://zthr.ai/">ZTHR</a><span class="zg"><span class="zl"><i class="dot d-app"></i>Student Advocate</span><a href="https://zthr.ai/advocate">About the app</a><a href="https://zthr.ai/studentadvocate/">Use the app</a><span class="zl" style="margin-left:6px"><i class="dot d-admin"></i></span><a href="https://zthr.ai/studentadvocate/admin/">App admin</a></span><span class="zg"><span class="zl"><i class="dot d-factory"></i>Factory</span><a href="https://zthr.ai/reference/factory/">Evidence</a><a href="https://zthr.ai/reference/docs/" aria-current="page">Docs</a><a href="https://zthr.ai/reference/case">The case</a></span><a href="https://zthr.ai/reference" class="zmap">Map: how it fits together</a></div><details class="znarrow"><summary><i class="dot d-factory"></i><span>Docs</span><span class="zall">All parts</span></summary><div class="zbar-in"><a href="https://zthr.ai/">ZTHR</a><span class="zg"><span class="zl"><i class="dot d-app"></i>Student Advocate</span><a href="https://zthr.ai/advocate">About the app</a><a href="https://zthr.ai/studentadvocate/">Use the app</a><span class="zl" style="margin-left:6px"><i class="dot d-admin"></i></span><a href="https://zthr.ai/studentadvocate/admin/">App admin</a></span><span class="zg"><span class="zl"><i class="dot d-factory"></i>Factory</span><a href="https://zthr.ai/reference/factory/">Evidence</a><a href="https://zthr.ai/reference/docs/" aria-current="page">Docs</a><a href="https://zthr.ai/reference/case">The case</a></span><a href="https://zthr.ai/reference" class="zmap">Map: how it fits together</a></div></details></nav><div class="console"><nav class="side" aria-label="Console"><a class="brand" href="../index.html"><span class="brand-mark"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg></span>Docs</a><a href="../index.html"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Docs home</a><div class="grp">The system</div><a href="../accessibility.html">Accessibility</a><a href="../agents.html">The agent team</a><a href="../api.html">Integration API</a><a href="../architecture.html">Architecture</a><a href="../data-model.html">Data model</a><a href="../data-sources.html">Data sources</a><a href="../features.html">Features</a><a href="../glossary.html">Glossary</a><a href="../security.html">Security</a><div class="grp">Business flows</div><a href="../flows/any-college.html">Any college</a><a href="../flows/campus-life.html">Campus life, the bus, jobs and mentors</a><a href="../flows/careers.html">Jobs and careers</a><a href="../flows/class-site.html">Class-site sync</a><a href="../flows/community.html">Community</a><a href="../flows/crisis.html">When something goes wrong</a><a href="../flows/drafts-and-approval.html">Drafts and approval</a><a href="../flows/letters.html">Explaining a letter</a><a href="../flows/meals.html">Meals for the week</a><a href="../flows/money.html">Money found and short months</a><a href="../flows/operator.html">The operator</a><a href="../flows/outcomes.html">Outcome measures</a><a href="../flows/planning.html">Deadlines, plans and held time</a><a href="../flows/playbooks.html">Playbooks</a><a href="../flows/sensitive-data.html">Sensitive data</a><a href="../flows/sign-in.html">Signing in</a><a href="../flows/stay-enrolled.html">Staying enrolled: grades, standing, aid progress and the choice to leave a class</a><a href="../flows/text-onboarding.html">Starting by text</a><a href="../flows/weather.html">Weather and roads</a><div class="grp">How it is tested</div><a href="../testing/ci.html">Running the factory on Google Cloud Build</a><a href="../testing/coverage.html" aria-current="page">Coverage</a><a href="../testing/exploration.html">Exhaustive walks</a><a href="../testing/gates.html">Gates</a><a href="../testing/journeys.html">Intent journeys</a><a href="../testing/mutation.html">Mutation testing and ratchets</a><a href="../testing/patterns.html">The 33 patterns, in operation</a><a href="../testing/redteam.html">The red team</a><a href="../testing/robustness.html">Robustness: generated inputs, failing services, load and restore</a><a href="../testing/ui-walk.html">Walking in a real browser</a><div class="grp">Building blocks</div><a href="../blocks/campus-services.html">Campus services</a><a href="../blocks/egress.html">@zthr/egress</a><a href="../blocks/evidence.html">@zthr/evidence</a><a href="../blocks/explore.html">@zthr/explore</a><a href="../blocks/gates.html">@zthr/gates</a><a href="../blocks/intent.html">@zthr/intent</a><a href="../blocks/models.html">@zthr/models</a><a href="../blocks/operator.html">@zthr/operator</a><a href="../blocks/plain-language.html">@zthr/plain-language</a><a href="../blocks/privacy.html">@zthr/privacy</a><a href="../blocks/review.html">@zthr/review</a><a href="../blocks/runtime.html">@zthr/runtime</a><a href="../blocks/store.html">@zthr/store</a><a href="../blocks/twin-service.html">@zthr/twin-service</a><a href="../blocks/twins.html">@zthr/twins</a><a href="../blocks/ui.html">@zthr/ui</a><div class="grp">Decisions</div><a href="../adr/0001-storage.html">ADR 0001: Storage behind an interface, SQLite first</a><a href="../adr/0002-web-stack.html">ADR 0002: Hono server and a framework-free progressive web app</a><a href="../adr/0003-models-offline.html">ADR 0003: Deterministic first, models optional</a><a href="../adr/0004-who-admits-what.html">ADR 0004: The factory admits; people sign only what destroys</a></nav><main id="main" class="con"><article class="prose"><h1>Coverage</h1>
 <h2>Tests by package</h2>
-<pre class="mermaid">pie showData title 1191 tests
+<pre class="mermaid">pie showData title 1192 tests
   &quot;apps/advocate&quot; : 837
   &quot;apps/campus-services&quot; : 65
-  &quot;tools/test&quot; : 57
+  &quot;tools/test&quot; : 58
   &quot;packages/ui&quot; : 56
   &quot;packages/runtime&quot; : 27
   &quot;packages/gates&quot; : 22
