@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from 'node:fs';
+import { mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -93,6 +93,10 @@ for (const width of WIDTHS) {
 }
 await browser.close();
 server.close();
+if (process.env.WORDS_OUT) {
+  mkdirSync(process.env.WORDS_OUT, { recursive: true });
+  writeFileSync(join(process.env.WORDS_OUT, 'words.json'), JSON.stringify({ at: new Date().toISOString(), views: checked, pages: targets.length, problems }, null, 1));
+}
 for (const p of problems) console.error(p);
 console.log(`whole words: ${checked} page views (${targets.length} pages at ${WIDTHS.join(' and ')} pixels, light and dark); ${problems.length} with a word split across lines`);
 process.exit(problems.length ? 1 : 0);
