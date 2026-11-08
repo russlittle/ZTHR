@@ -30,7 +30,7 @@ const pages = (d: string): string[] =>
 const TYPES: Record<string, string> = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml', '.webm': 'video/webm', '.json': 'application/json' };
 // Pages carry <base href="/reference/<dir>/">, so the site is served under /reference/ as it is in production.
 const server = createServer(async (req, res) => {
-  const path = decodeURIComponent((req.url ?? '/').split('?')[0]).replace(/^\/reference\/?/, '/');
+  const path = decodeURIComponent((req.url ?? '/').split('?')[0] ?? '/').replace(/^\/reference\/?/, '/');
   try {
     const body = await readFile(join(dir, path.endsWith('/') ? `${path}index.html` : path));
     res.writeHead(200, { 'content-type': TYPES[extname(path)] ?? 'application/octet-stream' }).end(body);
