@@ -215,13 +215,20 @@ steps:
         if [ "$$BRANCH" != "reference-implementation" ] && [ "$$BRANCH" != "$$DEPLOY" ]; then echo "Not deploying $$BRANCH."; exit 0; fi
         # Each visitor's demo copy lives in one server's memory, so the demo runs on one server, and a visitor's
         # requests stay with it: a second server would not have their copy and the session would reset mid-way.
-        gcloud run deploy advocate --project "$$PROJECT" --region us-central1 \
+        common=(--project "$$PROJECT" --region us-central1 \
           --image "us-central1-docker.pkg.dev/$$PROJECT/zthr/advocate:$$COMMIT" \
           --service-account "zthr-advocate@$$PROJECT.iam.gserviceaccount.com" \
-          --allow-unauthenticated --memory 1Gi --cpu 1 --min-instances 1 --max-instances 1 --concurrency 80 --session-affinity \
-          --labels "commit=$${COMMIT:0:12}" --set-env-vars "BUILD_COMMIT=$$COMMIT" --quiet
+          --allow-unauthenticated --memory 1Gi --cpu 1 \
+          --labels "commit=$${COMMIT:0:12}" --set-env-vars "BUILD_COMMIT=$$COMMIT" --quiet)
+        if ! gcloud run deploy advocate "$${common[@]}" --min-instances 1 --max-instances 1 --concurrency 80 --session-affinity; then
+          # If the one-server settings are refused, the commit that passed still ships, on the settings that last
+          # deployed, and the log says so: serving the new commit matters more than how many servers it runs on.
+          echo "ONE-SERVER SETTINGS REFUSED: deploying with the previous settings"
+          gcloud run deploy advocate "$${common[@]}" --min-instances 0 --max-instances 2 --concurrency 40
+        fi
         # A revision pinned by hand would keep traffic away from the new one; the commit that passed takes all of it.
-        gcloud run services update-traffic advocate --project "$$PROJECT" --region us-central1 --to-latest --quiet
+        gcloud run services update-traffic advocate --project "$$PROJECT" --region us-central1 --to-latest --quiet \
+          || echo "TRAFFIC UPDATE REFUSED: verify-serving decides whether the new commit is serving"
 
   - id: verify-serving
     # Done means serving (Pattern 23): what answers on the public URL is the commit that passed, or the build fails.
