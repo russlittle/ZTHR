@@ -11,7 +11,7 @@ a{color:var(--action);text-underline-offset:3px}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
 html{scroll-padding-top:96px;scroll-padding-bottom:24px}
 @media (max-width:640px){html{scroll-padding-bottom:110px}}
-.prose,.case{overflow-wrap:anywhere}
+.prose,.case{overflow-wrap:break-word}
 table.t td a{display:inline-block;padding:3px 0;min-height:24px}
 .skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 12px;border-radius:8px;z-index:10}.skip:focus{left:8px}
 h1,h2,h3{line-height:1.2;margin:0}
@@ -543,12 +543,12 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
 </tr>
 </tbody></table>
 <h2>Feature walk</h2>
-<p>1,800 page-states and 16,371 links and forms across 12 seeds; 0 violations. Routes reached: <code>/advocate/s/:id</code>, <code>/advocate/s/:id/action</code>, <code>/advocate/s/:id/ask</code>, <code>/advocate/s/:id/dates</code>, <code>/advocate/s/:id/drafts</code>, <code>/advocate/s/:id/help</code>, <code>/advocate/s/:id/letter</code>, <code>/advocate/s/:id/meals</code>, <code>/advocate/s/:id/money</code>, <code>/advocate/s/:id/resource/:rid</code>, <code>/advocate/s/:id/say</code>, <code>/advocate/s/:id/share</code>, <code>/advocate/s/:id/shifts</code>, <code>/advocate/s/:id/syllabus</code>, <code>/advocate/s/:id/week</code>, <code>/advocate/s/:id/you</code>.</p>
+<p>1,800 page-states and 17,325 links and forms across 12 seeds; 0 violations. Routes reached: <code>/advocate/s/:id</code>, <code>/advocate/s/:id/action</code>, <code>/advocate/s/:id/advisor</code>, <code>/advocate/s/:id/ask</code>, <code>/advocate/s/:id/dates</code>, <code>/advocate/s/:id/delete</code>, <code>/advocate/s/:id/drafts</code>, <code>/advocate/s/:id/help</code>, <code>/advocate/s/:id/letter</code>, <code>/advocate/s/:id/meals</code>, <code>/advocate/s/:id/money</code>, <code>/advocate/s/:id/resource/:rid</code>, <code>/advocate/s/:id/say</code>, <code>/advocate/s/:id/school</code>, <code>/advocate/s/:id/school/drop</code>, <code>/advocate/s/:id/share</code>, <code>/advocate/s/:id/shifts</code>, <code>/advocate/s/:id/syllabus</code>, <code>/advocate/s/:id/week</code>, <code>/advocate/s/:id/you</code>.</p>
 <pre class="mermaid">xychart-beta
   title &quot;Feature walk: links and forms followed per student&quot;
   x-axis [&quot;Ana&quot;, &quot;Keisha&quot;, &quot;Maria&quot;, &quot;Sam&quot;]
   y-axis &quot;Transitions&quot;
-  bar [1303, 1282, 1451, 1421]</pre><h2>Verified by</h2>
+  bar [1388, 1372, 1520, 1495]</pre><h2>Verified by</h2>
 <ul>
 <li><a href="https://github.com/russlittle/ZTHR/blob/reference-implementation/apps/advocate/test/walks.test.ts">`apps/advocate/test/walks.test.ts`</a> (2 test definitions)</li>
 </ul>

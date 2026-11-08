@@ -11,7 +11,7 @@ a{color:var(--action);text-underline-offset:3px}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
 html{scroll-padding-top:96px;scroll-padding-bottom:24px}
 @media (max-width:640px){html{scroll-padding-bottom:110px}}
-.prose,.case{overflow-wrap:anywhere}
+.prose,.case{overflow-wrap:break-word}
 table.t td a{display:inline-block;padding:3px 0;min-height:24px}
 .skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 12px;border-radius:8px;z-index:10}.skip:focus{left:8px}
 h1,h2,h3{line-height:1.2;margin:0}
@@ -368,7 +368,7 @@ factory that built it means for anyone who builds software.</p>
 </tr>
 <tr>
 <td><strong>Cost to run</strong></td>
-<td>No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The app scales to zero when no one is using it.</td>
+<td>No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The public demo runs on one small server, so a visitor&#39;s session holds from start to finish.</td>
 </tr>
 <tr>
 <td><strong>Open</strong></td>
@@ -518,7 +518,7 @@ crash a redirect. Each became a fixture, so it cannot return.</p>
   change[Each change] -- minutes of build time --&gt; checked[Tests, gates, journeys, spot-check walks]
   night[Each night] -- hours of compute --&gt; full[Full walks on a rotation; certification]
   checked &amp; full --&gt; evidence[(Public evidence)]</pre><ul>
-<li><strong>The product costs almost nothing to run.</strong> It makes no model calls in normal use, and it scales to zero.</li>
+<li><strong>The product costs almost nothing to run.</strong> It makes no model calls in normal use; the public demo is one small server, and a school running its own copy can let it scale to zero between visits.</li>
 <li><strong>The cost is compute, not people.</strong> More fixtures cost machine time, which is cheap next to unverified output.
 The exhaustive walks are the one cost that grows with the application; more cores shorten the night without
 changing the total.</li>
