@@ -284,6 +284,68 @@ a.reading:hover .l{color:var(--action)}
 .choice dd{margin:0;font-size:15px}
 .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .checks{border:0;padding:0;margin:0 0 14px}.checks legend{font-weight:700;margin-bottom:6px}.check{display:flex;align-items:center;gap:10px;font-weight:400;min-height:44px}.check input{width:24px;height:24px;flex:none}
+
+/* ---- controls: one look and behaviour for every button, field and choice ---- */
+a{text-underline-offset:3px;text-decoration-thickness:1.5px}
+.btn{position:relative;justify-content:center;text-align:center;line-height:1.2;-webkit-tap-highlight-color:transparent;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.btn .ic{flex:none}
+.btn[disabled],.btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed;transform:none}
+.btn.busy{pointer-events:none}
+.btn.busy>span{opacity:0}
+.btn.busy::after{content:"";position:absolute;inset:0;margin:auto;width:18px;height:18px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:zspin .7s linear infinite}
+@keyframes zspin{to{transform:rotate(360deg)}}
+.btn.danger:hover{background:color-mix(in srgb,var(--alert) 10%,transparent)}
+.btn.danger.solid{background:var(--alert);border-color:var(--alert);color:var(--on-alert,#fff)}
+.field{margin:0 0 14px}
+.field label{margin:0 0 6px}
+input,textarea,select{min-height:48px;transition:border-color .15s,box-shadow .15s}
+input:hover,textarea:hover,select:hover{border-color:color-mix(in srgb,var(--ink) 35%,var(--line))}
+input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--alert)}
+input[readonly]{background:color-mix(in srgb,var(--ink) 4%,var(--surface))}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+select{-webkit-appearance:none;appearance:none;padding-right:44px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23767993' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+input[type=checkbox]{accent-color:var(--l-route,var(--action))}
+.check{padding:4px 0;cursor:pointer}
+.check:hover{color:var(--l-route,var(--action))}
+/* disclosure */
+details.why summary{list-style:none;display:inline-flex;align-items:center;gap:8px;min-height:32px;font-weight:600;border-radius:8px;width:max-content;max-width:100%}
+details.why summary::-webkit-details-marker{display:none}
+details.why summary::before{content:"";width:7px;height:7px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(-45deg);transition:transform .15s;flex:none}
+details.why[open] summary::before{transform:rotate(45deg)}
+details.why summary:hover{color:var(--ink)}
+details.why p{margin:6px 0 0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink)}
+/* switch */
+.sw{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:4px 6px;border:0;background:none;cursor:pointer;font:inherit;font-weight:700;color:var(--ink);border-radius:999px;-webkit-tap-highlight-color:transparent}
+.sw-track{width:52px;height:32px;border-radius:999px;background:color-mix(in srgb,var(--ink) 10%,var(--surface));box-shadow:inset 0 0 0 2px var(--muted);position:relative;flex:none;transition:background .2s,box-shadow .2s}
+.sw-thumb{position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.sw[aria-checked="true"] .sw-track{background:var(--l-route,var(--action));box-shadow:none}
+.sw[aria-checked="true"] .sw-thumb{transform:translateX(20px);background:#fff}
+.sw-text{font-size:14px;color:var(--muted);min-width:2em;text-align:left}
+.sw:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sw.busy .sw-thumb{opacity:.6}
+/* segmented choice */
+.seg{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:16px;background:color-mix(in srgb,var(--ink) 6%,var(--surface));border:1px solid var(--line);max-width:100%}
+.seg form.inline{display:flex}.seg-b{width:100%}
+@media (max-width:640px){.seg{display:grid;width:100%}.seg-b{padding:8px 6px;font-size:14px;line-height:1.2}}
+.seg-b{font:inherit;font-weight:700;font-size:15px;min-height:44px;padding:8px 18px;border-radius:12px;border:0;background:transparent;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.seg-b:hover{color:var(--ink)}
+.seg-b[aria-pressed="true"]{background:var(--surface);color:var(--l-route,var(--action));box-shadow:0 1px 3px color-mix(in srgb,var(--ink) 18%,transparent),0 0 0 1px var(--line)}
+.seg-b:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* copy */
+.copy{display:flex;gap:8px;align-items:stretch;margin-top:10px}
+.copy input{flex:1;min-width:0}
+.copy .btn.copied{border-color:var(--r-pass,#1d7a55);color:var(--r-pass,#1d7a55)}
+/* whole rows are the link, with their buttons on top */
+.rows li{position:relative}
+.rows .grow>a::after{content:"";position:absolute;inset:0;border-radius:12px}
+.rows li .btn,.rows li form,.rows li .sw{position:relative;z-index:1}
+.rows li:has(.sw){flex-wrap:nowrap;align-items:center}
+.rows li:has(>.grow>a):hover{background:color-mix(in srgb,var(--l-route,var(--action)) 5%,transparent);border-radius:12px}
+/* on a phone, a note's buttons line up full width, the first one first */
+@media (max-width:640px){.note .acts{display:grid;grid-template-columns:1fr}.note .acts form.inline{display:block}.note .acts .btn{width:100%}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 ${theme === 'student' ? studentLayer(base) : theme === 'factory' ? factoryLayer(base) : theme === 'admin' ? adminLayer(base) : ''}`;
 }
@@ -380,7 +442,7 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
  */
 function studentLayer(base: string): string {
   const lines = { light: '--l-class:#2f6bff;--l-work:#ff7a1a;--l-care:#ec4899;--l-hold:#14b8a6;--l-due:#e5384f;--l-money:#f5b400;--l-route:#5145e8', dark: '--l-class:#6f9bff;--l-work:#ff9a52;--l-care:#ff79b6;--l-hold:#3fd9c4;--l-due:#ff7d92;--l-money:#ffc83d;--l-route:#a99dff' };
-  const DARK = `${lines.dark};--paper:#0b0b16;--line:#2a2c48;--board:#100e2e;--board-2:#241a5c;--board-ink:#f4f3ff;--board-muted:#aaa5dc;--on-route:#120c3a;--glass:rgba(22,23,44,.72);--glass-line:rgba(255,255,255,.07);--g1:rgba(110,86,255,.42);--g2:rgba(0,170,255,.24);--g3:rgba(255,80,160,.22);--g4:rgba(255,190,60,.10);--lift:0 12px 34px -16px rgba(0,0,0,.6);--r-pass:#5fd39e;--r-unk:#e8c066;--r-fail:#ff7d92`;
+  const DARK = `${lines.dark};--paper:#0b0b16;--line:#2a2c48;--board:#100e2e;--board-2:#241a5c;--board-ink:#f4f3ff;--board-muted:#aaa5dc;--on-route:#120c3a;--glass:rgba(22,23,44,.72);--glass-line:rgba(255,255,255,.07);--g1:rgba(110,86,255,.42);--g2:rgba(0,170,255,.24);--g3:rgba(255,80,160,.22);--g4:rgba(255,190,60,.10);--lift:0 12px 34px -16px rgba(0,0,0,.6);--on-alert:#2a0710;--r-pass:#5fd39e;--r-unk:#e8c066;--r-fail:#ff7d92`;
   return `
 @font-face{font-family:"Bricolage Grotesque";src:url("${base}/_ui/bricolage.woff2") format("woff2");font-weight:200 800;font-display:swap}
 :root{${lines.light};--display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,sans-serif;--paper:#f5f6fb;--line:#e1e3ef;--board:#15123d;--board-2:#2b1d6e;--board-ink:#f4f3ff;--board-muted:#b6b2e6;--on-route:#ffffff;--glass:rgba(255,255,255,.78);--glass-line:rgba(255,255,255,.9);--g1:rgba(110,86,255,.38);--g2:rgba(0,190,255,.30);--g3:rgba(255,92,170,.26);--g4:rgba(255,190,60,.22);--lift:0 1px 2px rgba(20,21,43,.04),0 10px 30px -14px rgba(60,50,160,.22)}
@@ -514,6 +576,7 @@ a.tile,a.tile:hover{text-decoration:none;color:var(--ink)}
 const assetDir = fileURLToPath(new URL('../assets/', import.meta.url));
 /** Static files a shell references, served by the host app under `${base}/_ui/`. */
 export function uiAsset(name: string): { body: Uint8Array; type: string } | undefined {
+  if (name === 'app.js') return { body: readFileSync(`${assetDir}app.js`), type: 'text/javascript; charset=utf-8' };
   if (!/^(atkinson-(400|700)|bricolage)\.woff2$/.test(name)) return undefined;
   return { body: readFileSync(`${assetDir}${name}`), type: 'font/woff2' };
 }
@@ -574,7 +637,8 @@ const head = (o: ShellOpts) => `<!doctype html><html lang="${esc(o.lang ?? 'en')
 
 export function appShell(o: ShellOpts): string {
   const nav = (o.nav ?? []).map((n) => `<a href="${esc(n.href)}"${n.current ? ' aria-current="page"' : ''}>${n.icon ? icon(n.icon, 20) : ''}<span>${esc(n.label)}</span></a>`).join('');
-  return `${head(o)}<body><a class="skip" href="#main">Skip to content</a>${o.surface ? zbar(o.surface) : ''}<header class="top"><div class="top-in"><a class="brand" href="${esc(o.brandHref ?? '/')}"><span class="brand-mark">${icon('route', 18)}</span>${esc(o.brand ?? 'App')}</a>${nav ? `<nav class="tabs" aria-label="Main">${nav}</nav>` : ''}</div></header><main id="main" class="app">${o.wide ? o.body : `<div class="page">${o.body}</div>`}</main></body></html>`;
+  const enhanced = { ...o, head: `${o.head ?? ''}<script src="${esc(o.base ?? '')}/_ui/app.js" defer></script>` };
+  return `${head(enhanced)}<body><a class="skip" href="#main">Skip to content</a>${o.surface ? zbar(o.surface) : ''}<header class="top"><div class="top-in"><a class="brand" href="${esc(o.brandHref ?? '/')}"><span class="brand-mark">${icon('route', 18)}</span>${esc(o.brand ?? 'App')}</a>${nav ? `<nav class="tabs" aria-label="Main">${nav}</nav>` : ''}</div></header><main id="main" class="app">${o.wide ? o.body : `<div class="page">${o.body}</div>`}</main></body></html>`;
 }
 
 /** A page that lays itself out entirely (a product or landing page): the design system, a skip link, and the body. */
@@ -596,13 +660,32 @@ export interface Action {
   post?: { url: string; fields: Record<string, string> };
   variant?: 'primary' | 'quiet' | 'call' | 'danger';
   icon?: string;
+  /** A switch: a single control that is on or off, announced as a switch with its state. */
+  toggle?: { on: boolean; name: string };
 }
 
 export function button(a: Action): string {
+  if (a.toggle) {
+    const t = a.toggle;
+    const sw = `<button class="sw" role="switch" aria-checked="${t.on}" aria-label="${esc(t.name)}"><span class="sw-track" aria-hidden="true"><span class="sw-thumb"></span></span><span class="sw-text" aria-hidden="true">${t.on ? 'On' : 'Off'}</span></button>`;
+    return a.post ? `<form class="inline" method="post" action="${esc(a.post.url)}">${Object.entries(a.post.fields).map(([k, v]) => `<input type="hidden" name="${esc(k)}" value="${esc(v)}">`).join('')}${sw}</form>` : sw;
+  }
   const cls = `btn${a.variant && a.variant !== 'primary' ? ` ${a.variant}` : ''}`;
-  const inner = `${a.icon ? icon(a.icon, 18) : ''}${esc(a.label)}`;
+  const inner = `${a.icon ? icon(a.icon, 18) : ''}<span>${esc(a.label)}</span>`;
   if (a.post) return `<form class="inline" method="post" action="${esc(a.post.url)}">${Object.entries(a.post.fields).map(([k, v]) => `<input type="hidden" name="${esc(k)}" value="${esc(v)}">`).join('')}<button class="${cls}">${inner}</button></form>`;
   return `<a class="${cls}" href="${esc(a.href ?? '#')}">${inner}</a>`;
+}
+
+/** One choice of several, shown as a segmented control: each option a button, the current one pressed. */
+export function segmented(label: string, options: { label: string; post: { url: string; fields: Record<string, string> }; current: boolean }[]): string {
+  return `<div class="seg" role="group" aria-label="${esc(label)}">${options
+    .map((o) => `<form class="inline" method="post" action="${esc(o.post.url)}">${Object.entries(o.post.fields).map(([k, v]) => `<input type="hidden" name="${esc(k)}" value="${esc(v)}">`).join('')}<button class="seg-b" aria-pressed="${o.current}"${o.current ? ' aria-current="true"' : ''}>${esc(o.label)}</button></form>`)
+    .join('')}</div>`;
+}
+
+/** A read-only value with a button that copies it; without scripts the field is selectable. */
+export function copyField(id: string, label: string, value: string): string {
+  return `<div class="copy"><label for="${esc(id)}" class="visually-hidden">${esc(label)}</label><input id="${esc(id)}" readonly value="${esc(value)}"><button type="button" class="btn quiet" data-copy="${esc(id)}">${icon('doc', 18)}<span class="copy-label">Copy link</span></button></div>`;
 }
 
 export const actions = (list: Action[]): string => (list.length ? `<div class="acts">${list.map(button).join('')}</div>` : '');
@@ -701,6 +784,11 @@ export interface Field {
   /** For a choice: 'select' draws a menu, 'checks' a group of checkboxes (value is a comma list of the checked ones). */
   options?: { value: string; label: string }[];
   required?: boolean;
+  min?: number;
+  max?: number;
+  step?: string;
+  inputmode?: 'numeric' | 'decimal' | 'text';
+  autocomplete?: string;
 }
 
 export function form(o: { url: string; fields: Field[]; submit: string; hidden?: Record<string, string> }): string {
@@ -714,8 +802,9 @@ export function form(o: { url: string; fields: Field[]; submit: string; hidden?:
       if (f.type === 'select' && f.options) {
         return `<label for="${id}">${esc(f.label)}</label><select id="${id}" name="${esc(f.name)}"${f.required ? ' required' : ''}>${f.options.map((o) => `<option value="${esc(o.value)}"${o.value === f.value ? ' selected' : ''}>${esc(o.label)}</option>`).join('')}</select>${f.hint ? `<div class="hint" id="${id}-hint">${esc(f.hint)}</div>` : ''}`;
       }
-      const ctl = f.multiline ? `<textarea id="${id}" name="${esc(f.name)}" rows="${f.multiline}"${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''}>${esc(f.value ?? '')}</textarea>` : `<input id="${id}" name="${esc(f.name)}" type="${esc(f.type ?? 'text')}" value="${esc(f.value ?? '')}"${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''}>`;
-      return `<label for="${id}">${esc(f.label)}</label>${ctl}${f.hint ? `<div class="hint">${esc(f.hint)}</div>` : ''}`;
+      const extra = `${f.required ? ' required' : ''}${f.min !== undefined ? ` min="${f.min}"` : ''}${f.max !== undefined ? ` max="${f.max}"` : ''}${f.step ? ` step="${esc(f.step)}"` : ''}${f.inputmode ? ` inputmode="${f.inputmode}"` : f.type === 'number' ? ' inputmode="decimal"' : ''}${f.autocomplete ? ` autocomplete="${esc(f.autocomplete)}"` : ''}${f.hint ? ` aria-describedby="${id}-hint"` : ''}`;
+      const ctl = f.multiline ? `<textarea id="${id}" name="${esc(f.name)}" rows="${f.multiline}"${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''}${extra}>${esc(f.value ?? '')}</textarea>` : `<input id="${id}" name="${esc(f.name)}" type="${esc(f.type ?? 'text')}" value="${esc(f.value ?? '')}"${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''}${extra}>`;
+      return `<div class="field"><label for="${id}">${esc(f.label)}${f.required ? '' : ''}</label>${ctl}${f.hint ? `<div class="hint" id="${id}-hint">${esc(f.hint)}</div>` : ''}</div>`;
     })
     .join('')}<div class="acts"><button class="btn">${esc(o.submit)}</button></div></form>`;
 }

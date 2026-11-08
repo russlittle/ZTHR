@@ -153,9 +153,17 @@ root.all(`${mount === '/' ? '' : mount}/*`, async (c) => {
   let id = getCookie(c, 'adv_demo');
   const fresh = !id || !/^[a-f0-9]{32}$/.test(id) || !sandboxes.has(id);
   if (fresh && !sandboxStarts.take(clientOf(c))) return c.text('Too many new demonstration sessions from this address. Please try again in an hour.', 429);
+  // A visitor whose copy is gone (it sat idle for two hours, or the server restarted) gets a fresh copy, told so,
+  // rather than buttons that point at things the new copy never had.
+  const lost = !!id && /^[a-f0-9]{32}$/.test(id) && !sandboxes.has(id);
   if (!id || !/^[a-f0-9]{32}$/.test(id)) {
     id = randomBytes(16).toString('hex');
     setCookie(c, 'adv_demo', id, { path: mount, httpOnly: true, sameSite: 'Lax', secure: production, maxAge: 7200 });
+  }
+  const student = new URL(c.req.url).pathname.slice(base.length).match(/^\/s\/([^/]+)/)?.[1];
+  if (lost && student) {
+    appFor(id);
+    return c.redirect(`${base}/s/${student}?reset=1`, 303);
   }
   const res = await appFor(id).fetch(rewrite(c.req.raw));
   const out = new Response(res.body, res);

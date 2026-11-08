@@ -122,6 +122,8 @@ steps:
         ADVOCATE_TODAY=2026-11-02 ADVOCATE_CLOCK=07:30 PORT=8787 ADVOCATE_BASE=/studentadvocate ADVOCATE_RATE_PER_MIN=100000 ADVOCATE_SANDBOX_STARTS_PER_HOUR=100000 npx tsx apps/advocate/src/server/main.ts > server.log 2>&1 &
         for i in $$(seq 1 30); do curl -sf localhost:8787/studentadvocate/ > /dev/null && break; sleep 1; done
         npx tsx tools/ui/walk.ts http://localhost:8787/studentadvocate evidence-out/ui || { cat server.log; exit 1; }
+        # Every link and button, clicked, then every one on the screen it leads to, down to depth 8, for five students.
+        npx tsx tools/ui/deep.ts http://localhost:8787/studentadvocate evidence-out/deep || { cat server.log; exit 1; }
         # Many visitors at once against the same server: fails on any 500 or a 95th percentile over budget.
         npx tsx tools/load.ts http://localhost:8787/studentadvocate 25 30 || { cat server.log; exit 1; }
 
@@ -206,12 +208,18 @@ steps:
     args:
       - -c
       - |
-        if [ "$$BRANCH" != "$$DEPLOY" ]; then echo "Not deploying $$BRANCH."; exit 0; fi
+        # The reference branch always deploys, whatever a trigger's substitutions say; any other branch stops here, and says so.
+        echo "branch '$$BRANCH', deploy branch '$$DEPLOY'"
+        if [ "$$BRANCH" != "reference-implementation" ] && [ "$$BRANCH" != "$$DEPLOY" ]; then echo "Not deploying $$BRANCH."; exit 0; fi
+        # Each visitor's demo copy lives in one server's memory, so the demo runs on one server, and a visitor's
+        # requests stay with it: a second server would not have their copy and the session would reset mid-way.
         gcloud run deploy advocate --project "$$PROJECT" --region us-central1 \
           --image "us-central1-docker.pkg.dev/$$PROJECT/zthr/advocate:$$COMMIT" \
           --service-account "zthr-advocate@$$PROJECT.iam.gserviceaccount.com" \
-          --allow-unauthenticated --memory 1Gi --cpu 1 --min-instances 0 --max-instances 2 --concurrency 40 \
+          --allow-unauthenticated --memory 1Gi --cpu 1 --min-instances 1 --max-instances 1 --concurrency 80 --session-affinity \
           --labels "commit=$${COMMIT:0:12}" --set-env-vars "BUILD_COMMIT=$$COMMIT" --quiet
+        # A revision pinned by hand would keep traffic away from the new one; the commit that passed takes all of it.
+        gcloud run services update-traffic advocate --project "$$PROJECT" --region us-central1 --to-latest --quiet
 
   - id: verify-serving
     # Done means serving (Pattern 23): what answers on the public URL is the commit that passed, or the build fails.
@@ -222,7 +230,7 @@ steps:
     args:
       - -c
       - |
-        if [ "$$BRANCH" != "$$DEPLOY" ]; then echo "Not deploying $$BRANCH."; exit 0; fi
+        if [ "$$BRANCH" != "reference-implementation" ] && [ "$$BRANCH" != "$$DEPLOY" ]; then echo "Not deploying $$BRANCH."; exit 0; fi
         url=$$(gcloud run services describe advocate --project "$$PROJECT" --region us-central1 --format 'value(status.url)')
         for i in 1 2 3 4 5 6; do
           got=$$(curl -fsS "$$url/studentadvocate/version" | sed -n 's/.*"commit":"\([0-9a-f]*\)".*/\1/p')

@@ -261,6 +261,7 @@ ${unconfirmed ? ui.note({ kind: 'plan', from: 'Class planner', icon: 'book', bod
         sid,
         `Today, ${s.chosenName}`,
         `${flash(sid, c.req.query('m'))}
+${c.req.query('reset') ? ui.note({ id: 'latest', title: 'This demo started over', body: 'Your demo copy had been idle, or the server restarted, so it is back to the start. Everything works the same; nothing you did was sent anywhere.', actions: [] }) : ''}
 <div class="hero"><h1>${ui.esc(greeting)}</h1><p class="date">${ui.esc(friendly(date))}</p>${glance}</div>
 <div class="today"><div class="t-day">${day}</div><div class="t-feed">${feed}</div><div class="t-side">
 ${ui.section('Coming up', ui.rows(comingUp.map((d) => ({ title: d.title, sub: `${d.course ? `${d.course}, ` : ''}${relDay(date, d.due)}`, actions: [toAction(sid, { label: 'Done', action: `mark-done:${d.id}` }, 1)] })), 'Nothing due in the next week.'), `<a href="${u(sid, '/week')}">See the week</a>`)}
@@ -431,7 +432,7 @@ ${ui.section('Update what I know', ui.form({ url: u(sid, '/household'), submit: 
 <div class="hello"><h1>School</h1><p class="date">${ui.esc([v.college.name, v.term?.term, current.length ? `${current.reduce((n, x) => n + x.credits, 0)} credits this term` : s.enrollment.creditHours ? `${s.enrollment.creditHours} credits` : ''].filter(Boolean).join(', '))}</p></div>
 ${ui.section('Keeping your aid and your standing', `${gradeReadings(v)}${standingNote}${noteFor(sid, aid)}`)}
 ${ui.section('Your classes', classRows.length ? ui.rows(classRows) : ui.rows([], 'No grades yet. Connect your class site or add a score below.'))}
-${v.books.length ? ui.section('Add a score', ui.form({ url: u(sid, '/score'), submit: 'Add the score', fields: [{ name: 'course', label: 'Class', type: 'select', options: v.books.map((b) => ({ value: b.course, label: b.course })), required: true }, { name: 'title', label: 'What it was for', placeholder: 'Exam 2, Quiz 4, Lab 3' }, { name: 'score', label: 'Your score', type: 'number' }, { name: 'outOf', label: 'Out of', type: 'number', value: '100' }] })) : ''}
+${v.books.length ? ui.section('Add a score', ui.form({ url: u(sid, '/score'), submit: 'Add the score', fields: [{ name: 'course', label: 'Class', type: 'select', options: v.books.map((b) => ({ value: b.course, label: b.course })), required: true }, { name: 'title', label: 'What it was for', placeholder: 'Exam 2, Quiz 4, Lab 3', required: true }, { name: 'score', label: 'Your score', type: 'number', min: 0, step: 'any', required: true }, { name: 'outOf', label: 'Out of', type: 'number', value: '100', min: 1, step: 'any', required: true, hint: 'The points it was worth.' }] })) : ''}
 ${v.degree ? ui.section('Your degree', ui.readings([{ label: v.degree.program.name, value: v.degree.earned, of: v.degree.program.credits, note: `${v.degree.inProgress} credits in progress${v.degree.finish ? `; at your pace you finish in ${v.degree.finish}` : ''}`, href: u(sid, '/school/degree') }, ...(v.degree.ot36 ? [{ label: 'Ohio Transfer 36', value: v.degree.ot36.done, of: v.degree.ot36.need, floor: v.degree.ot36.need, note: 'These core credits transfer to any Ohio public university', words: { pass: 'Complete', fail: 'In progress' }, href: u(sid, '/school/degree') } as ui.Reading] : [])]), `<a href="${u(sid, '/school/degree')}">Every requirement</a>`) : ''}
 ${ui.section('Choices and help', ui.rows([
   { title: 'Thinking about dropping a class?', sub: 'Each choice side by side: refund, transcript, aid progress and any aid you would owe back.', href: u(sid, '/school/drop') },
@@ -508,6 +509,28 @@ ${ui.readings(d.areas.map((x) => ({ label: x.area, value: x.done + x.inProgress,
     );
   });
 
+  app.get('/s/:id/delete', (c) => {
+    const sid = c.req.param('id');
+    const s = a.student(sid);
+    const kept = a.store.exportStudent(sid);
+    const n = (k: string) => (kept[k] ?? []).length;
+    const items = [
+      [n('deadlines'), 'date', 'dates'], [n('classes'), 'class time', 'class times'], [n('shifts'), 'work shift', 'work shifts'], [n('messages'), 'message', 'messages'], [n('drafts'), 'draft', 'drafts'], [n('gradebooks'), 'class grade book', 'class grade books'], [n('shares'), 'shared link, which stops working', 'shared links, which stop working'],
+    ].filter(([k]) => Number(k) > 0).map(([k, one, many]) => `${k} ${k === 1 ? one : many}`);
+    return c.html(
+      page(
+        sid,
+        'Delete everything',
+        `<div class="hello"><h1>Delete everything?</h1><p class="date">${ui.esc(s.chosenName)}, this deletes your Advocate account and everything in it. It cannot be undone.</p></div>
+<div class="panel" style="padding:18px"><p><b>What goes:</b> ${ui.esc(items.length ? items.join(', ') : 'your profile and settings')}, your sealed facts and documents, and your settings. Your record of consent keeps only that the account was deleted.</p>
+<p>Want a copy first? Download it, then come back.</p>
+${ui.actions([{ label: 'Download everything first', href: u(sid, '/export'), variant: 'quiet' }, { label: 'Keep my account', href: u(sid, '/you'), variant: 'quiet' }])}</div>
+<div class="acts" style="margin-top:18px">${ui.button({ label: 'Yes, delete everything', post: { url: u(sid, '/action'), fields: { action: 'delete-account' } }, variant: 'danger' }).replace('class="btn danger"', 'class="btn danger solid"')}</div>`,
+        'you',
+      ),
+    );
+  });
+
   // ------------------------------------------------------------ sharing with an advisor
 
   const SCOPE_OPTIONS = Object.entries(acad.SHARE_SCOPES).map(([value, label]) => ({ value, label }));
@@ -519,8 +542,8 @@ ${ui.readings(d.areas.map((x) => ({ label: x.area, value: x.done + x.inProgress,
       sid,
       'Share with an advisor',
       `${flashId ? flash(sid, flashId) : ''}<div class="hello"><h1>Share with an advisor</h1><p class="date">A read-only link. You choose what it shows and how long it works, and you can turn it off any time.</p></div>
-${fresh ? `<section class="note k-one" aria-labelledby="new-link" role="status"><h2 id="new-link">Your link is ready</h2><div class="body">Send this to ${ui.esc(fresh.share.label)}. It is shown only now; I keep only a fingerprint of it.</div><p><label for="link-text" class="visually-hidden">The link</label><input id="link-text" readonly value="${ui.esc(link)}"></p></section>` : ''}
-${ui.section('Make a link', ui.form({ url: u(sid, '/advisor'), submit: 'Make the link', fields: [{ name: 'label', label: 'Who is it for?', placeholder: 'My advisor, Ms. Rivera', value: 'My advisor' }, { name: 'scopes', label: 'What it shows', type: 'checks', options: SCOPE_OPTIONS, value: 'school,schedule' }, { name: 'days', label: 'How long it works', type: 'select', value: '7', options: acad.SHARE_DAYS.map((d) => ({ value: String(d), label: d === 1 ? '1 day' : `${d} days` })) }] }))}
+${fresh ? `<section class="note k-one" aria-labelledby="new-link" role="status"><h2 id="new-link">Your link is ready</h2><div class="body">Send this to ${ui.esc(fresh.share.label.replace(/^My\b/, 'your'))}. It is shown only now; I keep only a fingerprint of it.</div>${ui.copyField('link-text', 'The link', link)}</section>` : ''}
+${ui.section('Make a link', ui.form({ url: u(sid, '/advisor'), submit: 'Make the link', fields: [{ name: 'label', label: 'Who is it for?', placeholder: 'My advisor, Ms. Rivera', value: 'My advisor', required: true }, { name: 'scopes', label: 'What it shows', type: 'checks', options: SCOPE_OPTIONS, value: 'school,schedule' }, { name: 'days', label: 'How long it works', type: 'select', value: '7', options: acad.SHARE_DAYS.map((d) => ({ value: String(d), label: d === 1 ? '1 day' : `${d} days` })) }] }))}
 ${ui.section('Your links', ui.rows(list.map((x) => {
   const live = acad.shareLive(x, a.clock());
   return { title: x.label, sub: `${x.scopes.map((k) => acad.SHARE_SCOPES[k]).join('; ')}. ${x.revokedAt ? 'Turned off.' : live ? `Works ${acad.daysLeft(x, today)} more day${acad.daysLeft(x, today) === 1 ? '' : 's'}.` : 'Expired.'} Opened ${x.views} time${x.views === 1 ? '' : 's'}.`, chip: { text: live ? 'On' : 'Off', tone: live ? ('ok' as const) : undefined }, actions: live ? [{ label: `Turn off the link for ${x.label}`, post: { url: u(sid, '/advisor/off'), fields: { id: x.id } }, variant: 'quiet' as const }] : [] };
@@ -701,11 +724,15 @@ ${ui.section('Your things', ui.rows([
   { title: 'Ask your Advocate', sub: 'Anything about school, money or life', href: u(sid, '/ask') },
   { title: 'Explain a letter', sub: 'What it means, what to do, by when', href: u(sid, '/letter') },
 ]))}
-${ui.section('How I talk with you', `<div class="panel" style="padding:14px 18px"><p>Right now: <b>${depthLabel[s.dial.depth]}</b>. Quiet from ${ui.esc(time12(s.dial.quietStart))} to ${ui.esc(time12(s.dial.quietEnd))}.</p>${ui.actions((['brief', 'standard', 'walk-me-through'] as const).map((d) => toAction(sid, { label: depthLabel[d], action: `dial:${d}` }, d === s.dial.depth ? 0 : 1)))}</div>`)}
-${ui.section('What I can see', ui.rows((['calendar', 'forwarding', 'learning-feed', 'location'] as const).map((src) => ({ title: { calendar: 'Your calendar', forwarding: 'Emails you forward', 'learning-feed': 'Your class site', location: 'Your location' }[src], chip: a.hasSource(sid, src) ? { text: 'On', tone: 'ok' as const } : { text: 'Off' }, actions: [toAction(sid, a.hasSource(sid, src) ? { label: 'Turn off', action: `source-off:${src}` } : { label: 'Turn on', action: `source-on:${src}` }, 1)] }))))}
-${ui.section('Quick questions', ui.rows([{ title: ps.off ? 'Off' : `On, at most every ${ps.everyDays} days`, sub: 'One optional question now and then, so I can offer help before it is needed.', actions: [toAction(sid, ps.off ? { label: 'Turn on', action: 'pulses-on' } : { label: 'Turn off', action: 'pulses-off' }, 1)] }]))}
+${ui.section('How I talk with you', `<div class="panel" style="padding:16px 18px"><p id="depth-h">How much I say: <b>${depthLabel[s.dial.depth]}</b>. Quiet from ${ui.esc(time12(s.dial.quietStart))} to ${ui.esc(time12(s.dial.quietEnd))}.</p>${ui.segmented('How much I say', (['brief', 'standard', 'walk-me-through'] as const).map((d) => ({ label: depthLabel[d], post: { url: u(sid, '/action'), fields: { action: `dial:${d}` } }, current: d === s.dial.depth })))}</div>`)}
+${ui.section('What I can see', ui.rows((['calendar', 'forwarding', 'learning-feed', 'location'] as const).map((src) => {
+  const title = { calendar: 'Your calendar', forwarding: 'Emails you forward', 'learning-feed': 'Your class site', location: 'Your location' }[src];
+  const on = a.hasSource(sid, src);
+  return { title, sub: { calendar: 'Classes and appointments, so I plan around them.', forwarding: 'Only what you forward to me.', 'learning-feed': 'Assignments and due dates from your class site.', location: 'Used in the moment for buses and places, never kept.' }[src], actions: [{ label: title, post: { url: u(sid, '/action'), fields: { action: on ? `source-off:${src}` : `source-on:${src}` } }, toggle: { on, name: title } }] };
+})))}
+${ui.section('Quick questions', ui.rows([{ title: 'Quick questions', sub: ps.off ? 'Off. One optional question now and then, so I can offer help before it is needed.' : `On, at most every ${ps.everyDays} days. One optional question now and then, so I can offer help before it is needed.`, actions: [{ label: 'Quick questions', post: { url: u(sid, '/action'), fields: { action: ps.off ? 'pulses-on' : 'pulses-off' } }, toggle: { on: !ps.off, name: 'Quick questions' } }] }]))}
 ${ui.section('Your record of consent', ui.rows(ledger.map((e) => ({ title: `${e.kind} ${e.subject}`, sub: e.at.slice(0, 16).replace('T', ' ') })), 'Nothing yet.'))}
-${ui.section('Your data', `<div class="panel" style="padding:14px 18px"><p>Everything I keep is yours. Download it, connect it to other tools, or delete it.</p>${ui.actions([{ label: 'Download everything', href: u(sid, '/export'), variant: 'quiet' }, { label: 'Calendar feed', href: u(sid, '/calendar.ics'), variant: 'quiet' }, toAction(sid, { label: 'Share the Advocate', action: 'share' }, 1), { label: 'Delete everything', post: { url: u(sid, '/action'), fields: { action: 'delete-account' } }, variant: 'danger' }])}</div>`)}
+${ui.section('Your data', `<div class="panel" style="padding:14px 18px"><p>Everything I keep is yours. Download it, connect it to other tools, or delete it.</p>${ui.actions([{ label: 'Download everything', href: u(sid, '/export'), variant: 'quiet' }, { label: 'Calendar feed', href: u(sid, '/calendar.ics'), variant: 'quiet' }, toAction(sid, { label: 'Share the Advocate', action: 'share' }, 1), { label: 'Delete everything', href: u(sid, '/delete'), variant: 'danger' }])}</div>`)}
 <p class="small muted">Built to meet WCAG 2.2 AA and to work with screen readers. <a href="https://zthr.ai/reference/factory/accessibility">Accessibility statement</a>.</p>`,
         'you',
       ),

@@ -16,7 +16,7 @@ factory that built it means for anyone who builds software.
 | **Elapsed time** | Days, from an empty repository to a deployed application with five phases of features, five synthetic campus services, fifteen reusable blocks and full documentation. |
 | **Direction** | About 125 prompts from the author, from the idea to the deployed application. |
 | **Size** | About 22,000 lines of TypeScript and 4,200 lines of documentation, every data structure drawn as an ERD. |
-| **Evidence** | 1,191 tests; 23 gates, each proven able to fail; 41 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student; 433 browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks. |
+| **Evidence** | 1,192 tests; 23 gates, each proven able to fail; 41 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student, and 886 controls clicked in a real browser down to seven screens deep; 454 browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks. |
 | **Cost to run** | No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The app scales to zero when no one is using it. |
 | **Open** | Every test, gate, walk, decision and line of source is public. |
 

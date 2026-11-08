@@ -197,6 +197,68 @@ a.reading:hover .l{color:var(--action)}
 .choice dd{margin:0;font-size:15px}
 .visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .checks{border:0;padding:0;margin:0 0 14px}.checks legend{font-weight:700;margin-bottom:6px}.check{display:flex;align-items:center;gap:10px;font-weight:400;min-height:44px}.check input{width:24px;height:24px;flex:none}
+
+/* ---- controls: one look and behaviour for every button, field and choice ---- */
+a{text-underline-offset:3px;text-decoration-thickness:1.5px}
+.btn{position:relative;justify-content:center;text-align:center;line-height:1.2;-webkit-tap-highlight-color:transparent;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.btn .ic{flex:none}
+.btn[disabled],.btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed;transform:none}
+.btn.busy{pointer-events:none}
+.btn.busy>span{opacity:0}
+.btn.busy::after{content:"";position:absolute;inset:0;margin:auto;width:18px;height:18px;border-radius:50%;border:2.5px solid currentColor;border-right-color:transparent;animation:zspin .7s linear infinite}
+@keyframes zspin{to{transform:rotate(360deg)}}
+.btn.danger:hover{background:color-mix(in srgb,var(--alert) 10%,transparent)}
+.btn.danger.solid{background:var(--alert);border-color:var(--alert);color:var(--on-alert,#fff)}
+.field{margin:0 0 14px}
+.field label{margin:0 0 6px}
+input,textarea,select{min-height:48px;transition:border-color .15s,box-shadow .15s}
+input:hover,textarea:hover,select:hover{border-color:color-mix(in srgb,var(--ink) 35%,var(--line))}
+input:user-invalid,textarea:user-invalid,select:user-invalid{border-color:var(--alert)}
+input[readonly]{background:color-mix(in srgb,var(--ink) 4%,var(--surface))}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+select{-webkit-appearance:none;appearance:none;padding-right:44px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23767993' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+input[type=checkbox]{accent-color:var(--l-route,var(--action))}
+.check{padding:4px 0;cursor:pointer}
+.check:hover{color:var(--l-route,var(--action))}
+/* disclosure */
+details.why summary{list-style:none;display:inline-flex;align-items:center;gap:8px;min-height:32px;font-weight:600;border-radius:8px;width:max-content;max-width:100%}
+details.why summary::-webkit-details-marker{display:none}
+details.why summary::before{content:"";width:7px;height:7px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(-45deg);transition:transform .15s;flex:none}
+details.why[open] summary::before{transform:rotate(45deg)}
+details.why summary:hover{color:var(--ink)}
+details.why p{margin:6px 0 0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--ink) 5%,transparent);color:var(--ink)}
+/* switch */
+.sw{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:4px 6px;border:0;background:none;cursor:pointer;font:inherit;font-weight:700;color:var(--ink);border-radius:999px;-webkit-tap-highlight-color:transparent}
+.sw-track{width:52px;height:32px;border-radius:999px;background:color-mix(in srgb,var(--ink) 10%,var(--surface));box-shadow:inset 0 0 0 2px var(--muted);position:relative;flex:none;transition:background .2s,box-shadow .2s}
+.sw-thumb{position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.sw[aria-checked="true"] .sw-track{background:var(--l-route,var(--action));box-shadow:none}
+.sw[aria-checked="true"] .sw-thumb{transform:translateX(20px);background:#fff}
+.sw-text{font-size:14px;color:var(--muted);min-width:2em;text-align:left}
+.sw:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sw.busy .sw-thumb{opacity:.6}
+/* segmented choice */
+.seg{display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:16px;background:color-mix(in srgb,var(--ink) 6%,var(--surface));border:1px solid var(--line);max-width:100%}
+.seg form.inline{display:flex}.seg-b{width:100%}
+@media (max-width:640px){.seg{display:grid;width:100%}.seg-b{padding:8px 6px;font-size:14px;line-height:1.2}}
+.seg-b{font:inherit;font-weight:700;font-size:15px;min-height:44px;padding:8px 18px;border-radius:12px;border:0;background:transparent;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.seg-b:hover{color:var(--ink)}
+.seg-b[aria-pressed="true"]{background:var(--surface);color:var(--l-route,var(--action));box-shadow:0 1px 3px color-mix(in srgb,var(--ink) 18%,transparent),0 0 0 1px var(--line)}
+.seg-b:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* copy */
+.copy{display:flex;gap:8px;align-items:stretch;margin-top:10px}
+.copy input{flex:1;min-width:0}
+.copy .btn.copied{border-color:var(--r-pass,#1d7a55);color:var(--r-pass,#1d7a55)}
+/* whole rows are the link, with their buttons on top */
+.rows li{position:relative}
+.rows .grow>a::after{content:"";position:absolute;inset:0;border-radius:12px}
+.rows li .btn,.rows li form,.rows li .sw{position:relative;z-index:1}
+.rows li:has(.sw){flex-wrap:nowrap;align-items:center}
+.rows li:has(>.grow>a):hover{background:color-mix(in srgb,var(--l-route,var(--action)) 5%,transparent);border-radius:12px}
+/* on a phone, a note's buttons line up full width, the first one first */
+@media (max-width:640px){.note .acts{display:grid;grid-template-columns:1fr}.note .acts form.inline{display:block}.note .acts .btn{width:100%}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 @font-face{font-family:"Bricolage Grotesque";src:url("../fonts/bricolage.woff2") format("woff2");font-weight:200 800;font-display:swap}

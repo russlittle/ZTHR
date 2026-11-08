@@ -177,7 +177,7 @@ for (const scheme of ['light', 'dark'] as const) {
 }
 
 // ---- part two: every screen, three students, two widths, two themes
-const SCREENS = ['', '/money', '/school', '/school/drop', '/school/degree', '/advisor', '/help', '/you', '/week', '/dates', '/shifts', '/syllabus', '/drafts', '/ask', '/letter', '/meals'];
+const SCREENS = ['', '/money', '/school', '/school/drop', '/school/degree', '/advisor', '/help', '/you', '/delete', '/week', '/dates', '/shifts', '/syllabus', '/drafts', '/ask', '/letter', '/meals'];
 for (const sid of ['maria', 'sam', 'ana', 'destiny', 'tyler']) {
   for (const [vp, size] of Object.entries(VIEWPORTS)) {
     for (const scheme of ['light', 'dark'] as const) {

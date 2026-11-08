@@ -38,6 +38,22 @@ flowchart TD
 | 3.1.1 Language of page | The page states its language; Spanish students' pages say Spanish |
 | 2.4.1 Bypass blocks | A skip link to the main region on every page |
 
+## Every control, to depth
+
+The walk sees every screen; the deep click-through (`tools/ui/deep.ts`) presses every control. For five students it opens Today, clicks every link and button, then every one on each screen those lead to, down to eight levels. A form that asks for a choice is tried with a different choice; a form that needs an answer gets a valid one, so the submit itself is tested. Controls that leave the app or end the account (calls, texts, sign out, delete everything) are checked separately and never pressed in the crawl.
+
+```mermaid
+flowchart LR
+  today[Today, per student] --> find[Find every link and button in main and the tab bar]
+  find --> click[Click it once, on the screen where it was found]
+  click --> check{Loaded, one heading, no artifacts,<br/>no browser errors, something changed,<br/>no 'not available'?}
+  check -- yes --> next[Queue the new screen, one level deeper]
+  check -- no --> fail[Build fails, naming the path of clicks]
+  next --> find
+```
+
+A control fails if it answers with an error, lands on a screen without exactly one level-1 heading, shows a programming artifact, logs a browser error, does nothing, or answers "not available". Any failure stops the build.
+
 ## Verified by
 
 <!-- verified-by:start -->
