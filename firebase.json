@@ -35,15 +35,36 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "frame-ancestors 'self'"
+            "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com 'sha256-+9LedYjVI1JDjmF6yQqhm8VwG4+6Qgrfb68H4vNQyjw=' 'sha256-UQ9J/sqhA3sPaHFRGGWPrnqAt8lMfBuInkGcggKDJ2c=' 'sha256-canCCEijj4sgfhlvJj2a+xYBaslX14b6ywYlykNE2R0='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+          },
+          {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=31536000; includeSubDomains"
+          },
+          {
+            "key": "Permissions-Policy",
+            "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+          },
+          {
+            "key": "Cross-Origin-Opener-Policy",
+            "value": "same-origin"
+          }
+        ]
+      },
+      {
+        "source": "/security.txt",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "text/plain; charset=utf-8"
           }
         ]
       }
     ],
     "rewrites": [
       {
-        "source": "**",
-        "destination": "/index.html"
+        "source": "/.well-known/security.txt",
+        "destination": "/security.txt"
       }
     ],
     "redirects": [

@@ -1,11 +1,12 @@
 """
 Follow every link on every page of zthr.ai as Firebase Hosting serves it: trailing slashes stripped, clean URLs,
-the forwarding rules in firebase.json, and the catch-all that sends anything not found to the home page. A link
-that would land on the home page by accident, loop, or forward to a path the app does not serve fails the deploy.
+and the forwarding rules in firebase.json. A link that finds no page (Firebase answers 404), loops, or forwards to a
+path the app does not serve fails the deploy. So does an inline script the content security policy would block,
+and a security.txt that is missing or within 30 days of expiring.
 
     python3 tools/linkcheck.py .
 """
-import json, os, re, sys
+import base64, datetime, hashlib, json, os, re, sys
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 
@@ -16,7 +17,7 @@ cfg = json.load(open(os.path.join(ROOT, 'firebase.json')))['hosting']
 APP_ROUTES = re.compile(r'^/studentadvocate(/(s/[a-z]+(/[a-z-]+)?|admin(/[a-z-]*)?|text|version|api/.*|_ui/.*)?)?/?$|^/twins(/.*)?$')
 
 def file_for(path):
-    """What Firebase serves for a clean path, or None (the catch-all: the home page)."""
+    """What Firebase serves for a clean path, or None (not found)."""
     p = path.rstrip('/') or '/'
     cands = [p] if os.path.splitext(p)[1] and not p.endswith('.html') else []
     cands += [p + '.html', p.rstrip('/') + '/index.html'] if p != '/' else ['/index.html']
@@ -74,12 +75,32 @@ for dp, _, fs in os.walk(PUB):
             if u.netloc != 'zthr.ai': continue
             checked += 1
             r = serve(u.path or '/')
-            if r[0] == 'home' and (u.path or '/') not in ('/', ''): problems.append((rel, h, 'lands on the home page (not found): ' + u.path))
+            if r[0] == 'home' and (u.path or '/') not in ('/', ''): problems.append((rel, h, 'not found (404): ' + u.path))
             elif r[0] == 'loop': problems.append((rel, h, 'redirect loop'))
             elif r[0] == 'external':
                 ep = urlparse(r[1]).path
                 if not APP_ROUTES.match(ep): problems.append((rel, h, 'forwarded to an app path the app does not serve: ' + ep))
-print(f'{pages} pages, {checked} links checked, {len(problems)} problems')
+# Every inline script must be allowed by hash in the content security policy, or browsers will refuse to run it.
+csp = next((h['value'] for blk in cfg.get('headers', []) for h in blk['headers'] if h['key'] == 'Content-Security-Policy'), '')
+scripts = 0
+for dp, _, fs in os.walk(PUB):
+    for fn in fs:
+        if not fn.endswith('.html'): continue
+        f = os.path.join(dp, fn)
+        for m in re.finditer(r'<script(?![^>]*\bsrc=)([^>]*)>(.*?)</script>', open(f, encoding='utf8').read(), re.S):
+            if 'json' in m.group(1): continue
+            scripts += 1
+            h = "'sha256-" + base64.b64encode(hashlib.sha256(m.group(2).encode()).digest()).decode() + "'"
+            if h not in csp: problems.append(('/' + os.path.relpath(f, PUB), h, 'inline script not allowed by the content security policy'))
+# security.txt (RFC 9116): present, served at /.well-known/security.txt, and not about to expire.
+st = os.path.join(PUB, 'security.txt')
+if not os.path.isfile(st) or not any(r.get('source') == '/.well-known/security.txt' for r in cfg.get('rewrites', [])):
+    problems.append(('/security.txt', '', 'missing, or not served at /.well-known/security.txt'))
+else:
+    exp = re.search(r'^Expires:\s*(\S+)', open(st).read(), re.M)
+    left = (datetime.datetime.fromisoformat(exp.group(1).replace('Z', '+00:00')) - datetime.datetime.now(datetime.timezone.utc)).days if exp else -1
+    if left < 30: problems.append(('/security.txt', '', f'expires in {left} days'))
+print(f'{pages} pages, {checked} links checked, {scripts} inline scripts allowed by hash, {len(problems)} problems')
 seen = set()
 for pg, h, why in problems:
     if (h, why) in seen: continue
