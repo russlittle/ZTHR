@@ -15,6 +15,8 @@ import { sources } from './sources.js';
 import { erd } from '@zthr/store';
 import { EvidenceStore } from '@zthr/evidence';
 import { NOT_AFFILIATED, productPage } from '../apps/advocate/src/server/product.js';
+import { createApp } from '../apps/advocate/src/server/app.js';
+import { Advocate } from '../apps/advocate/src/agents/advocate.js';
 
 /**
  * Builds the public site the factory publishes next to the app:
@@ -63,6 +65,10 @@ function copyAssets(): void {
   // Diagrams are drawn by a copy of Mermaid served from this site, so readers' browsers fetch nothing elsewhere.
   mkdirSync(join(SITE, 'assets'), { recursive: true });
   cpSync(join(ROOT, 'node_modules/mermaid/dist/mermaid.min.js'), join(SITE, 'assets', 'mermaid.min.js'));
+  // The paths the app serves, read from its own router, so every link into the app from the published site can be
+  // checked against the real route table rather than a copy of it. Middleware wildcards are not pages.
+  const appRoutes = [...new Set(createApp(new Advocate(), { base: '/studentadvocate' }).routes.filter((r) => ['GET', 'ALL'].includes(r.method) && !r.path.endsWith('*')).map((r) => r.path))].sort();
+  writeFileSync(join(SITE, 'app-routes.json'), `${JSON.stringify({ base: '/studentadvocate', routes: appRoutes, prefixes: ['/twins'] }, null, 1)}\n`);
   if (RELATIVE) {
     mkdirSync(join(SITE, 'fonts'), { recursive: true });
     for (const f of ['atkinson-400.woff2', 'atkinson-700.woff2', 'bricolage.woff2']) writeFileSync(join(SITE, 'fonts', f), ui.uiAsset(f)!.body);
