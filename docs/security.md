@@ -27,6 +27,7 @@ flowchart LR
 | Grow one demo copy without limit by text | At most 200 conversations per copy; messages cut at 1,600 characters | API tests |
 | Inject script into a page | Every value is escaped by the page parts; the content security policy allows scripts from this origin and Google sign-in only, never inline | guard tests, browser walk |
 | Frame the app to trick clicks | `frame-ancestors 'none'` and `X-Frame-Options: DENY` | guard tests |
+| Downgrade a visitor to plain HTTP | `Strict-Transport-Security` for a year on every HTTPS answer; every cookie is `Secure` over HTTPS | guard tests |
 | Make the server call other hosts (SSRF), including through webhooks | One egress door; the demonstration reaches only the campus twins, production only an allow-list; anything else is refused and recorded | `no-hidden-egress` gate, egress tests |
 | Forge a session or token | Sessions are HMAC-signed and compared in constant time; API tokens are stored only as hashes and scoped | auth and API tests |
 | Act cross-site with a visitor's cookies | Cookies are `SameSite=Lax` and `HttpOnly`; state changes are POSTs | auth tests |
@@ -37,12 +38,17 @@ flowchart LR
 
 ## Dependencies
 
-Production dependencies are audited on every change. One finding is registered rather than hidden: the schema
-library's memory exhaustion on oversized collections, fixed only in a new major version. The 256 KB body limit
-bounds every input the app validates until the upgrade lands.
+Production dependencies are audited on every change. Findings that cannot be fixed without a breaking upgrade are
+registered rather than hidden, each with a reason and an expiry: the schema library's memory exhaustion on oversized
+collections (the 256 KB body limit bounds every input the app validates until the upgrade lands), and advisories in
+the test runner, which never ships in the application image.
+
+## Reporting a problem
+
+Email russ@zthr.ai. The published site serves the same contact at `/.well-known/security.txt`.
 
 ## Verified by
 
 <!-- verified-by:start -->
-- [`apps/advocate/test/guard.test.ts`](../apps/advocate/test/guard.test.ts) (8 test definitions)
+- [`apps/advocate/test/guard.test.ts`](../apps/advocate/test/guard.test.ts) (9 test definitions)
 <!-- verified-by:end -->

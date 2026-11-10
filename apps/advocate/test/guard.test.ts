@@ -16,6 +16,11 @@ describe('security headers', () => {
     for (const d of ["default-src 'self'", "frame-ancestors 'none'", "form-action 'self'", "object-src 'none'", "base-uri 'self'"]) expect(csp).toContain(d);
     expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
   });
+  it('over HTTPS, browsers are told to use HTTPS only; over plain HTTP (local), they are not', async () => {
+    const https = await app.request('/', { headers: { 'x-forwarded-proto': 'https' } });
+    expect(https.headers.get('strict-transport-security')).toMatch(/^max-age=31536000/);
+    expect((await app.request('/')).headers.get('strict-transport-security')).toBeNull();
+  });
 });
 
 describe('rate limits', () => {

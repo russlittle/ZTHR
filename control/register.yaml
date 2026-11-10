@@ -31,6 +31,12 @@ findings:
     reason: Every untrusted input is capped at 256 KB before validation, which bounds the attack; the upgrade is scheduled with its own walk.
     owner: claude-agent
     expires: 2026-12-15
+  - id: vitest-dev-advisories
+    gate: dependencies
+    finding: The test runner (vitest 3, and tinypool under it) has critical advisories, path traversal in its mocker and prototype pollution in worker options; the fix is vitest 5, a breaking change.
+    reason: Development only; nothing from it ships in the application image, and it runs only on trusted code in CI. The upgrade is scheduled with a full test and mutation run.
+    owner: claude-agent
+    expires: 2026-12-15
   - id: screen-readers-not-tested-by-people
     gate: ui-walk
     finding: Accessibility is checked automatically on every build (every WCAG 2.2 A and AA rule axe tests, the accessibility tree, focus, text spacing, reflow and contrast); it has not yet been tested with NVDA, JAWS, VoiceOver and TalkBack by people who use them.

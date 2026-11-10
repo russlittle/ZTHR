@@ -5,7 +5,7 @@ import type { Context, MiddlewareHandler } from 'hono';
  * can read the whole policy in one place.
  *
  *  - Security headers: a content security policy that allows only this origin (and Google sign-in when it is on),
- *    no framing by other sites, no content sniffing, no referrer leaking beyond the origin.
+ *    no framing by other sites, no content sniffing, no referrer leaking beyond the origin, and HTTPS only.
  *  - A per-client request rate, and a separate, much smaller rate for starting new demo sandboxes, so one client
  *    cannot exhaust the server or push other visitors' sandboxes out.
  */
@@ -30,6 +30,8 @@ export function securityHeaders(): MiddlewareHandler {
     c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
     c.header('Cross-Origin-Opener-Policy', 'same-origin');
     c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+    // Over HTTPS (the front end says so), browsers are told to use nothing else for a year.
+    if (c.req.header('x-forwarded-proto') === 'https') c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   };
 }
 

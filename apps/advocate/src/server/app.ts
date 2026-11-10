@@ -187,7 +187,7 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
     let phone = getCookie(c, 'demo_phone');
     if (!phone) {
       phone = `+1937555${String(Math.floor(1000 + Math.random() * 8999))}`;
-      setCookie(c, 'demo_phone', phone, { path: base || '/', httpOnly: true, sameSite: 'Lax', maxAge: 86400 });
+      setCookie(c, 'demo_phone', phone, { path: base || '/', httpOnly: true, sameSite: 'Lax', secure: c.req.header('x-forwarded-proto') === 'https', maxAge: 86400 });
     }
     return c.html(textPage(phone, threads.get(phone) ?? []));
   });
