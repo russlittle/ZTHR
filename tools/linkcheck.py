@@ -13,8 +13,14 @@ from urllib.parse import urljoin, urlparse
 ROOT = sys.argv[1]  # the site repo
 PUB = os.path.join(ROOT, 'docs')
 cfg = json.load(open(os.path.join(ROOT, 'firebase.json')))['hosting']
-# What the app at Cloud Run serves under /studentadvocate and /twins.
-APP_ROUTES = re.compile(r'^/studentadvocate(/(s/[a-z]+(/[a-z-]+)?|admin(/[a-z-]*)?|text|version|api/.*|_ui/.*)?)?/?$|^/twins(/.*)?$')
+# What the app at Cloud Run serves: its own router's table, published with the reference pages
+# (docs/reference/app-routes.json), so a link into the app is checked against the routes that exist.
+def _app_routes():
+    t = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'docs', 'reference', 'app-routes.json')))
+    pats = [re.escape(t['base']) + re.sub(r'\\:[A-Za-z_]+|:[A-Za-z_]+', '[^/]+', re.escape(r).replace('\\:', ':')).rstrip('/') + '/?' for r in t['routes']]
+    pats += [re.escape(p) + '(/.*)?' for p in t.get('prefixes', [])]
+    return re.compile('^(' + '|'.join(pats) + ')$')
+APP_ROUTES = _app_routes()
 
 def file_for(path):
     """What Firebase serves for a clean path, or None (not found)."""
