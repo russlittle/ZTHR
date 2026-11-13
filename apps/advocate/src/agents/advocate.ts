@@ -31,6 +31,11 @@ import { COLLEGE_SITES, explain } from '../domain/college.js';
 import { collegeById, collegeFromText } from '../domain/colleges.js';
 import { prepText, type Meeting } from '../domain/meetings.js';
 import { PULSES, nextPulse, type PulseState } from '../domain/pulses.js';
+import * as B from '../guide/barriers.js';
+import { packageFor, PACKAGES, type SupportPackage } from '../guide/packages.js';
+import { tally, type Outcome, type Record_ } from '../guide/feedback.js';
+import { signals as guideSignals, type Signal } from '../guide/signals.js';
+import { coverage as guideCoverage, feed as guideFeed } from '../guide/feed.js';
 import { COMMUNITIES, Community } from '../domain/community.js';
 import { solveWeek, type ChildCare } from '../domain/week.js';
 import { crisisReplyEs, detectSpanish, t as tr } from '../domain/i18n.js';
@@ -787,12 +792,128 @@ export class Advocate {
     };
   }
 
+  /** No safe place tonight: the emergency route first, in plain words, then tomorrow's step. */
+  tonightMessage(studentId: string): OutboundMessage {
+    const pkg = PACKAGES.find((p) => p.id === 'tonight')!;
+    const opts = this.supportPackage(studentId, pkg).options.filter((o) => o.resource.phone).slice(0, 3);
+    return {
+      studentId,
+      author: 'navigator',
+      urgency: 'safety',
+      text: `Let's find you a safe place tonight. Call one of these now:\n${opts.map((o, i) => `${i + 1}. ${o.resource.name}: ${o.resource.phone}${o.resource.hours ? ` (${o.resource.hours.toLowerCase()})` : ''}`).join('\n')}\nOr call 2-1-1 any time and they will find a shelter with room. If you are in danger, call 911. Tomorrow, I will help with the next step.`,
+      nextSteps: [...opts.slice(0, 2).map((o) => ({ label: `Call ${o.resource.name}`, action: `call:${o.resource.phone}` })), { label: 'Call 2-1-1', action: 'call:211' }],
+      why: 'You told me you do not have a safe place to stay tonight.',
+    };
+  }
+
   crisis(studentId: string, situation: Situation) {
     const plan = crisisPlan(this.student(studentId), situation, this.catalog, this.today(), this.vaultDocuments(studentId));
     for (const n of plan.unmet) this.recordUnmet(studentId, n);
     this.ev('crisis_intake', studentId, { situation, options: plan.options.length });
     this.draftFor(studentId, situation);
     return plan;
+  }
+
+  // ---------- the community resource guide (docs/flows/resource-guide.md) ----------
+
+  /** The Advocate's date (fixed in the demonstration), for screens that judge freshness. */
+  dateToday(): string {
+    return this.today();
+  }
+
+  barriers(studentId: string): B.BarrierBook {
+    return this.store.get<B.BarrierBook>('barriers', studentId) ?? B.empty();
+  }
+
+  private saveBarriers(studentId: string, book: B.BarrierBook, event: string, need: NeedCategory): void {
+    this.store.put('barriers', studentId, studentId, book);
+    this.ev('barrier', studentId, { event, need });
+  }
+
+  /** Open a barrier (from a check-in, the student, or the Advocate asking): it stays until the student resolves it. */
+  openBarrier(studentId: string, need: NeedCategory, by: B.OpenedBy, urgency: B.Urgency = 'soon'): B.BarrierBook {
+    const book = B.open(this.barriers(studentId), need, by, urgency, this.today());
+    this.saveBarriers(studentId, book, 'opened', need);
+    return book;
+  }
+
+  /** Only the student resolves a barrier. */
+  resolveBarrier(studentId: string, need: NeedCategory): B.BarrierBook {
+    const book = B.resolve(this.barriers(studentId), need, this.today());
+    this.saveBarriers(studentId, book, 'resolved', need);
+    return book;
+  }
+
+  notTodayBarrier(studentId: string, need: NeedCategory): B.BarrierBook {
+    const book = B.notToday(this.barriers(studentId), need, this.today());
+    this.saveBarriers(studentId, book, 'not-today', need);
+    return book;
+  }
+
+  startBarrier(studentId: string, need: NeedCategory): B.BarrierBook {
+    const book = B.start(this.barriers(studentId), need, this.today());
+    this.saveBarriers(studentId, book, 'started', need);
+    return book;
+  }
+
+  /** The few things worth doing now, from the student's open barriers and the guide. */
+  signals(studentId: string): Signal[] {
+    return guideSignals({
+      book: this.barriers(studentId),
+      today: this.today(),
+      optionsFor: (need) => this.findHelpQuiet(studentId, need).map((o) => o.resource),
+      record: (id) => this.resourceRecord(id),
+    });
+  }
+
+  /** Matching without counting a request: signals are computed often and are not the student asking. */
+  private findHelpQuiet(studentId: string, need: NeedCategory): PlanOption[] {
+    return findHelp(this.student(studentId), need, { catalog: this.catalog, today: this.today(), vaultDocuments: this.vaultDocuments(studentId) }).options;
+  }
+
+  /** A support package for one barrier, keeping only what serves this student and is current. */
+  supportPackage(studentId: string, pkg: SupportPackage): { pkg: SupportPackage; options: PlanOption[] } {
+    const serving = new Map(this.findHelpQuiet(studentId, pkg.need).map((o) => [o.resource.id, o]));
+    for (const n of new Set(pkg.entries.flatMap((id) => this.catalog.find((r) => r.id === id)?.categories ?? []))) {
+      if (n === pkg.need) continue;
+      for (const o of this.findHelpQuiet(studentId, n)) if (pkg.entries.includes(o.resource.id) && !serving.has(o.resource.id)) serving.set(o.resource.id, o);
+    }
+    return { pkg, options: pkg.entries.map((id) => serving.get(id)).filter((o): o is PlanOption => !!o) };
+  }
+
+  /** The care plan: every open barrier with its package, most urgent first. */
+  carePlan(studentId: string): { barrier: B.StudentBarrier; pkg?: SupportPackage; options: PlanOption[] }[] {
+    return B.active(this.barriers(studentId)).map((b) => {
+      const pkg = packageFor(b.need);
+      return pkg ? { barrier: b, ...this.supportPackage(studentId, pkg) } : { barrier: b, options: this.findHelpQuiet(studentId, b.need).slice(0, 3) };
+    });
+  }
+
+  packages(): SupportPackage[] {
+    return PACKAGES;
+  }
+
+  /** "Did it help?" after a student uses a resource. One answer per student per resource; the latest counts. */
+  resourceFeedback(studentId: string, resourceId: string, outcome: Outcome): void {
+    if (!this.catalog.some((r) => r.id === resourceId)) return;
+    this.store.put('resource_feedback', `${resourceId}|${studentId}`, studentId, { resourceId, outcome, on: this.today() });
+    // The resource is the subject (it is public); the student appears only as a pseudonym, so one answer per student counts.
+    this.ev('resource_feedback', resourceId, { outcome, who: this.pseud(studentId) }, true);
+  }
+
+  resourceRecord(resourceId: string): Record_ {
+    const latest = new Map<string, Outcome>();
+    for (const e of this.evidence.events('resource_feedback')) if (e.subject === resourceId) latest.set(String(e.data.who), e.data.outcome as Outcome);
+    return tally([...latest.values()]);
+  }
+
+  /** The public feed and its coverage report: services, never students. */
+  guideFeed() {
+    return guideFeed(this.catalog, this.today(), (id) => this.resourceRecord(id));
+  }
+
+  guideCoverage() {
+    return guideCoverage(this.catalog, this.today());
   }
 
   recordUnmet(studentId: string, need: NeedCategory): void {
@@ -965,7 +1086,12 @@ export class Advocate {
     this.store.remove('pulse_pending', studentId);
     const need = answer === p.needOn;
     this.ev('pulse', studentId, { pulse: p.id, event: 'answered', revealedNeed: need });
-    if (need) return this.helpMessage(studentId, p.need);
+    if (need) {
+      // A yes opens a barrier that stays in every recommendation until the student says it is resolved.
+      this.openBarrier(studentId, p.need, 'check-in', p.urgency ?? 'soon');
+      if (p.urgency === 'tonight') return this.tonightMessage(studentId);
+      return this.helpMessage(studentId, p.need);
+    }
     return { studentId, author: 'navigator', urgency: 'routine', text: p.tipWhenFine, nextSteps: [{ label: 'Show my day', action: 'today' }], why: 'Your answer to a quick question.' };
   }
 

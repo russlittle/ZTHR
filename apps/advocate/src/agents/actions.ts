@@ -7,6 +7,8 @@ import type { Situation } from '../domain/crisis.js';
 import * as campusLife from './campus-life.js';
 import { collegeById } from '../domain/colleges.js';
 import * as academics from './academics.js';
+import { BARRIER } from '../guide/taxonomy.js';
+import { OUTCOMES, type Outcome } from '../guide/feedback.js';
 
 /**
  * Every button the team offers, in one registry (PRD P3: every message carries a next step the student can take
@@ -16,7 +18,7 @@ import * as academics from './academics.js';
  *
  * A result always carries a message, so the text channel can answer. It may also name a screen for the app.
  */
-export type View = 'today' | 'money' | 'help' | 'settings' | 'week' | 'syllabus' | 'shifts' | 'dates' | 'drafts' | 'resource' | 'ask' | 'deleted' | 'share' | 'letter' | 'meals' | 'school' | 'drop' | 'advisor-share' | 'degree';
+export type View = 'today' | 'money' | 'help' | 'settings' | 'week' | 'syllabus' | 'shifts' | 'dates' | 'drafts' | 'resource' | 'ask' | 'deleted' | 'share' | 'letter' | 'meals' | 'school' | 'drop' | 'advisor-share' | 'degree' | 'guide' | 'plan';
 
 export interface ActionResult {
   message: OutboundMessage;
@@ -26,7 +28,9 @@ export interface ActionResult {
 
 type Handler = (a: Advocate, sid: string, arg: string) => ActionResult;
 
-const NEEDS: NeedCategory[] = ['food', 'housing', 'utilities', 'money', 'childcare', 'transportation', 'health', 'mental-health', 'books', 'legal', 'career', 'phone-internet', 'caregiving', 'academic'];
+/** Every barrier in the taxonomy is a need the student can ask about. */
+const NEEDS: NeedCategory[] = Object.keys(BARRIER) as NeedCategory[];
+const isNeed = (x: string): x is NeedCategory => Object.hasOwn(BARRIER, x);
 const SITUATIONS: Situation[] = ['eviction', 'utility-shutoff', 'car', 'no-food', 'rent-short'];
 
 const msg = (sid: string, text: string, nextSteps: { label: string; action: string }[], author = 'chief-of-staff', why?: string): OutboundMessage => ({
@@ -112,7 +116,42 @@ export const ACTIONS: Record<string, Handler> = {
     if (deadline(a, sid, arg)) return { message: a.assignmentHelp(sid, arg) };
     return ACTIONS['find-help']!(a, sid, '');
   },
-  need: (a, sid, arg) => ({ message: a.helpMessage(sid, arg as NeedCategory), view: 'help' }),
+  need: (a, sid, arg) => {
+    if (!isNeed(arg)) return ACTIONS['find-help']!(a, sid, '');
+    // Saying something is hard opens a barrier: it stays in the plan until the student says it is resolved.
+    a.openBarrier(sid, arg, 'student', BARRIER[arg].urgent ? 'tonight' : 'soon');
+    if (arg === 'emergency') return { message: a.tonightMessage(sid), view: 'plan' };
+    return { message: a.helpMessage(sid, arg), view: 'help' };
+  },
+  tonight: (a, sid) => {
+    a.openBarrier(sid, 'emergency', 'student', 'tonight');
+    return { message: a.tonightMessage(sid), view: 'plan' };
+  },
+  barrier: (a, sid, arg) => {
+    const [verb, need] = arg.split(':');
+    if (!need || !isNeed(need)) return { message: msg(sid, 'I could not find that one. Here is your plan.', [back], 'navigator'), view: 'plan' };
+    const label = BARRIER[need].label.toLowerCase();
+    if (verb === 'resolve') {
+      a.resolveBarrier(sid, need);
+      return { message: msg(sid, `Good. I marked ${label} as resolved. If it comes back, tell me and I will pick it up again.`, [back], 'navigator'), view: 'plan' };
+    }
+    if (verb === 'not-today') {
+      a.notTodayBarrier(sid, need);
+      return { message: msg(sid, `Okay. No reminders about ${label} today. It is still in your plan for when you are ready.`, [back], 'navigator'), view: 'plan' };
+    }
+    if (verb === 'start') {
+      a.startBarrier(sid, need);
+      return { message: msg(sid, `Noted: you are working on ${label}. I will check in, not nag.`, [back], 'navigator'), view: 'plan' };
+    }
+    a.openBarrier(sid, need, 'student', BARRIER[need].urgent ? 'tonight' : 'soon');
+    return { message: a.helpMessage(sid, need), view: 'plan' };
+  },
+  feedback: (a, sid, arg) => {
+    const [rid, outcome] = arg.split(':');
+    if (!rid || !OUTCOMES.includes(outcome as Outcome)) return { message: msg(sid, 'Thanks.', [back], 'navigator') };
+    a.resourceFeedback(sid, rid, outcome as Outcome);
+    return { message: msg(sid, outcome === 'helped' ? 'Thank you. That helps the next student know what works.' : 'Thank you for telling me. I will find you another option, and this helps the next student too.', outcome === 'helped' ? [back] : [{ label: 'Find another option', action: `need:${a.catalog.find((r) => r.id === rid)?.categories[0] ?? 'food'}` }, back], 'navigator'), view: 'resource', viewArg: rid };
+  },
   situation: (a, sid, arg) => ({ message: a.crisis(sid, (SITUATIONS.includes(arg as Situation) ? arg : 'no-food') as Situation).message, view: 'help' }),
   call: (_a, sid, arg) => ({ message: msg(sid, `Call ${arg === '988' ? 'or text 988' : arg}. ${arg === '211' ? '2-1-1 answers any time and knows local help.' : arg === '988' ? 'Someone answers any time, day or night.' : 'Tell them you are a student; it often opens more options.'}`, [back]) }),
   contact: (_a, sid, arg) => {

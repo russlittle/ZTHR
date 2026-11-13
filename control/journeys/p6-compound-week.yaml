@@ -1,0 +1,12 @@
+id: p6-compound-week
+persona: maria
+phase: 6
+goal: A student short on rent, food and a ride in the same week gets one plan, most urgent first, with each need's package limited to help that serves her county or college and is current.
+forbidden:
+  - a resource is offered that does not serve the student or is past its freshness
+  - the plan drops one of the student's open needs
+  - more than three signals are shown at once
+budget: { actions: 6, ms: 5000 }
+requirements: [GUIDE-3, GUIDE-4]
+modes: [standard, walk-me-through]
+channels: [app]

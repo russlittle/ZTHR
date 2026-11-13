@@ -14,6 +14,10 @@ import { currentGrade, type Gradebook } from '../src/domain/academics.js';
 import { dropOptions } from '../src/agents/academics.js';
 import { programById } from '../src/domain/degree.js';
 import { createApp } from '../src/server/app.js';
+import { admit } from '../src/guide/admission.js';
+import { isFresh } from '../src/catalog/types.js';
+
+const isFreshOn = (r: Parameters<typeof isFresh>[0]) => isFresh(r, DAY);
 
 /**
  * Journey implementations for the locked cards in control/journeys. Each one
@@ -860,6 +864,129 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
     ctx.expect(replies.some((r) => /comida/.test(r)), 'food help is found');
     ctx.forbid('a student who wrote in Spanish is answered in English', english.length > 0, english.map((r) => r.slice(0, 50)).join(' | '));
     ctx.forbid('the team asks about immigration or citizenship status', replies.some((r) => /ciudadan|inmigra|estatus migratorio|green card|visa/i.test(r) || STATUS_QUESTION.test(r)));
+  },
+
+  // ---------- phase 6: the community resource guide (docs/flows/resource-guide.md) ----------
+
+  'p6-no-safe-place-tonight': async (_app, ctx) => {
+    const app = makeApp();
+    const s = student(app, ctx, { chosenName: 'Maria', enrollment: { college: 'sinclair', creditHours: 12 } });
+    ctx.act('asked: do you have a safe place to stay tonight?');
+    app.a.store.put('pulse_pending', s.id, s.id, { pulse: 'tonight' });
+    const [m] = ctx.channel === 'text' ? say(app, ctx, s, 'no') : [show(app, ctx, app.a.answerPulse(s.id, 'tonight', 'no'))];
+    ctx.forbid('the answer is treated as routine or put off until later', !m || m.urgency === 'routine' || !/tonight/i.test(m.text) || !/2-1-1/.test(m.text));
+    const first = m?.nextSteps[0]?.action ?? '';
+    ctx.forbid('the first thing offered has no phone number to call tonight', !/^call:\+?\d/.test(first) && !/^call:\(?\d/.test(first));
+    ctx.act('open Today');
+    const web = createApp(app.a, { base: '' });
+    const today = await (await web.request(`/s/${s.id}`)).text();
+    ctx.expect(/A safe place tonight/.test(today), 'Today leads with a safe place tonight');
+    ctx.forbid('the need leaves Today before the student resolves it', app.a.signals(s.id)[0]?.urgency !== 'tonight');
+    ctx.expect(app.a.carePlan(s.id)[0]?.barrier.need === 'emergency', 'the plan puts tonight first');
+    forbidTone(app, ctx, s);
+  },
+
+  'p6-check-in-until-resolved': async (_app, ctx) => {
+    let today = DAY;
+    const a = new Advocate({ today: () => today, now: () => new Date(`${today}T15:00:00Z`) });
+    const app = { a };
+    const s = student(app, ctx, { chosenName: 'Maria', enrollment: { college: 'sinclair', creditHours: 12 } });
+    ctx.act('answer yes to the food check-in');
+    a.answerPulse(s.id, 'food', 'yes');
+    const has = () => a.signals(s.id).some((x) => x.need === 'food');
+    ctx.expect(has(), 'food is in the signals after the check-in');
+    for (const n of ['transportation', 'books', 'utilities', 'phone-internet'] as const) a.openBarrier(s.id, n, 'student', 'someday');
+    ctx.forbid('more than three things are put in front of the student at once', a.signals(s.id).length > 3);
+    ctx.expect(has(), 'food is still shown among the few, since it came from a check-in and is sooner');
+    ctx.act('not today');
+    a.notTodayBarrier(s.id, 'food');
+    ctx.forbid('"not today" closes the need or loses it', a.barriers(s.id).items.find((b) => b.need === 'food')?.status !== 'open' || has());
+    today = '2026-11-03';
+    ctx.expect(has(), 'food is back the next day');
+    for (const d of ['2026-11-05', '2026-11-08', '2026-11-12']) {
+      today = d;
+      ctx.forbid('anything but the student closes the need', a.barriers(s.id).items.find((b) => b.need === 'food')?.status === 'resolved');
+    }
+    ctx.act('resolve it');
+    a.resolveBarrier(s.id, 'food');
+    ctx.forbid('a resolved need keeps being suggested', has() || a.carePlan(s.id).some((x) => x.barrier.need === 'food'));
+  },
+
+  'p6-compound-week': async (_app, ctx) => {
+    const app = makeApp();
+    const s = student(app, ctx, { chosenName: 'Maria', enrollment: { college: 'sinclair', creditHours: 12 } });
+    ctx.act('tell the Advocate rent, food and a ride are all hard this week');
+    app.a.openBarrier(s.id, 'housing', 'student', 'soon');
+    app.a.openBarrier(s.id, 'food', 'student', 'soon');
+    app.a.openBarrier(s.id, 'transportation', 'student', 'someday');
+    ctx.act('open the plan');
+    const web = createApp(app.a, { base: '' });
+    const html = await (await web.request(`/s/${s.id}/plan`)).text();
+    const plan = app.a.carePlan(s.id);
+    ctx.forbid('the plan drops one of the student\'s open needs', !['housing', 'food', 'transportation'].every((n) => plan.some((p) => p.barrier.need === n)));
+    ctx.expect(plan.at(-1)?.barrier.need === 'transportation', 'the plan is most urgent first');
+    ctx.expect(/Short on rent/.test(html), 'the rent package is on the plan page');
+    const wrong = plan.flatMap((p) => p.options).filter((o) => !isFreshOn(o.resource) || !(o.resource.serves.national || o.resource.serves.counties?.includes('Montgomery') || o.resource.serves.colleges?.includes('sinclair')));
+    ctx.forbid('a resource is offered that does not serve the student or is past its freshness', wrong.length > 0, wrong.map((o) => o.resource.id).join(', '));
+    ctx.forbid('more than three signals are shown at once', app.a.signals(s.id).length > 3);
+  },
+
+  'p6-did-it-help': async (_app, ctx) => {
+    const app = makeApp();
+    const people = Array.from({ length: 5 }, (_, i) => student(app, ctx, { chosenName: `Student${i}`, enrollment: { college: 'sinclair' } }));
+    ctx.act('four students answer, one of them three times');
+    for (const p of people.slice(0, 4)) app.a.resourceFeedback(p.id, 'house-of-bread', 'helped');
+    app.a.resourceFeedback(people[0]!.id, 'house-of-bread', 'helped');
+    app.a.resourceFeedback(people[0]!.id, 'house-of-bread', 'helped');
+    const shown = () => app.a.guideFeed().services.find((x) => x.id === 'house-of-bread')?.record;
+    ctx.forbid('one student\'s repeated answers are counted more than once', app.a.resourceRecord('house-of-bread').tried !== 4);
+    ctx.forbid('a count is shown from fewer than five students', shown() !== undefined);
+    ctx.act('a fifth answers');
+    app.a.resourceFeedback(people[4]!.id, 'house-of-bread', 'could-not-reach');
+    ctx.expect(shown() === 'Helped 4 of 5 students who tried it; 1 could not reach them.', 'the count shows at five');
+    const text = JSON.stringify(app.a.guideFeed());
+    ctx.forbid('the record names or links to any student', people.some((p) => text.includes(p.id) || text.includes(p.chosenName)));
+  },
+
+  'p6-public-feed': async (_app, ctx) => {
+    const app = makeApp();
+    const s = student(app, ctx, { chosenName: 'Rosalind', enrollment: { college: 'sinclair' } });
+    app.a.openBarrier(s.id, 'housing', 'check-in', 'tonight');
+    app.a.resourceFeedback(s.id, 'daybreak', 'helped');
+    const web = createApp(app.a, { base: '' });
+    const get = async (p: string) => {
+      ctx.act(`GET ${p}`);
+      return (await web.request(p)).json() as Promise<{ services: { id: string; organization: { kind: string; faith_note?: string }; source: { url: string }; verification: { verified_on: string; current: boolean; freshness_days: number } }[]; license?: { url: string } }>;
+    };
+    const all = await get('/api/guide/v1/services');
+    const text = JSON.stringify(all);
+    ctx.forbid('the feed carries a student\'s name, phone, id or answer', text.includes(s.id) || text.includes('Rosalind') || text.includes(s.phone ?? '@@') || /Helped 1 of 1/.test(text));
+    ctx.forbid('an entry is missing its source of record or verified date', all.services.some((x) => !/^https?:\/\//.test(x.source.url) || !/^\d{4}-\d{2}-\d{2}$/.test(x.verification.verified_on)));
+    ctx.forbid('an entry past its freshness is shown as current', all.services.some((x) => x.verification.current && (Date.parse(DAY) - Date.parse(x.verification.verified_on)) / 86_400_000 > x.verification.freshness_days));
+    ctx.expect(/creativecommons/.test(all.license?.url ?? ''), 'the feed carries its license');
+    const faith = await get('/api/guide/v1/services?kind=faith');
+    ctx.expect(faith.services.length > 0 && faith.services.every((x) => x.organization.kind === 'faith'), 'the kind filter returns only faith-based entries');
+    const page = await (await web.request(`/guide/service/${faith.services[0]!.id}`)).text();
+    ctx.forbid('a faith-based entry does not say whether help depends on faith', !/faith-based/i.test(page));
+    const greene = await get('/api/guide/v1/services?barrier=food&county=Greene');
+    ctx.expect(greene.services.length > 0, 'the barrier and county filters return entries');
+  },
+
+  'p6-bad-entry-held': async (_app, ctx) => {
+    const good = DAYTON_CATALOG.find((r) => r.id === 'daybreak')!;
+    const bad = { ...good, id: 'planted-bad-entry', phone: '555-12', source: { ...good.source, url: 'see flyer' }, eligibility: { text: 'Eligibility determinations are contingent upon comprehensive verification of documentation substantiating household composition and residency qualification.' } };
+    ctx.act('a scout brings in an entry');
+    const owners = new Set(DAYTON_CATALOG.map((r) => r.id));
+    const checks = admit(bad, [...DAYTON_CATALOG, bad], owners);
+    const failed = checks.filter((c) => !c.ok).map((c) => c.name);
+    ctx.forbid('an entry that fails a gate is admitted', failed.length === 0);
+    ctx.expect(['source of record cited', 'phone is a phone number', 'eligibility in plain words', 'owned by a declared scout'].every((n) => failed.includes(n)), 'each failing check is named');
+    ctx.act('the catalog is built from admitted entries only');
+    const admitted = [...DAYTON_CATALOG, bad].filter((r) => admit(r, [...DAYTON_CATALOG, bad], owners).every((c) => c.ok));
+    const app = makeApp(undefined, admitted);
+    const s = student(app, ctx, { chosenName: 'Any', enrollment: { college: 'sinclair' } });
+    ctx.act('look for a shelter');
+    ctx.forbid('a held entry is offered to a student', app.a.findHelp(s.id, 'emergency').options.some((o) => o.resource.id === 'planted-bad-entry') || app.a.guideFeed().services.some((x) => x.id === 'planted-bad-entry'));
   },
 };
 

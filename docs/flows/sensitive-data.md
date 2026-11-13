@@ -13,17 +13,17 @@ the field and the place. The latest run is on the factory console's Sensitive da
 | Class | Means | Fields |
 | --- | --- | --- |
 | public | Published facts anyone may read | 15 |
-| internal | Ids, times, statuses and settings that say nothing about the student alone | 69 |
-| personal | Identifies or describes the student: name, phone, schedule, what they wrote | 62 |
-| sensitive | Special-category: money, benefits, family, identity, which help they need, sealed facts | 18 |
+| internal | Ids, times, statuses and settings that say nothing about the student alone | 71 |
+| personal | Identifies or describes the student: name, phone, schedule, what they wrote | 63 |
+| sensitive | Special-category: money, benefits, family, identity, which help they need, sealed facts | 19 |
 | secret | Credentials: stored only hashed or encrypted, never shown | 1 |
 
 ```mermaid
 pie showData title Fields by class
   "public" : 15
-  "internal" : 69
-  "personal" : 62
-  "sensitive" : 18
+  "internal" : 71
+  "personal" : 63
+  "sensitive" : 19
   "secret" : 1
 ```
 
@@ -48,7 +48,8 @@ flowchart LR
   k11[network: webhooks]
   k12[app admin]
   k13[outcomes]
-  k14[server logs]
+  k14[public guide and feed]
+  k15[server logs]
   P --> k0
   S --> k0
   P --> k4
@@ -83,6 +84,7 @@ flowchart LR
 | network: webhooks | no | no | no |
 | app admin | no | no | no |
 | outcomes | no | no | no |
+| public guide and feed | no | no | no |
 | server logs | no | no | no |
 
 A field may declare one more place for itself, with a reason: the student's first name and the note they approved
@@ -150,6 +152,8 @@ flowchart TB
 | `api_tokens.label` | personal |  |
 | `webhooks.url` | personal |  |
 | `webhooks.secret` | secret | signs each delivery |
+| `barriers.items` | sensitive | need, opened by, urgency (tonight, soon, someday), status (open, in-progress, resolved), dates, history |
+| `resource_feedback.outcome` | personal | helped, did-not-help, could-not-reach |
 | `vault.name` | sensitive |  |
 | `money.balance` | sensitive |  |
 | `money.bills` | sensitive |  |
@@ -219,6 +223,8 @@ Each field's class is shown beside it. A collection is as sensitive as its most 
 | `sources` | internal |
 | `api_tokens` | personal |
 | `webhooks` | secret |
+| `barriers` | sensitive |
+| `resource_feedback` | personal |
 | `vault` | sensitive |
 | `money` | sensitive |
 | `household_plan` | sensitive |
@@ -375,6 +381,14 @@ erDiagram
     date startedAt "internal"
     object_list history "sensitive"
     date waitingSince "internal"
+  }
+  barriers {
+    StudentBarrier_list items "sensitive"
+  }
+  resource_feedback {
+    string resourceId "internal"
+    enum outcome "personal"
+    date on "internal"
   }
   vault {
     string name "sensitive"

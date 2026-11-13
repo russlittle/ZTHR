@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 import { randomBytes } from 'node:crypto';
 import * as ui from '@zthr/ui';
+import { guideRoutes } from './guide.js';
 import { startPage } from './product.js';
 import type { Advocate, Delivered } from '../agents/advocate.js';
 import type { View } from '../agents/actions.js';
@@ -43,6 +44,11 @@ const NEEDS: [NeedCategory, string, string][] = [
   ['childcare', 'Child care', 'child'],
   ['legal', 'Legal help', 'shield'],
   ['mental-health', 'Someone to talk to', 'talk'],
+  ['safety', 'Not safe at home', 'shield'],
+  ['documents', 'An ID or documents', 'doc'],
+  ['academic', 'Falling behind in class', 'book'],
+  ['belonging', 'People like me', 'talk'],
+  ['wellbeing', 'Move and recharge', 'today'],
 ];
 const SITUATIONS: [string, string][] = [
   ['eviction', 'I got an eviction notice'],
@@ -73,7 +79,7 @@ export function createApp(a: Advocate, opts: AppOptions = {}): Hono {
   const base = opts.base ?? '';
   const app = new Hono({ strict: false });
   const u = (sid: string, path = '') => `${base}/s/${encodeURIComponent(sid)}${path}`;
-  const VIEW_PATH: Record<View, string> = { today: '', money: '/money', help: '/help', settings: '/you', week: '/week', syllabus: '/syllabus', shifts: '/shifts', dates: '/dates', drafts: '/drafts', resource: '/resource', ask: '/ask', deleted: '', share: '/share', letter: '/letter', meals: '/meals', school: '/school', drop: '/school/drop', 'advisor-share': '/advisor', degree: '/school/degree' };
+  const VIEW_PATH: Record<View, string> = { today: '', money: '/money', help: '/help', settings: '/you', week: '/week', syllabus: '/syllabus', shifts: '/shifts', dates: '/dates', drafts: '/drafts', resource: '/resource', ask: '/ask', deleted: '', share: '/share', letter: '/letter', meals: '/meals', school: '/school', drop: '/school/drop', 'advisor-share': '/advisor', degree: '/school/degree', guide: '/guide', plan: '/plan' };
 
   const toAction = (sid: string, n: { label: string; action: string }, i: number): ui.Action =>
     n.action.startsWith('call:')
@@ -251,7 +257,14 @@ ${a.findByPhone(phone) ? ui.actions([{ label: 'Open this account in the app', hr
       { text: comingUp.length ? `${comingUp.length} due this week` : 'Nothing else due this week', icon: 'check' },
       ...(money ? [{ text: 'Money needs a look', tone: 'warn' as const, icon: 'money' }] : []),
     ]);
-    const feed = `${one ? ui.note({ kind: 'one', title: 'If you do one thing today', body: `${one.title.replace(/\.$/, '')}. ${one.why.replace(/\.$/, '')}.`, actions: today.nextSteps.map((n, i) => toAction(sid, n, i)) }) : ''}
+    // What the student told me is hard: at most three signals, the most urgent first (docs/flows/resource-guide.md).
+    const sig = a.signals(sid);
+    const tonightSig = sig.find((x) => x.urgency === 'tonight');
+    // Tonight comes before everything else on the page; the other signals sit at the top of the feed.
+    const tonightNote = `${tonightSig?.resource ? ui.note({ kind: 'safety', title: 'A safe place tonight', body: `${tonightSig.resource.name}${tonightSig.resource.phone ? `: ${tonightSig.resource.phone}` : ''}. Or call 2-1-1 any time and they will find a shelter with room. If you are in danger, call 911.`, actions: [...(tonightSig.resource.phone ? [{ label: `Call ${tonightSig.resource.name}`, href: `tel:${tonightSig.resource.phone}`, variant: 'call' as const, icon: 'phone' }] : []), { label: 'Call 2-1-1', href: 'tel:211', variant: 'quiet' as const, icon: 'phone' }] }) : ''}`;
+    const others = sig.filter((x) => x !== tonightSig || !tonightSig.resource);
+    const signalBlock = others.length ? `${ui.section('For what you told me is hard', ui.rows(others.map((x) => ({ title: x.title, sub: x.why, ...(x.resource ? { href: u(sid, `/resource/${x.resource.id}`) } : {}) }))), `<a href="${u(sid, '/plan')}">Your plan</a>`)}` : '';
+    const feed = `${signalBlock}${one ? ui.note({ kind: 'one', title: 'If you do one thing today', body: `${one.title.replace(/\.$/, '')}. ${one.why.replace(/\.$/, '')}.`, actions: today.nextSteps.map((n, i) => toAction(sid, n, i)) }) : ''}
 ${[commute, weather, money, pulse, ...conflicts, ...ahead].filter((m): m is OutboundMessage => !!m).map((m) => noteFor(sid, m)).join('')}
 ${unconfirmed ? ui.note({ kind: 'plan', from: 'Class planner', icon: 'book', body: `${unconfirmed} date${unconfirmed === 1 ? '' : 's'} from your syllabus need a quick look before I plan around them.`, actions: [toAction(sid, { label: 'Check the dates', action: 'review-deadlines' }, 0)] }) : ''}`;
     const dayName = new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
@@ -263,7 +276,7 @@ ${unconfirmed ? ui.note({ kind: 'plan', from: 'Class planner', icon: 'book', bod
         `${flash(sid, c.req.query('m'))}
 ${c.req.query('reset') ? ui.note({ id: 'latest', title: 'This demo started over', body: 'Your demo copy had been idle, or the server restarted, so it is back to the start. Everything works the same; nothing you did was sent anywhere.', actions: [] }) : ''}
 <div class="hero"><h1>${ui.esc(greeting)}</h1><p class="date">${ui.esc(friendly(date))}</p>${glance}</div>
-<div class="today"><div class="t-day">${day}</div><div class="t-feed">${feed}</div><div class="t-side">
+${tonightNote}<div class="today"><div class="t-day">${day}</div><div class="t-feed">${feed}</div><div class="t-side">
 ${ui.section('Coming up', ui.rows(comingUp.map((d) => ({ title: d.title, sub: `${d.course ? `${d.course}, ` : ''}${relDay(date, d.due)}`, actions: [toAction(sid, { label: 'Done', action: `mark-done:${d.id}` }, 1)] })), 'Nothing due in the next week.'), `<a href="${u(sid, '/week')}">See the week</a>`)}
 ${ui.section('Ask your Advocate', ui.form({ url: u(sid, '/say'), submit: 'Send', fields: [{ name: 'text', label: 'Message', placeholder: 'Try: plan my essay, I need food, what is a registrar' }] }))}</div></div>`,
         'today',
@@ -604,6 +617,9 @@ ${ui.section('Your links', ui.rows(list.map((x) => {
     return c.html(ui.bareShell({ theme: 'student', title: `Shared by ${st.chosenName}`, base, head: '<meta name="robots" content="noindex,nofollow">', body: `<main id="main" class="page"><div class="hello"><h1>${ui.esc(`Shared by ${st.chosenName}`)}</h1><p class="date">${ui.esc(`For ${sh.label}. Read-only, until ${friendly(sh.expiresAt.slice(0, 10))}. ${st.chosenName} sees each time this is opened and can turn it off.`)}</p></div>${parts.join('')}<p class="small muted">From the Student Advocate. Grades and aid progress are computed from published rules; the college makes official decisions.</p></main>` }));
   });
 
+  // ------------------------------------------------------------ the community resource guide
+  app.route('/', guideRoutes(a, { base, page: (sid, title, body, current = '') => page(sid, title, body, current), u }));
+
   // ------------------------------------------------------------ help
 
   app.get('/s/:id/help', (c) => {
@@ -615,6 +631,7 @@ ${ui.section('Your links', ui.rows(list.map((x) => {
         'Help',
         `${flash(sid, c.req.query('m'))}
 <div class="hello"><h1>What's hard right now?</h1><p class="date">Pick one. I find help that fits you and do the legwork.</p></div>
+${ui.actions([{ label: 'No safe place tonight', post: post('tonight'), variant: 'danger' }, { label: 'Your plan', href: u(sid, '/plan'), variant: 'primary' }, { label: 'Explore the whole guide', href: u(sid, '/guide'), variant: 'quiet' }])}
 ${ui.tiles(NEEDS.map(([n, label, ic]) => ({ label, icon: ic, post: post(`need:${n}`) })), 'Kinds of help')}
 ${ui.section('Something went wrong?', ui.tiles([...SITUATIONS.map(([x, label]) => ({ label, icon: 'alert', post: post(`situation:${x}`) })), { label: 'Explain a letter I got', icon: 'doc', href: u(sid, '/letter') }, { label: 'Plan a week of meals', icon: 'food', href: u(sid, '/meals') }, { label: 'Find a job or career help', icon: 'route', post: post('career') }], 'Situations'))}
 ${ui.section('On campus', ui.tiles([{ label: 'Food on campus now', icon: 'food', post: post('campus-food') }, { label: 'Free food this week', icon: 'food', post: post('free-food') }, { label: 'Study spots', icon: 'book', post: post('study-spots') }, { label: 'Bus to class', icon: 'bus', post: post('leave-by') }, { label: 'Jobs that fit my week', icon: 'route', post: post('jobs-fit') }, { label: 'Talk to a mentor', icon: 'talk', post: post('mentors') }], 'On campus'))}

@@ -1,0 +1,11 @@
+id: p6-bad-entry-held
+persona: any
+phase: 6
+goal: An entry a scout brings in with no source, a broken phone number, dense eligibility text or no owner is held with the failing checks named, and never reaches a student or the feed.
+forbidden:
+  - an entry that fails a gate is admitted
+  - a held entry is offered to a student
+budget: { actions: 3, ms: 5000 }
+requirements: [GUIDE-8]
+modes: [standard]
+channels: [app]

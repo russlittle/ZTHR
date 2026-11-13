@@ -161,6 +161,14 @@ erDiagram
     object_ history
     date waitingSince "optional"
   }
+  barriers {
+    StudentBarrier_ items "need, opened by, urgency (tonight, soon, someday), status (open, in-progress, resolved), dates, history"
+  }
+  resource_feedback {
+    string resourceId
+    enum outcome "helped, did-not-help, could-not-reach"
+    date on
+  }
   vault {
     string name
     date addedAt
@@ -185,6 +193,8 @@ erDiagram
   students ||--o| money : "tracks"
   students ||--o| household_plan : "plans"
   students ||--o| aid : "expects"
+  students ||--o| barriers : "faces"
+  students ||--o{ resource_feedback : "rates"
 ```
 
 ## The record: connections
@@ -230,6 +240,8 @@ erDiagram
 | `sources` | student:source | What the student connected: calendar, forwarding, class site, location. Each grant is also in the consent ledger. |
 | `api_tokens` | sha256(token) | Tokens the student created to connect other tools. Only a hash is stored. |
 | `webhooks` | id | Where the student asked to be notified. Https only; payloads carry ids, never message text. |
+| `barriers` | student | What is hard right now, from check-ins, the student or the Advocate asking. Each stays open until the student says it is resolved; "not today" pauses reminders and closes nothing. |
+| `resource_feedback` | resource|student | Whether a resource helped, one answer per student per resource. Shown only as counts, and only once enough students answered. |
 | `vault` | student:name | Names of documents the student keeps; contents are sealed. |
 | `money` | student | Balance, bills and pay, for spotting a short month ahead of time. |
 | `household_plan` | student | Child care hours, commute and sleep, for the week solver. |

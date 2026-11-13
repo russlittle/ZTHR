@@ -23,6 +23,9 @@ import { COLLEGES } from '../apps/advocate/src/domain/colleges.js';
 import * as academics from '../apps/advocate/src/agents/academics.js';
 import { PERSONAS } from '../apps/advocate/src/server/demo.js';
 import { createApp } from '../apps/advocate/src/server/app.js';
+import { admit } from '../apps/advocate/src/guide/admission.js';
+import { Feed, feed as guideFeed } from '../apps/advocate/src/guide/feed.js';
+import * as B from '../apps/advocate/src/guide/barriers.js';
 
 /**
  * Every named gate states what it protects, carries the planted defects that
@@ -650,7 +653,117 @@ const shareGate: Gate<ShareProbe> = {
   ],
 };
 
-const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate].map((g) => g.id);
+// ---- the community resource guide (docs/flows/resource-guide.md) ----
+
+type AdmitFn = typeof admit;
+interface GuideAdmission { catalog: Resource[]; owners: Set<string>; admit: AdmitFn }
+const scoutOwners = () => new Set(readdirSync(`${CONTROL}/scouts`).filter((f) => f.endsWith('.yaml')).flatMap((f) => (parseYaml(readFileSync(`${CONTROL}/scouts/${f}`, 'utf8')) as { entries: string[] }).entries));
+// One bad entry per kind of fault an admission gate exists to catch; each must be held, by the check named.
+const BAD_ENTRIES: [string, (r: Resource) => Resource][] = [
+  ['source of record cited', (r) => ({ ...r, id: 'bad-source', source: { ...r.source, url: 'see the flyer' } })],
+  ['phone is a phone number', (r) => ({ ...r, id: 'bad-phone', phone: '555-12' })],
+  ['eligibility in plain words', (r) => ({ ...r, id: 'bad-words', eligibility: { text: 'Eligibility determinations are contingent upon comprehensive verification of documentation substantiating household composition and residency qualification.' } })],
+  ['barriers from the taxonomy', (r) => ({ ...r, id: 'bad-barrier', categories: ['astrology' as Resource['categories'][number]] })],
+  ['verified on a real date', (r) => ({ ...r, id: 'bad-date', verifiedOn: '2026-13-40' })],
+];
+const guideAdmissionGate: Gate<GuideAdmission> = {
+  id: 'guide-admission',
+  protects: 'Every guide entry passes every admission check, and an entry with no source, a bad phone number, dense wording, a made-up barrier or an impossible date is held by the check named for it.',
+  definition: def(admit) + JSON.stringify(BAD_ENTRIES.map(([n]) => n)),
+  check: ({ catalog, owners, admit: fn }) => {
+    const bad: string[] = [];
+    for (const r of catalog) {
+      const failed = fn(r, catalog, owners).filter((c) => !c.ok);
+      if (failed.length) bad.push(`${r.id} held: ${failed.map((c) => c.name).join(', ')}`);
+    }
+    const base = DAYTON_CATALOG.find((r) => r.id === 'daybreak')!;
+    for (const [check, make] of BAD_ENTRIES) {
+      const e = make(base);
+      const owned = new Set([...owners, e.id]);
+      if (fn(e, [...catalog, e], owned).find((c) => c.name === check)?.ok !== false) bad.push(`a planted entry was not held by "${check}"`);
+    }
+    return bad.length ? fail('guide-admission', bad.slice(0, 4).join('; ')) : pass('guide-admission', `${catalog.length} entries admitted; ${BAD_ENTRIES.length} planted bad entries each held by its check`);
+  },
+  falsification: [
+    { name: 'planted catalog with an entry that has no source', plant: () => ({ catalog: [...DAYTON_CATALOG, { ...DAYTON_CATALOG[0]!, id: 'no-source', source: { ...DAYTON_CATALOG[0]!.source, url: 'ask around' } }], owners: new Set([...scoutOwners(), 'no-source']), admit }) },
+    { name: 'planted gate that admits everything', plant: () => ({ catalog: DAYTON_CATALOG, owners: scoutOwners(), admit: ((r: Resource, c: Resource[], o: Set<string>) => admit(r, c, o).map((x) => ({ ...x, ok: true }))) as AdmitFn }) },
+    { name: 'planted gate that no longer checks phone numbers', plant: () => ({ catalog: DAYTON_CATALOG, owners: scoutOwners(), admit: ((r: Resource, c: Resource[], o: Set<string>) => admit(r, c, o).map((x) => (x.name === 'phone is a phone number' ? { ...x, ok: true } : x))) as AdmitFn }) },
+  ],
+};
+
+type FeedProbe = () => { feed: unknown; studentMarks: string[]; fewAnswers: string };
+const realFeedProbe: FeedProbe = () => {
+  const a = new Advocate({ today: () => DAY });
+  const s = a.createStudent({ chosenName: 'Feedprobe', zip: '45402', phone: '+19375550999', enrollment: { college: 'sinclair', creditHours: 12 } });
+  a.openBarrier(s.id, 'housing', 'check-in', 'tonight');
+  a.resourceFeedback(s.id, 'daybreak', 'helped');
+  return { feed: a.guideFeed(), studentMarks: [s.id, 'Feedprobe', '5550999'], fewAnswers: 'daybreak' };
+};
+const guideFeedGate: Gate<FeedProbe> = {
+  id: 'guide-feed',
+  protects: 'The public guide feed matches its published schema, carries no student (no name, phone, id or answer), and shows a "did it help" count only from five answers up.',
+  definition: def(realFeedProbe) + def(guideFeed),
+  check: (probe) => {
+    const { feed: f, studentMarks, fewAnswers } = probe();
+    const bad: string[] = [];
+    const parsed = Feed.safeParse(f);
+    if (!parsed.success) bad.push(`schema: ${parsed.error.issues.slice(0, 2).map((i) => `${i.path.join('.')} ${i.message}`).join('; ')}`);
+    const text = JSON.stringify(f);
+    for (const m of studentMarks) if (text.includes(m)) bad.push(`the feed carries a student mark (${m.slice(0, 4)}…)`);
+    const few = parsed.success ? parsed.data.services.find((x) => x.id === fewAnswers) : undefined;
+    if (few?.record) bad.push('a count is shown from fewer than five answers');
+    return bad.length ? fail('guide-feed', bad.join('; ')) : pass('guide-feed', `${parsed.success ? parsed.data.count : 0} services; schema holds; no student marks; small counts withheld`);
+  },
+  falsification: [
+    { name: 'planted feed that carries the student name', plant: () => () => { const p = realFeedProbe(); return { ...p, feed: { ...(p.feed as object), note: 'requested by Feedprobe' } }; } },
+    { name: 'planted feed that shows a count from one answer', plant: () => () => { const p = realFeedProbe(); const f = p.feed as ReturnType<typeof guideFeed>; return { ...p, feed: { ...f, services: f.services.map((x) => (x.id === 'daybreak' ? { ...x, record: 'Helped 1 of 1 students who tried it.' } : x)) } }; } },
+    { name: 'planted feed with an entry missing its source', plant: () => () => { const p = realFeedProbe(); const f = p.feed as ReturnType<typeof guideFeed>; return { ...p, feed: { ...f, services: f.services.map((x, i) => (i === 0 ? { ...x, source: { license: x.source.license } } : x)) } }; } },
+  ],
+};
+
+interface BarrierOps { open: typeof B.open; resolve: typeof B.resolve; notToday: typeof B.notToday; start: typeof B.start; asked: typeof B.asked }
+const REAL_BARRIERS: BarrierOps = { open: B.open, resolve: B.resolve, notToday: B.notToday, start: B.start, asked: B.asked };
+/** Seeded sequences of events, the same every run, so a gate verdict is reproducible. */
+function barrierViolations(ops: BarrierOps, runs = 300): string[] {
+  let seed = 20261102;
+  const rnd = (n: number) => ((seed = (seed * 1103515245 + 12345) % 2 ** 31), seed % n);
+  const needs = ['emergency', 'housing', 'food', 'transportation', 'utilities'] as const;
+  const urg = ['tonight', 'soon', 'someday'] as const;
+  const rank = { tonight: 0, soon: 1, someday: 2 };
+  const out = new Set<string>();
+  for (let r = 0; r < runs; r++) {
+    let book = B.empty();
+    for (let i = 0; i < 25; i++) {
+      const need = needs[rnd(needs.length)]!;
+      const day = `2026-11-${String(2 + i).padStart(2, '0')}`;
+      const before = B.find(book, need);
+      const kind = rnd(5);
+      book = kind === 0 ? ops.open(book, need, 'check-in', urg[rnd(3)]!, day) : kind === 1 ? ops.resolve(book, need, day) : kind === 2 ? ops.notToday(book, need, day) : kind === 3 ? ops.start(book, need, day) : ops.asked(book, need, day);
+      const after = B.find(book, need);
+      if (after?.status === 'resolved' && before?.status !== 'resolved' && kind !== 1) out.add('something other than the student closed a barrier');
+      if (before && before.status !== 'resolved' && after && kind === 0 && rank[after.urgency] > rank[before.urgency]) out.add('opening an open barrier lowered its urgency');
+      if (new Set(book.items.map((b) => b.need)).size !== book.items.length) out.add('a barrier was duplicated');
+      if (kind === 2 && before && after && before.status !== after.status) out.add('"not today" changed a barrier\'s status');
+    }
+  }
+  return [...out];
+}
+const barrierGate: Gate<BarrierOps> = {
+  id: 'barrier-lifecycle',
+  protects: 'A need a student raised stays open until the student resolves it: nothing else closes it, its urgency never drops while open, "not today" only pauses reminders, and it is never duplicated.',
+  definition: def(barrierViolations) + def(B.open) + def(B.resolve) + def(B.notToday) + def(B.start) + def(B.asked),
+  check: (ops) => {
+    const v = barrierViolations(ops);
+    return v.length ? fail('barrier-lifecycle', v.join('; ')) : pass('barrier-lifecycle', '300 seeded sequences of 25 events: every rule held');
+  },
+  falsification: [
+    { name: 'planted open that lowers urgency', plant: () => ({ ...REAL_BARRIERS, open: (book, need, by, u, today) => { const b = B.find(book, need); return b && b.status !== 'resolved' ? { items: [...book.items.filter((x) => x.need !== need), { ...b, urgency: u }] } : B.open(book, need, by, u, today); } }) },
+    { name: 'planted "not today" that closes the barrier', plant: () => ({ ...REAL_BARRIERS, notToday: (book, need, today) => B.resolve(book, need, today) }) },
+    { name: 'planted check-in that closes a quiet barrier', plant: () => ({ ...REAL_BARRIERS, asked: (book, need, today) => B.resolve(book, need, today) }) },
+  ],
+};
+
+const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate].map((g) => g.id);
 
 function repoFiles(): string[] {
   const out: string[] = [];
@@ -668,7 +781,7 @@ function repoFiles(): string[] {
 
 /** What each gate protects and what it is proven against, for the docs and the console. */
 export function gateCatalog(): { id: string; protects: string; plants: string[] }[] {
-  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
+  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
 }
 
 export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdict[]; proofs: Proof[] }> {
@@ -713,6 +826,9 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   await run(r2t4Gate, () => r2t4);
   await run(sapGate, () => sap);
   await run(shareGate, () => realShareProbe);
+  await run(guideAdmissionGate, () => ({ catalog: DAYTON_CATALOG, owners: scoutOwners(), admit }));
+  await run(guideFeedGate, () => realFeedProbe);
+  await run(barrierGate, () => REAL_BARRIERS);
   writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
   return { verdicts, proofs };
 }

@@ -98,6 +98,8 @@ export function pageProblems(p: Page, others: string[]): string[] {
 
 export const route = (url: string) => url.replace(/\?.*$/, '').replace(/\/s\/[^/]+/, '/s/:id').replace(/\/resource\/[^/?]+/, '/resource/:rid');
 
+export const GUIDE_READ = /\/guide(\/|$)/;
+
 /** Settings are independent switches: the main walk sets them through seeds, and the settings walk covers every combination. */
 export const SETTINGS_ACTION = /action=(dial|source-on|source-off|pulses-on|pulses-off)%3A?/;
 
@@ -138,7 +140,10 @@ export async function crawlAdvocate(opts: { only?: string[]; maxNodes?: number; 
       routes.add(route(page.url));
       for (const problem of pageProblems(page, others)) merged.violations.push({ seed: name, path, problem });
       if (w.deleted) continue;
-      const sig = `${route(page.url)}|${stateSignature(w, undefined)}`;
+      // The guide's reading pages show the catalog, the same whatever else the student has done, so each is walked
+      // once per seed; its forms (barriers, "did it help") still run from there. The barrier rules themselves are
+      // held for every sequence of events by the property tests in guide.test.ts.
+      const sig = GUIDE_READ.test(route(page.url)) ? `guide|${route(page.url)}` : `${route(page.url)}|${stateSignature(w, undefined)}`;
       if (seen.has(sig)) continue;
       seen.add(sig);
       if (process.env.DEBUG_SIG) console.log(route(page.url), JSON.stringify(stateParts(w)));

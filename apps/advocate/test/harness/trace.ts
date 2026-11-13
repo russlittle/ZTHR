@@ -11,7 +11,7 @@ import { createApp } from '../../src/server/app.js';
  * on the web, through the API, with a mentor introduction sent and a webhook registered. Every place data can
  * land is then searched for every marker. The policy below is the declaration of where each class may go.
  */
-export const SINKS = ['store', 'sealed store', 'consent ledger', 'evidence', 'student export', 'student API', 'student screens', 'texts to the student', 'calendar feed', 'sent with approval', 'network: campus services', 'network: webhooks', 'app admin', 'outcomes', 'server logs'] as const;
+export const SINKS = ['store', 'sealed store', 'consent ledger', 'evidence', 'student export', 'student API', 'student screens', 'texts to the student', 'calendar feed', 'sent with approval', 'network: campus services', 'network: webhooks', 'app admin', 'outcomes', 'public guide and feed', 'server logs'] as const;
 export type Sink = (typeof SINKS)[number];
 
 const OWN: Sink[] = ['store', 'student export', 'student API', 'student screens', 'texts to the student'];
@@ -128,7 +128,12 @@ async function session(logs: string[]): Promise<TraceResult> {
   await a.operator.tick(new Date(NOW.getTime() + 3 * 3600_000));
   await api('POST', '/v1/deadlines', { title: 'Quiz', due: '2026-11-12' });
 
-  const screens = (await Promise.all(['', '/week', '/dates', '/shifts', '/money', '/help', '/meals', '/drafts', '/you', '/ask', '/letter', '/share', '/syllabus'].map((p) => page(`/s/${sid}${p}`)))).join('\n');
+  // The guide: a check-in answered yes, a barrier the student raised, an answer about whether a resource helped.
+  a.answerPulse(sid, 'tonight', 'no');
+  a.openBarrier(sid, 'food', 'student');
+  a.resourceFeedback(sid, 'daybreak', 'helped');
+  const publicGuide = (await Promise.all(['/guide', '/guide/emergency', '/guide/service/daybreak', '/api/guide/v1', '/api/guide/v1/services', '/api/guide/v1/services/daybreak', '/api/guide/v1/coverage', '/api/guide/v1/packages', '/api/guide/v1/barriers'].map(page))).join('\n');
+  const screens = (await Promise.all(['', '/week', '/dates', '/shifts', '/money', '/help', '/meals', '/drafts', '/you', '/ask', '/letter', '/share', '/syllabus', '/guide', '/guide/food', '/plan'].map((p) => page(`/s/${sid}${p}`)))).join('\n');
   const apis = (await Promise.all(['/v1/me', '/v1/today', '/v1/deadlines', '/v1/shifts', '/v1/eligibility', '/v1/messages', '/v1/webhooks', '/v1/export/deadlines.csv'].map((p) => api('GET', p)))).join('\n') + hook;
   const admin = (await Promise.all(['/admin/', '/admin/catalog', '/admin/moderation', '/admin/proposals', '/admin/admissions', '/admin/outcomes', '/admin/scouts'].map(page))).join('\n');
   const outcomes = await page('/api/outcomes');
@@ -151,6 +156,7 @@ async function session(logs: string[]): Promise<TraceResult> {
     'network: webhooks': ext('webhook:'),
     'app admin': admin,
     outcomes,
+    'public guide and feed': publicGuide,
     'server logs': logs.join('\n'),
   };
   const canaries: Canary[] = [...Object.values(C), apiToken, secretCanary];

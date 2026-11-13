@@ -32,6 +32,7 @@ const FEATURES: [string, string, string][] = [
   ['book', 'Keeps up with your classes', 'Reads your syllabus and your class site, moves a date when your instructor moves it, and plans the work in the time you have.'],
   ['route', 'Opens doors to work', 'Jobs that fit around your classes and shifts, a fair-chance path when you ask for it, and an introduction to a mentor in your field.'],
   ['cap', 'Keeps you enrolled', 'Your grade so far and what the final needs, whether you keep your financial aid, and every choice about dropping a class side by side, with the aid that would go back.'],
+  ['home', 'Puts a community behind you', 'Every kind of local help, from colleges, agencies, nonprofits and congregations, narrowed to a few next steps for what is hard right now. A need you raise stays in view until you say it is solved.'],
   ['you', 'Brings in your advisor, your way', 'A read-only link you control: only what you choose to show, for as long as you choose, and you see each time it is opened.'],
 ];
 
@@ -117,7 +118,7 @@ export function productPage(l: ProductLinks): string {
 <section class="pp-sec" aria-labelledby="who"><h2 id="who">Who it is for</h2><p class="sub">Students who carry more than classes: the ones most likely to stop out for reasons that have nothing to do with ability.</p>
 <div class="pp-who"><span>Working students</span><span>Student parents</span><span>First in their family</span><span>Adults returning to school</span><span>Students short on food or rent</span><span>Students who were in foster care</span><span>Veterans</span><span>Students who prefer texting</span></div></section>
 
-<section class="pp-sec" id="what" aria-labelledby="what-h"><h2 id="what-h">What it does</h2><p class="sub">Eight things a good advisor, a benefits navigator and a well-organized friend would do, all at once, by app or by text.</p>
+<section class="pp-sec" id="what" aria-labelledby="what-h"><h2 id="what-h">What it does</h2><p class="sub">Nine things a good advisor, a benefits navigator and a well-organized friend would do, all at once, by app or by text.</p>
 <div class="pp-grid">${FEATURES.map(([ic, t, d]) => `<div class="pp-card">${ui.icon(ic, 26)}<h3>${ui.esc(t)}</h3><p>${ui.esc(d)}</p></div>`).join('')}</div></section>
 
 <section class="pp-sec" aria-labelledby="how"><h2 id="how">How it works</h2><p class="sub">A small team of specialist agents behind one friendly voice, with every step a student can see.</p>
@@ -131,6 +132,13 @@ export function productPage(l: ProductLinks): string {
   <div class="pp-card"><h3>For students</h3><ul><li>Money they qualify for and were not getting, found in minutes</li><li>Time held for the work that matters, around shifts and child care</li><li>Fewer missed deadlines and fewer surprise bills</li><li>Help that comes to them, in their words, with no judgment</li></ul></div>
   <div class="pp-card"><h3>For colleges</h3><ul><li>A support layer that reaches every student, at night and on weekends</li><li>Outcome measures that never show a group smaller than five</li><li>Any college added with one file; local help kept fresh automatically</li><li>No model spend in the product; costs measured in cents</li></ul></div>
   <div class="pp-card"><h3>For the field</h3><ul><li>A complete, open reference built by AI under fixtures</li><li>Every block reusable, every test public, every decision recorded</li><li>Proof that zero-trust AI development produces software people can trust</li></ul></div>
+</div></section>
+
+<section class="pp-sec" id="guide" aria-labelledby="guide-h"><h2 id="guide-h">A resource guide anyone can use</h2><p class="sub">The help a student needs is already out there: shelters, pantries, clinics, legal aid, free fitness in the parks. What is missing is a current, trustworthy list of it. The Advocate keeps one for Montgomery and Greene counties, and gives it away.</p>
+<div class="pp-value">
+  <div class="pp-card"><h3>For any student</h3><p>The whole guide is open to anyone, with no sign-in: five domains and 23 barriers, from a safe place tonight to belonging on campus. Every entry has its source, the day it was checked, what it costs, what to expect and how to use it.</p><p><a href="${l.app}/guide">Open the guide</a></p></div>
+  <div class="pp-card"><h3>For any app</h3><p>The same guide as an open data feed under CC BY 4.0, with an OpenAPI description. A college portal, a library, a congregation or a county help line can take it instead of doing the legwork. It lists services, never students.</p><p><a href="${l.docs.replace(/index\.html$/, '')}api/guide.html">The feed</a></p></div>
+  <div class="pp-card"><h3>Kept true by agents</h3><p>Scouts own every entry. Admission gates hold any entry with no source, a bad number or dense wording. A verifier re-reads every source each week, and students say whether it helped. Counts are shown only from five answers up.</p><p><a href="${l.docs.replace(/index\.html$/, '')}flows/resource-guide.html">How it stays current</a></p></div>
 </div></section>
 
 <section class="pp-sec" id="try" aria-labelledby="try-h"><h2 id="try-h">Try it as one of twelve students</h2><p class="sub">Pick a student and you are signed in as them. Everything works: tap the buttons, book a room, draft a message, ask a question.</p>

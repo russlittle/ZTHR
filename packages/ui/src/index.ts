@@ -299,6 +299,9 @@ a{text-underline-offset:3px;text-decoration-thickness:1.5px}
 @keyframes zspin{to{transform:rotate(360deg)}}
 .btn.danger:hover{background:color-mix(in srgb,var(--alert) 10%,transparent)}
 .btn.danger.solid{background:var(--alert);border-color:var(--alert);color:var(--on-alert,#fff)}
+/* facts: a label and its value, side by side, stacked on a phone */
+.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:6px 0 4px}.facts dt{font-weight:700}.facts dd{margin:0;overflow-wrap:break-word}
+@media (max-width:560px){.facts{grid-template-columns:minmax(0,1fr);gap:2px}.facts dd{margin-bottom:8px}}
 .field{margin:0 0 14px}
 .field label{margin:0 0 6px}
 input,textarea,select{min-height:48px;transition:border-color .15s,box-shadow .15s}

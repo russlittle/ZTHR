@@ -25,7 +25,7 @@ const DECLARED: CollectionDef[] = [
       ['drafts', 'approves', '||--o{'], ['messages', 'receives', '||--o{'], ['playbook_runs', 'runs', '||--o{'], ['sources', 'connects', '||--o{'], ['api_tokens', 'creates', '||--o{'],
       ['webhooks', 'registers', '||--o{'], ['vault', 'keeps', '||--o{'], ['money', 'tracks', '||--o|'], ['household_plan', 'plans', '||--o|'], ['meetings', 'attends', '||--o{'],
       ['courses', 'takes', '||--o{'], ['pulse_state', 'answers', '||--o|'], ['dismissed', 'dismisses', '||--o{'], ['aid', 'expects', '||--o|'], ['commute_plans', 'rides', '||--o{'], ['transit_now', 'waits at', '||--o|'], ['dispatches', 'asks for', '||--o{'],
-      ['academic', 'keeps a record in', '||--o|'], ['gradebooks', 'is graded in', '||--o{'], ['shares', 'shares through', '||--o{'],
+      ['academic', 'keeps a record in', '||--o|'], ['gradebooks', 'is graded in', '||--o{'], ['shares', 'shares through', '||--o{'], ['barriers', 'faces', '||--o|'], ['resource_feedback', 'rates', '||--o{'],
     ],
   },
   { group: 'schedule', name: 'deadlines', purpose: 'Every date that matters: assignments, exams, aid, bills, appointments. Found dates stay unconfirmed until the student checks them.', key: 'id', fields: [f('id', 'string'), f('studentId', 'string', 'owner'), f('title', 'string'), f('due', 'date or date-time'), o('course', 'string'), f('kind', 'enum', 'assignment, exam, reading, college, aid, benefit, bill, appointment, other'), f('source', 'object', 'where it was found, with the line'), f('confirmed', 'boolean'), o('effortHours', 'number'), o('durationMin', 'number'), o('done', 'boolean')], relations: [['holds', 'gets time in', '||--o{']] },
@@ -42,6 +42,8 @@ const DECLARED: CollectionDef[] = [
   { group: 'connections', name: 'sources', purpose: 'What the student connected: calendar, forwarding, class site, location. Each grant is also in the consent ledger.', key: 'student:source', fields: [f('source', 'enum'), f('connectedAt', 'date')] },
   { group: 'connections', name: 'api_tokens', purpose: 'Tokens the student created to connect other tools. Only a hash is stored.', key: 'sha256(token)', fields: [f('id', 'string', 'sha256 of the token'), f('label', 'string'), f('scopes', 'enum[]', 'read, write, actions'), f('createdAt', 'date')] },
   { group: 'connections', name: 'webhooks', purpose: 'Where the student asked to be notified. Https only; payloads carry ids, never message text.', key: 'id', fields: [f('id', 'string'), f('url', 'url'), f('events', 'string[]'), f('secret', 'string', 'signs each delivery')] },
+  { group: 'help and money', name: 'barriers', purpose: 'What is hard right now, from check-ins, the student or the Advocate asking. Each stays open until the student says it is resolved; "not today" pauses reminders and closes nothing.', key: 'student', fields: [f('items', 'StudentBarrier[]', 'need, opened by, urgency (tonight, soon, someday), status (open, in-progress, resolved), dates, history')] },
+  { group: 'help and money', name: 'resource_feedback', purpose: 'Whether a resource helped, one answer per student per resource. Shown only as counts, and only once enough students answered.', key: 'resource|student', fields: [f('resourceId', 'string'), f('outcome', 'enum', 'helped, did-not-help, could-not-reach'), f('on', 'date')] },
   { group: 'help and money', name: 'vault', purpose: 'Names of documents the student keeps; contents are sealed.', key: 'student:name', fields: [f('name', 'string'), f('addedAt', 'date')] },
   { group: 'help and money', name: 'money', purpose: 'Balance, bills and pay, for spotting a short month ahead of time.', key: 'student', fields: [f('balance', 'number'), f('bills', 'Bill[]'), o('pay', 'Paycheck')] },
   { group: 'help and money', name: 'household_plan', purpose: 'Child care hours, commute and sleep, for the week solver.', key: 'student', fields: [o('childCare', 'ChildCare'), o('commuteMin', 'number'), o('sleepHours', 'number'), o('commuteMode', 'enum', 'bus, car, walk'), o('homeStop', 'string', 'transit stop id the student picked')] },
@@ -88,6 +90,7 @@ export const CLASSIFICATION: Record<string, DataClass> = {
   'academic.program': 'personal', 'academic.programCredits': 'personal', 'academic.transcript': 'sensitive', 'academic.aid': 'sensitive', 'academic.charges': 'sensitive', 'academic.aidProbation': 'sensitive',
   'gradebooks.course': 'personal', 'gradebooks.credits': 'personal', 'gradebooks.categories': 'personal', 'gradebooks.items': 'sensitive', 'gradebooks.scale': 'public',
   'shares.label': 'personal', 'shares.scopes': 'personal',
+  'barriers.items': 'sensitive', 'resource_feedback.outcome': 'personal',
   // connections
   'api_tokens.label': 'personal', 'webhooks.url': 'personal', 'webhooks.secret': 'secret',
   // campus

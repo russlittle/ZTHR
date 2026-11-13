@@ -148,6 +148,10 @@ root.get(`${mount === '/' ? '' : mount}/shared/:token`, async (c) => {
   c.header('Cache-Control', 'no-store');
   return c.html('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Link not available</title><main style="font:18px/1.5 system-ui;max-width:40rem;margin:3rem auto;padding:0 16px"><h1>This link isn\'t available</h1><p>It may have expired or been turned off by the student who made it.</p></main></html>', 410);
 });
+// The public guide and its feed hold no student data, so one shared copy serves them: an app taking the feed does
+// not start a demonstration copy per request.
+const publicGuide = shared ?? build().app;
+for (const p of ['/guide', '/guide/*', '/api/guide/*']) root.get(`${mount === '/' ? '' : mount}${p}`, (c) => publicGuide.fetch(rewrite(c.req.raw)));
 root.all(`${mount === '/' ? '' : mount}/*`, async (c) => {
   if (shared) return shared.fetch(rewrite(c.req.raw));
   let id = getCookie(c, 'adv_demo');

@@ -10,7 +10,7 @@ describe('pulses', () => {
     const q = a.pulse(s.id)!;
     expect(q.text).toMatch(/skip/);
     expect(a.pulse(s.id)).toBeUndefined(); // not again the same day
-    const need = a.answerPulse(s.id, 'ride', 'no');
+    const need = a.answerPulse(s.id, 'ride', 'yes');
     expect(need.text).toMatch(/transportation help/);
     const fine = a.answerPulse(s.id, 'food', 'no');
     expect(fine.nextSteps.length).toBeGreaterThan(0);
@@ -20,7 +20,7 @@ describe('pulses', () => {
     const a = makeAdvocate();
     const s = maria(a);
     a.deliver(a.pulse(s.id)!, { force: true });
-    const r = a.converse(s.id, 'no');
+    const r = a.converse(s.id, 'yes');
     expect(r[0]!.text).toMatch(/transportation/);
   });
   it('turning pulses off stops them', () => {

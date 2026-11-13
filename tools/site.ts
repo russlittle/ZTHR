@@ -61,7 +61,7 @@ const walkFiles = (dir: string, ext: string): string[] => (existsSync(dir) ? rea
 
 // ------------------------------------------------------------------ docs
 
-function copyAssets(): void {
+async function copyAssets(): Promise<void> {
   // Diagrams are drawn by a copy of Mermaid served from this site, so readers' browsers fetch nothing elsewhere.
   mkdirSync(join(SITE, 'assets'), { recursive: true });
   cpSync(join(ROOT, 'node_modules/mermaid/dist/mermaid.min.js'), join(SITE, 'assets', 'mermaid.min.js'));
@@ -71,10 +71,25 @@ function copyAssets(): void {
   // checked against the real route table rather than a copy of it. Middleware wildcards are not pages.
   const appRoutes = [...new Set(createApp(new Advocate(), { base: '/studentadvocate' }).routes.filter((r) => ['GET', 'ALL'].includes(r.method) && !r.path.endsWith('*')).map((r) => r.path))].sort();
   writeFileSync(join(SITE, 'app-routes.json'), `${JSON.stringify({ base: '/studentadvocate', routes: appRoutes, prefixes: ['/twins'] }, null, 1)}\n`);
+  // The guide's public feed as static files, asked of the app's own router so the copy is exactly what the API
+  // serves: an app can take it from zthr.ai with no server running (docs/api/guide.md).
+  await writeGuideFeed();
   if (RELATIVE) {
     mkdirSync(join(SITE, 'fonts'), { recursive: true });
     for (const f of ['atkinson-400.woff2', 'atkinson-700.woff2', 'bricolage.woff2']) writeFileSync(join(SITE, 'fonts', f), ui.uiAsset(f)!.body);
   }
+}
+
+async function writeGuideFeed(): Promise<void> {
+  const app = createApp(new Advocate(), { base: '/studentadvocate' });
+  const dir = join(SITE, 'guide', 'v1');
+  mkdirSync(join(dir, 'services'), { recursive: true });
+  const get = async (p: string) => (await app.request(`/api/guide/v1${p}`)).json();
+  const services = (await get('/services')) as { services: { id: string }[] };
+  writeFileSync(join(dir, 'services.json'), `${JSON.stringify(services, null, 1)}\n`);
+  for (const svc of services.services) writeFileSync(join(dir, 'services', `${svc.id}.json`), `${JSON.stringify(svc, null, 1)}\n`);
+  for (const p of ['barriers', 'coverage', 'packages', 'openapi']) writeFileSync(join(dir, `${p}.json`), `${JSON.stringify(await get(p === 'openapi' ? '/openapi.json' : `/${p}`), null, 1)}\n`);
+  writeFileSync(join(dir, 'index.json'), `${JSON.stringify(await get(''), null, 1)}\n`);
 }
 
 function buildLanding(): void {
@@ -399,7 +414,7 @@ ${SERVICE_IDS.map((id) => { const sv = SERVICES[id]; const probes = (contract?.r
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  copyAssets();
+  await copyAssets();
   buildLanding();
   buildCase();
   const d = buildDocs();

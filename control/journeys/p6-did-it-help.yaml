@@ -1,0 +1,12 @@
+id: p6-did-it-help
+persona: maria
+phase: 6
+goal: Students answer whether a resource helped; the entry shows a count only once enough have answered that no one answer can be picked out, and each student counts once.
+forbidden:
+  - a count is shown from fewer than five students
+  - one student's repeated answers are counted more than once
+  - the record names or links to any student
+budget: { actions: 8, ms: 5000 }
+requirements: [GUIDE-5]
+modes: [standard]
+channels: [app]

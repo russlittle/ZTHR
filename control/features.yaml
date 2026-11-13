@@ -217,3 +217,41 @@ phases:
         status: built
         screens: [School]
         journeys: [p5-share-with-advisor]
+  - n: 6
+    name: A community to support them
+    features:
+      - name: The community resource guide
+        what: Every kind of help in Montgomery and Greene counties, from colleges, government, nonprofits, faith groups, community groups and clinics, sorted into five domains and 23 barriers, each entry with its source, the day it was checked, its cost, what to expect and how to use it.
+        status: built
+        screens: [Guide]
+        journeys: [p6-public-feed, p6-bad-entry-held]
+      - name: One-question check-ins that open a need
+        what: An occasional optional question, such as whether the student has a safe place to stay tonight. A yes keeps that need in every recommendation until the student says it is resolved.
+        status: built
+        screens: [Today, Help]
+        journeys: [p6-no-safe-place-tonight, p6-check-in-until-resolved]
+      - name: A few signals, not a directory
+        what: Each open need yields its best next step, most urgent first, and never more than three at once. "Not today" pauses reminders and closes nothing.
+        status: built
+        screens: [Today]
+        journeys: [p6-check-in-until-resolved, p6-compound-week]
+      - name: Support packages and the care plan
+        what: Twelve packages, the help that usually works together for one barrier, in the order to try it, kept to what serves the student and is current, on one plan, most urgent first.
+        status: built
+        screens: [Plan]
+        journeys: [p6-compound-week]
+      - name: Did it help
+        what: One question after a student uses a resource. Counts are shown only once five or more students have answered, and each student counts once.
+        status: built
+        screens: [Guide]
+        journeys: [p6-did-it-help]
+      - name: A public feed for any app
+        what: The guide as open data under CC BY 4.0, with an OpenAPI description, filters by barrier, county and kind of provider, and published coverage gaps. It holds services, never students.
+        status: built
+        screens: [Guide]
+        journeys: [p6-public-feed]
+      - name: Agents that keep it true
+        what: Scouts own each entry; admission gates hold an entry with no source, a bad phone number, dense wording or no owner; a verifier re-reads every source on its schedule and marks what it could not confirm.
+        status: built
+        screens: [Guide]
+        journeys: [p6-bad-entry-held]

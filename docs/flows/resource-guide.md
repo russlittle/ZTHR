@@ -325,18 +325,26 @@ The guide is offered as a public benefit: any app, college, library, congregatio
 
 ## Evidence
 
-| Gate or record | Shows |
-| --- | --- |
-| Resource admission | Every admitted entry has a cited, reachable source; structured barrier, provider, county and eligibility; and how-to-use text at the reading level |
-| Link and content QA | Each verification run, published: what was checked, what was found, what changed |
-| Freshness | No entry is shown as current past its freshness; a ratchet on the share of entries verified on time |
-| Precision audit | Each scout's sampled precision against its datum |
-| Check-in fidelity | Each question matches its cited source's wording, or is marked as written for the Advocate |
-| Barrier lifecycle | No sequence of answers closes a barrier the student did not resolve |
-| Sensitive trace | Barrier answers never reach an advisor, a college or a log unless the student shares them |
-| Matching journeys | Locked journeys for compound situations: a student short on rent, without a ride and with a sick child gets the right three signals |
-| Coverage | Each barrier in each county has help from at least one kind of provider, or a published gap |
-| Feed | The public feed validates against its published schema and carries every entry's source and verification |
+Each row is a check that runs with every build, except where the row says otherwise. The gates are each proven able to fail: they are run against planted defects first, and a gate that misses one cannot admit anything ([Gates](../testing/gates.md)).
+
+| Check | What it holds | Where |
+| --- | --- | --- |
+| Resource admission (gate) | Every entry passes every admission check. Five planted bad entries (no source, a broken phone number, dense eligibility text, a made-up barrier, an impossible date) are each held by the check named for that fault | `guide-admission` in `tools/gates.ts` |
+| One planted entry per check (tests) | Each of the 12 admission checks holds an entry built to fail it. An entry no scout owns and a duplicated id are held too | `guide.test.ts` |
+| Feed (gate) | The feed validates against its schema and carries no student's name, phone, id or answer. No count is shown from fewer than five answers | `guide-feed` |
+| Barrier lifecycle (gate) | Over 300 seeded sequences of 25 events: nothing but the student closes a barrier, urgency never drops while it is open, "not today" never changes its status, and no barrier is duplicated | `barrier-lifecycle` |
+| Barrier properties (tests) | The same rules over 400 generated sequences each, plus: history only grows and stays in date order, active barriers are sorted most urgent first, and a quiet barrier is asked about once a week | `guide.test.ts`, with fast-check |
+| Signals (tests) | Never more than three, whatever is open. Tonight comes first. Resolved and "not today" barriers drop out. A barrier with nothing near the student becomes a counted gap that offers 2-1-1 | `guide.test.ts` |
+| Did it help (tests and journey) | Each student counts once and their latest answer wins. Counts appear only from five answers up | `guide.test.ts`, `p6-did-it-help` |
+| Packages (tests) | Every entry in a package exists. A package offers only what serves the student and is current | `guide.test.ts` |
+| Taxonomy (tests) | Each barrier sits in one of the five domains and has at least one entry. Every kind of provider is present, faith-based included. Every check-in opens a barrier from the taxonomy and cites its source | `guide.test.ts` |
+| Every page and endpoint (tests) | The public guide, all 23 barrier pages and every entry page render with the entry's source. Each API endpoint answers with CORS. Filters return only what they promise | `guide.test.ts` |
+| Locked journeys | No safe place tonight, by app and text, in the standard and brief modes; a check-in kept until resolved; a compound week; did it help; the public feed; a bad entry held | `control/journeys/p6-*.yaml` |
+| Sensitive trace | Markers planted in every sensitive field never reach the public guide or the feed. The trace runs after a check-in, a barrier and a "did it help" answer | `sensitive-data` gate |
+| Page walk | Every guide page and form, walked for each student. Each reading page is walked once per student, since it shows the same catalog whatever else the student has done | `npm run crawl` |
+| Link and content check (weekly) | Each entry's source and page answer, the listed phone number still appears there, and the entry is within its freshness. Anything not confirmed is listed by entry | [Guide verification](https://github.com/russlittle/ZTHR/actions/workflows/guide-verify.yml) |
+| Coverage | For each barrier in each county: the current services and the kinds of provider behind them, with the gaps published | `/api/guide/v1/coverage` |
+| Precision audit | Not measured yet. Each scout's sampled precision against its datum starts once the weekly verifier has a month of runs | |
 
 ## Sources
 

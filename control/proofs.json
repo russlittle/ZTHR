@@ -201,5 +201,35 @@
       "planted link that keeps working after it is turned off",
       "planted message that repeats the link"
     ]
+  },
+  {
+    "gate": "guide-admission",
+    "gateHash": "cc16d1c68d08bbbd2ca0cd7a08a0fe5a1886f2936ab6a5b8eb811f5a9faed3c3",
+    "valid": true,
+    "cases": [
+      "planted catalog with an entry that has no source",
+      "planted gate that admits everything",
+      "planted gate that no longer checks phone numbers"
+    ]
+  },
+  {
+    "gate": "guide-feed",
+    "gateHash": "6ef5ed5814be8b0d755b8e1bda0fbe4bffd336ec685f7fe3d257c25c5b37a802",
+    "valid": true,
+    "cases": [
+      "planted feed that carries the student name",
+      "planted feed that shows a count from one answer",
+      "planted feed with an entry missing its source"
+    ]
+  },
+  {
+    "gate": "barrier-lifecycle",
+    "gateHash": "2c8a228dea1e28ab9593b91ffc02928e6a29b4de200fc506bd5bbb5ba57ea116",
+    "valid": true,
+    "cases": [
+      "planted open that lowers urgency",
+      "planted \"not today\" that closes the barrier",
+      "planted check-in that closes a quiet barrier"
+    ]
   }
 ]
