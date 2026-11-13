@@ -38,7 +38,7 @@ describe('roles are defined by what they are denied (Pattern 20)', () => {
   });
   it('the builder cannot admit its own drafts: a draft that fails a check stays unresolved, and signoff refuses anyone not listed', () => {
     const a = new Advocate({ today: () => '2026-11-03' });
-    for (let i = 0; i < 3; i++) a.findHelp(a.createStudent({ chosenName: `S${i}`, zip: '45402', enrollment: { college: 'sinclair' } }).id, 'career');
+    for (let i = 0; i < 3; i++) a.findHelp(a.createStudent({ chosenName: `S${i}`, zip: '45505', enrollment: { college: 'clark-state' } }).id, 'career');
     const [p] = propose(a.evidence, { today: '2026-11-03', existingScouts: [], existingPlaybooks: [] });
     expect(p!.status).toBe('unresolved');
     const r = spawnSync('npx', ['tsx', 'tools/signoff.ts', '--proposal', 'p-7f82777e5d', '--by', 'builder', '--reason', 'I approve my own work, trust me'], { cwd: ROOT, encoding: 'utf8' });

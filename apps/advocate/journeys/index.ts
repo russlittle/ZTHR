@@ -467,9 +467,11 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
     ctx.act('look for food');
     const food = app.a.findHelp(s.id, 'food');
     ctx.forbid('a resource is offered that is stale or the student is ineligible for', food.options.some((o) => o.resource.id === 'house-of-bread' || o.eligibility?.status === 'unlikely'));
-    ctx.act('look for tutoring help, which has no listed resource yet');
+    // A real gap: the guide covers Montgomery and Greene counties, so a Clark State student's tutoring need has no entry yet.
+    const clark = student(app, ctx, { chosenName: 'Any', enrollment: { college: 'clark-state', creditHours: 12 } });
+    ctx.act('look for tutoring help where no resource is listed yet');
     const before = app.a.evidence.events('unmet_need').length;
-    const m = show(app, ctx, app.a.helpMessage(s.id, 'academic'));
+    const m = show(app, ctx, app.a.helpMessage(clark.id, 'academic'));
     ctx.forbid('a gap is hidden instead of counted', !/couldn't find/.test(m.text) || app.a.evidence.events('unmet_need').length <= before);
   },
 

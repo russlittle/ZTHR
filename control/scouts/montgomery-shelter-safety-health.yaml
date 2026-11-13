@@ -1,0 +1,17 @@
+scout: montgomery-shelter-safety-health
+geography: { county: Montgomery }
+needs: [emergency, housing, safety, mental-health, health, career, phone-internet, wellbeing, opportunity]
+sources:
+  - { url: "https://stvincentdayton.org/help/", kind: agency }
+  - { url: "https://www.daybreakdayton.org/", kind: agency }
+  - { url: "https://www.ywcadayton.org/shelter", kind: agency }
+  - { url: "https://www.phdmc.org/resources/local-healthcare-providers", kind: agency }
+  - { url: "https://www.premierhealth.com/locations/samaritan-behavioral-health", kind: agency }
+  - { url: "https://dam.assets.ohio.gov/image/upload/jfs.ohio.gov/owd/OhioMeansJobs/OhioMeansJobsCentersbyCounty.pdf", kind: agency }
+  - { url: "https://www.daytonmetrolibrary.org/news/mobile-hotspots/", kind: agency }
+  - { url: "https://www.metroparks.org/programs", kind: agency }
+entries: [homefull-mens-shelter, svdp-womens-shelter, daybreak, ywca-dayton, samaritan-behavioral, community-health-dayton, omj-montgomery, dml-hotspots, metroparks-free-fitness]
+freshness_days: 30
+datum: { precision_min: 0.85 }
+owner: builder
+admitted_by: factory

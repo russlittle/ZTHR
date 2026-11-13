@@ -1,0 +1,14 @@
+scout: miami-valley-regional
+geography: { county: Montgomery }
+needs: [health, childcare, goods, wellbeing, opportunity]
+sources:
+  - { url: "https://www.phdmc.org/resources/local-healthcare-providers", kind: agency }
+  - { url: "https://4cforchildren.org/findcare", kind: agency }
+  - { url: "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf", kind: directory }
+  - { url: "https://www.daytonymca.org/node/1478", kind: agency }
+  - { url: "https://www.daytonartinstitute.org", kind: agency }
+entries: [five-rivers-health, four-c-child-care, gem-city-diaper-bank, ymca-extra-hands, dai-art-for-all]
+freshness_days: 90
+datum: { precision_min: 0.8 }
+owner: builder
+admitted_by: factory

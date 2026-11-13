@@ -1,4 +1,5 @@
 import type { NeedCategory } from '../domain/types.js';
+import type { ProviderKind, ProviderLevel, Situation } from '../guide/taxonomy.js';
 
 /**
  * A catalog entry, shaped after the Open Referral Human Services Data
@@ -26,9 +27,28 @@ export interface Resource {
   verifiedOn: string;
   freshnessDays: number;
   tags?: string[];
+  /** Who provides it, and at what level. Faith-based entries say plainly whether help depends on attending anything. */
+  provider: { kind: ProviderKind; level: ProviderLevel; faithNote?: string };
+  /** Situations it fits best; it may still serve others. */
+  situations?: Situation[];
+  /** What it costs the student. */
+  cost?: 'free' | 'sliding-scale' | 'low-cost' | 'varies';
+  /** What to expect when you go or call, in the source's terms. */
+  whatToExpect?: string;
+  /** What is known right now, each fact with its own source and date; absent means not known. */
+  availability?: AvailabilityFact[];
 }
 
+export interface AvailabilityFact {
+  fact: 'applications-open' | 'funding' | 'response-time' | 'season';
+  value: string;
+  source: string;
+  checkedOn: string;
+}
+
+/** Fresh while within its freshness window. An entry verified after the reference date (the demonstration runs on a
+ * fixed day) was checked more recently than that, so it counts as current. */
 export function isFresh(r: Resource, today: string): boolean {
   const age = (Date.parse(today) - Date.parse(r.verifiedOn)) / 86_400_000;
-  return age >= 0 && age <= r.freshnessDays;
+  return age <= r.freshnessDays;
 }

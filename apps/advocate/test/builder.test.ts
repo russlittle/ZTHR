@@ -11,9 +11,10 @@ import { makeAdvocate } from './helpers.js';
 const CONTROL = fileURLToPath(new URL('../../../control', import.meta.url));
 
 describe('the builder', () => {
-  const demand = (need: string, n: number, zip = '45402') => {
+  // Demand comes from Clark State students: the guide covers Montgomery and Greene counties, so a need there is a real gap.
+  const demand = (need: string, n: number, zip = '45505', college = 'clark-state') => {
     const a = makeAdvocate();
-    for (let i = 0; i < n; i++) a.findHelp(a.createStudent({ chosenName: `S${i}`, zip, enrollment: { college: 'sinclair' } }).id, need as never);
+    for (let i = 0; i < n; i++) a.findHelp(a.createStudent({ chosenName: `S${i}`, zip, enrollment: { college } }).id, need as never);
     return a.evidence;
   };
   const opts = { today: '2026-11-02', existingScouts: [], existingPlaybooks: [] };
@@ -33,7 +34,7 @@ describe('the builder', () => {
     expect(p!.checks.find((c) => !c.ok)?.detail).toMatch(/source of record/);
   });
   it('does not duplicate a scout that already covers the need', () => {
-    expect(propose(demand('books', 3), { ...opts, existingScouts: [{ geography: { county: 'Montgomery' }, needs: ['books'] }] })).toHaveLength(0);
+    expect(propose(demand('books', 3), { ...opts, existingScouts: [{ geography: { county: 'Clark' }, needs: ['books'] }] })).toHaveLength(0);
   });
   it('retires a question that almost never reveals a need', () => {
     const ev = new EvidenceStore();

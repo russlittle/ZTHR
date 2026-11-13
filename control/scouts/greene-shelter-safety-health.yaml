@@ -1,0 +1,12 @@
+scout: greene-shelter-safety-health
+geography: { county: Greene }
+needs: [emergency, housing, safety, mental-health, health, utilities, goods, money, career]
+sources:
+  - { url: "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf", kind: directory }
+  - { url: "https://www.ohiolegalhelp.org/resource/family-violence-prevention-center-greene-county", kind: directory }
+  - { url: "https://dam.assets.ohio.gov/image/upload/jfs.ohio.gov/owd/OhioMeansJobs/OhioMeansJobsCentersbyCounty.pdf", kind: agency }
+entries: [greene-ihn, housing-solutions-greene, greene-fvpc, tcn-greene, greene-public-health, greene-cap, share-121-closet, salvation-army-xenia, omj-greene]
+freshness_days: 45
+datum: { precision_min: 0.8 }
+owner: builder
+admitted_by: factory
