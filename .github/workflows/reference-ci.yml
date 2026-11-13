@@ -1,0 +1,32 @@
+name: Reference app checks (reproduce)
+
+# Runs the reference app's first build steps on GitHub, so a failing Cloud Build step can be reproduced with its log
+# readable here. On demand only.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch or commit of the reference app
+        default: reference-implementation
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Tests
+        run: npx vitest run --reporter=dot 2>&1 | tail -150
+      - run: npm run gates
+      - run: npm run journeys
+      - run: npm run docs:check
