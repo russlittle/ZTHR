@@ -16,8 +16,10 @@ async function read(url) {
   const t = setTimeout(() => ctl.abort(), 20_000);
   try {
     const r = await fetch(url, { redirect: 'follow', signal: ctl.signal, headers: { 'user-agent': UA, accept: 'text/html,application/xhtml+xml,*/*' } });
-    const body = r.status < 400 ? (await r.text()).slice(0, 2_000_000) : '';
-    return { status: r.status, final: r.url, body };
+    const pdf = /pdf/i.test(r.headers.get('content-type') ?? '') || /\.pdf($|\?)/i.test(r.url);
+    // Text inside a PDF is usually compressed, so a phone number cannot be searched for there.
+    const body = r.status < 400 && !pdf ? (await r.text()).slice(0, 2_000_000) : '';
+    return { status: r.status, final: r.url, body, pdf };
   } catch (e) {
     return { status: 0, final: url, body: '', error: String(e.cause?.code ?? e.name ?? e.message) };
   } finally {
@@ -54,11 +56,14 @@ for (let i = 0; i < feed.services.length; i += 6) {
         const answered = src.status > 0 && src.status < 400;
         const pageAnswered = page.status > 0 && page.status < 400;
         const d = digits(s.phone);
-        const phoneSeen = !d || d.length < 10 ? null : [src.body, page.body].some((b) => digits(b).includes(d));
+        const readable = [src, page].filter((x) => x.status > 0 && x.status < 400 && !x.pdf);
+        const phoneSeen = !d || d.length < 10 || !readable.length ? null : readable.some((x) => digits(x.body).includes(d));
         const age = Math.round((Date.parse(today) - Date.parse(s.verification.verified_on)) / 86_400_000);
         const notes = [];
-        if (!answered) notes.push(`source answered ${src.status || src.error}`);
-        if (!pageAnswered && page !== src) notes.push(`page answered ${page.status || page.error}`);
+        // Some sites refuse or hide pages from automated readers; those are for a person to open, not proof the entry is gone.
+        const why = (x) => (x.status === 403 ? '403: refused the automated check; open it by hand' : x.status === 404 ? '404: not found for the automated check; open it by hand' : String(x.status || x.error));
+        if (!answered) notes.push(`source ${why(src)}`);
+        if (!pageAnswered && page !== src) notes.push(`page ${why(page)}`);
         if (answered && phoneSeen === false) notes.push('the listed phone number was not found on the source or page');
         if (age > s.verification.freshness_days) notes.push(`last verified ${age} days ago, past its ${s.verification.freshness_days}-day freshness`);
         return { id: s.id, name: s.name, source: s.source.url, source_status: src.status, page_status: page.status, phone_seen: phoneSeen, age_days: age, status: notes.length ? 'needs a look' : 'confirmed', notes };
