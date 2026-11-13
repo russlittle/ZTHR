@@ -4,7 +4,7 @@ purpose: Get approved accommodation letters to every instructor at the start of 
 owner: builder
 admitted_by: factory
 sources:
-  - https://www2.ed.gov/about/offices/list/ocr/transition.html
+  - https://www.ed.gov/higher-education/students-disabilities-preparing-postsecondary-education
 student_grants:
   sealed: [disability_accommodations]
   profile: [chosenName, college]

@@ -25,7 +25,7 @@ flowchart TD
   confirm_received -. after 10 days .-> confirm_received_late[/"One or more letters may not have gone out. I can draft a sho"/]
 ```
 
-Sources: <https://www2.ed.gov/about/offices/list/ocr/transition.html>. Grants: sealed disability_accommodations; profile chosenName, college. Journeys: persona-8c-accommodation-letters.
+Sources: <https://www.ed.gov/higher-education/students-disabilities-preparing-postsecondary-education>. Grants: sealed disability_accommodations; profile chosenName, college. Journeys: persona-8c-accommodation-letters.
 
 ## Housing over breaks
 
