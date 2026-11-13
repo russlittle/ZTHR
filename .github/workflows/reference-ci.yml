@@ -15,7 +15,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 180
     # The same image the Cloud Build steps use.
     container: node:22-bookworm
     steps:
@@ -34,3 +34,22 @@ jobs:
       - run: npm run journeys -- --release check
       - run: npm run docs:check
       - run: npm run contract
+      - name: Button walk (push mode)
+        shell: bash
+        run: mkdir -p evidence-out/last && tools/walk-ci.sh explore false
+      - name: Feature walk (push mode)
+        shell: bash
+        run: tools/walk-ci.sh crawl false && npx tsx tools/crawl.ts Maria --settings
+      - name: Browser walk, deep click-through, words, load
+        shell: bash
+        run: |
+          set -e
+          npm install --no-save playwright@1.63.0
+          npx playwright install --with-deps chromium
+          npx tsx tools/site.ts
+          ADVOCATE_TODAY=2026-11-02 ADVOCATE_CLOCK=07:30 PORT=8787 ADVOCATE_BASE=/studentadvocate ADVOCATE_RATE_PER_MIN=100000 ADVOCATE_SANDBOX_STARTS_PER_HOUR=100000 npx tsx apps/advocate/src/server/main.ts > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:8787/studentadvocate/ > /dev/null && break; sleep 1; done
+          npx tsx tools/ui/walk.ts http://localhost:8787/studentadvocate evidence-out/ui || { cat server.log; exit 1; }
+          timeout 1500 npx tsx tools/ui/deep.ts http://localhost:8787/studentadvocate evidence-out/deep || { cat server.log; exit 1; }
+          WORDS_OUT=evidence-out/words timeout 900 npx tsx tools/ui/words.ts site-out http://localhost:8787/studentadvocate
+          npx tsx tools/load.ts http://localhost:8787/studentadvocate 25 30 || { cat server.log; exit 1; }
