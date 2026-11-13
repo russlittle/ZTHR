@@ -161,6 +161,7 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 .question { margin-top: 56px; text-align: left; border: 1px solid var(--rule-strong); padding: 26px 28px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center; }
 .question p { margin: 0; font-family: var(--font-display); font-stretch: 112%; font-weight: 700; font-size: clamp(22px, 3vw, 32px); line-height: 1.2; text-wrap: balance; }
 .question .eyebrow { grid-column: 1 / -1; }
+@media (max-width: 480px) { .question { grid-template-columns: minmax(0, 1fr); padding: 18px 16px; } .question > * { min-width: 0; overflow-wrap: anywhere; } }
 
 .families { margin-top: 56px; }
 .famgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule-strong); }
@@ -221,7 +222,7 @@ main { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; }
 #mapsvg .dim { opacity: .18; }
 #mapsvg .pn:focus { outline: none; }
 #mapsvg .pn:focus-visible circle { stroke-width: 4; }
-@media (max-width: 700px) { nav.views { flex-wrap: nowrap; overflow-x: auto; width: 100%; scrollbar-width: none; } nav.views a { white-space: nowrap; } .top-in { gap: 6px; } }
+@media (max-width: 700px) { nav.views { flex-wrap: wrap; width: 100%; } nav.views a { white-space: nowrap; padding: 6px 8px; } .top-in { gap: 6px; } }
 .panel { border-top: 2px solid var(--ink); padding-top: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 72px); }
 .panel .h3, .panel h2 { margin: 10px 0 6px; font-size: 24px; }
 .panel p { font-size: 15.5px; margin: 0 0 12px; }
@@ -275,6 +276,7 @@ footer { max-width: 1180px; margin: 0 auto; padding-block: 0 48px; font-family: 
 
 [hidden]{display:none!important} :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)} body{margin:0} img{max-width:100%}
 </style>
+<script src="/reference/assets/figures.js" defer></script>
 </head>
 <body>
 

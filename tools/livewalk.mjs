@@ -106,6 +106,10 @@ for (const width of [1280, 390]) {
     const r = await page.evaluate(() => ({
       csp: window.__csp,
       overflow: document.documentElement.scrollWidth - innerWidth,
+      // Nothing scrolls sideways inside the page either: no frame, menu or figure.
+      scrollers: [...document.querySelectorAll('body *')].filter((e) => !e.closest('.fig-view') && e.offsetParent && /(auto|scroll)/.test(getComputedStyle(e).overflowX) && e.scrollWidth > e.clientWidth + 2).map((e) => `${e.tagName.toLowerCase()}.${String(e.className).split(' ')[0]}`),
+      figures: document.querySelectorAll('.fig').length,
+      bars: document.querySelectorAll('.fig .fig-bar').length,
       h1: document.querySelectorAll('h1').length,
       diagrams: document.querySelectorAll('.mermaid').length,
       drawn: document.querySelectorAll('.mermaid svg:not([aria-roledescription="error"])').length,
@@ -117,10 +121,26 @@ for (const width of [1280, 390]) {
     if (r.csp.length) bad(at, `blocked by the content security policy: ${r.csp.slice(0, 3).join('; ')}`);
     if (errors.length) bad(at, `browser errors: ${errors.slice(0, 2).join(' | ')}`);
     if (r.overflow > 1) bad(at, `page scrolls sideways by ${r.overflow}px`);
+    if (r.scrollers.length) bad(at, `scrolls sideways inside: ${[...new Set(r.scrollers)].join(', ')}`);
+    if (r.bars < r.figures) bad(at, `${r.figures - r.bars} figure(s) without full screen, copy and print controls`);
     if (r.broken) bad(at, `${r.broken} diagram(s) drawn as a syntax error`);
     else if (r.drawn < r.diagrams) bad(at, `${r.diagrams - r.drawn} of ${r.diagrams} diagrams not drawn`);
     if (!r.title.trim()) bad(at, 'no page title');
     if (width === 1280) for (const h of r.links) if (!links.has(h.split('#')[0])) links.set(h.split('#')[0], p);
+  }
+  // One figure, opened full screen and closed again, per width: every control on screen, and focus comes back.
+  await page.goto(`${ORIGIN}/reference/docs/architecture`, { waitUntil: 'load' });
+  await page.waitForSelector('.fig .fig-bar', { timeout: 10000 }).catch(() => bad(`/reference/docs/architecture at ${width}px`, 'no figure controls'));
+  const full = page.locator('.fig-bar').first().getByRole('button', { name: 'Full screen' });
+  if (await full.count()) {
+    await full.click();
+    await page.waitForTimeout(400);
+    const v = await page.evaluate(() => ({ open: document.querySelector('.fig-view')?.open, off: [...document.querySelectorAll('.fig-view header button')].filter((b) => { const x = b.getBoundingClientRect(); return x.right > innerWidth || x.left < 0; }).map((b) => b.getAttribute('aria-label')) }));
+    if (!v.open) bad(`full screen at ${width}px`, 'did not open');
+    if (v.off.length) bad(`full screen at ${width}px`, `controls off screen: ${v.off.join(', ')}`);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    if (await page.evaluate(() => document.querySelector('.fig-view')?.open)) bad(`full screen at ${width}px`, 'Escape did not close it');
   }
   await ctx.close();
 }
