@@ -1,0 +1,39 @@
+name: Live walk of zthr.ai
+
+# After every deploy, and every morning, the live site is walked as visitors get it: every page in a real browser,
+# every link followed, the security headers, the not-found answers and the way into the app.
+on:
+  workflow_run:
+    workflows: ["Deploy zthr.ai to Firebase Hosting"]
+    types: [completed]
+  schedule:
+    - cron: "17 10 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  walk:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install a browser
+        run: |
+          npm install --no-save playwright@1.48.2
+          npx playwright install --with-deps chromium
+      - name: Wait for the new deploy to reach the edge
+        if: github.event_name == 'workflow_run'
+        run: sleep 60
+      - name: Walk the live site
+        run: node tools/livewalk.mjs https://zthr.ai
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: livewalk
+          path: livewalk.json
