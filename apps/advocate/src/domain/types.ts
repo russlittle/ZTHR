@@ -40,7 +40,16 @@ export type NeedCategory =
   | 'career'
   | 'phone-internet'
   | 'caregiving'
-  | 'academic';
+  | 'academic'
+  | 'emergency'
+  | 'safety'
+  | 'goods'
+  | 'documents'
+  | 'aid'
+  | 'direction'
+  | 'belonging'
+  | 'wellbeing'
+  | 'opportunity';
 
 export interface Household {
   size: number;
