@@ -108,7 +108,8 @@ for (const width of [1280, 390]) {
       overflow: document.documentElement.scrollWidth - innerWidth,
       h1: document.querySelectorAll('h1').length,
       diagrams: document.querySelectorAll('.mermaid').length,
-      drawn: document.querySelectorAll('.mermaid svg').length,
+      drawn: document.querySelectorAll('.mermaid svg:not([aria-roledescription="error"])').length,
+      broken: document.querySelectorAll('.mermaid svg[aria-roledescription="error"]').length,
       title: document.title,
       links: [...document.querySelectorAll('a[href]')].map((a) => a.href).filter((h) => /^https?:/.test(h)),
     }));
@@ -116,7 +117,8 @@ for (const width of [1280, 390]) {
     if (r.csp.length) bad(at, `blocked by the content security policy: ${r.csp.slice(0, 3).join('; ')}`);
     if (errors.length) bad(at, `browser errors: ${errors.slice(0, 2).join(' | ')}`);
     if (r.overflow > 1) bad(at, `page scrolls sideways by ${r.overflow}px`);
-    if (r.drawn < r.diagrams) bad(at, `${r.diagrams - r.drawn} of ${r.diagrams} diagrams not drawn`);
+    if (r.broken) bad(at, `${r.broken} diagram(s) drawn as a syntax error`);
+    else if (r.drawn < r.diagrams) bad(at, `${r.diagrams - r.drawn} of ${r.diagrams} diagrams not drawn`);
     if (!r.title.trim()) bad(at, 'no page title');
     if (width === 1280) for (const h of r.links) if (!links.has(h.split('#')[0])) links.set(h.split('#')[0], p);
   }
