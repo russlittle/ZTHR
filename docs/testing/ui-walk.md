@@ -44,12 +44,12 @@ The walk sees every screen; the deep click-through (`tools/ui/deep.ts`) presses 
 
 ```mermaid
 flowchart LR
-  today[Today, per student] --> find[Find every link and button in main and the tab bar]
-  find --> click[Click it once, on the screen where it was found]
-  click --> check{Loaded, one heading, no artifacts,<br/>no browser errors, something changed,<br/>no 'not available'?}
-  check -- yes --> next[Queue the new screen, one level deeper]
-  check -- no --> fail[Build fails, naming the path of clicks]
-  next --> find
+  start[Today, per student] --> scan[Find every link and button in main and the tab bar]
+  scan --> press[Press it once, on the screen where it was found]
+  press --> verdict{Loaded, one heading, no artifacts,<br/>no browser errors, something changed,<br/>no 'not available'?}
+  verdict -- yes --> deeper[Queue the new screen, one level deeper]
+  verdict -- no --> stop[Build fails, naming the path of clicks]
+  deeper --> scan
 ```
 
 Words are checked whole (`tools/ui/words.ts`): every published page and every student's main screens, at desktop and phone widths in light and dark, with every heading, table cell, link, button, label and list item measured. A word drawn across two lines fails the build; long addresses and code may break.

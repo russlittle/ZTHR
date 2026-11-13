@@ -320,7 +320,7 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
 }
 </style><script async src="https://www.googletagmanager.com/gtag/js?id=G-12ENZ47TSG"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-12ENZ47TSG');</script>
 <script src="assets/mermaid.min.js"></script><script>window.mermaid&&(function(){var d=matchMedia('(prefers-color-scheme: dark)').matches;mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',themeVariables:d?{fontFamily:'Atkinson Hyperlegible, system-ui, sans-serif',fontSize:'15px',background:'#111e25',primaryColor:'#13303a',primaryBorderColor:'#5fd0e6',primaryTextColor:'#e3edf2',secondaryColor:'#1d2a40',tertiaryColor:'#111e25',lineColor:'#97abb6',textColor:'#e3edf2',clusterBkg:'#0e1a20',clusterBorder:'#22343e',edgeLabelBackground:'#111e25',noteBkgColor:'#173842',noteTextColor:'#e3edf2'}:{fontFamily:'Atkinson Hyperlegible, system-ui, sans-serif',fontSize:'15px',background:'#ffffff',primaryColor:'#e8f4f7',primaryBorderColor:'#0b6680',primaryTextColor:'#12202a',secondaryColor:'#eeedfd',tertiaryColor:'#ffffff',lineColor:'#53636f',textColor:'#12202a',clusterBkg:'#f6f9fa',clusterBorder:'#c8d6de',edgeLabelBackground:'#ffffff',noteBkgColor:'#fff6e0',noteTextColor:'#12202a'}});addEventListener('DOMContentLoaded',function(){if(innerWidth<700)document.querySelectorAll('pre.mermaid').forEach(function(m){m.textContent=m.textContent.replace(/^(\s*(?:flowchart|graph))\s+LR\b/,'$1 TB').replace(/\bdirection\s+LR\b/g,'direction TB').replace(/^(\s*subgraph[^\n]*\n)(?!\s*direction)/gm,'$1direction TB\n')});mermaid.run().then(function(){document.querySelectorAll('.mermaid svg').forEach(function(svg){var w=svg.viewBox&&svg.viewBox.baseVal?svg.viewBox.baseVal.width:0,box=svg.parentElement;if(!w||w<=box.clientWidth)return;svg.style.maxWidth='none';svg.style.minWidth=Math.min(w,Math.max(560,w*0.8))+'px';box.tabIndex=0;box.setAttribute('role','group');box.setAttribute('aria-label','Diagram; scroll sideways to see all of it');var hint=document.createElement('p');hint.className='dia-hint';hint.setAttribute('aria-hidden','true');hint.textContent='Wider than the screen: swipe the diagram sideways to see all of it.';box.after(hint)})})})})();</script>
-<style>.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.dia-hint{font-size:13px;color:var(--muted);margin:-6px 0 14px}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style><style>article.case{max-width:860px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
+<style>.tscroll{max-width:100%;overflow-x:auto;margin:10px 0}.tscroll>table{margin:0}.tscroll:focus-visible{outline:3px solid var(--accent,#0b6680);outline-offset:2px}.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.dia-hint{font-size:13px;color:var(--muted);margin:-6px 0 14px}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style><style>article.case{max-width:860px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
 article.case h1{font-size:clamp(30px,4.4vw,46px);line-height:1.08;letter-spacing:-.02em;text-wrap:balance;margin:18px 0 14px}
 article.case h1+p{font-size:19px;color:var(--muted)}
 article.case h2{font-size:26px;margin:44px 0 10px;text-wrap:balance}
@@ -331,7 +331,7 @@ article.case th{font-size:13px;color:var(--muted);background:var(--calm)}
 article.case thead:has(th:empty){display:none}
 article.case .mermaid{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin:16px 0;overflow:auto;box-shadow:var(--shadow)}
 article.case code{background:var(--calm);padding:1px 5px;border-radius:5px}
-@media (max-width:640px){article.case table{display:block;overflow-x:auto}}</style></head><body><a class="skip" href="/reference/case#main">Skip to content</a><nav class="zbar" aria-label="All of the Student Advocate and ZTHR"><div class="zbar-in zwide"><a href="https://zthr.ai/">ZTHR</a><span class="zg"><span class="zl"><i class="dot d-app"></i>Student Advocate</span><a href="https://zthr.ai/advocate">About the app</a><a href="https://zthr.ai/studentadvocate/">Use the app</a><span class="zl" style="margin-left:6px"><i class="dot d-admin"></i></span><a href="https://zthr.ai/studentadvocate/admin/">App admin</a></span><span class="zg"><span class="zl"><i class="dot d-factory"></i>Factory</span><a href="https://zthr.ai/reference/factory/">Evidence</a><a href="https://zthr.ai/reference/docs/">Docs</a><a href="https://zthr.ai/reference/case" aria-current="page">The case</a></span><a href="https://zthr.ai/reference" class="zmap">Map: how it fits together</a></div><details class="znarrow"><summary><i class="dot d-factory"></i><span>The case</span><span class="zall">All parts</span></summary><div class="zbar-in"><a href="https://zthr.ai/">ZTHR</a><span class="zg"><span class="zl"><i class="dot d-app"></i>Student Advocate</span><a href="https://zthr.ai/advocate">About the app</a><a href="https://zthr.ai/studentadvocate/">Use the app</a><span class="zl" style="margin-left:6px"><i class="dot d-admin"></i></span><a href="https://zthr.ai/studentadvocate/admin/">App admin</a></span><span class="zg"><span class="zl"><i class="dot d-factory"></i>Factory</span><a href="https://zthr.ai/reference/factory/">Evidence</a><a href="https://zthr.ai/reference/docs/">Docs</a><a href="https://zthr.ai/reference/case" aria-current="page">The case</a></span><a href="https://zthr.ai/reference" class="zmap">Map: how it fits together</a></div></details></nav><main id="main"><article class="case"><h1>What an AI factory can build, and what it is worth</h1>
+</style></head><body><a class="skip" href="/reference/case#main">Skip to content</a><nav class="zbar" aria-label="All of the Student Advocate and ZTHR"><div class="zbar-in zwide"><a href="https://zthr.ai/">ZTHR</a><span class="zg"><span class="zl"><i class="dot d-app"></i>Student Advocate</span><a href="https://zthr.ai/advocate">About the app</a><a href="https://zthr.ai/studentadvocate/">Use the app</a><span class="zl" style="margin-left:6px"><i class="dot d-admin"></i></span><a href="https://zthr.ai/studentadvocate/admin/">App admin</a></span><span class="zg"><span class="zl"><i class="dot d-factory"></i>Factory</span><a href="https://zthr.ai/reference/factory/">Evidence</a><a href="https://zthr.ai/reference/docs/">Docs</a><a href="https://zthr.ai/reference/case" aria-current="page">The case</a></span><a href="https://zthr.ai/reference" class="zmap">Map: how it fits together</a></div><details class="znarrow"><summary><i class="dot d-factory"></i><span>The case</span><span class="zall">All parts</span></summary><div class="zbar-in"><a href="https://zthr.ai/">ZTHR</a><span class="zg"><span class="zl"><i class="dot d-app"></i>Student Advocate</span><a href="https://zthr.ai/advocate">About the app</a><a href="https://zthr.ai/studentadvocate/">Use the app</a><span class="zl" style="margin-left:6px"><i class="dot d-admin"></i></span><a href="https://zthr.ai/studentadvocate/admin/">App admin</a></span><span class="zg"><span class="zl"><i class="dot d-factory"></i>Factory</span><a href="https://zthr.ai/reference/factory/">Evidence</a><a href="https://zthr.ai/reference/docs/">Docs</a><a href="https://zthr.ai/reference/case" aria-current="page">The case</a></span><a href="https://zthr.ai/reference" class="zmap">Map: how it fits together</a></div></details></nav><main id="main"><article class="case"><h1>What an AI factory can build, and what it is worth</h1>
 <p>The Student Advocate is a complete, working application built entirely by AI agents under ZTHR fixtures: a
 student-facing team that runs a student&#39;s day, finds the money and help they qualify for, and does the legwork to
 get it. It exists to answer one question with evidence instead of argument: <strong>can software written by AI be
@@ -339,7 +339,7 @@ trusted, if the environment it is built in decides what is admitted?</strong></p
 <p>This page makes the case from both sides: what the application is worth to the people it serves, and what the
 factory that built it means for anyone who builds software.</p>
 <h2>At a glance</h2>
-<table>
+<div class="tscroll" tabindex="0" role="region" aria-label="Table; scrolls sideways on narrow screens"><table>
 <thead>
 <tr>
 <th></th>
@@ -374,7 +374,7 @@ factory that built it means for anyone who builds software.</p>
 <td><strong>Open</strong></td>
 <td>Every test, gate, walk, decision and line of source is public.</td>
 </tr>
-</tbody></table>
+</tbody></table></div>
 <h2>The problem it solves</h2>
 <p>Students who stop out rarely do so over ability. They stop out over a few hundred dollars, a missed form, a bus that never
 came, a shift that collided with an exam. Help exists for most of it: emergency grants, benefits, food programs,
@@ -388,7 +388,7 @@ most need the help have the least time to do that work.</p>
   find &amp; qualify &amp; work --&gt; stop[Stopping out]
   adv([The Advocate]) -. does the finding, checking and drafting .-&gt; gap
   adv --&gt; stay[Staying in school]</pre><h2>What the Advocate does</h2>
-<table>
+<div class="tscroll" tabindex="0" role="region" aria-label="Table; scrolls sideways on narrow screens"><table>
 <thead>
 <tr>
 <th>For the student</th>
@@ -427,7 +427,7 @@ most need the help have the least time to do that work.</p>
 <td>Opens doors to work</td>
 <td>Jobs that fit around classes and shifts, a fair-chance path when the student asks, an introduction to a mentor.</td>
 </tr>
-</tbody></table>
+</tbody></table></div>
 <p>It works by text or in the app, at the reading level and length the student chooses, with a screen reader or without, and it never scolds. Crisis
 words go straight to 988 before anything else. Nothing leaves on a student&#39;s behalf without their approval of the
 exact words.</p>
@@ -460,7 +460,7 @@ by checks that are themselves proven, against intent that the agents cannot edit
   trace --&gt; admit[Admitted by the factory]
   admit --&gt; serve[Deployed; the public address must serve the commit that passed]
   gates &amp; walks &amp; trace -- any failure --&gt; back[Back to the agents, with the reason]
-  person([A person]) -. signs only destructive changes .-&gt; admit</pre><table>
+  person([A person]) -. signs only destructive changes .-&gt; admit</pre><div class="tscroll" tabindex="0" role="region" aria-label="Table; scrolls sideways on narrow screens"><table>
 <thead>
 <tr>
 <th>Fixture</th>
@@ -507,7 +507,7 @@ by checks that are themselves proven, against intent that the agents cannot edit
 <td><strong>Accessible by construction</strong></td>
 <td>Every screen held to WCAG 2.2 AA and read the way a screen reader reads it, on every change.</td>
 </tr>
-</tbody></table>
+</tbody></table></div>
 <p>The factory finds what review misses. In building the Advocate it found, without being asked: a webhook signing
 secret in a student&#39;s export, document names in a permanent ledger, a brief-mode answer too long to deliver, a
 bus plan that took a transfer when a direct route existed, a synthetic mentor sharing a first name with a
@@ -533,7 +533,7 @@ Outcomes are measured without ever exposing a person.</p>
 state what users must be able to do and what must never happen, and get software built to that intent, with
 evidence anyone can inspect. People govern the gates and sign destructive changes; the factory does the rest.</p>
 <p><strong>What &quot;used well&quot; requires:</strong></p>
-<table>
+<div class="tscroll" tabindex="0" role="region" aria-label="Table; scrolls sideways on narrow screens"><table>
 <thead>
 <tr>
 <th>Condition</th>
@@ -560,7 +560,7 @@ evidence anyone can inspect. People govern the gates and sign destructive change
 <td>People governing the gates</td>
 <td>The factory admits features; people decide what the gates are and sign anything destructive.</td>
 </tr>
-</tbody></table>
+</tbody></table></div>
 <h2>Where it stands</h2>
 <p>Built and deployed: all five phases of features, the factory and its evidence, the block library and the
 documentation. Open, each with an owner and a date:</p>

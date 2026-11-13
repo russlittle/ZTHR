@@ -5,7 +5,7 @@ owner: builder
 admitted_by: factory
 sources:
   - https://emanuals.jfs.ohio.gov/Workforce/WIOA/WIOAPL/WIOAPL-15-08-1.stm
-  - https://ohiomeansjobs.ohio.gov
+  - https://dam.assets.ohio.gov/image/upload/jfs.ohio.gov/owd/OhioMeansJobs/OhioMeansJobsCentersbyCounty.pdf
 student_grants:
   sealed: []
   profile: [chosenName, county, college]

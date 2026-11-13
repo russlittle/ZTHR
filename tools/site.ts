@@ -36,8 +36,11 @@ const APP = ARTIFACT ? 'https://zthr.ai/studentadvocate/' : '/studentadvocate/';
 const fontBase = (rootRel: string) => (RELATIVE ? rootRel.replace(/\/$/, '') || '.' : '/advocate');
 const head = (rootRel: string) => `${ARTIFACT ? '' : `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>`}
 ${ARTIFACT ? '' : `<script src="${STATIC ? rootRel : '/'}assets/mermaid.min.js"></script>`}<script>window.mermaid&&(function(){var d=matchMedia('(prefers-color-scheme: dark)').matches;mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',themeVariables:d?{fontFamily:'Atkinson Hyperlegible, system-ui, sans-serif',fontSize:'15px',background:'#111e25',primaryColor:'#13303a',primaryBorderColor:'#5fd0e6',primaryTextColor:'#e3edf2',secondaryColor:'#1d2a40',tertiaryColor:'#111e25',lineColor:'#97abb6',textColor:'#e3edf2',clusterBkg:'#0e1a20',clusterBorder:'#22343e',edgeLabelBackground:'#111e25',noteBkgColor:'#173842',noteTextColor:'#e3edf2'}:{fontFamily:'Atkinson Hyperlegible, system-ui, sans-serif',fontSize:'15px',background:'#ffffff',primaryColor:'#e8f4f7',primaryBorderColor:'#0b6680',primaryTextColor:'#12202a',secondaryColor:'#eeedfd',tertiaryColor:'#ffffff',lineColor:'#53636f',textColor:'#12202a',clusterBkg:'#f6f9fa',clusterBorder:'#c8d6de',edgeLabelBackground:'#ffffff',noteBkgColor:'#fff6e0',noteTextColor:'#12202a'}});addEventListener('DOMContentLoaded',function(){if(innerWidth<700)document.querySelectorAll('pre.mermaid').forEach(function(m){m.textContent=m.textContent.replace(/^(\\s*(?:flowchart|graph))\\s+LR\\b/,'$1 TB').replace(/\\bdirection\\s+LR\\b/g,'direction TB').replace(/^(\\s*subgraph[^\\n]*\\n)(?!\\s*direction)/gm,'$1direction TB\\n')});mermaid.run().then(function(){document.querySelectorAll('.mermaid svg').forEach(function(svg){var w=svg.viewBox&&svg.viewBox.baseVal?svg.viewBox.baseVal.width:0,box=svg.parentElement;if(!w||w<=box.clientWidth)return;svg.style.maxWidth='none';svg.style.minWidth=Math.min(w,Math.max(560,w*0.8))+'px';box.tabIndex=0;box.setAttribute('role','group');box.setAttribute('aria-label','Diagram; scroll sideways to see all of it');var hint=document.createElement('p');hint.className='dia-hint';hint.setAttribute('aria-hidden','true');hint.textContent='Wider than the screen: swipe the diagram sideways to see all of it.';box.after(hint)})})})})();</script>
-<style>.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.dia-hint{font-size:13px;color:var(--muted);margin:-6px 0 14px}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style>`;
+<style>.tscroll{max-width:100%;overflow-x:auto;margin:10px 0}.tscroll>table{margin:0}.tscroll:focus-visible{outline:3px solid var(--accent,#0b6680);outline-offset:2px}.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.dia-hint{font-size:13px;color:var(--muted);margin:-6px 0 14px}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style>`;
 
+/** Each table sits in its own frame that scrolls sideways when the table is wider than the screen, so the page
+ * itself never does; the frame can be reached and scrolled from the keyboard, and the table stays a table. */
+const scrollTables = (html: string) => html.replace(/<table>/g, '<div class="tscroll" tabindex="0" role="region" aria-label="Table; scrolls sideways on narrow screens"><table>').replace(/<\/table>/g, '</table></div>');
 const read = <T>(p: string): T | undefined => (existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as T) : undefined);
 /**
  * zthr.ai strips trailing slashes, so a folder's page is served at /reference/factory, not /reference/factory/, and
@@ -130,7 +133,7 @@ function buildCase(): void {
       },
     },
   });
-  const body = marked.parse(readFileSync(src, 'utf8')) as string;
+  const body = scrollTables(marked.parse(readFileSync(src, 'utf8')) as string);
   const title = readFileSync(src, 'utf8').match(/^# (.+)$/m)![1]!;
   const css = `article.case{max-width:860px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
 article.case h1{font-size:clamp(30px,4.4vw,46px);line-height:1.08;letter-spacing:-.02em;text-wrap:balance;margin:18px 0 14px}
@@ -143,7 +146,7 @@ article.case th{font-size:13px;color:var(--muted);background:var(--calm)}
 article.case thead:has(th:empty){display:none}
 article.case .mermaid{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin:16px 0;overflow:auto;box-shadow:var(--shadow)}
 article.case code{background:var(--calm);padding:1px 5px;border-radius:5px}
-@media (max-width:640px){article.case table{display:block;overflow-x:auto}}`;
+`;
   write(join(SITE, 'case.html'), ui.bareShell({ theme: 'factory', surface: 'case', title: `${title} · ZTHR`, description: 'The Student Advocate, built entirely by AI agents under ZTHR fixtures: what it does, why it can be trusted, how the factory works, what it costs and what it could mean.', base: fontBase(''), head: `${head('')}<style>${css}</style>`, body: `<main id="main"><article class="case">${body}</article></main>` }));
 }
 
@@ -176,7 +179,7 @@ function buildDocs(): number {
         },
       },
     });
-    const body = marked.parse(readFileSync(f, 'utf8').replace(/<!--[\s\S]*?-->/g, '')) as string;
+    const body = scrollTables(marked.parse(readFileSync(f, 'utf8').replace(/<!--[\s\S]*?-->/g, '')) as string);
     const nav = groups.map(([g, keep]) => ({ title: g, items: files.map(rel).filter(keep).sort().map((x) => ({ href: `${up}${x.replace(/\.md$/, '.html')}`, label: title(join(ROOT, 'docs', x)), current: x === r })) }));
     const rootRel = `${up}../`;
     write(join(SITE, 'docs', out), ui.consoleShell({ title: `${title(f)} · Docs · ZTHR factory`, brand: 'Docs', brandHref: `${up}index.html`, base: fontBase(rootRel), head: head(rootRel), theme: 'factory', surface: 'docs', groups: [{ title: '', items: [{ href: `${up}index.html`, label: 'Docs home', icon: 'doc', current: r === 'README.md' }] }, ...nav], body: `<article class="prose">${body}</article>` }));

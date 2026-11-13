@@ -162,7 +162,7 @@ flowchart TD
   wait_meeting -. after 7 days .-> wait_meeting_late[/"No answer yet. Want me to find the center's phone number so "/]
 ```
 
-Sources: <https://emanuals.jfs.ohio.gov/Workforce/WIOA/WIOAPL/WIOAPL-15-08-1.stm>, <https://ohiomeansjobs.ohio.gov>. Grants: profile chosenName, county, college. Journeys: p2-retraining.
+Sources: <https://emanuals.jfs.ohio.gov/Workforce/WIOA/WIOAPL/WIOAPL-15-08-1.stm>, <https://dam.assets.ohio.gov/image/upload/jfs.ohio.gov/owd/OhioMeansJobs/OhioMeansJobsCentersbyCounty.pdf>. Grants: profile chosenName, county, college. Journeys: p2-retraining.
 
 ## Appealing to keep your financial aid
 
