@@ -75,6 +75,15 @@ for (const p of ['/studentadvocate', '/studentadvocate/', '/studentadvocate/admi
   if (r.status !== 200) bad(p, `lands on ${r.url} with ${r.status}`);
 }
 const ver = await land(`${APP}/studentadvocate/version`);
+// What the build recorded for its deep click-through and whole-words check, as the app publishes it.
+const walkPage = await land(`${APP}/factory/ui-walk.html`);
+const buildChecks = (() => {
+  const t = walkPage.body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  const deep = t.match(/([\d,]+) controls clicked[^.]*?([\d,]+) controls with problems/) ?? t.match(/([\d,]+) controls clicked/);
+  const words = t.match(/([\d,]+) page views \(([\d,]+) pages at two widths in two themes\); ([\d,]+) with a word split/);
+  const failing = (t.match(/Controls with problems(.{0,600})/) ?? [])[1] ?? '';
+  return { deep: deep ? deep[0] : 'not recorded', words: words ? words[0] : 'not recorded', failing: failing.trim().slice(0, 600) };
+})();
 let commit = '';
 try {
   commit = JSON.parse(ver.body).commit ?? '';
@@ -173,6 +182,7 @@ const summary = [
   `- ${pages.length} pages, ${views} page views in a real browser (1280 and 390 pixels)`,
   `- ${followed} distinct links followed to where they land`,
   `- app serving commit \`${commit.slice(0, 12) || 'unknown'}\``,
+  `- the app's build recorded: ${buildChecks.deep}; ${buildChecks.words}${buildChecks.failing ? ` — failing: ${buildChecks.failing}` : ''}`,
   `- **${problems.length} problems**, ${warnings.length} warnings`,
   '',
   ...problems.map((p) => `- ❌ ${p}`),
