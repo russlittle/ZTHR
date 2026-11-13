@@ -52,6 +52,13 @@ async function broken(page: Page): Promise<string[]> {
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       for (let n = walker.nextNode(); n; n = walker.nextNode()) {
         if (seen.has(n) || n.parentElement?.closest('pre,code,svg')) continue;
+        // Text kept only for screen readers (in a box of a pixel or two) is not drawn, so it cannot be split.
+        let hiddenBox = false;
+        for (let el: Element | null = n.parentElement; el && !hiddenBox; el = el.parentElement) {
+          const b = el.getBoundingClientRect();
+          if (b.width <= 2 && b.height <= 2) hiddenBox = true;
+        }
+        if (hiddenBox) continue;
         seen.add(n);
         const text = n.textContent ?? '';
         for (const m of text.matchAll(/[A-Za-z][A-Za-z'’]{3,}/g)) {

@@ -8,7 +8,7 @@ after a shift, so accessibility is part of the product, not a coat of paint.
 
 | Need | What the app does |
 | --- | --- |
-| Screen readers | Every page has a skip link, a main region, one level-1 heading and headings in order. Every control has a spoken name. Gauges speak their value and the line they are measured against ("2.57 of 4, must reach 2.0"). Tables have captions, and a scrolling table is a named region the keyboard can reach. |
+| Screen readers | Every page has a skip link, a main region, one level-1 heading and headings in order. Every control has a spoken name. Gauges speak their value and the line they are measured against ("2.57 of 4, must reach 2.0"). Tables have captions. |
 | Status messages | The result of a tap is shown at the top of the next screen as a status message, and the address points straight to it. |
 | Keyboard | Everything works with Tab, Enter and Space, with a three-pixel focus ring in every theme. The sticky header and the phone tab bar reserve space, so a focused control is never hidden under them. |
 | Low vision | Body text is Atkinson Hyperlegible, a typeface designed for low-vision readers. Text reflows to 320 pixels wide, the width of a 1280-pixel screen at 400% zoom. Every text color is held to 4.5:1 over the strongest part of the background gradient, in both themes. |
@@ -17,6 +17,8 @@ after a shift, so accessibility is part of the product, not a coat of paint.
 | Motion | No motion that the student did not start; reduced-motion settings turn transitions off. |
 | Language | Each page states its language. Spanish replies are marked Spanish so a screen reader uses the right voice. |
 | Consistent help | Help, and 988 for a crisis, are in the same place on every screen. |
+| No sideways scrolling | Nothing on any screen scrolls sideways, at any width down to 320 pixels: menus wrap or fold behind a Menu button, the week stacks one day per row, diagrams fit the column, and a table too wide for the screen restacks into one block per row with each value labelled by its column, keeping its table roles for screen readers. |
+| Diagrams and tables | On the published pages, each diagram and table has Full screen, Copy and Print controls at its top right. Full screen can be zoomed and moved with the mouse, a pinch, or the keyboard (plus, minus, zero to fit, arrows to move, Escape to close, and focus returns to the control that opened it). Copy puts a diagram on the clipboard as an image and a table as rows and columns. Print prints that figure alone. |
 
 ## How it is tested
 

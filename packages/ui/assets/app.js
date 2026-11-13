@@ -41,6 +41,26 @@
 
   // The message a tap produced takes focus, so a screen reader reads it first and a keyboard starts from it.
   document.addEventListener('DOMContentLoaded', function () {
+    // Phone menu: the side list folds behind a Menu button, showing only the page you are on; open, it wraps.
+    // Without this script the list simply wraps, so it never scrolls sideways either way.
+    (function () {
+      var side = document.querySelector('nav.side');
+      if (!side || side.querySelector('.side-toggle')) return;
+      side.id = side.id || 'side-menu';
+      var t = document.createElement('button');
+      t.type = 'button';
+      t.className = 'side-toggle';
+      t.setAttribute('aria-controls', side.id);
+      t.setAttribute('aria-expanded', 'false');
+      t.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Menu</span>';
+      side.appendChild(t);
+      side.classList.add('closed');
+      t.addEventListener('click', function () {
+        var open = side.classList.toggle('closed') === false;
+        t.setAttribute('aria-expanded', String(open));
+        t.querySelector('span').textContent = open ? 'Close menu' : 'Menu';
+      });
+    })();
     var latest = document.getElementById('latest');
     if (latest && location.hash === '#latest') latest.focus({ preventScroll: false });
   });

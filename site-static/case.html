@@ -162,6 +162,7 @@ table.t th{font-size:13px;color:var(--muted)}
 .side .brand{margin:2px 6px 8px}
 .side a:hover{background:color-mix(in srgb,var(--side-active) 70%,transparent)}
 .side .brand{color:var(--side-ink)}
+.side-toggle{display:none;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--side-ink);font:inherit;font-weight:600;font-size:14px;cursor:pointer}.side-toggle:focus-visible{outline:3px solid var(--accent,#0b6680);outline-offset:2px}
 main.con{padding:24px 28px 60px;max-width:1200px;min-width:0}
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:14px 0}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;box-shadow:var(--shadow)}
@@ -310,17 +311,19 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
 .prose ul:has(>li>a:only-child)>li{border-bottom:1px solid var(--line);margin:0}
 .prose ul:has(>li>a:only-child)>li>a{display:block;padding:11px 0;text-decoration:none;color:var(--ink);font-weight:700}
 .prose ul:has(>li>a:only-child)>li>a:hover{color:var(--action)}
-/* phone: the page list becomes one scrolling row under the bar, so the page itself comes first */
+/* phone: the page list folds behind a Menu button under the bar, so the page itself comes first; open, it wraps */
 @media (max-width:860px){
- .side{flex-wrap:nowrap;overflow-x:auto;gap:4px;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line);scrollbar-width:none;position:sticky;top:0;z-index:4}
+ .side{flex-wrap:wrap;align-items:center;overflow:visible;gap:4px;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:4}
+ .side.closed a:not([aria-current="page"]){display:none}
+ .side-toggle{display:inline-flex;margin-left:auto}
  .side .grp,.side .brand{display:none}
- .side a{flex:none;white-space:nowrap;padding:8px 12px;font-size:14px}
+ .side a{flex:0 1 auto;min-width:0;max-width:100%;padding:8px 12px;font-size:14px}
  .side a[aria-current="page"]::before{display:none}
  .side a .ic{display:none}
 }
 </style><script async src="https://www.googletagmanager.com/gtag/js?id=G-12ENZ47TSG"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-12ENZ47TSG');</script>
-<script src="assets/mermaid.min.js"></script><script>window.mermaid&&(function(){var d=matchMedia('(prefers-color-scheme: dark)').matches;mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',themeVariables:d?{fontFamily:'Atkinson Hyperlegible, system-ui, sans-serif',fontSize:'15px',background:'#111e25',primaryColor:'#13303a',primaryBorderColor:'#5fd0e6',primaryTextColor:'#e3edf2',secondaryColor:'#1d2a40',tertiaryColor:'#111e25',lineColor:'#97abb6',textColor:'#e3edf2',clusterBkg:'#0e1a20',clusterBorder:'#22343e',edgeLabelBackground:'#111e25',noteBkgColor:'#173842',noteTextColor:'#e3edf2'}:{fontFamily:'Atkinson Hyperlegible, system-ui, sans-serif',fontSize:'15px',background:'#ffffff',primaryColor:'#e8f4f7',primaryBorderColor:'#0b6680',primaryTextColor:'#12202a',secondaryColor:'#eeedfd',tertiaryColor:'#ffffff',lineColor:'#53636f',textColor:'#12202a',clusterBkg:'#f6f9fa',clusterBorder:'#c8d6de',edgeLabelBackground:'#ffffff',noteBkgColor:'#fff6e0',noteTextColor:'#12202a'}});addEventListener('DOMContentLoaded',function(){if(innerWidth<700)document.querySelectorAll('pre.mermaid').forEach(function(m){m.textContent=m.textContent.replace(/^(\s*(?:flowchart|graph))\s+LR\b/,'$1 TB').replace(/\bdirection\s+LR\b/g,'direction TB').replace(/^(\s*subgraph[^\n]*\n)(?!\s*direction)/gm,'$1direction TB\n')});mermaid.run().then(function(){document.querySelectorAll('.mermaid svg').forEach(function(svg){var w=svg.viewBox&&svg.viewBox.baseVal?svg.viewBox.baseVal.width:0,box=svg.parentElement;if(!w||w<=box.clientWidth)return;svg.style.maxWidth='none';svg.style.minWidth=Math.min(w,Math.max(560,w*0.8))+'px';box.tabIndex=0;box.setAttribute('role','group');box.setAttribute('aria-label','Diagram; scroll sideways to see all of it');var hint=document.createElement('p');hint.className='dia-hint';hint.setAttribute('aria-hidden','true');hint.textContent='Wider than the screen: swipe the diagram sideways to see all of it.';box.after(hint)})})})})();</script>
-<style>.tscroll{max-width:100%;overflow-x:auto;margin:10px 0}.tscroll>table{margin:0}.tscroll:focus-visible{outline:3px solid var(--accent,#0b6680);outline-offset:2px}.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.dia-hint{font-size:13px;color:var(--muted);margin:-6px 0 14px}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style><style>article.case{max-width:860px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
+<script src="assets/mermaid.min.js"></script><script src="assets/figures.js" defer></script>
+<style>.prose{max-width:860px}.prose h1{margin:6px 0 14px}.prose h2{margin:28px 0 8px}.prose h3{margin:20px 0 6px}.prose table{border-collapse:collapse;width:100%;font-size:15px;margin:10px 0}.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}.prose code{background:var(--calm);padding:1px 5px;border-radius:5px;font-size:.92em}.prose pre{background:var(--calm);padding:12px;border-radius:10px;overflow:auto}.prose pre code{background:none;padding:0}.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;overflow:auto}.shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}.shots figure{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px}.shots img{width:100%;height:220px;object-fit:cover;object-position:top;border-radius:6px}.shots figcaption{font-size:12px;color:var(--muted);margin-top:4px}</style><style>article.case{max-width:860px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
 article.case h1{font-size:clamp(30px,4.4vw,46px);line-height:1.08;letter-spacing:-.02em;text-wrap:balance;margin:18px 0 14px}
 article.case h1+p{font-size:19px;color:var(--muted)}
 article.case h2{font-size:26px;margin:44px 0 10px;text-wrap:balance}
@@ -339,7 +342,7 @@ trusted, if the environment it is built in decides what is admitted?</strong></p
 <p>This page makes the case from both sides: what the application is worth to the people it serves, and what the
 factory that built it means for anyone who builds software.</p>
 <h2>At a glance</h2>
-<div class="tscroll" tabindex="0" role="region" aria-label="Table; scrolls sideways on narrow screens"><table>
+<table>
 <thead>
 <tr>
 <th></th>
@@ -374,7 +377,7 @@ factory that built it means for anyone who builds software.</p>
 <td><strong>Open</strong></td>
 <td>Every test, gate, walk, decision and line of source is public.</td>
 </tr>
-</tbody></table></div>
+</tbody></table>
 <h2>The problem it solves</h2>
 <p>Students who stop out rarely do so over ability. They stop out over a few hundred dollars, a missed form, a bus that never
 came, a shift that collided with an exam. Help exists for most of it: emergency grants, benefits, food programs,
@@ -388,7 +391,7 @@ most need the help have the least time to do that work.</p>
   find &amp; qualify &amp; work --&gt; stop[Stopping out]
   adv([The Advocate]) -. does the finding, checking and drafting .-&gt; gap
   adv --&gt; stay[Staying in school]</pre><h2>What the Advocate does</h2>
-<div class="tscroll" tabindex="0" role="region" aria-label="Table; scrolls sideways on narrow screens"><table>
+<table>
 <thead>
 <tr>
 <th>For the student</th>
@@ -427,7 +430,7 @@ most need the help have the least time to do that work.</p>
 <td>Opens doors to work</td>
 <td>Jobs that fit around classes and shifts, a fair-chance path when the student asks, an introduction to a mentor.</td>
 </tr>
-</tbody></table></div>
+</tbody></table>
 <p>It works by text or in the app, at the reading level and length the student chooses, with a screen reader or without, and it never scolds. Crisis
 words go straight to 988 before anything else. Nothing leaves on a student&#39;s behalf without their approval of the
 exact words.</p>
@@ -460,7 +463,7 @@ by checks that are themselves proven, against intent that the agents cannot edit
   trace --&gt; admit[Admitted by the factory]
   admit --&gt; serve[Deployed; the public address must serve the commit that passed]
   gates &amp; walks &amp; trace -- any failure --&gt; back[Back to the agents, with the reason]
-  person([A person]) -. signs only destructive changes .-&gt; admit</pre><div class="tscroll" tabindex="0" role="region" aria-label="Table; scrolls sideways on narrow screens"><table>
+  person([A person]) -. signs only destructive changes .-&gt; admit</pre><table>
 <thead>
 <tr>
 <th>Fixture</th>
@@ -507,7 +510,7 @@ by checks that are themselves proven, against intent that the agents cannot edit
 <td><strong>Accessible by construction</strong></td>
 <td>Every screen held to WCAG 2.2 AA and read the way a screen reader reads it, on every change.</td>
 </tr>
-</tbody></table></div>
+</tbody></table>
 <p>The factory finds what review misses. In building the Advocate it found, without being asked: a webhook signing
 secret in a student&#39;s export, document names in a permanent ledger, a brief-mode answer too long to deliver, a
 bus plan that took a transfer when a direct route existed, a synthetic mentor sharing a first name with a
@@ -533,7 +536,7 @@ Outcomes are measured without ever exposing a person.</p>
 state what users must be able to do and what must never happen, and get software built to that intent, with
 evidence anyone can inspect. People govern the gates and sign destructive changes; the factory does the rest.</p>
 <p><strong>What &quot;used well&quot; requires:</strong></p>
-<div class="tscroll" tabindex="0" role="region" aria-label="Table; scrolls sideways on narrow screens"><table>
+<table>
 <thead>
 <tr>
 <th>Condition</th>
@@ -560,7 +563,7 @@ evidence anyone can inspect. People govern the gates and sign destructive change
 <td>People governing the gates</td>
 <td>The factory admits features; people decide what the gates are and sign anything destructive.</td>
 </tr>
-</tbody></table></div>
+</tbody></table>
 <h2>Where it stands</h2>
 <p>Built and deployed: all five phases of features, the factory and its evidence, the block library and the
 documentation. Open, each with an owner and a date:</p>

@@ -249,6 +249,7 @@ table.t th{font-size:13px;color:var(--muted)}
 .side .brand{margin:2px 6px 8px}
 .side a:hover{background:color-mix(in srgb,var(--side-active) 70%,transparent)}
 .side .brand{color:var(--side-ink)}
+.side-toggle{display:none;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--side-ink);font:inherit;font-weight:600;font-size:14px;cursor:pointer}.side-toggle:focus-visible{outline:3px solid var(--accent,#0b6680);outline-offset:2px}
 main.con{padding:24px 28px 60px;max-width:1200px;min-width:0}
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:14px 0}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;box-shadow:var(--shadow)}
@@ -363,7 +364,7 @@ h1,h2,h3,.brand,.kpi .n{font-family:var(--display);letter-spacing:-.015em}
 .kpi{border:0;border-radius:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:none;padding:16px 18px;margin:0 -1px -1px 0}
 .kpi .n{font-size:32px;font-weight:650;font-variant-numeric:tabular-nums}
 table.t th{border-bottom:1.5px solid var(--ink)}
-@media (max-width:860px){.side{flex-wrap:nowrap;overflow-x:auto;padding:8px 12px;scrollbar-width:none}.side .grp,.side .brand{display:none}.side a{flex:none;white-space:nowrap}}
+@media (max-width:860px){.side{flex-wrap:wrap;align-items:center;overflow:visible;padding:8px 12px;gap:4px}.side .grp,.side .brand{display:none}.side a{flex:0 1 auto;min-width:0;max-width:100%;padding:7px 10px;font-size:14px}.side.closed a:not([aria-current="page"]){display:none}.side-toggle{display:inline-flex;margin-left:auto}}
 `;
 }
 
@@ -423,11 +424,13 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
 .prose ul:has(>li>a:only-child)>li{border-bottom:1px solid var(--line);margin:0}
 .prose ul:has(>li>a:only-child)>li>a{display:block;padding:11px 0;text-decoration:none;color:var(--ink);font-weight:700}
 .prose ul:has(>li>a:only-child)>li>a:hover{color:var(--action)}
-/* phone: the page list becomes one scrolling row under the bar, so the page itself comes first */
+/* phone: the page list folds behind a Menu button under the bar, so the page itself comes first; open, it wraps */
 @media (max-width:860px){
- .side{flex-wrap:nowrap;overflow-x:auto;gap:4px;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line);scrollbar-width:none;position:sticky;top:0;z-index:4}
+ .side{flex-wrap:wrap;align-items:center;overflow:visible;gap:4px;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:4}
+ .side.closed a:not([aria-current="page"]){display:none}
+ .side-toggle{display:inline-flex;margin-left:auto}
  .side .grp,.side .brand{display:none}
- .side a{flex:none;white-space:nowrap;padding:8px 12px;font-size:14px}
+ .side a{flex:0 1 auto;min-width:0;max-width:100%;padding:8px 12px;font-size:14px}
  .side a[aria-current="page"]::before{display:none}
  .side a .ic{display:none}
 }
@@ -548,8 +551,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--l-route);outline:none
  .tabs a[aria-current="page"]{background:color-mix(in srgb,var(--l-route) 14%,var(--surface));color:var(--l-route)}
  .tabs a[aria-current="page"] .ic{color:var(--l-route)}
  .hero h1{font-size:34px}
- .glance{flex-wrap:nowrap;overflow-x:auto;margin-left:-16px;margin-right:-16px;padding:0 16px 4px;scrollbar-width:none}
- .glance span{white-space:nowrap;flex:none}
+ .glance{flex-wrap:wrap;gap:6px}
+ .glance span{white-space:nowrap}
  .t-day .card{border-radius:22px;padding:18px 14px 10px}
  .day li{grid-template-columns:76px 30px minmax(0,1fr)}.day li::after{left:88px}.day .t{font-size:14px;padding-right:8px}
 }
@@ -559,10 +562,10 @@ a.tile,a.tile:hover{text-decoration:none;color:var(--ink)}
 .rows .grow>a b::after{content:"";display:inline-block;width:7px;height:7px;margin-left:8px;border:solid var(--l-route);border-width:2px 2px 0 0;transform:translateY(-2px) rotate(45deg)}
 .rows .grow>a:hover b{color:var(--l-route)}
 /* the week: the same line colors, as tinted blocks */
-.week{gap:8px;overflow-x:auto}
+.week{gap:8px}
 .page:has(.week){max-width:1088px}
 .week .d{min-width:0;border-radius:16px;padding:10px;box-shadow:none}
-@media (max-width:900px){.week .d{min-width:128px}}
+@media (max-width:900px){.week{grid-template-columns:1fr!important}.week .d{min-width:0}}
 .week .d h2{font-family:var(--display);font-size:14px;color:var(--ink);font-weight:650}
 .week .b{--bc:var(--l-route);font-size:13px;border-radius:9px;padding:6px 8px;border-left:4px solid var(--bc);background:color-mix(in srgb,var(--bc) 11%,var(--surface))}
 .week .b.class{--bc:var(--l-class)}.week .b.shift{--bc:var(--l-work)}.week .b.study,.week .b.hold{--bc:var(--l-hold)}.week .b.pickup,.week .b.drop-off{--bc:var(--l-care)}.week .b.due{--bc:var(--l-due)}
