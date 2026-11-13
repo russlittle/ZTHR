@@ -153,6 +153,18 @@ for (const width of [1280, 390]) {
   }
   await ctx.close();
 }
+// The factory cost page on zthr.ai reads the latest build's cost records from the app; it must show them.
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(`${ORIGIN}/reference/factory/cost.html`, { waitUntil: 'networkidle' });
+  const text = (await page.locator('main').innerText().catch(() => '')) || '';
+  // Until the app serves its cost records (a build that publishes them has deployed), this is a warning.
+  const served = await fetch('https://advocate-fsy7whk33q-uc.a.run.app/factory/ci-costs.json').then((r) => r.ok).catch(() => false);
+  if (!/factory runs recorded/.test(text) && !served) warnings.push('/reference/factory/cost.html: the app does not serve its cost records yet');
+  else if (!/factory runs recorded/.test(text)) bad('/reference/factory/cost.html', `shows no cost records: "${text.replace(/\s+/g, ' ').slice(0, 140)}"`);
+  await ctx.close();
+}
 await browser.close();
 
 // 5. Every link, followed to where it lands. Links into the site and the app must land on a 200; links out
