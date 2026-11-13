@@ -1,3 +1,4 @@
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import { Hono } from 'hono';
 import * as ui from '@zthr/ui';
 import type { Advocate } from '../agents/advocate.js';
@@ -209,9 +210,15 @@ ${ui.actions([{ label: 'Something else is hard', href: ctx.u(sid, '/help'), vari
 }
 
 /** The feed's OpenAPI description, with the service schema derived from the same zod schema the feed is checked against. */
+const asSchema = (z: Parameters<typeof zodToJsonSchema>[0]) => {
+  const { $schema: _drop, ...rest } = zodToJsonSchema(z, { target: 'openApi3', $refStrategy: 'none' }) as Record<string, unknown>;
+  return rest as { type: string; properties: Record<string, unknown>; required: string[] };
+};
+const serviceSchema = () => asSchema(FeedService);
+const feedSchema = () => asSchema(Feed);
+
 export function guideOpenapi(base: string) {
   const services = `${base}/api/guide/v1`;
-  const fields = Object.keys(FeedService.shape);
   return {
     openapi: '3.1.0',
     info: { title: 'Community resource guide feed', version: '1.0', description: 'Services that help college students in Montgomery and Greene counties, Ohio, organized by barrier, with each entry\'s source of record and verification. Services, never students. Free to use with attribution.', license: { name: LICENSE.name, url: LICENSE.url } },
@@ -225,8 +232,9 @@ export function guideOpenapi(base: string) {
     },
     components: {
       schemas: {
-        Service: { type: 'object', required: ['id', 'name', 'description', 'organization', 'taxonomy', 'eligibility', 'how_to_use', 'source', 'verification'], properties: Object.fromEntries(fields.map((f) => [f, {}])) },
-        Feed: { type: 'object', required: Object.keys(Feed.shape), properties: { services: { type: 'array', items: { $ref: '#/components/schemas/Service' } } } },
+        // Generated from the same schema the feed is checked against in code, so the document cannot drift from it.
+        Service: serviceSchema(),
+        Feed: { ...feedSchema(), properties: { ...feedSchema().properties, services: { type: 'array', items: { $ref: '#/components/schemas/Service' } } } },
       },
     },
   };

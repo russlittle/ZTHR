@@ -49,7 +49,7 @@ The static files take no filters. Filter `services.json` in your app instead.
 
 ## A service
 
-The fields follow the [Open Referral Human Services Data Specification](https://docs.openreferral.org/) (service, organization, location, phone, eligibility, taxonomy), so a tool that reads HSDS needs little mapping. The schema is enforced in code (`apps/advocate/src/guide/feed.ts`): every response is checked against it in the tests.
+The fields follow the [Open Referral Human Services Data Specification](https://docs.openreferral.org/) (service, organization, location, phone, eligibility, taxonomy), so a tool that reads HSDS needs little mapping. The schema is enforced in code (`apps/advocate/src/guide/feed.ts`), and the OpenAPI document's `Service` and `Feed` schemas are generated from that same code, so the two cannot drift apart. The tests validate every response against the published document with a standard JSON Schema validator, the same way your app would.
 
 ```mermaid
 erDiagram

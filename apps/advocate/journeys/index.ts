@@ -907,8 +907,17 @@ export const JOURNEYS: Record<string, JourneyImpl<JourneyApp>> = {
       today = d;
       ctx.forbid('anything but the student closes the need', a.barriers(s.id).items.find((b) => b.need === 'food')?.status === 'resolved');
     }
-    ctx.act('resolve it');
-    a.resolveBarrier(s.id, 'food');
+    ctx.act('a quiet week later, the check-in asks whether food is sorted out');
+    const q = a.pulse(s.id);
+    ctx.expect(!!q && /food/i.test(q.text) && /sorted out/i.test(q.text), 'the check-in slot asks about the open need first');
+    ctx.act('text back: no');
+    a.converse(s.id, 'no');
+    ctx.forbid('anything but the student closes the need', a.barriers(s.id).items.find((b) => b.need === 'food')?.status === 'resolved');
+    ctx.expect(!/food/i.test(a.pulse(s.id)?.text ?? ''), 'food is not asked about again the same week');
+    ctx.act('a week after that, text back: yes');
+    today = '2026-11-19';
+    a.barrierCheck(s.id, 'food');
+    a.converse(s.id, 'yes');
     ctx.forbid('a resolved need keeps being suggested', has() || a.carePlan(s.id).some((x) => x.barrier.need === 'food'));
   },
 

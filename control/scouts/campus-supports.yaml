@@ -2,6 +2,7 @@ scout: campus-supports
 geography: { college: sinclair }
 needs: [mental-health, academic, aid, books, belonging, direction, career, wellbeing]
 sources:
+  - { url: "https://www.sinclair.edu/student-life/sce/clubs-and-organizations/", kind: college }
   - { url: "https://sinclair.edu/support/counseling", kind: college }
   - { url: "https://sinclair.edu/accessibility-services", kind: college }
   - { url: "https://sinclair.edu/support/sss/", kind: college }
@@ -12,7 +13,7 @@ sources:
   - { url: "https://www.wright.edu/veteran-and-military-center/services", kind: college }
   - { url: "https://wright.edu/career-center", kind: college }
   - { url: "https://wright.edu/student-affairs/campus-recreation/membership", kind: college }
-entries: [sinclair-counseling, sinclair-accessibility, sinclair-trio, sinclair-tutoring, sinclair-veterans, wsu-counseling, wsu-disability, wsu-veteran-center, wsu-career-hub, wsu-campus-rec]
+entries: [sinclair-counseling, sinclair-accessibility, sinclair-trio, sinclair-tutoring, sinclair-veterans, wsu-counseling, wsu-disability, wsu-veteran-center, wsu-career-hub, wsu-campus-rec, sinclair-clubs]
 freshness_days: 180
 datum: { precision_min: 0.9 }
 owner: builder

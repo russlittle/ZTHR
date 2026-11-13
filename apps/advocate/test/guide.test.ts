@@ -19,6 +19,7 @@ import { BARRIER, BARRIERS, DOMAINS, PROVIDER_KINDS, SITUATION_LABEL } from '../
 import { PULSES } from '../src/domain/pulses.js';
 import { Hono } from 'hono';
 import { createApp } from '../src/server/app.js';
+import { Advocate } from '../src/agents/advocate.js';
 import { makeAdvocate, maria, TODAY } from './helpers.js';
 
 const guideApp = () => new Hono().route('/advocate', createApp(makeAdvocate(), { base: '/advocate' }));
@@ -444,5 +445,84 @@ describe('the guide screens and API answer, for anyone, with no student data', (
     expect(faith.services.every((x) => x.organization.kind === 'faith')).toBe(true);
     for (const p of ['/api/guide/v1', '/api/guide/v1/barriers', '/api/guide/v1/coverage', '/api/guide/v1/packages', '/api/guide/v1/openapi.json']) expect((await get(p)).status, p).toBe(200);
     expect((await get('/api/guide/v1/services/nope')).status).toBe(404);
+  });
+});
+
+describe('a quiet need is asked about again, in the check-in slot, until the student says it is sorted out', () => {
+  const setup = () => {
+    let today = TODAY;
+    const a = new Advocate({ today: () => today, now: () => new Date(`${today}T15:00:00Z`) });
+    const s = maria(a);
+    a.openBarrier(s.id, 'utilities', 'student');
+    return { a, s, go: (d: string) => (today = d) };
+  };
+  it('is not asked in the first week, then is asked before any other check-in', () => {
+    const { a, s, go } = setup();
+    go('2026-11-06');
+    expect(a.pulse(s.id)?.text ?? '').not.toMatch(/sorted out/);
+    go('2026-11-09');
+    const q = a.pulse(s.id)!;
+    expect(q.text).toMatch(/utilities.*sorted out/i);
+    expect(q.nextSteps.map((x) => x.action)).toEqual(['barrier:resolve:utilities', 'barrier-still:utilities', 'barrier:not-today:utilities']);
+    expect(B.find(a.barriers(s.id), 'utilities')?.lastAskedOn).toBe('2026-11-09');
+  });
+  it('"not yet" keeps it open and answers with help for it; a text "yes" resolves it', () => {
+    const { a, s, go } = setup();
+    go('2026-11-09');
+    a.pulse(s.id);
+    const r = a.converse(s.id, 'no');
+    expect(r[0]?.text).toMatch(/utilit|bill|energy|PIPP|HEAP/i);
+    expect(B.find(a.barriers(s.id), 'utilities')?.status).toBe('open');
+    go('2026-11-16');
+    a.pulse(s.id);
+    a.converse(s.id, 'yes');
+    expect(B.find(a.barriers(s.id), 'utilities')?.status).toBe('resolved');
+    go('2026-11-30');
+    expect(a.pulse(s.id)?.text ?? '').not.toMatch(/utilities/i);
+  });
+  it('turning check-ins off stops the follow-up too, and leaves the need open', () => {
+    const { a, s, go } = setup();
+    a.setPulses(s.id, { off: true });
+    go('2026-11-20');
+    expect(a.pulse(s.id)).toBeUndefined();
+    expect(B.find(a.barriers(s.id), 'utilities')?.status).toBe('open');
+  });
+  it('the buttons work from the app', async () => {
+    const { a, s, go } = setup();
+    go('2026-11-09');
+    a.pulse(s.id);
+    const { ACTIONS } = await import('../src/agents/actions.js');
+    const still = ACTIONS['barrier-still']!(a, s.id, 'utilities');
+    expect(B.find(a.barriers(s.id), 'utilities')?.status).toBe('open');
+    expect(still.message.text.length).toBeGreaterThan(10);
+    expect(ACTIONS['my-plan']!(a, s.id, '').view).toBe('plan');
+    expect(ACTIONS['barrier-still']!(a, s.id, 'astrology').message.text).toMatch(/could not tell/);
+  });
+});
+
+describe('a consumer app that knows only the published OpenAPI document can take the feed', () => {
+  it('every service, from the list and one by one, validates against the document\'s own schema', async () => {
+    // ajv ships CommonJS; take its constructor whichever way the loader hands it over.
+    const ajvMod = (await import('ajv')) as unknown as { default: { default?: unknown } };
+    const fmtMod = (await import('ajv-formats')) as unknown as { default: { default?: unknown } };
+    const Ajv = (ajvMod.default.default ?? ajvMod.default) as new (o: object) => { compile: (s: object) => ((x: unknown) => boolean) & { errors?: unknown[] } };
+    const addFormats = (fmtMod.default.default ?? fmtMod.default) as (a: unknown) => void;
+    const app = guideApp();
+    const get = async (p: string) => (await app.request(`/advocate/api/guide/v1${p}`)).json();
+    const doc = (await get('/openapi.json')) as { openapi: string; components: { schemas: Record<string, object> }; paths: Record<string, unknown> };
+    expect(doc.openapi).toBe('3.1.0');
+    const ajv = new Ajv({ strict: false, allErrors: true });
+    addFormats(ajv);
+    const service = ajv.compile(doc.components.schemas.Service!);
+    const props = Object.keys((doc.components.schemas.Service as { properties: object }).properties);
+    expect(props).toEqual(expect.arrayContaining(['id', 'organization', 'taxonomy', 'how_to_use', 'source', 'verification']));
+    const all = (await get('/services')) as { services: unknown[] };
+    for (const svc of all.services) expect(service(svc), JSON.stringify(service.errors?.slice(0, 2))).toBe(true);
+    for (const id of DAYTON_CATALOG.slice(0, 10).map((r) => r.id)) expect(service(await get(`/services/${id}`))).toBe(true);
+    // The document is not vacuous: a service missing its source, or with a made-up provider kind, is refused.
+    const one = all.services[0] as Record<string, unknown>;
+    expect(service({ ...one, source: undefined })).toBe(false);
+    expect(service({ ...one, organization: { ...(one.organization as object), kind: 'astrology' } })).toBe(false);
+    for (const p of Object.keys(doc.paths)) expect((await app.request(`/advocate/api/guide/v1${p.replace('{id}', 'daybreak')}`)).status, p).toBe(200);
   });
 });

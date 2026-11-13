@@ -17,6 +17,7 @@ import { SmsTwin } from '@zthr/twins';
 import type { ModelClient } from '@zthr/models';
 import { DAYTON_CATALOG } from '../catalog/dayton.js';
 import type { Resource } from '../catalog/types.js';
+import { isFresh } from '../catalog/types.js';
 import { screenAll, type EligibilityResult } from '../eligibility/engine.js';
 import { bookOptions, type Material } from '../domain/books.js';
 import { crisisPlan, detectSituation, DRAFTS, type Situation } from '../domain/crisis.js';
@@ -32,6 +33,7 @@ import { collegeById, collegeFromText } from '../domain/colleges.js';
 import { prepText, type Meeting } from '../domain/meetings.js';
 import { PULSES, nextPulse, type PulseState } from '../domain/pulses.js';
 import * as B from '../guide/barriers.js';
+import { BARRIER } from '../guide/taxonomy.js';
 import { packageFor, PACKAGES, type SupportPackage } from '../guide/packages.js';
 import { tally, type Outcome, type Record_ } from '../guide/feedback.js';
 import { signals as guideSignals, type Signal } from '../guide/signals.js';
@@ -151,6 +153,45 @@ export interface AdvocateOptions {
   campus?: CampusEndpoints;
 }
 
+/**
+ * Within one need, what the student actually said decides the order: "a winter coat" puts the clothes closet ahead
+ * of the diaper bank, and "a job" puts the job center ahead of free fitness. A service meant for one group (veterans,
+ * student parents, former foster youth) is left out unless the student said they are in that group.
+ */
+const GROUP_WORDS: Partial<Record<string, RegExp>> = {
+  veteran: /\b(veteran|military|army|navy|marines?|air force|served|gi bill)\b/i,
+  'student-parent': /\b(my (kid|kids|child|children|son|daughter|baby)|i'?m a (mom|dad|parent)|diapers?|formula)\b/i,
+  'foster-youth': /\b(foster)\b/i,
+};
+const STOP = new Set(['need', 'needs', 'help', 'with', 'have', 'there', 'what', 'where', 'some', 'free', 'about', 'really', 'cant', "can't", 'afford', 'find', 'want', 'just', 'like', 'this', 'that', 'here', 'from', 'your', 'they', 'them', 'been', 'will', 'would', 'could', 'should', 'please', 'today', 'tonight']);
+export function rankBySaid<T extends { resource: Resource }>(options: T[], said: string): T[] {
+  const words = (said.toLowerCase().match(/[a-z']{4,}/g) ?? []).filter((w) => !STOP.has(w)).map((w) => w.replace(/(ing|es|s)$/, ''));
+  const hits = (o: T) => {
+    const hay = `${o.resource.name} ${o.resource.description} ${o.resource.organization}`.toLowerCase();
+    return words.filter((w) => w.length >= 3 && hay.includes(w)).length;
+  };
+  const groupOnly = (o: T) => {
+    const groups = (o.resource.situations ?? []).filter((g) => GROUP_WORDS[g]);
+    const named = /\b(veteran|military|parent|foster)/i.test(o.resource.name);
+    return (groups.length || named) && !groups.some((g) => GROUP_WORDS[g]!.test(said)) ? 1 : 0;
+  };
+  return options.map((o, i) => ({ o, i, h: hits(o), g: groupOnly(o) })).filter((x) => !x.g).sort((a, b) => b.h - a.h || a.i - b.i).map((x) => x.o);
+}
+
+/** The tonight message for someone who has not signed up yet: no ZIP, so every current tonight line in the region. */
+export function tonightBeforeAccount(catalog: Resource[], today: string): string {
+  const pkg = PACKAGES.find((p) => p.id === 'tonight')!;
+  const lines = pkg.entries
+    .map((id) => catalog.find((r) => r.id === id))
+    .filter((r): r is Resource => !!r && !!r.phone && isFresh(r, today) && r.id !== 'united-way-211')
+    .slice(0, 5)
+    .map((r) => `${r.name}: ${r.phone}${r.serves.counties?.length === 1 ? ` (${r.serves.counties[0]} County)` : ''}`);
+  return `Let's find you a safe place tonight. Call 2-1-1 any time; they can find a shelter with room. Or call one of these now: ${lines.join('; ')}. If you are in danger, call 911.`;
+}
+
+/** No safe place to stay tonight, in the words students use. Checked before anything slower. */
+export const TONIGHT_WORDS = /\b(nowhere to (sleep|stay|go)|no(where| place| safe place) to (sleep|stay)( tonight)?|(sleep|sleeping|slept) in (my|the|a) car\b(?!\s*seat)|(on|in) the streets?( tonight)?|homeless (tonight|now|right now)|(kicked|threw|thrown) me out|kicked out (tonight|today|of (my|the) (house|home|place))|need (a )?shelter|(can'?t|cannot) go (back )?home( tonight)?|locked out of (my|the) (house|home|place))\b/i;
+
 const NEED_WORDS: [NeedCategory, RegExp][] = [
   ['food', /\b(food|groceries|hungry|pantry|meal|lunch|snap|food stamps)\b/i],
   ['housing', /\b(housing|rent|apartment|shelter|homeless|place to (live|stay)|evict)\b/i],
@@ -161,7 +202,18 @@ const NEED_WORDS: [NeedCategory, RegExp][] = [
   ['legal', /\b(legal|lawyer|court)\b/i],
   ['books', /\b(book|textbook)s?\b/i],
   ['money', /\b(money|emergency grant|broke|cash|pay (a|my) bill)\b/i],
-  ['mental-health', /\b(counsel(ing|or)|therap(y|ist)|stressed|anxious|depressed)\b/i],
+  ['mental-health', /\b(counsel(ing|or)|therap(y|ist)|stressed|anxious|depressed|panic attacks?|can'?t (stop crying|get out of bed))\b/i],
+  ['safety', /\b(domestic violence|not safe (at home|with (him|her|them))|scared of (him|her|my (partner|boyfriend|girlfriend|husband|wife|ex))|stalk(ing|er|ed)|restraining order|protection order)\b/i],
+  ['goods', /\b(diapers?|wipes|formula|clothes|clothing|(winter )?coat|shoes|boots|furniture|a bed|toiletries|hygiene)\b/i],
+  ['documents', /\b((state |photo )?id card|(lost|need|get|replace) (my |an? )?(state )?id|birth certificate|social security card|driver'?s licen[cs]e)\b/i],
+  ['aid', /\b(work[- ]?study|financial aid office|scholarships?|pell grant|tuition)\b/i],
+  ['career', /\b(need a job|find (a |another )?job|lost my job|(hours|shifts) (got )?cut|job training|get hired|hiring|apprenticeship|unemploy(ed|ment))\b/i],
+  ['direction', /\b(career (path|advice|counsel\w*)|resume|what (job|major|career) (fits|should i)|change (my )?major)\b/i],
+  ['belonging', /\b(lonely|alone here|no friends|don'?t (fit in|belong)|veterans?|first[- ]gen(eration)?|clubs?|make friends)\b/i],
+  ['wellbeing', /\b(gym|work(ing)? ?out|exercise|fitness|yoga|walk(ing)? trails?|parks?|sleep better|free (events?|museum))\b/i],
+  ['emergency', /\b(nowhere to (sleep|stay)|need a shelter|shelter tonight)\b/i],
+  ['academic', /\b(tutor(ing)?|disability services|accommodations?|failing (a |my )?class|study help)\b/i],
+  ['opportunity', /\b(volunteer(ing)?|internships?|things to do|free events?|museums?|concerts?|art (class|show)s?)\b/i],
 ];
 
 export class Advocate {
@@ -359,6 +411,15 @@ export class Advocate {
       this.ev('safety_route', phone, { categories: safety.categories, before: 'account', language: es ? 'es' : lang });
       return [es ? crisisReplyEs(true, safety.categories.includes('abuse') || safety.categories.includes('danger-from-others')) : crisisReply(safety.categories)];
     }
+    // No safe place tonight comes before any sign-up question: the numbers go out at once, for both counties, and
+    // the questions wait until the student is somewhere safe.
+    if (o.stage === 'start' && TONIGHT_WORDS.test(body)) {
+      o.stage = 'where';
+      o.pendingNeed = 'emergency';
+      this.onboarding.set(phone, o);
+      this.ev('safety_route', phone, { categories: ['no-safe-place-tonight'], before: 'account', language: lang });
+      return [tonightBeforeAccount(this.catalog, this.today()), 'When you are somewhere safe, text me your college and ZIP code (example: Sinclair 45402) and I will keep helping. By replying, you confirm you are 18 or older.'];
+    }
     this.onboarding.set(phone, o);
     const textDial = { ...DEFAULT_DIAL, channel: 'text' as const, language: lang };
     switch (o.stage) {
@@ -450,6 +511,10 @@ export class Advocate {
     }
     const school = this.academicIntent(s.id, text);
     if (school) return [this.deliver(school, { force: true })];
+    if (TONIGHT_WORDS.test(text)) {
+      this.openBarrier(s.id, 'emergency', 'student', 'tonight');
+      return [this.deliver(this.tonightMessage(s.id), { force: true })];
+    }
     const situation = detectSituation(text);
     if (situation) return [this.deliver(this.crisis(s.id, situation).message, { force: true })];
     if (/^(today|my day|schedule|what'?s today)\b/.test(t)) return [this.deliver(this.todayMessage(s.id), { force: true })];
@@ -466,7 +531,11 @@ export class Advocate {
     }
     const pulseAnswer = t.match(/^(yes|no|yeah|nope|yep)\b/);
     const pending = this.store.get<{ pulse: string }>('pulse_pending', s.id);
-    if (pulseAnswer && pending) return [this.deliver(this.answerPulse(s.id, pending.pulse, /^(yes|yeah|yep)/.test(pulseAnswer[1]!) ? 'yes' : 'no'), { force: true })];
+    if (pulseAnswer && pending) {
+      const yes = /^(yes|yeah|yep)/.test(pulseAnswer[1]!);
+      if (pending.pulse.startsWith('barrier:')) return [this.deliver(this.answerBarrierCheck(s.id, pending.pulse.slice(8) as NeedCategory, yes), { force: true })];
+      return [this.deliver(this.answerPulse(s.id, pending.pulse, yes ? 'yes' : 'no'), { force: true })];
+    }
     const licensed = needsLicensed(text);
     if (licensed) return [this.deliver(this.licensedMessage(s.id, licensed), { force: true })];
     const guide = findGuide(text);
@@ -492,7 +561,7 @@ export class Advocate {
     if (/\bfafsa\b/.test(t)) return [this.deliver(this.playbookMessage(s.id, this.startPlaybook(s.id, 'fafsa-2027-28')), { force: true })];
     if (/\b(qualify|benefits|money found|screen)\b/.test(t)) return [this.deliver(this.moneyFoundMessage(s.id), { force: true })];
     const need = NEED_WORDS.find(([, re]) => re.test(text))?.[0];
-    if (need) return [this.deliver(this.helpMessage(s.id, need), { force: true })];
+    if (need) return [this.deliver(this.helpMessage(s.id, need, text), { force: true })];
     return [
       this.deliver(
         {
@@ -767,14 +836,21 @@ export class Advocate {
     return r;
   }
 
-  helpMessage(studentId: string, need: NeedCategory): OutboundMessage {
+  helpMessage(studentId: string, need: NeedCategory, said?: string): OutboundMessage {
     const r = this.findHelp(studentId, need);
+    if (said && !r.unmet) {
+      r.options = rankBySaid(r.options, said);
+      if (!r.options.length) {
+        r.unmet = true;
+        this.recordUnmet(studentId, need);
+      }
+    }
     if (r.unmet) {
       return {
         studentId,
         author: 'navigator',
         urgency: 'routine',
-        text: `I couldn't find a verified ${need.replace('-', ' ')} resource near you yet. I've noted the gap so it gets counted. 2-1-1 can help right now, any time.`,
+        text: `I couldn't find a checked resource near you for ${(BARRIER[need]?.label ?? need.replace('-', ' ')).toLowerCase()} yet. I've noted the gap so it gets counted. 2-1-1 can help right now, any time.`,
         nextSteps: [{ label: 'Call 2-1-1', action: 'call:211' }, { label: 'Look for something else', action: 'find-help' }],
         why: 'No fresh catalog entry serves your college or county for this need.',
       };
@@ -1066,6 +1142,10 @@ export class Advocate {
 
   pulse(studentId: string): OutboundMessage | undefined {
     const st = this.pulseState(studentId);
+    // A need that has gone quiet for a week is asked about in the check-in slot first: it stays open until the
+    // student says it is sorted out, so the Advocate asks rather than assumes. Turning check-ins off stops this too.
+    const due = st.off ? undefined : B.dueForCheck(this.barriers(studentId), this.today());
+    if (due) return this.barrierCheck(studentId, due.need);
     const p = nextPulse(st, this.today());
     if (!p) return undefined;
     this.setPulses(studentId, { asked: { ...st.asked, [p.id]: this.today() } });
@@ -1079,6 +1159,39 @@ export class Advocate {
       nextSteps: [{ label: 'Yes', action: `pulse:${p.id}:yes` }, { label: 'No', action: `pulse:${p.id}:no` }, { label: 'Stop these questions', action: 'pulses-off' }],
       why: 'A single optional question, at most every few days, so I can offer help before it is needed.',
     };
+  }
+
+  /** "Is this sorted out now?" for a need that has gone quiet. Asking is recorded, so it comes back a week later. */
+  barrierCheck(studentId: string, need: NeedCategory): OutboundMessage {
+    const book = this.barriers(studentId);
+    const b = B.find(book, need);
+    if (!b || b.status === 'resolved') return this.helpMessage(studentId, need);
+    this.saveBarriers(studentId, B.asked(book, need, this.today()), 'asked', need);
+    this.store.put('pulse_pending', studentId, studentId, { pulse: `barrier:${need}` });
+    const label = (BARRIER[need]?.label ?? need).toLowerCase();
+    return {
+      studentId,
+      author: 'navigator',
+      urgency: 'routine',
+      text: `A while ago you told me ${label} was hard. Is it sorted out now?`,
+      nextSteps: [
+        { label: 'Yes, it is sorted out', action: `barrier:resolve:${need}` },
+        { label: 'Not yet', action: `barrier-still:${need}` },
+        { label: 'Not today', action: `barrier:not-today:${need}` },
+      ],
+      why: 'Something you raised stays on your plan until you say it is solved, so I check in on it about once a week.',
+    };
+  }
+
+  /** The answer to "is it sorted out now?": yes resolves it; not yet keeps it, with its best next step. */
+  answerBarrierCheck(studentId: string, need: NeedCategory, sorted: boolean): OutboundMessage {
+    this.store.remove('pulse_pending', studentId);
+    if (sorted) {
+      this.resolveBarrier(studentId, need);
+      return { studentId, author: 'navigator', urgency: 'routine', text: `Good. I took ${(BARRIER[need]?.label ?? need).toLowerCase()} off your plan. If it comes back, just tell me.`, nextSteps: [{ label: 'Your plan', action: 'my-plan' }], why: 'You said it is solved, so it no longer shows in your recommendations.' };
+    }
+    this.ev('barrier', studentId, { event: 'still-open', need });
+    return this.helpMessage(studentId, need);
   }
 
   answerPulse(studentId: string, pulseId: string, answer: 'yes' | 'no'): OutboundMessage {

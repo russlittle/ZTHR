@@ -352,6 +352,8 @@ export const ACTIONS: Record<string, Handler> = {
     const [pid, ans] = arg.split(':');
     return { message: a.answerPulse(sid, pid!, ans === 'yes' ? 'yes' : 'no') };
   },
+  'my-plan': (_a, sid) => ({ message: msg(sid, 'Here is your plan, most urgent first.', [back], 'navigator'), view: 'plan' }),
+  'barrier-still': (a, sid, arg) => (isNeed(arg) ? { message: a.answerBarrierCheck(sid, arg, false) } : { message: msg(sid, 'I could not tell which need that was.', [back]) }),
   'pulses-off': (a, sid) => {
     a.setPulses(sid, { off: true });
     return { message: msg(sid, 'Done. No more quick questions. You can turn them back on in Settings.', [{ label: 'Settings', action: 'settings' }]) };

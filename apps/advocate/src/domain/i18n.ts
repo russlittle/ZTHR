@@ -35,11 +35,17 @@ const T = {
 const NEED_ES: Record<string, string> = {
   food: 'comida', housing: 'vivienda', utilities: 'servicios (luz, gas, agua)', money: 'dinero', transportation: 'transporte', childcare: 'cuidado de niños',
   'phone-internet': 'teléfono o internet', legal: 'ayuda legal', books: 'libros', 'mental-health': 'apoyo emocional', caregiving: 'cuidado de familiares', career: 'empleo',
+  emergency: 'emergencia', safety: 'seguridad', goods: 'ropa y artículos del hogar', documents: 'identificación y documentos', aid: 'ayuda financiera', direction: 'carrera', belonging: 'comunidad', wellbeing: 'bienestar', opportunity: 'trabajo', academic: 'apoyo escolar',
+};
+
+/** How a need reads inside an English sentence ("Here's {need} help"), where its id would read oddly. */
+const NEED_EN: Record<string, string> = {
+  'mental-health': 'mental health', 'phone-internet': 'phone or internet', goods: 'clothing and household', documents: 'ID and documents', aid: 'financial aid', direction: 'career', belonging: 'connection', wellbeing: 'wellbeing', opportunity: 'job', academic: 'school', emergency: 'emergency', safety: 'safety',
 };
 
 export function t(key: keyof typeof T, lang: Language, vars: Record<string, string> = {}): string {
   let s: string = T[key][lang];
-  for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, lang === 'es' ? (NEED_ES[v] ?? v) : v.replace('-', ' '));
+  for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, lang === 'es' ? (NEED_ES[v] ?? v) : (NEED_EN[v] ?? v.replace('-', ' ')));
   return s;
 }
 

@@ -103,11 +103,11 @@ export const GUIDE_READ = /\/guide(\/|$)/;
 /** Settings are independent switches: the main walk sets them through seeds, and the settings walk covers every combination. */
 export const SETTINGS_ACTION = /action=(dial|source-on|source-off|pulses-on|pulses-off)%3A?/;
 
-export async function crawlAdvocate(opts: { only?: string[]; maxNodes?: number; settingsOnly?: boolean } = {}): Promise<ExploreReport & { routes: string[] }> {
+export async function crawlAdvocate(opts: { only?: string[]; maxNodes?: number; settingsOnly?: boolean; dials?: boolean } = {}): Promise<ExploreReport & { routes: string[] }> {
   const routes = new Set<string>();
   const campus = await campusSeedDocs();
   const merged: ExploreReport & { routes: string[] } = { seeds: [], states: 0, transitions: 0, actionsSeen: [], verbsSeen: {}, violations: [], exhausted: true, routes: [] };
-  const seeds = PERSONA_NAMES.filter((n) => !opts.only || opts.only.includes(n)).flatMap((n) => (opts.settingsOnly ? [[n, 'own']] : [[n, 'own'], [n, 'brief'], [n, 'walk-me-through']]) as [string, string][]);
+  const seeds = PERSONA_NAMES.filter((n) => !opts.only || opts.only.includes(n)).flatMap((n) => (opts.settingsOnly || opts.dials === false ? [[n, 'own']] : [[n, 'own'], [n, 'brief'], [n, 'walk-me-through']]) as [string, string][]);
   for (const [name, dial] of seeds) {
     const others = PERSONA_NAMES.filter((n) => n !== name);
     const make = (): CrawlWorld => {
@@ -119,6 +119,9 @@ export async function crawlAdvocate(opts: { only?: string[]; maxNodes?: number; 
     };
     // explore() is synchronous, so the walk runs breadth-first here with the same rules, awaiting each request.
     const seen = new Set<string>();
+    // A guide reading page is queued once per seed, from wherever it is first linked; replaying the path to it from
+    // every other state would only show the same page again.
+    const guideQueued = new Set<string>();
     const queue: string[][] = [[`GET ${BASE}/s/${name.toLowerCase()}${opts.settingsOnly ? '/you' : ''}`]];
     let transitions = 0;
     let depth = 0;
@@ -150,6 +153,11 @@ export async function crawlAdvocate(opts: { only?: string[]; maxNodes?: number; 
       depth = Math.max(depth, path.length);
       const acts = [...new Set(pageActions(page))].filter((x) => (opts.settingsOnly ? x.startsWith('POST') && SETTINGS_ACTION.test(x) : !SETTINGS_ACTION.test(x)));
       for (const act of acts) {
+        if (act.startsWith('GET ') && GUIDE_READ.test(route(act.slice(4)))) {
+          const target = route(act.slice(4));
+          if (guideQueued.has(target)) continue;
+          guideQueued.add(target);
+        }
         transitions++;
         merged.verbsSeen[act.split(' ')[0]!] = (merged.verbsSeen[act.split(' ')[0]!] ?? 0) + 1;
         queue.push([...path, act]);

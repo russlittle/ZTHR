@@ -27,6 +27,8 @@ import { Advocate } from '../apps/advocate/src/agents/advocate.js';
 // --artifact builds a self-contained copy with relative links (no analytics) for previewing outside zthr.ai.
 // --static builds the same relative-link copy with analytics, for zthr.ai/reference on the static site host.
 const ARTIFACT = process.argv.includes('--artifact');
+/** The deployed app, which serves the factory pages each build makes, with that build's records. */
+const APP_ORIGIN = 'https://advocate-fsy7whk33q-uc.a.run.app';
 const STATIC = process.argv.includes('--static');
 const RELATIVE = ARTIFACT || STATIC;
 const SITE = join(ROOT, ARTIFACT ? 'site-artifact' : STATIC ? 'site-static' : 'site-out');
@@ -67,6 +69,7 @@ async function copyAssets(): Promise<void> {
   cpSync(join(ROOT, 'node_modules/mermaid/dist/mermaid.min.js'), join(SITE, 'assets', 'mermaid.min.js'));
   // Diagrams and tables: fit the column, restack on phones, and carry full screen, copy and print controls.
   cpSync(join(ROOT, 'tools/site-assets/figures.js'), join(SITE, 'assets', 'figures.js'));
+  cpSync(join(ROOT, 'tools/site-assets/cost.js'), join(SITE, 'assets', 'cost.js'));
   // The paths the app serves, read from its own router, so every link into the app from the published site can be
   // checked against the real route table rather than a copy of it. Middleware wildcards are not pages.
   const appRoutes = [...new Set(createApp(new Advocate(), { base: '/studentadvocate' }).routes.filter((r) => ['GET', 'ALL'].includes(r.method) && !r.path.endsWith('*')).map((r) => r.path))].sort();
@@ -367,8 +370,18 @@ ${NAV.map((g) => ui.section(g.title, ui.rows(g.pages.filter(([p]) => p !== 'inde
   write(join(SITE, 'factory', 'data.html'), shell('data', 'Data model', `<p class="muted">Generated from the declared schema; tests fail if the code writes anything it does not declare. <a href="../docs/data-model.html">The ERD</a>.</p>${ui.table(['Collection', 'Key', 'Fields', 'What it holds'], COLLECTIONS.map((c) => [`<code>${c.name}</code>`, c.key, c.fields.map((f) => `${f.name}${f.optional ? '?' : ''}`).join(', '), c.purpose]), { raw: [true, false, false, false] })}`));
 
   // cost
+  // The records go out with every build as JSON, so a static copy of the site (zthr.ai) can show them too.
+  mkdirSync(join(SITE, 'factory'), { recursive: true });
+  writeFileSync(join(SITE, 'factory', 'ci-costs.json'), JSON.stringify(costs.map((c) => ({ finishedAt: c.finishedAt, kind: c.kind, machine: c.machine, minutes: c.minutes, costUsd: c.costUsd }))));
   const total = costs.reduce((s, c) => s + c.costUsd, 0);
-  write(join(SITE, 'factory', 'cost.html'), shell('cost', 'Cost', costs.length ? `${ui.kpis([{ value: n(costs.length), label: 'factory runs recorded' }, { value: `$${total.toFixed(2)}`, label: 'all time, list price' }, { value: `${(costs.reduce((s, c) => s + c.minutes, 0) / costs.length).toFixed(1)} min`, label: 'average run' }, { value: '$0.00', label: 'model spend by the product' }])}${ui.table(['Finished', 'Kind', 'Machine', 'Minutes', 'Cost'], costs.slice(-40).reverse().map((c) => [c.finishedAt.slice(0, 16).replace('T', ' '), c.kind, c.machine, c.minutes.toFixed(1), `$${c.costUsd.toFixed(4)}`]))}` : '<p class="muted">Cost is recorded by each Cloud Build run; none in this build yet.</p>'));
+  const ym = new Date().toISOString().slice(0, 7);
+  const month = costs.filter((c) => c.finishedAt.slice(0, 7) === ym).reduce((s, c) => s + c.costUsd, 0);
+  const costBody = costs.length
+    ? `${ui.kpis([{ value: n(costs.length), label: 'factory runs recorded' }, { value: `$${total.toFixed(2)}`, label: 'all time, list price' }, { value: `$${month.toFixed(2)}`, label: 'this month, of a $100 cap' }, { value: `${(costs.reduce((s, c) => s + c.minutes, 0) / costs.length).toFixed(1)} min`, label: 'average run' }, { value: '$0.00', label: 'model spend by the product' }])}${ui.table(['Finished', 'Kind', 'Machine', 'Minutes', 'Cost'], costs.slice(-40).reverse().map((c) => [c.finishedAt.slice(0, 16).replace('T', ' '), c.kind, c.machine, c.minutes.toFixed(1), `$${c.costUsd.toFixed(4)}`]))}`
+    : STATIC
+      ? `<div id="cost-live" data-src="${APP_ORIGIN}/factory/ci-costs.json" data-page="${APP_ORIGIN}/factory/cost.html"><p class="muted">Reading the cost records from the latest build…</p></div><script src="../assets/cost.js" defer></script>`
+      : '<p class="muted">Cost is recorded by each Cloud Build run; none in this build yet.</p>';
+  write(join(SITE, 'factory', 'cost.html'), shell('cost', 'Cost', `<p class="muted">Compute for every factory run, at the dated list price in <code>control/ci-rates.json</code>. CI is held under $100 a month.</p>${costBody}`));
   // twins
   const contract = read<{ at: string; results: { service: string; probe: string; path: string; ok: boolean; problems: string[] }[] }>(join(OUT, 'contract.json'));
   write(

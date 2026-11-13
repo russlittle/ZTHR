@@ -15,7 +15,8 @@ describe('walks, quick slice', () => {
     expect(r.exhausted).toBe(true);
   }, 600_000);
   it('feature walk: Keisha (out of area), every page, link and form, with no violations', async () => {
-    const r = await crawlAdvocate({ only: ['Keisha'] });
+    // The quick slice walks Keisha's own setting; the crawl step walks every student in every detail setting.
+    const r = await crawlAdvocate({ only: ['Keisha'], dials: false });
     expect(r.violations.map((v) => `${v.problem} :: ${v.path.slice(-2).join(' > ')}`)).toEqual([]);
     expect(r.exhausted).toBe(true);
   }, 600_000);

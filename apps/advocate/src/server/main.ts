@@ -131,6 +131,12 @@ if (demoMode) {
 
 // The published docs and factory console, built by tools/site.ts into site-out/.
 if (existsSync('site-out')) {
+  // The factory's cost records are public, and the static copy of the site on zthr.ai reads them from here.
+  root.use('/factory/ci-costs.json', async (c, next) => {
+    await next();
+    c.header('Access-Control-Allow-Origin', '*');
+    c.header('Cache-Control', 'no-cache');
+  });
   for (const p of ['docs', 'factory', 'assets']) {
     root.use(`/${p}/*`, async (c, next) => (new URL(c.req.url).pathname === `/${p}` ? c.redirect(`/${p}/`) : next()));
     root.use(`/${p}/*`, serveStatic({ root: 'site-out', rewriteRequestPath: (path) => (path.endsWith('/') ? `${path}index.html` : path) }));

@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "vitest",
+  "vitest": {
+    "configFile": "vitest.guide-mutation.config.ts"
+  },
+  "mutate": [
+    "apps/advocate/src/guide/barriers.ts",
+    "apps/advocate/src/guide/signals.ts",
+    "apps/advocate/src/guide/feedback.ts",
+    "apps/advocate/src/guide/admission.ts",
+    "apps/advocate/src/guide/feed.ts"
+  ],
+  "reporters": [
+    "clear-text",
+    "json"
+  ],
+  "jsonReporter": {
+    "fileName": "reports/mutation-guide.json"
+  },
+  "coverageAnalysis": "perTest",
+  "concurrency": 6,
+  "timeoutMS": 60000,
+  "tempDirName": ".stryker-tmp-guide",
+  "dryRunTimeoutMinutes": 20
+}
