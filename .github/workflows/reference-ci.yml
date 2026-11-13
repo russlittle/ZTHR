@@ -15,18 +15,21 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
+    # The same image the Cloud Build steps use.
+    container: node:22-bookworm
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
       - run: npm ci
       - run: npm run typecheck
       - name: Tests
-        run: npx vitest run --reporter=dot 2>&1 | tail -150
+        run: |
+          set -o pipefail
+          free -m || true; nproc
+          npm test -- --maxWorkers=4 2>&1 | tail -200
       - run: npm run gates
-      - run: npm run journeys
+      - run: npm run journeys -- --release check
       - run: npm run docs:check
+      - run: npm run contract
