@@ -74,6 +74,14 @@ flowchart LR
 The service runs as an account with no roles. Each visitor to the demonstration gets their own copy of the twelve
 students, so nothing one visitor does changes what the next one sees.
 
+## Reproducing a build step in the open
+
+The Cloud Build log needs a signed-in Google account. To read a failing step without one, the
+[Reference app checks](https://github.com/russlittle/ZTHR/actions/workflows/reference-ci.yml) workflow runs the
+same steps, in the same `node:22-bookworm` image, on GitHub: install, typecheck, tests with four processes, gates,
+journeys, docs, contracts, the button and feature walks in push mode, then the browser walk, the deep
+click-through, the word check and the load test. It runs on demand for any branch or commit, and its log is public.
+
 ## Cost
 
 The build runs on an 8-vCPU machine (`E2_HIGHCPU_8`) so the suite and the nightly mutation run finish quickly.

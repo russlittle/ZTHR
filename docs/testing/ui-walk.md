@@ -11,7 +11,8 @@ flowchart TD
     a1[Start] --> a2[Maria's day] --> a3[Draft to landlord] --> a4[Sent] --> a5[Money] --> a6[Power shut-off] --> a7[You] --> a8[Week]
   end
   subgraph two[Part two: every screen]
-    s[5 students x 16 screens x phone and desktop x light and dark]
+    s[5 students x 20 screens x phone and desktop x light and dark]
+    g[The public resource guide, with no sign-in: the guide, a barrier, where help is missing, two services]
     r[Every screen at 320 px: reflow at 400% zoom]
     l[A shared link, as the advisor sees it]
   end
