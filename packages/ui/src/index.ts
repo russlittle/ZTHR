@@ -30,7 +30,7 @@ export const join = (...parts: (string | false | undefined | null)[]): string =>
 const common = { bar: '#10141f', barInk: '#e8ebf5', barMuted: '#9aa3bd', dotApp: '#9a8cff', dotAdmin: '#ffc83d', dotFactory: '#4fd3e3' };
 export const THEMES = {
   student: {
-    light: { ...common, paper: '#f5f6fb', surface: '#ffffff', ink: '#14152b', muted: '#464962', line: '#e1e3ef', action: '#3f33c0', actionInk: '#ffffff', mark: '#ffc83d', markInk: '#3a2700', alert: '#d23a52', calm: '#eeedfd', focus: '#1b5fd1', side: '#ffffff', sideInk: '#14152b', sideMuted: '#5a5d78', sideActive: '#eeedfd' },
+    light: { ...common, paper: '#f5f6fb', surface: '#ffffff', ink: '#14152b', muted: '#464962', line: '#e1e3ef', action: '#3f33c0', actionInk: '#ffffff', mark: '#ffc83d', markInk: '#3a2700', alert: '#c2334b', calm: '#eeedfd', focus: '#1b5fd1', side: '#ffffff', sideInk: '#14152b', sideMuted: '#5a5d78', sideActive: '#eeedfd' },
     dark: { ...common, paper: '#0b0b16', surface: '#16172a', ink: '#ecedf8', muted: '#a3a6c4', line: '#2a2c48', action: '#a99dff', actionInk: '#120c3a', mark: '#ffc83d', markInk: '#2a1d00', alert: '#ff7d92', calm: '#1f1d40', focus: '#8db4ff', side: '#16172a', sideInk: '#ecedf8', sideMuted: '#a3a6c4', sideActive: '#1f1d40' },
   },
   admin: {

@@ -60,7 +60,7 @@ steps:
     # Generated-input tests run 200 cases on every change and 2,000 on the nightly run. Four test processes at a
     # time: the machine has 8 GB, and eight processes each holding a walked app ran it out of memory.
     env: ['MUTATION=$_MUTATION']
-    args: ['-c', 'free -m || true; if [ "$$MUTATION" = "true" ]; then export FUZZ_RUNS=2000; fi; npm test -- --maxWorkers=4']
+    args: ['-c', 'if [ "$$MUTATION" = "true" ]; then export FUZZ_RUNS=2000; fi; npm test -- --maxWorkers=4']
 
   - id: gates
     name: node:22-bookworm

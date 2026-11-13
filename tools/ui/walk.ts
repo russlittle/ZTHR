@@ -158,14 +158,14 @@ for (const scheme of ['light', 'dark'] as const) {
   await page.getByRole('button', { name: 'Send it' }).first().click();
   await page.getByText(/Sent to landlord/).first().waitFor();
   await at('04-sent');
-  await page.getByRole('link', { name: 'Money' }).click();
+  await page.getByRole('link', { name: 'Money', exact: true }).click();
   await page.getByRole('heading', { name: 'What I checked' }).waitFor();
   await at('05-money');
-  await page.getByRole('link', { name: 'Help' }).click();
+  await page.getByRole('link', { name: 'Help', exact: true }).click();
   await page.getByRole('button', { name: 'My power is getting shut off' }).click();
   await page.getByText(/payment plan/).first().waitFor();
   await at('06-shutoff');
-  await page.getByRole('link', { name: 'You' }).click();
+  await page.getByRole('link', { name: 'You', exact: true }).click();
   await page.getByRole('heading', { name: 'Your record of consent' }).waitFor();
   await at('07-you');
   await page.getByRole('link', { name: 'Your week' }).click();
@@ -177,7 +177,7 @@ for (const scheme of ['light', 'dark'] as const) {
 }
 
 // ---- part two: every screen, three students, two widths, two themes
-const SCREENS = ['', '/money', '/school', '/school/drop', '/school/degree', '/advisor', '/help', '/you', '/delete', '/week', '/dates', '/shifts', '/syllabus', '/drafts', '/ask', '/letter', '/meals'];
+const SCREENS = ['', '/money', '/school', '/school/drop', '/school/degree', '/advisor', '/help', '/you', '/delete', '/week', '/dates', '/shifts', '/syllabus', '/drafts', '/ask', '/letter', '/meals', '/guide', '/guide/food', '/plan'];
 for (const sid of ['maria', 'sam', 'ana', 'destiny', 'tyler']) {
   for (const [vp, size] of Object.entries(VIEWPORTS)) {
     for (const scheme of ['light', 'dark'] as const) {
@@ -213,6 +213,21 @@ for (const sid of ['maria', 'sam', 'ana', 'destiny', 'tyler']) {
   await page.goto(link);
   await inspect(page, 'advisor', 'shared-link', 'light', 'desktop', t0);
   await page.close();
+}
+// ---- the public resource guide, as anyone sees it with no sign-in
+{
+  const PUBLIC = ['/guide', '/guide/emergency', '/guide/coverage', '/guide/service/daybreak', '/guide/service/sinclair-clubs'];
+  for (const [vp, size] of Object.entries(VIEWPORTS)) {
+    for (const scheme of ['light', 'dark'] as const) {
+      const page = await browser.newPage({ viewport: size, colorScheme: scheme, bypassCSP: true });
+      for (const p of PUBLIC) {
+        const t0 = Date.now();
+        await page.goto(`${base}${p}`);
+        await inspect(page, 'public', p.slice(1).replace(/\//g, '-'), scheme, vp, t0);
+      }
+      await page.close();
+    }
+  }
 }
 // ---- part three: the published docs and factory console, if this build made them
 const origin = new URL(base).origin;
