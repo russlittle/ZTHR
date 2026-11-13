@@ -1,0 +1,54 @@
+{
+ "id": "ohio-state-id",
+ "name": "Free Ohio state ID card",
+ "description": "A state ID card at no charge, for Ohio residents 17 and older who do not have a valid driver license.",
+ "organization": {
+  "name": "Ohio Bureau of Motor Vehicles",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "state"
+ },
+ "taxonomy": [
+  {
+   "barrier": "documents",
+   "label": "ID and documents",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "url": "https://ohiobmv.gov/dl-id-card.aspx",
+ "cost": "free",
+ "eligibility": "Ohio residents 17 or older without a valid driver license. Under 18 needs a parent or guardian along.",
+ "how_to_use": {
+  "steps": [
+   "Gather proof of your full legal name, date of birth, Social Security number, legal presence and Ohio address.",
+   "Save your spot in line online. Then go to any BMV license office."
+  ],
+  "documents": [
+   "Proof of full legal name",
+   "Proof of date of birth",
+   "Social Security number",
+   "Proof of legal presence",
+   "Proof of Ohio address"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://ohiobmv.gov/dl-id-card.aspx",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

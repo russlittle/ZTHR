@@ -1,0 +1,53 @@
+{
+ "id": "sinclair-tutoring",
+ "name": "Tutoring and Learning Center",
+ "description": "Free one-on-one or group tutoring for over 200 courses, on campus or by Zoom.",
+ "organization": {
+  "name": "Sinclair Community College",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "academic",
+   "label": "School",
+   "domain": "know-how",
+   "domain_label": "Knowing how college works"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "sinclair"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "Building 7, Room L07, library lower level",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "937-512-2792",
+ "url": "https://sinclair.edu/tlc",
+ "cost": "free",
+ "eligibility": "Currently enrolled Sinclair students.",
+ "how_to_use": {
+  "steps": [
+   "Book through the online reservation form: one-hour sessions, up to two per course each week.",
+   "Say which topics you want help with."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://sinclair.edu/tlc",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 180,
+  "current": true
+ }
+}

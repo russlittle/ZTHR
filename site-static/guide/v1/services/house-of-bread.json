@@ -1,0 +1,52 @@
+{
+ "id": "house-of-bread",
+ "name": "House of Bread",
+ "description": "Hot lunch every day of the year.",
+ "organization": {
+  "name": "House of Bread",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "9 Orth Ave.",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "937-226-1520",
+ "url": "https://houseofbread.org/",
+ "hours": "Daily, 11:00 a.m. to 1:00 p.m., 365 days a year",
+ "eligibility": "Anyone in need.",
+ "how_to_use": {
+  "steps": [
+   "Walk in during lunch."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://sinclair.edu/student-life/wellness/resources/food-assistance/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 45,
+  "current": true
+ }
+}

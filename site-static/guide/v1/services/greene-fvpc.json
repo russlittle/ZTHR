@@ -1,0 +1,65 @@
+{
+ "id": "greene-fvpc",
+ "name": "Family Violence Prevention Center of Greene County",
+ "description": "Help right away and a safe place to stay if someone has hurt you, for you and your kids.",
+ "organization": {
+  "name": "Family Violence Prevention Center of Greene County",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "safety",
+   "label": "Safety",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "emergency",
+   "label": "Emergency",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "Xenia",
+  "city": "Xenia"
+ },
+ "phone": "937-372-4552",
+ "url": "http://www.violencefreefutures.org/",
+ "hours": "Crisis hotline open 24 hours, every day",
+ "cost": "free",
+ "eligibility": "Survivors of domestic violence or sexual assault, and their children.",
+ "how_to_use": {
+  "steps": [
+   "Call the 24-hour crisis hotline, 937-372-4552.",
+   "If you are in danger right now, call 911."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.ohiolegalhelp.org/resource/family-violence-prevention-center-greene-county",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 30,
+  "current": true
+ }
+}

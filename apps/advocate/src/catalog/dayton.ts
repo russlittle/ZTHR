@@ -26,7 +26,7 @@ const FIRST_ENTRIES: Resource[] = [
     howToApply: ['Call 1-800-677-1116, or search by ZIP code at eldercare.acl.gov.', 'Ask who helps caregivers in your county.'],
     documents: [],
     prefill: ['zip'],
-    source: { url: 'https://eldercare.acl.gov/Public/About/Contact_Info/Index.aspx', license: 'public-information' },
+    source: { url: 'https://eldercare.acl.gov', license: 'public-information' },
     verifiedOn: '2026-11-03',
     freshnessDays: 180,
   },

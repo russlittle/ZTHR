@@ -1,0 +1,53 @@
+{
+ "id": "tcn-greene",
+ "name": "TCN Behavioral Health crisis line",
+ "description": "Mental health and addiction care in Greene County, with a 24-hour crisis line for adults.",
+ "organization": {
+  "name": "TCN Behavioral Health",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "emergency",
+   "label": "Emergency",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-376-8701",
+ "hours": "Crisis line open 24 hours, every day",
+ "eligibility": "Adults in Greene County. The main line for appointments is 937-376-8700.",
+ "how_to_use": {
+  "steps": [
+   "In a crisis, call 937-376-8701, any time, or call or text 988.",
+   "For an appointment, call 937-376-8700."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

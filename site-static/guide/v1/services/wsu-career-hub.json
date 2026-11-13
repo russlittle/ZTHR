@@ -1,0 +1,63 @@
+{
+ "id": "wsu-career-hub",
+ "name": "Berry Family Career Hub",
+ "description": "Help to pick a major, write a resume, get ready for interviews and find a job.",
+ "organization": {
+  "name": "Wright State University",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "direction",
+   "label": "Direction",
+   "domain": "aims",
+   "domain_label": "Knowing where you are headed"
+  },
+  {
+   "barrier": "career",
+   "label": "Work",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "opportunity",
+   "label": "Opportunity",
+   "domain": "thriving",
+   "domain_label": "Feeling well and finding opportunity"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "wright-state"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "108 Student Union",
+  "city": "Dayton"
+ },
+ "phone": "937-775-2556",
+ "url": "https://wright.edu/career-center",
+ "eligibility": "Wright State students.",
+ "how_to_use": {
+  "steps": [
+   "Log in to Handshake to book an appointment or search for jobs and internships.",
+   "Or call 937-775-2556."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://wright.edu/career-center",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 180,
+  "current": true
+ }
+}

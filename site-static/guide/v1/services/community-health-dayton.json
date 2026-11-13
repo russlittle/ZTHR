@@ -1,0 +1,53 @@
+{
+ "id": "community-health-dayton",
+ "name": "Community Health Centers of Greater Dayton",
+ "description": "Primary care whether or not you can pay. Fees are based on what you can pay.",
+ "organization": {
+  "name": "Community Health Centers of Greater Dayton",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "health",
+   "label": "Health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1323 W. Third St.",
+  "city": "Dayton"
+ },
+ "phone": "937-586-9733",
+ "url": "https://www.communityhealthdayton.org/",
+ "cost": "sliding-scale",
+ "eligibility": "Anyone, insured or not. Sliding-scale fees based on income.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-586-9733 for an appointment."
+  ],
+  "documents": [
+   "Proof of income, for the sliding-scale fee"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.phdmc.org/resources/local-healthcare-providers",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

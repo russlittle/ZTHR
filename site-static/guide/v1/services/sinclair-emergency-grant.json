@@ -1,0 +1,72 @@
+{
+ "id": "sinclair-emergency-grant",
+ "name": "Sinclair Student Emergency Grant",
+ "description": "One-time money for an emergency, like rent, food, a bill, or internet.",
+ "organization": {
+  "name": "Sinclair Community College",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "money",
+   "label": "Money",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "utilities",
+   "label": "Utilities",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "phone-internet",
+   "label": "Phone and internet",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "sinclair"
+  ],
+  "national": false
+ },
+ "url": "https://sinclair.edu/emergencygrant",
+ "eligibility": "Enrolled at least 6 credit hours this semester in a degree or certificate program, with a documented emergency. GPA, aid status and past awards may be considered. Once while at Sinclair.",
+ "how_to_use": {
+  "steps": [
+   "Get a paper that shows the need, like a late bill.",
+   "Apply through the link on sinclair.edu/emergencygrant."
+  ],
+  "documents": [
+   "Proof of the emergency (bill, notice, or estimate)"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://sinclair.edu/emergencygrant",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

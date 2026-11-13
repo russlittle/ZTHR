@@ -1,0 +1,68 @@
+{
+ "id": "mvcap",
+ "name": "Miami Valley Community Action Partnership",
+ "description": "A local agency that helps with bills. This is where you set up a time to apply for heating help.",
+ "organization": {
+  "name": "Miami Valley Community Action Partnership",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "utilities",
+   "label": "Utilities",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "money",
+   "label": "Money",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "719 South Main Street",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "937-341-5000",
+ "url": "https://miamivalleycap.org/",
+ "eligibility": "Income rules vary by program.",
+ "how_to_use": {
+  "steps": [
+   "Call to ask which programs fit and to make an appointment."
+  ],
+  "documents": [
+   "Photo ID",
+   "Recent utility bills",
+   "Proof of income"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://mcdrc.ohiolegalhelp.org/resource/miami-valley-community-action-partnership",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

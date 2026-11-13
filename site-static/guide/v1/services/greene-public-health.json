@@ -1,0 +1,62 @@
+{
+ "id": "greene-public-health",
+ "name": "Greene County Public Health",
+ "description": "Public health services in Greene County, including WIC food help for parents of young children and testing.",
+ "organization": {
+  "name": "Greene County",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "health",
+   "label": "Health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [
+  {
+   "id": "student-parent",
+   "label": "Student parents"
+  }
+ ],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "360 Wilson Dr.",
+  "city": "Xenia",
+  "postal_code": "45385"
+ },
+ "phone": "937-374-5600",
+ "url": "https://www.greenecophoh.gov",
+ "eligibility": "Greene County residents. WIC is for pregnant people and parents of children under five, with income rules.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-374-5600 and ask for the service you need."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

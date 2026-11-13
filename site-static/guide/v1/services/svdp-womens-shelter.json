@@ -1,0 +1,64 @@
+{
+ "id": "svdp-womens-shelter",
+ "name": "Shelter for Women and Families",
+ "description": "A place to stay tonight for women and families in Montgomery County.",
+ "organization": {
+  "name": "Society of St. Vincent de Paul, Dayton",
+  "kind": "faith",
+  "kind_label": "Faith-based",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "emergency",
+   "label": "Emergency",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [
+  {
+   "id": "student-parent",
+   "label": "Student parents"
+  }
+ ],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "120 W. Apple St.",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "937-461-7837",
+ "url": "https://stvincentdayton.org",
+ "cost": "free",
+ "eligibility": "Women and families who need a place to stay. Call first to check if there is room.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-461-7837 to check if there is room tonight.",
+   "If you cannot get through, call 2-1-1 at 937-225-3000, any time."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://stvincentdayton.org/help/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 30,
+  "current": true
+ }
+}

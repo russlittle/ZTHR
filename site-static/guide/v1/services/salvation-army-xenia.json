@@ -1,0 +1,57 @@
+{
+ "id": "salvation-army-xenia",
+ "name": "The Salvation Army, Xenia",
+ "description": "Help with emergency needs in Greene County.",
+ "organization": {
+  "name": "The Salvation Army",
+  "kind": "faith",
+  "kind_label": "Faith-based",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "money",
+   "label": "Money",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "goods",
+   "label": "Clothing and goods",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-372-9810",
+ "eligibility": "Greene County residents in need. Call to ask what help is available now.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-372-9810."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

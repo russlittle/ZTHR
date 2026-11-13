@@ -1,0 +1,54 @@
+{
+ "id": "fish-fairborn",
+ "name": "FISH Fairborn",
+ "description": "Food pantry for Fairborn and Bath Township.",
+ "organization": {
+  "name": "FISH Fairborn",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "480 W. Funderburg Rd.",
+  "city": "Fairborn",
+  "postal_code": "45324"
+ },
+ "phone": "937-879-1313",
+ "hours": "Tuesday and Friday, 1 to 4 p.m.",
+ "eligibility": "Fairborn and Bath Township residents; proof of residency and valid ID.",
+ "how_to_use": {
+  "steps": [
+   "Visit during hours with ID and proof of address."
+  ],
+  "documents": [
+   "Photo ID",
+   "Proof of address"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://greenelibrary.info/wp-content/uploads/sites/148/2025/11/GC_Food_Resource_Guide_updated_11-25.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 45,
+  "current": true
+ }
+}

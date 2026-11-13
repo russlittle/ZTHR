@@ -1,0 +1,61 @@
+{
+ "id": "wsu-disability",
+ "name": "Office of Disability Services",
+ "description": "Help for students with a disability, like more time on tests.",
+ "organization": {
+  "name": "Wright State University",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "academic",
+   "label": "School",
+   "domain": "know-how",
+   "domain_label": "Knowing how college works"
+  }
+ ],
+ "situations": [
+  {
+   "id": "disability",
+   "label": "Students with a disability"
+  }
+ ],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "wright-state"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "180 University Hall",
+  "city": "Dayton"
+ },
+ "phone": "937-775-5680",
+ "url": "https://www.wright.edu/disability-services",
+ "hours": "Monday to Friday, 8:30 a.m. to 5 p.m.",
+ "cost": "free",
+ "eligibility": "Wright State students with a disability. You sign up for this on its own, apart from getting into school.",
+ "how_to_use": {
+  "steps": [
+   "Fill out the form online.",
+   "Send a note from your doctor that says what your needs are.",
+   "Attend a College Accommodation Planning meeting."
+  ],
+  "documents": [
+   "Professional documentation of the disability"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.wright.edu/disability-services",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 180,
+  "current": true
+ }
+}

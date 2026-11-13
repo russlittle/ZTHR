@@ -1,0 +1,60 @@
+{
+ "id": "metroparks-free-fitness",
+ "name": "Free fitness and events in the MetroParks",
+ "description": "Free outdoor classes, from yoga and tai chi to bootcamp, and free festivals, in parks across Montgomery County.",
+ "organization": {
+  "name": "Five Rivers MetroParks",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "wellbeing",
+   "label": "Move and recharge",
+   "domain": "thriving",
+   "domain_label": "Feeling well and finding opportunity"
+  },
+  {
+   "barrier": "opportunity",
+   "label": "Opportunity",
+   "domain": "thriving",
+   "domain_label": "Feeling well and finding opportunity"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "url": "https://www.metroparks.org/programs",
+ "cost": "free",
+ "eligibility": "Everyone. Many classes need no registration.",
+ "how_to_use": {
+  "steps": [
+   "See the schedule at metroparks.org/programs.",
+   "Bring water, and a mat for yoga."
+  ],
+  "documents": []
+ },
+ "availability": [
+  {
+   "fact": "season",
+   "value": "Most outdoor classes run in the warm months; check the schedule",
+   "source": "https://www.metroparks.org/?p=23902",
+   "checked_on": "2026-11-13"
+  }
+ ],
+ "source": {
+  "url": "https://www.metroparks.org/?p=23902",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 60,
+  "current": true
+ }
+}

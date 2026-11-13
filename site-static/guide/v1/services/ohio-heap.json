@@ -1,0 +1,51 @@
+{
+ "id": "ohio-heap",
+ "name": "Ohio HEAP heating assistance",
+ "description": "Help with winter heating bills for households with lower income. You can apply from July 1, 2026 to May 31, 2027. It can take up to twelve weeks.",
+ "organization": {
+  "name": "Ohio Department of Development",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "state"
+ },
+ "taxonomy": [
+  {
+   "barrier": "utilities",
+   "label": "Utilities",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "url": "https://www.energyhelp.ohio.gov",
+ "eligibility": "Household income at or below 175% of poverty.",
+ "how_to_use": {
+  "steps": [
+   "Apply online at energyhelp.ohio.gov. Or set up a time with Miami Valley Community Action Partnership."
+  ],
+  "documents": [
+   "List of household members and proof of income for each adult",
+   "Most recent gas and electric bills",
+   "Birth dates and Social Security numbers for household members",
+   "Proof of disability, if it applies"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.occ.ohio.gov/factsheet/home-energy-assistance-program-heap",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

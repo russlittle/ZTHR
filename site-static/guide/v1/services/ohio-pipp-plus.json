@@ -1,0 +1,58 @@
+{
+ "id": "ohio-pipp-plus",
+ "name": "PIPP Plus",
+ "description": "Pay a set share of your income for gas and electric instead of the full bill, all year.",
+ "organization": {
+  "name": "State of Ohio",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "state"
+ },
+ "taxonomy": [
+  {
+   "barrier": "utilities",
+   "label": "Utilities",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "url": "https://energyhelpohio.gov",
+ "eligibility": "For homes with a lower income that get gas or electric from a big power company. For one person, the limit is about $27,900 a year.",
+ "how_to_use": {
+  "steps": [
+   "Apply online at energyhelpohio.gov, or ask your local help agency.",
+   "You will also need to apply for HEAP."
+  ],
+  "documents": [
+   "Proof of household income",
+   "Your gas and electric bills"
+  ],
+  "what_to_expect": "You pay 5% of your monthly household income for each of gas and electric (10% in an all-electric home, at least $10)."
+ },
+ "availability": [
+  {
+   "fact": "applications-open",
+   "value": "Year-round",
+   "source": "https://www.occ.ohio.gov/factsheet/percentage-income-payment-plan-pipp-plus",
+   "checked_on": "2026-11-13"
+  }
+ ],
+ "source": {
+  "url": "https://www.occ.ohio.gov/factsheet/percentage-income-payment-plan-pipp-plus",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

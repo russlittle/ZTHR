@@ -1,0 +1,63 @@
+{
+ "id": "sinclair-veterans",
+ "name": "Military-friendly education center",
+ "description": "Help with classes, benefits and making friends, for students who served and their families.",
+ "organization": {
+  "name": "Sinclair Community College",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "belonging",
+   "label": "Belonging",
+   "domain": "people",
+   "domain_label": "People in your corner"
+  },
+  {
+   "barrier": "aid",
+   "label": "Aid and benefits",
+   "domain": "know-how",
+   "domain_label": "Knowing how college works"
+  }
+ ],
+ "situations": [
+  {
+   "id": "veteran",
+   "label": "Veterans"
+  }
+ ],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "sinclair"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "Building 10, Room 444, 444 West Third Street",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "937-512-2586",
+ "url": "https://www.sinclair.edu/services/veteran/",
+ "cost": "free",
+ "eligibility": "Students who served or serve now, and their families.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-512-2586 or book an in-person or virtual appointment."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.sinclair.edu/services/veteran/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 180,
+  "current": true
+ }
+}

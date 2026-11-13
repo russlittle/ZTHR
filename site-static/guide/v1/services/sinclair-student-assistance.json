@@ -1,0 +1,64 @@
+{
+ "id": "sinclair-student-assistance",
+ "name": "Sinclair Student Assistance Request (case management)",
+ "description": "Someone on staff calls you back. They help with housing, food, or health needs, and they know who else can help.",
+ "organization": {
+  "name": "Sinclair Community College",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "health",
+   "label": "Health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "money",
+   "label": "Money",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "sinclair"
+  ],
+  "national": false
+ },
+ "url": "https://cm.maxient.com/reportingform.php?SinclairCC&layout_id=46",
+ "eligibility": "Sinclair students facing housing, food, or health needs.",
+ "how_to_use": {
+  "steps": [
+   "Fill out the Student Assistance Request form.",
+   "A staff member will contact you."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://sinclair.edu/student-life/wellness/resources/food-assistance/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

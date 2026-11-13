@@ -1,0 +1,46 @@
+{
+ "id": "eldercare-locator",
+ "name": "Eldercare Locator",
+ "description": "Free help finding care for an older parent or relative, and support for the person caring for them.",
+ "organization": {
+  "name": "U.S. Administration for Community Living",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "federal"
+ },
+ "taxonomy": [
+  {
+   "barrier": "caregiving",
+   "label": "Caring for family",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [],
+  "national": true
+ },
+ "phone": "1-800-677-1116",
+ "url": "https://eldercare.acl.gov",
+ "hours": "Mon to Fri, 8 a.m. to 9 p.m. Eastern",
+ "eligibility": "Anyone caring for an older adult, or an older adult looking for help.",
+ "how_to_use": {
+  "steps": [
+   "Call 1-800-677-1116, or search by ZIP code at eldercare.acl.gov.",
+   "Ask who helps caregivers in your county."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://eldercare.acl.gov/Public/About/Contact_Info/Index.aspx",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-03",
+  "freshness_days": 180,
+  "current": true
+ }
+}

@@ -1,0 +1,51 @@
+{
+ "id": "samaritan-behavioral",
+ "name": "Samaritan Behavioral Health",
+ "description": "Counseling and crisis care in Montgomery County, partly funded by the county mental health board.",
+ "organization": {
+  "name": "Premier Health",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "601 Edwin C. Moses Blvd., Fourth Floor",
+  "city": "Dayton"
+ },
+ "phone": "937-734-8333",
+ "url": "https://www.premierhealth.com/locations/samaritan-behavioral-health",
+ "eligibility": "People in Montgomery County who need counseling or crisis care.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-734-8333 to ask for an assessment.",
+   "In a crisis, call or text 988, or go to the nearest emergency room."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.premierhealth.com/locations/samaritan-behavioral-health",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

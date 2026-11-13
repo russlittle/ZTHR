@@ -1,0 +1,53 @@
+{
+ "id": "ys-community-pantry",
+ "name": "Yellow Springs Community Food Pantry",
+ "description": "Food pantry for Yellow Springs and Clifton, at Central Chapel Church.",
+ "organization": {
+  "name": "Yellow Springs Community Food Pantry",
+  "kind": "community",
+  "kind_label": "Community",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [
+   "antioch"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "411 S. High St.",
+  "city": "Yellow Springs",
+  "postal_code": "45387"
+ },
+ "phone": "937-510-6030",
+ "hours": "Second and fourth Thursdays, 2 to 4 p.m.",
+ "eligibility": "Yellow Springs and Clifton residents.",
+ "how_to_use": {
+  "steps": [
+   "Visit during hours."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://greenelibrary.info/wp-content/uploads/sites/148/2025/11/GC_Food_Resource_Guide_updated_11-25.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 45,
+  "current": true
+ }
+}

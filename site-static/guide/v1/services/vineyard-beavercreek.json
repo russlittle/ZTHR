@@ -1,0 +1,54 @@
+{
+ "id": "vineyard-beavercreek",
+ "name": "The Vineyard Church food pantry",
+ "description": "Food pantry serving all of Greene County.",
+ "organization": {
+  "name": "The Vineyard Church",
+  "kind": "faith",
+  "kind_label": "Faith-based",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "4081 Indian Ripple Rd.",
+  "city": "Beavercreek",
+  "postal_code": "45440"
+ },
+ "phone": "937-427-1912",
+ "hours": "Monday and Wednesday, 10 a.m. to 12 p.m.",
+ "eligibility": "Greene County residents; photo ID, plus a bill if you have a new address.",
+ "how_to_use": {
+  "steps": [
+   "Visit during hours with photo ID."
+  ],
+  "documents": [
+   "Photo ID",
+   "A bill showing a new address, if it changed"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://greenelibrary.info/wp-content/uploads/sites/148/2025/11/GC_Food_Resource_Guide_updated_11-25.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 45,
+  "current": true
+ }
+}

@@ -1,0 +1,45 @@
+{
+ "id": "lifeline",
+ "name": "Lifeline phone or internet discount",
+ "description": "Money off your phone or internet bill each month, if you qualify.",
+ "organization": {
+  "name": "Universal Service Administrative Company",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "federal"
+ },
+ "taxonomy": [
+  {
+   "barrier": "phone-internet",
+   "label": "Phone and internet",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [],
+  "national": true
+ },
+ "url": "https://www.lifelinesupport.org",
+ "eligibility": "Income at or below 135% of poverty, or receiving SNAP, Medicaid, SSI, federal public housing or a veterans pension. One per household.",
+ "how_to_use": {
+  "steps": [
+   "Apply online with the National Verifier. Or ask your phone company."
+  ],
+  "documents": [
+   "Proof of SNAP, Medicaid or SSI, or proof of income"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.usac.org/lifeline/consumer-eligibility/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

@@ -1,0 +1,58 @@
+{
+ "id": "gem-city-diaper-bank",
+ "name": "Gem City Diaper Bank",
+ "description": "Diapers for families who need them.",
+ "organization": {
+  "name": "Gem City Diaper Bank",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "goods",
+   "label": "Clothing and goods",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "childcare",
+   "label": "Child care",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [
+  {
+   "id": "student-parent",
+   "label": "Student parents"
+  }
+ ],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-231-1716",
+ "cost": "free",
+ "eligibility": "Families in need of diapers.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-231-1716 to ask where to pick up diapers."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

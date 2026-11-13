@@ -1,0 +1,58 @@
+{
+ "id": "homefull-mens-shelter",
+ "name": "Dayton's Shelter for Men",
+ "description": "A place to stay tonight for men in Montgomery County.",
+ "organization": {
+  "name": "Homefull",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "emergency",
+   "label": "Emergency",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1921 S. Gettysburg Ave.",
+  "city": "Dayton",
+  "postal_code": "45417"
+ },
+ "phone": "937-350-1335",
+ "cost": "free",
+ "eligibility": "Men who need a place to stay. Call first to check if there is room.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-350-1335 to check if there is room tonight.",
+   "If you cannot get through, call 2-1-1 at 937-225-3000, any time."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://stvincentdayton.org/help/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 30,
+  "current": true
+ }
+}

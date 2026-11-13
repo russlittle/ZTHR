@@ -1,0 +1,45 @@
+{
+ "id": "housing-solutions-greene",
+ "name": "Housing Solutions of Greene County",
+ "description": "Housing help in Greene County.",
+ "organization": {
+  "name": "Housing Solutions of Greene County",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-376-7810",
+ "eligibility": "Greene County residents who need help with housing.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-376-7810 and say what is going on with your housing."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

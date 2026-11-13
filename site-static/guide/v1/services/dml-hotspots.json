@@ -1,0 +1,52 @@
+{
+ "id": "dml-hotspots",
+ "name": "Mobile hotspot kits",
+ "description": "Borrow a mobile internet hotspot for three weeks, free with a library card.",
+ "organization": {
+  "name": "Dayton Metro Library",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "phone-internet",
+   "label": "Phone and internet",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-463-2665",
+ "url": "https://www.daytonmetrolibrary.org/news/mobile-hotspots/",
+ "cost": "free",
+ "eligibility": "Anyone with a Dayton Metro Library card in good standing. One kit at a time.",
+ "how_to_use": {
+  "steps": [
+   "Get a library card if you do not have one.",
+   "Request a hotspot kit in the catalog or at any branch.",
+   "Questions: the Ask Me line, 937-463-2665."
+  ],
+  "documents": [
+   "Library card"
+  ],
+  "what_to_expect": "Loans are 21 days, renewable up to five times if no one is waiting. A lost or damaged kit has a replacement fee."
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.daytonmetrolibrary.org/news/mobile-hotspots/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 60,
+  "current": true
+ }
+}

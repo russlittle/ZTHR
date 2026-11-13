@@ -1,0 +1,55 @@
+{
+ "id": "sinclair-counseling",
+ "name": "Sinclair Counseling Services",
+ "description": "Free, private counseling for Sinclair students. You can reach a counselor day or night.",
+ "organization": {
+  "name": "Sinclair Community College",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "sinclair"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "Building 10, Room 424, 444 West Third Street",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "937-512-3032",
+ "url": "https://sinclair.edu/support/counseling",
+ "hours": "Counselor by phone 24 hours, every day",
+ "cost": "free",
+ "eligibility": "Sinclair students.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-512-3032. After hours and on weekends, choose the option to speak with a counselor.",
+   "Or fill in the appointment request on the Counseling Services page.",
+   "In an emergency, call or text 988."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://sinclair.edu/support/counseling",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 180,
+  "current": true
+ }
+}

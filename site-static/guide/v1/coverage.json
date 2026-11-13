@@ -1,0 +1,423 @@
+{
+ "cells": [
+  {
+   "barrier": "emergency",
+   "county": "Montgomery",
+   "services": 4,
+   "kinds": [
+    "faith",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "emergency",
+   "county": "Greene",
+   "services": 4,
+   "kinds": [
+    "faith",
+    "health",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "food",
+   "county": "Montgomery",
+   "services": 15,
+   "kinds": [
+    "college",
+    "community",
+    "faith",
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "food",
+   "county": "Greene",
+   "services": 15,
+   "kinds": [
+    "college",
+    "community",
+    "faith",
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "housing",
+   "county": "Montgomery",
+   "services": 10,
+   "kinds": [
+    "college",
+    "faith",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "housing",
+   "county": "Greene",
+   "services": 9,
+   "kinds": [
+    "college",
+    "faith",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "utilities",
+   "county": "Montgomery",
+   "services": 5,
+   "kinds": [
+    "college",
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "utilities",
+   "county": "Greene",
+   "services": 6,
+   "kinds": [
+    "college",
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "money",
+   "county": "Montgomery",
+   "services": 6,
+   "kinds": [
+    "college",
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "money",
+   "county": "Greene",
+   "services": 8,
+   "kinds": [
+    "college",
+    "faith",
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "transportation",
+   "county": "Montgomery",
+   "services": 3,
+   "kinds": [
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "transportation",
+   "county": "Greene",
+   "services": 2,
+   "kinds": [
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "childcare",
+   "county": "Montgomery",
+   "services": 5,
+   "kinds": [
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "childcare",
+   "county": "Greene",
+   "services": 5,
+   "kinds": [
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "caregiving",
+   "county": "Montgomery",
+   "services": 1,
+   "kinds": [
+    "government"
+   ]
+  },
+  {
+   "barrier": "caregiving",
+   "county": "Greene",
+   "services": 1,
+   "kinds": [
+    "government"
+   ]
+  },
+  {
+   "barrier": "health",
+   "county": "Montgomery",
+   "services": 6,
+   "kinds": [
+    "college",
+    "government",
+    "health",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "health",
+   "county": "Greene",
+   "services": 5,
+   "kinds": [
+    "college",
+    "government",
+    "health",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "mental-health",
+   "county": "Montgomery",
+   "services": 4,
+   "kinds": [
+    "college",
+    "government",
+    "health"
+   ]
+  },
+  {
+   "barrier": "mental-health",
+   "county": "Greene",
+   "services": 4,
+   "kinds": [
+    "college",
+    "government",
+    "health"
+   ]
+  },
+  {
+   "barrier": "safety",
+   "county": "Montgomery",
+   "services": 1,
+   "kinds": [
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "safety",
+   "county": "Greene",
+   "services": 1,
+   "kinds": [
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "legal",
+   "county": "Montgomery",
+   "services": 1,
+   "kinds": [
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "legal",
+   "county": "Greene",
+   "services": 1,
+   "kinds": [
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "phone-internet",
+   "county": "Montgomery",
+   "services": 4,
+   "kinds": [
+    "college",
+    "government"
+   ]
+  },
+  {
+   "barrier": "phone-internet",
+   "county": "Greene",
+   "services": 3,
+   "kinds": [
+    "college",
+    "government"
+   ]
+  },
+  {
+   "barrier": "goods",
+   "county": "Montgomery",
+   "services": 1,
+   "kinds": [
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "goods",
+   "county": "Greene",
+   "services": 3,
+   "kinds": [
+    "community",
+    "faith",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "books",
+   "county": "Montgomery",
+   "services": 1,
+   "kinds": [
+    "college"
+   ]
+  },
+  {
+   "barrier": "books",
+   "county": "Greene",
+   "services": 1,
+   "kinds": [
+    "college"
+   ]
+  },
+  {
+   "barrier": "documents",
+   "county": "Montgomery",
+   "services": 1,
+   "kinds": [
+    "government"
+   ]
+  },
+  {
+   "barrier": "documents",
+   "county": "Greene",
+   "services": 1,
+   "kinds": [
+    "government"
+   ]
+  },
+  {
+   "barrier": "career",
+   "county": "Montgomery",
+   "services": 2,
+   "kinds": [
+    "college",
+    "government"
+   ]
+  },
+  {
+   "barrier": "career",
+   "county": "Greene",
+   "services": 2,
+   "kinds": [
+    "college",
+    "government"
+   ]
+  },
+  {
+   "barrier": "aid",
+   "county": "Montgomery",
+   "services": 3,
+   "kinds": [
+    "college"
+   ]
+  },
+  {
+   "barrier": "aid",
+   "county": "Greene",
+   "services": 3,
+   "kinds": [
+    "college"
+   ]
+  },
+  {
+   "barrier": "academic",
+   "county": "Montgomery",
+   "services": 5,
+   "kinds": [
+    "college"
+   ]
+  },
+  {
+   "barrier": "academic",
+   "county": "Greene",
+   "services": 5,
+   "kinds": [
+    "college"
+   ]
+  },
+  {
+   "barrier": "direction",
+   "county": "Montgomery",
+   "services": 2,
+   "kinds": [
+    "college"
+   ]
+  },
+  {
+   "barrier": "direction",
+   "county": "Greene",
+   "services": 2,
+   "kinds": [
+    "college"
+   ]
+  },
+  {
+   "barrier": "belonging",
+   "county": "Montgomery",
+   "services": 2,
+   "kinds": [
+    "college"
+   ]
+  },
+  {
+   "barrier": "belonging",
+   "county": "Greene",
+   "services": 2,
+   "kinds": [
+    "college"
+   ]
+  },
+  {
+   "barrier": "wellbeing",
+   "county": "Montgomery",
+   "services": 3,
+   "kinds": [
+    "college",
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "wellbeing",
+   "county": "Greene",
+   "services": 2,
+   "kinds": [
+    "college",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "opportunity",
+   "county": "Montgomery",
+   "services": 3,
+   "kinds": [
+    "college",
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "opportunity",
+   "county": "Greene",
+   "services": 2,
+   "kinds": [
+    "college",
+    "nonprofit"
+   ]
+  }
+ ],
+ "gaps": []
+}

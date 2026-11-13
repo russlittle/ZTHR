@@ -1,0 +1,54 @@
+{
+ "id": "greene-cap",
+ "name": "Community Action Partnership, Greene County",
+ "description": "Help with utility bills in Greene County.",
+ "organization": {
+  "name": "Community Action Partnership",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "utilities",
+   "label": "Utilities",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "money",
+   "label": "Money",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-376-7747",
+ "eligibility": "Greene County households with lower income.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-376-7747 to ask about utility help and how to apply."
+  ],
+  "documents": [
+   "Proof of household income",
+   "Your utility bills"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

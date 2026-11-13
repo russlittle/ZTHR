@@ -1,0 +1,43 @@
+{
+ "id": "lifeline-988",
+ "name": "988 Suicide & Crisis Lifeline",
+ "description": "Free, confidential support any time. Call or text 988.",
+ "organization": {
+  "name": "988 Lifeline",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "federal"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [],
+  "national": true
+ },
+ "phone": "988",
+ "eligibility": "Anyone.",
+ "how_to_use": {
+  "steps": [
+   "Call or text 988."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://988lifeline.org",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 365,
+  "current": true
+ }
+}

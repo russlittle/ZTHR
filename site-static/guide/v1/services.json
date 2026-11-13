@@ -1,0 +1,3591 @@
+{
+ "feed": "community-resource-guide",
+ "version": "1.0",
+ "region": "Montgomery and Greene counties, Ohio",
+ "generated_on": "2026-11-13",
+ "license": {
+  "name": "Creative Commons Attribution 4.0",
+  "url": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "Community resource guide, Student Advocate (zthr.ai). Facts from each entry's cited source of record."
+ },
+ "count": 63,
+ "services": [
+  {
+   "id": "eldercare-locator",
+   "name": "Eldercare Locator",
+   "description": "Free help finding care for an older parent or relative, and support for the person caring for them.",
+   "organization": {
+    "name": "U.S. Administration for Community Living",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "federal"
+   },
+   "taxonomy": [
+    {
+     "barrier": "caregiving",
+     "label": "Caring for family",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [],
+    "national": true
+   },
+   "phone": "1-800-677-1116",
+   "url": "https://eldercare.acl.gov",
+   "hours": "Mon to Fri, 8 a.m. to 9 p.m. Eastern",
+   "eligibility": "Anyone caring for an older adult, or an older adult looking for help.",
+   "how_to_use": {
+    "steps": [
+     "Call 1-800-677-1116, or search by ZIP code at eldercare.acl.gov.",
+     "Ask who helps caregivers in your county."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://eldercare.acl.gov/Public/About/Contact_Info/Index.aspx",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-03",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "sinclair-food-pantry",
+   "name": "Sinclair Student Food Pantry",
+   "description": "Free food supplies for Sinclair students.",
+   "organization": {
+    "name": "Sinclair Community College",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "sinclair"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "Building 13, Room 426, 444 West Third Street",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "url": "https://www.sinclair.edu/foodpantry",
+   "eligibility": "Sinclair students who need food.",
+   "how_to_use": {
+    "steps": [
+     "Go to Building 13, Room 426.",
+     "Check sinclair.edu/foodpantry for open dates."
+    ],
+    "documents": [
+     "Sinclair student ID"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/student-life/wellness/resources/food-assistance/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "sinclair-lunch-time-hunger",
+   "name": "Lunch Time Hunger Program",
+   "description": "Free lunch, no questions asked.",
+   "organization": {
+    "name": "Sinclair Community College",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "sinclair"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "Building 13, Room 426, 444 West Third Street",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "url": "https://www.sinclair.edu/foodpantry",
+   "hours": "Monday to Thursday, 11:00 a.m. to 1:00 p.m.",
+   "eligibility": "Sinclair students. No questions asked.",
+   "how_to_use": {
+    "steps": [
+     "Walk in during lunch hours."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/student-life/wellness/resources/food-assistance/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "sinclair-student-assistance",
+   "name": "Sinclair Student Assistance Request (case management)",
+   "description": "Someone on staff calls you back. They help with housing, food, or health needs, and they know who else can help.",
+   "organization": {
+    "name": "Sinclair Community College",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "health",
+     "label": "Health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "money",
+     "label": "Money",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "sinclair"
+    ],
+    "national": false
+   },
+   "url": "https://cm.maxient.com/reportingform.php?SinclairCC&layout_id=46",
+   "eligibility": "Sinclair students facing housing, food, or health needs.",
+   "how_to_use": {
+    "steps": [
+     "Fill out the Student Assistance Request form.",
+     "A staff member will contact you."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/student-life/wellness/resources/food-assistance/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "sinclair-emergency-grant",
+   "name": "Sinclair Student Emergency Grant",
+   "description": "One-time money for an emergency, like rent, food, a bill, or internet.",
+   "organization": {
+    "name": "Sinclair Community College",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "money",
+     "label": "Money",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "utilities",
+     "label": "Utilities",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "phone-internet",
+     "label": "Phone and internet",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "sinclair"
+    ],
+    "national": false
+   },
+   "url": "https://sinclair.edu/emergencygrant",
+   "eligibility": "Enrolled at least 6 credit hours this semester in a degree or certificate program, with a documented emergency. GPA, aid status and past awards may be considered. Once while at Sinclair.",
+   "how_to_use": {
+    "steps": [
+     "Get a paper that shows the need, like a late bill.",
+     "Apply through the link on sinclair.edu/emergencygrant."
+    ],
+    "documents": [
+     "Proof of the emergency (bill, notice, or estimate)"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/emergencygrant",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "wsu-raider-food-pantry",
+   "name": "Raider Food Pantry",
+   "description": "Free emergency food for Wright State students, by appointment, once a month.",
+   "organization": {
+    "name": "Wright State University",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "wright-state"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "055 Student Union, 3640 Colonel Glenn Hwy",
+    "city": "Fairborn",
+    "postal_code": "45435"
+   },
+   "phone": "937-775-2808",
+   "url": "https://www.wright.edu/foodpantry",
+   "eligibility": "Wright State students enrolled this term who need emergency food.",
+   "how_to_use": {
+    "steps": [
+     "Book an appointment online with your campus login (no walk-ins).",
+     "Arrive on time; more than 5 minutes late without notice cancels the appointment."
+    ],
+    "documents": [
+     "Photo ID",
+     "University ID number"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.wright.edu/foodpantry",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "ohio-benefits-snap",
+   "name": "Apply for SNAP, cash or child care help",
+   "description": "The state's online form for SNAP food help, cash help, and help paying for child care.",
+   "organization": {
+    "name": "Ohio Department of Job and Family Services",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "state"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "money",
+     "label": "Money",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "childcare",
+     "label": "Child care",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "url": "https://benefits.ohio.gov",
+   "eligibility": "There are rules about income and who lives with you. Most students who take six or more credits also need to meet one extra rule, like working 20 hours a week.",
+   "how_to_use": {
+    "steps": [
+     "Create an account at benefits.ohio.gov.",
+     "Fill out the application.",
+     "Complete the interview when the county calls.",
+     "Send any verification they ask for."
+    ],
+    "documents": [
+     "Photo ID",
+     "Proof of income for the last 30 days",
+     "Proof of the student exemption (work schedule, work-study award, or child care need)"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.greenecountyohio.gov/279/Job-Family-Services",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "montgomery-jfs",
+   "name": "Montgomery County Job and Family Services",
+   "description": "The county office for SNAP, cash, Medicaid and child care assistance.",
+   "organization": {
+    "name": "Montgomery County",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "money",
+     "label": "Money",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "childcare",
+     "label": "Child care",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "health",
+     "label": "Health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "1111 S. Edwin C. Moses Blvd.",
+    "city": "Dayton",
+    "postal_code": "45422"
+   },
+   "phone": "937-225-4148",
+   "eligibility": "Montgomery County residents.",
+   "how_to_use": {
+    "steps": [
+     "Apply online at benefits.ohio.gov, or visit or call the office."
+    ],
+    "documents": [
+     "Photo ID",
+     "Social Security card",
+     "Proof of income"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.ohiolegalhelp.org/resource/montgomery-county-job-and-family-services",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "greene-jfs",
+   "name": "Greene County Job and Family Services",
+   "description": "The county office for SNAP, cash, Medicaid and publicly funded child care.",
+   "organization": {
+    "name": "Greene County",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "money",
+     "label": "Money",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "childcare",
+     "label": "Child care",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "health",
+     "label": "Health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "541 Ledbetter Rd.",
+    "city": "Xenia",
+    "postal_code": "45385"
+   },
+   "phone": "937-562-6000",
+   "eligibility": "Greene County residents.",
+   "how_to_use": {
+    "steps": [
+     "Apply online at benefits.ohio.gov.",
+     "For Medicaid you can also call 1-844-640-6446."
+    ],
+    "documents": [
+     "Photo ID",
+     "Proof of income"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.greenecountyohio.gov/279/Job-Family-Services",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "ohio-heap",
+   "name": "Ohio HEAP heating assistance",
+   "description": "Help with winter heating bills for households with lower income. You can apply from July 1, 2026 to May 31, 2027. It can take up to twelve weeks.",
+   "organization": {
+    "name": "Ohio Department of Development",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "state"
+   },
+   "taxonomy": [
+    {
+     "barrier": "utilities",
+     "label": "Utilities",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "url": "https://www.energyhelp.ohio.gov",
+   "eligibility": "Household income at or below 175% of poverty.",
+   "how_to_use": {
+    "steps": [
+     "Apply online at energyhelp.ohio.gov. Or set up a time with Miami Valley Community Action Partnership."
+    ],
+    "documents": [
+     "List of household members and proof of income for each adult",
+     "Most recent gas and electric bills",
+     "Birth dates and Social Security numbers for household members",
+     "Proof of disability, if it applies"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.occ.ohio.gov/factsheet/home-energy-assistance-program-heap",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "mvcap",
+   "name": "Miami Valley Community Action Partnership",
+   "description": "A local agency that helps with bills. This is where you set up a time to apply for heating help.",
+   "organization": {
+    "name": "Miami Valley Community Action Partnership",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "utilities",
+     "label": "Utilities",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "money",
+     "label": "Money",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "719 South Main Street",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-341-5000",
+   "url": "https://miamivalleycap.org/",
+   "eligibility": "Income rules vary by program.",
+   "how_to_use": {
+    "steps": [
+     "Call to ask which programs fit and to make an appointment."
+    ],
+    "documents": [
+     "Photo ID",
+     "Recent utility bills",
+     "Proof of income"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://mcdrc.ohiolegalhelp.org/resource/miami-valley-community-action-partnership",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "foodbank-dayton",
+   "name": "The Foodbank pantry locator",
+   "description": "The food bank for this area. Look up pantries by ZIP code, or find a mobile pantry near you.",
+   "organization": {
+    "name": "The Foodbank, Inc.",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "56 Armor Place",
+    "city": "Dayton",
+    "postal_code": "45417"
+   },
+   "phone": "937-461-0265",
+   "url": "https://thefoodbankdayton.org",
+   "eligibility": "Varies by pantry.",
+   "how_to_use": {
+    "steps": [
+     "Search the pantry locator by ZIP code.",
+     "Call the pantry to confirm hours and what to bring."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.wyso.org/news/2025-10-28/snap-funding-frozen-amid-shutdown-where-to-find-help-locally",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "united-way-211",
+   "name": "2-1-1 Helpline",
+   "description": "Free, confidential help finding food, paying bills and other services.",
+   "organization": {
+    "name": "United Way of the Greater Dayton Area",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "utilities",
+     "label": "Utilities",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "money",
+     "label": "Money",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "health",
+     "label": "Health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "transportation",
+     "label": "Transportation",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "childcare",
+     "label": "Child care",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "211",
+   "url": "https://www.211.org/",
+   "eligibility": "Anyone.",
+   "how_to_use": {
+    "steps": [
+     "Call 2-1-1, or (937) 225-3000."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.wyso.org/news/2025-10-28/snap-funding-frozen-amid-shutdown-where-to-find-help-locally",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "house-of-bread",
+   "name": "House of Bread",
+   "description": "Hot lunch every day of the year.",
+   "organization": {
+    "name": "House of Bread",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "9 Orth Ave.",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-226-1520",
+   "url": "https://houseofbread.org/",
+   "hours": "Daily, 11:00 a.m. to 1:00 p.m., 365 days a year",
+   "eligibility": "Anyone in need.",
+   "how_to_use": {
+    "steps": [
+     "Walk in during lunch."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/student-life/wellness/resources/food-assistance/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "good-neighbor-house",
+   "name": "Good Neighbor House",
+   "description": "A drive-thru food pantry. They also have a clinic for health care and teeth.",
+   "organization": {
+    "name": "Good Neighbor House",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "health",
+     "label": "Health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "627 East First Street",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-224-3003",
+   "url": "https://www.goodneighborhouse.org/",
+   "hours": "Drive-thru pantry Monday to Thursday, 9 a.m. to 2 p.m.; call first",
+   "eligibility": "Call to speak with an intake volunteer.",
+   "how_to_use": {
+    "steps": [
+     "Call first to speak with an intake volunteer."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.wyso.org/news/2025-10-28/snap-funding-frozen-amid-shutdown-where-to-find-help-locally",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "svdp-dayton",
+   "name": "St. Vincent de Paul of Dayton",
+   "description": "A place to stay tonight, help finding housing, food, clothes, and things for your home.",
+   "organization": {
+    "name": "Society of St. Vincent de Paul, Dayton",
+    "kind": "faith",
+    "kind_label": "Faith-based",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "url": "https://stvincentdayton.org/",
+   "eligibility": "Call or visit the website for current intake.",
+   "how_to_use": {
+    "steps": [
+     "Visit stvincentdayton.org or call for shelter intake."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/student-life/wellness/resources/food-assistance/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "css-choice-pantry",
+   "name": "Catholic Social Services Choice Food Pantry",
+   "description": "Choice food pantry with case management for west and northwest Dayton residents.",
+   "organization": {
+    "name": "Catholic Social Services of the Miami Valley",
+    "kind": "faith",
+    "kind_label": "Faith-based",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "922 W. Riverview Ave.",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-223-7217",
+   "url": "https://cssmv.org/",
+   "eligibility": "For people who live in west and northwest Dayton. Call and ask for 1101 to see if you can use it.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-223-7217, ext. 1101, to see if you can use it."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/student-life/wellness/resources/food-assistance/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "have-a-gay-day-pantry",
+   "name": "Have A Gay Day Community Food Pantry",
+   "description": "A food pantry that can also bring food to you.",
+   "organization": {
+    "name": "Have A Gay Day",
+    "kind": "community",
+    "kind_label": "Community",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "1902 Needmore Rd.",
+    "city": "Dayton",
+    "postal_code": "45414"
+   },
+   "phone": "937-469-7629",
+   "url": "https://haveagayday.org",
+   "eligibility": "Call for current hours and delivery.",
+   "how_to_use": {
+    "steps": [
+     "Call or visit the website."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.wyso.org/news/2025-10-28/snap-funding-frozen-amid-shutdown-where-to-find-help-locally",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "greene-fish-xenia",
+   "name": "Greene County FISH Pantry",
+   "description": "Food pantry; one visit every four weeks. Second and fourth Saturdays 8 to 11 a.m. are for veterans and active military.",
+   "organization": {
+    "name": "Greene County FISH",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "774 Cincinnati Ave.",
+    "city": "Xenia",
+    "postal_code": "45385"
+   },
+   "phone": "937-372-8441",
+   "hours": "Wednesday and Thursday, 11 a.m. to 3 p.m.",
+   "eligibility": "Greene County residents; bring ID.",
+   "how_to_use": {
+    "steps": [
+     "Visit during hours with your ID."
+    ],
+    "documents": [
+     "Photo ID"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://greenelibrary.info/wp-content/uploads/sites/148/2025/11/GC_Food_Resource_Guide_updated_11-25.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "fish-fairborn",
+   "name": "FISH Fairborn",
+   "description": "Food pantry for Fairborn and Bath Township.",
+   "organization": {
+    "name": "FISH Fairborn",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "480 W. Funderburg Rd.",
+    "city": "Fairborn",
+    "postal_code": "45324"
+   },
+   "phone": "937-879-1313",
+   "hours": "Tuesday and Friday, 1 to 4 p.m.",
+   "eligibility": "Fairborn and Bath Township residents; proof of residency and valid ID.",
+   "how_to_use": {
+    "steps": [
+     "Visit during hours with ID and proof of address."
+    ],
+    "documents": [
+     "Photo ID",
+     "Proof of address"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://greenelibrary.info/wp-content/uploads/sites/148/2025/11/GC_Food_Resource_Guide_updated_11-25.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "ys-community-pantry",
+   "name": "Yellow Springs Community Food Pantry",
+   "description": "Food pantry for Yellow Springs and Clifton, at Central Chapel Church.",
+   "organization": {
+    "name": "Yellow Springs Community Food Pantry",
+    "kind": "community",
+    "kind_label": "Community",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [
+     "antioch"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "411 S. High St.",
+    "city": "Yellow Springs",
+    "postal_code": "45387"
+   },
+   "phone": "937-510-6030",
+   "hours": "Second and fourth Thursdays, 2 to 4 p.m.",
+   "eligibility": "Yellow Springs and Clifton residents.",
+   "how_to_use": {
+    "steps": [
+     "Visit during hours."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://greenelibrary.info/wp-content/uploads/sites/148/2025/11/GC_Food_Resource_Guide_updated_11-25.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "vineyard-beavercreek",
+   "name": "The Vineyard Church food pantry",
+   "description": "Food pantry serving all of Greene County.",
+   "organization": {
+    "name": "The Vineyard Church",
+    "kind": "faith",
+    "kind_label": "Faith-based",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "4081 Indian Ripple Rd.",
+    "city": "Beavercreek",
+    "postal_code": "45440"
+   },
+   "phone": "937-427-1912",
+   "hours": "Monday and Wednesday, 10 a.m. to 12 p.m.",
+   "eligibility": "Greene County residents; photo ID, plus a bill if you have a new address.",
+   "how_to_use": {
+    "steps": [
+     "Visit during hours with photo ID."
+    ],
+    "documents": [
+     "Photo ID",
+     "A bill showing a new address, if it changed"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://greenelibrary.info/wp-content/uploads/sites/148/2025/11/GC_Food_Resource_Guide_updated_11-25.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 45,
+    "current": true
+   }
+  },
+  {
+   "id": "rta",
+   "name": "Greater Dayton RTA",
+   "description": "Buses in Montgomery County. Routes 1, 2, 4, 8, 19 and 22 stop at Sinclair. Riders with a disability can get a lower fare.",
+   "organization": {
+    "name": "Greater Dayton Regional Transit Authority",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "transportation",
+     "label": "Transportation",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-425-8300",
+   "eligibility": "Anyone; reduced fare with an RTA disability ID.",
+   "how_to_use": {
+    "steps": [
+     "Call RTA customer service for passes and student pricing."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.sinclair.edu/about/visit/public-transportation/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "rta-project-mobility",
+   "name": "RTA Project Mobility",
+   "description": "Rides from your door for riders with a disability. Book a day ahead. Ask about a pass for the whole term.",
+   "organization": {
+    "name": "Greater Dayton Regional Transit Authority",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "transportation",
+     "label": "Transportation",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-425-8300",
+   "eligibility": "ADA paratransit certification.",
+   "how_to_use": {
+    "steps": [
+     "Call to get certified and book rides."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.sinclair.edu/about/visit/public-transportation/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "greene-cats",
+   "name": "Greene CATS Public Transit",
+   "description": "Public transit for Greene County.",
+   "organization": {
+    "name": "Greene County",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "transportation",
+     "label": "Transportation",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "2380 Bellbrook Ave.",
+    "city": "Xenia",
+    "postal_code": "45385"
+   },
+   "phone": "937-708-8322",
+   "eligibility": "Anyone in the service area.",
+   "how_to_use": {
+    "steps": [
+     "Call to schedule a ride."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.sinclair.edu/about/visit/public-transportation/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "lawo",
+   "name": "Legal Aid of Western Ohio",
+   "description": "Free legal help for people with low income in western Ohio. They help with evictions and housing problems.",
+   "organization": {
+    "name": "Legal Aid of Western Ohio",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "legal",
+     "label": "Legal",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "130 W. Second St., Suite 700 West",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "888-534-1432",
+   "url": "https://legalaidline.org/apply-for-legal-help/",
+   "eligibility": "Low-income residents of western Ohio.",
+   "how_to_use": {
+    "steps": [
+     "Apply online at legalaidline.org, or call the intake line.",
+     "Have any court papers or notices ready."
+    ],
+    "documents": [
+     "Any notice or court papers you received"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://mcdrc.ohiolegalhelp.org/resource/legal-aid-western-ohio",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "lifeline",
+   "name": "Lifeline phone or internet discount",
+   "description": "Money off your phone or internet bill each month, if you qualify.",
+   "organization": {
+    "name": "Universal Service Administrative Company",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "federal"
+   },
+   "taxonomy": [
+    {
+     "barrier": "phone-internet",
+     "label": "Phone and internet",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [],
+    "national": true
+   },
+   "url": "https://www.lifelinesupport.org",
+   "eligibility": "Income at or below 135% of poverty, or receiving SNAP, Medicaid, SSI, federal public housing or a veterans pension. One per household.",
+   "how_to_use": {
+    "steps": [
+     "Apply online with the National Verifier. Or ask your phone company."
+    ],
+    "documents": [
+     "Proof of SNAP, Medicaid or SSI, or proof of income"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.usac.org/lifeline/consumer-eligibility/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "lifeline-988",
+   "name": "988 Suicide & Crisis Lifeline",
+   "description": "Free, confidential support any time. Call or text 988.",
+   "organization": {
+    "name": "988 Lifeline",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "federal"
+   },
+   "taxonomy": [
+    {
+     "barrier": "mental-health",
+     "label": "Mental health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [],
+    "national": true
+   },
+   "phone": "988",
+   "eligibility": "Anyone.",
+   "how_to_use": {
+    "steps": [
+     "Call or text 988."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://988lifeline.org",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-02",
+    "freshness_days": 365,
+    "current": true
+   }
+  },
+  {
+   "id": "homefull-mens-shelter",
+   "name": "Dayton's Shelter for Men",
+   "description": "A place to stay tonight for men in Montgomery County.",
+   "organization": {
+    "name": "Homefull",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "emergency",
+     "label": "Emergency",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "1921 S. Gettysburg Ave.",
+    "city": "Dayton",
+    "postal_code": "45417"
+   },
+   "phone": "937-350-1335",
+   "cost": "free",
+   "eligibility": "Men who need a place to stay. Call first to check if there is room.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-350-1335 to check if there is room tonight.",
+     "If you cannot get through, call 2-1-1 at 937-225-3000, any time."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://stvincentdayton.org/help/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 30,
+    "current": true
+   }
+  },
+  {
+   "id": "svdp-womens-shelter",
+   "name": "Shelter for Women and Families",
+   "description": "A place to stay tonight for women and families in Montgomery County.",
+   "organization": {
+    "name": "Society of St. Vincent de Paul, Dayton",
+    "kind": "faith",
+    "kind_label": "Faith-based",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "emergency",
+     "label": "Emergency",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [
+    {
+     "id": "student-parent",
+     "label": "Student parents"
+    }
+   ],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "120 W. Apple St.",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-461-7837",
+   "url": "https://stvincentdayton.org",
+   "cost": "free",
+   "eligibility": "Women and families who need a place to stay. Call first to check if there is room.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-461-7837 to check if there is room tonight.",
+     "If you cannot get through, call 2-1-1 at 937-225-3000, any time."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://stvincentdayton.org/help/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 30,
+    "current": true
+   }
+  },
+  {
+   "id": "daybreak",
+   "name": "Daybreak",
+   "description": "The Miami Valley's shelter for young people without a safe place to stay, with help finding a place of their own.",
+   "organization": {
+    "name": "Daybreak",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "emergency",
+     "label": "Emergency",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [
+    {
+     "id": "youth-under-25",
+     "label": "Young adults under 25"
+    }
+   ],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "605 S. Patterson Blvd.",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-461-1000",
+   "url": "https://www.daybreakdayton.org",
+   "hours": "Hotline open 24 hours, every day",
+   "cost": "free",
+   "eligibility": "Young people who are homeless, at risk of it, or moving from couch to couch. Call the hotline to ask whether you qualify.",
+   "how_to_use": {
+    "steps": [
+     "Call the 24-hour hotline, 937-461-1000.",
+     "Tell them where you are staying now and whether you are safe tonight."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.daybreakdayton.org/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 30,
+    "current": true
+   }
+  },
+  {
+   "id": "greene-ihn",
+   "name": "Interfaith Hospitality Network of Greene County",
+   "description": "Shelter and housing support in Greene County.",
+   "organization": {
+    "name": "Interfaith Hospitality Network of Greene County",
+    "kind": "faith",
+    "kind_label": "Faith-based",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "emergency",
+     "label": "Emergency",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-372-0705",
+   "eligibility": "People in Greene County who need shelter. Call to ask about room and requirements.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-372-0705."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 30,
+    "current": true
+   }
+  },
+  {
+   "id": "housing-solutions-greene",
+   "name": "Housing Solutions of Greene County",
+   "description": "Housing help in Greene County.",
+   "organization": {
+    "name": "Housing Solutions of Greene County",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-376-7810",
+   "eligibility": "Greene County residents who need help with housing.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-376-7810 and say what is going on with your housing."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "ywca-dayton",
+   "name": "YWCA Dayton crisis hotline and shelter",
+   "description": "A safe place to stay and help for women and kids who are being hurt, threatened or followed.",
+   "organization": {
+    "name": "YWCA Dayton",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "safety",
+     "label": "Safety",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "emergency",
+     "label": "Emergency",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "141 W. Third St.",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-222-7233",
+   "url": "https://www.ywcadayton.org/shelter",
+   "hours": "Crisis hotline open 24 hours, every day",
+   "cost": "free",
+   "eligibility": "Women and children in Montgomery County at risk of harm. Shelter goes first to those at the highest risk.",
+   "how_to_use": {
+    "steps": [
+     "Call the 24-hour crisis hotline, 937-222-SAFE (7233).",
+     "If you are in danger right now, call 911."
+    ],
+    "documents": [],
+    "what_to_expect": "A hotline advocate talks with you about what is happening and what you need, and can arrange safe shelter."
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.ywcadayton.org/shelter",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 30,
+    "current": true
+   }
+  },
+  {
+   "id": "greene-fvpc",
+   "name": "Family Violence Prevention Center of Greene County",
+   "description": "Help right away and a safe place to stay if someone has hurt you, for you and your kids.",
+   "organization": {
+    "name": "Family Violence Prevention Center of Greene County",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "safety",
+     "label": "Safety",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "emergency",
+     "label": "Emergency",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "housing",
+     "label": "Housing",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "Xenia",
+    "city": "Xenia"
+   },
+   "phone": "937-372-4552",
+   "url": "http://www.violencefreefutures.org/",
+   "hours": "Crisis hotline open 24 hours, every day",
+   "cost": "free",
+   "eligibility": "Survivors of domestic violence or sexual assault, and their children.",
+   "how_to_use": {
+    "steps": [
+     "Call the 24-hour crisis hotline, 937-372-4552.",
+     "If you are in danger right now, call 911."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.ohiolegalhelp.org/resource/family-violence-prevention-center-greene-county",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 30,
+    "current": true
+   }
+  },
+  {
+   "id": "sinclair-counseling",
+   "name": "Sinclair Counseling Services",
+   "description": "Free, private counseling for Sinclair students. You can reach a counselor day or night.",
+   "organization": {
+    "name": "Sinclair Community College",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "mental-health",
+     "label": "Mental health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "sinclair"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "Building 10, Room 424, 444 West Third Street",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-512-3032",
+   "url": "https://sinclair.edu/support/counseling",
+   "hours": "Counselor by phone 24 hours, every day",
+   "cost": "free",
+   "eligibility": "Sinclair students.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-512-3032. After hours and on weekends, choose the option to speak with a counselor.",
+     "Or fill in the appointment request on the Counseling Services page.",
+     "In an emergency, call or text 988."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/support/counseling",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "wsu-counseling",
+   "name": "Counseling and Wellness Services",
+   "description": "Counseling for Wright State students. A $20 fee covers the whole semester; without it, sessions are $20 each.",
+   "organization": {
+    "name": "Wright State University",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "mental-health",
+     "label": "Mental health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "wright-state"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "053 Student Union, lower level",
+    "city": "Dayton"
+   },
+   "phone": "937-775-3407",
+   "url": "https://www.wright.edu/counseling-and-wellness/fees",
+   "hours": "Monday to Friday, 8:30 a.m. to 5 p.m.",
+   "cost": "low-cost",
+   "eligibility": "Currently registered Wright State students.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-775-3407 or stop by 053 Student Union.",
+     "Ask about the $20 fee. It pays for all your visits that term.",
+     "After hours, call or text 988."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.wright.edu/counseling-and-wellness/fees",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "tcn-greene",
+   "name": "TCN Behavioral Health crisis line",
+   "description": "Mental health and addiction care in Greene County, with a 24-hour crisis line for adults.",
+   "organization": {
+    "name": "TCN Behavioral Health",
+    "kind": "health",
+    "kind_label": "Health care",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "mental-health",
+     "label": "Mental health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "emergency",
+     "label": "Emergency",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-376-8701",
+   "hours": "Crisis line open 24 hours, every day",
+   "eligibility": "Adults in Greene County. The main line for appointments is 937-376-8700.",
+   "how_to_use": {
+    "steps": [
+     "In a crisis, call 937-376-8701, any time, or call or text 988.",
+     "For an appointment, call 937-376-8700."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "samaritan-behavioral",
+   "name": "Samaritan Behavioral Health",
+   "description": "Counseling and crisis care in Montgomery County, partly funded by the county mental health board.",
+   "organization": {
+    "name": "Premier Health",
+    "kind": "health",
+    "kind_label": "Health care",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "mental-health",
+     "label": "Mental health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "601 Edwin C. Moses Blvd., Fourth Floor",
+    "city": "Dayton"
+   },
+   "phone": "937-734-8333",
+   "url": "https://www.premierhealth.com/locations/samaritan-behavioral-health",
+   "eligibility": "People in Montgomery County who need counseling or crisis care.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-734-8333 to ask for an assessment.",
+     "In a crisis, call or text 988, or go to the nearest emergency room."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.premierhealth.com/locations/samaritan-behavioral-health",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "five-rivers-health",
+   "name": "Five Rivers Health Centers",
+   "description": "Doctor and dentist visits at several sites, one of them in Greene County. You pay what you can.",
+   "organization": {
+    "name": "Five Rivers Health Centers",
+    "kind": "health",
+    "kind_label": "Health care",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "health",
+     "label": "Health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-281-6800",
+   "url": "https://www.fiverivershealthcenters.org/",
+   "cost": "sliding-scale",
+   "eligibility": "Anyone, insured or not. Fees are on a sliding scale based on income, and staff can help you sign up for Medicaid or other insurance.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-281-6800 for an appointment.",
+     "Bring proof of income if you want the sliding-scale fee."
+    ],
+    "documents": [
+     "Proof of income, for the sliding-scale fee"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.phdmc.org/resources/local-healthcare-providers",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "community-health-dayton",
+   "name": "Community Health Centers of Greater Dayton",
+   "description": "Primary care whether or not you can pay. Fees are based on what you can pay.",
+   "organization": {
+    "name": "Community Health Centers of Greater Dayton",
+    "kind": "health",
+    "kind_label": "Health care",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "health",
+     "label": "Health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "1323 W. Third St.",
+    "city": "Dayton"
+   },
+   "phone": "937-586-9733",
+   "url": "https://www.communityhealthdayton.org/",
+   "cost": "sliding-scale",
+   "eligibility": "Anyone, insured or not. Sliding-scale fees based on income.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-586-9733 for an appointment."
+    ],
+    "documents": [
+     "Proof of income, for the sliding-scale fee"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.phdmc.org/resources/local-healthcare-providers",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "greene-public-health",
+   "name": "Greene County Public Health",
+   "description": "Public health services in Greene County, including WIC food help for parents of young children and testing.",
+   "organization": {
+    "name": "Greene County",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "health",
+     "label": "Health",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [
+    {
+     "id": "student-parent",
+     "label": "Student parents"
+    }
+   ],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "360 Wilson Dr.",
+    "city": "Xenia",
+    "postal_code": "45385"
+   },
+   "phone": "937-374-5600",
+   "url": "https://www.greenecophoh.gov",
+   "eligibility": "Greene County residents. WIC is for pregnant people and parents of children under five, with income rules.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-374-5600 and ask for the service you need."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "ohio-state-id",
+   "name": "Free Ohio state ID card",
+   "description": "A state ID card at no charge, for Ohio residents 17 and older who do not have a valid driver license.",
+   "organization": {
+    "name": "Ohio Bureau of Motor Vehicles",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "state"
+   },
+   "taxonomy": [
+    {
+     "barrier": "documents",
+     "label": "ID and documents",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "url": "https://ohiobmv.gov/dl-id-card.aspx",
+   "cost": "free",
+   "eligibility": "Ohio residents 17 or older without a valid driver license. Under 18 needs a parent or guardian along.",
+   "how_to_use": {
+    "steps": [
+     "Gather proof of your full legal name, date of birth, Social Security number, legal presence and Ohio address.",
+     "Save your spot in line online. Then go to any BMV license office."
+    ],
+    "documents": [
+     "Proof of full legal name",
+     "Proof of date of birth",
+     "Social Security number",
+     "Proof of legal presence",
+     "Proof of Ohio address"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://ohiobmv.gov/dl-id-card.aspx",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "omj-montgomery",
+   "name": "OhioMeansJobs Montgomery County",
+   "description": "Free help finding work, job training and career support.",
+   "organization": {
+    "name": "Ohio Department of Job and Family Services",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "career",
+     "label": "Work",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "1111 S. Edwin C. Moses Blvd.",
+    "city": "Dayton",
+    "postal_code": "45417"
+   },
+   "phone": "937-225-5627",
+   "cost": "free",
+   "eligibility": "Anyone looking for work or training.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-225-5627 or walk in.",
+     "Bring a resume if you have one; staff can help you write one if not."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://dam.assets.ohio.gov/image/upload/jfs.ohio.gov/owd/OhioMeansJobs/OhioMeansJobsCentersbyCounty.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "omj-greene",
+   "name": "OhioMeansJobs Greene County",
+   "description": "Free help finding work, job training and career support.",
+   "organization": {
+    "name": "Ohio Department of Job and Family Services",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "career",
+     "label": "Work",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "581 Ledbetter Rd.",
+    "city": "Xenia",
+    "postal_code": "45385"
+   },
+   "phone": "937-562-6565",
+   "cost": "free",
+   "eligibility": "Anyone looking for work or training.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-562-6565 or walk in."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://dam.assets.ohio.gov/image/upload/jfs.ohio.gov/owd/OhioMeansJobs/OhioMeansJobsCentersbyCounty.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "dml-hotspots",
+   "name": "Mobile hotspot kits",
+   "description": "Borrow a mobile internet hotspot for three weeks, free with a library card.",
+   "organization": {
+    "name": "Dayton Metro Library",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "phone-internet",
+     "label": "Phone and internet",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-463-2665",
+   "url": "https://www.daytonmetrolibrary.org/news/mobile-hotspots/",
+   "cost": "free",
+   "eligibility": "Anyone with a Dayton Metro Library card in good standing. One kit at a time.",
+   "how_to_use": {
+    "steps": [
+     "Get a library card if you do not have one.",
+     "Request a hotspot kit in the catalog or at any branch.",
+     "Questions: the Ask Me line, 937-463-2665."
+    ],
+    "documents": [
+     "Library card"
+    ],
+    "what_to_expect": "Loans are 21 days, renewable up to five times if no one is waiting. A lost or damaged kit has a replacement fee."
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.daytonmetrolibrary.org/news/mobile-hotspots/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 60,
+    "current": true
+   }
+  },
+  {
+   "id": "sinclair-accessibility",
+   "name": "Sinclair Accessibility Services",
+   "description": "Help for students with a disability, like more time on tests or help with notes.",
+   "organization": {
+    "name": "Sinclair Community College",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "academic",
+     "label": "School",
+     "domain": "know-how",
+     "domain_label": "Knowing how college works"
+    }
+   ],
+   "situations": [
+    {
+     "id": "disability",
+     "label": "Students with a disability"
+    }
+   ],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "sinclair"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "Building 10, Room 424, 444 West Third Street",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-512-5113",
+   "url": "https://sinclair.edu/accessibility-services",
+   "hours": "Monday to Friday, 8 a.m. to 5 p.m.",
+   "cost": "free",
+   "eligibility": "Students with a health condition or disability that makes daily life or school harder. You need a note from a doctor or other expert.",
+   "how_to_use": {
+    "steps": [
+     "Start the online Accessibility Application.",
+     "Send a note from your doctor that says what your needs are.",
+     "A staff member will call you to set up the help you need."
+    ],
+    "documents": [
+     "Documentation of the disability"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/accessibility-services",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "wsu-disability",
+   "name": "Office of Disability Services",
+   "description": "Help for students with a disability, like more time on tests.",
+   "organization": {
+    "name": "Wright State University",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "academic",
+     "label": "School",
+     "domain": "know-how",
+     "domain_label": "Knowing how college works"
+    }
+   ],
+   "situations": [
+    {
+     "id": "disability",
+     "label": "Students with a disability"
+    }
+   ],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "wright-state"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "180 University Hall",
+    "city": "Dayton"
+   },
+   "phone": "937-775-5680",
+   "url": "https://www.wright.edu/disability-services",
+   "hours": "Monday to Friday, 8:30 a.m. to 5 p.m.",
+   "cost": "free",
+   "eligibility": "Wright State students with a disability. You sign up for this on its own, apart from getting into school.",
+   "how_to_use": {
+    "steps": [
+     "Fill out the form online.",
+     "Send a note from your doctor that says what your needs are.",
+     "Attend a College Accommodation Planning meeting."
+    ],
+    "documents": [
+     "Professional documentation of the disability"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.wright.edu/disability-services",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "sinclair-trio",
+   "name": "TRIO Student Support Services",
+   "description": "Free help to stay in school. You get tutors, help with the FAFSA, money for books and a laptop to borrow.",
+   "organization": {
+    "name": "Sinclair Community College",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "academic",
+     "label": "School",
+     "domain": "know-how",
+     "domain_label": "Knowing how college works"
+    },
+    {
+     "barrier": "aid",
+     "label": "Aid and benefits",
+     "domain": "know-how",
+     "domain_label": "Knowing how college works"
+    },
+    {
+     "barrier": "books",
+     "label": "Books and course supplies",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "phone-internet",
+     "label": "Phone and internet",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "direction",
+     "label": "Direction",
+     "domain": "aims",
+     "domain_label": "Knowing where you are headed"
+    }
+   ],
+   "situations": [
+    {
+     "id": "first-generation",
+     "label": "First in family to attend college"
+    },
+    {
+     "id": "disability",
+     "label": "Students with a disability"
+    }
+   ],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "sinclair"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "Building 10, Room 421, 444 West Third Street",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-512-3550",
+   "url": "https://sinclair.edu/support/sss/",
+   "hours": "Monday to Friday, 8 a.m. to 5 p.m.",
+   "cost": "free",
+   "eligibility": "Sinclair students who are citizens or green card holders and need help with school. You also need one of these: no parent with a four-year degree, a lower income, or a disability on file.",
+   "how_to_use": {
+    "steps": [
+     "Fill in the online SSS application.",
+     "Staff contact you to talk about what would help most."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/support/sss/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "sinclair-tutoring",
+   "name": "Tutoring and Learning Center",
+   "description": "Free one-on-one or group tutoring for over 200 courses, on campus or by Zoom.",
+   "organization": {
+    "name": "Sinclair Community College",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "academic",
+     "label": "School",
+     "domain": "know-how",
+     "domain_label": "Knowing how college works"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "sinclair"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "Building 7, Room L07, library lower level",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-512-2792",
+   "url": "https://sinclair.edu/tlc",
+   "cost": "free",
+   "eligibility": "Currently enrolled Sinclair students.",
+   "how_to_use": {
+    "steps": [
+     "Book through the online reservation form: one-hour sessions, up to two per course each week.",
+     "Say which topics you want help with."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://sinclair.edu/tlc",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "wsu-veteran-center",
+   "name": "Veteran and Military Center",
+   "description": "A home base for students who served. Get help with the GI Bill, sign up for classes early and meet other vets.",
+   "organization": {
+    "name": "Wright State University",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "belonging",
+     "label": "Belonging",
+     "domain": "people",
+     "domain_label": "People in your corner"
+    },
+    {
+     "barrier": "aid",
+     "label": "Aid and benefits",
+     "domain": "know-how",
+     "domain_label": "Knowing how college works"
+    },
+    {
+     "barrier": "academic",
+     "label": "School",
+     "domain": "know-how",
+     "domain_label": "Knowing how college works"
+    }
+   ],
+   "situations": [
+    {
+     "id": "veteran",
+     "label": "Veterans"
+    }
+   ],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "wright-state"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "131 Allyn Hall",
+    "city": "Dayton"
+   },
+   "phone": "937-775-5550",
+   "url": "https://www.wright.edu/veteran-and-military-center/services",
+   "cost": "free",
+   "eligibility": "Students who served or serve now, in any branch, and their families.",
+   "how_to_use": {
+    "steps": [
+     "Stop by 131 Allyn Hall or call 937-775-5550.",
+     "To sign up for classes early, bring your DD214 or military ID."
+    ],
+    "documents": [
+     "DD214 or military ID"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.wright.edu/veteran-and-military-center/services",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "sinclair-veterans",
+   "name": "Military-friendly education center",
+   "description": "Help with classes, benefits and making friends, for students who served and their families.",
+   "organization": {
+    "name": "Sinclair Community College",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "belonging",
+     "label": "Belonging",
+     "domain": "people",
+     "domain_label": "People in your corner"
+    },
+    {
+     "barrier": "aid",
+     "label": "Aid and benefits",
+     "domain": "know-how",
+     "domain_label": "Knowing how college works"
+    }
+   ],
+   "situations": [
+    {
+     "id": "veteran",
+     "label": "Veterans"
+    }
+   ],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "sinclair"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "Building 10, Room 444, 444 West Third Street",
+    "city": "Dayton",
+    "postal_code": "45402"
+   },
+   "phone": "937-512-2586",
+   "url": "https://www.sinclair.edu/services/veteran/",
+   "cost": "free",
+   "eligibility": "Students who served or serve now, and their families.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-512-2586 or book an in-person or virtual appointment."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.sinclair.edu/services/veteran/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "wsu-career-hub",
+   "name": "Berry Family Career Hub",
+   "description": "Help to pick a major, write a resume, get ready for interviews and find a job.",
+   "organization": {
+    "name": "Wright State University",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "direction",
+     "label": "Direction",
+     "domain": "aims",
+     "domain_label": "Knowing where you are headed"
+    },
+    {
+     "barrier": "career",
+     "label": "Work",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "opportunity",
+     "label": "Opportunity",
+     "domain": "thriving",
+     "domain_label": "Feeling well and finding opportunity"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "wright-state"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "108 Student Union",
+    "city": "Dayton"
+   },
+   "phone": "937-775-2556",
+   "url": "https://wright.edu/career-center",
+   "eligibility": "Wright State students.",
+   "how_to_use": {
+    "steps": [
+     "Log in to Handshake to book an appointment or search for jobs and internships.",
+     "Or call 937-775-2556."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://wright.edu/career-center",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "ohio-pipp-plus",
+   "name": "PIPP Plus",
+   "description": "Pay a set share of your income for gas and electric instead of the full bill, all year.",
+   "organization": {
+    "name": "State of Ohio",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "state"
+   },
+   "taxonomy": [
+    {
+     "barrier": "utilities",
+     "label": "Utilities",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "url": "https://energyhelpohio.gov",
+   "eligibility": "For homes with a lower income that get gas or electric from a big power company. For one person, the limit is about $27,900 a year.",
+   "how_to_use": {
+    "steps": [
+     "Apply online at energyhelpohio.gov, or ask your local help agency.",
+     "You will also need to apply for HEAP."
+    ],
+    "documents": [
+     "Proof of household income",
+     "Your gas and electric bills"
+    ],
+    "what_to_expect": "You pay 5% of your monthly household income for each of gas and electric (10% in an all-electric home, at least $10)."
+   },
+   "availability": [
+    {
+     "fact": "applications-open",
+     "value": "Year-round",
+     "source": "https://www.occ.ohio.gov/factsheet/percentage-income-payment-plan-pipp-plus",
+     "checked_on": "2026-11-13"
+    }
+   ],
+   "source": {
+    "url": "https://www.occ.ohio.gov/factsheet/percentage-income-payment-plan-pipp-plus",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "greene-cap",
+   "name": "Community Action Partnership, Greene County",
+   "description": "Help with utility bills in Greene County.",
+   "organization": {
+    "name": "Community Action Partnership",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "county"
+   },
+   "taxonomy": [
+    {
+     "barrier": "utilities",
+     "label": "Utilities",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "money",
+     "label": "Money",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-376-7747",
+   "eligibility": "Greene County households with lower income.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-376-7747 to ask about utility help and how to apply."
+    ],
+    "documents": [
+     "Proof of household income",
+     "Your utility bills"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "four-c-child-care",
+   "name": "Find child care with 4C for Children",
+   "description": "Staff help you find child care that fits your schedule and budget, or you can search online.",
+   "organization": {
+    "name": "4C for Children",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "childcare",
+     "label": "Child care",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [
+    {
+     "id": "student-parent",
+     "label": "Student parents"
+    }
+   ],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-220-9660",
+   "url": "https://4cforchildren.org/findcare",
+   "hours": "Monday to Friday, 8:30 a.m. to 5 p.m.",
+   "eligibility": "Families in 15 southwest Ohio and Miami Valley counties, including Montgomery and Greene.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-220-9660 and ask for 1330.",
+     "Or use the Request Help Finding Child Care form, or the online search.",
+     "Ask your county help office if the state can pay for some of your child care."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://4cforchildren.org/findcare",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "gem-city-diaper-bank",
+   "name": "Gem City Diaper Bank",
+   "description": "Diapers for families who need them.",
+   "organization": {
+    "name": "Gem City Diaper Bank",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "goods",
+     "label": "Clothing and goods",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "childcare",
+     "label": "Child care",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [
+    {
+     "id": "student-parent",
+     "label": "Student parents"
+    }
+   ],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-231-1716",
+   "cost": "free",
+   "eligibility": "Families in need of diapers.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-231-1716 to ask where to pick up diapers."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "share-121-closet",
+   "name": "Share 121 Clothes Closet",
+   "description": "Free clothing in Greene County.",
+   "organization": {
+    "name": "Share 121",
+    "kind": "community",
+    "kind_label": "Community",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "goods",
+     "label": "Clothing and goods",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-372-1594",
+   "cost": "free",
+   "eligibility": "Anyone who needs clothing. Call for hours.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-372-1594 for hours and location."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 60,
+    "current": true
+   }
+  },
+  {
+   "id": "salvation-army-xenia",
+   "name": "The Salvation Army, Xenia",
+   "description": "Help with emergency needs in Greene County.",
+   "organization": {
+    "name": "The Salvation Army",
+    "kind": "faith",
+    "kind_label": "Faith-based",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "money",
+     "label": "Money",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "goods",
+     "label": "Clothing and goods",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "phone": "937-372-9810",
+   "eligibility": "Greene County residents in need. Call to ask what help is available now.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-372-9810."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "metroparks-free-fitness",
+   "name": "Free fitness and events in the MetroParks",
+   "description": "Free outdoor classes, from yoga and tai chi to bootcamp, and free festivals, in parks across Montgomery County.",
+   "organization": {
+    "name": "Five Rivers MetroParks",
+    "kind": "government",
+    "kind_label": "Government",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "wellbeing",
+     "label": "Move and recharge",
+     "domain": "thriving",
+     "domain_label": "Feeling well and finding opportunity"
+    },
+    {
+     "barrier": "opportunity",
+     "label": "Opportunity",
+     "domain": "thriving",
+     "domain_label": "Feeling well and finding opportunity"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "url": "https://www.metroparks.org/programs",
+   "cost": "free",
+   "eligibility": "Everyone. Many classes need no registration.",
+   "how_to_use": {
+    "steps": [
+     "See the schedule at metroparks.org/programs.",
+     "Bring water, and a mat for yoga."
+    ],
+    "documents": []
+   },
+   "availability": [
+    {
+     "fact": "season",
+     "value": "Most outdoor classes run in the warm months; check the schedule",
+     "source": "https://www.metroparks.org/?p=23902",
+     "checked_on": "2026-11-13"
+    }
+   ],
+   "source": {
+    "url": "https://www.metroparks.org/?p=23902",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 60,
+    "current": true
+   }
+  },
+  {
+   "id": "wsu-campus-rec",
+   "name": "Campus Recreation",
+   "description": "Free for students: fitness center, pool, climbing gym, courts and group fitness classes.",
+   "organization": {
+    "name": "Wright State University",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "wellbeing",
+     "label": "Move and recharge",
+     "domain": "thriving",
+     "domain_label": "Feeling well and finding opportunity"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "wright-state"
+    ],
+    "national": false
+   },
+   "location": {
+    "address": "092 Student Union",
+    "city": "Dayton"
+   },
+   "phone": "937-775-5505",
+   "url": "https://wright.edu/student-affairs/campus-recreation/membership",
+   "cost": "free",
+   "eligibility": "Wright State students.",
+   "how_to_use": {
+    "steps": [
+     "Activate your free student membership at the Campus Recreation desk."
+    ],
+    "documents": [
+     "Wright State ID"
+    ]
+   },
+   "availability": [],
+   "source": {
+    "url": "https://wright.edu/student-affairs/campus-recreation/membership",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 180,
+    "current": true
+   }
+  },
+  {
+   "id": "ymca-extra-hands",
+   "name": "YMCA Extra Hands membership help",
+   "description": "Lower membership fees at the Y based on household income or circumstances.",
+   "organization": {
+    "name": "YMCA of Greater Dayton",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "regional"
+   },
+   "taxonomy": [
+    {
+     "barrier": "wellbeing",
+     "label": "Move and recharge",
+     "domain": "thriving",
+     "domain_label": "Feeling well and finding opportunity"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "url": "https://www.daytonymca.org/node/1478",
+   "cost": "varies",
+   "eligibility": "Based on need: household income or circumstances. The Y says no one is turned away for inability to pay, as funds allow.",
+   "how_to_use": {
+    "steps": [
+     "Download the Extra Hands application, in English or Spanish, or ask at Member Services."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.daytonymca.org/node/1478",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "dai-art-for-all",
+   "name": "Art for All free weekends",
+   "description": "Three weekends a year, the whole museum is free to visit.",
+   "organization": {
+    "name": "Dayton Art Institute",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "opportunity",
+     "label": "Opportunity",
+     "domain": "thriving",
+     "domain_label": "Feeling well and finding opportunity"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery",
+     "Greene"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "url": "https://www.daytonartinstitute.org",
+   "cost": "free",
+   "eligibility": "Everyone.",
+   "how_to_use": {
+    "steps": [
+     "Just go on an Art for All weekend."
+    ],
+    "documents": []
+   },
+   "availability": [
+    {
+     "fact": "season",
+     "value": "2026: March 7 and 8, August 29 and 30, November 14 and 15",
+     "source": "https://www.daytonartinstitute.org/news/2026/03/02/everyones-invited-dayton-art-institute-announces-free-admission-weekends-to-make-art-accessible-for-all",
+     "checked_on": "2026-11-13"
+    }
+   ],
+   "source": {
+    "url": "https://www.daytonartinstitute.org/news/2026/03/02/everyones-invited-dayton-art-institute-announces-free-admission-weekends-to-make-art-accessible-for-all",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 90,
+    "current": true
+   }
+  }
+ ]
+}

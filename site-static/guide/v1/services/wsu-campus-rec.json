@@ -1,0 +1,53 @@
+{
+ "id": "wsu-campus-rec",
+ "name": "Campus Recreation",
+ "description": "Free for students: fitness center, pool, climbing gym, courts and group fitness classes.",
+ "organization": {
+  "name": "Wright State University",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "wellbeing",
+   "label": "Move and recharge",
+   "domain": "thriving",
+   "domain_label": "Feeling well and finding opportunity"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "wright-state"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "092 Student Union",
+  "city": "Dayton"
+ },
+ "phone": "937-775-5505",
+ "url": "https://wright.edu/student-affairs/campus-recreation/membership",
+ "cost": "free",
+ "eligibility": "Wright State students.",
+ "how_to_use": {
+  "steps": [
+   "Activate your free student membership at the Campus Recreation desk."
+  ],
+  "documents": [
+   "Wright State ID"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://wright.edu/student-affairs/campus-recreation/membership",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 180,
+  "current": true
+ }
+}

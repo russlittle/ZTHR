@@ -1,0 +1,65 @@
+{
+ "id": "ohio-benefits-snap",
+ "name": "Apply for SNAP, cash or child care help",
+ "description": "The state's online form for SNAP food help, cash help, and help paying for child care.",
+ "organization": {
+  "name": "Ohio Department of Job and Family Services",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "state"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "money",
+   "label": "Money",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "childcare",
+   "label": "Child care",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "url": "https://benefits.ohio.gov",
+ "eligibility": "There are rules about income and who lives with you. Most students who take six or more credits also need to meet one extra rule, like working 20 hours a week.",
+ "how_to_use": {
+  "steps": [
+   "Create an account at benefits.ohio.gov.",
+   "Fill out the application.",
+   "Complete the interview when the county calls.",
+   "Send any verification they ask for."
+  ],
+  "documents": [
+   "Photo ID",
+   "Proof of income for the last 30 days",
+   "Proof of the student exemption (work schedule, work-study award, or child care need)"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.greenecountyohio.gov/279/Job-Family-Services",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

@@ -1,0 +1,47 @@
+{
+ "id": "ymca-extra-hands",
+ "name": "YMCA Extra Hands membership help",
+ "description": "Lower membership fees at the Y based on household income or circumstances.",
+ "organization": {
+  "name": "YMCA of Greater Dayton",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "wellbeing",
+   "label": "Move and recharge",
+   "domain": "thriving",
+   "domain_label": "Feeling well and finding opportunity"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "url": "https://www.daytonymca.org/node/1478",
+ "cost": "varies",
+ "eligibility": "Based on need: household income or circumstances. The Y says no one is turned away for inability to pay, as funds allow.",
+ "how_to_use": {
+  "steps": [
+   "Download the Extra Hands application, in English or Spanish, or ask at Member Services."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.daytonymca.org/node/1478",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

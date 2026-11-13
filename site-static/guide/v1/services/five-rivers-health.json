@@ -1,0 +1,51 @@
+{
+ "id": "five-rivers-health",
+ "name": "Five Rivers Health Centers",
+ "description": "Doctor and dentist visits at several sites, one of them in Greene County. You pay what you can.",
+ "organization": {
+  "name": "Five Rivers Health Centers",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "health",
+   "label": "Health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-281-6800",
+ "url": "https://www.fiverivershealthcenters.org/",
+ "cost": "sliding-scale",
+ "eligibility": "Anyone, insured or not. Fees are on a sliding scale based on income, and staff can help you sign up for Medicaid or other insurance.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-281-6800 for an appointment.",
+   "Bring proof of income if you want the sliding-scale fee."
+  ],
+  "documents": [
+   "Proof of income, for the sliding-scale fee"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.phdmc.org/resources/local-healthcare-providers",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}
