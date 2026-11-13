@@ -33,5 +33,6 @@
     "break": null
   },
   "tempDirName": ".stryker-tmp",
-  "dryRunTimeoutMinutes": 20
+  "dryRunTimeoutMinutes": 20,
+  "ignoreStatic": true
 }

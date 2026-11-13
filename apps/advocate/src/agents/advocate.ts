@@ -35,6 +35,7 @@ import { PULSES, nextPulse, type PulseState } from '../domain/pulses.js';
 import * as B from '../guide/barriers.js';
 import { BARRIER } from '../guide/taxonomy.js';
 import { packageFor, PACKAGES, type SupportPackage } from '../guide/packages.js';
+import { MIN_SHOWN } from '../guide/feedback.js';
 import { tally, type Outcome, type Record_ } from '../guide/feedback.js';
 import { signals as guideSignals, type Signal } from '../guide/signals.js';
 import { coverage as guideCoverage, feed as guideFeed } from '../guide/feed.js';
@@ -990,6 +991,19 @@ export class Advocate {
 
   guideCoverage() {
     return guideCoverage(this.catalog, this.today());
+  }
+
+  /**
+   * How often students asked for help the guide could not give, by need and county: the gaps a funder, agency or
+   * congregation could fill. Only counts of five or more are given, so no one request can be picked out.
+   */
+  asksWithNoHelp(): { need: NeedCategory; county: string; asks: number }[] {
+    const n = new Map<string, number>();
+    for (const e of this.evidence.events('unmet_need')) {
+      const k = `${String(e.data.need)}|${e.subject}`;
+      n.set(k, (n.get(k) ?? 0) + 1);
+    }
+    return [...n].filter(([, c]) => c >= MIN_SHOWN).map(([k, asks]) => ({ need: k.split('|')[0] as NeedCategory, county: k.split('|')[1]!, asks })).sort((x, y) => y.asks - x.asks);
   }
 
   recordUnmet(studentId: string, need: NeedCategory): void {

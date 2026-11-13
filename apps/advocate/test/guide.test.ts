@@ -526,3 +526,26 @@ describe('a consumer app that knows only the published OpenAPI document can take
     for (const p of Object.keys(doc.paths)) expect((await app.request(`/advocate/api/guide/v1${p.replace('{id}', 'daybreak')}`)).status, p).toBe(200);
   });
 });
+
+describe('where help is missing: a public page for anyone deciding where to step in', () => {
+  it('shows every barrier in both counties, names the gaps, and holds back small counts of requests', async () => {
+    const a = makeAdvocate();
+    const app = new Hono().route('/advocate', createApp(a, { base: '/advocate' }));
+    const html = async () => (await app.request('/advocate/guide/coverage')).text();
+    const first = await html();
+    for (const b of BARRIERS) expect(first).toContain(`/advocate/guide/${b.id}"`);
+    expect((first.match(/none yet/g) ?? []).length).toBe(a.guideCoverage().gaps.length);
+    expect(first).toMatch(/Counts appear only from five/);
+    // Four requests the guide could not meet are not shown; the fifth shows the count, never who asked.
+    const people = Array.from({ length: 5 }, (_, i) => maria(a, { chosenName: `Gap${i}`, phone: `+1937555${3100 + i}` }));
+    for (const p of people.slice(0, 4)) a.recordUnmet(p.id, 'legal');
+    expect(a.asksWithNoHelp()).toEqual([]);
+    a.recordUnmet(people[4]!.id, 'legal');
+    expect(a.asksWithNoHelp()).toEqual([{ need: 'legal', county: 'Montgomery', asks: 5 }]);
+    const after = await html();
+    expect(after).toMatch(/Montgomery County: asked 5 times/);
+    for (const p of people) expect(after).not.toContain(p.chosenName);
+    expect((await app.request('/advocate/guide')).status).toBe(200);
+    expect(await (await app.request('/advocate/guide')).text()).toContain('/advocate/guide/coverage');
+  });
+});

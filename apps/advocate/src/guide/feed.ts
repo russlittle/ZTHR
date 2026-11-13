@@ -3,6 +3,9 @@ import type { Resource } from '../catalog/types.js';
 import { isFresh } from '../catalog/types.js';
 import { BARRIER, BARRIERS, DOMAIN_LABEL, PROVIDER_KINDS, PROVIDER_LABEL, SITUATION_LABEL, type ProviderKind } from './taxonomy.js';
 import { recordLine, type Record_ } from './feedback.js';
+import { COLLEGES } from '../domain/colleges.js';
+
+const collegeCounty = (id: string) => COLLEGES.find((c) => c.college === id)?.county;
 
 /**
  * The public feed (docs/api/guide.md). The guide as data any app, college, library, congregation or agency can take
@@ -89,7 +92,8 @@ export function coverage(catalog: Resource[], today: string, counties = ['Montgo
   const cells: CoverageCell[] = [];
   for (const b of BARRIERS) {
     for (const county of counties) {
-      const hits = catalog.filter((r) => isFresh(r, today) && r.categories.includes(b.id) && (r.serves.national || r.serves.counties?.includes(county) || (r.serves.colleges?.length ?? 0) > 0));
+      // A college's own service counts in the county the college is in: students elsewhere cannot use it.
+      const hits = catalog.filter((r) => isFresh(r, today) && r.categories.includes(b.id) && (r.serves.national || r.serves.counties?.includes(county) || (r.serves.colleges ?? []).some((c) => collegeCounty(c) === county)));
       cells.push({ barrier: b.id, county, services: hits.length, kinds: [...new Set(hits.map((r) => r.provider.kind))].sort() as ProviderKind[] });
     }
   }

@@ -22,5 +22,6 @@
   "concurrency": 6,
   "timeoutMS": 60000,
   "tempDirName": ".stryker-tmp-guide",
-  "dryRunTimeoutMinutes": 20
+  "dryRunTimeoutMinutes": 20,
+  "ignoreStatic": true
 }

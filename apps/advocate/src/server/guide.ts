@@ -78,7 +78,7 @@ export function guideRoutes(a: Advocate, ctx: GuideCtx): Hono {
     }).join('');
     const tonight = ui.note({ kind: 'safety', title: 'No safe place tonight?', body: 'Call 2-1-1 any time and they will find a shelter with room. If you are in danger, call 911. To talk to someone now, call or text 988.', actions: [{ label: 'Call 2-1-1', href: 'tel:211', variant: 'call', icon: 'phone' }, { label: 'Call or text 988', href: 'tel:988', variant: 'quiet', icon: 'phone' }] });
     return `<div class="hello"><h1>Community resource guide</h1><p class="date">${ui.esc(`${a.catalog.length} places that help college students in Montgomery and Greene counties: colleges, government, nonprofits, faith groups and the community. Every one is checked against its own source.`)}</p></div>
-${tonight}${yours}${search}${results}${domains}`;
+${tonight}${yours}${search}${results}${domains}${sid ? '' : `<p class="small muted">For agencies, colleges and apps: <a href="${ctx.base}/guide/coverage">where help is missing</a>, and <a href="${ctx.base}/api/guide/v1">the guide as open data</a> (CC BY 4.0).</p>`}`;
   }
 
   function barrierPage(need: NeedCategory, sid?: string, kind = ''): string {
@@ -167,6 +167,26 @@ ${ui.actions([{ label: 'Something else is hard', href: ctx.u(sid, '/help'), vari
   app.get('/guide/service/:rid', (c) => {
     const r = a.catalog.find((x) => x.id === c.req.param('rid'));
     return r ? c.html(pub(r.name, servicePage(r))) : c.html(pub('Not found', `<div class="hello"><h1>That place is not in the guide</h1><p><a href="${ctx.base}/guide">The whole guide</a></p></div>`), 404);
+  });
+  // Where the guide is thin: for funders, agencies, congregations and colleges deciding where help is missing.
+  app.get('/guide/coverage', (c) => {
+    const cov = a.guideCoverage();
+    const asks = a.asksWithNoHelp();
+    const cell = (b: string, county: string) => {
+      const x = cov.cells.find((y) => y.barrier === b && y.county === county)!;
+      return x.services ? `${county}: ${x.services} (${x.kinds.map((k) => PROVIDER_LABEL[k].toLowerCase()).join(', ')})` : `${county}: none yet`;
+    };
+    // A list rather than a table, so it reads on a phone without scrolling sideways.
+    const lists = DOMAINS.map((d) => ui.section(DOMAIN_LABEL[d], ui.rows(BARRIERS.filter((b) => b.domain === d).map((b) => {
+      const gaps = cov.gaps.filter((g) => g.barrier === b.id).length;
+      return { title: b.label, sub: `${cell(b.id, 'Montgomery')}. ${cell(b.id, 'Greene')}.`, href: `${ctx.base}/guide/${b.id}`, ...(gaps ? { chip: { text: gaps === 2 ? 'Gap in both counties' : 'Gap in one county', tone: 'warn' as const } } : {}) };
+    })))).join('');
+    const body = `<div class="hello"><h1>Where help is missing</h1><p class="date">Current services in the guide for each barrier, by county, and from which kinds of provider. A gap is a place a college, agency, congregation or funder could step in.</p></div>
+${ui.kpis([{ value: String(a.catalog.length), label: 'services in the guide' }, { value: String(cov.gaps.length), label: 'barrier and county gaps' }, { value: String(BARRIERS.length), label: 'barriers tracked' }])}
+${lists}
+${ui.section('Asked for, and not found', asks.length ? ui.rows(asks.map((x) => ({ title: BARRIER[x.need]?.label ?? x.need, sub: `${x.county} County: asked ${x.asks} times with nothing in the guide to offer` }))) : '<p>No gap has been asked about five or more times yet. Counts appear only from five, so no one request can be picked out.</p>')}
+<p class="small muted">As data: <a href="${ctx.base}/api/guide/v1/coverage">/api/guide/v1/coverage</a>. Counts are of services checked within their freshness. A college's own services count in the county the college is in.</p>`;
+    return c.html(pub('Where help is missing', body));
   });
   app.get('/guide/:need', (c) => {
     const need = c.req.param('need');

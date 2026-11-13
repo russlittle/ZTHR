@@ -42,7 +42,7 @@ flowchart LR
 | `/api/guide/v1/services/{id}` | `services/{id}.json` | One service |
 | `/api/guide/v1/barriers` | `barriers.json` | The five domains, the 23 barriers, the situations, and the kinds of provider |
 | `/api/guide/v1/packages` | `packages.json` | Support packages: the services that usually work together for one barrier, in the order to try them |
-| `/api/guide/v1/coverage` | `coverage.json` | For each barrier and county, how many current services there are and from which kinds of provider, with the gaps named |
+| `/api/guide/v1/coverage` | `coverage.json` | For each barrier and county, how many current services there are and from which kinds of provider, with the gaps named. A college's own services count in the college's county. The same data, for people, is the page [Where help is missing](https://advocate-fsy7whk33q-uc.a.run.app/studentadvocate/guide/coverage) |
 | `/api/guide/v1/openapi.json` | `openapi.json` | An OpenAPI 3.1 description of all of the above |
 
 The static files take no filters. Filter `services.json` in your app instead.
