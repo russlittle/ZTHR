@@ -25,6 +25,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - name: Tests
+        shell: bash
         run: |
           set -o pipefail
           free -m || true; nproc
