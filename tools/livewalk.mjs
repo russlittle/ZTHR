@@ -154,11 +154,14 @@ async function worker() {
   for (let item = queue.shift(); item; item = queue.shift()) {
     const [url, from] = item;
     const ours = url.startsWith(ORIGIN) || url.startsWith(APP);
-    const r = await land(url);
+    let r = await land(url);
+    // Someone else's site can be down for a minute; one retry before judging it.
+    if (r.status !== 200 && !ours) r = await land(url);
     followed++;
     if (r.status === 200) continue;
     if (ours) bad(from, `${url} lands on ${r.url} with ${r.status || r.error}`);
     else if ([401, 403, 429, 999].includes(r.status) || r.status === 0) warnings.push(`${from}: ${url} answered ${r.status || r.error} (external, may refuse robots)`);
+    else if (r.status >= 500) warnings.push(`${from}: ${url} answered ${r.status} twice (their server is failing; checked again tomorrow)`);
     else if (r.status >= 400) bad(from, `${url} is broken (${r.status})`);
   }
 }
