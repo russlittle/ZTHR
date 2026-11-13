@@ -40,6 +40,7 @@ flowchart LR
 - [Outcome measures](flows/outcomes.md)
 - [Deadlines, plans and held time](flows/planning.md)
 - [Playbooks](flows/playbooks.md)
+- [Community resource guide](flows/resource-guide.md)
 - [Sensitive data](flows/sensitive-data.md)
 - [Signing in](flows/sign-in.md)
 - [Staying enrolled: grades, standing, aid progress and the choice to leave a class](flows/stay-enrolled.md)
