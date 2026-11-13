@@ -59,6 +59,15 @@
             "value": "text/plain; charset=utf-8"
           }
         ]
+      },
+      {
+        "source": "/reference/guide/v1/**",
+        "headers": [
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          }
+        ]
       }
     ],
     "rewrites": [

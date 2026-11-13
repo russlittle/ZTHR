@@ -1,0 +1,45 @@
+{
+ "id": "rta",
+ "name": "Greater Dayton RTA",
+ "description": "Buses in Montgomery County. Routes 1, 2, 4, 8, 19 and 22 stop at Sinclair. Riders with a disability can get a lower fare.",
+ "organization": {
+  "name": "Greater Dayton Regional Transit Authority",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "transportation",
+   "label": "Transportation",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-425-8300",
+ "eligibility": "Anyone; reduced fare with an RTA disability ID.",
+ "how_to_use": {
+  "steps": [
+   "Call RTA customer service for passes and student pricing."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.sinclair.edu/about/visit/public-transportation/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

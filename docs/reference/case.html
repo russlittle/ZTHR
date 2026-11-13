@@ -212,6 +212,9 @@ a{text-underline-offset:3px;text-decoration-thickness:1.5px}
 @keyframes zspin{to{transform:rotate(360deg)}}
 .btn.danger:hover{background:color-mix(in srgb,var(--alert) 10%,transparent)}
 .btn.danger.solid{background:var(--alert);border-color:var(--alert);color:var(--on-alert,#fff)}
+/* facts: a label and its value, side by side, stacked on a phone */
+.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:6px 0 4px}.facts dt{font-weight:700}.facts dd{margin:0;overflow-wrap:break-word}
+@media (max-width:560px){.facts{grid-template-columns:minmax(0,1fr);gap:2px}.facts dd{margin-bottom:8px}}
 .field{margin:0 0 14px}
 .field label{margin:0 0 6px}
 input,textarea,select{min-height:48px;transition:border-color .15s,box-shadow .15s}
@@ -355,7 +358,7 @@ factory that built it means for anyone who builds software.</p>
 </tr>
 <tr>
 <td><strong>Elapsed time</strong></td>
-<td>Days, from an empty repository to a deployed application with five phases of features, five synthetic campus services, fifteen reusable blocks and full documentation.</td>
+<td>Days, from an empty repository to a deployed application with six phases of features, a community resource guide published as open data, five synthetic campus services, fifteen reusable blocks and full documentation.</td>
 </tr>
 <tr>
 <td><strong>Direction</strong></td>
@@ -367,7 +370,7 @@ factory that built it means for anyone who builds software.</p>
 </tr>
 <tr>
 <td><strong>Evidence</strong></td>
-<td>1,192 tests; 23 gates, each proven able to fail; 41 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student, and 886 controls clicked in a real browser down to seven screens deep; 454 browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks.</td>
+<td>1,349 tests; 26 gates, each proven able to fail; 47 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student, and 886 controls clicked in a real browser down to seven screens deep; 454 browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks.</td>
 </tr>
 <tr>
 <td><strong>Cost to run</strong></td>
@@ -457,7 +460,7 @@ framing, forged sessions and attempts to reach other hosts. <a href="docs/securi
 by checks that are themselves proven, against intent that the agents cannot edit.</p>
 <pre class="mermaid">flowchart TB
   intent[Intent: a student&#39;s goal in plain words, locked by hash] --&gt; build[Agents build]
-  build --&gt; gates{20 gates, each proven to fail on planted defects}
+  build --&gt; gates{26 gates, each proven to fail on planted defects}
   gates --&gt; walks{Every button and page, for every student, walked to a fixpoint}
   walks --&gt; trace{Sensitive-data trace}
   trace --&gt; admit[Admitted by the factory]
@@ -565,7 +568,7 @@ evidence anyone can inspect. People govern the gates and sign destructive change
 </tr>
 </tbody></table>
 <h2>Where it stands</h2>
-<p>Built and deployed: all five phases of features, the factory and its evidence, the block library and the
+<p>Built and deployed: all six phases of features, the factory and its evidence, the block library and the
 documentation. Open, each with an owner and a date:</p>
 <ul>
 <li><strong>Phase certificates</strong> wait for the nightly rotation to give every student a full walk that holds for the

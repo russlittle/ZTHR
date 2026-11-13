@@ -1,0 +1,54 @@
+{
+ "id": "wsu-counseling",
+ "name": "Counseling and Wellness Services",
+ "description": "Counseling for Wright State students. A $20 fee covers the whole semester; without it, sessions are $20 each.",
+ "organization": {
+  "name": "Wright State University",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "wright-state"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "053 Student Union, lower level",
+  "city": "Dayton"
+ },
+ "phone": "937-775-3407",
+ "url": "https://www.wright.edu/counseling-and-wellness/fees",
+ "hours": "Monday to Friday, 8:30 a.m. to 5 p.m.",
+ "cost": "low-cost",
+ "eligibility": "Currently registered Wright State students.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-775-3407 or stop by 053 Student Union.",
+   "Ask about the $20 fee. It pays for all your visits that term.",
+   "After hours, call or text 988."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.wright.edu/counseling-and-wellness/fees",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 180,
+  "current": true
+ }
+}

@@ -1,0 +1,45 @@
+{
+ "id": "rta-project-mobility",
+ "name": "RTA Project Mobility",
+ "description": "Rides from your door for riders with a disability. Book a day ahead. Ask about a pass for the whole term.",
+ "organization": {
+  "name": "Greater Dayton Regional Transit Authority",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "transportation",
+   "label": "Transportation",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-425-8300",
+ "eligibility": "ADA paratransit certification.",
+ "how_to_use": {
+  "steps": [
+   "Call to get certified and book rides."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.sinclair.edu/about/visit/public-transportation/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

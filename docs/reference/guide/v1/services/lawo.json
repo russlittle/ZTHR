@@ -1,0 +1,61 @@
+{
+ "id": "lawo",
+ "name": "Legal Aid of Western Ohio",
+ "description": "Free legal help for people with low income in western Ohio. They help with evictions and housing problems.",
+ "organization": {
+  "name": "Legal Aid of Western Ohio",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "legal",
+   "label": "Legal",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "130 W. Second St., Suite 700 West",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "888-534-1432",
+ "url": "https://legalaidline.org/apply-for-legal-help/",
+ "eligibility": "Low-income residents of western Ohio.",
+ "how_to_use": {
+  "steps": [
+   "Apply online at legalaidline.org, or call the intake line.",
+   "Have any court papers or notices ready."
+  ],
+  "documents": [
+   "Any notice or court papers you received"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://mcdrc.ohiolegalhelp.org/resource/legal-aid-western-ohio",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

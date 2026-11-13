@@ -1,0 +1,72 @@
+{
+ "id": "greene-jfs",
+ "name": "Greene County Job and Family Services",
+ "description": "The county office for SNAP, cash, Medicaid and publicly funded child care.",
+ "organization": {
+  "name": "Greene County",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "money",
+   "label": "Money",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "childcare",
+   "label": "Child care",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "health",
+   "label": "Health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "541 Ledbetter Rd.",
+  "city": "Xenia",
+  "postal_code": "45385"
+ },
+ "phone": "937-562-6000",
+ "eligibility": "Greene County residents.",
+ "how_to_use": {
+  "steps": [
+   "Apply online at benefits.ohio.gov.",
+   "For Medicaid you can also call 1-844-640-6446."
+  ],
+  "documents": [
+   "Photo ID",
+   "Proof of income"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.greenecountyohio.gov/279/Job-Family-Services",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

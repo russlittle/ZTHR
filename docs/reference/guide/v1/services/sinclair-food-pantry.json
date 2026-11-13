@@ -1,0 +1,53 @@
+{
+ "id": "sinclair-food-pantry",
+ "name": "Sinclair Student Food Pantry",
+ "description": "Free food supplies for Sinclair students.",
+ "organization": {
+  "name": "Sinclair Community College",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "sinclair"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "Building 13, Room 426, 444 West Third Street",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "url": "https://www.sinclair.edu/foodpantry",
+ "eligibility": "Sinclair students who need food.",
+ "how_to_use": {
+  "steps": [
+   "Go to Building 13, Room 426.",
+   "Check sinclair.edu/foodpantry for open dates."
+  ],
+  "documents": [
+   "Sinclair student ID"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://sinclair.edu/student-life/wellness/resources/food-assistance/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 45,
+  "current": true
+ }
+}

@@ -1,0 +1,51 @@
+{
+ "id": "have-a-gay-day-pantry",
+ "name": "Have A Gay Day Community Food Pantry",
+ "description": "A food pantry that can also bring food to you.",
+ "organization": {
+  "name": "Have A Gay Day",
+  "kind": "community",
+  "kind_label": "Community",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1902 Needmore Rd.",
+  "city": "Dayton",
+  "postal_code": "45414"
+ },
+ "phone": "937-469-7629",
+ "url": "https://haveagayday.org",
+ "eligibility": "Call for current hours and delivery.",
+ "how_to_use": {
+  "steps": [
+   "Call or visit the website."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.wyso.org/news/2025-10-28/snap-funding-frozen-amid-shutdown-where-to-find-help-locally",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 45,
+  "current": true
+ }
+}

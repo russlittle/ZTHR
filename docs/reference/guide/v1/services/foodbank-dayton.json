@@ -1,0 +1,53 @@
+{
+ "id": "foodbank-dayton",
+ "name": "The Foodbank pantry locator",
+ "description": "The food bank for this area. Look up pantries by ZIP code, or find a mobile pantry near you.",
+ "organization": {
+  "name": "The Foodbank, Inc.",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "56 Armor Place",
+  "city": "Dayton",
+  "postal_code": "45417"
+ },
+ "phone": "937-461-0265",
+ "url": "https://thefoodbankdayton.org",
+ "eligibility": "Varies by pantry.",
+ "how_to_use": {
+  "steps": [
+   "Search the pantry locator by ZIP code.",
+   "Call the pantry to confirm hours and what to bring."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.wyso.org/news/2025-10-28/snap-funding-frozen-amid-shutdown-where-to-find-help-locally",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

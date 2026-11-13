@@ -1,0 +1,46 @@
+{
+ "id": "share-121-closet",
+ "name": "Share 121 Clothes Closet",
+ "description": "Free clothing in Greene County.",
+ "organization": {
+  "name": "Share 121",
+  "kind": "community",
+  "kind_label": "Community",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "goods",
+   "label": "Clothing and goods",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-372-1594",
+ "cost": "free",
+ "eligibility": "Anyone who needs clothing. Call for hours.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-372-1594 for hours and location."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 60,
+  "current": true
+ }
+}

@@ -212,6 +212,9 @@ a{text-underline-offset:3px;text-decoration-thickness:1.5px}
 @keyframes zspin{to{transform:rotate(360deg)}}
 .btn.danger:hover{background:color-mix(in srgb,var(--alert) 10%,transparent)}
 .btn.danger.solid{background:var(--alert);border-color:var(--alert);color:var(--on-alert,#fff)}
+/* facts: a label and its value, side by side, stacked on a phone */
+.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:6px 0 4px}.facts dt{font-weight:700}.facts dd{margin:0;overflow-wrap:break-word}
+@media (max-width:560px){.facts{grid-template-columns:minmax(0,1fr);gap:2px}.facts dd{margin-bottom:8px}}
 .field{margin:0 0 14px}
 .field label{margin:0 0 6px}
 input,textarea,select{min-height:48px;transition:border-color .15s,box-shadow .15s}
@@ -346,17 +349,17 @@ the field and the place. The latest run is on the factory console&#39;s Sensitiv
 <tr>
 <td>internal</td>
 <td>Ids, times, statuses and settings that say nothing about the student alone</td>
-<td>69</td>
+<td>71</td>
 </tr>
 <tr>
 <td>personal</td>
 <td>Identifies or describes the student: name, phone, schedule, what they wrote</td>
-<td>62</td>
+<td>63</td>
 </tr>
 <tr>
 <td>sensitive</td>
 <td>Special-category: money, benefits, family, identity, which help they need, sealed facts</td>
-<td>18</td>
+<td>19</td>
 </tr>
 <tr>
 <td>secret</td>
@@ -366,9 +369,9 @@ the field and the place. The latest run is on the factory console&#39;s Sensitiv
 </tbody></table>
 <pre class="mermaid">pie showData title Fields by class
   &quot;public&quot; : 15
-  &quot;internal&quot; : 69
-  &quot;personal&quot; : 62
-  &quot;sensitive&quot; : 18
+  &quot;internal&quot; : 71
+  &quot;personal&quot; : 63
+  &quot;sensitive&quot; : 19
   &quot;secret&quot; : 1</pre><h2>Where each class may go</h2>
 <pre class="mermaid">flowchart LR
   P[personal]:::p
@@ -388,7 +391,8 @@ the field and the place. The latest run is on the factory console&#39;s Sensitiv
   k11[network: webhooks]
   k12[app admin]
   k13[outcomes]
-  k14[server logs]
+  k14[public guide and feed]
+  k15[server logs]
   P --&gt; k0
   S --&gt; k0
   P --&gt; k4
@@ -493,6 +497,12 @@ the field and the place. The latest run is on the factory console&#39;s Sensitiv
 </tr>
 <tr>
 <td>outcomes</td>
+<td>no</td>
+<td>no</td>
+<td>no</td>
+</tr>
+<tr>
+<td>public guide and feed</td>
 <td>no</td>
 <td>no</td>
 <td>no</td>
@@ -739,6 +749,16 @@ go to the mentor platform; their class-site token goes to the class site; their 
 <td><code>webhooks.secret</code></td>
 <td>secret</td>
 <td>signs each delivery</td>
+</tr>
+<tr>
+<td><code>barriers.items</code></td>
+<td>sensitive</td>
+<td>need, opened by, urgency (tonight, soon, someday), status (open, in-progress, resolved), dates, history</td>
+</tr>
+<tr>
+<td><code>resource_feedback.outcome</code></td>
+<td>personal</td>
+<td>helped, did-not-help, could-not-reach</td>
 </tr>
 <tr>
 <td><code>vault.name</code></td>
@@ -1031,6 +1051,14 @@ go to the mentor platform; their class-site token goes to the class site; their 
 <td>secret</td>
 </tr>
 <tr>
+<td><code>barriers</code></td>
+<td>sensitive</td>
+</tr>
+<tr>
+<td><code>resource_feedback</code></td>
+<td>personal</td>
+</tr>
+<tr>
 <td><code>vault</code></td>
 <td>sensitive</td>
 </tr>
@@ -1214,6 +1242,14 @@ go to the mentor platform; their class-site token goes to the class site; their 
     date startedAt &quot;internal&quot;
     object_list history &quot;sensitive&quot;
     date waitingSince &quot;internal&quot;
+  }
+  barriers {
+    StudentBarrier_list items &quot;sensitive&quot;
+  }
+  resource_feedback {
+    string resourceId &quot;internal&quot;
+    enum outcome &quot;personal&quot;
+    date on &quot;internal&quot;
   }
   vault {
     string name &quot;sensitive&quot;

@@ -212,6 +212,9 @@ a{text-underline-offset:3px;text-decoration-thickness:1.5px}
 @keyframes zspin{to{transform:rotate(360deg)}}
 .btn.danger:hover{background:color-mix(in srgb,var(--alert) 10%,transparent)}
 .btn.danger.solid{background:var(--alert);border-color:var(--alert);color:var(--on-alert,#fff)}
+/* facts: a label and its value, side by side, stacked on a phone */
+.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:6px 0 4px}.facts dt{font-weight:700}.facts dd{margin:0;overflow-wrap:break-word}
+@media (max-width:560px){.facts{grid-template-columns:minmax(0,1fr);gap:2px}.facts dd{margin-bottom:8px}}
 .field{margin:0 0 14px}
 .field label{margin:0 0 6px}
 input,textarea,select{min-height:48px;transition:border-color .15s,box-shadow .15s}
@@ -465,6 +468,14 @@ each with its own guarantee.</p>
     object_ history
     date waitingSince &quot;optional&quot;
   }
+  barriers {
+    StudentBarrier_ items &quot;need, opened by, urgency (tonight, soon, someday), status (open, in-progress, resolved), dates, history&quot;
+  }
+  resource_feedback {
+    string resourceId
+    enum outcome &quot;helped, did-not-help, could-not-reach&quot;
+    date on
+  }
   vault {
     string name
     date addedAt
@@ -488,7 +499,9 @@ each with its own guarantee.</p>
   students ||--o{ vault : &quot;keeps&quot;
   students ||--o| money : &quot;tracks&quot;
   students ||--o| household_plan : &quot;plans&quot;
-  students ||--o| aid : &quot;expects&quot;</pre><h2>The record: connections</h2>
+  students ||--o| aid : &quot;expects&quot;
+  students ||--o| barriers : &quot;faces&quot;
+  students ||--o{ resource_feedback : &quot;rates&quot;</pre><h2>The record: connections</h2>
 <pre class="mermaid">erDiagram
   students { string id PK  string chosenName  HelpDial dial }
   sources {
@@ -591,6 +604,16 @@ each with its own guarantee.</p>
 <td><code>webhooks</code></td>
 <td>id</td>
 <td>Where the student asked to be notified. Https only; payloads carry ids, never message text.</td>
+</tr>
+<tr>
+<td><code>barriers</code></td>
+<td>student</td>
+<td>What is hard right now, from check-ins, the student or the Advocate asking. Each stays open until the student says it is resolved; &quot;not today&quot; pauses reminders and closes nothing.</td>
+</tr>
+<tr>
+<td><code>resource_feedback</code></td>
+<td>resource</td>
+<td>student</td>
 </tr>
 <tr>
 <td><code>vault</code></td>

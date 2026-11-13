@@ -1,0 +1,72 @@
+{
+ "id": "montgomery-jfs",
+ "name": "Montgomery County Job and Family Services",
+ "description": "The county office for SNAP, cash, Medicaid and child care assistance.",
+ "organization": {
+  "name": "Montgomery County",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "money",
+   "label": "Money",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "childcare",
+   "label": "Child care",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "health",
+   "label": "Health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1111 S. Edwin C. Moses Blvd.",
+  "city": "Dayton",
+  "postal_code": "45422"
+ },
+ "phone": "937-225-4148",
+ "eligibility": "Montgomery County residents.",
+ "how_to_use": {
+  "steps": [
+   "Apply online at benefits.ohio.gov, or visit or call the office."
+  ],
+  "documents": [
+   "Photo ID",
+   "Social Security card",
+   "Proof of income"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.ohiolegalhelp.org/resource/montgomery-county-job-and-family-services",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

@@ -1,0 +1,50 @@
+{
+ "id": "greene-cats",
+ "name": "Greene CATS Public Transit",
+ "description": "Public transit for Greene County.",
+ "organization": {
+  "name": "Greene County",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "transportation",
+   "label": "Transportation",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "2380 Bellbrook Ave.",
+  "city": "Xenia",
+  "postal_code": "45385"
+ },
+ "phone": "937-708-8322",
+ "eligibility": "Anyone in the service area.",
+ "how_to_use": {
+  "steps": [
+   "Call to schedule a ride."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.sinclair.edu/about/visit/public-transportation/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 120,
+  "current": true
+ }
+}

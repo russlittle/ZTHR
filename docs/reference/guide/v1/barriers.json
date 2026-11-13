@@ -1,0 +1,236 @@
+{
+ "domains": [
+  {
+   "id": "feasible",
+   "label": "Making college life work",
+   "barriers": [
+    {
+     "id": "emergency",
+     "label": "Emergency",
+     "covers": "No safe place tonight, no food today, or a crisis",
+     "services": 7
+    },
+    {
+     "id": "food",
+     "label": "Food",
+     "covers": "Running short, no money for groceries, no way to cook",
+     "services": 21
+    },
+    {
+     "id": "housing",
+     "label": "Housing",
+     "covers": "Behind on rent, facing eviction, unstable, or without a home",
+     "services": 13
+    },
+    {
+     "id": "utilities",
+     "label": "Utilities",
+     "covers": "A shut-off notice, a high bill, or no heat",
+     "services": 6
+    },
+    {
+     "id": "money",
+     "label": "Money",
+     "covers": "A bill coming due, a gap before payday, an emergency cost",
+     "services": 9
+    },
+    {
+     "id": "transportation",
+     "label": "Transportation",
+     "covers": "No reliable way to class or work",
+     "services": 4
+    },
+    {
+     "id": "childcare",
+     "label": "Child care",
+     "covers": "No care for class or shifts",
+     "services": 6
+    },
+    {
+     "id": "caregiving",
+     "label": "Caring for family",
+     "covers": "Caring for a parent, relative or someone ill",
+     "services": 1
+    },
+    {
+     "id": "health",
+     "label": "Health",
+     "covers": "Care, prescriptions, insurance",
+     "services": 8
+    },
+    {
+     "id": "mental-health",
+     "label": "Mental health",
+     "covers": "Stress, anxiety, grief, a hard week",
+     "services": 5
+    },
+    {
+     "id": "safety",
+     "label": "Safety",
+     "covers": "Not safe at home or in a relationship",
+     "services": 2
+    },
+    {
+     "id": "legal",
+     "label": "Legal",
+     "covers": "Eviction, records, benefits appeals",
+     "services": 1
+    },
+    {
+     "id": "phone-internet",
+     "label": "Phone and internet",
+     "covers": "No phone, internet or computer",
+     "services": 4
+    },
+    {
+     "id": "goods",
+     "label": "Clothing and goods",
+     "covers": "Clothing, hygiene items, furniture, supplies",
+     "services": 3
+    },
+    {
+     "id": "books",
+     "label": "Books and course supplies",
+     "covers": "Textbooks, calculators, course fees",
+     "services": 1
+    },
+    {
+     "id": "documents",
+     "label": "ID and documents",
+     "covers": "No ID, birth certificate or Social Security card",
+     "services": 1
+    },
+    {
+     "id": "career",
+     "label": "Work",
+     "covers": "Hours cut, a job lost, or looking for a better one",
+     "services": 3
+    }
+   ]
+  },
+  {
+   "id": "know-how",
+   "label": "Knowing how college works",
+   "barriers": [
+    {
+     "id": "aid",
+     "label": "Aid and benefits",
+     "covers": "FAFSA, verification, an appeal, benefits you may qualify for",
+     "services": 3
+    },
+    {
+     "id": "academic",
+     "label": "School",
+     "covers": "Falling behind, a disability, tutoring, advising",
+     "services": 5
+    }
+   ]
+  },
+  {
+   "id": "aims",
+   "label": "Knowing where you are headed",
+   "barriers": [
+    {
+     "id": "direction",
+     "label": "Direction",
+     "covers": "Unsure about a program or a career",
+     "services": 2
+    }
+   ]
+  },
+  {
+   "id": "people",
+   "label": "People in your corner",
+   "barriers": [
+    {
+     "id": "belonging",
+     "label": "Belonging",
+     "covers": "No one to ask, feeling alone, wanting people like me",
+     "services": 2
+    }
+   ]
+  },
+  {
+   "id": "thriving",
+   "label": "Feeling well and finding opportunity",
+   "barriers": [
+    {
+     "id": "wellbeing",
+     "label": "Move and recharge",
+     "covers": "Parks, trails, gyms, classes and time outdoors",
+     "services": 3
+    },
+    {
+     "id": "opportunity",
+     "label": "Opportunity",
+     "covers": "Events, volunteering, arts and culture, scholarships, paid internships",
+     "services": 3
+    }
+   ]
+  }
+ ],
+ "situations": [
+  {
+   "id": "student-parent",
+   "label": "Student parents"
+  },
+  {
+   "id": "working-student",
+   "label": "Working students"
+  },
+  {
+   "id": "veteran",
+   "label": "Veterans"
+  },
+  {
+   "id": "foster-youth",
+   "label": "Former foster youth"
+  },
+  {
+   "id": "first-generation",
+   "label": "First in family to attend college"
+  },
+  {
+   "id": "returning-adult",
+   "label": "Returning adults"
+  },
+  {
+   "id": "disability",
+   "label": "Students with a disability"
+  },
+  {
+   "id": "no-car",
+   "label": "Students without a car"
+  },
+  {
+   "id": "youth-under-25",
+   "label": "Young adults under 25"
+  }
+ ],
+ "provider_kinds": [
+  {
+   "id": "college",
+   "label": "College"
+  },
+  {
+   "id": "government",
+   "label": "Government"
+  },
+  {
+   "id": "nonprofit",
+   "label": "Nonprofit"
+  },
+  {
+   "id": "faith",
+   "label": "Faith-based"
+  },
+  {
+   "id": "community",
+   "label": "Community"
+  },
+  {
+   "id": "health",
+   "label": "Health care"
+  }
+ ]
+}

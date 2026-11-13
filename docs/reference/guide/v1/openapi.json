@@ -1,0 +1,185 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "Community resource guide feed",
+  "version": "1.0",
+  "description": "Services that help college students in Montgomery and Greene counties, Ohio, organized by barrier, with each entry's source of record and verification. Services, never students. Free to use with attribution.",
+  "license": {
+   "name": "Creative Commons Attribution 4.0",
+   "url": "https://creativecommons.org/licenses/by/4.0/"
+  }
+ },
+ "servers": [
+  {
+   "url": "/studentadvocate/api/guide/v1"
+  }
+ ],
+ "paths": {
+  "/services": {
+   "get": {
+    "summary": "Every service, optionally filtered",
+    "parameters": [
+     {
+      "name": "barrier",
+      "in": "query",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "county",
+      "in": "query",
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "kind",
+      "in": "query",
+      "schema": {
+       "type": "string",
+       "enum": [
+        "college",
+        "government",
+        "nonprofit",
+        "faith",
+        "community",
+        "health"
+       ]
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "The feed",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Feed"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/services/{id}": {
+   "get": {
+    "summary": "One service",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "The service",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Service"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "Not in the guide"
+     }
+    }
+   }
+  },
+  "/barriers": {
+   "get": {
+    "summary": "The barrier taxonomy: domains, barriers, situations and provider kinds",
+    "responses": {
+     "200": {
+      "description": "The taxonomy"
+     }
+    }
+   }
+  },
+  "/packages": {
+   "get": {
+    "summary": "Support packages: the usual combination of help for each barrier",
+    "responses": {
+     "200": {
+      "description": "Packages"
+     }
+    }
+   }
+  },
+  "/coverage": {
+   "get": {
+    "summary": "Current services per barrier and county, and the gaps",
+    "responses": {
+     "200": {
+      "description": "Coverage"
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "Service": {
+    "type": "object",
+    "required": [
+     "id",
+     "name",
+     "description",
+     "organization",
+     "taxonomy",
+     "eligibility",
+     "how_to_use",
+     "source",
+     "verification"
+    ],
+    "properties": {
+     "id": {},
+     "name": {},
+     "description": {},
+     "organization": {},
+     "taxonomy": {},
+     "situations": {},
+     "serves": {},
+     "location": {},
+     "phone": {},
+     "url": {},
+     "hours": {},
+     "cost": {},
+     "eligibility": {},
+     "how_to_use": {},
+     "availability": {},
+     "record": {},
+     "source": {},
+     "verification": {}
+    }
+   },
+   "Feed": {
+    "type": "object",
+    "required": [
+     "feed",
+     "version",
+     "region",
+     "generated_on",
+     "license",
+     "count",
+     "services"
+    ],
+    "properties": {
+     "services": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/Service"
+      }
+     }
+    }
+   }
+  }
+ }
+}

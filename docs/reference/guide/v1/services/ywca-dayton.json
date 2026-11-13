@@ -1,0 +1,67 @@
+{
+ "id": "ywca-dayton",
+ "name": "YWCA Dayton crisis hotline and shelter",
+ "description": "A safe place to stay and help for women and kids who are being hurt, threatened or followed.",
+ "organization": {
+  "name": "YWCA Dayton",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "safety",
+   "label": "Safety",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "emergency",
+   "label": "Emergency",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "141 W. Third St.",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "937-222-7233",
+ "url": "https://www.ywcadayton.org/shelter",
+ "hours": "Crisis hotline open 24 hours, every day",
+ "cost": "free",
+ "eligibility": "Women and children in Montgomery County at risk of harm. Shelter goes first to those at the highest risk.",
+ "how_to_use": {
+  "steps": [
+   "Call the 24-hour crisis hotline, 937-222-SAFE (7233).",
+   "If you are in danger right now, call 911."
+  ],
+  "documents": [],
+  "what_to_expect": "A hotline advocate talks with you about what is happening and what you need, and can arrange safe shelter."
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.ywcadayton.org/shelter",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 30,
+  "current": true
+ }
+}

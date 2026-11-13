@@ -1,0 +1,55 @@
+{
+ "id": "four-c-child-care",
+ "name": "Find child care with 4C for Children",
+ "description": "Staff help you find child care that fits your schedule and budget, or you can search online.",
+ "organization": {
+  "name": "4C for Children",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "childcare",
+   "label": "Child care",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [
+  {
+   "id": "student-parent",
+   "label": "Student parents"
+  }
+ ],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-220-9660",
+ "url": "https://4cforchildren.org/findcare",
+ "hours": "Monday to Friday, 8:30 a.m. to 5 p.m.",
+ "eligibility": "Families in 15 southwest Ohio and Miami Valley counties, including Montgomery and Greene.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-220-9660 and ask for 1330.",
+   "Or use the Request Help Finding Child Care form, or the online search.",
+   "Ask your county help office if the state can pay for some of your child care."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://4cforchildren.org/findcare",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "feed": "community-resource-guide",
+ "license": {
+  "name": "Creative Commons Attribution 4.0",
+  "url": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "Community resource guide, Student Advocate (zthr.ai). Facts from each entry's cited source of record."
+ },
+ "endpoints": [
+  "/studentadvocate/api/guide/v1/services",
+  "/studentadvocate/api/guide/v1/services/{id}",
+  "/studentadvocate/api/guide/v1/barriers",
+  "/studentadvocate/api/guide/v1/packages",
+  "/studentadvocate/api/guide/v1/coverage",
+  "/studentadvocate/api/guide/v1/openapi.json"
+ ]
+}

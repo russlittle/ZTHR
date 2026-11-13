@@ -1,0 +1,52 @@
+{
+ "id": "omj-montgomery",
+ "name": "OhioMeansJobs Montgomery County",
+ "description": "Free help finding work, job training and career support.",
+ "organization": {
+  "name": "Ohio Department of Job and Family Services",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "career",
+   "label": "Work",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1111 S. Edwin C. Moses Blvd.",
+  "city": "Dayton",
+  "postal_code": "45417"
+ },
+ "phone": "937-225-5627",
+ "cost": "free",
+ "eligibility": "Anyone looking for work or training.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-225-5627 or walk in.",
+   "Bring a resume if you have one; staff can help you write one if not."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://dam.assets.ohio.gov/image/upload/jfs.ohio.gov/owd/OhioMeansJobs/OhioMeansJobsCentersbyCounty.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

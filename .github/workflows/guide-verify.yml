@@ -1,0 +1,35 @@
+name: Guide verification
+
+# Every entry in the published community resource guide, re-read at its source: each source and page answers, the
+# listed phone number still appears there, and the entry is within its freshness. Weekly, after a deploy, and on demand.
+on:
+  workflow_run:
+    workflows: ["Deploy zthr.ai to Firebase Hosting"]
+    types: [completed]
+  schedule:
+    - cron: "41 11 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Wait for the new deploy to reach the edge
+        if: github.event_name == 'workflow_run'
+        run: sleep 60
+      - name: Verify every entry at its source
+        run: node tools/guide-verify.mjs https://zthr.ai/reference/guide/v1/services.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: guide-verify
+          path: guide-verify.json

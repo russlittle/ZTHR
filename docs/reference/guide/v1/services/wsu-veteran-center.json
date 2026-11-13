@@ -1,0 +1,71 @@
+{
+ "id": "wsu-veteran-center",
+ "name": "Veteran and Military Center",
+ "description": "A home base for students who served. Get help with the GI Bill, sign up for classes early and meet other vets.",
+ "organization": {
+  "name": "Wright State University",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "belonging",
+   "label": "Belonging",
+   "domain": "people",
+   "domain_label": "People in your corner"
+  },
+  {
+   "barrier": "aid",
+   "label": "Aid and benefits",
+   "domain": "know-how",
+   "domain_label": "Knowing how college works"
+  },
+  {
+   "barrier": "academic",
+   "label": "School",
+   "domain": "know-how",
+   "domain_label": "Knowing how college works"
+  }
+ ],
+ "situations": [
+  {
+   "id": "veteran",
+   "label": "Veterans"
+  }
+ ],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "wright-state"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "131 Allyn Hall",
+  "city": "Dayton"
+ },
+ "phone": "937-775-5550",
+ "url": "https://www.wright.edu/veteran-and-military-center/services",
+ "cost": "free",
+ "eligibility": "Students who served or serve now, in any branch, and their families.",
+ "how_to_use": {
+  "steps": [
+   "Stop by 131 Allyn Hall or call 937-775-5550.",
+   "To sign up for classes early, bring your DD214 or military ID."
+  ],
+  "documents": [
+   "DD214 or military ID"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.wright.edu/veteran-and-military-center/services",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 180,
+  "current": true
+ }
+}

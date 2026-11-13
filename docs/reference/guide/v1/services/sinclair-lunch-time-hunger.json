@@ -1,0 +1,51 @@
+{
+ "id": "sinclair-lunch-time-hunger",
+ "name": "Lunch Time Hunger Program",
+ "description": "Free lunch, no questions asked.",
+ "organization": {
+  "name": "Sinclair Community College",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "sinclair"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "Building 13, Room 426, 444 West Third Street",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "url": "https://www.sinclair.edu/foodpantry",
+ "hours": "Monday to Thursday, 11:00 a.m. to 1:00 p.m.",
+ "eligibility": "Sinclair students. No questions asked.",
+ "how_to_use": {
+  "steps": [
+   "Walk in during lunch hours."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://sinclair.edu/student-life/wellness/resources/food-assistance/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 45,
+  "current": true
+ }
+}

@@ -1,0 +1,168 @@
+{
+ "packages": [
+  {
+   "id": "tonight",
+   "barrier": "emergency",
+   "title": "A safe place to stay tonight",
+   "why": "Call a shelter first to check for room; 2-1-1 can find one that has space, any time.",
+   "self_step": null,
+   "services": [
+    "daybreak",
+    "svdp-womens-shelter",
+    "homefull-mens-shelter",
+    "greene-ihn",
+    "united-way-211",
+    "ywca-dayton",
+    "greene-fvpc"
+   ]
+  },
+  {
+   "id": "not-safe",
+   "barrier": "safety",
+   "title": "Getting safe",
+   "why": "These hotlines answer day and night and can arrange a safe place to stay.",
+   "self_step": "If you are in danger right now, call 911.",
+   "services": [
+    "ywca-dayton",
+    "greene-fvpc",
+    "lifeline-988"
+   ]
+  },
+  {
+   "id": "rent-short",
+   "barrier": "housing",
+   "title": "Short on rent",
+   "why": "College emergency money is fastest; the county and community action agencies can add more; legal aid helps if an eviction has started.",
+   "self_step": "Ask your landlord in writing for a few more days, and keep a copy.",
+   "services": [
+    "sinclair-emergency-grant",
+    "sinclair-student-assistance",
+    "mvcap",
+    "housing-solutions-greene",
+    "united-way-211",
+    "lawo"
+   ]
+  },
+  {
+   "id": "food-short",
+   "barrier": "food",
+   "title": "Food is running short",
+   "why": "A campus pantry helps today; SNAP helps every month after.",
+   "self_step": null,
+   "services": [
+    "sinclair-food-pantry",
+    "sinclair-lunch-time-hunger",
+    "wsu-raider-food-pantry",
+    "foodbank-dayton",
+    "house-of-bread",
+    "ohio-benefits-snap",
+    "greene-fish-xenia"
+   ]
+  },
+  {
+   "id": "shut-off",
+   "barrier": "utilities",
+   "title": "A shut-off notice",
+   "why": "The winter crisis program and HEAP can stop a shut-off; PIPP Plus keeps the bill steady after.",
+   "self_step": "Call the utility and ask for a payment plan; tell them you are applying for help.",
+   "services": [
+    "ohio-heap",
+    "mvcap",
+    "greene-cap",
+    "ohio-pipp-plus",
+    "sinclair-emergency-grant"
+   ]
+  },
+  {
+   "id": "no-ride",
+   "barrier": "transportation",
+   "title": "No way to get to class",
+   "why": "Students ride the bus at a reduced fare, and rides from the door are there for riders with a disability.",
+   "self_step": null,
+   "services": [
+    "rta",
+    "rta-project-mobility",
+    "greene-cats"
+   ]
+  },
+  {
+   "id": "no-child-care",
+   "barrier": "childcare",
+   "title": "No child care for class or work",
+   "why": "The county can pay for part of child care; 4C finds openings that fit your hours.",
+   "self_step": null,
+   "services": [
+    "four-c-child-care",
+    "montgomery-jfs",
+    "greene-jfs",
+    "gem-city-diaper-bank"
+   ]
+  },
+  {
+   "id": "hard-week",
+   "barrier": "mental-health",
+   "title": "A hard week",
+   "why": "Talking to someone helps, and so does moving: a walk outside or a free class can lift a hard week.",
+   "self_step": "If you are thinking about hurting yourself, call or text 988 now.",
+   "services": [
+    "sinclair-counseling",
+    "wsu-counseling",
+    "samaritan-behavioral",
+    "tcn-greene",
+    "metroparks-free-fitness",
+    "wsu-campus-rec",
+    "lifeline-988"
+   ]
+  },
+  {
+   "id": "falling-behind",
+   "barrier": "academic",
+   "title": "Falling behind in a class",
+   "why": "Tutoring is free, and accommodations help if a disability is part of it.",
+   "self_step": null,
+   "services": [
+    "sinclair-tutoring",
+    "sinclair-trio",
+    "sinclair-accessibility",
+    "wsu-disability"
+   ]
+  },
+  {
+   "id": "no-id",
+   "barrier": "documents",
+   "title": "No photo ID",
+   "why": "An Ohio state ID is free for residents 17 and older without a driver license.",
+   "self_step": null,
+   "services": [
+    "ohio-state-id"
+   ]
+  },
+  {
+   "id": "need-work",
+   "barrier": "career",
+   "title": "Hours cut or need a job",
+   "why": "Workforce centers help with jobs and training; your college career office knows jobs that fit a class schedule.",
+   "self_step": null,
+   "services": [
+    "omj-montgomery",
+    "omj-greene",
+    "wsu-career-hub",
+    "sinclair-trio"
+   ]
+  },
+  {
+   "id": "alone",
+   "barrier": "belonging",
+   "title": "Finding your people",
+   "why": "A center for students like you is a place to belong, and a free class or event is an easy way to meet people.",
+   "self_step": null,
+   "services": [
+    "sinclair-veterans",
+    "wsu-veteran-center",
+    "sinclair-trio",
+    "metroparks-free-fitness",
+    "dai-art-for-all"
+   ]
+  }
+ ]
+}

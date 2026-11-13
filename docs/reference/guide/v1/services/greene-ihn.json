@@ -1,0 +1,51 @@
+{
+ "id": "greene-ihn",
+ "name": "Interfaith Hospitality Network of Greene County",
+ "description": "Shelter and housing support in Greene County.",
+ "organization": {
+  "name": "Interfaith Hospitality Network of Greene County",
+  "kind": "faith",
+  "kind_label": "Faith-based",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "emergency",
+   "label": "Emergency",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "phone": "937-372-0705",
+ "eligibility": "People in Greene County who need shelter. Call to ask about room and requirements.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-372-0705."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 30,
+  "current": true
+ }
+}

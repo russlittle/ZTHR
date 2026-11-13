@@ -212,6 +212,9 @@ a{text-underline-offset:3px;text-decoration-thickness:1.5px}
 @keyframes zspin{to{transform:rotate(360deg)}}
 .btn.danger:hover{background:color-mix(in srgb,var(--alert) 10%,transparent)}
 .btn.danger.solid{background:var(--alert);border-color:var(--alert);color:var(--on-alert,#fff)}
+/* facts: a label and its value, side by side, stacked on a phone */
+.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:6px 0 4px}.facts dt{font-weight:700}.facts dd{margin:0;overflow-wrap:break-word}
+@media (max-width:560px){.facts{grid-template-columns:minmax(0,1fr);gap:2px}.facts dd{margin-bottom:8px}}
 .field{margin:0 0 14px}
 .field label{margin:0 0 6px}
 input,textarea,select{min-height:48px;transition:border-color .15s,box-shadow .15s}
@@ -346,96 +349,167 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
   end</pre><h2>Who sees what</h2>
 <p>The guide&#39;s entries describe services, not people, so the guide is public: anyone can browse it without signing in, from a student to a counselor to a neighbor looking for help. Everything about a student (their barriers, their check-in answers, their plans and which resources they used) is private to that student and shared only by their choice.</p>
 <h2>Barriers: the taxonomy</h2>
-<p>The guide is organized the way a student experiences trouble, not the way agencies are organized. Each barrier is a service facet in the sense of the Open Eligibility taxonomy (Open Referral, CC BY-SA 3.0); situations, the second facet, describe who is asking.</p>
-<table>
+<p>Research on community college students finds that support helps in four ways (Karp, CCRC): it makes college life feasible, it builds college know-how, it clarifies what a student is aiming for, and it connects them to people. The taxonomy is organized the same way, with a fifth domain for what helps a student thrive and not only survive: moving, being outdoors, events and opportunity. Some of the most useful supports are not obvious ones: a 2024 network meta-analysis of randomised trials in the BMJ (Noetel et al.) found walking or jogging, yoga and strength training eased depression, with structured programs doing better, and several institutional studies associate campus recreation use with higher grades and retention (association, not proof of cause). Each barrier is a service facet in the sense of the Open Eligibility taxonomy (Open Referral, CC BY-SA 3.0).</p>
+<pre class="mermaid">flowchart TB
+  student((A student))
+  student --- feasible[Making college life feasible]
+  student --- knowhow[College know-how]
+  student --- aims[Clear aims]
+  student --- people[People and community]
+  student --- thrive[Thriving]
+  thrive --- t1[Move and recharge: parks, trails, gyms, classes&lt;br/&gt;Opportunity: events, volunteering, arts,&lt;br/&gt;scholarships, paid internships]
+  feasible --- f1[Emergency, food, housing, utilities,&lt;br/&gt;money, transportation, child care,&lt;br/&gt;caring for family, health, mental health,&lt;br/&gt;safety, legal, phone and internet,&lt;br/&gt;clothing and goods, books, ID and documents, work]
+  knowhow --- k1[Financial aid and benefits,&lt;br/&gt;registration and records,&lt;br/&gt;school: tutoring, disability, advising]
+  aims --- a1[Program and career direction]
+  people --- p1[Belonging: mentors, peers,&lt;br/&gt;student groups, community]</pre><table>
 <thead>
 <tr>
+<th>Domain</th>
 <th>Barrier</th>
 <th>Covers</th>
 <th>Example resources</th>
 </tr>
 </thead>
 <tbody><tr>
+<td>Feasible</td>
 <td>Emergency</td>
 <td>No safe place tonight, no food today, a crisis</td>
 <td>Shelter intake, 2-1-1, crisis lines, emergency food</td>
 </tr>
 <tr>
+<td>Feasible</td>
 <td>Food</td>
 <td>Running short, no money for groceries, no way to cook</td>
 <td>Campus pantries, food banks, SNAP, community meals</td>
 </tr>
 <tr>
+<td>Feasible</td>
 <td>Housing</td>
 <td>Behind on rent, facing eviction, unstable, homeless</td>
 <td>Rental assistance, eviction help, shelters, housing navigation</td>
 </tr>
 <tr>
+<td>Feasible</td>
 <td>Utilities</td>
 <td>A shut-off notice, a high bill, heat in winter</td>
 <td>HEAP and the winter crisis program, utility hardship funds</td>
 </tr>
 <tr>
+<td>Feasible</td>
 <td>Money</td>
 <td>A bill coming due, a gap before payday, an emergency</td>
-<td>College emergency grants, assistance funds, tax help</td>
+<td>College emergency grants, assistance funds, free tax preparation</td>
 </tr>
 <tr>
+<td>Feasible</td>
 <td>Transportation</td>
 <td>No reliable way to class or work</td>
 <td>Transit passes, ride programs, car repair funds</td>
 </tr>
 <tr>
+<td>Feasible</td>
 <td>Child care</td>
 <td>No care for class or shifts</td>
 <td>Child care subsidies, campus care, sick-child options</td>
 </tr>
 <tr>
-<td>Health</td>
-<td>Care, prescriptions, insurance</td>
-<td>Clinics, Medicaid, sliding-scale care</td>
+<td>Feasible</td>
+<td>Caring for family</td>
+<td>Caring for a parent or relative</td>
+<td>Caregiver support, respite</td>
 </tr>
 <tr>
+<td>Feasible</td>
+<td>Health</td>
+<td>Care, prescriptions, insurance</td>
+<td>Community health centers, Medicaid, sliding-scale care</td>
+</tr>
+<tr>
+<td>Feasible</td>
 <td>Mental health</td>
 <td>Stress, anxiety, grief, a hard week</td>
 <td>Campus counseling, community mental health, warmlines</td>
 </tr>
 <tr>
+<td>Feasible</td>
 <td>Safety</td>
 <td>Not safe at home or in a relationship</td>
 <td>Domestic violence services, protection orders, safe housing</td>
 </tr>
 <tr>
+<td>Feasible</td>
 <td>Legal</td>
-<td>Eviction, records, immigration, benefits appeals</td>
-<td>Legal aid, clinics, expungement help</td>
+<td>Eviction, records, benefits appeals</td>
+<td>Legal aid, clinics, record sealing help</td>
 </tr>
 <tr>
-<td>Digital access</td>
+<td>Feasible</td>
+<td>Phone and internet</td>
 <td>No phone, internet or computer</td>
-<td>Lifeline, low-cost internet, device loans</td>
+<td>Lifeline, low-cost internet, device and hotspot loans</td>
 </tr>
 <tr>
-<td>Goods</td>
-<td>Clothing, hygiene, furniture, school supplies</td>
-<td>Closets, drives, congregations</td>
+<td>Feasible</td>
+<td>Clothing and goods</td>
+<td>Clothing, hygiene, furniture</td>
+<td>Closets, free stores, congregations</td>
 </tr>
 <tr>
-<td>Documents</td>
+<td>Feasible</td>
+<td>Books and supplies</td>
+<td>Textbooks, calculators, course fees</td>
+<td>Lending libraries, book grants</td>
+</tr>
+<tr>
+<td>Feasible</td>
+<td>ID and documents</td>
 <td>No ID, birth certificate or Social Security card</td>
-<td>ID clinics, vital records help</td>
+<td>ID help, vital records</td>
 </tr>
 <tr>
+<td>Feasible</td>
 <td>Work</td>
-<td>Hours cut, job lost, a better job</td>
+<td>Hours cut, a job lost, a better job</td>
 <td>Workforce centers, job training, unemployment</td>
 </tr>
 <tr>
-<td>Academic</td>
-<td>Falling behind, a disability, tutoring</td>
-<td>Tutoring, disability services, advising</td>
+<td>Know-how</td>
+<td>Aid and benefits</td>
+<td>FAFSA, verification, an appeal, benefits a student qualifies for</td>
+<td>Financial aid offices, benefits screening, FAFSA help</td>
+</tr>
+<tr>
+<td>Know-how</td>
+<td>School</td>
+<td>Falling behind, a disability, tutoring, advising</td>
+<td>Tutoring, disability services, advising, TRIO</td>
+</tr>
+<tr>
+<td>Aims</td>
+<td>Direction</td>
+<td>Unsure about a program or a career</td>
+<td>Career services, program exploration, job shadowing</td>
+</tr>
+<tr>
+<td>People</td>
+<td>Belonging</td>
+<td>No one to ask, feeling alone, wanting people like me</td>
+<td>Mentoring, student parent groups, veterans centers, affinity groups, community programs</td>
+</tr>
+<tr>
+<td>Thriving</td>
+<td>Move and recharge</td>
+<td>Time to move, get outside, reset</td>
+<td>Campus recreation, parks and trails, free fitness classes, community centers</td>
+</tr>
+<tr>
+<td>Thriving</td>
+<td>Opportunity</td>
+<td>Something to look forward to, something to build</td>
+<td>Free events, volunteering, arts and culture, library programs, scholarships, paid internships</td>
 </tr>
 </tbody></table>
+<p>The research is equally clear that a one-time push at the start does not last, and that most students never hear of help that exists: in a 2026 CCRC fact sheet, 73% of two-year students faced at least one basic needs insecurity, yet 65% did not know about campus resources and half of those in need used none. The guide answers awareness; the Advocate answers the last mile.</p>
 <p>Situations are not barriers; they change which resources fit: student parent, working student, veteran, former foster youth, first in family, returning adult, student with a disability, a student without a car.</p>
 <h2>Providers</h2>
 <p>Every entry says who provides it, because a student deciding whether to walk in somewhere wants to know.</p>
@@ -730,45 +804,202 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
 </tr>
 </tbody></table>
 <p>Each step in a plan is followed to its end: applied, missing information resolved, decided, help received, or another route taken.</p>
-<h2>Evidence</h2>
+<h2>What the Advocate watches</h2>
+<p>Alongside barriers, the Advocate keeps the signals that research ties most closely to finishing (Jenkins and Bailey, <em>Early Momentum Metrics</em>, CCRC):</p>
 <table>
 <thead>
 <tr>
-<th>Gate or record</th>
-<th>Shows</th>
+<th>Signal</th>
+<th>The measure</th>
+<th>Why it matters</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>Resource admission</td>
-<td>Every admitted entry has a cited, reachable source; structured barrier, provider, county and eligibility; and how-to-use text at the reading level</td>
+<td>Credit momentum</td>
+<td>15 credits attempted in the first term, or 30 in the first year</td>
+<td>Students at 15 were more likely to earn a degree than those at 12</td>
 </tr>
 <tr>
-<td>Link and content QA</td>
-<td>Each verification run, published: what was checked, what was found, what changed</td>
+<td>Gateway momentum</td>
+<td>College-level math and English passed in the first year</td>
+<td>In Tennessee, 48% of those who passed both earned a credential within six years, against 18%</td>
 </tr>
 <tr>
-<td>Freshness</td>
-<td>No entry is shown as current past its freshness; a ratchet on the share of entries verified on time</td>
+<td>Program momentum</td>
+<td>9 credits in the student&#39;s program in the first year</td>
+<td>40% against 16% completing within six years, in the same data</td>
 </tr>
 <tr>
-<td>Precision audit</td>
-<td>Each scout&#39;s sampled precision against its datum</td>
+<td>Standing and aid progress</td>
+<td>GPA, pace and the maximum timeframe</td>
+<td>Losing aid is a common way to stop out</td>
 </tr>
 <tr>
-<td>Check-in fidelity</td>
-<td>Each question matches its cited source&#39;s wording, or is marked as written for the Advocate</td>
+<td>Critical moments</td>
+<td>Registering for the second year, drifting from a program, 15 credits from finishing</td>
+<td>Moments CCRC&#39;s advising research names for a personal check-in</td>
+</tr>
+</tbody></table>
+<p>These are for the student first: a momentum line on the School screen, and a single nudge at a critical moment, never a score held over them.</p>
+<h2>How it is delivered: the research behind the choices</h2>
+<p>CCRC&#39;s framework for advising (sustained, strategic, integrated, proactive, personalized) and RAND&#39;s study of basic needs support set the rules the Advocate keeps:</p>
+<table>
+<thead>
+<tr>
+<th>Principle</th>
+<th>What the Advocate does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Sustained, not one push at entry</td>
+<td>Check-ins and barrier follow-up run all term, at the rhythm the student set</td>
 </tr>
 <tr>
-<td>Barrier lifecycle</td>
-<td>No sequence of answers closes a barrier the student did not resolve</td>
+<td>Proactive</td>
+<td>It brings the right help to the student before they ask, at critical moments</td>
+</tr>
+<tr>
+<td>Personalized</td>
+<td>Signals come from this student&#39;s barriers, situation, schedule and record</td>
+</tr>
+<tr>
+<td>Integrated</td>
+<td>Campus and community help in one place; a handoff to the right office carries the context the student chose to share</td>
+</tr>
+<tr>
+<td>Do not over-message</td>
+<td>At most three signals; one check-in at a time; &quot;not today&quot; is respected</td>
+</tr>
+<tr>
+<td>Tiered responses</td>
+<td>Tonight gets an emergency route; this week gets a step; someday waits in the guide</td>
+</tr>
+<tr>
+<td>Define closure</td>
+<td>A barrier closes only when the student says it is resolved; every step is followed to its end</td>
+</tr>
+<tr>
+<td>Streamlined intake</td>
+<td>Forms are pre-filled from what the student already told the Advocate</td>
+</tr>
+<tr>
+<td>Data-informed</td>
+<td>Service use is linked to outcomes; feedback is asked after every use</td>
+</tr>
+</tbody></table>
+<h2>Beyond a directory</h2>
+<ul>
+<li><strong>Benefits check.</strong> Many students qualify for SNAP through a student exemption (working 20 hours, work-study, a child under six) and never apply; in California only 26% of eligible community college students received it. The Advocate checks the exemptions against what it knows and prepares the application.</li>
+<li><strong>Warm handoffs.</strong> Instead of a phone number, a prepared message to a named office, sent only with the student&#39;s approval, carrying only what the student chose to include.</li>
+<li><strong>Seasonal help.</strong> The winter crisis utility program, free tax preparation and the earned income credit in tax season, summer meal programs, the second-year registration window: the guide knows when each matters and the Advocate brings it up then.</li>
+<li><strong>Coverage gaps.</strong> The QA agents publish which barriers have little or no help in each county, by provider kind. For a region, that is a map of where the safety net is thin; for a funder, where to put money.</li>
+<li><strong>Peer record.</strong> After enough students have used a resource, it shows how often it helped (&quot;helped 14 of 19 students who tried, this term&quot;), so the next student knows what to expect.</li>
+<li><strong>Well-being that is not an emergency.</strong> When a student says it has been a hard week, the Advocate can offer a walk on a nearby trail between classes, a free yoga class or a park event alongside counseling, because movement helps and costs nothing, and it never replaces a crisis route.</li>
+<li><strong>Community connection.</strong> Belonging is part of the guide: mentoring, student parent groups, veterans centers, congregations and community programs that welcome students, not only services for emergencies.</li>
+</ul>
+<h2>The public feed</h2>
+<p>The guide is offered as a public benefit: any app, college, library, congregation or agency can take it as a feed instead of doing the legwork themselves. The feed follows the Open Referral Human Services Data Specification, carries each entry&#39;s source, the day it was verified and its verification record, and is free to use with attribution. It holds services, never students.</p>
+<h2>Evidence</h2>
+<p>Each row is a check that runs with every build, except where the row says otherwise. The gates are each proven able to fail: they are run against planted defects first, and a gate that misses one cannot admit anything (<a href="../testing/gates.html">Gates</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>What it holds</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Resource admission (gate)</td>
+<td>Every entry passes every admission check. Five planted bad entries (no source, a broken phone number, dense eligibility text, a made-up barrier, an impossible date) are each held by the check named for that fault</td>
+<td><code>guide-admission</code> in <code>tools/gates.ts</code></td>
+</tr>
+<tr>
+<td>One planted entry per check (tests)</td>
+<td>Each of the 12 admission checks holds an entry built to fail it. An entry no scout owns and a duplicated id are held too</td>
+<td><code>guide.test.ts</code></td>
+</tr>
+<tr>
+<td>Feed (gate)</td>
+<td>The feed validates against its schema and carries no student&#39;s name, phone, id or answer. No count is shown from fewer than five answers</td>
+<td><code>guide-feed</code></td>
+</tr>
+<tr>
+<td>Barrier lifecycle (gate)</td>
+<td>Over 300 seeded sequences of 25 events: nothing but the student closes a barrier, urgency never drops while it is open, &quot;not today&quot; never changes its status, and no barrier is duplicated</td>
+<td><code>barrier-lifecycle</code></td>
+</tr>
+<tr>
+<td>Barrier properties (tests)</td>
+<td>The same rules over 400 generated sequences each, plus: history only grows and stays in date order, active barriers are sorted most urgent first, and a quiet barrier is asked about once a week</td>
+<td><code>guide.test.ts</code>, with fast-check</td>
+</tr>
+<tr>
+<td>Signals (tests)</td>
+<td>Never more than three, whatever is open. Tonight comes first. Resolved and &quot;not today&quot; barriers drop out. A barrier with nothing near the student becomes a counted gap that offers 2-1-1</td>
+<td><code>guide.test.ts</code></td>
+</tr>
+<tr>
+<td>Did it help (tests and journey)</td>
+<td>Each student counts once and their latest answer wins. Counts appear only from five answers up</td>
+<td><code>guide.test.ts</code>, <code>p6-did-it-help</code></td>
+</tr>
+<tr>
+<td>Packages (tests)</td>
+<td>Every entry in a package exists. A package offers only what serves the student and is current</td>
+<td><code>guide.test.ts</code></td>
+</tr>
+<tr>
+<td>Taxonomy (tests)</td>
+<td>Each barrier sits in one of the five domains and has at least one entry. Every kind of provider is present, faith-based included. Every check-in opens a barrier from the taxonomy and cites its source</td>
+<td><code>guide.test.ts</code></td>
+</tr>
+<tr>
+<td>Every page and endpoint (tests)</td>
+<td>The public guide, all 23 barrier pages and every entry page render with the entry&#39;s source. Each API endpoint answers with CORS. Filters return only what they promise</td>
+<td><code>guide.test.ts</code></td>
+</tr>
+<tr>
+<td>Locked journeys</td>
+<td>No safe place tonight, by app and text, in the standard and brief modes; a check-in kept until resolved; a compound week; did it help; the public feed; a bad entry held</td>
+<td><code>control/journeys/p6-*.yaml</code></td>
 </tr>
 <tr>
 <td>Sensitive trace</td>
-<td>Barrier answers never reach an advisor, a college or a log unless the student shares them</td>
+<td>Markers planted in every sensitive field never reach the public guide or the feed. The trace runs after a check-in, a barrier and a &quot;did it help&quot; answer</td>
+<td><code>sensitive-data</code> gate</td>
 </tr>
 <tr>
-<td>Matching journeys</td>
-<td>Locked journeys for compound situations: a student short on rent, without a ride and with a sick child gets the right three signals</td>
+<td>Page walk</td>
+<td>Every guide page and form, walked for each student. Each reading page is walked once per student, since it shows the same catalog whatever else the student has done</td>
+<td><code>npm run crawl</code></td>
+</tr>
+<tr>
+<td>Link and content check (weekly)</td>
+<td>Each entry&#39;s source and page answer, the listed phone number still appears there, and the entry is within its freshness. Anything not confirmed is listed by entry</td>
+<td><a href="https://github.com/russlittle/ZTHR/actions/workflows/guide-verify.yml">Guide verification</a></td>
+</tr>
+<tr>
+<td>Coverage</td>
+<td>For each barrier in each county: the current services and the kinds of provider behind them, with the gaps published</td>
+<td><code>/api/guide/v1/coverage</code></td>
+</tr>
+<tr>
+<td>Precision audit</td>
+<td>Not measured yet. Each scout&#39;s sampled precision against its datum starts once the weekly verifier has a month of runs</td>
+<td></td>
 </tr>
 </tbody></table>
+<h2>Sources</h2>
+<ul>
+<li>Karp, M. M. (2011). <em>Toward a New Understanding of Non-Academic Student Support: Four Mechanisms Encouraging Positive Student Outcomes in the Community College</em>. Community College Research Center.</li>
+<li>Jenkins, D., and Bailey, T. (2017). <em>Early Momentum Metrics: Why They Matter for College Improvement</em>. Community College Research Center.</li>
+<li>Karp, M. M., Ackerson, S., Cheng, I., Cocatre-Zilgien, E., Costelloe, S., Freeman, B., Lemire, S., Linderman, D., McFarlane, B., Moulton, S., O&#39;Shea, J., Porowski, A., and Richburg-Hayes, L. (2021). <em>Effective Advising for Postsecondary Students: A Practice Guide</em>; and CCRC&#39;s <em>A Framework for Advising Reform</em> (2020).</li>
+<li>Community College Research Center (2026). <em>Basic Needs Supports</em> fact sheet.</li>
+<li>RAND Corporation (2025). <em>The Six Core Features of Student Basic Needs Support in Community Colleges</em>.</li>
+<li>Billioux, A., et al. (2017). <em>Standardized Screening for Health-Related Social Needs in Clinical Settings: The Accountable Health Communities Screening Tool</em>. National Academy of Medicine.</li>
+<li>Noetel, M., et al. (2024). Effect of exercise for depression: systematic review and network meta-analysis of randomised controlled trials. <em>BMJ</em> 384:e075847.</li>
+<li>Hager, E. R., et al. (2010). Development and validity of a 2-item screen to identify families at risk for food insecurity. <em>Pediatrics</em> 126(1).</li>
+<li>Open Referral. <em>Human Services Data Specification</em>; Open Eligibility taxonomy.</li>
+</ul>
 </article></main></div></body></html>

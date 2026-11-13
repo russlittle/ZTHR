@@ -1,0 +1,55 @@
+{
+ "id": "wsu-raider-food-pantry",
+ "name": "Raider Food Pantry",
+ "description": "Free emergency food for Wright State students, by appointment, once a month.",
+ "organization": {
+  "name": "Wright State University",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "wright-state"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "055 Student Union, 3640 Colonel Glenn Hwy",
+  "city": "Fairborn",
+  "postal_code": "45435"
+ },
+ "phone": "937-775-2808",
+ "url": "https://www.wright.edu/foodpantry",
+ "eligibility": "Wright State students enrolled this term who need emergency food.",
+ "how_to_use": {
+  "steps": [
+   "Book an appointment online with your campus login (no walk-ins).",
+   "Arrive on time; more than 5 minutes late without notice cancels the appointment."
+  ],
+  "documents": [
+   "Photo ID",
+   "University ID number"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.wright.edu/foodpantry",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 45,
+  "current": true
+ }
+}

@@ -1,0 +1,66 @@
+{
+ "id": "daybreak",
+ "name": "Daybreak",
+ "description": "The Miami Valley's shelter for young people without a safe place to stay, with help finding a place of their own.",
+ "organization": {
+  "name": "Daybreak",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "regional"
+ },
+ "taxonomy": [
+  {
+   "barrier": "emergency",
+   "label": "Emergency",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [
+  {
+   "id": "youth-under-25",
+   "label": "Young adults under 25"
+  }
+ ],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "605 S. Patterson Blvd.",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "937-461-1000",
+ "url": "https://www.daybreakdayton.org",
+ "hours": "Hotline open 24 hours, every day",
+ "cost": "free",
+ "eligibility": "Young people who are homeless, at risk of it, or moving from couch to couch. Call the hotline to ask whether you qualify.",
+ "how_to_use": {
+  "steps": [
+   "Call the 24-hour hotline, 937-461-1000.",
+   "Tell them where you are staying now and whether you are safe tonight."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.daybreakdayton.org/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 30,
+  "current": true
+ }
+}

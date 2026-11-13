@@ -1,0 +1,58 @@
+{
+ "id": "good-neighbor-house",
+ "name": "Good Neighbor House",
+ "description": "A drive-thru food pantry. They also have a clinic for health care and teeth.",
+ "organization": {
+  "name": "Good Neighbor House",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "food",
+   "label": "Food",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "health",
+   "label": "Health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "627 East First Street",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "937-224-3003",
+ "url": "https://www.goodneighborhouse.org/",
+ "hours": "Drive-thru pantry Monday to Thursday, 9 a.m. to 2 p.m.; call first",
+ "eligibility": "Call to speak with an intake volunteer.",
+ "how_to_use": {
+  "steps": [
+   "Call first to speak with an intake volunteer."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.wyso.org/news/2025-10-28/snap-funding-frozen-amid-shutdown-where-to-find-help-locally",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-02",
+  "freshness_days": 45,
+  "current": true
+ }
+}

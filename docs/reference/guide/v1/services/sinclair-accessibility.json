@@ -1,0 +1,62 @@
+{
+ "id": "sinclair-accessibility",
+ "name": "Sinclair Accessibility Services",
+ "description": "Help for students with a disability, like more time on tests or help with notes.",
+ "organization": {
+  "name": "Sinclair Community College",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "academic",
+   "label": "School",
+   "domain": "know-how",
+   "domain_label": "Knowing how college works"
+  }
+ ],
+ "situations": [
+  {
+   "id": "disability",
+   "label": "Students with a disability"
+  }
+ ],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "sinclair"
+  ],
+  "national": false
+ },
+ "location": {
+  "address": "Building 10, Room 424, 444 West Third Street",
+  "city": "Dayton",
+  "postal_code": "45402"
+ },
+ "phone": "937-512-5113",
+ "url": "https://sinclair.edu/accessibility-services",
+ "hours": "Monday to Friday, 8 a.m. to 5 p.m.",
+ "cost": "free",
+ "eligibility": "Students with a health condition or disability that makes daily life or school harder. You need a note from a doctor or other expert.",
+ "how_to_use": {
+  "steps": [
+   "Start the online Accessibility Application.",
+   "Send a note from your doctor that says what your needs are.",
+   "A staff member will call you to set up the help you need."
+  ],
+  "documents": [
+   "Documentation of the disability"
+  ]
+ },
+ "availability": [],
+ "source": {
+  "url": "https://sinclair.edu/accessibility-services",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 180,
+  "current": true
+ }
+}

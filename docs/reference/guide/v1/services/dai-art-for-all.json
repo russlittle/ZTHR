@@ -1,0 +1,54 @@
+{
+ "id": "dai-art-for-all",
+ "name": "Art for All free weekends",
+ "description": "Three weekends a year, the whole museum is free to visit.",
+ "organization": {
+  "name": "Dayton Art Institute",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "opportunity",
+   "label": "Opportunity",
+   "domain": "thriving",
+   "domain_label": "Feeling well and finding opportunity"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery",
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "url": "https://www.daytonartinstitute.org",
+ "cost": "free",
+ "eligibility": "Everyone.",
+ "how_to_use": {
+  "steps": [
+   "Just go on an Art for All weekend."
+  ],
+  "documents": []
+ },
+ "availability": [
+  {
+   "fact": "season",
+   "value": "2026: March 7 and 8, August 29 and 30, November 14 and 15",
+   "source": "https://www.daytonartinstitute.org/news/2026/03/02/everyones-invited-dayton-art-institute-announces-free-admission-weekends-to-make-art-accessible-for-all",
+   "checked_on": "2026-11-13"
+  }
+ ],
+ "source": {
+  "url": "https://www.daytonartinstitute.org/news/2026/03/02/everyones-invited-dayton-art-institute-announces-free-admission-weekends-to-make-art-accessible-for-all",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 90,
+  "current": true
+ }
+}
