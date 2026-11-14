@@ -13,6 +13,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { unzipSync, strFromU8 } from 'fflate';
 import { join } from 'node:path';
 import { HAND_CATALOG as DAYTON_CATALOG } from '../apps/advocate/src/catalog/dayton.js';
+import { FOUND_DAYTON_RUN } from '../apps/advocate/src/catalog/found/dayton.js';
 import type { Resource } from '../apps/advocate/src/catalog/types.js';
 import { admit } from '../apps/advocate/src/guide/admission.js';
 import * as F from '../apps/advocate/src/finder/finder.js';
@@ -146,6 +147,15 @@ async function find(): Promise<void> {
   console.log(`${admitted.length} admitted, ${held.length} held, ${skipped.length} skipped, ${leads.length} leads`);
   for (const s of sources) console.log(`  ${s.name}: ${s.status} ${s.records} records, ${s.kept} kept${s.note ? ` (${s.note})` : ''}`);
   for (const h of held.slice(0, 20)) console.log(`  held ${h.id}: ${h.failed.join('; ')}`);
+  // Against the last run for the same area: a system of record that changed shape fails the run by name.
+  const sameArea = FOUND_DAYTON_RUN.area.state === state && FOUND_DAYTON_RUN.area.counties.join() === counties.map((c) => c.name).join();
+  const last = sameArea ? (FOUND_DAYTON_RUN.sources as F.SourceRead[]) : [];
+  const moved = F.drift(last, sources);
+  if (moved.length) {
+    console.log(`DRIFT against the run of ${FOUND_DAYTON_RUN.generatedOn}:`);
+    for (const m of moved) console.log(`  ${m}`);
+    process.exitCode = 1;
+  }
 }
 
 /** From a run's found.json to the generated catalog module and its scout. */

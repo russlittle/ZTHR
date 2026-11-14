@@ -501,3 +501,25 @@ export function parseCsv(text: string): Record<string, string>[] {
   const [head, ...body] = rows;
   return body.filter((r) => r.length > 1).map((r) => Object.fromEntries(head!.map((h, i) => [h, r[i] ?? ''])));
 }
+
+/** One source as a run read it: enough to tell, on the next run, whether the system of record changed under us. */
+export interface SourceRead { name: string; status: number; records: number; kept: number }
+
+/**
+ * A system of record that changes shape usually does not fail; it answers 200 with nothing in it, or with a field
+ * renamed so every record is left out. The finder compares each source with its last run and names what moved, so a
+ * quiet loss is a failed run, not a smaller guide.
+ */
+export function drift(before: SourceRead[], now: SourceRead[]): string[] {
+  const out: string[] = [];
+  for (const b of before) {
+    const n = now.find((s) => s.name === b.name);
+    if (!n) { out.push(`${b.name}: not read this run`); continue; }
+    if (n.status < 200 || n.status >= 300) out.push(`${b.name}: answered ${n.status || 'nothing'}`);
+    else if (b.records > 0 && n.records === 0) out.push(`${b.name}: answered with no records (last run ${b.records})`);
+    else if (n.records < b.records / 2) out.push(`${b.name}: ${n.records} records, under half of last run's ${b.records}`);
+    else if (b.kept > 0 && n.kept === 0 && n.records > 0) out.push(`${b.name}: ${n.records} records read and none kept; a field may have been renamed`);
+    else if (b.kept >= 10 && n.kept < b.kept / 2) out.push(`${b.name}: ${n.kept} kept, under half of last run's ${b.kept}`);
+  }
+  return out;
+}

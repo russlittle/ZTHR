@@ -201,3 +201,27 @@ describe('a student\'s name inside a place name is not a leak, and a real leak i
     expect(check(w, step('Alex said you should call them first.')).filter((p: string) => /another student/.test(p))).toEqual(["another student's name appeared: Alex"]);
   });
 });
+
+describe('drift: a system of record that changes shape fails the run by name', () => {
+  const hrsa: F.SourceRead = { name: 'HRSA health center sites', status: 200, records: 692, kept: 19 };
+  const imls: F.SourceRead = { name: 'IMLS public libraries', status: 200, records: 784, kept: 33 };
+  const last = [hrsa, imls];
+  it('the same shape is no drift', () => {
+    expect(F.drift(last, [{ ...hrsa, records: 700, kept: 20 }, imls])).toEqual([]);
+  });
+  it('names each way a source can go quiet', () => {
+    const at = (h: Partial<F.SourceRead>, l: Partial<F.SourceRead> = {}) => F.drift(last, [{ ...hrsa, ...h }, { ...imls, ...l }]);
+    expect(at({ status: 403 })).toEqual(['HRSA health center sites: answered 403']);
+    expect(at({ records: 0, kept: 0 })).toEqual(['HRSA health center sites: answered with no records (last run 692)']);
+    expect(at({ records: 300 })).toEqual(["HRSA health center sites: 300 records, under half of last run's 692"]);
+    expect(at({ kept: 0 })[0]).toMatch(/none kept; a field may have been renamed/);
+    expect(at({}, { kept: 10 })).toEqual(["IMLS public libraries: 10 kept, under half of last run's 33"]);
+    expect(F.drift(last, [hrsa])).toEqual(['IMLS public libraries: not read this run']);
+  });
+  it('the stored run is a baseline the check can read', async () => {
+    const { FOUND_DAYTON_RUN } = await import('../src/catalog/found/dayton.js');
+    const sources = FOUND_DAYTON_RUN.sources as F.SourceRead[];
+    expect(sources.length).toBeGreaterThanOrEqual(7);
+    expect(F.drift(sources, sources)).toEqual([]);
+  });
+});

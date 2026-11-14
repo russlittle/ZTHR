@@ -99,6 +99,17 @@ From there the entries reach students, the public feed and the page "Where help 
 
 Of what was read, 137 records were outside the area, 54 were school-based clinic sites, 5 had no phone number and 3 were bookmobiles. No entry was held by the gates.
 
+## When a system of record changes
+
+A government system that changes shape rarely fails outright. It answers with nothing in it, or renames a field so every record is left out, and the guide quietly shrinks. Each run is compared with the last run for the same area. The run fails, naming the source, when a source:
+
+- answers with an error, or is not read at all;
+- answers with no records, or under half of last run's records;
+- has records read and none kept, which usually means a renamed field;
+- keeps under half of what it kept last run.
+
+A person then reads the source and fixes its adapter, or confirms that the change is real.
+
 ## Where its limits are
 
 - **Systems of record lag.** A clinic can close before its record changes. Each entry's freshness is 30 days (90 for libraries), and the guide's weekly verifier re-reads every entry's source.
@@ -113,4 +124,5 @@ Of what was read, 137 records were outside the area, 54 were school-based clinic
 | Admission (tests and gate) | Every entry an adapter writes passes the guide's gates. All 270 entries in the guide are admitted | `finder.test.ts`, `guide-admission` |
 | One place, or two (tests) | The same phone and street is one place; a shared main number at two addresses is two; same-name sites are named by town and street | `finder.test.ts` |
 | Names inside place names (tests) | A first name inside a guide place name (a clinic on Alex Road) is not reported as another student's name, and any other appearance still is | `finder.test.ts` |
+| Drift (tests) | Each way a source can go quiet fails the run by name; the stored run is a baseline the check reads | `finder.test.ts` |
 | The feed | Every found entry is in the public feed with its system of record as its source | `guide-feed` |
