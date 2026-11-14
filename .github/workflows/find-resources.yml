@@ -1,0 +1,40 @@
+name: Find resources
+
+# The resource finder, run for an area: reads the public systems of record that list help there, keeps what serves
+# the area, checks each entry against the guide's admission gates, and keeps what it found as an artifact.
+# Anyone can run it for their own area: fork, then run this workflow with your state, counties and center point.
+on:
+  workflow_dispatch:
+    inputs:
+      state:
+        description: Two-letter state
+        default: OH
+      counties:
+        description: Counties as Name:FIPS, comma separated
+        default: Montgomery:39113,Greene:39057
+      center:
+        description: A point near the middle, lat,lng
+        default: 39.7589,-84.1916
+      ref:
+        description: Branch or commit of the reference app
+        default: reference-implementation
+
+permissions:
+  contents: read
+
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container: node:22-bookworm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - run: npm ci
+      - name: Find
+        run: npx tsx tools/find-resources.ts find --state "${{ inputs.state }}" --counties "${{ inputs.counties }}" --center "${{ inputs.center }}" --out found
+      - uses: actions/upload-artifact@v4
+        with:
+          name: found
+          path: found/found.json
