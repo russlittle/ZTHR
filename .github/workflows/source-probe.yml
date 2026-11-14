@@ -13,48 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Probe each source for Montgomery (39113) and Greene (39057) counties, Ohio
+      - name: Probe
         shell: bash
         run: |
           set +e +o pipefail
           UA='zthr-resource-finder (+https://zthr.ai)'
-          get() { curl -sS -L -A "$UA" -m 120 -o "$2" -w '%{http_code} %{size_download}\n' "$1" || true; }
-          echo "== Census ZCTA to county"; get 'https://www2.census.gov/geo/docs/maps-data/data/rel2020/zcta520/tab20_zcta520_county20_natl.txt' zc.txt
-          python3 - <<'P'
-          import csv
-          z={}
-          for r in csv.DictReader(open('zc.txt',encoding='utf-8-sig'),delimiter='|'):
-              if r['GEOID_COUNTY_20'] in ('39113','39057') and r['GEOID_ZCTA5_20']: z.setdefault(r['GEOID_COUNTY_20'],set()).add(r['GEOID_ZCTA5_20'])
-          print({k:len(v) for k,v in z.items()})
-          open('zips.txt','w').write('\n'.join(sorted(set().union(*z.values()))))
-          P
-          echo "== HRSA health center sites"; get 'https://data.hrsa.gov/DataDownload/DD_Files/Health_Center_Service_Delivery_and_LookAlike_Sites.csv' hrsa.csv
-          python3 - <<'P'
-          import csv
-          zips=set(open('zips.txt').read().split())
-          rows=[r for r in csv.DictReader(open('hrsa.csv',encoding='utf-8-sig',errors='replace')) if r.get('Site State Abbreviation')=='OH' and r.get('Site Postal Code','')[:5] in zips]
-          print(len(rows),'sites'); print(list(rows[0].keys())[:40] if rows else '')
-          for r in rows[:4]: print({k:r[k] for k in ['Site Name','Site Address','Site City','Site Telephone Number','Site Web Address','Health Center Service Delivery Site Location Setting Description','Site Status Description'] if k in r})
-          P
-          echo "== FindTreatment, both coordinate orders, 25 miles"
-          for s in '-84.1916,39.7589' '39.7589,-84.1916'; do get "https://findtreatment.gov/locator/exportsAsJson/v2?sAddr=$s&limitType=2&limitValue=40234&pageSize=2000&page=1&sort=0" ft.json; python3 -c "import json;d=json.load(open('ft.json'));print('$s',d.get('recordCount'))"; done
-          echo "== HUD public housing authorities (OH)"; get 'https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Public_Housing_Authorities/FeatureServer/0/query?where=STD_ST%3D%27OH%27&outFields=*&f=json&resultRecordCount=2000' pha.json
+          get() { curl -sS -L -A "$UA" -m 120 -o "$2" -w '%{http_code} %{size_download}\n' "$1"; }
+          echo "== HUD multifamily assisted, Montgomery and Greene"
+          get 'https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MULTIFAMILY_PROPERTIES_ASSISTED/FeatureServer/0/query?where=STD_ST%3D%27OH%27+AND+(CNTY_NM2+LIKE+%27Montgomery%25%27+OR+CNTY_NM2+LIKE+%27Greene%25%27)&outFields=*&f=json&resultRecordCount=2000' mf.json
           python3 -c "
-          import json;d=json.load(open('pha.json'));zips=set(open('zips.txt').read().split())
-          f=[x['attributes'] for x in d.get('features',[])];print(len(f),'OH');print(list(f[0].keys())[:30] if f else d)
-          h=[a for a in f if str(a.get('STD_ZIP5',''))[:5] in zips];print(len(h),'in area',[ (a.get('FORMAL_PARTICIPANT_NAME'),a.get('HA_PHN_NUM')) for a in h][:5])"
-          echo "== HUD counseling, OH cities"; for c in Dayton Kettering Fairborn Beavercreek Xenia Miamisburg Huber%20Heights Centerville Trotwood; do get "https://data.hud.gov/Housing_Counselor/search?AgencyName=&City=$c&State=OH" h.json; python3 -c "import json;print('$c',len(json.load(open('h.json'))))"; done
-          echo "== IRS exempt organizations, Ohio"; get 'https://www.irs.gov/pub/irs-soi/eo_oh.csv' eo.csv
-          python3 - <<'P'
-          import csv,collections
-          zips=set(open('zips.txt').read().split())
-          rows=[r for r in csv.DictReader(open('eo.csv',encoding='latin-1')) if r['ZIP'][:5] in zips]
-          print(len(rows),'exempt orgs in area')
-          c=collections.Counter((r['NTEE_CD'] or '?')[:1] for r in rows); print(sorted(c.items()))
-          print(rows[0].keys())
-          P
-          echo "== IMLS public libraries"; get 'https://www.imls.gov/sites/default/files/2025-06/pls_fy2023_csv.zip' pls.zip; ls -la pls.zip
-          echo "== Dayton Foodbank partner agencies"; get 'https://thefoodbankdayton.org/get-help/' fb.html; grep -o '<title>[^<]*' fb.html | head -2
-          echo "== Greene County public health"; get 'https://www.greenecountyohio.gov/' g.html; grep -o '<title>[^<]*' g.html | head -2
-          echo "== Ohio OhioMeansJobs centers"; get 'https://jfs.ohio.gov/job-services-and-unemployment/job-services/job-programs-and-services/ohiomeansjobs-centers' o.html; grep -o '<title>[^<]*' o.html | head -2
-          echo "== USDA SNAP retailers ArcGIS"; get 'https://services1.arcgis.com/RLQu0rK7h4kbsBq5/arcgis/rest/services/snap_retailer_location_data/FeatureServer/0/query?where=State%3D%27OH%27&returnCountOnly=true&f=json' s.json; cat s.json; echo
+          import json;d=json.load(open('mf.json'));f=[x['attributes'] for x in d.get('features',[])];print(len(f), d.get('error'))
+          print(sorted(f[0].keys()) if f else '')
+          for a in f[:3]: print({k:a[k] for k in a if any(t in k for t in ['NAME','PHONE','ADDR','CITY','ZIP','UNITS','ELDER','DISABL','PROGRAM','CNTY'])})"
+          echo "== HUD multifamily fields"; get 'https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MULTIFAMILY_PROPERTIES_ASSISTED/FeatureServer/0?f=json' mff.json; python3 -c "import json;print([x['name'] for x in json.load(open('mff.json')).get('fields',[])][:120])"
+          echo "== IMLS PLS page links"; get 'https://www.imls.gov/research-evaluation/data-collection/public-libraries-survey-pls' pls.html; grep -oE 'href="[^"]*(pls|PLS)[^"]*\.(zip|csv)"' pls.html | head; get 'https://imls.gov/research-evaluation/surveys/public-libraries-survey-pls' pls2.html; grep -oE 'href="[^"]*\.(zip|csv)"' pls2.html | head
+          echo "== Plentiful (pantry platform) Dayton"; get 'https://directory.plentiful.org/ohio/dayton' pl.html; grep -o '<title>[^<]*' pl.html; grep -oE '"(name|address|phone)":"[^"]{2,80}"' pl.html | head -12
