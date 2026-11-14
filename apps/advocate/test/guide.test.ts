@@ -1,6 +1,6 @@
 // Verifies docs/flows/resource-guide.md
 // Verifies docs/api/guide.md
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -323,12 +323,19 @@ describe('feedback: one question, shown only in numbers no one can be picked out
 });
 
 describe('the public feed', () => {
-  const a = makeAdvocate();
-  const s = maria(a);
-  a.openBarrier(s.id, 'housing', 'check-in', 'tonight');
-  a.resourceFeedback(s.id, 'daybreak', 'helped');
-  const f = a.guideFeed();
-  const text = JSON.stringify(f);
+  // Built in each test, where a mutant is switched on, never while tests are being collected.
+  let a: ReturnType<typeof makeAdvocate>;
+  let s: ReturnType<typeof maria>;
+  let f: ReturnType<ReturnType<typeof makeAdvocate>['guideFeed']>;
+  let text: string;
+  beforeEach(() => {
+    a = makeAdvocate();
+    s = maria(a);
+    a.openBarrier(s.id, 'housing', 'check-in', 'tonight');
+    a.resourceFeedback(s.id, 'daybreak', 'helped');
+    f = a.guideFeed();
+    text = JSON.stringify(f);
+  });
 
   it('validates against its published schema', () => {
     expect(Feed.safeParse(f).success).toBe(true);

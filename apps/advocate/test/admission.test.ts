@@ -156,6 +156,9 @@ describe('admission: each gate at its edge', () => {
     const noPhone = { ...good, id: 'no-phone', phone: undefined };
     expect(admit(noPhone, [...others, { ...good, phone: undefined }, noPhone], new Set([...OWNERS, 'no-phone'])).filter((c) => !c.ok)).toEqual([]);
     expect(failed({}, [...DAYTON_CATALOG, good])).toEqual(['unique id']);
+    // Every duplicate is named, in catalog order.
+    const twin = (id: string) => ({ ...good, id });
+    expect(admit(good, [...others, good, twin('daybreak-a'), twin('daybreak-b')], OWNERS).find((c) => c.name === 'not a duplicate')!.detail).toBe('daybreak-a, daybreak-b');
   });
 
   it('admitAll holds exactly the entries that fail, with only their failing checks', () => {

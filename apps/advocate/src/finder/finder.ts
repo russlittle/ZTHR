@@ -389,7 +389,7 @@ export function fromHudMultifamily(features: { attributes: Record<string, unknow
   for (const { attributes: a } of features) {
     const county = countyOf(area, a.STD_ZIP5);
     if (!county) continue;
-    const name = title(String(a.PROPERTY_NAME_TEXT ?? '').replace(/,\s*(II|III|IV)$/i, ' $1').trim());
+    const name = title(String(a.PROPERTY_NAME_TEXT ?? '').trim().replace(/\s*,\s*(II|III|IV)$/i, ' $1'));
     const phone = phoneOf(a.PROPERTY_ON_SITE_PHONE_NUMBER);
     if (!phone) {
       skipped.push({ source: HUD_MF_PAGE, name, why: 'no phone number in the record' });

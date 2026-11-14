@@ -2,7 +2,7 @@
 // Each system's record, shaped as that system returns it, against the whole entry a student would see, worked by hand
 // from the record and the rules in the doc: what each field says, and that nothing else is said. Then each helper
 // at its edges.
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import * as F from '../src/finder/finder.js';
 
 const REL = [
@@ -13,7 +13,11 @@ const REL = [
   '1|45385|ZCTA5 45385|1|0|G6350|B5|S|1|39057|Greene County|1|0|G4020|H1|A|90000000|0',
   '1|45005|ZCTA5 45005|1|0|G6350|B5|S|1|39165|Warren County|1|0|G4020|H1|A|90000000|0',
 ].join('\n');
-const area: F.Area = { state: 'OH', counties: [{ name: 'Montgomery', fips: '39113' }, { name: 'Greene', fips: '39057' }], zipCounty: F.zipCountyFrom(REL, ['39113', '39057']), center: { lat: 39.7589, lng: -84.1916 }, today: '2026-11-14' };
+// Built before each test, where a mutant is switched on, never while tests are being collected.
+let area: F.Area;
+beforeEach(() => {
+  area = { state: 'OH', counties: [{ name: 'Montgomery', fips: '39113' }, { name: 'Greene', fips: '39057' }], zipCounty: F.zipCountyFrom(REL, ['39113', '39057']), center: { lat: 39.7589, lng: -84.1916 }, today: '2026-11-14' };
+});
 const common = { documents: [], prefill: [], verifiedOn: '2026-11-14', freshnessDays: 30 };
 
 describe('each system of record, as the whole entry a student sees', () => {
@@ -203,5 +207,85 @@ describe('the helpers at their edges', () => {
     const head = 'OID_ZCTA5_20|GEOID_ZCTA5_20|NAMELSAD_ZCTA5_20|AREALAND_ZCTA5_20|AREAWATER_ZCTA5_20|MTFCC_ZCTA5_20|CLASSFP_ZCTA5_20|FUNCSTAT_ZCTA5_20|OID_COUNTY_20|GEOID_COUNTY_20|NAMELSAD_COUNTY_20|AREALAND_COUNTY_20|AREAWATER_COUNTY_20|MTFCC_COUNTY_20|CLASSFP_COUNTY_20|FUNCSTAT_COUNTY_20|AREALAND_PART|AREAWATER_PART';
     const rel = [head, '1|45999|Z|1|0|G|B|S|1|39113|Montgomery County|1|0|G|H|A|500|0', '1|45999|Z|1|0|G|B|S|1|39057|Greene County|1|0|G|H|A|500|0'].join('\n');
     expect([...F.zipCountyFrom(rel, ['39113', '39057'])]).toEqual([['45999', 'Montgomery']]);
+  });
+});
+
+describe('what the finder asks each system, exactly', () => {
+  it('the requests a live run read: 40 miles around the center, a whole state, a city, the IRS state file', () => {
+    expect(F.FINDTREATMENT(area)).toBe('https://findtreatment.gov/locator/exportsAsJson/v2?sAddr=39.7589,-84.1916&limitType=2&limitValue=64374&pageSize=2000&page=1&sort=0');
+    expect(F.FINDTREATMENT(area, 3)).toContain('&page=3&');
+    expect(64374 / 1609.344).toBeCloseTo(40, 2);
+    expect(F.HUD_COUNSELING_CITY('OH', 'Yellow Springs')).toBe('https://data.hud.gov/Housing_Counselor/search?AgencyName=&City=Yellow%20Springs&State=OH');
+    expect(F.HUD_PHA('OH')).toBe('https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Public_Housing_Authorities/FeatureServer/0/query?where=STD_ST%3D%27OH%27&outFields=*&f=json&resultRecordCount=2000');
+    expect(F.HUD_MF('OH')).toBe('https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MULTIFAMILY_PROPERTIES_ASSISTED/FeatureServer/0/query?where=STD_ST%3D%27OH%27&outFields=PROPERTY_ID,PROPERTY_NAME_TEXT,STD_ADDR,STD_CITY,STD_ZIP5,PROPERTY_ON_SITE_PHONE_NUMBER,CLIENT_GROUP_NAME,TOTAL_ASSISTED_UNIT_COUNT&f=json&resultOffset=0&resultRecordCount=2000');
+    expect(F.HUD_MF('OH', 2000)).toContain('&resultOffset=2000&');
+    expect(F.IRS_EO('OH')).toBe('https://www.irs.gov/pub/irs-soi/eo_oh.csv');
+  });
+});
+
+describe('a record missing a field: the entry says nothing in its place', () => {
+  it('names, addresses and towns read as empty, never as something made up, and spaces around them are dropped', () => {
+    const ft = F.fromFindTreatment([{ state: 'OH', zip: '45402', phone: '937-555-0100', services: [] } as never], area).entries[0]!;
+    expect([ft.name, ft.organization, ft.location]).toEqual(['', '', { address: '', city: '', zip: '45402' }]);
+    expect(F.fromFindTreatment([{ name2: '  Hope  ', state: 'OH', zip: '45402', services: [] } as never], area).entries[0]!.name).toBe('Hope');
+    const hrsa = F.fromHrsa([{ 'Site State Abbreviation': 'OH', 'Site Postal Code': '45402', 'Site Status Description': 'Active' }], area).entries[0]!;
+    expect([hrsa.name, hrsa.organization, hrsa.location, 'url' in hrsa]).toEqual(['', '', { address: '', city: '', zip: '45402' }, false]);
+    expect(F.fromHrsa([{ 'Site Name': '  Clinic  ', 'Site City': ' XENIA ', 'Site State Abbreviation': 'OH', 'Site Postal Code': '45385', 'Site Status Description': 'Active' }], area).entries[0]!.location!.city).toBe('Xenia');
+    expect(F.fromHrsa([{ 'Site Name': '  Clinic  ', 'Site State Abbreviation': 'OH', 'Site Postal Code': '45385', 'Site Status Description': 'Active' }], area).entries[0]!.name).toBe('Clinic');
+    expect(F.fromHrsa([{ 'Site Name': 'Clinic', 'Site State Abbreviation': 'OH', 'Site Postal Code': '45385', 'Site Status Description': 'Active', 'Health Center Organization Name': ' CITY HEALTH ' }], area).entries[0]!.organization).toBe('City Health');
+    expect(F.fromHrsa([{ 'Site State Abbreviation': 'OH', 'Site Postal Code': '45385' }], area).skipped).toEqual([{ source: F.HRSA_PAGE, name: '', why: 'status unknown' }]);
+    const hud = F.fromHudCounseling([{ statecd: 'OH', zipcd: '45402' } as never], area).entries[0]!;
+    expect([hud.name, hud.location]).toEqual(['', { address: '', city: '', zip: '45402' }]);
+    expect(F.fromHudCounseling([{ nme: '  HOPE  ', city: ' DAYTON ', statecd: 'OH', zipcd: '45402' } as never], area).entries[0]!.name).toBe('Hope');
+    const pha = F.fromHudPha([{ attributes: { STD_ZIP5: '45385' } }], area).entries[0]!;
+    expect([pha.name, pha.location, pha.howToApply[0]]).toEqual(['', { address: '', city: '', zip: '45385' }, 'Call to ask if the waiting list is open.']);
+    expect(F.fromHudPha([{ attributes: { FORMAL_PARTICIPANT_NAME: '  XENIA HA ', STD_ADDR: ' 1 Main St ', STD_ZIP5: '45385' } }], area).entries[0]!).toMatchObject({ name: 'Xenia Ha', location: { address: '1 Main St' } });
+    const mf = F.fromHudMultifamily([{ attributes: { STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: '9375550123' } }], area).entries[0]!;
+    expect([mf.name, mf.location, mf.eligibility.text]).toEqual(['', { address: '', city: '', zip: '45402' }, 'Based on income and household size.']);
+    expect(F.fromHudMultifamily([{ attributes: { PROPERTY_NAME_TEXT: '  OAK , II ', STD_ADDR: ' 1 MAIN ', STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: '9375550123' } }], area).entries[0]!).toMatchObject({ name: 'Oak II', location: { address: '1 Main' } });
+    const lib = F.fromLibraries([{ STABR: 'OH', ZIP: '45385' }], area).entries[0]!;
+    expect([lib.name, lib.organization, lib.location]).toEqual(['', '', { address: '', city: '', zip: '45385' }]);
+    expect(F.fromLibraries([{ STABR: 'OH', ZIP: '45385', LIBNAME: ' XENIA ', STATNAME: ' GREENE  LIBRARY ', ADDRESS: ' 1 MAIN ', CITY: ' XENIA ' }], area).entries[0]!).toMatchObject({ name: 'Xenia', organization: 'Greene Library', location: { address: '1 Main', city: 'Xenia' } });
+  });
+
+  it('a library or a lead outside the area is left out; a lead with no NTEE code is not a lead', () => {
+    expect(F.fromLibraries([{ STABR: 'OH', ZIP: '45005', LIBNAME: 'LEBANON' }], area)).toEqual({ entries: [], skipped: [] });
+    expect(F.fromLibraries([{ STABR: 'OH', ZIP: '45385', LIBNAME: 'X', C_OUT_TY: 'BM' }], area).skipped).toHaveLength(1);
+    const lead = { EIN: '1', NAME: ' HOPE PANTRY ', STREET: ' 1 MAIN ', CITY: ' DAYTON ', STATE: 'OH', ZIP: '45402', NTEE_CD: ' k31 ' };
+    expect(F.leadsFromIrs([lead], area)).toEqual([{ ein: '1', name: 'Hope Pantry', address: '1 Main', city: 'Dayton', zip: '45402', county: 'Montgomery', ntee: 'K31', barrier: 'food', source: 'https://www.irs.gov/pub/irs-soi/eo_oh.csv' }]);
+    expect(F.leadsFromIrs([{ ...lead, NTEE_CD: '' }, { ...lead, NAME: undefined as never, STREET: undefined as never, CITY: undefined as never, NTEE_CD: 'K31' }], area).map((l) => [l.name, l.address, l.city])).toEqual([['', '', '']]);
+  });
+});
+
+describe('one place or two, at the edges', () => {
+  it('a street number is the leading digits only, and an entry with no place is named and kept as it is', () => {
+    const e = (id: string, phone: string, address?: string) => ({ id, name: 'Same', phone, ...(address !== undefined ? { location: { address, city: 'Dayton', zip: '45402' } } : {}), source: { url: 'https://s.gov' } }) as never;
+    const skipped: F.Found['skipped'] = [];
+    expect(F.dedupe([e('a', '937-555-0100', '1200 Main St'), e('b', '937-555-0100', '12 Main St'), e('c', '937-555-0100', 'Main St 12')], skipped).map((x: { id: string }) => x.id)).toEqual(['a', 'b', 'c']);
+    expect(F.dedupe([e('a', '937-555-0100'), e('b', '937-555-0100')], []).map((x: { id: string }) => x.id)).toEqual(['a']);
+    expect(F.samePlace({ name: 'X', phone: '937-555-0100', location: { address: '1200 Main', city: 'D', zip: '1' } }, { name: 'X', phone: '937-555-0100', location: { address: '12 Main', city: 'D', zip: '1' } })).toBe(false);
+    expect(F.nameSites([{ name: 'Same' } as never, { name: 'Same' } as never]).map((x: { name: string }) => x.name)).toEqual(['Same', 'Same']);
+    expect(F.nameSites([{ name: 'Same', location: { address: '', city: 'Dayton', zip: '1' } } as never, { name: 'Same', location: { address: '', city: 'Dayton', zip: '1' } } as never]).map((x: { name: string }) => x.name)).toEqual(['Same (Dayton)', 'Same (Dayton)']);
+  });
+
+  it('kinds of treatment: each word a record uses for substance use', () => {
+    const care = (type_facility: string, f3 = '') => F.fromFindTreatment([{ name2: 'C', state: 'OH', zip: '45402', type_facility, services: [{ f1: 'Type of Care', f3 }] } as never], area).entries[0]!.description;
+    for (const [t, f3] of [['OTP', ''], ['', 'Detoxification'], ['', 'Methadone maintenance'], ['', 'Buprenorphine'], ['', 'Opioid treatment']]) expect(care(t!, f3), `${t}${f3}`).toBe('Treatment for substance use.');
+    expect(care('MH', 'Outpatient')).toBe('Treatment for mental health.');
+    expect(care('MH', 'Outpatient; Detoxification')).toBe('Treatment for mental health and substance use.');
+  });
+});
+
+describe('CSV and the census file, at their edges', () => {
+  it('a bare carriage return ends a line; one inside quotes does not', () => {
+    expect(F.parseCsv('a,b\r1,2\r3,4')).toEqual([{ a: '1', b: '2' }, { a: '3', b: '4' }]);
+    expect(F.parseCsv('a,b\n1,\n')).toEqual([{ a: '1', b: '' }]);
+    expect(F.parseCsv('a,b\n"1\r",2\n')).toEqual([{ a: '1\r', b: '2' }]);
+    expect(F.parseCsv('﻿"a",b\n1,2')).toEqual([{ a: '1', b: '2' }]);
+  });
+  it('the census file read with a BOM and Windows line endings, skipping lines with no ZIP and counties not asked for', () => {
+    const head = '﻿OID_ZCTA5_20|GEOID_ZCTA5_20|NAMELSAD_ZCTA5_20|AREALAND_ZCTA5_20|AREAWATER_ZCTA5_20|MTFCC_ZCTA5_20|CLASSFP_ZCTA5_20|FUNCSTAT_ZCTA5_20|OID_COUNTY_20|GEOID_COUNTY_20|NAMELSAD_COUNTY_20|AREALAND_COUNTY_20|AREAWATER_COUNTY_20|MTFCC_COUNTY_20|CLASSFP_COUNTY_20|FUNCSTAT_COUNTY_20|AREALAND_PART|AREAWATER_PART';
+    const rel = [head, '1|45402|Z|1|0|G|B|S|1|39113|Montgomery County|1|0|G|H|A|100|0', '1||Z|1|0|G|B|S|1|39113|Montgomery County|1|0|G|H|A|100|0', '1|45005|Z|1|0|G|B|S|1|39165|Warren County|1|0|G|H|A|100|0', '1|45999|Z|1|0|G|B|S|1|39113|Montgomery County|1|0|G|H|A||0', ''].join('\r\n');
+    expect([...F.zipCountyFrom(rel, ['39113'])]).toEqual([['45402', 'Montgomery'], ['45999', 'Montgomery']]);
   });
 });

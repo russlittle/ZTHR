@@ -23,6 +23,7 @@ describe('barriers: each event by name, and a resolved barrier left alone', () =
     b = B.open(b, 'food', 'check-in', 'tonight', '2026-11-04');
     expect(B.find(b, 'food')!.urgency).toBe('tonight');
     b = B.start(b, 'food', '2026-11-05');
+    expect(B.find(b, 'food')!.status).toBe('in-progress');
     expect(B.start(b, 'food', '2026-11-06')).toBe(b);
     b = B.resolve(b, 'food', '2026-11-07');
     expect(B.find(b, 'food')).toMatchObject({ status: 'resolved', resolvedOn: '2026-11-07' });
@@ -124,6 +125,14 @@ describe('signals at their edges', () => {
     const book = B.open(B.empty(), 'food', 'student', 'soon', D);
     const [g] = signals({ book, today: D, optionsFor: () => [], record: none });
     expect(g).toEqual({ need: 'food', urgency: 'soon', title: 'Food: call 2-1-1', why: 'I have no checked resource near you for this yet. 2-1-1 can help any time, and I have counted the gap.', gap: true });
+  });
+
+  it('a barrier with no package keeps the order it was given, and an unknown need is named as itself', () => {
+    const book = B.open(B.empty(), 'money', 'student', 'soon', D);
+    expect(packageFor('money')).toBeUndefined();
+    expect(signals({ book, today: D, optionsFor: () => [make('first'), make('second')], record: none })[0]!.resource!.id).toBe('first');
+    const odd = B.open(B.empty(), 'not-a-need' as never, 'student', 'soon', D);
+    expect(signals({ book: odd, today: D, optionsFor: () => [], record: none })[0]!.title).toBe('not-a-need: call 2-1-1');
   });
 
   it('picks by deadline, then the package order, then the record', () => {

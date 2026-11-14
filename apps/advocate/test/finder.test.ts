@@ -1,5 +1,5 @@
 // Verifies docs/flows/resource-finder.md
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { HAND_CATALOG as DAYTON_CATALOG } from '../src/catalog/dayton.js';
 import { admit } from '../src/guide/admission.js';
 import * as F from '../src/finder/finder.js';
@@ -17,7 +17,11 @@ const REL = [
   '1|45385|ZCTA5 45385|1|0|G6350|B5|S|1|39057|Greene County|1|0|G4020|H1|A|90000000|0',
   '1|45005|ZCTA5 45005|1|0|G6350|B5|S|1|39165|Warren County|1|0|G4020|H1|A|90000000|0',
 ].join('\n');
-const area: F.Area = { state: 'OH', counties: [{ name: 'Montgomery', fips: '39113' }, { name: 'Greene', fips: '39057' }], zipCounty: F.zipCountyFrom(REL, ['39113', '39057']), center: { lat: 39.7589, lng: -84.1916 }, today: '2026-11-14' };
+// Built before each test, where a mutant is switched on, never while tests are being collected.
+let area: F.Area;
+beforeEach(() => {
+  area = { state: 'OH', counties: [{ name: 'Montgomery', fips: '39113' }, { name: 'Greene', fips: '39057' }], zipCounty: F.zipCountyFrom(REL, ['39113', '39057']), center: { lat: 39.7589, lng: -84.1916 }, today: '2026-11-14' };
+});
 const passes = (entries: { id: string }[]) => {
   const owners = new Set(entries.map((e) => e.id));
   return entries.map((e) => ({ id: e.id, failed: admit(e as never, [...DAYTON_CATALOG, ...(entries as never[])], owners).filter((c) => !c.ok).map((c) => c.name) })).filter((x) => x.failed.length);
@@ -47,12 +51,12 @@ describe('SAMHSA FindTreatment', () => {
     services: [{ f1: 'Type of Care', f2: 'TC', f3: 'Substance use treatment; Detoxification' }, { f1: 'Payment/Insurance/Funding Accepted', f2: 'PAY', f3: 'Medicaid; Sliding fee scale' }],
   };
   const far = { ...row, name2: 'Lebanon Clinic', zip: '45005' };
-  const f = F.fromFindTreatment([row, far], area);
+  const f = () => F.fromFindTreatment([row, far], area);
   it('keeps what is in the area, with the county from its ZIP, and says why the rest was left out', () => {
-    expect(f.entries).toHaveLength(1);
-    expect(f.entries[0]).toMatchObject({ id: 'ft-new-season-dayton-treatment-center-45432', name: 'New Season Dayton Treatment Center', serves: { counties: ['Greene'] }, phone: '937-212-4950', categories: ['mental-health'], cost: 'sliding-scale', provider: { kind: 'health', level: 'local' } });
-    expect(f.entries[0]!.description).toBe('Treatment for substance use. It charges less if you earn less.');
-    expect(f.skipped).toEqual([{ source: F.FINDTREATMENT_PAGE, name: 'Lebanon Clinic', why: 'outside the area' }]);
+    expect(f().entries).toHaveLength(1);
+    expect(f().entries[0]).toMatchObject({ id: 'ft-new-season-dayton-treatment-center-45432', name: 'New Season Dayton Treatment Center', serves: { counties: ['Greene'] }, phone: '937-212-4950', categories: ['mental-health'], cost: 'sliding-scale', provider: { kind: 'health', level: 'local' } });
+    expect(f().entries[0]!.description).toBe('Treatment for substance use. It charges less if you earn less.');
+    expect(f().skipped).toEqual([{ source: F.FINDTREATMENT_PAGE, name: 'Lebanon Clinic', why: 'outside the area' }]);
   });
   it('claims no sliding fee, hours or website the record does not give', () => {
     const plain = F.fromFindTreatment([{ ...row, services: [] }], area).entries[0]!;
@@ -61,7 +65,7 @@ describe('SAMHSA FindTreatment', () => {
     expect('url' in plain).toBe(false);
     expect(plain.description).toBe('Treatment for substance use.');
   });
-  it('passes the admission gates', () => expect(passes(f.entries)).toEqual([]));
+  it('passes the admission gates', () => expect(passes(f().entries)).toEqual([]));
 });
 
 describe('HRSA health center sites', () => {
@@ -79,13 +83,13 @@ describe('HRSA health center sites', () => {
     'Health Center Name': 'FIVE RIVERS HEALTH CENTERS',
     ...over,
   });
-  const f = F.fromHrsa([site({}), site({ 'Site Name': 'Normandy Elementary', 'Health Center Service Delivery Site Location Setting Description': 'School' }), site({ 'Site Name': 'Old Site', 'Site Status Description': 'Inactive' }), site({ 'Site Name': 'Lebanon', 'Site Postal Code': '45005' }), site({ 'Site State Abbreviation': 'IN' })], area);
+  const f = () => F.fromHrsa([site({}), site({ 'Site Name': 'Normandy Elementary', 'Health Center Service Delivery Site Location Setting Description': 'School' }), site({ 'Site Name': 'Old Site', 'Site Status Description': 'Inactive' }), site({ 'Site Name': 'Lebanon', 'Site Postal Code': '45005' }), site({ 'Site State Abbreviation': 'IN' })], area);
   it('keeps active, public sites in the area, and leaves out school-only and inactive sites, saying why', () => {
-    expect(f.entries.map((e) => e.name)).toEqual(['Five Rivers Health Centers - Corwin Nixon']);
-    expect(f.entries[0]).toMatchObject({ organization: 'Five Rivers Health Centers', cost: 'sliding-scale', url: 'https://www.example-health.org', serves: { counties: ['Montgomery'] } });
-    expect(f.skipped.map((s) => s.why)).toEqual(["a school-based site, for that school's students", 'status Inactive']);
+    expect(f().entries.map((e) => e.name)).toEqual(['Five Rivers Health Centers - Corwin Nixon']);
+    expect(f().entries[0]).toMatchObject({ organization: 'Five Rivers Health Centers', cost: 'sliding-scale', url: 'https://www.example-health.org', serves: { counties: ['Montgomery'] } });
+    expect(f().skipped.map((s) => s.why)).toEqual(["a school-based site, for that school's students", 'status Inactive']);
   });
-  it('passes the admission gates', () => expect(passes(f.entries)).toEqual([]));
+  it('passes the admission gates', () => expect(passes(f().entries)).toEqual([]));
 });
 
 describe('HUD housing counseling and public housing authorities', () => {
@@ -113,9 +117,9 @@ describe('the IRS list gives leads, never entries', () => {
     { EIN: '5', NAME: 'LEGAL HELP', STREET: '5 MAIN ST', CITY: 'DAYTON', STATE: 'OH', ZIP: '45402', NTEE_CD: 'I80' },
     { EIN: '6', NAME: 'FAR PANTRY', STREET: '6 MAIN ST', CITY: 'LEBANON', STATE: 'OH', ZIP: '45005', NTEE_CD: 'K31' },
   ];
-  const leads = F.leadsFromIrs(rows, area);
+  const leads = () => F.leadsFromIrs(rows, area);
   it('maps the kind of work to a barrier, and leaves out work that is not about a barrier and places outside the area', () => {
-    expect(leads.map((l) => [l.name, l.barrier, l.county])).toEqual([
+    expect(leads().map((l) => [l.name, l.barrier, l.county])).toEqual([
       ['Greene County Food Pantry', 'food', 'Greene'],
       ['Legal Help', 'legal', 'Montgomery'],
       ['Safe Home', 'safety', 'Montgomery'],
