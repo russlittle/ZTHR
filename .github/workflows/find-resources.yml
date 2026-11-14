@@ -34,6 +34,9 @@ jobs:
       - run: npm ci
       - name: Find
         run: npx tsx tools/find-resources.ts find --state "${{ inputs.state }}" --counties "${{ inputs.counties }}" --center "${{ inputs.center }}" --out found
+      - name: Print the result, compressed, so it can be read from the log
+        run: |
+          echo "FOUND-BEGIN"; gzip -9c found/found.json | base64 -w 0; echo; echo "FOUND-END"
       - uses: actions/upload-artifact@v4
         with:
           name: found
