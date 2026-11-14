@@ -10,6 +10,7 @@ import { parse as parseYaml } from 'yaml';
 import { SERVICES, SERVICE_IDS } from '../apps/campus-services/src/index.js';
 import { links } from './doc-links.js';
 import { JOURNEY_DIR, OUT, ROOT, headCommit } from './lib.js';
+import { scores as mutationScores, survivors as mutationSurvivors, type Report as MutationReport } from './mutation-core.js';
 import { loadFeatures } from './features.js';
 import { sources } from './sources.js';
 import { erd } from '@zthr/store';
@@ -372,6 +373,8 @@ ${NAV.map((g) => ui.section(g.title, ui.rows(g.pages.filter(([p]) => p !== 'inde
   // cost
   // The records go out with every build as JSON, so a static copy of the site (zthr.ai) can show them too.
   mkdirSync(join(SITE, 'factory'), { recursive: true });
+  // The survivors of the last nightly mutation run, public, as the next work for whoever writes tests next.
+  if (!STATIC && mutation) writeFileSync(join(SITE, 'factory', 'mutation-survivors.json'), JSON.stringify({ floors: read<{ floors: Record<string, number> }>(join(ROOT, 'reports', 'mutation-floors.json'))?.floors ?? read<{ floors: Record<string, number> }>(join(ROOT, 'reports', 'last-floors.json'))?.floors ?? {}, scores: mutationScores(mutation as MutationReport), survivors: mutationSurvivors(mutation as MutationReport) }));
   if (!STATIC) writeFileSync(join(SITE, 'factory', 'ci-costs.json'), JSON.stringify(costs.map((c) => ({ finishedAt: c.finishedAt, kind: c.kind, machine: c.machine, minutes: c.minutes, costUsd: c.costUsd }))));
   const total = costs.reduce((s, c) => s + c.costUsd, 0);
   const ym = new Date().toISOString().slice(0, 7);
