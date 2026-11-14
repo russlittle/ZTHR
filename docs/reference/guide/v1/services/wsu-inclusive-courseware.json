@@ -1,0 +1,50 @@
+{
+ "id": "wsu-inclusive-courseware",
+ "name": "Wright State Inclusive Courseware",
+ "description": "In some classes, the book comes with the class at a price below what it costs in stores.",
+ "organization": {
+  "name": "Wright State University",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "books",
+   "label": "Books and course supplies",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "wright-state"
+  ],
+  "national": false
+ },
+ "phone": "937-775-5600",
+ "url": "https://www.wright.edu/enrollment-services/forms-and-resources/inclusive-courseware",
+ "cost": "low-cost",
+ "eligibility": "Students in a class that uses it.",
+ "how_to_use": {
+  "steps": [
+   "Look up your class in WINGS. It shows if the book comes with the class.",
+   "Do not buy that book somewhere else first.",
+   "Call the campus store with questions, 937-775-5600."
+  ],
+  "documents": [],
+  "what_to_expect": "If aid pays for books, it covers this only if money is left after tuition. You can opt out, but you then buy the book on your own."
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.wright.edu/enrollment-services/forms-and-resources/inclusive-courseware",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

@@ -960,6 +960,31 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
 <td><code>guide.test.ts</code></td>
 </tr>
 <tr>
+<td>Weeks of a student&#39;s life (model-based simulation)</td>
+<td>Random sequences of up to 40 steps: raise a need, answer a check-in, &quot;not yet&quot;, &quot;not today&quot;, &quot;it is sorted out&quot;, text something, say whether a resource helped, let days pass. After every step the Advocate is compared with a model of the guide&#39;s promises: the open needs, the needs paused for today, and at most three signals, none of them paused or closed. Every reply must have a next step and pass the tone rubric. fast-check shrinks any failure to its shortest sequence. A planted defect (paused needs still signaling) was caught and shrunk to two steps: open a need, then &quot;not today&quot;</td>
+<td><code>guide-simulation.test.ts</code></td>
+</tr>
+<tr>
+<td>What students type (tests)</td>
+<td>A corpus of phrasings, each routed where it must go: the tonight route, a crisis line, or help for one barrier, with the right service first (&quot;a winter coat&quot; puts a clothes closet first, &quot;a job&quot; a job center). Phrasings that must not raise the tonight route are in the corpus too. A first text about tonight gets shelter numbers before any sign-up question</td>
+<td><code>need-routing.test.ts</code></td>
+</tr>
+<tr>
+<td>The weekly follow-up (tests and journey)</td>
+<td>A need that has been quiet for a week is asked about in the check-in slot (&quot;Is it sorted out now?&quot;), once a week. &quot;Not yet&quot; keeps it open. Only &quot;yes&quot; resolves it. Turning check-ins off stops the follow-up and leaves the need open</td>
+<td><code>guide.test.ts</code>, <code>p6-check-in-until-resolved</code></td>
+</tr>
+<tr>
+<td>A consumer that knows only the OpenAPI document (tests)</td>
+<td>Every service validates against the schema the OpenAPI document publishes, using a standard validator (Ajv). The document is checked against real failures too: a service missing its source, or with a made-up provider kind, is refused</td>
+<td><code>guide.test.ts</code></td>
+</tr>
+<tr>
+<td>Mutation</td>
+<td>The guide&#39;s barrier, signal, feedback and admission modules are in the nightly mutation run, so a test that never notices a change in them shows up as a surviving mutant</td>
+<td><code>stryker.config.json</code></td>
+</tr>
+<tr>
 <td>Locked journeys</td>
 <td>No safe place tonight, by app and text, in the standard and brief modes; a check-in kept until resolved; a compound week; did it help; the public feed; a bad entry held</td>
 <td><code>control/journeys/p6-*.yaml</code></td>
@@ -981,8 +1006,8 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
 </tr>
 <tr>
 <td>Coverage</td>
-<td>For each barrier in each county: the current services and the kinds of provider behind them, with the gaps published</td>
-<td><code>/api/guide/v1/coverage</code></td>
+<td>For each barrier in each county: the current services and the kinds of provider behind them, with the gaps published. A college&#39;s own services count only in the county the college is in. The public page <a href="https://advocate-fsy7whk33q-uc.a.run.app/studentadvocate/guide/coverage">Where help is missing</a> adds how often students asked for help the guide could not give, shown only from five requests up</td>
+<td><code>/api/guide/v1/coverage</code>, <code>guide.test.ts</code></td>
 </tr>
 <tr>
 <td>Precision audit</td>

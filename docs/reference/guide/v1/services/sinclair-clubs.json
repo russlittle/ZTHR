@@ -1,0 +1,49 @@
+{
+ "id": "sinclair-clubs",
+ "name": "Sinclair clubs and student organizations",
+ "description": "Clubs and groups you can join, even if you go part-time.",
+ "organization": {
+  "name": "Sinclair Community College, Student and Community Engagement",
+  "kind": "college",
+  "kind_label": "College",
+  "level": "college"
+ },
+ "taxonomy": [
+  {
+   "barrier": "belonging",
+   "label": "Belonging",
+   "domain": "people",
+   "domain_label": "People in your corner"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [],
+  "colleges": [
+   "sinclair"
+  ],
+  "national": false
+ },
+ "phone": "800-315-3000",
+ "url": "https://www.sinclair.edu/student-life/sce/clubs-and-organizations/",
+ "cost": "free",
+ "eligibility": "Any Sinclair student.",
+ "how_to_use": {
+  "steps": [
+   "Look through the clubs on the website.",
+   "Write to the student engagement office if you want help finding one."
+  ],
+  "documents": [],
+  "what_to_expect": "You can join part-time, and you can start a new club."
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.sinclair.edu/student-life/sce/clubs-and-organizations/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 120,
+  "current": true
+ }
+}

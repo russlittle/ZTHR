@@ -2,13 +2,13 @@
  "feed": "community-resource-guide",
  "version": "1.0",
  "region": "Montgomery and Greene counties, Ohio",
- "generated_on": "2026-11-13",
+ "generated_on": "2026-11-14",
  "license": {
   "name": "Creative Commons Attribution 4.0",
   "url": "https://creativecommons.org/licenses/by/4.0/",
   "attribution": "Community resource guide, Student Advocate (zthr.ai). Facts from each entry's cited source of record."
  },
- "count": 63,
+ "count": 68,
  "services": [
   {
    "id": "eldercare-locator",
@@ -3584,6 +3584,273 @@
    "verification": {
     "verified_on": "2026-11-13",
     "freshness_days": 90,
+    "current": true
+   }
+  },
+  {
+   "id": "life-enrichment-center",
+   "name": "Life Enrichment Center",
+   "description": "A place in Dayton for a hot breakfast, food, a shower, a haircut, clothes and a place to get mail.",
+   "organization": {
+    "name": "Life Enrichment Center",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "goods",
+     "label": "Clothing and goods",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "food",
+     "label": "Food",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "425 N Findlay Street",
+    "city": "Dayton",
+    "postal_code": "45404"
+   },
+   "phone": "937-252-5700",
+   "url": "https://www.daytonlec.org/",
+   "cost": "free",
+   "eligibility": "Open to people in need. Sign up first.",
+   "how_to_use": {
+    "steps": [
+     "Check the website for the days each service runs.",
+     "Sign up as a client the first time you go."
+    ],
+    "documents": [],
+    "what_to_expect": "Services run on set days, so check before you go."
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.sinclair.edu/student-life/wellness/resources/clothing/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 60,
+    "current": true
+   }
+  },
+  {
+   "id": "clothes-that-work",
+   "name": "Clothes That Work",
+   "description": "Clothes for work, and help getting ready for a job.",
+   "organization": {
+    "name": "Clothes That Work",
+    "kind": "nonprofit",
+    "kind_label": "Nonprofit",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "goods",
+     "label": "Clothing and goods",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    },
+    {
+     "barrier": "career",
+     "label": "Work",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "1133 S Edwin C Moses Blvd, Suite 392",
+    "city": "Dayton",
+    "postal_code": "45417"
+   },
+   "phone": "937-222-3778",
+   "cost": "free",
+   "eligibility": "People getting ready for a job or an interview.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-222-3778 to ask how to get clothes for work."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.sinclair.edu/student-life/wellness/resources/clothing/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 60,
+    "current": true
+   }
+  },
+  {
+   "id": "masters-closet",
+   "name": "The Master's Closet",
+   "description": "Gently used to fairly new clothes at no cost, in Huber Heights.",
+   "organization": {
+    "name": "The Master's Closet Community Outreach Center",
+    "kind": "community",
+    "kind_label": "Community",
+    "level": "local"
+   },
+   "taxonomy": [
+    {
+     "barrier": "goods",
+     "label": "Clothing and goods",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [
+     "Montgomery"
+    ],
+    "colleges": [],
+    "national": false
+   },
+   "location": {
+    "address": "5950 Longford Rd.",
+    "city": "Huber Heights",
+    "postal_code": "45424"
+   },
+   "phone": "937-499-0352",
+   "cost": "free",
+   "eligibility": "Anyone who needs clothes.",
+   "how_to_use": {
+    "steps": [
+     "Call 937-499-0352 for hours before you go."
+    ],
+    "documents": []
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.sinclair.edu/student-life/wellness/resources/clothing/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 60,
+    "current": true
+   }
+  },
+  {
+   "id": "sinclair-clubs",
+   "name": "Sinclair clubs and student organizations",
+   "description": "Clubs and groups you can join, even if you go part-time.",
+   "organization": {
+    "name": "Sinclair Community College, Student and Community Engagement",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "belonging",
+     "label": "Belonging",
+     "domain": "people",
+     "domain_label": "People in your corner"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "sinclair"
+    ],
+    "national": false
+   },
+   "phone": "800-315-3000",
+   "url": "https://www.sinclair.edu/student-life/sce/clubs-and-organizations/",
+   "cost": "free",
+   "eligibility": "Any Sinclair student.",
+   "how_to_use": {
+    "steps": [
+     "Look through the clubs on the website.",
+     "Write to the student engagement office if you want help finding one."
+    ],
+    "documents": [],
+    "what_to_expect": "You can join part-time, and you can start a new club."
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.sinclair.edu/student-life/sce/clubs-and-organizations/",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
+    "current": true
+   }
+  },
+  {
+   "id": "wsu-inclusive-courseware",
+   "name": "Wright State Inclusive Courseware",
+   "description": "In some classes, the book comes with the class at a price below what it costs in stores.",
+   "organization": {
+    "name": "Wright State University",
+    "kind": "college",
+    "kind_label": "College",
+    "level": "college"
+   },
+   "taxonomy": [
+    {
+     "barrier": "books",
+     "label": "Books and course supplies",
+     "domain": "feasible",
+     "domain_label": "Making college life work"
+    }
+   ],
+   "situations": [],
+   "serves": {
+    "counties": [],
+    "colleges": [
+     "wright-state"
+    ],
+    "national": false
+   },
+   "phone": "937-775-5600",
+   "url": "https://www.wright.edu/enrollment-services/forms-and-resources/inclusive-courseware",
+   "cost": "low-cost",
+   "eligibility": "Students in a class that uses it.",
+   "how_to_use": {
+    "steps": [
+     "Look up your class in WINGS. It shows if the book comes with the class.",
+     "Do not buy that book somewhere else first.",
+     "Call the campus store with questions, 937-775-5600."
+    ],
+    "documents": [],
+    "what_to_expect": "If aid pays for books, it covers this only if money is left after tuition. You can opt out, but you then buy the book on your own."
+   },
+   "availability": [],
+   "source": {
+    "url": "https://www.wright.edu/enrollment-services/forms-and-resources/inclusive-courseware",
+    "license": "public-information"
+   },
+   "verification": {
+    "verified_on": "2026-11-13",
+    "freshness_days": 120,
     "current": true
    }
   }

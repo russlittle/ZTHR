@@ -403,7 +403,7 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
 <tr>
 <td><code>/api/guide/v1/coverage</code></td>
 <td><code>coverage.json</code></td>
-<td>For each barrier and county, how many current services there are and from which kinds of provider, with the gaps named</td>
+<td>For each barrier and county, how many current services there are and from which kinds of provider, with the gaps named. A college&#39;s own services count in the college&#39;s county. The same data, for people, is the page <a href="https://advocate-fsy7whk33q-uc.a.run.app/studentadvocate/guide/coverage">Where help is missing</a></td>
 </tr>
 <tr>
 <td><code>/api/guide/v1/openapi.json</code></td>
@@ -413,7 +413,7 @@ pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius
 </tbody></table>
 <p>The static files take no filters. Filter <code>services.json</code> in your app instead.</p>
 <h2>A service</h2>
-<p>The fields follow the <a href="https://docs.openreferral.org/">Open Referral Human Services Data Specification</a> (service, organization, location, phone, eligibility, taxonomy), so a tool that reads HSDS needs little mapping. The schema is enforced in code (<code>apps/advocate/src/guide/feed.ts</code>): every response is checked against it in the tests.</p>
+<p>The fields follow the <a href="https://docs.openreferral.org/">Open Referral Human Services Data Specification</a> (service, organization, location, phone, eligibility, taxonomy), so a tool that reads HSDS needs little mapping. The schema is enforced in code (<code>apps/advocate/src/guide/feed.ts</code>), and the OpenAPI document&#39;s <code>Service</code> and <code>Feed</code> schemas are generated from that same code, so the two cannot drift apart. The tests validate every response against the published document with a standard JSON Schema validator, the same way your app would.</p>
 <pre class="mermaid">erDiagram
   SERVICE ||--|| ORGANIZATION : &quot;run by&quot;
   SERVICE ||--|{ TAXONOMY : &quot;helps with&quot;

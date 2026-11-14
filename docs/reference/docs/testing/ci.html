@@ -400,6 +400,12 @@ until a person turns them on:</p>
   pass[All steps pass] --&gt; site[Build docs and console] --&gt; image[Container image] --&gt; run[Cloud Run: advocate]
   run --&gt; fb[zthr.ai/advocate, /docs, /factory through Firebase Hosting]</pre><p>The service runs as an account with no roles. Each visitor to the demonstration gets their own copy of the twelve
 students, so nothing one visitor does changes what the next one sees.</p>
+<h2>Reproducing a build step in the open</h2>
+<p>The Cloud Build log needs a signed-in Google account. To read a failing step without one, the
+<a href="https://github.com/russlittle/ZTHR/actions/workflows/reference-ci.yml">Reference app checks</a> workflow runs the
+same steps, in the same <code>node:22-bookworm</code> image, on GitHub: install, typecheck, tests with four processes, gates,
+journeys, docs, contracts, the button and feature walks in push mode, then the browser walk, the deep
+click-through, the word check and the load test. It runs on demand for any branch or commit, and its log is public.</p>
 <h2>Cost</h2>
 <p>The build runs on an 8-vCPU machine (<code>E2_HIGHCPU_8</code>) so the suite and the nightly mutation run finish quickly.
 Its list price is $0.0156 a build-minute (<a href="https://cloud.google.com/build/pricing">Cloud Build pricing</a>); the free
