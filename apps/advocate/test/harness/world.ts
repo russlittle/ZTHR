@@ -66,7 +66,13 @@ export function stateParts(w: World): string[] {
   const few = (n: number) => (n >= 2 ? '2+' : String(n));
   const parts = [
     `dial:${s.dial.depth}:${s.dial.channel}:${s.chosenName === 'there' ? 'unnamed' : 'named'}`,
-    `deadlines:${a.deadlines(sid).map((d) => `${d.title}/${d.done ? 'done' : d.confirmed ? 'on' : 'unconfirmed'}`).sort().join(',')}`,
+    // Deadlines by kind and status, counted to two: which campus events were added, and in what order, multiplied
+    // into every other feature's state without changing a button, and kept the walk from a fixpoint.
+    `deadlines:${(() => {
+      const n = new Map<string, number>();
+      for (const d of a.deadlines(sid)) { const k = `${d.kind}/${d.done ? 'done' : d.confirmed ? 'on' : 'unconfirmed'}`; n.set(k, (n.get(k) ?? 0) + 1); }
+      return [...n].map(([k, c]) => `${k}x${few(c)}`).sort().join(',');
+    })()}`,
     // A playbook's step shows in the buttons on screen while the student is in it, so its progress is not
     // multiplied into every other feature's state (they do not interact).
     `runs:${few(store.list<{ status: string }>('playbook_runs', sid).filter((r) => r.status === 'done').length)}`,
