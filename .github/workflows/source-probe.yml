@@ -16,6 +16,7 @@ jobs:
       - name: Probe each source for Montgomery (39113) and Greene (39057) counties, Ohio
         shell: bash
         run: |
+          set +e +o pipefail
           UA='zthr-resource-finder (+https://zthr.ai)'
           get() { curl -sS -L -A "$UA" -m 120 -o "$2" -w '%{http_code} %{size_download}\n' "$1" || true; }
           echo "== Census ZCTA to county"; get 'https://www2.census.gov/geo/docs/maps-data/data/rel2020/zcta520/tab20_zcta520_county20_natl.txt' zc.txt
