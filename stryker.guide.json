@@ -9,7 +9,8 @@
     "apps/advocate/src/guide/signals.ts",
     "apps/advocate/src/guide/feedback.ts",
     "apps/advocate/src/guide/admission.ts",
-    "apps/advocate/src/guide/feed.ts"
+    "apps/advocate/src/guide/feed.ts",
+    "apps/advocate/src/finder/finder.ts"
   ],
   "reporters": [
     "clear-text",
@@ -19,7 +20,7 @@
     "fileName": "reports/mutation-guide.json"
   },
   "coverageAnalysis": "perTest",
-  "concurrency": 6,
+  "concurrency": 2,
   "timeoutMS": 60000,
   "tempDirName": ".stryker-tmp-guide",
   "dryRunTimeoutMinutes": 20,
