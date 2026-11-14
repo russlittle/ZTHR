@@ -1,0 +1,51 @@
+{
+ "id": "ft-decoach-rehabilitation-centre-45385",
+ "name": "DeCoach Rehabilitation Centre (Xenia)",
+ "description": "Treatment for substance use.",
+ "organization": {
+  "name": "DeCoach Rehabilitation Centre",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "36 North Detroit Street",
+  "city": "Xenia",
+  "postal_code": "45385"
+ },
+ "phone": "937-610-4673",
+ "eligibility": "Call to ask who they serve.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-610-4673 to ask for a first visit.",
+   "Ask if they take your insurance or charge less if you earn less."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://findtreatment.gov/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}

@@ -1,0 +1,52 @@
+{
+ "id": "ft-brightview-health-45458",
+ "name": "BrightView Health (Dayton, 8120 Garnet Drive)",
+ "description": "Treatment for substance use.",
+ "organization": {
+  "name": "BrightView Health",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "8120 Garnet Drive",
+  "city": "Dayton",
+  "postal_code": "45458"
+ },
+ "phone": "833-510-4357",
+ "url": "https://www.brightviewhealth.com",
+ "eligibility": "Call to ask who they serve.",
+ "how_to_use": {
+  "steps": [
+   "Call 833-510-4357 to ask for a first visit.",
+   "Ask if they take your insurance or charge less if you earn less."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://findtreatment.gov/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}

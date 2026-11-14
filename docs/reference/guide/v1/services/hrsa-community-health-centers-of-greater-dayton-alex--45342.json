@@ -1,0 +1,54 @@
+{
+ "id": "hrsa-community-health-centers-of-greater-dayton-alex--45342",
+ "name": "Community Health Centers of Greater Dayton - Alex Central Health Center",
+ "description": "A community health center funded by the federal government. It sees you with or without insurance, and charges less if you earn less.",
+ "organization": {
+  "name": "Community Health Centers of Greater Dayton",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "health",
+   "label": "Health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "5 S Alex Rd",
+  "city": "Miamisburg",
+  "postal_code": "45342"
+ },
+ "phone": "937-247-0304",
+ "url": "https://www.communityhealthdayton.org",
+ "cost": "sliding-scale",
+ "eligibility": "Anyone, with or without insurance.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-247-0304 to make a visit.",
+   "Ask about the sliding fee if money is tight."
+  ],
+  "documents": [],
+  "what_to_expect": "Health centers ask your income to set your fee. Bring proof of income if you have it."
+ },
+ "availability": [],
+ "source": {
+  "url": "https://findahealthcenter.hrsa.gov/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}

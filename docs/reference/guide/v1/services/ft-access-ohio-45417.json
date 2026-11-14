@@ -1,0 +1,52 @@
+{
+ "id": "ft-access-ohio-45417",
+ "name": "Access OHIO",
+ "description": "Treatment for mental health and substance use.",
+ "organization": {
+  "name": "Access OHIO",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1 Elizabeth Place",
+  "city": "Dayton",
+  "postal_code": "45417"
+ },
+ "phone": "937-228-0579",
+ "url": "https://accessoh.com/",
+ "eligibility": "Call to ask who they serve.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-228-0579 to ask for a first visit.",
+   "Ask if they take your insurance or charge less if you earn less."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://findtreatment.gov/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}

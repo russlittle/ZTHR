@@ -20,7 +20,7 @@
      "id": "housing",
      "label": "Housing",
      "covers": "Behind on rent, facing eviction, unstable, or without a home",
-     "services": 13
+     "services": 111
     },
     {
      "id": "utilities",
@@ -32,7 +32,7 @@
      "id": "money",
      "label": "Money",
      "covers": "A bill coming due, a gap before payday, an emergency cost",
-     "services": 9
+     "services": 14
     },
     {
      "id": "transportation",
@@ -56,13 +56,13 @@
      "id": "health",
      "label": "Health",
      "covers": "Care, prescriptions, insurance",
-     "services": 8
+     "services": 24
     },
     {
      "id": "mental-health",
      "label": "Mental health",
      "covers": "Stress, anxiety, grief, a hard week",
-     "services": 5
+     "services": 62
     },
     {
      "id": "safety",
@@ -80,7 +80,7 @@
      "id": "phone-internet",
      "label": "Phone and internet",
      "covers": "No phone, internet or computer",
-     "services": 4
+     "services": 35
     },
     {
      "id": "goods",
@@ -122,7 +122,7 @@
      "id": "academic",
      "label": "School",
      "covers": "Falling behind, a disability, tutoring, advising",
-     "services": 5
+     "services": 36
     }
    ]
   },
@@ -231,6 +231,10 @@
   {
    "id": "health",
    "label": "Health care"
+  },
+  {
+   "id": "property",
+   "label": "Property owner"
   }
  ]
 }

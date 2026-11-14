@@ -1,0 +1,52 @@
+{
+ "id": "ft-recovery-works-healing-center-llc-45449",
+ "name": "Recovery Works Healing Center LLC (Dayton)",
+ "description": "Treatment for substance use.",
+ "organization": {
+  "name": "Recovery Works Healing Center LLC",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "100 Elmwood Park Drive",
+  "city": "Dayton",
+  "postal_code": "45449"
+ },
+ "phone": "937-384-0580",
+ "url": "https://www.rwhcohio.com",
+ "eligibility": "Call to ask who they serve.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-384-0580 to ask for a first visit.",
+   "Ask if they take your insurance or charge less if you earn less."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://findtreatment.gov/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}

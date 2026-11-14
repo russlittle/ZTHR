@@ -1,0 +1,53 @@
+{
+ "id": "ft-samaritan-behavioral-health-45417",
+ "name": "Samaritan Behavioral Health",
+ "description": "Treatment for mental health and substance use. It charges less if you earn less.",
+ "organization": {
+  "name": "Samaritan Behavioral Health",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "601 South Edwin C Moses Boulevard, Building E",
+  "city": "Dayton",
+  "postal_code": "45417"
+ },
+ "phone": "937-734-4310",
+ "url": "https://www.sbhihelp.org",
+ "cost": "sliding-scale",
+ "eligibility": "Call to ask who they serve.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-734-4310 to ask for a first visit.",
+   "Ask if they take your insurance or charge less if you earn less."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://findtreatment.gov/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}
