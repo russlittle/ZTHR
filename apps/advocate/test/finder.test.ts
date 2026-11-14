@@ -173,3 +173,17 @@ describe('HUD-assisted apartments and public libraries', () => {
     expect(passes(f.entries)).toEqual([]);
   });
 });
+
+describe('one place, or two', () => {
+  const at = (phone: string, address?: string, name = 'X') => ({ phone, name, ...(address ? { location: { address, city: 'Dayton' } } : {}) });
+  it('the same phone and street number is one place; a shared main number at two addresses is two', () => {
+    expect(F.samePlace(at('937-463-2665', '215 E Third St'), at('(937) 463-2665', '215 East Third Street'))).toBe(true);
+    expect(F.samePlace(at('937-463-2665', '215 E Third St'), at('937-463-2665', '2260 S Smithville Rd'))).toBe(false);
+    expect(F.samePlace(at('937-463-2665', undefined, 'Main Library'), at('937-463-2665', undefined, 'main library'))).toBe(true);
+    expect(F.samePlace(at(''), at(''))).toBe(false);
+  });
+  it('names lose the stray spaces federal records carry', () => {
+    const f = F.fromHudMultifamily([{ attributes: { PROPERTY_NAME_TEXT: 'COVENANT  MANOR   ', STD_ADDR: '1 MAIN', STD_CITY: 'DAYTON', STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: '9378544596', CLIENT_GROUP_NAME: 'Elderly' } }], area);
+    expect(f.entries[0]!.name).toBe('Covenant Manor');
+  });
+});

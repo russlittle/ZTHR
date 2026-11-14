@@ -127,11 +127,10 @@ async function find(): Promise<void> {
   take('HUD housing counseling agencies', F.HUD_COUNSELING_PAGE, hudStatus, hud.length, F.fromHudCounseling(hud as never, area), `searched ${Math.min(cities.length, 80)} cities`);
 
   // A place the guide already lists by hand keeps its hand entry; then duplicates across sources go.
-  const known = new Set(DAYTON_CATALOG.map((r) => (r.phone ?? '').replace(/\D/g, '')).filter((p) => p.length >= 10));
   const fresh = all.filter((e) => {
-    const p = (e.phone ?? '').replace(/\D/g, '');
-    if (p && known.has(p)) {
-      skipped.push({ source: e.source.url, name: e.name, why: 'already in the guide, by hand' });
+    const hand = DAYTON_CATALOG.find((r) => F.samePlace(r, e));
+    if (hand) {
+      skipped.push({ source: e.source.url, name: e.name, why: `already in the guide, by hand, as ${hand.name}` });
       return false;
     }
     return true;

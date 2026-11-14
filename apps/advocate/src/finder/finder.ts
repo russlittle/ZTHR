@@ -52,7 +52,7 @@ export const phoneOf = (p: unknown): string | undefined => {
 };
 const slug = (s: string) => s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
 const undba = (s: string) => s.replace(/^\s*dba\s+/i, '');
-const title = (s: string) => (/[a-z]/.test(s) ? s : s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase()).replace(/\b(Of|And|For|The|In|At)\b/g, (m) => m.toLowerCase()).replace(/^./, (m) => m.toUpperCase()).replace(/\b(Ii|Iii|Iv|Vi|Vii)\b/g, (m) => m.toUpperCase()));
+const title = (raw: string) => { const s = raw.replace(/\s+/g, ' ').trim(); return (/[a-z]/.test(s) ? s : s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase()).replace(/\b(Of|And|For|The|In|At)\b/g, (m) => m.toLowerCase()).replace(/^./, (m) => m.toUpperCase()).replace(/\b(Ii|Iii|Iv|Vi|Vii)\b/g, (m) => m.toUpperCase())); };
 const url = (u: unknown) => {
   const s = String(u ?? '').trim();
   if (!s || /in progress|n\/a|none/i.test(s)) return undefined;
@@ -98,6 +98,14 @@ export function nameSites(entries: Resource[]): Resource[] {
   for (const e of byTown) again.set(e.name.toLowerCase(), (again.get(e.name.toLowerCase()) ?? 0) + 1);
   return byTown.map((e) => ((again.get(e.name.toLowerCase()) ?? 0) > 1 && e.location?.address ? { ...e, name: e.name.replace(/\)$/, `, ${e.location.address.split(',')[0]})`) } : e));
 }
+
+/** The same phone and the same street number: one place. A shared main number alone (a library system) is not. */
+export const samePlace = (a: Pick<Resource, 'phone' | 'location' | 'name'>, b: Pick<Resource, 'phone' | 'location' | 'name'>) => {
+  const p = digits(a.phone);
+  if (!p || p !== digits(b.phone)) return false;
+  const num = (x: typeof a) => x.location?.address.match(/^\d+/)?.[0];
+  return num(a) && num(b) ? num(a) === num(b) : a.name.toLowerCase() === b.name.toLowerCase();
+};
 
 /** Same phone and same street number means the same place, listed twice; the first listing is kept. */
 export function dedupe(entries: Resource[], skipped: Found['skipped']): Resource[] {
