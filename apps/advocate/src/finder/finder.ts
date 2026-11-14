@@ -51,7 +51,8 @@ export const phoneOf = (p: unknown): string | undefined => {
   return d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : undefined;
 };
 const slug = (s: string) => s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
-const title = (s: string) => (/[a-z]/.test(s) ? s : s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase()).replace(/\b(Of|And|For|The|In|At)\b/g, (m) => m.toLowerCase()).replace(/^./, (m) => m.toUpperCase()));
+const undba = (s: string) => s.replace(/^\s*dba\s+/i, '');
+const title = (s: string) => (/[a-z]/.test(s) ? s : s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase()).replace(/\b(Of|And|For|The|In|At)\b/g, (m) => m.toLowerCase()).replace(/^./, (m) => m.toUpperCase()).replace(/\b(Ii|Iii|Iv|Vi|Vii)\b/g, (m) => m.toUpperCase()));
 const url = (u: unknown) => {
   const s = String(u ?? '').trim();
   if (!s || /in progress|n\/a|none/i.test(s)) return undefined;
@@ -82,6 +83,20 @@ export function zipCountyFrom(relationship: string, fips: string[]): Map<string,
     if (fips.includes(code!)) out.set(zip, nm!);
   }
   return out;
+}
+
+/**
+ * One organization often runs several sites under one name and one phone number. Each site keeps its own entry,
+ * named with its town so a student can tell them apart (and the guide's duplicate check sees distinct places).
+ */
+export function nameSites(entries: Resource[]): Resource[] {
+  const count = new Map<string, number>();
+  for (const e of entries) count.set(e.name.toLowerCase(), (count.get(e.name.toLowerCase()) ?? 0) + 1);
+  const byTown = entries.map((e) => ((count.get(e.name.toLowerCase()) ?? 0) > 1 && e.location?.city ? { ...e, name: `${e.name} (${e.location.city})` } : e));
+  // Two sites in the same town: the street tells them apart.
+  const again = new Map<string, number>();
+  for (const e of byTown) again.set(e.name.toLowerCase(), (again.get(e.name.toLowerCase()) ?? 0) + 1);
+  return byTown.map((e) => ((again.get(e.name.toLowerCase()) ?? 0) > 1 && e.location?.address ? { ...e, name: e.name.replace(/\)$/, `, ${e.location.address.split(',')[0]})`) } : e));
 }
 
 /** Same phone and same street number means the same place, listed twice; the first listing is kept. */
@@ -129,7 +144,7 @@ export function fromFindTreatment(rows: FtRow[], area: Area): Found {
   const skipped: Found['skipped'] = [];
   const entries: Resource[] = [];
   for (const r of rows) {
-    const name = title(String(r.name2 || r.name1 || '').trim());
+    const name = title(undba(String(r.name2 || r.name1 || '').trim()));
     const county = r.state === area.state ? countyOf(area, r.zip) : undefined;
     if (!county) {
       skipped.push({ source: FINDTREATMENT_PAGE, name, why: 'outside the area' });
@@ -145,7 +160,7 @@ export function fromFindTreatment(rows: FtRow[], area: Area): Found {
     entries.push({
       id: `ft-${slug(name)}-${zip5(r.zip)}`,
       name,
-      organization: title(String(r.name1 || name)),
+      organization: title(undba(String(r.name1 || name))),
       categories: ['mental-health'],
       description: `Treatment for ${what}.${/sliding fee/i.test(pay) ? ' It charges less if you earn less.' : ''}`,
       serves: { counties: [county] },
@@ -181,7 +196,7 @@ export function fromHrsa(rows: Record<string, string>[], area: Area): Found {
     if (r['Site State Abbreviation'] !== area.state) continue;
     const county = countyOf(area, r['Site Postal Code']);
     if (!county) continue;
-    if (!/active/i.test(r['Site Status Description'] ?? '')) {
+    if (!/^\s*active\s*$/i.test(r['Site Status Description'] ?? '')) {
       skipped.push({ source: HRSA_PAGE, name, why: `status ${r['Site Status Description'] || 'unknown'}` });
       continue;
     }
@@ -259,7 +274,7 @@ export function fromHudCounseling(rows: HudRow[], area: Area): Found {
       name,
       organization: name,
       categories: ['housing', 'money'],
-      description: 'Housing counseling approved by HUD: help with renting, behind on rent or a mortgage, credit, or buying a home.',
+      description: 'A housing counselor, checked by HUD, can help with rent, a home loan, credit, or buying a home.',
       serves: { counties: [county] },
       location: { address: [r.adr1, r.adr2].filter(Boolean).join(', '), city: title(String(r.city ?? '')), zip: zip5(r.zipcd) },
       ...(phone ? { phone } : {}),
@@ -312,6 +327,99 @@ export function fromHudPha(features: { attributes: Record<string, unknown> }[], 
       freshnessDays: FRESH_DAYS,
       provider: { kind: 'government', level: 'county' },
       tags: ['found:hud-pha'],
+    });
+  }
+  return { entries, skipped };
+}
+
+// ---------------------------------------------------------------- HUD multifamily assisted housing
+
+export const HUD_MF = (state: string, offset = 0) =>
+  `https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MULTIFAMILY_PROPERTIES_ASSISTED/FeatureServer/0/query?where=STD_ST%3D%27${state}%27&outFields=PROPERTY_ID,PROPERTY_NAME_TEXT,STD_ADDR,STD_CITY,STD_ZIP5,PROPERTY_ON_SITE_PHONE_NUMBER,CLIENT_GROUP_NAME,TOTAL_ASSISTED_UNIT_COUNT&f=json&resultOffset=${offset}&resultRecordCount=2000`;
+export const HUD_MF_PAGE = 'https://resources.hud.gov/';
+
+/** Apartments where HUD helps pay the rent, so rent is based on income. Each has its own application and wait list. */
+export function fromHudMultifamily(features: { attributes: Record<string, unknown> }[], area: Area): Found {
+  const skipped: Found['skipped'] = [];
+  const entries: Resource[] = [];
+  for (const { attributes: a } of features) {
+    const county = countyOf(area, a.STD_ZIP5);
+    if (!county) continue;
+    const name = title(String(a.PROPERTY_NAME_TEXT ?? '').replace(/,\s*(II|III|IV)$/i, ' $1').trim());
+    const phone = phoneOf(a.PROPERTY_ON_SITE_PHONE_NUMBER);
+    if (!phone) {
+      skipped.push({ source: HUD_MF_PAGE, name, why: 'no phone number in the record' });
+      continue;
+    }
+    const group = String(a.CLIENT_GROUP_NAME ?? '');
+    const elderly = /elderly/i.test(group) && !/family/i.test(group);
+    const disabled = /disab/i.test(group) && !/family|elderly/i.test(group);
+    const units = Number(a.TOTAL_ASSISTED_UNIT_COUNT ?? 0);
+    entries.push({
+      id: `hudmf-${slug(name)}-${zip5(a.STD_ZIP5)}`,
+      name,
+      organization: name,
+      categories: ['housing'],
+      description: `Apartments where HUD helps pay the rent, so what you pay is based on your income${units ? ` (${units} such units)` : ''}.`,
+      serves: { counties: [county] },
+      location: { address: title(String(a.STD_ADDR ?? '').trim()), city: title(String(a.STD_CITY ?? '')), zip: zip5(a.STD_ZIP5) },
+      phone,
+      eligibility: { text: elderly ? 'For older adults, based on income.' : disabled ? 'For people with disabilities, based on income.' : 'Based on income and household size.' },
+      howToApply: [`Call ${phone} to ask if the wait list is open.`, 'Ask how to apply, and what to bring.'],
+      documents: [],
+      prefill: [],
+      whatToExpect: 'Each building has its own wait list. Putting your name on several can help.',
+      source: { url: HUD_MF_PAGE, license: 'public-information' },
+      verifiedOn: area.today,
+      freshnessDays: FRESH_DAYS,
+      provider: { kind: 'government', level: 'federal' },
+      tags: ['found:hud-multifamily', ...(elderly ? ['older-adults'] : []), ...(disabled ? ['disability'] : [])],
+    });
+  }
+  return { entries, skipped };
+}
+
+// ---------------------------------------------------------------- Public libraries (IMLS Public Libraries Survey)
+
+export const IMLS_PLS = 'https://www.imls.gov/sites/default/files/2026-06/pls_fy2024_csv.zip';
+export const IMLS_PAGE = 'https://www.imls.gov/research-evaluation/surveys/public-libraries-survey-pls';
+
+/** Library branches: free computers, internet and a quiet place to study, often with Wi-Fi hotspots to borrow. */
+export function fromLibraries(rows: Record<string, string>[], area: Area): Found {
+  const skipped: Found['skipped'] = [];
+  const entries: Resource[] = [];
+  for (const r of rows) {
+    if (r.STABR !== area.state) continue;
+    const county = countyOf(area, r.ZIP);
+    if (!county) continue;
+    const name = title((r.LIBNAME ?? '').trim());
+    if (/BS|BM/.test(r.C_OUT_TY ?? '')) {
+      skipped.push({ source: IMLS_PAGE, name, why: 'a bookmobile, with no fixed place' });
+      continue;
+    }
+    const phone = phoneOf(r.PHONE);
+    const hours = Number(r.HOURS ?? 0);
+    const weeks = Number(r.WKS_OPEN ?? 0);
+    entries.push({
+      id: `lib-${slug(name)}-${zip5(r.ZIP)}`,
+      name,
+      organization: title((r.STATNAME ?? name).trim()) || name,
+      categories: ['phone-internet', 'academic'],
+      description: 'A public library. Use the computers, Wi-Fi and printers for free, and study there.',
+      serves: { counties: [county] },
+      location: { address: title((r.ADDRESS ?? '').trim()), city: title((r.CITY ?? '').trim()), zip: zip5(r.ZIP) },
+      ...(phone ? { phone } : {}),
+      eligibility: { text: 'Anyone can come in.' },
+      howToApply: ['Go in during open hours.', 'Ask for a library card to borrow things and use the computers longer.'],
+      documents: [],
+      prefill: [],
+      cost: 'free',
+      ...(hours > 0 && weeks > 0 ? { whatToExpect: `Open about ${Math.round(hours / weeks)} hours a week. Check the library's site for today's hours.` } : {}),
+      source: { url: IMLS_PAGE, license: 'public-information' },
+      verifiedOn: area.today,
+      freshnessDays: 90,
+      provider: { kind: 'government', level: 'local' },
+      tags: ['found:imls'],
     });
   }
   return { entries, skipped };

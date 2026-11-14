@@ -10,6 +10,7 @@
  * students and the feed, and the run's report reaches the docs.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { unzipSync, strFromU8 } from 'fflate';
 import { join } from 'node:path';
 import { DAYTON_CATALOG } from '../apps/advocate/src/catalog/dayton.js';
 import type { Resource } from '../apps/advocate/src/catalog/types.js';
@@ -88,6 +89,26 @@ async function find(): Promise<void> {
   const phaRows = pha.ok ? ((pha.body as { features?: { attributes: Record<string, unknown> }[] }).features ?? []) : [];
   take('HUD public housing authorities', F.HUD_PHA_PAGE, pha.status, phaRows.length, F.fromHudPha(phaRows, area), 'records in the state');
 
+  const mf: { attributes: Record<string, unknown> }[] = [];
+  let mfStatus = 0;
+  for (let offset = 0; offset < 20000; offset += 2000) {
+    const r = await get(F.HUD_MF(state, offset), 'json');
+    mfStatus = r.status;
+    const page = r.ok ? ((r.body as { features?: { attributes: Record<string, unknown> }[] }).features ?? []) : [];
+    mf.push(...page);
+    if (page.length < 2000) break;
+  }
+  take('HUD multifamily assisted housing', F.HUD_MF_PAGE, mfStatus, mf.length, F.fromHudMultifamily(mf, area), 'records in the state');
+
+  const pls = await fetch(F.IMLS_PLS, { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(180_000) }).catch(() => undefined);
+  let libRows: Record<string, string>[] = [];
+  if (pls?.ok) {
+    const files = unzipSync(new Uint8Array(await pls.arrayBuffer()), { filter: (f) => /outlet.*\.csv$/i.test(f.name) });
+    const outlet = Object.values(files)[0];
+    if (outlet) libRows = F.parseCsv(strFromU8(outlet, true));
+  }
+  take('IMLS public libraries', F.IMLS_PAGE, pls?.status ?? 0, libRows.filter((r) => r.STABR === state).length, F.fromLibraries(libRows, area), 'library outlets in the state');
+
   // The IRS list gives the leads, and the area's city names for sources searched by city.
   const eo = await get(F.IRS_EO(state));
   const eoRows = eo.ok ? F.parseCsv(eo.body as string) : [];
@@ -115,7 +136,7 @@ async function find(): Promise<void> {
     }
     return true;
   });
-  const entries = F.dedupe(fresh, skipped);
+  const entries = F.nameSites(F.dedupe(fresh, skipped));
   const owners = new Set(entries.map((e) => e.id));
   const checked = entries.map((e) => ({ e, failed: admit(e, [...DAYTON_CATALOG, ...entries], owners).filter((c) => !c.ok) }));
   const admitted = checked.filter((c) => !c.failed.length).map((c) => c.e);
