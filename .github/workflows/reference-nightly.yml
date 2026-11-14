@@ -1,0 +1,34 @@
+name: Reference nightly walks (reproduce)
+
+# Runs the nightly build's walk steps on GitHub, in the same image and with the same commands, so a failing nightly
+# step can be read in the open. On demand only.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch or commit of the reference app
+        default: reference-implementation
+      walk:
+        description: explore or crawl
+        default: explore
+
+permissions:
+  contents: read
+
+jobs:
+  walk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    container: node:22-bookworm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - run: npm ci
+      - name: Nightly walk, as the build runs it
+        shell: bash
+        run: |
+          mkdir -p evidence-out/last
+          nproc; free -m || true
+          tools/walk-ci.sh "${{ inputs.walk }}" true 2>&1 | tail -300
+          exit "${PIPESTATUS[0]}"
