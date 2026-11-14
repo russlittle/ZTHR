@@ -1,3 +1,4 @@
+import { FOUND_DAYTON } from './found/dayton.js';
 import type { Resource } from './types.js';
 import { GUIDE_CATALOG } from './guide.js';
 
@@ -530,4 +531,8 @@ const FIRST_ENTRIES: Resource[] = [
 ];
 
 /** The whole guide for Montgomery and Greene counties: the first entries and the guide's second set. */
-export const DAYTON_CATALOG: Resource[] = [...FIRST_ENTRIES, ...GUIDE_CATALOG];
+/** The entries written by hand, each from a cited source. */
+export const HAND_CATALOG: Resource[] = [...FIRST_ENTRIES, ...GUIDE_CATALOG];
+
+/** The guide: entries written by hand, then what the resource finder found in the public systems of record. */
+export const DAYTON_CATALOG: Resource[] = [...HAND_CATALOG, ...FOUND_DAYTON];

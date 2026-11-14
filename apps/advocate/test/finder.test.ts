@@ -1,6 +1,6 @@
 // Verifies docs/flows/resource-finder.md
 import { describe, expect, it } from 'vitest';
-import { DAYTON_CATALOG } from '../src/catalog/dayton.js';
+import { HAND_CATALOG as DAYTON_CATALOG } from '../src/catalog/dayton.js';
 import { admit } from '../src/guide/admission.js';
 import * as F from '../src/finder/finder.js';
 
@@ -185,5 +185,19 @@ describe('one place, or two', () => {
   it('names lose the stray spaces federal records carry', () => {
     const f = F.fromHudMultifamily([{ attributes: { PROPERTY_NAME_TEXT: 'COVENANT  MANOR   ', STD_ADDR: '1 MAIN', STD_CITY: 'DAYTON', STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: '9378544596', CLIENT_GROUP_NAME: 'Elderly' } }], area);
     expect(f.entries[0]!.name).toBe('Covenant Manor');
+  });
+});
+
+describe('a student\'s name inside a place name is not a leak, and a real leak is still caught', () => {
+  it('the walk checks scrub only the guide\'s own place names', async () => {
+    const { invariants } = await import('./harness/world.js');
+    const { makeAdvocate, maria } = await import('./helpers.js');
+    const a = makeAdvocate();
+    const w = { a, sid: maria(a).id } as never;
+    const check = invariants(['Alex'], []);
+    const step = (text: string) => ({ action: 'say:x', outcome: { via: 'text', replies: [{ text, nextSteps: [{ label: 'Back', action: 'back' }], urgency: 'routine' }] } }) as never;
+    const place = 'Community Health Centers of Greater Dayton - Alex Central Health Center';
+    expect(check(w, step(`Try ${place}. Call them first.`)).filter((p: string) => /another student/.test(p))).toEqual([]);
+    expect(check(w, step('Alex said you should call them first.')).filter((p: string) => /another student/.test(p))).toEqual(["another student's name appeared: Alex"]);
   });
 });

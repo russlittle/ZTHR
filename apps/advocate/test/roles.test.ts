@@ -88,12 +88,17 @@ describe('authorization by absence (Pattern 30)', () => {
     expect(r.headers.get('location')).toMatch(/signin/);
   });
   it('the app admin never shows a student\'s record, messages or sealed facts', async () => {
+    // The same pages with no students, then with every student: a name may appear on its own in the catalog (a
+    // clinic on Alex Road), but adding students must not add one occurrence of any of their names.
+    const empty = createApp(new Advocate({ today: () => '2026-11-03' }), {});
     const a = new Advocate({ today: () => '2026-11-03' });
     for (const n of PERSONA_NAMES) PERSONAS[n]!(a);
     const app = createApp(a, {});
+    const count = (html: string, n: string) => html.split(new RegExp(`\\b${n}\\b`)).length - 1;
     for (const page of ['/admin/', '/admin/catalog', '/admin/moderation', '/admin/proposals', '/admin/admissions', '/admin/scouts', '/admin/outcomes']) {
+      const before = await (await empty.request(page)).text();
       const html = await (await app.request(page)).text();
-      for (const n of PERSONA_NAMES) expect(html.includes(`>${n}<`) || html.includes(` ${n} `), `${page}: ${n}`).toBe(false);
+      for (const n of PERSONA_NAMES) expect(count(html, n), `${page}: ${n}`).toBe(count(before, n));
       expect(html).not.toContain('synthetic sealed fact');
     }
   });

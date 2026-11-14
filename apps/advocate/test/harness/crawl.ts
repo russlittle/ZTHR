@@ -5,6 +5,7 @@ import { Hono } from 'hono';
 import { Advocate } from '../../src/agents/advocate.js';
 import { createApp } from '../../src/server/app.js';
 import { PERSONAS, PERSONA_NAMES } from '../../src/server/demo.js';
+import { DAYTON_CATALOG } from '../../src/catalog/dayton.js';
 import { DAY, signature as stateSignature, stateParts, type World } from './world.js';
 
 /**
@@ -90,13 +91,19 @@ export function pageProblems(p: Page, others: string[]): string[] {
     if (!id || !p.html.includes(`for="${id}"`)) problems.push(`a ${i[1]} has no label`);
   }
   for (const b of p.html.matchAll(/<(button|a)\s[^>]*>([\s\S]*?)<\/\1>/g)) if (!visibleText(b[2]!).trim() && !/aria-label="[^"]+"/.test(b[0])) problems.push(`a ${b[1]} has no name`);
-  for (const n of others) if (new RegExp(`\\b${n}\\b`).test(text)) problems.push(`another student's name appears: ${n}`);
+  // A student's first name can also be part of a place the guide lists (a clinic on Alex Road). Those catalog names
+  // and addresses are taken out first, so the check still catches any other appearance of the name.
+  const scrubbed = PLACE_NAMES.reduce((t, place) => t.split(place).join(' '), text);
+  for (const n of others) if (new RegExp(`\\b${n}\\b`).test(scrubbed)) problems.push(`another student's name appears: ${n}`);
   if (text.includes('synthetic sealed fact')) problems.push('a sealed fact appears on a page');
   if (/still being built|not available right now/i.test(text)) problems.push('a dead-end message appears');
   return problems;
 }
 
 export const route = (url: string) => url.replace(/\?.*$/, '').replace(/\/s\/[^/]+/, '/s/:id').replace(/\/resource\/[^/?]+/, '/resource/:rid');
+
+/** Names and addresses in the guide that contain a word that is also a student's first name. */
+const PLACE_NAMES = DAYTON_CATALOG.flatMap((r) => [r.name, r.organization, r.location?.address ?? '']).filter((x) => x && PERSONA_NAMES.some((n) => new RegExp(`\\b${n}\\b`).test(x))).sort((x, y) => y.length - x.length);
 
 export const GUIDE_READ = /\/guide(\/|$)/;
 

@@ -37,7 +37,10 @@ const pathOf = (u: string) => {
   return `${x.pathname.replace(base.replace(/^https?:\/\/[^/]+/, ''), '')}${[...x.searchParams.keys()].filter((k) => k !== 'm').map((k) => `?${k}=${x.searchParams.get(k)}`).join('')}`;
 };
 /** A screen's identity for the crawl: its path with student ids and one-off ids folded, so each screen is explored once. */
-const screenKey = (p: string) => p.replace(/\/s\/[^/]+/, '/s/:id').replace(/\/(dr|hd|dl|r)_[a-z0-9]+/g, '/:x');
+// The guide's entry and barrier pages are one screen each, filled from the catalog: one of each is explored in depth
+// (hundreds more would only show the same controls on other entries). The feature walk opens every one of them.
+const screenKey = (p: string) =>
+  p.replace(/\/s\/[^/]+/, '/s/:id').replace(/\/(dr|hd|dl|r)_[a-z0-9]+/g, '/:x').replace(/\/guide\/service\/[^/?#]+/, '/guide/service/:rid').replace(/\/guide\/(?!service|coverage)[a-z-]+(?=$|[?#])/, '/guide/:need');
 
 async function controls(page: Page): Promise<Control[]> {
   return page.evaluate((origin: string) => {

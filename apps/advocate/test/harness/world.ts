@@ -1,4 +1,5 @@
 // Verifies docs/testing/exploration.md (the exhaustive walk of every button, in app and text).
+import { DAYTON_CATALOG } from '../../src/catalog/dayton.js';
 import { applyCampus, type SeedDoc } from './campus.js';
 import { explore, exploreAsync, hash, type ExploreReport, type ExploreSpec, type Step } from '@zthr/explore';
 import { Advocate } from '../../src/agents/advocate.js';
@@ -60,18 +61,21 @@ export function stateParts(w: World): string[] {
   const s = a.student(sid);
   const store = a.store;
   const has = (c: string) => (store.list(c, sid).length ? 1 : 0);
+  // Counts saturate at two: a third shift, finished playbook or send behaves as the second did, and an unbounded
+  // count gives the walk a new state for every repeat, so it could never reach a fixpoint.
+  const few = (n: number) => (n >= 2 ? '2+' : String(n));
   const parts = [
     `dial:${s.dial.depth}:${s.dial.channel}:${s.chosenName === 'there' ? 'unnamed' : 'named'}`,
     `deadlines:${a.deadlines(sid).map((d) => `${d.title}/${d.done ? 'done' : d.confirmed ? 'on' : 'unconfirmed'}`).sort().join(',')}`,
     // A playbook's step shows in the buttons on screen while the student is in it, so its progress is not
     // multiplied into every other feature's state (they do not interact).
-    `runs:${store.list<{ status: string }>('playbook_runs', sid).filter((r) => r.status === 'done').length}`,
+    `runs:${few(store.list<{ status: string }>('playbook_runs', sid).filter((r) => r.status === 'done').length)}`,
     `drafts:${a.drafts(sid).some((d) => d.status === 'shown') ? 'waiting' : 'none'}:${a.drafts(sid).some((d) => d.status === 'sent') ? 'sent' : ''}`,
-    `holds:${has('holds')} reminders:${has('reminders')} shifts:${a.shifts(sid).length} dismissed:${has('dismissed')}`,
+    `holds:${has('holds')} reminders:${has('reminders')} shifts:${few(a.shifts(sid).length)} dismissed:${has('dismissed')}`,
     `pulse:${a.pulseState(sid).off ? 'off' : 'on'}:${store.get('pulse_pending', sid) ? 'pending' : ''}`,
     `sources:${['calendar', 'forwarding', 'learning-feed', 'location'].filter((x) => a.hasSource(sid, x)).join(',')}`,
     `commute:${a.commuteSettings(sid).mode ?? ''}:${a.commuteSettings(sid).homeStop ? 'stop' : ''}`,
-    `dispatches:${a.operator.dispatches(sid).map((d) => d.status).sort().join(',')}`,
+    `dispatches:${[...new Set(a.operator.dispatches(sid).map((d) => d.status))].sort().join(',')}`,
   ];
   return parts;
 }
@@ -96,6 +100,9 @@ export function actions(w: World, last: Outcome | undefined): string[] {
 
 const CITIZENSHIP = /\b(citizen(ship)?|immigration|green card|visa status|undocumented|legal status)\b.*\?/i;
 
+const PLACES = DAYTON_CATALOG.flatMap((r) => [r.name, r.organization, r.location?.address ?? '']).filter(Boolean);
+const placeNames = (names: string[]) => PLACES.filter((x) => names.some((n) => new RegExp(`\\b${n}\\b`).test(x))).sort((x, y) => y.length - x.length);
+
 export function invariants(otherNames: string[], sealedValues: string[]) {
   return (w: World, step: Step<Outcome>): string[] => {
     const problems: string[] = [];
@@ -115,7 +122,9 @@ export function invariants(otherNames: string[], sealedValues: string[]) {
       if ('status' in m && (m as { status: string }).status === 'held') problems.push(`held by the tone gate: ${m.text.slice(0, 80)}`);
       if (CITIZENSHIP.test(m.text)) problems.push('asks about citizenship or immigration status');
       for (const v of sealedValues) if (m.text.includes(v)) problems.push('a sealed fact appeared in a message');
-      for (const n of otherNames) if (new RegExp(`\\b${n}\\b`).test(m.text)) problems.push(`another student's name appeared: ${n}`);
+      // Guide place names that contain a first name (a clinic on Alex Road) are taken out before the check.
+      const scrubbed = placeNames(otherNames).reduce((t, place) => t.split(place).join(' '), m.text);
+      for (const n of otherNames) if (new RegExp(`\\b${n}\\b`).test(scrubbed)) problems.push(`another student's name appeared: ${n}`);
       if (/still being built|not sure i got that/i.test(m.text) && step.action.startsWith('say:') === false) problems.push(`fallback reply to a button: ${step.action}`);
     }
     return problems;
