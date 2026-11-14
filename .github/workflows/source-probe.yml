@@ -19,12 +19,7 @@ jobs:
           set +e +o pipefail
           UA='zthr-resource-finder (+https://zthr.ai)'
           get() { curl -sS -L -A "$UA" -m 120 -o "$2" -w '%{http_code} %{size_download}\n' "$1"; }
-          echo "== HUD multifamily assisted, Montgomery and Greene"
-          get 'https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MULTIFAMILY_PROPERTIES_ASSISTED/FeatureServer/0/query?where=STD_ST%3D%27OH%27+AND+(CNTY_NM2+LIKE+%27Montgomery%25%27+OR+CNTY_NM2+LIKE+%27Greene%25%27)&outFields=*&f=json&resultRecordCount=2000' mf.json
-          python3 -c "
-          import json;d=json.load(open('mf.json'));f=[x['attributes'] for x in d.get('features',[])];print(len(f), d.get('error'))
-          print(sorted(f[0].keys()) if f else '')
-          for a in f[:3]: print({k:a[k] for k in a if any(t in k for t in ['NAME','PHONE','ADDR','CITY','ZIP','UNITS','ELDER','DISABL','PROGRAM','CNTY'])})"
-          echo "== HUD multifamily fields"; get 'https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MULTIFAMILY_PROPERTIES_ASSISTED/FeatureServer/0?f=json' mff.json; python3 -c "import json;print([x['name'] for x in json.load(open('mff.json')).get('fields',[])][:120])"
-          echo "== IMLS PLS page links"; get 'https://www.imls.gov/research-evaluation/data-collection/public-libraries-survey-pls' pls.html; grep -oE 'href="[^"]*(pls|PLS)[^"]*\.(zip|csv)"' pls.html | head; get 'https://imls.gov/research-evaluation/surveys/public-libraries-survey-pls' pls2.html; grep -oE 'href="[^"]*\.(zip|csv)"' pls2.html | head
-          echo "== Plentiful (pantry platform) Dayton"; get 'https://directory.plentiful.org/ohio/dayton' pl.html; grep -o '<title>[^<]*' pl.html; grep -oE '"(name|address|phone)":"[^"]{2,80}"' pl.html | head -12
+          echo "== HUD multifamily fields"; get 'https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MULTIFAMILY_PROPERTIES_ASSISTED/FeatureServer/0?f=json' mff.json; python3 -c "import json;n=[x['name'] for x in json.load(open('mff.json')).get('fields',[])];print([x for x in n if any(t in x for t in ['ST','ZIP','CNTY','COUNTY','CITY','PHONE','NAME','CLIENT','UNIT','LAT','LON'])])"
+          get 'https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MULTIFAMILY_PROPERTIES_ASSISTED/FeatureServer/0/query?where=STD_ST%3D%27OH%27&outFields=PROPERTY_NAME_TEXT,ADDRESS_LINE1_TEXT,PLACED_BASE_CITY_NAME_TEXT,STD_ZIP5,PROPERTY_ON_SITE_PHONE_NUMBER,CLIENT_GROUP_NAME,TOTAL_ASSISTED_UNIT_COUNT&f=json&resultRecordCount=3' mf.json; head -c 1500 mf.json; echo
+          get 'https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/MULTIFAMILY_PROPERTIES_ASSISTED/FeatureServer/0/query?where=STD_ST%3D%27OH%27&returnCountOnly=true&f=json' c.json; cat c.json; echo
+          echo "== IMLS PLS FY2024 outlets"; get 'https://www.imls.gov/sites/default/files/2026-06/pls_fy2024_csv.zip' pls.zip; unzip -o -q pls.zip -d pls; ls -R pls | head; f=$(ls pls/*/*outlet* pls/*outlet* 2>/dev/null | head -1); echo "$f"; head -c 600 "$f"; echo; grep -i ",OH," "$f" | grep -iE "DAYTON|XENIA|FAIRBORN|BEAVERCREEK|KETTERING|CENTERVILLE|MIAMISBURG|VANDALIA|YELLOW SPRINGS|HUBER" | wc -l
