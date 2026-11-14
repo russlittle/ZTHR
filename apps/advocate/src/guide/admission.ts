@@ -15,8 +15,12 @@ export interface Check {
 
 const PREFILL_FIELDS = new Set(['chosenName', 'phone', 'zip', 'college', 'creditHours', 'householdSize', 'monthlyGrossIncome', 'weeklyWorkHours']);
 const KNOWN_RULES = new Set(['snap', 'lifeline', 'ohio-heap', 'sinclair-emergency-grant']);
-const isDate = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d));
-const digits = (p: string) => p.replace(/\D/g, '');
+function isDate(d: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d));
+}
+function digits(p: string) {
+  return p.replace(/\D/g, '');
+}
 
 export function admit(r: Resource, catalog: Resource[], owners: Set<string>): Check[] {
   const checks: Check[] = [];
@@ -40,7 +44,7 @@ export function admit(r: Resource, catalog: Resource[], owners: Set<string>): Ch
   push('prefill fields exist', r.prefill.every((f) => PREFILL_FIELDS.has(f)), r.prefill.join(', ') || 'none');
   push('availability facts are sourced and dated', (r.availability ?? []).every((f) => /^https?:\/\//.test(f.source) && isDate(f.checkedOn)), `${r.availability?.length ?? 0} facts`);
   push('owned by a declared scout', owners.has(r.id), owners.has(r.id) ? 'owned' : 'no scout lists it');
-  const dupes = catalog.filter((x) => x.id !== r.id && ((r.phone && x.phone && digits(x.phone) === digits(r.phone) && x.name === r.name) || x.id === r.id));
+  const dupes = catalog.filter((x) => x.id !== r.id && !!r.phone && !!x.phone && digits(x.phone) === digits(r.phone) && x.name === r.name);
   push('not a duplicate', dupes.length === 0, dupes.map((d) => d.id).join(', ') || 'unique');
   push('unique id', catalog.filter((x) => x.id === r.id).length === 1, r.id);
   return checks;

@@ -5,7 +5,9 @@ import { BARRIER, BARRIERS, DOMAIN_LABEL, PROVIDER_KINDS, PROVIDER_LABEL, SITUAT
 import { recordLine, type Record_ } from './feedback.js';
 import { COLLEGES } from '../domain/colleges.js';
 
-const collegeCounty = (id: string) => COLLEGES.find((c) => c.college === id)?.county;
+function collegeCounty(id: string): string | undefined {
+  return COLLEGES.find((c) => c.college === id)?.county;
+}
 
 /**
  * The public feed (docs/api/guide.md). The guide as data any app, college, library, congregation or agency can take

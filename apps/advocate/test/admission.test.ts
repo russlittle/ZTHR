@@ -117,6 +117,8 @@ describe('admission: each gate at its edge', () => {
     expect(failed({ eligibility: { text: 'Anyone. Residency required.' } })).toEqual([]);
     expect(failed({ eligibility: { text: 'Everyone in Montgomery County, unconditionally.' } })).toEqual([]);
     expect(failed({ eligibility: { text: 'Everyone living in Montgomery County, unconditionally.' } })).toEqual(['eligibility in plain words']);
+    // Words are counted across runs of spaces: four long words with double spaces are still four.
+    expect(failed({ eligibility: { text: 'Unconditionally  comprehensive  residency  verification.' } })).toEqual([]);
   });
 
   it('description: plain words', () => {

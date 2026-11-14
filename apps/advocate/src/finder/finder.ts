@@ -44,24 +44,44 @@ export interface Lead {
 }
 
 export const FRESH_DAYS = 30;
-export const zip5 = (z: unknown) => String(z ?? '').replace(/\D/g, '').slice(0, 5);
-export const digits = (p: unknown) => String(p ?? '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
-export const phoneOf = (p: unknown): string | undefined => {
+export function zip5(z: unknown) {
+  return String(z ?? '').replace(/\D/g, '').slice(0, 5);
+}
+export function digits(p: unknown) {
+  return String(p ?? '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+}
+export function phoneOf(p: unknown): string | undefined {
   const d = digits(p);
   // A North American number: ten digits, and neither the area code nor the exchange starts with 0 or 1.
   return /^[2-9]\d{2}[2-9]\d{6}$/.test(d) ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : undefined;
-};
-export const slug = (s: string) => s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
-export const undba = (s: string) => s.replace(/^\s*dba\s+/i, '');
-export const title = (raw: string) => { const s = raw.replace(/\s+/g, ' ').trim(); return (/[a-z]/.test(s) ? s : s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase()).replace(/\b(Of|And|For|The|In|At)\b/g, (m) => m.toLowerCase()).replace(/^./, (m) => m.toUpperCase()).replace(/\b(Ii|Iii|Iv|Vi|Vii)\b/g, (m) => m.toUpperCase())); };
-export const url = (u: unknown) => {
+}
+export function slug(s: string) {
+  return s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
+}
+export function undba(s: string) {
+  return s.replace(/^\s*dba\s+/i, '');
+}
+export function title(raw: string) {
+  const s = raw.replace(/\s+/g, ' ').trim();
+  // A name already in mixed case is kept as written; one in capitals is put in title case.
+  if (/[a-z]/.test(s)) return s;
+  return s
+    .toLowerCase()
+    .replace(/\b([a-z])/g, (m) => m.toUpperCase())
+    .replace(/\b(Of|And|For|The|In|At)\b/g, (m) => m.toLowerCase())
+    .replace(/^./, (m) => m.toUpperCase())
+    .replace(/\b(Ii|Iii|Iv|Vi|Vii)\b/g, (m) => m.toUpperCase());
+}
+export function url(u: unknown) {
   const s = String(u ?? '').trim();
   if (!s || /in progress|n\/a|none/i.test(s)) return undefined;
   return /^https?:\/\//i.test(s) ? s : /^[\w-]+(\.[\w-]+)+/.test(s) ? `https://${s}` : undefined;
-};
+}
 
 /** The county a ZIP belongs to in this area, or undefined when it is outside. */
-export const countyOf = (area: Area, zip: unknown) => area.zipCounty.get(zip5(zip));
+export function countyOf(area: Area, zip: unknown) {
+  return area.zipCounty.get(zip5(zip));
+}
 
 /** Build the ZIP-to-county map from the Census 2020 ZCTA-to-county relationship file (pipe-separated). */
 export function zipCountyFrom(relationship: string, fips: string[]): Map<string, string> {
@@ -101,12 +121,12 @@ export function nameSites(entries: Resource[]): Resource[] {
 }
 
 /** The same phone and the same street number: one place. A shared main number alone (a library system) is not. */
-export const samePlace = (a: Pick<Resource, 'phone' | 'location' | 'name'>, b: Pick<Resource, 'phone' | 'location' | 'name'>) => {
+export function samePlace(a: Pick<Resource, 'phone' | 'location' | 'name'>, b: Pick<Resource, 'phone' | 'location' | 'name'>) {
   const p = digits(a.phone);
   if (!p || p !== digits(b.phone)) return false;
   const num = (x: typeof a) => x.location?.address.match(/^\d+/)?.[0];
   return num(a) && num(b) ? num(a) === num(b) : a.name.toLowerCase() === b.name.toLowerCase();
-};
+}
 
 /** Same phone and same street number means the same place, listed twice; the first listing is kept. */
 export function dedupe(entries: Resource[], skipped: Found['skipped']): Resource[] {

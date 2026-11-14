@@ -30,7 +30,11 @@ export function recordLine(r: Record_): string | undefined {
 }
 
 /** A share of help from 0 to 1, shrunk toward one half when there are few answers, for ranking only. */
-export const helpScore = (r: Record_): number => (r.helped + 1) / (r.tried + 2);
+export function helpScore(r: Record_): number {
+  return (r.helped + 1) / (r.tried + 2);
+}
 
 /** Flag for the curator: tried by enough students and rarely helped. Flagged, never hidden. */
-export const needsReview = (r: Record_): boolean => r.tried >= MIN_SHOWN * 2 && r.helped / r.tried < 0.25;
+export function needsReview(r: Record_): boolean {
+  return r.tried >= MIN_SHOWN * 2 && r.helped / r.tried < 0.25;
+}

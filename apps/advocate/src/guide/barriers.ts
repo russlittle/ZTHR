@@ -34,12 +34,20 @@ export interface BarrierBook {
 }
 
 const RANK: Record<Urgency, number> = { tonight: 0, soon: 1, someday: 2 };
-const higher = (a: Urgency, b: Urgency): Urgency => (RANK[a] <= RANK[b] ? a : b);
+function higher(a: Urgency, b: Urgency): Urgency {
+  return RANK[a] <= RANK[b] ? a : b;
+}
 const day = 86_400_000;
-const addDays = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + n * day).toISOString().slice(0, 10);
-const daysBetween = (a: string, b: string) => Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / day);
+function addDays(d: string, n: number): string {
+  return new Date(Date.parse(`${d}T12:00:00Z`) + n * day).toISOString().slice(0, 10);
+}
+function daysBetween(a: string, b: string): number {
+  return Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / day);
+}
 
-export const empty = (): BarrierBook => ({ items: [] });
+export function empty(): BarrierBook {
+  return { items: [] };
+}
 
 function replace(book: BarrierBook, b: StudentBarrier): BarrierBook {
   return { items: [...book.items.filter((x) => x.need !== b.need), b] };
@@ -93,7 +101,9 @@ export function active(book: BarrierBook): StudentBarrier[] {
 }
 
 /** Whether reminders about it may be shown today. */
-export const remindable = (b: StudentBarrier, today: string): boolean => b.status !== 'resolved' && (!b.quietUntil || b.quietUntil <= today);
+export function remindable(b: StudentBarrier, today: string): boolean {
+  return b.status !== 'resolved' && (!b.quietUntil || b.quietUntil <= today);
+}
 
 /** An open barrier not mentioned for a week gets one gentle question: still a problem? */
 export function dueForCheck(book: BarrierBook, today: string, quietDays = 7): StudentBarrier | undefined {
