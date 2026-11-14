@@ -128,40 +128,316 @@
   "schemas": {
    "Service": {
     "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "organization": {
+      "type": "object",
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "kind": {
+        "type": "string",
+        "enum": [
+         "college",
+         "government",
+         "nonprofit",
+         "faith",
+         "community",
+         "health"
+        ]
+       },
+       "kind_label": {
+        "type": "string"
+       },
+       "level": {
+        "type": "string"
+       },
+       "faith_note": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "name",
+       "kind",
+       "kind_label",
+       "level"
+      ],
+      "additionalProperties": false
+     },
+     "taxonomy": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "barrier": {
+         "type": "string"
+        },
+        "label": {
+         "type": "string"
+        },
+        "domain": {
+         "type": "string"
+        },
+        "domain_label": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "barrier",
+        "label",
+        "domain",
+        "domain_label"
+       ],
+       "additionalProperties": false
+      },
+      "minItems": 1
+     },
+     "situations": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "id": {
+         "type": "string"
+        },
+        "label": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "id",
+        "label"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "serves": {
+      "type": "object",
+      "properties": {
+       "counties": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "colleges": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "national": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "counties",
+       "colleges",
+       "national"
+      ],
+      "additionalProperties": false
+     },
+     "location": {
+      "type": "object",
+      "properties": {
+       "address": {
+        "type": "string"
+       },
+       "city": {
+        "type": "string"
+       },
+       "postal_code": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "address",
+       "city"
+      ],
+      "additionalProperties": false
+     },
+     "phone": {
+      "type": "string"
+     },
+     "url": {
+      "type": "string"
+     },
+     "hours": {
+      "type": "string"
+     },
+     "cost": {
+      "type": "string"
+     },
+     "eligibility": {
+      "type": "string"
+     },
+     "how_to_use": {
+      "type": "object",
+      "properties": {
+       "steps": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        },
+        "minItems": 1
+       },
+       "documents": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       },
+       "what_to_expect": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "steps",
+       "documents"
+      ],
+      "additionalProperties": false
+     },
+     "availability": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "fact": {
+         "type": "string"
+        },
+        "value": {
+         "type": "string"
+        },
+        "source": {
+         "type": "string"
+        },
+        "checked_on": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "fact",
+        "value",
+        "source",
+        "checked_on"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "record": {
+      "type": "string"
+     },
+     "source": {
+      "type": "object",
+      "properties": {
+       "url": {
+        "type": "string",
+        "format": "uri"
+       },
+       "license": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "url",
+       "license"
+      ],
+      "additionalProperties": false
+     },
+     "verification": {
+      "type": "object",
+      "properties": {
+       "verified_on": {
+        "type": "string"
+       },
+       "freshness_days": {
+        "type": "number"
+       },
+       "current": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "verified_on",
+       "freshness_days",
+       "current"
+      ],
+      "additionalProperties": false
+     }
+    },
     "required": [
      "id",
      "name",
      "description",
      "organization",
      "taxonomy",
+     "situations",
+     "serves",
      "eligibility",
      "how_to_use",
+     "availability",
      "source",
      "verification"
     ],
-    "properties": {
-     "id": {},
-     "name": {},
-     "description": {},
-     "organization": {},
-     "taxonomy": {},
-     "situations": {},
-     "serves": {},
-     "location": {},
-     "phone": {},
-     "url": {},
-     "hours": {},
-     "cost": {},
-     "eligibility": {},
-     "how_to_use": {},
-     "availability": {},
-     "record": {},
-     "source": {},
-     "verification": {}
-    }
+    "additionalProperties": false
    },
    "Feed": {
     "type": "object",
+    "properties": {
+     "feed": {
+      "type": "string",
+      "enum": [
+       "community-resource-guide"
+      ]
+     },
+     "version": {
+      "type": "string"
+     },
+     "region": {
+      "type": "string"
+     },
+     "generated_on": {
+      "type": "string"
+     },
+     "license": {
+      "type": "object",
+      "properties": {
+       "name": {
+        "type": "string"
+       },
+       "url": {
+        "type": "string"
+       },
+       "attribution": {
+        "type": "string"
+       }
+      },
+      "required": [
+       "name",
+       "url",
+       "attribution"
+      ],
+      "additionalProperties": false
+     },
+     "count": {
+      "type": "number"
+     },
+     "services": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/Service"
+      }
+     }
+    },
     "required": [
      "feed",
      "version",
@@ -171,14 +447,7 @@
      "count",
      "services"
     ],
-    "properties": {
-     "services": {
-      "type": "array",
-      "items": {
-       "$ref": "#/components/schemas/Service"
-      }
-     }
-    }
+    "additionalProperties": false
    }
   }
  }

@@ -1,0 +1,51 @@
+{
+ "id": "masters-closet",
+ "name": "The Master's Closet",
+ "description": "Gently used to fairly new clothes at no cost, in Huber Heights.",
+ "organization": {
+  "name": "The Master's Closet Community Outreach Center",
+  "kind": "community",
+  "kind_label": "Community",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "goods",
+   "label": "Clothing and goods",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "5950 Longford Rd.",
+  "city": "Huber Heights",
+  "postal_code": "45424"
+ },
+ "phone": "937-499-0352",
+ "cost": "free",
+ "eligibility": "Anyone who needs clothes.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-499-0352 for hours before you go."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.sinclair.edu/student-life/wellness/resources/clothing/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 60,
+  "current": true
+ }
+}

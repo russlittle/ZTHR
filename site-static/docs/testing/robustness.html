@@ -384,6 +384,14 @@ generated, the services fail on purpose, and the load is measured rather than es
 <td>A snapshot and restore of the whole app gives every student an identical export and consent ledger.</td>
 </tr>
 <tr>
+<td>Model-based simulation</td>
+<td>Weeks of a student&#39;s life with the resource guide, as random sequences of up to 40 steps: raise a need, answer a check-in, &quot;not yet&quot;, &quot;not today&quot;, &quot;it is sorted out&quot;, text something, say whether a resource helped, let days pass. After every step the app is compared with a model of what the guide promises (which needs are open, which are paused today, at most three signals, a next step and a passing tone check on every reply). A failure is shrunk to its shortest sequence. See <a href="../flows/resource-guide.html">the resource guide</a>.</td>
+</tr>
+<tr>
+<td>What students type</td>
+<td>A corpus of real phrasings, each routed where it must go (the tonight route, a crisis line, or help for one barrier with the right service first), and phrasings that must not raise the tonight route.</td>
+</tr>
+<tr>
 <td>Load</td>
 <td><code>tools/load.ts</code> sends many visitors at once, each with its own demo copy, through the screens a student uses, and fails on any 500 or a 95th percentile over budget.</td>
 </tr>
@@ -401,5 +409,15 @@ characters, and any broken character is repaired.</li>
 <li><strong>A crafted scope name was accepted on a shared link.</strong> The check that a scope exists used <code>in</code>, which also
 matches inherited names. A link could be saved with a scope called <code>toString</code>, and the student&#39;s list of links
 then printed program text. It showed nothing extra, but the check now uses the object&#39;s own keys.</li>
+</ul>
+<p>Writing the resource guide&#39;s tests found three more:</p>
+<ul>
+<li><strong>&quot;Did it help&quot; answers were never counted.</strong> The answer was recorded with the resource as its subject, and the
+evidence store replaced every subject with a pseudonym, so no record ever matched its resource. The resource is
+now the subject (it is public), and the student appears only as a pseudonym, so each student counts once.</li>
+<li><strong>&quot;I have nowhere to sleep tonight&quot; was not understood.</strong> It reached the fallback reply. The words students use
+for having no safe place tonight now take the tonight route, from a first text before any sign-up question too.</li>
+<li><strong>A veterans&#39; center was offered to a student who said she felt alone.</strong> Help meant for one group is now left out
+unless the student said they are in that group.</li>
 </ul>
 </article></main></div></body></html>

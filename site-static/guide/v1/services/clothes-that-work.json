@@ -1,0 +1,57 @@
+{
+ "id": "clothes-that-work",
+ "name": "Clothes That Work",
+ "description": "Clothes for work, and help getting ready for a job.",
+ "organization": {
+  "name": "Clothes That Work",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "goods",
+   "label": "Clothing and goods",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "career",
+   "label": "Work",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1133 S Edwin C Moses Blvd, Suite 392",
+  "city": "Dayton",
+  "postal_code": "45417"
+ },
+ "phone": "937-222-3778",
+ "cost": "free",
+ "eligibility": "People getting ready for a job or an interview.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-222-3778 to ask how to get clothes for work."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.sinclair.edu/student-life/wellness/resources/clothing/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-13",
+  "freshness_days": 60,
+  "current": true
+ }
+}

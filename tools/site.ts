@@ -372,11 +372,11 @@ ${NAV.map((g) => ui.section(g.title, ui.rows(g.pages.filter(([p]) => p !== 'inde
   // cost
   // The records go out with every build as JSON, so a static copy of the site (zthr.ai) can show them too.
   mkdirSync(join(SITE, 'factory'), { recursive: true });
-  writeFileSync(join(SITE, 'factory', 'ci-costs.json'), JSON.stringify(costs.map((c) => ({ finishedAt: c.finishedAt, kind: c.kind, machine: c.machine, minutes: c.minutes, costUsd: c.costUsd }))));
+  if (!STATIC) writeFileSync(join(SITE, 'factory', 'ci-costs.json'), JSON.stringify(costs.map((c) => ({ finishedAt: c.finishedAt, kind: c.kind, machine: c.machine, minutes: c.minutes, costUsd: c.costUsd }))));
   const total = costs.reduce((s, c) => s + c.costUsd, 0);
   const ym = new Date().toISOString().slice(0, 7);
   const month = costs.filter((c) => c.finishedAt.slice(0, 7) === ym).reduce((s, c) => s + c.costUsd, 0);
-  const costBody = costs.length
+  const costBody = costs.length && !STATIC
     ? `${ui.kpis([{ value: n(costs.length), label: 'factory runs recorded' }, { value: `$${total.toFixed(2)}`, label: 'all time, list price' }, { value: `$${month.toFixed(2)}`, label: 'this month, of a $100 cap' }, { value: `${(costs.reduce((s, c) => s + c.minutes, 0) / costs.length).toFixed(1)} min`, label: 'average run' }, { value: '$0.00', label: 'model spend by the product' }])}${ui.table(['Finished', 'Kind', 'Machine', 'Minutes', 'Cost'], costs.slice(-40).reverse().map((c) => [c.finishedAt.slice(0, 16).replace('T', ' '), c.kind, c.machine, c.minutes.toFixed(1), `$${c.costUsd.toFixed(4)}`]))}`
     : STATIC
       ? `<div id="cost-live" data-src="${APP_ORIGIN}/factory/ci-costs.json" data-page="${APP_ORIGIN}/factory/cost.html"><p class="muted">Reading the cost records from the latest build…</p></div><script src="../assets/cost.js" defer></script>`
