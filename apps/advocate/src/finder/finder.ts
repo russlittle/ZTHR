@@ -44,16 +44,17 @@ export interface Lead {
 }
 
 export const FRESH_DAYS = 30;
-const zip5 = (z: unknown) => String(z ?? '').replace(/\D/g, '').slice(0, 5);
-const digits = (p: unknown) => String(p ?? '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+export const zip5 = (z: unknown) => String(z ?? '').replace(/\D/g, '').slice(0, 5);
+export const digits = (p: unknown) => String(p ?? '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
 export const phoneOf = (p: unknown): string | undefined => {
   const d = digits(p);
-  return d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : undefined;
+  // A North American number: ten digits, and neither the area code nor the exchange starts with 0 or 1.
+  return /^[2-9]\d{2}[2-9]\d{6}$/.test(d) ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : undefined;
 };
-const slug = (s: string) => s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
-const undba = (s: string) => s.replace(/^\s*dba\s+/i, '');
-const title = (raw: string) => { const s = raw.replace(/\s+/g, ' ').trim(); return (/[a-z]/.test(s) ? s : s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase()).replace(/\b(Of|And|For|The|In|At)\b/g, (m) => m.toLowerCase()).replace(/^./, (m) => m.toUpperCase()).replace(/\b(Ii|Iii|Iv|Vi|Vii)\b/g, (m) => m.toUpperCase())); };
-const url = (u: unknown) => {
+export const slug = (s: string) => s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
+export const undba = (s: string) => s.replace(/^\s*dba\s+/i, '');
+export const title = (raw: string) => { const s = raw.replace(/\s+/g, ' ').trim(); return (/[a-z]/.test(s) ? s : s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase()).replace(/\b(Of|And|For|The|In|At)\b/g, (m) => m.toLowerCase()).replace(/^./, (m) => m.toUpperCase()).replace(/\b(Ii|Iii|Iv|Vi|Vii)\b/g, (m) => m.toUpperCase())); };
+export const url = (u: unknown) => {
   const s = String(u ?? '').trim();
   if (!s || /in progress|n\/a|none/i.test(s)) return undefined;
   return /^https?:\/\//i.test(s) ? s : /^[\w-]+(\.[\w-]+)+/.test(s) ? `https://${s}` : undefined;
@@ -214,7 +215,7 @@ export function fromHrsa(rows: Record<string, string>[], area: Area): Found {
       continue;
     }
     const phone = phoneOf(r['Site Telephone Number']);
-    const org = title((r['Health Center Name'] ?? r['Health Center Organization Name'] ?? name).trim());
+    const org = title((r['Health Center Name'] || r['Health Center Organization Name'] || name).trim());
     const look = /look-?alike/i.test(r['Health Center Type'] ?? '');
     entries.push({
       id: `hrsa-${slug(name)}-${zip5(r['Site Postal Code'])}`,
@@ -261,6 +262,21 @@ interface HudRow {
   languages?: string;
 }
 
+/** HUD's three-letter language codes, as its counselor search returns them. */
+export const LANGUAGE: Record<string, string> = {
+  ARA: 'Arabic', ASL: 'American Sign Language', CHI: 'Chinese', CRE: 'Haitian Creole', FAR: 'Farsi', FRE: 'French', GER: 'German',
+  HIN: 'Hindi', HMO: 'Hmong', ITA: 'Italian', JPN: 'Japanese', KHM: 'Khmer', KOR: 'Korean', NEP: 'Nepali', POL: 'Polish', POR: 'Portuguese',
+  RUS: 'Russian', SOM: 'Somali', SPA: 'Spanish', SWA: 'Swahili', TGL: 'Tagalog', UKR: 'Ukrainian', URD: 'Urdu', VIE: 'Vietnamese',
+};
+
+/** The languages besides English, in words: "Spanish", "Spanish and French", "Spanish, French and other languages". */
+export function languages(codes: unknown): string | undefined {
+  const all = String(codes ?? '').split(',').map((l) => l.trim().toUpperCase()).filter((l) => l && l !== 'ENG');
+  const named = [...new Set(all.map((c) => LANGUAGE[c]).filter((n): n is string => !!n))];
+  const words = [...named, ...(all.some((c) => !LANGUAGE[c]) ? ['other languages'] : [])];
+  return words.length ? (words.length === 1 ? words[0] : `${words.slice(0, -1).join(', ')} and ${words.at(-1)}`) : undefined;
+}
+
 export function fromHudCounseling(rows: HudRow[], area: Area): Found {
   const skipped: Found['skipped'] = [];
   const entries: Resource[] = [];
@@ -276,7 +292,7 @@ export function fromHudCounseling(rows: HudRow[], area: Area): Found {
     }
     const phone = phoneOf(r.phone1);
     const government = /\b(county|city of|authority|department)\b/i.test(name);
-    const langs = String(r.languages ?? '').split(',').map((l) => l.trim()).filter((l) => l && l !== 'ENG');
+    const langs = languages(r.languages);
     entries.push({
       id: `hud-${slug(name)}-${zip5(r.zipcd)}`,
       name,
@@ -291,7 +307,7 @@ export function fromHudCounseling(rows: HudRow[], area: Area): Found {
       howToApply: [`Call${phone ? ` ${phone}` : ''} and say what you need help with.`],
       documents: [],
       prefill: [],
-      ...(langs.length ? { whatToExpect: `Counseling is offered in English and other languages too (${langs.join(', ')}).` } : {}),
+      ...(langs ? { whatToExpect: `Counseling is also offered in ${langs}.` } : {}),
       source: { url: HUD_COUNSELING_PAGE, license: 'public-information' },
       verifiedOn: area.today,
       freshnessDays: FRESH_DAYS,
@@ -380,7 +396,8 @@ export function fromHudMultifamily(features: { attributes: Record<string, unknow
       source: { url: HUD_MF_PAGE, license: 'public-information' },
       verifiedOn: area.today,
       freshnessDays: FRESH_DAYS,
-      provider: { kind: 'government', level: 'federal' },
+      // HUD helps pay the rent; the building is run by its owner, a company or a nonprofit.
+      provider: { kind: 'property', level: 'local' },
       tags: ['found:hud-multifamily', ...(elderly ? ['older-adults'] : []), ...(disabled ? ['disability'] : [])],
     });
   }

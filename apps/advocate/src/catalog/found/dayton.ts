@@ -3289,8 +3289,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3332,8 +3332,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3375,8 +3375,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3418,8 +3418,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3461,8 +3461,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -3505,8 +3505,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -3549,8 +3549,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3592,8 +3592,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -3636,8 +3636,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3679,8 +3679,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3722,8 +3722,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3765,8 +3765,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -3809,8 +3809,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3852,8 +3852,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -3896,8 +3896,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3939,8 +3939,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -3982,8 +3982,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -4026,8 +4026,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4069,8 +4069,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4112,8 +4112,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4155,8 +4155,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4198,8 +4198,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4241,8 +4241,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -4285,8 +4285,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -4329,8 +4329,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4372,8 +4372,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -4416,8 +4416,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -4460,8 +4460,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -4504,8 +4504,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -4548,8 +4548,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4591,8 +4591,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4634,8 +4634,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4677,8 +4677,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4720,8 +4720,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4763,8 +4763,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4806,8 +4806,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -4850,8 +4850,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -4894,8 +4894,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -4938,8 +4938,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -4981,8 +4981,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -5025,8 +5025,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5068,8 +5068,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -5112,8 +5112,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -5156,8 +5156,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -5200,8 +5200,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5243,8 +5243,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5286,8 +5286,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -5330,8 +5330,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5373,8 +5373,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5416,8 +5416,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5459,8 +5459,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5502,8 +5502,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5545,8 +5545,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5588,8 +5588,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5631,8 +5631,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5674,8 +5674,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5717,8 +5717,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5760,8 +5760,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -5804,8 +5804,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5847,8 +5847,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -5891,8 +5891,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -5934,8 +5934,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -5978,8 +5978,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -6021,8 +6021,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -6064,8 +6064,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -6107,8 +6107,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6151,8 +6151,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -6194,8 +6194,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -6237,8 +6237,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6281,8 +6281,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6325,8 +6325,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6369,8 +6369,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6413,8 +6413,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6457,8 +6457,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6501,8 +6501,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6545,8 +6545,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6589,8 +6589,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6633,8 +6633,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6677,8 +6677,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6721,8 +6721,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6765,8 +6765,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6809,8 +6809,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6853,8 +6853,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -6896,8 +6896,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily",
@@ -6940,8 +6940,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -6983,8 +6983,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -7026,8 +7026,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -7069,8 +7069,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -7112,8 +7112,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -7155,8 +7155,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -7198,8 +7198,8 @@ export const FOUND_DAYTON: Resource[] = [
   "verifiedOn": "2026-11-14",
   "freshnessDays": 30,
   "provider": {
-   "kind": "government",
-   "level": "federal"
+   "kind": "property",
+   "level": "local"
   },
   "tags": [
    "found:hud-multifamily"
@@ -8672,7 +8672,7 @@ export const FOUND_DAYTON: Resource[] = [
   ],
   "documents": [],
   "prefill": [],
-  "whatToExpect": "Counseling is offered in English and other languages too (SPA).",
+  "whatToExpect": "Counseling is also offered in Spanish.",
   "source": {
    "url": "https://apps.hud.gov/offices/hsg/sfh/hcc/hcs.cfm",
    "license": "public-information"
@@ -8759,7 +8759,7 @@ export const FOUND_DAYTON: Resource[] = [
   ],
   "documents": [],
   "prefill": [],
-  "whatToExpect": "Counseling is offered in English and other languages too (SPA).",
+  "whatToExpect": "Counseling is also offered in Spanish.",
   "source": {
    "url": "https://apps.hud.gov/offices/hsg/sfh/hcc/hcs.cfm",
    "license": "public-information"

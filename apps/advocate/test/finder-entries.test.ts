@@ -1,0 +1,207 @@
+// Verifies docs/flows/resource-finder.md
+// Each system's record, shaped as that system returns it, against the whole entry a student would see, worked by hand
+// from the record and the rules in the doc: what each field says, and that nothing else is said. Then each helper
+// at its edges.
+import { describe, expect, it } from 'vitest';
+import * as F from '../src/finder/finder.js';
+
+const REL = [
+  'OID_ZCTA5_20|GEOID_ZCTA5_20|NAMELSAD_ZCTA5_20|AREALAND_ZCTA5_20|AREAWATER_ZCTA5_20|MTFCC_ZCTA5_20|CLASSFP_ZCTA5_20|FUNCSTAT_ZCTA5_20|OID_COUNTY_20|GEOID_COUNTY_20|NAMELSAD_COUNTY_20|AREALAND_COUNTY_20|AREAWATER_COUNTY_20|MTFCC_COUNTY_20|CLASSFP_COUNTY_20|FUNCSTAT_COUNTY_20|AREALAND_PART|AREAWATER_PART',
+  '1|45402|ZCTA5 45402|1|0|G6350|B5|S|1|39113|Montgomery County|1|0|G4020|H1|A|9000000|0',
+  '1|45432|ZCTA5 45432|1|0|G6350|B5|S|1|39113|Montgomery County|1|0|G4020|H1|A|5000000|0',
+  '1|45432|ZCTA5 45432|1|0|G6350|B5|S|1|39057|Greene County|1|0|G4020|H1|A|7000000|0',
+  '1|45385|ZCTA5 45385|1|0|G6350|B5|S|1|39057|Greene County|1|0|G4020|H1|A|90000000|0',
+  '1|45005|ZCTA5 45005|1|0|G6350|B5|S|1|39165|Warren County|1|0|G4020|H1|A|90000000|0',
+].join('\n');
+const area: F.Area = { state: 'OH', counties: [{ name: 'Montgomery', fips: '39113' }, { name: 'Greene', fips: '39057' }], zipCounty: F.zipCountyFrom(REL, ['39113', '39057']), center: { lat: 39.7589, lng: -84.1916 }, today: '2026-11-14' };
+const common = { documents: [], prefill: [], verifiedOn: '2026-11-14', freshnessDays: 30 };
+
+describe('each system of record, as the whole entry a student sees', () => {
+  it('FindTreatment: the intake line over the main one, both kinds of care, a sliding fee because the record lists one', () => {
+    const f = F.fromFindTreatment([{ name1: 'New Season of Ohio, L.P.', name2: 'New Season Dayton Treatment Center', street1: '3954 Linden Avenue', street2: 'Suite 2', city: 'DAYTON', state: 'OH', zip: '45402-3004', phone: '(937) 212-4950', intake1: '1 (937) 212-4951', website: 'newseason.example.org', type_facility: 'MH', services: [{ f1: 'Type of Care', f2: 'TC', f3: 'Mental health treatment; Substance use treatment' }, { f1: 'Payment/Insurance/Funding Accepted', f2: 'PAY', f3: 'Medicaid; Sliding fee scale' }] } as never], area);
+    expect(f).toEqual({ skipped: [], entries: [{
+      ...common, id: 'ft-new-season-dayton-treatment-center-45402', name: 'New Season Dayton Treatment Center', organization: 'New Season of Ohio, L.P.', categories: ['mental-health'],
+      description: 'Treatment for mental health and substance use. It charges less if you earn less.', serves: { counties: ['Montgomery'] },
+      location: { address: '3954 Linden Avenue, Suite 2', city: 'Dayton', zip: '45402' }, phone: '937-212-4951', url: 'https://newseason.example.org',
+      eligibility: { text: 'Call to ask who they serve.' }, howToApply: ['Call 937-212-4951 to ask for a first visit.', 'Ask if they take your insurance or charge less if you earn less.'],
+      cost: 'sliding-scale', source: { url: 'https://findtreatment.gov/', license: 'public-information' }, provider: { kind: 'health', level: 'local' }, tags: ['found:findtreatment'],
+    }] });
+  });
+
+  it('FindTreatment: mental health alone, substance use alone, and the main line when there is no intake line', () => {
+    const one = (over: Record<string, unknown>) => F.fromFindTreatment([{ name1: 'Org', name2: 'Clinic', street1: '1 Main St', city: 'Dayton', state: 'OH', zip: '45402', phone: '937-555-0100', type_facility: '', services: [], ...over } as never], area).entries[0]!;
+    expect(one({ type_facility: 'MH' }).description).toBe('Treatment for mental health.');
+    expect(one({ services: [{ f1: 'Type of Care', f3: 'Mental health treatment' }] }).description).toBe('Treatment for mental health.');
+    expect(one({ type_facility: 'SA' }).description).toBe('Treatment for substance use.');
+    expect(one({ type_facility: 'BUPREN' }).description).toBe('Treatment for substance use.');
+    expect(one({ services: [{ f1: 'Type of Care', f3: 'Opioid treatment program' }] }).description).toBe('Treatment for substance use.');
+    expect(one({ services: [{ f1: 'Pharmacotherapies', f3: 'Mental health treatment' }] }).description).toBe('Treatment for substance use.');
+    expect(one({}).phone).toBe('937-555-0100');
+    expect(one({}).howToApply[0]).toBe('Call 937-555-0100 to ask for a first visit.');
+    expect(one({ phone: '', intake1: '' }).howToApply[0]).toBe('Call to ask for a first visit.');
+    expect('phone' in one({ phone: '', intake1: '' })).toBe(false);
+    expect('url' in one({ website: 'In progress' })).toBe(false);
+    expect(one({ name2: '' }).name).toBe('Org');
+    expect(one({ name2: '', name1: 'DBA Hope House' }).organization).toBe('Hope House');
+    expect(one({ state: 'IN' })).toBeUndefined();
+    expect(one({ street2: '', city: 'DAYTON' }).location).toEqual({ address: '1 Main St', city: 'Dayton', zip: '45402' });
+  });
+
+  it('HRSA: a look-alike is not called federally funded; its sliding fee and with-or-without-insurance hold', () => {
+    const site = (over: Record<string, string>) => F.fromHrsa([{ 'Site Name': 'Five Rivers Health Centers - Corwin Nixon', 'Site Address': ' 2261 Philadelphia Dr ', 'Site City': 'DAYTON', 'Site State Abbreviation': 'OH', 'Site Postal Code': '45402-1111', 'Site Telephone Number': '937-734-6841', 'Site Web Address': 'www.example-health.org', 'Health Center Service Delivery Site Location Setting Description': 'All Other Clinic Types', 'Site Status Description': 'Active', 'Health Center Name': 'FIVE RIVERS HEALTH CENTERS', 'Health Center Type': 'Look-Alike', ...over }], area);
+    expect(site({})).toEqual({ skipped: [], entries: [{
+      ...common, id: 'hrsa-five-rivers-health-centers-corwin-nixon-45402', name: 'Five Rivers Health Centers - Corwin Nixon', organization: 'Five Rivers Health Centers', categories: ['health'],
+      description: 'A community health center. It sees you with or without insurance, and charges less if you earn less.', serves: { counties: ['Montgomery'] },
+      location: { address: '2261 Philadelphia Dr', city: 'Dayton', zip: '45402' }, phone: '937-734-6841', url: 'https://www.example-health.org',
+      eligibility: { text: 'Anyone, with or without insurance.' }, howToApply: ['Call 937-734-6841 to make a visit.', 'Ask about the sliding fee if money is tight.'],
+      cost: 'sliding-scale', whatToExpect: 'Health centers ask your income to set your fee. Bring proof of income if you have it.',
+      source: { url: 'https://findahealthcenter.hrsa.gov/', license: 'public-information' }, provider: { kind: 'health', level: 'local' }, tags: ['found:hrsa'],
+    }] });
+    expect(site({ 'Health Center Type': 'Federally Qualified Health Center' }).entries[0]!.description).toBe('A community health center funded by the federal government. It sees you with or without insurance, and charges less if you earn less.');
+    expect(site({ 'Site Status Description': '' }).skipped).toEqual([{ source: F.HRSA_PAGE, name: 'Five Rivers Health Centers - Corwin Nixon', why: 'status unknown' }]);
+    expect(site({ 'Site Status Description': ' Active ' }).entries).toHaveLength(1);
+    expect(site({ 'Site Status Description': 'Active Pending' }).entries).toHaveLength(0);
+    expect(site({ 'Site Telephone Number': '' }).entries[0]!.howToApply[0]).toBe('Call to make a visit.');
+    expect(site({ 'Health Center Name': '' }).entries[0]!.organization).toBe('Five Rivers Health Centers - Corwin Nixon');
+  });
+
+  it('HUD counselors: the languages in words, a government agency named as one', () => {
+    const one = (over: Record<string, unknown>) => F.fromHudCounseling([{ nme: 'HOMEOWNERSHIP CENTER OF GREATER DAYTON', adr1: '1 Main St', adr2: 'Floor 2', city: 'DAYTON', statecd: 'OH', zipcd: '45402', phone1: '937-555-0101', weburl: 'http://hcd.example.org', languages: 'ENG, SPA ,FRE', ...over } as never], area);
+    expect(one({})).toEqual({ skipped: [], entries: [{
+      ...common, id: 'hud-homeownership-center-of-greater-dayton-45402', name: 'Homeownership Center of Greater Dayton', organization: 'Homeownership Center of Greater Dayton', categories: ['housing', 'money'],
+      description: 'A housing counselor, checked by HUD, can help with rent, a home loan, credit, or buying a home.', serves: { counties: ['Montgomery'] },
+      location: { address: '1 Main St, Floor 2', city: 'Dayton', zip: '45402' }, phone: '937-555-0101', url: 'http://hcd.example.org',
+      eligibility: { text: 'Call to ask who they serve.' }, howToApply: ['Call 937-555-0101 and say what you need help with.'],
+      whatToExpect: 'Counseling is also offered in Spanish and French.',
+      source: { url: 'https://apps.hud.gov/offices/hsg/sfh/hcc/hcs.cfm', license: 'public-information' }, provider: { kind: 'nonprofit', level: 'local' }, tags: ['found:hud-counseling'],
+    }] });
+    expect('whatToExpect' in one({ languages: 'ENG' }).entries[0]!).toBe(false);
+    expect(one({ nme: 'MONTGOMERY COUNTY DEPARTMENT OF HOUSING' }).entries[0]!.provider).toEqual({ kind: 'government', level: 'local' });
+    expect(one({ phone1: '' }).entries[0]!.howToApply).toEqual(['Call and say what you need help with.']);
+    expect(one({ statecd: 'KY' })).toEqual({ entries: [], skipped: [{ source: F.HUD_COUNSELING_PAGE, name: 'Homeownership Center of Greater Dayton', why: 'outside the area' }] });
+  });
+
+  it('a language code becomes its name, and an unknown one is "other languages"', () => {
+    expect(F.languages('SPA')).toBe('Spanish');
+    expect(F.languages('ENG,SPA,FRE,VIE')).toBe('Spanish, French and Vietnamese');
+    expect(F.languages('spa, XYZ')).toBe('Spanish and other languages');
+    expect(F.languages('XYZ')).toBe('other languages');
+    expect(F.languages('SPA,SPA')).toBe('Spanish');
+    expect(F.languages('ENG')).toBeUndefined();
+    expect(F.languages(undefined)).toBeUndefined();
+  });
+
+  it('a housing authority: public housing and vouchers, a wait list that opens and closes', () => {
+    const f = F.fromHudPha([{ attributes: { FORMAL_PARTICIPANT_NAME: 'Greene Metropolitian Housing Authority', HA_PHN_NUM: '9373762908', STD_ADDR: '538 N Detroit St', STD_CITY: 'XENIA', STD_ZIP5: '45385' } }], area);
+    expect(f).toEqual({ skipped: [], entries: [{
+      ...common, id: 'pha-greene-metropolitan-housing-authority', name: 'Greene Metropolitan Housing Authority', organization: 'Greene Metropolitan Housing Authority', categories: ['housing'],
+      description: 'The public housing authority: public housing, and Housing Choice Vouchers (Section 8) that help pay rent.', serves: { counties: ['Greene'] },
+      location: { address: '538 N Detroit St', city: 'Xenia', zip: '45385' }, phone: '937-376-2908',
+      eligibility: { text: 'Based on income and household size.' }, howToApply: ['Call 937-376-2908 to ask if the waiting list is open.', 'Ask how to get on the list, and what to bring.'],
+      whatToExpect: 'Waiting lists can be long, and they open and close. Ask when this one will open if it is closed.',
+      source: { url: 'https://www.hud.gov/program_offices/public_indian_housing/pha/contacts', license: 'public-information' }, provider: { kind: 'government', level: 'county' }, tags: ['found:hud-pha'],
+    }] });
+  });
+
+  it('HUD-assisted apartments: run by their owner, with who they are for and how many units', () => {
+    const one = (over: Record<string, unknown>) => F.fromHudMultifamily([{ attributes: { PROPERTY_NAME_TEXT: 'RIVER APTS, III', STD_ADDR: '4132 WINTERTIME DRIVE', STD_CITY: 'DAYTON', STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: '(937)555-0123', CLIENT_GROUP_NAME: 'Disabled', TOTAL_ASSISTED_UNIT_COUNT: 0, ...over } }], area).entries[0]!;
+    expect(one({})).toEqual({
+      ...common, id: 'hudmf-river-apts-iii-45402', name: 'River Apts III', organization: 'River Apts III', categories: ['housing'],
+      description: 'Apartments where HUD helps pay the rent, so what you pay is based on your income.', serves: { counties: ['Montgomery'] },
+      location: { address: '4132 Wintertime Drive', city: 'Dayton', zip: '45402' }, phone: '937-555-0123',
+      eligibility: { text: 'For people with disabilities, based on income.' }, howToApply: ['Call 937-555-0123 to ask if the wait list is open.', 'Ask how to apply, and what to bring.'],
+      whatToExpect: 'Each building has its own wait list. Putting your name on several can help.',
+      source: { url: 'https://resources.hud.gov/', license: 'public-information' }, provider: { kind: 'property', level: 'local' }, tags: ['found:hud-multifamily', 'disability'],
+    });
+    expect(one({ CLIENT_GROUP_NAME: 'Elderly' }).tags).toEqual(['found:hud-multifamily', 'older-adults']);
+    for (const g of ['Elderly/Family', 'Family', 'Elderly and Disabled', 'Disabled Family', '']) {
+      const e = one({ CLIENT_GROUP_NAME: g });
+      expect([e.eligibility.text, e.tags], g).toEqual([g === 'Elderly and Disabled' ? 'For older adults, based on income.' : 'Based on income and household size.', g === 'Elderly and Disabled' ? ['found:hud-multifamily', 'older-adults'] : ['found:hud-multifamily']]);
+    }
+    expect(one({ PROPERTY_NAME_TEXT: 'OAK HILL, IV' }).name).toBe('Oak Hill IV');
+    expect(one({ PROPERTY_NAME_TEXT: 'OAK HILL, LLC' }).name).toBe('Oak Hill, Llc');
+    expect(one({ TOTAL_ASSISTED_UNIT_COUNT: 1 }).description).toBe('Apartments where HUD helps pay the rent, so what you pay is based on your income (1 such units).');
+  });
+
+  it('a library branch: no hours claimed unless the survey gives both hours and weeks', () => {
+    const one = (over: Record<string, string>) => F.fromLibraries([{ STABR: 'OH', LIBNAME: 'XENIA COMMUNITY LIBRARY', STATNAME: 'GREENE COUNTY PUBLIC LIBRARY', ADDRESS: '76 E MARKET ST', CITY: 'XENIA', ZIP: '45385', PHONE: '9373764952', C_OUT_TY: 'BR', HOURS: '0', WKS_OPEN: '52', ...over }], area).entries[0]!;
+    expect(one({})).toEqual({
+      ...common, freshnessDays: 90, id: 'lib-xenia-community-library-45385', name: 'Xenia Community Library', organization: 'Greene County Public Library', categories: ['phone-internet', 'academic'],
+      description: 'A public library. Use the computers, Wi-Fi and printers for free, and study there.', serves: { counties: ['Greene'] },
+      location: { address: '76 E Market St', city: 'Xenia', zip: '45385' }, phone: '937-376-4952',
+      eligibility: { text: 'Anyone can come in.' }, howToApply: ['Go in during open hours.', 'Ask for a library card to borrow things and use the computers longer.'],
+      cost: 'free', source: { url: 'https://www.imls.gov/research-evaluation/surveys/public-libraries-survey-pls', license: 'public-information' }, provider: { kind: 'government', level: 'local' }, tags: ['found:imls'],
+    });
+    expect(one({ HOURS: '2600', WKS_OPEN: '52' }).whatToExpect).toBe("Open about 50 hours a week. Check the library's site for today's hours.");
+    expect('whatToExpect' in one({ HOURS: '2600', WKS_OPEN: '0' })).toBe(false);
+    expect('whatToExpect' in one({ HOURS: '-1', WKS_OPEN: '52' })).toBe(false);
+    expect(one({ C_OUT_TY: 'BM' })).toBeUndefined();
+    expect(one({ C_OUT_TY: 'CE' }).name).toBe('Xenia Community Library');
+    expect(one({ STATNAME: '' }).organization).toBe('Xenia Community Library');
+  });
+});
+
+describe('the helpers at their edges', () => {
+  it('ZIP codes and phone numbers', () => {
+    expect([F.zip5('45402-1234'), F.zip5(45402), F.zip5(null), F.zip5('4540')]).toEqual(['45402', '45402', '', '4540']);
+    expect([F.phoneOf('1-937-555-0100'), F.phoneOf('(937) 555-0100'), F.phoneOf('937.555.0100 ext 2'), F.phoneOf('11-937-555-010'), F.phoneOf('937-155-0100'), F.phoneOf('037-555-0100'), F.phoneOf('211'), F.phoneOf(null)]).toEqual(['937-555-0100', '937-555-0100', undefined, undefined, undefined, undefined, undefined, undefined]);
+    expect(F.digits('2-937-555-0100')).toBe('29375550100');
+    expect(F.digits('1937555010')).toBe('1937555010');
+  });
+  it('ids, names and links', () => {
+    expect(F.slug('  Habitat & Homes: St. Mary\'s #2  ')).toBe('habitat-and-homes-st-mary-s-2');
+    expect(F.slug('x'.repeat(60))).toHaveLength(48);
+    expect(F.undba('  dba Hope House')).toBe('Hope House');
+    expect(F.undba('Adba House')).toBe('Adba House');
+    expect(F.title('  ST.  VINCENT DE PAUL OF THE  CITY  ')).toBe('St. Vincent De Paul of the City');
+    expect(F.title('Food Bank of the Miami Valley')).toBe('Food Bank of the Miami Valley');
+    expect(F.title('AND THEN ROAD VII')).toBe('And Then Road VII');
+    expect([F.url(' https://a.org '), F.url('HTTP://a.org'), F.url('a.org/help'), F.url('sub.a.org'), F.url('localhost'), F.url('N/A'), F.url('none'), F.url(''), F.url('Website in progress')]).toEqual(['https://a.org', 'HTTP://a.org', 'https://a.org/help', 'https://sub.a.org', undefined, undefined, undefined, undefined, undefined]);
+  });
+  it('one place or two', () => {
+    const at = (name: string, phone: string | undefined, address?: string) => ({ name, phone, ...(address !== undefined ? { location: { address, city: 'Dayton', zip: '45402' } } : {}) });
+    expect(F.samePlace(at('A', '937-555-0100', '1 Main St'), at('B', '(937) 555-0100', '1 Elm St'))).toBe(true);
+    expect(F.samePlace(at('A', '937-555-0100', '1 Main St'), at('A', '937-555-0100', '2 Main St'))).toBe(false);
+    expect(F.samePlace(at('A', '937-555-0100'), at('a', '937-555-0100'))).toBe(true);
+    expect(F.samePlace(at('A', '937-555-0100'), at('B', '937-555-0100'))).toBe(false);
+    expect(F.samePlace(at('A', '937-555-0100', 'Main St'), at('A', '937-555-0100', '1 Main St'))).toBe(true);
+    expect(F.samePlace(at('A', undefined, '1 Main St'), at('A', undefined, '1 Main St'))).toBe(false);
+    expect(F.samePlace(at('A', '937-555-0100', '1 Main St'), at('A', '937-555-0101', '1 Main St'))).toBe(false);
+  });
+  it('dedupe keeps the first listing, says why, and gives a repeated id a number', () => {
+    const e = (id: string, name: string, phone: string, address: string) => ({ id, name, phone, location: { address, city: 'Dayton', zip: '45402' }, source: { url: 'https://s.gov' } }) as never;
+    const skipped: F.Found['skipped'] = [];
+    const out = F.dedupe([e('x', 'First', '937-555-0100', '1 Main St'), e('y', 'Second', '937-555-0100', '1 Main St, Suite 2'), e('x', 'Third', '937-555-0199', '9 Elm St'), e('x', 'Fourth', '937-555-0177', '7 Oak St'), e('z', 'No number', '937-555-0100', 'Main St')], skipped);
+    expect(out.map((o: { id: string; name: string }) => `${o.id} ${o.name}`)).toEqual(['x First', 'x-2 Third', 'x-3 Fourth', 'z No number']);
+    expect(skipped).toEqual([{ source: 'https://s.gov', name: 'Second', why: 'the same place as First' }]);
+  });
+  it('sites of one name: by town, then by street within a town', () => {
+    const e = (name: string, city: string, address: string) => ({ name, location: { address, city, zip: '45402' } }) as never;
+    expect(F.nameSites([e('TCN', 'Xenia', '452 W Market St'), e('TCN', 'Dayton', '1 Main St, Suite 4'), e('tcn', 'Dayton', '9 Elm St'), e('Other', 'Dayton', '1 Main St')]).map((x: { name: string }) => x.name)).toEqual(['TCN (Xenia)', 'TCN (Dayton, 1 Main St)', 'tcn (Dayton, 9 Elm St)', 'Other']);
+  });
+  it('CSV: a BOM, blank and one-cell lines, a final line with no newline, and quotes', () => {
+    expect(F.parseCsv('﻿a,b\r\n1,2\r\n\r\nonly\n"x\r\ny",""\n3,4')).toEqual([{ a: '1', b: '2' }, { a: 'x\r\ny', b: '' }, { a: '3', b: '4' }]);
+    expect(F.parseCsv('a,b\n1')).toEqual([]);
+    expect(F.parseCsv('a,b\n1,2,3\n,')).toEqual([{ a: '1', b: '2' }, { a: '', b: '' }]);
+    expect(F.parseCsv('')).toEqual([]);
+  });
+  it('drift at its edges: a 2xx answer is fine, exactly half is not under half, ten kept is the line', () => {
+    const b = { name: 'S', status: 200, records: 100, kept: 10 };
+    expect(F.drift([b], [{ ...b, status: 299 }])).toEqual([]);
+    expect(F.drift([b], [{ ...b, status: 199 }])).toEqual(['S: answered 199']);
+    expect(F.drift([b], [{ ...b, status: 300 }])).toEqual(['S: answered 300']);
+    expect(F.drift([b], [{ ...b, status: 0 }])).toEqual(['S: answered nothing']);
+    expect(F.drift([b], [{ ...b, records: 50, kept: 10 }])).toEqual([]);
+    expect(F.drift([b], [{ ...b, records: 49 }])).toEqual(["S: 49 records, under half of last run's 100"]);
+    expect(F.drift([b], [{ ...b, kept: 5 }])).toEqual([]);
+    expect(F.drift([b], [{ ...b, kept: 4 }])).toEqual(["S: 4 kept, under half of last run's 10"]);
+    expect(F.drift([{ ...b, kept: 9 }], [{ ...b, kept: 1 }])).toEqual([]);
+    expect(F.drift([{ ...b, records: 0, kept: 0 }], [{ ...b, records: 0, kept: 0 }])).toEqual([]);
+    expect(F.drift([{ ...b, kept: 0 }], [{ ...b, kept: 0 }])).toEqual([]);
+  });
+  it('a ZIP split exactly in half stays with the county read first', () => {
+    const head = 'OID_ZCTA5_20|GEOID_ZCTA5_20|NAMELSAD_ZCTA5_20|AREALAND_ZCTA5_20|AREAWATER_ZCTA5_20|MTFCC_ZCTA5_20|CLASSFP_ZCTA5_20|FUNCSTAT_ZCTA5_20|OID_COUNTY_20|GEOID_COUNTY_20|NAMELSAD_COUNTY_20|AREALAND_COUNTY_20|AREAWATER_COUNTY_20|MTFCC_COUNTY_20|CLASSFP_COUNTY_20|FUNCSTAT_COUNTY_20|AREALAND_PART|AREAWATER_PART';
+    const rel = [head, '1|45999|Z|1|0|G|B|S|1|39113|Montgomery County|1|0|G|H|A|500|0', '1|45999|Z|1|0|G|B|S|1|39057|Greene County|1|0|G|H|A|500|0'].join('\n');
+    expect([...F.zipCountyFrom(rel, ['39113', '39057'])]).toEqual([['45999', 'Montgomery']]);
+  });
+});

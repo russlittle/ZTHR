@@ -93,7 +93,7 @@ describe('HUD housing counseling and public housing authorities', () => {
   it('keeps each agency once, in the area, with its languages', () => {
     const f = F.fromHudCounseling([agency, agency, { ...agency, agcid: '1', zipcd: '45005' }], area);
     expect(f.entries).toHaveLength(1);
-    expect(f.entries[0]).toMatchObject({ name: 'Nid-Hca Dayton', categories: ['housing', 'money'], provider: { kind: 'nonprofit' }, whatToExpect: 'Counseling is offered in English and other languages too (SPA).' });
+    expect(f.entries[0]).toMatchObject({ name: 'Nid-Hca Dayton', categories: ['housing', 'money'], provider: { kind: 'nonprofit' }, whatToExpect: 'Counseling is also offered in Spanish.' });
     expect(passes(f.entries)).toEqual([]);
   });
   it('a public housing authority, with the name corrected where the federal record misspells it', () => {

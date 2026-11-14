@@ -27,7 +27,7 @@ export interface GuideCtx {
   u: (sid: string, path?: string) => string;
 }
 
-const KIND_ICON: Record<ProviderKind, string> = { college: 'cap', government: 'shield', nonprofit: 'help', faith: 'home', community: 'talk', health: 'check' };
+const KIND_ICON: Record<ProviderKind, string> = { college: 'cap', government: 'shield', nonprofit: 'help', faith: 'home', community: 'talk', health: 'check', property: 'home' };
 const COST: Record<string, string> = { free: 'Free', 'sliding-scale': 'You pay what you can', 'low-cost': 'Low cost', varies: 'Cost varies; help is available' };
 
 function faithLine(r: Resource): string | undefined {

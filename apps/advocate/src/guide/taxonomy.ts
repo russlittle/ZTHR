@@ -72,7 +72,7 @@ export const SITUATION_LABEL: Record<Situation, string> = {
 };
 
 /** Who provides a service: a student deciding whether to walk in somewhere wants to know. */
-export const PROVIDER_KINDS = ['college', 'government', 'nonprofit', 'faith', 'community', 'health'] as const;
+export const PROVIDER_KINDS = ['college', 'government', 'nonprofit', 'faith', 'community', 'health', 'property'] as const;
 export type ProviderKind = (typeof PROVIDER_KINDS)[number];
 export const PROVIDER_LABEL: Record<ProviderKind, string> = {
   college: 'College',
@@ -81,6 +81,7 @@ export const PROVIDER_LABEL: Record<ProviderKind, string> = {
   faith: 'Faith-based',
   community: 'Community',
   health: 'Health care',
+  property: 'Property owner',
 };
 export const PROVIDER_LEVELS = ['federal', 'state', 'county', 'city', 'regional', 'local', 'college'] as const;
 export type ProviderLevel = (typeof PROVIDER_LEVELS)[number];

@@ -31,12 +31,12 @@ flowchart LR
 | [SAMHSA FindTreatment](https://findtreatment.gov/) | Licensed mental health and substance use treatment | Mental health | The kind of treatment, and "charges less if you earn less" only when the record lists a sliding fee |
 | [HRSA health center sites](https://findahealthcenter.hrsa.gov/) | Every federally funded community health center site | Health | That it sees you with or without insurance and has a sliding fee, which federal funding requires. School-based sites are left out, because they serve that school's students |
 | [HUD public housing authorities](https://www.hud.gov/program_offices/public_indian_housing/pha/contacts) | The housing authority for each county | Housing | Public housing and vouchers. That wait lists open and close |
-| [HUD-assisted apartments](https://resources.hud.gov/) | Buildings where HUD helps pay the rent | Housing | That rent is based on income, how many such units, and whether a building is for older adults or people with disabilities. Records with no phone are left out |
+| [HUD-assisted apartments](https://resources.hud.gov/) | Buildings where HUD helps pay the rent | Housing | That rent is based on income, how many such units, and whether a building is for older adults or people with disabilities. The provider is the property owner, not HUD. Records with no phone are left out |
 | [IMLS Public Libraries Survey](https://www.imls.gov/research-evaluation/surveys/public-libraries-survey-pls) | Every library branch | Phone and internet; school | Free computers, Wi-Fi and printing, and average weekly hours. Bookmobiles are left out |
-| [HUD housing counselors](https://apps.hud.gov/offices/hsg/sfh/hcc/hcs.cfm) | HUD-approved housing counseling agencies | Housing; money | What a housing counselor helps with, and the languages offered |
+| [HUD housing counselors](https://apps.hud.gov/offices/hsg/sfh/hcc/hcs.cfm) | HUD-approved housing counseling agencies | Housing; money | What a housing counselor helps with, and the languages offered, named in words |
 | [IRS exempt organizations](https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf) | Every registered nonprofit and congregation | Leads only | Nothing to students. The IRS lists that an organization exists and its kind of work, not what it offers, when, or to whom |
 
-An entry never claims what its record does not say. There are no hours unless published, and no eligibility beyond "call to ask who they serve" unless the program's own rules fix it. A sliding fee is claimed only where the record lists one, or where federal funding requires it.
+An entry never claims what its record does not say. A phone number is kept only when it can be a real North American number. There are no hours unless published, and no eligibility beyond "call to ask who they serve" unless the program's own rules fix it. A sliding fee is claimed only where the record lists one, or where federal funding requires it.
 
 ## How an area is drawn
 
@@ -120,6 +120,7 @@ A person then reads the source and fixes its adapter, or confirms that the chang
 
 | Check | What it holds | Where |
 |---|---|---|
+| Whole entries (tests) | For each system, one record against the whole entry a student sees, worked by hand: every field, and nothing more | `finder-entries.test.ts` |
 | Adapters (tests) | Each system's records, shaped as each system returned them, are kept or left out for the stated reason, and nothing is claimed that the record does not give | `finder.test.ts` |
 | Admission (tests and gate) | Every entry an adapter writes passes the guide's gates. All 270 entries in the guide are admitted | `finder.test.ts`, `guide-admission` |
 | One place, or two (tests) | The same phone and street is one place; a shared main number at two addresses is two; same-name sites are named by town and street | `finder.test.ts` |
