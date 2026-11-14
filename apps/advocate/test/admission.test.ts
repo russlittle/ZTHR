@@ -1,10 +1,11 @@
-// Verifies: docs/flows/resource-guide.md (Keeping it true: the admission gates)
+// Verifies docs/flows/resource-guide.md
 // Each gate is held to its edge: the planted entry fails that gate and no other, the value on each side of every
 // limit lands on the side the rule states, and each check's detail names what it judged, since the detail is what a
 // person reads when an entry is held.
 import { describe, expect, it } from 'vitest';
 import { DAYTON_CATALOG } from '../src/catalog/dayton.js';
-import type { NeedCategory, Resource } from '../src/catalog/types.js';
+import type { Resource } from '../src/catalog/types.js';
+import type { NeedCategory } from '../src/domain/types.js';
 import { admit, admitAll } from '../src/guide/admission.js';
 
 const OWNERS = new Set(DAYTON_CATALOG.map((r) => r.id));
@@ -132,7 +133,7 @@ describe('admission: each gate at its edge', () => {
   });
 
   it('availability: every fact sourced and dated', () => {
-    const fact = { fact: 'funding', value: 'Open', source: 'https://example.org', checkedOn: '2026-11-13' };
+    const fact = { fact: 'funding' as const, value: 'Open', source: 'https://example.org', checkedOn: '2026-11-13' };
     expect(failed({ availability: [fact, { ...fact, source: 'http://example.org' }] })).toEqual([]);
     expect(detail({ availability: [fact, fact] }, 'availability facts are sourced and dated')).toBe('2 facts');
     expect(failed({ availability: [fact, { ...fact, source: 'see https://example.org' }] })).toEqual(['availability facts are sourced and dated']);

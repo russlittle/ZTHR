@@ -448,6 +448,37 @@ const zeroBypassGate: Gate<{ required: { check: string; step: string }[]; pipeli
     { name: 'planted script that skips its walk without carrying evidence', plant: () => ({ required: readYaml<{ required: { check: string; step: string }[] }>('required-checks.yaml').required, pipeline: livePipeline(), scripts: { 'tools/walk-ci.sh': 'if [ "$2" != "true" ]; then exit 0\nfi && exit 0' } }) },
   ],
 };
+
+// Mutation scope: a module that decides something cannot stay out of mutation testing, and no mutant is switched off.
+type MutationScope = { dirs: string[]; files: string[]; except: Record<string, string> };
+type ScopeProbe = { scope: MutationScope; mutate: string[]; onDisk: (dir: string) => string[]; exists: (f: string) => boolean; source: (f: string) => string };
+const realScope = (): ScopeProbe => ({
+  scope: JSON.parse(readFileSync(`${CONTROL}/mutation-scope.json`, 'utf8')) as MutationScope,
+  mutate: (JSON.parse(readFileSync(`${ROOT}stryker.config.json`, 'utf8')) as { mutate: string[] }).mutate,
+  onDisk: (d) => readdirSync(`${ROOT}${d}`).filter((f) => f.endsWith('.ts')).map((f) => `${d}/${f}`),
+  exists: (f) => existsSync(`${ROOT}${f}`),
+  source: (f) => readFileSync(`${ROOT}${f}`, 'utf8'),
+});
+const mutationScopeGate: Gate<ScopeProbe> = {
+  id: 'mutation-scope',
+  protects: 'Every module that decides something a student or a gate relies on is mutation tested from the commit that adds it, and no source in scope switches a mutant off.',
+  definition: 'each .ts file in a scoped directory, and each scoped file, is in stryker.config.json mutate unless excepted with a reason; each mutate entry exists; no scoped source has a Stryker disable comment',
+  check: ({ scope, mutate, onDisk, exists, source }) => {
+    const bad: string[] = [];
+    const inScope = [...new Set([...scope.dirs.flatMap(onDisk), ...scope.files])].filter((f) => !(f in scope.except));
+    for (const f of inScope) if (!mutate.includes(f)) bad.push(`${f} is in scope and not mutated`);
+    for (const f of mutate) if (!exists(f)) bad.push(`${f} is mutated and does not exist`);
+    for (const [f, why] of Object.entries(scope.except)) if (why.trim().length < 10) bad.push(`${f} is left out with no reason`);
+    for (const f of inScope.filter(exists)) if (/Stryker\s+disable/i.test(source(f))) bad.push(`${f} switches mutants off`);
+    return bad.length ? fail('mutation-scope', bad.slice(0, 5).join('; ')) : pass('mutation-scope', `${inScope.length} modules in scope, all mutated, none switched off`);
+  },
+  falsification: [
+    { name: 'planted new module that is not mutated', plant: () => { const r = realScope(); return { ...r, onDisk: (d) => [...r.onDisk(d), ...(d === r.scope.dirs[0] ? [`${d}/planted.ts`] : [])], exists: (f) => f.endsWith('planted.ts') || r.exists(f), source: (f) => (f.endsWith('planted.ts') ? 'export const x = 1;' : r.source(f)) }; } },
+    { name: 'planted module that switches a mutant off', plant: () => { const r = realScope(); const target = r.mutate[0]!; return { ...r, source: (f) => (f === target ? `// Stryker disable next-line all\n${r.source(f)}` : r.source(f)) }; } },
+    { name: 'planted mutate entry for a file that is gone', plant: () => ({ ...realScope(), mutate: [...realScope().mutate, 'apps/advocate/src/guide/gone.ts'] }) },
+    { name: 'planted exception with no reason', plant: () => { const r = realScope(); return { ...r, scope: { ...r.scope, except: { ...r.scope.except, [r.mutate[0]!]: '' } }, mutate: r.mutate }; } },
+  ],
+};
 const livePipeline = () => parseYaml(readFileSync(`${ROOT}cloudbuild.yaml`, 'utf8')) as Pipeline;
 
 type Tiers = { tiers: { tier: string; guard: string; paths: string[] }[] };
@@ -763,7 +794,7 @@ const barrierGate: Gate<BarrierOps> = {
   ],
 };
 
-const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate].map((g) => g.id);
+const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate, mutationScopeGate].map((g) => g.id);
 
 function repoFiles(): string[] {
   const out: string[] = [];
@@ -781,7 +812,7 @@ function repoFiles(): string[] {
 
 /** What each gate protects and what it is proven against, for the docs and the console. */
 export function gateCatalog(): { id: string; protects: string; plants: string[] }[] {
-  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
+  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate, mutationScopeGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
 }
 
 export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdict[]; proofs: Proof[] }> {
@@ -829,6 +860,7 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   await run(guideAdmissionGate, () => ({ catalog: DAYTON_CATALOG, owners: scoutOwners(), admit }));
   await run(guideFeedGate, () => realFeedProbe);
   await run(barrierGate, () => REAL_BARRIERS);
+  await run(mutationScopeGate, realScope);
   writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
   return { verdicts, proofs };
 }

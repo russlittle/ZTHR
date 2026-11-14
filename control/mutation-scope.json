@@ -1,0 +1,12 @@
+{
+  "note": "Every module that decides something a student or a gate relies on is mutation tested. A new file in one of these directories is in scope from the commit that adds it; the mutation-scope gate fails until stryker.config.json mutates it. A file is left out only here, with the reason.",
+  "dirs": ["apps/advocate/src/guide", "apps/advocate/src/finder", "apps/advocate/src/eligibility", "packages/gates/src", "packages/runtime/src"],
+  "files": ["apps/advocate/src/domain/tone.ts"],
+  "except": {
+    "apps/advocate/src/guide/taxonomy.ts": "data: the barrier list, checked by the guide-feed and barrier-lifecycle gates",
+    "apps/advocate/src/guide/packages.ts": "data: the support packages, each checked against the catalog by guide.test.ts",
+    "apps/advocate/src/eligibility/params.ts": "data: published program tables, checked figure by figure against their sources by the oracle gate",
+    "packages/gates/src/index.ts": "re-exports only",
+    "packages/runtime/src/index.ts": "re-exports only"
+  }
+}

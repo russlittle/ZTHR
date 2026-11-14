@@ -3,6 +3,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { EvidenceStore } from '@zthr/evidence';
 import { loadCards } from '@zthr/intent';
 import { CONTROL, JOURNEY_DIR, OUT } from './lib.js';
+import type { ResetEntry } from '@zthr/gates';
+import { judge, scores, type Floors, type Report } from './mutation-core.js';
 
 /**
  * Phase certificates. A phase is certified at a commit when, in that build: every gate passed with a valid proof,
@@ -52,7 +54,11 @@ if (mutation && floor !== undefined) {
   const killed = all.filter((m) => ['Killed', 'Timeout'].includes(m.status)).length;
   const valid = all.filter((m) => !['CompileError', 'RuntimeError', 'Ignored'].includes(m.status)).length;
   const score = (killed / valid) * 100;
-  shared.push({ check: 'mutation', status: score >= floor ? 'pass' : 'fail', detail: `${score.toFixed(1)}% against a floor of ${floor}%` });
+  // Each module against its own floor too, so one module's gain cannot hide another's loss.
+  const ledger = existsSync(`${CONTROL}/ratchet-resets.jsonl`) ? readFileSync(`${CONTROL}/ratchet-resets.jsonl`, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l) as ResetEntry) : [];
+  const perFile = judge(scores(mutation as Report), read<{ floors: Floors }>(`${CONTROL}/mutation-floors.json`)?.floors ?? {}, read<{ floors: Floors }>('reports/last-floors.json')?.floors ?? {}, ledger, read<{ people: string[] }>(`${CONTROL}/people.json`)?.people ?? []);
+  const under = perFile.filter((r) => !r.ok).map((r) => `${r.file} ${r.detail}`);
+  shared.push({ check: 'mutation', status: score >= floor && !under.length ? 'pass' : 'fail', detail: `${score.toFixed(1)}% against a floor of ${floor}%; ${under.length ? `under their own floors: ${under.join('; ')}` : `all ${perFile.length} modules at or above their own floors`}` });
 } else shared.push({ check: 'mutation', status: 'not measured', detail: 'mutation runs nightly' });
 
 const cards = loadCards(JOURNEY_DIR);

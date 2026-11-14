@@ -1,4 +1,4 @@
-// Verifies: docs/flows/resource-guide.md (A barrier's life; Whether it helped; From everything to a few signals)
+// Verifies docs/flows/resource-guide.md
 // The barrier book, the help record and the signals at their edges: each event is written to the history by name,
 // nothing changes a resolved barrier but the student reopening it, and every limit lands on the side the rule states.
 import { describe, expect, it } from 'vitest';
@@ -130,7 +130,7 @@ describe('signals at their edges', () => {
     const book = B.open(B.empty(), 'emergency', 'student', 'soon', D);
     const pkg = packageFor('emergency')!;
     const [first, second] = pkg.entries;
-    const pick = (opts: Resource[], record = none) => signals({ book, today: D, optionsFor: () => opts, record })[0]!;
+    const pick = (opts: Resource[], record: (id: string) => ReturnType<typeof tally> = none) => signals({ book, today: D, optionsFor: () => opts, record })[0]!;
     expect(pick([make('outside'), make(second!), make(first!)]).resource!.id).toBe(first);
     expect(pick([make(first!), make('outside', { availability: [{ fact: 'applications-open', value: 'yes', source: 'https://x.org', checkedOn: D }] })]).resource!.id).toBe('outside');
     const rec = (id: string) => (id === 'b' ? tally(['helped', 'helped', 'helped']) : tally(['did-not-help']));

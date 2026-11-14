@@ -1,0 +1,17 @@
+{
+ "note": "Each module's mutation floor, in whole percent. A floor tightens on its own to what the nightly run measured and is kept in the evidence bucket; lowering one here takes a reset in ratchet-resets.jsonl by a listed person. A module with no floor starts at what it first measures.",
+ "floors": {
+  "apps/advocate/src/domain/tone.ts": 77,
+  "apps/advocate/src/eligibility/engine.ts": 64,
+  "apps/advocate/src/guide/admission.ts": 65,
+  "apps/advocate/src/guide/barriers.ts": 93,
+  "apps/advocate/src/guide/feed.ts": 77,
+  "apps/advocate/src/guide/feedback.ts": 78,
+  "apps/advocate/src/guide/signals.ts": 87,
+  "packages/gates/src/gate.ts": 74,
+  "packages/gates/src/ratchet.ts": 84,
+  "packages/gates/src/verdict.ts": 97,
+  "packages/runtime/src/approval.ts": 80,
+  "packages/runtime/src/governor.ts": 96
+ }
+}

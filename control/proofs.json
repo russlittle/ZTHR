@@ -231,5 +231,16 @@
       "planted \"not today\" that closes the barrier",
       "planted check-in that closes a quiet barrier"
     ]
+  },
+  {
+    "gate": "mutation-scope",
+    "gateHash": "912d8af5acb53b0abb97c6314eafec3759b5482258366b6788e60c9b83d18927",
+    "valid": true,
+    "cases": [
+      "planted new module that is not mutated",
+      "planted module that switches a mutant off",
+      "planted mutate entry for a file that is gone",
+      "planted exception with no reason"
+    ]
   }
 ]

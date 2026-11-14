@@ -11,3 +11,4 @@ required:
   - { check: exhaustive page walk, step: crawl }
   - { check: browser walk, step: walk }
   - { check: campus service contracts, step: contract }
+  - { check: mutation floors, module by module (nightly), step: mutation }

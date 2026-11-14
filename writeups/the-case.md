@@ -16,7 +16,7 @@ factory that built it means for anyone who builds software.
 | **Elapsed time** | Days, from an empty repository to a deployed application with six phases of features, a community resource guide of 270 checked entries (202 found by agents in six federal systems of record) published as open data, five synthetic campus services, fifteen reusable blocks and full documentation. |
 | **Direction** | About 125 prompts from the author, from the idea to the deployed application. |
 | **Size** | About 22,000 lines of TypeScript and 4,200 lines of documentation, every data structure drawn as an ERD. |
-| **Evidence** | 2,053 tests; 26 gates, each proven able to fail; 47 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student, and 886 controls clicked in a real browser down to seven screens deep; 454 browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks. |
+| **Evidence** | 2,053 tests; 27 gates, each proven able to fail; 47 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student, and 886 controls clicked in a real browser down to seven screens deep; 454 browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks. |
 | **Cost to run** | No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The public demo runs on one small server, so a visitor's session holds from start to finish. |
 | **Open** | Every test, gate, walk, decision and line of source is public. |
 
@@ -86,7 +86,7 @@ by checks that are themselves proven, against intent that the agents cannot edit
 ```mermaid
 flowchart TB
   intent[Intent: a student's goal in plain words, locked by hash] --> build[Agents build]
-  build --> gates{26 gates, each proven to fail on planted defects}
+  build --> gates{27 gates, each proven to fail on planted defects}
   gates --> walks{Every button and page, for every student, walked to a fixpoint}
   walks --> trace{Sensitive-data trace}
   trace --> admit[Admitted by the factory]

@@ -130,11 +130,19 @@ steps:
         # Many visitors at once against the same server: fails on any 500 or a 95th percentile over budget.
         npx tsx tools/load.ts http://localhost:8787/studentadvocate 25 30 || { cat server.log; exit 1; }
 
+  - id: fetch-mutation-floors
+    # The floors the last nightly run tightened to: a floor in the repository lower than these holds only with a reset.
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    env: ['BUCKET=$_EVIDENCE_BUCKET', 'MUTATION=$_MUTATION']
+    args: ['-c', 'mkdir -p reports; if [ "$$MUTATION" = "true" ] && [ -n "$$BUCKET" ]; then gcloud storage cp "$$BUCKET/latest/mutation-floors.json" reports/last-floors.json 2>/dev/null || echo "No floors from a nightly run yet; each module starts at what it measures."; fi']
+
   - id: mutation
+    # Every module in scope (control/mutation-scope.json) against its own floor; the survivors are the next work.
     name: node:22-bookworm
     entrypoint: bash
     env: ['MUTATION=$_MUTATION']
-    args: ['-c', 'if [ "$$MUTATION" = "true" ]; then npx stryker run --concurrency "$$(nproc)" && npx tsx tools/blocks.ts --mutate; else echo "Mutation testing runs on the nightly trigger."; fi']
+    args: ['-c', 'if [ "$$MUTATION" = "true" ]; then npx stryker run --concurrency "$$(nproc)" && npx tsx tools/mutation.ts && npx tsx tools/blocks.ts --mutate; else echo "Mutation testing runs on the nightly trigger."; fi']
 
   - id: sensitive-trace
     # Plants a marker in every personal, sensitive and secret field and records where each one went.
@@ -146,7 +154,7 @@ steps:
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: bash
     env: ['BUCKET=$_EVIDENCE_BUCKET']
-    args: ['-c', 'mkdir -p evidence-out reports; if [ -n "$$BUCKET" ]; then gcloud storage cat "$$BUCKET/costs/*.json" > evidence-out/ci-costs.jsonl 2>/dev/null || { : > evidence-out/ci-costs.jsonl; echo "No cost history yet."; }; [ -f reports/mutation.json ] || gcloud storage cp "$$BUCKET/latest/mutation.json" reports/mutation.json 2>/dev/null || echo "No nightly mutation report yet."; [ -d reports/blocks ] || gcloud storage cp -r "$$BUCKET/latest/blocks" reports/ 2>/dev/null || echo "No nightly block reports yet."; fi']
+    args: ['-c', 'mkdir -p evidence-out reports; if [ -n "$$BUCKET" ]; then gcloud storage cat "$$BUCKET/costs/*.json" > evidence-out/ci-costs.jsonl 2>/dev/null || { : > evidence-out/ci-costs.jsonl; echo "No cost history yet."; }; [ -f reports/mutation.json ] || gcloud storage cp "$$BUCKET/latest/mutation.json" reports/mutation.json 2>/dev/null || echo "No nightly mutation report yet."; [ -d reports/blocks ] || gcloud storage cp -r "$$BUCKET/latest/blocks" reports/ 2>/dev/null || echo "No nightly block reports yet."; [ -f reports/last-floors.json ] || gcloud storage cp "$$BUCKET/latest/mutation-floors.json" reports/last-floors.json 2>/dev/null || echo "No nightly floors yet."; fi']
 
   - id: blocks
     # The block library: tests, consumers and each block's own mutation score (from the nightly run when this is not one).
@@ -184,7 +192,7 @@ steps:
         gcloud storage cp -r evidence-out control/proofs.json "$$BUCKET/runs/$${COMMIT:-manual}/"
         if [ -d reports ]; then gcloud storage cp -r reports "$$BUCKET/runs/$${COMMIT:-manual}/"; fi
         if [ "$_MUTATION" = "true" ] && [ "$$BRANCH" = "$$DEPLOY" ] && [ -d evidence-out/walks ]; then gcloud storage cp -r evidence-out/walks/* "$$BUCKET/latest/walks/"; fi
-        if [ -f reports/mutation.json ] && [ "$_MUTATION" = "true" ]; then gcloud storage cp reports/mutation.json "$$BUCKET/latest/mutation.json"; gcloud storage cp -r reports/blocks "$$BUCKET/latest/"; fi
+        if [ -f reports/mutation.json ] && [ "$_MUTATION" = "true" ]; then gcloud storage cp reports/mutation.json reports/mutation-floors.json reports/mutation-survivors.json "$$BUCKET/latest/"; gcloud storage cp -r reports/blocks "$$BUCKET/latest/"; fi
 
   - id: site
     # The published docs and factory console, from everything this run recorded.
