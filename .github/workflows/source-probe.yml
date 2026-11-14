@@ -1,7 +1,7 @@
 name: Resource source probe
 
 # Checks which public sources of community resources answer from here, and what each returns for an area.
-# On demand only. Prints status, size and a sample of each.
+# On demand only.
 on:
   workflow_dispatch:
 
@@ -11,32 +11,49 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
-      - name: Probe each source
+      - name: Probe each source for Montgomery (39113) and Greene (39057) counties, Ohio
         shell: bash
         run: |
           UA='zthr-resource-finder (+https://zthr.ai)'
-          probe() { # name url
-            code=$(curl -sS -L -A "$UA" -m 60 -o /tmp/out -w '%{http_code} %{size_download} %{content_type}' "$2" 2>&1 || true)
-            echo "=== $1"; echo "    $2"; echo "    -> $code"; head -c 700 /tmp/out | tr '\n' ' ' | cut -c1-700; echo; echo
-          }
-          # Dayton, OH center (lng,lat), 30 miles
-          probe findtreatment-distance 'https://findtreatment.gov/locator/exportsAsJson/v2?sAddr=-84.1916,39.7589&limitType=2&limitValue=48280&pageSize=5&page=1&sort=0'
-          probe hud-counseling-oh 'https://data.hud.gov/Housing_Counselor/search?AgencyName=&City=Dayton&State=OH'
-          probe hud-counseling-xenia 'https://data.hud.gov/Housing_Counselor/search?AgencyName=&City=Xenia&State=OH'
-          probe hrsa-sites-download 'https://data.hrsa.gov/DataDownload/DD_Files/Health_Center_Service_Delivery_and_LookAlike_Sites.csv'
-          probe hrsa-sites-xlsx 'https://data.hrsa.gov/DataDownload/DD_Files/Health_Center_Service_Delivery_and_LookAlike_Sites.xlsx'
-          probe census-zcta-county 'https://www2.census.gov/geo/docs/maps-data/data/rel2020/zcta520/tab20_zcta520_county20_natl.txt'
-          probe imls-pls 'https://www.imls.gov/research-evaluation/data-collection/public-libraries-survey'
-          probe headstart-locator 'https://eclkc.ohs.acf.hhs.gov/hslc/api/center-locator?latitude=39.7589&longitude=-84.1916&radius=15'
-          probe lsc-grantees 'https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help'
-          probe usda-summer-meals 'https://services1.arcgis.com/RLQu0rK7h4kbsBq5/arcgis/rest/services/Summer_Meal_Site_Finder_2025/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=2&f=json'
-          probe hud-pha 'https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Public_Housing_Authorities/FeatureServer/0/query?where=STD_ST%3D%27OH%27&outFields=*&resultRecordCount=2&f=json'
-          probe hud-counseling-arcgis 'https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/Single_Family_Housing_Counseling_Agencies/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=2&f=json'
-          probe careeronestop 'https://api.careeronestop.org/v1/ajcfinder/'
-          probe vita-irs 'https://irs.treasury.gov/freetaxprep/'
-          probe ohio-benefits 'https://benefits.ohio.gov/'
-          probe dayton-foodbank 'https://thefoodbankdayton.org/find-food/'
-          probe greene-guide 'https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf'
-          probe openreferral-211 'https://api.211.org/'
+          get() { curl -sS -L -A "$UA" -m 120 -o "$2" -w '%{http_code} %{size_download}\n' "$1" || true; }
+          echo "== Census ZCTA to county"; get 'https://www2.census.gov/geo/docs/maps-data/data/rel2020/zcta520/tab20_zcta520_county20_natl.txt' zc.txt
+          python3 - <<'P'
+          import csv
+          z={}
+          for r in csv.DictReader(open('zc.txt',encoding='utf-8-sig'),delimiter='|'):
+              if r['GEOID_COUNTY_20'] in ('39113','39057') and r['GEOID_ZCTA5_20']: z.setdefault(r['GEOID_COUNTY_20'],set()).add(r['GEOID_ZCTA5_20'])
+          print({k:len(v) for k,v in z.items()})
+          open('zips.txt','w').write('\n'.join(sorted(set().union(*z.values()))))
+          P
+          echo "== HRSA health center sites"; get 'https://data.hrsa.gov/DataDownload/DD_Files/Health_Center_Service_Delivery_and_LookAlike_Sites.csv' hrsa.csv
+          python3 - <<'P'
+          import csv
+          zips=set(open('zips.txt').read().split())
+          rows=[r for r in csv.DictReader(open('hrsa.csv',encoding='utf-8-sig',errors='replace')) if r.get('Site State Abbreviation')=='OH' and r.get('Site Postal Code','')[:5] in zips]
+          print(len(rows),'sites'); print(list(rows[0].keys())[:40] if rows else '')
+          for r in rows[:4]: print({k:r[k] for k in ['Site Name','Site Address','Site City','Site Telephone Number','Site Web Address','Health Center Service Delivery Site Location Setting Description','Site Status Description'] if k in r})
+          P
+          echo "== FindTreatment, both coordinate orders, 25 miles"
+          for s in '-84.1916,39.7589' '39.7589,-84.1916'; do get "https://findtreatment.gov/locator/exportsAsJson/v2?sAddr=$s&limitType=2&limitValue=40234&pageSize=2000&page=1&sort=0" ft.json; python3 -c "import json;d=json.load(open('ft.json'));print('$s',d.get('recordCount'))"; done
+          echo "== HUD public housing authorities (OH)"; get 'https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Public_Housing_Authorities/FeatureServer/0/query?where=STD_ST%3D%27OH%27&outFields=*&f=json&resultRecordCount=2000' pha.json
+          python3 -c "
+          import json;d=json.load(open('pha.json'));zips=set(open('zips.txt').read().split())
+          f=[x['attributes'] for x in d.get('features',[])];print(len(f),'OH');print(list(f[0].keys())[:30] if f else d)
+          h=[a for a in f if str(a.get('STD_ZIP5',''))[:5] in zips];print(len(h),'in area',[ (a.get('FORMAL_PARTICIPANT_NAME'),a.get('HA_PHN_NUM')) for a in h][:5])"
+          echo "== HUD counseling, OH cities"; for c in Dayton Kettering Fairborn Beavercreek Xenia Miamisburg Huber%20Heights Centerville Trotwood; do get "https://data.hud.gov/Housing_Counselor/search?AgencyName=&City=$c&State=OH" h.json; python3 -c "import json;print('$c',len(json.load(open('h.json'))))"; done
+          echo "== IRS exempt organizations, Ohio"; get 'https://www.irs.gov/pub/irs-soi/eo_oh.csv' eo.csv
+          python3 - <<'P'
+          import csv,collections
+          zips=set(open('zips.txt').read().split())
+          rows=[r for r in csv.DictReader(open('eo.csv',encoding='latin-1')) if r['ZIP'][:5] in zips]
+          print(len(rows),'exempt orgs in area')
+          c=collections.Counter((r['NTEE_CD'] or '?')[:1] for r in rows); print(sorted(c.items()))
+          print(rows[0].keys())
+          P
+          echo "== IMLS public libraries"; get 'https://www.imls.gov/sites/default/files/2025-06/pls_fy2023_csv.zip' pls.zip; ls -la pls.zip
+          echo "== Dayton Foodbank partner agencies"; get 'https://thefoodbankdayton.org/get-help/' fb.html; grep -o '<title>[^<]*' fb.html | head -2
+          echo "== Greene County public health"; get 'https://www.greenecountyohio.gov/' g.html; grep -o '<title>[^<]*' g.html | head -2
+          echo "== Ohio OhioMeansJobs centers"; get 'https://jfs.ohio.gov/job-services-and-unemployment/job-services/job-programs-and-services/ohiomeansjobs-centers' o.html; grep -o '<title>[^<]*' o.html | head -2
+          echo "== USDA SNAP retailers ArcGIS"; get 'https://services1.arcgis.com/RLQu0rK7h4kbsBq5/arcgis/rest/services/snap_retailer_location_data/FeatureServer/0/query?where=State%3D%27OH%27&returnCountOnly=true&f=json' s.json; cat s.json; echo
