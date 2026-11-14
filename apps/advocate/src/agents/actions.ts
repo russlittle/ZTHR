@@ -48,8 +48,11 @@ const deadline = (a: Advocate, sid: string, id: string): Deadline | undefined =>
 
 const showDraft = (a: Advocate, sid: string, purpose: string, to: string, body: string, intro: string): ActionResult => {
   const d = a.draftFor(sid, purpose) ?? a.createDraft(sid, to, to, body, purpose);
+  // Brief answers keep the draft itself and the promise that nothing is sent; the encouragement goes.
+  const brief = a.student(sid).dial.depth === 'brief';
+  const text = brief ? `Draft to ${d.to}:\n"${d.body}"\nI send nothing until you say so.` : `${intro} Here is a draft to ${d.to}:\n"${d.body}"\nNothing is sent until you say so.`;
   return {
-    message: msg(sid, `${intro} Here is a draft to ${d.to}:\n"${d.body}"\nNothing is sent until you say so.`, [{ label: 'Send it', action: `approve:${d.id}` }, back]),
+    message: msg(sid, text, [{ label: 'Send it', action: `approve:${d.id}` }, back]),
     view: 'drafts',
     viewArg: purpose,
   };
@@ -276,7 +279,7 @@ export const ACTIONS: Record<string, Handler> = {
     if (arg.startsWith('job:')) {
       const p = a.campusFeed(s.enrollment.college)?.postings.find((x) => x.id === arg.slice(4));
       if (!p) return { message: msg(sid, 'That posting is no longer open.', [{ label: 'Jobs that fit', action: 'jobs-fit' }, back]) };
-      return showDraft(a, sid, `job:${p.id}`, p.employer, `Hello, this is ${s.chosenName}. I'm a student and I'm interested in the ${p.title} job. The hours fit my class schedule. What is the best way to apply, and is there anything I should send? Thank you.`, 'A short note shows you are serious.');
+      return showDraft(a, sid, `job:${p.id}`, p.employer, `Hello, this is ${s.chosenName}. I'm a student interested in the ${p.title} job, and the hours fit my classes. How do I apply, and what should I send? Thank you.`, 'A short note shows you are serious.');
     }
     if (arg.startsWith('late:')) {
       const course = decodeURIComponent(arg.slice(5));

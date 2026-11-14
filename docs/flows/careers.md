@@ -23,4 +23,5 @@ Source for the CQE: the Ohio Department of Rehabilitation and Correction's petit
 
 <!-- verified-by:start -->
 - [`apps/advocate/test/careers.test.ts`](../../apps/advocate/test/careers.test.ts) (8 test definitions)
+- [`apps/advocate/test/drafts-brief.test.ts`](../../apps/advocate/test/drafts-brief.test.ts) (1 test definitions)
 <!-- verified-by:end -->
