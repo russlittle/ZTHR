@@ -1,0 +1,42 @@
+name: Resource source probe
+
+# Checks which public sources of community resources answer from here, and what each returns for an area.
+# On demand only. Prints status, size and a sample of each.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Probe each source
+        shell: bash
+        run: |
+          UA='zthr-resource-finder (+https://zthr.ai)'
+          probe() { # name url
+            code=$(curl -sS -L -A "$UA" -m 60 -o /tmp/out -w '%{http_code} %{size_download} %{content_type}' "$2" 2>&1 || true)
+            echo "=== $1"; echo "    $2"; echo "    -> $code"; head -c 700 /tmp/out | tr '\n' ' ' | cut -c1-700; echo; echo
+          }
+          # Dayton, OH center (lng,lat), 30 miles
+          probe findtreatment-distance 'https://findtreatment.gov/locator/exportsAsJson/v2?sAddr=-84.1916,39.7589&limitType=2&limitValue=48280&pageSize=5&page=1&sort=0'
+          probe hud-counseling-oh 'https://data.hud.gov/Housing_Counselor/search?AgencyName=&City=Dayton&State=OH'
+          probe hud-counseling-xenia 'https://data.hud.gov/Housing_Counselor/search?AgencyName=&City=Xenia&State=OH'
+          probe hrsa-sites-download 'https://data.hrsa.gov/DataDownload/DD_Files/Health_Center_Service_Delivery_and_LookAlike_Sites.csv'
+          probe hrsa-sites-xlsx 'https://data.hrsa.gov/DataDownload/DD_Files/Health_Center_Service_Delivery_and_LookAlike_Sites.xlsx'
+          probe census-zcta-county 'https://www2.census.gov/geo/docs/maps-data/data/rel2020/zcta520/tab20_zcta520_county20_natl.txt'
+          probe imls-pls 'https://www.imls.gov/research-evaluation/data-collection/public-libraries-survey'
+          probe headstart-locator 'https://eclkc.ohs.acf.hhs.gov/hslc/api/center-locator?latitude=39.7589&longitude=-84.1916&radius=15'
+          probe lsc-grantees 'https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help'
+          probe usda-summer-meals 'https://services1.arcgis.com/RLQu0rK7h4kbsBq5/arcgis/rest/services/Summer_Meal_Site_Finder_2025/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=2&f=json'
+          probe hud-pha 'https://services.arcgis.com/VTyQ9soqVukalItT/arcgis/rest/services/Public_Housing_Authorities/FeatureServer/0/query?where=STD_ST%3D%27OH%27&outFields=*&resultRecordCount=2&f=json'
+          probe hud-counseling-arcgis 'https://services.arcgis.com/VTyQ9soqVukalItT/ArcGIS/rest/services/Single_Family_Housing_Counseling_Agencies/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=2&f=json'
+          probe careeronestop 'https://api.careeronestop.org/v1/ajcfinder/'
+          probe vita-irs 'https://irs.treasury.gov/freetaxprep/'
+          probe ohio-benefits 'https://benefits.ohio.gov/'
+          probe dayton-foodbank 'https://thefoodbankdayton.org/find-food/'
+          probe greene-guide 'https://www.greenecophoh.gov/files/documents/files/2025/11/Greene_County_Community_Resource_Guide.pdf'
+          probe openreferral-211 'https://api.211.org/'
