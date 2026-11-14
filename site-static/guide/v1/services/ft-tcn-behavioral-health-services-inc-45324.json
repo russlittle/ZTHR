@@ -1,0 +1,53 @@
+{
+ "id": "ft-tcn-behavioral-health-services-inc-45324",
+ "name": "TCN Behavioral Health Services Inc (Fairborn)",
+ "description": "Treatment for substance use. It charges less if you earn less.",
+ "organization": {
+  "name": "TCN Behavioral Health Services Inc",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1825 Commerce Center Boulevard",
+  "city": "Fairborn",
+  "postal_code": "45324"
+ },
+ "phone": "937-376-8700",
+ "url": "https://www.tcn.org",
+ "cost": "sliding-scale",
+ "eligibility": "Call to ask who they serve.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-376-8700 to ask for a first visit.",
+   "Ask if they take your insurance or charge less if you earn less."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://findtreatment.gov/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}

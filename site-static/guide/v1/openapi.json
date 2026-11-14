@@ -44,7 +44,8 @@
         "nonprofit",
         "faith",
         "community",
-        "health"
+        "health",
+        "property"
        ]
       }
      }
@@ -152,7 +153,8 @@
          "nonprofit",
          "faith",
          "community",
-         "health"
+         "health",
+         "property"
         ]
        },
        "kind_label": {

@@ -1,0 +1,58 @@
+{
+ "id": "hud-horizon-housing-communities-development-for-ohio-45414",
+ "name": "Horizon Housing Communities Development for Ohio (Hhcdo)",
+ "description": "A housing counselor, checked by HUD, can help with rent, a home loan, credit, or buying a home.",
+ "organization": {
+  "name": "Horizon Housing Communities Development for Ohio (Hhcdo)",
+  "kind": "nonprofit",
+  "kind_label": "Nonprofit",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  },
+  {
+   "barrier": "money",
+   "label": "Money",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1700 Needmore Rd, 1700 Needmore road suite 205",
+  "city": "Dayton",
+  "postal_code": "45414"
+ },
+ "phone": "937-259-8870",
+ "url": "http://www.horizondevelopment.org",
+ "eligibility": "Call to ask who they serve.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-259-8870 and say what you need help with."
+  ],
+  "documents": [],
+  "what_to_expect": "Counseling is also offered in Spanish."
+ },
+ "availability": [],
+ "source": {
+  "url": "https://apps.hud.gov/offices/hsg/sfh/hcc/hcs.cfm",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}

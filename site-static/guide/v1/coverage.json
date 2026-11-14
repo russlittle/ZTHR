@@ -46,57 +46,61 @@
   {
    "barrier": "housing",
    "county": "Montgomery",
-   "services": 10,
+   "services": 91,
    "kinds": [
     "college",
     "faith",
-    "nonprofit"
+    "government",
+    "nonprofit",
+    "property"
    ]
   },
   {
    "barrier": "housing",
    "county": "Greene",
+   "services": 24,
+   "kinds": [
+    "faith",
+    "government",
+    "nonprofit",
+    "property"
+   ]
+  },
+  {
+   "barrier": "utilities",
+   "county": "Montgomery",
+   "services": 5,
+   "kinds": [
+    "college",
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "utilities",
+   "county": "Greene",
+   "services": 5,
+   "kinds": [
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "money",
+   "county": "Montgomery",
+   "services": 10,
+   "kinds": [
+    "college",
+    "government",
+    "nonprofit"
+   ]
+  },
+  {
+   "barrier": "money",
+   "county": "Greene",
    "services": 7,
    "kinds": [
     "faith",
-    "nonprofit"
-   ]
-  },
-  {
-   "barrier": "utilities",
-   "county": "Montgomery",
-   "services": 5,
-   "kinds": [
-    "college",
-    "government",
-    "nonprofit"
-   ]
-  },
-  {
-   "barrier": "utilities",
-   "county": "Greene",
-   "services": 5,
-   "kinds": [
-    "government",
-    "nonprofit"
-   ]
-  },
-  {
-   "barrier": "money",
-   "county": "Montgomery",
-   "services": 6,
-   "kinds": [
-    "college",
-    "government",
-    "nonprofit"
-   ]
-  },
-  {
-   "barrier": "money",
-   "county": "Greene",
-   "services": 6,
-   "kinds": [
-    "faith",
     "government",
     "nonprofit"
    ]
@@ -156,7 +160,7 @@
   {
    "barrier": "health",
    "county": "Montgomery",
-   "services": 6,
+   "services": 21,
    "kinds": [
     "college",
     "government",
@@ -167,7 +171,7 @@
   {
    "barrier": "health",
    "county": "Greene",
-   "services": 4,
+   "services": 5,
    "kinds": [
     "government",
     "health",
@@ -177,7 +181,7 @@
   {
    "barrier": "mental-health",
    "county": "Montgomery",
-   "services": 3,
+   "services": 48,
    "kinds": [
     "college",
     "government",
@@ -187,7 +191,7 @@
   {
    "barrier": "mental-health",
    "county": "Greene",
-   "services": 3,
+   "services": 15,
    "kinds": [
     "college",
     "government",
@@ -229,7 +233,7 @@
   {
    "barrier": "phone-internet",
    "county": "Montgomery",
-   "services": 4,
+   "services": 27,
    "kinds": [
     "college",
     "government"
@@ -238,7 +242,7 @@
   {
    "barrier": "phone-internet",
    "county": "Greene",
-   "services": 1,
+   "services": 9,
    "kinds": [
     "government"
    ]
@@ -331,17 +335,19 @@
   {
    "barrier": "academic",
    "county": "Montgomery",
-   "services": 3,
+   "services": 26,
    "kinds": [
-    "college"
+    "college",
+    "government"
    ]
   },
   {
    "barrier": "academic",
    "county": "Greene",
-   "services": 2,
+   "services": 10,
    "kinds": [
-    "college"
+    "college",
+    "government"
    ]
   },
   {

@@ -1,0 +1,52 @@
+{
+ "id": "ft-miami-valley-hospital-45409",
+ "name": "Miami Valley Hospital",
+ "description": "Treatment for mental health and substance use.",
+ "organization": {
+  "name": "Miami Valley Hospital",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1 Wyoming Street",
+  "city": "Dayton",
+  "postal_code": "45409"
+ },
+ "phone": "937-208-2032",
+ "url": "https://www.premierhealth.com/",
+ "eligibility": "Call to ask who they serve.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-208-2032 to ask for a first visit.",
+   "Ask if they take your insurance or charge less if you earn less."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://findtreatment.gov/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}

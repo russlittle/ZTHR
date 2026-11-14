@@ -1,0 +1,52 @@
+{
+ "id": "pha-greene-metropolitan-housing-authority",
+ "name": "Greene Metropolitan Housing Authority",
+ "description": "The public housing authority: public housing, and Housing Choice Vouchers (Section 8) that help pay rent.",
+ "organization": {
+  "name": "Greene Metropolitan Housing Authority",
+  "kind": "government",
+  "kind_label": "Government",
+  "level": "county"
+ },
+ "taxonomy": [
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "538 N Detroit St",
+  "city": "Xenia",
+  "postal_code": "45385"
+ },
+ "phone": "937-376-2908",
+ "eligibility": "Based on income and household size.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-376-2908 to ask if the waiting list is open.",
+   "Ask how to get on the list, and what to bring."
+  ],
+  "documents": [],
+  "what_to_expect": "Waiting lists can be long, and they open and close. Ask when this one will open if it is closed."
+ },
+ "availability": [],
+ "source": {
+  "url": "https://www.hud.gov/program_offices/public_indian_housing/pha/contacts",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}

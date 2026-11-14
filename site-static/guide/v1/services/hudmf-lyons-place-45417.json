@@ -1,0 +1,52 @@
+{
+ "id": "hudmf-lyons-place-45417",
+ "name": "Lyons Place",
+ "description": "Apartments where HUD helps pay the rent, so what you pay is based on your income (55 such units).",
+ "organization": {
+  "name": "Lyons Place",
+  "kind": "property",
+  "kind_label": "Property owner",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "housing",
+   "label": "Housing",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Montgomery"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "1300 Genesis Way",
+  "city": "Dayton",
+  "postal_code": "45417"
+ },
+ "phone": "937-854-7833",
+ "eligibility": "For older adults, based on income.",
+ "how_to_use": {
+  "steps": [
+   "Call 937-854-7833 to ask if the wait list is open.",
+   "Ask how to apply, and what to bring."
+  ],
+  "documents": [],
+  "what_to_expect": "Each building has its own wait list. Putting your name on several can help."
+ },
+ "availability": [],
+ "source": {
+  "url": "https://resources.hud.gov/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}

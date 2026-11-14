@@ -1,0 +1,52 @@
+{
+ "id": "ft-brightview-health-45431",
+ "name": "BrightView Health (Dayton, 5464 Burkhardt Road)",
+ "description": "Treatment for substance use.",
+ "organization": {
+  "name": "BrightView Health",
+  "kind": "health",
+  "kind_label": "Health care",
+  "level": "local"
+ },
+ "taxonomy": [
+  {
+   "barrier": "mental-health",
+   "label": "Mental health",
+   "domain": "feasible",
+   "domain_label": "Making college life work"
+  }
+ ],
+ "situations": [],
+ "serves": {
+  "counties": [
+   "Greene"
+  ],
+  "colleges": [],
+  "national": false
+ },
+ "location": {
+  "address": "5464 Burkhardt Road",
+  "city": "Dayton",
+  "postal_code": "45431"
+ },
+ "phone": "844-707-7775",
+ "url": "https://www.brightviewhealth.com",
+ "eligibility": "Call to ask who they serve.",
+ "how_to_use": {
+  "steps": [
+   "Call 844-707-7775 to ask for a first visit.",
+   "Ask if they take your insurance or charge less if you earn less."
+  ],
+  "documents": []
+ },
+ "availability": [],
+ "source": {
+  "url": "https://findtreatment.gov/",
+  "license": "public-information"
+ },
+ "verification": {
+  "verified_on": "2026-11-14",
+  "freshness_days": 30,
+  "current": true
+ }
+}
