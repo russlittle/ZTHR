@@ -165,6 +165,19 @@ for (const width of [1280, 390]) {
   else if (!/factory runs recorded/.test(text)) bad('/reference/factory/cost.html', `shows no cost records: "${text.replace(/\s+/g, ' ').slice(0, 140)}"`);
   await ctx.close();
 }
+// The nightly run is the full proof (every student walked to a fixpoint, mutation testing). Its cost record is
+// written only when it finishes cleanly, so no nightly record in 36 hours means it did not run or did not pass.
+// On the daily walk that is a problem; on a walk after a deploy, a warning.
+{
+  const runs = await fetch('https://advocate-fsy7whk33q-uc.a.run.app/factory/ci-costs.json').then((r) => (r.ok ? r.json() : [])).catch(() => []);
+  const nightly = runs.filter((r) => r.kind === 'nightly').map((r) => Date.parse(r.finishedAt)).sort((x, y) => y - x)[0];
+  const hours = nightly ? (Date.now() - nightly) / 3_600_000 : Infinity;
+  if (hours > 36) {
+    const msg = nightly ? `the last nightly run that passed finished ${Math.round(hours)} hours ago` : 'no nightly run has passed yet';
+    if (process.env.GITHUB_EVENT_NAME === 'schedule') bad('nightly factory run', `${msg}; run tools/nightly.sh in Cloud Shell to see why`);
+    else warnings.push(`nightly factory run: ${msg}`);
+  }
+}
 await browser.close();
 
 // 5. Every link, followed to where it lands. Links into the site and the app must land on a 200; links out
