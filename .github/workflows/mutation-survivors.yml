@@ -1,0 +1,22 @@
+name: Mutation survivors
+
+# The survivors of the last nightly mutation run, as the app publishes them: each mutant no test noticed, with its
+# module, line and change, and each module's score and floor. Printed to the log, compressed, for the session that
+# writes tests next. On demand.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read the survivors
+        shell: bash
+        run: |
+          curl -sS -f -m 60 -A 'zthr-factory (+https://zthr.ai)' -o s.json https://advocate-fsy7whk33q-uc.a.run.app/factory/mutation-survivors.json
+          python3 -c "import json;d=json.load(open('s.json'));print(len(d['survivors']),'survivors');[print(f\"{s['file']}: {s['score']:.1f}% (floor {d['floors'].get(s['file'],'none')})\") for s in d['scores']]"
+          echo SURVIVORS-BEGIN; gzip -9c s.json | base64 -w0; echo; echo SURVIVORS-END
