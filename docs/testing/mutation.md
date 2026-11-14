@@ -79,6 +79,18 @@ A survivor is a missing statement of a rule, so the test that kills it states th
 - **The text a person reads is asserted.** A held entry's detail and a barrier's history events are both checked word for word.
 - **The test never reads the code's own output as the expected value.** Expected values come from the rule, worked by hand.
 
+## The daily hunt
+
+Once a day, after the nightly run, an agent session turns survivors into tests:
+
+1. **Read the survivors.** The `Mutation survivors` workflow reads the app's `/factory/mutation-survivors.json` and prints it, compressed, between `SURVIVORS-BEGIN` and `SURVIVORS-END` in its log.
+2. **Pick the work.** Guide and eligibility modules first, then safety and runtime, then gates; 30 to 60 survivors in one session.
+3. **Kill them**, by the rules above, in the test file that verifies the module's doc. An equivalent mutant is removed by simplifying the code, never by a `Stryker disable` comment.
+4. **Check.** Type check, the touched tests, and the gates all pass; a mutation run over the touched module confirms the targeted survivors are killed.
+5. **Ship.** One commit naming the modules and the survivors addressed, pushed outside the nightly window (06:30 to 08:30 UTC).
+
+The session never lowers a floor, weakens or deletes a test, or changes a locked journey card, `control/people.json`, `control/ratchet-resets.jsonl` or `control/mutation-floors.json`. The nightly floors and the scope gate hold it to that: a weaker test shows up as a module under its floor.
+
 ## Running it
 
 ```sh
