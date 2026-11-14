@@ -41,6 +41,16 @@ bash <(curl -sL https://raw.githubusercontent.com/russlittle/ZTHR/reference-impl
 It finishes by starting the first run and printing its link. Defaults can be changed with environment variables
 (`PROJECT`, `REGION`, `BUCKET`, `CODE_BRANCH`, `BUDGET_USD`, `NIGHTLY_CRON`, `TZ_NAME`).
 
+To check the nightly run end to end, and start one now through its schedule, run in Cloud Shell:
+
+```sh
+bash <(curl -sL https://raw.githubusercontent.com/russlittle/ZTHR/reference-implementation/tools/nightly.sh)
+```
+
+It reports the trigger, the schedule and the last nightly builds with the step that failed. It creates the schedule
+if it is missing and resumes it if it is paused. It changes no permissions. The daily walk of zthr.ai fails when no
+nightly run has passed in 36 hours, so a nightly that stops running or passing is seen the next morning.
+
 Run a build by hand from a checkout: `gcloud builds submit --project zthr-ai --config cloudbuild.yaml .`
 
 ## What runs when
