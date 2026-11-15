@@ -6,6 +6,9 @@ import type { Context, MiddlewareHandler } from 'hono';
  *
  *  - Security headers: a content security policy that allows only this origin (and Google sign-in when it is on),
  *    no framing by other sites, no content sniffing, no referrer leaking beyond the origin, and HTTPS only.
+ *  - Forms posted only from this site: a browser's POST whose Origin is another site is refused, on top of the
+ *    SameSite cookies, so a page elsewhere cannot act for a student. Requests with no Origin (text-message
+ *    webhooks, scripts) are not browsers acting for anyone and pass to their own checks.
  *  - A per-client request rate, and a separate, much smaller rate for starting new demo sandboxes, so one client
  *    cannot exhaust the server or push other visitors' sandboxes out.
  */
@@ -29,9 +32,34 @@ export function securityHeaders(): MiddlewareHandler {
     c.header('X-Content-Type-Options', 'nosniff');
     c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
     c.header('Cross-Origin-Opener-Policy', 'same-origin');
+    // Another site may read this site's public JSON with CORS, but may not embed its pages or files as its own.
+    c.header('Cross-Origin-Resource-Policy', 'same-origin');
     c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
     // Over HTTPS (the front end says so), browsers are told to use nothing else for a year.
     if (c.req.header('x-forwarded-proto') === 'https') c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  };
+}
+
+/** Google posts the sign-in credential back from its own origin; that route has its own double-submit check. */
+const GOOGLE_SIGN_IN = [{ path: /\/auth\/google$/, host: 'accounts.google.com' }];
+
+/** Origins a form may be posted from: this host as the browser saw it, and the hosts that front it. */
+export function sameOrigin(fronts: string[] = ['zthr.ai', 'www.zthr.ai'], also: { path: RegExp; host: string }[] = GOOGLE_SIGN_IN): MiddlewareHandler {
+  return async (c, next) => {
+    const m = c.req.method;
+    if (m === 'GET' || m === 'HEAD' || m === 'OPTIONS') return next();
+    const origin = c.req.header('origin');
+    if (!origin) return next();
+    let host: string;
+    try {
+      host = new URL(origin).host;
+    } catch {
+      return c.text('This form can be sent only from this site.', 403);
+    }
+    const ours = new Set([c.req.header('host'), c.req.header('x-forwarded-host'), ...fronts].filter((h): h is string => !!h).map((h) => h.toLowerCase()));
+    const allowed = ours.has(host.toLowerCase()) || also.some((a) => a.path.test(new URL(c.req.url).pathname) && a.host === host.toLowerCase());
+    if (!allowed) return c.text('This form can be sent only from this site.', 403);
+    return next();
   };
 }
 

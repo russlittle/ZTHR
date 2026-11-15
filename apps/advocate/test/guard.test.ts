@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
-import { Window, clientOf, rateLimit, securityHeaders } from '../src/server/guard.js';
+import { Window, clientOf, rateLimit, sameOrigin, securityHeaders } from '../src/server/guard.js';
 import { SERVICES } from '../../campus-services/src/index.js';
 
 describe('security headers', () => {
@@ -15,6 +15,8 @@ describe('security headers', () => {
     const csp = r.headers.get('content-security-policy')!;
     for (const d of ["default-src 'self'", "frame-ancestors 'none'", "form-action 'self'", "object-src 'none'", "base-uri 'self'"]) expect(csp).toContain(d);
     expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
+    expect(r.headers.get('cross-origin-opener-policy')).toBe('same-origin');
+    expect(r.headers.get('cross-origin-resource-policy')).toBe('same-origin');
   });
   it('over HTTPS, browsers are told to use HTTPS only; over plain HTTP (local), they are not', async () => {
     const https = await app.request('/', { headers: { 'x-forwarded-proto': 'https' } });
@@ -84,5 +86,31 @@ describe('the text demo stays bounded', () => {
     const odd = await (await send('not a number', 'x'.repeat(5000))).text();
     expect(odd).not.toContain('not a number');
     expect(odd).not.toContain('x'.repeat(1601));
+  });
+});
+
+describe('forms posted only from this site', () => {
+  const app = new Hono().use('*', sameOrigin()).post('/s/ana/action', (c) => c.text('done')).get('/s/ana', (c) => c.text('page'));
+  const post = (headers: Record<string, string>) => app.request('http://advocate.run.app/s/ana/action', { method: 'POST', headers: { host: 'advocate.run.app', ...headers } });
+  it('a post from another site is refused, saying why', async () => {
+    for (const origin of ['https://evil.example', 'https://zthr.ai.evil.example', 'http://advocate.run.app.evil', 'null', 'not a url']) {
+      const r = await post({ origin });
+      expect(r.status, origin).toBe(403);
+      expect(await r.text()).toBe('This form can be sent only from this site.');
+    }
+  });
+  it('a post from this host, the host that fronts it, or zthr.ai passes; so does one with no Origin, such as a text-message webhook', async () => {
+    for (const h of [{ origin: 'https://advocate.run.app' } as Record<string, string>, { origin: 'https://zthr.ai' }, { origin: 'https://www.zthr.ai' }, { origin: 'https://front.example', 'x-forwarded-host': 'front.example' }, { origin: 'https://ADVOCATE.run.app' }, {}]) expect((await post(h)).status, JSON.stringify(h)).toBe(200);
+  });
+  it('only the sign-in route accepts Google posting the credential back', async () => {
+    const g = new Hono().use('*', sameOrigin()).post('/sa/auth/google', (c) => c.text('in')).post('/sa/s/ana/action', (c) => c.text('done'));
+    const send = (path: string, origin: string) => g.request(`http://advocate.run.app${path}`, { method: 'POST', headers: { host: 'advocate.run.app', origin } });
+    expect((await send('/sa/auth/google', 'https://accounts.google.com')).status).toBe(200);
+    expect((await send('/sa/s/ana/action', 'https://accounts.google.com')).status).toBe(403);
+    expect((await send('/sa/auth/google', 'https://evil.example')).status).toBe(403);
+    expect((await send('/sa/auth/google/x', 'https://accounts.google.com')).status).toBe(403);
+  });
+  it('reading a page is never refused for its origin', async () => {
+    expect((await app.request('http://advocate.run.app/s/ana', { headers: { host: 'advocate.run.app', origin: 'https://evil.example' } })).status).toBe(200);
   });
 });

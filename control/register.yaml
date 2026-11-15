@@ -51,3 +51,21 @@ findings:
     reason: The app never guesses a date; the dates go into control/colleges/sinclair.yaml when the calendar can be read.
     owner: claude-agent
     expires: 2027-01-15
+  - id: zap-inline-styles
+    gate: security-scan
+    finding: The content security policy allows inline styles (style-src 'unsafe-inline'); the page parts set small styles inline. Inline scripts are not allowed.
+    reason: Styles cannot run code; moving every inline style into stylesheets or hashes is scheduled with the next page-parts change.
+    owner: claude-agent
+    expires: 2027-02-15
+  - id: zap-form-tokens
+    gate: security-scan
+    finding: Forms carry no per-form anti-forgery token.
+    reason: A browser's POST from another site is refused by origin, and the app's cookies are SameSite=Lax; a per-form token is the next layer.
+    owner: claude-agent
+    expires: 2027-01-31
+  - id: zap-gaesa-cookie
+    gate: security-scan
+    finding: Cloud Run's session-affinity cookie GAESA is set without HttpOnly, Secure or SameSite.
+    reason: Google's front end sets it, not the app; it carries only which server holds a visitor's session. Removing it means removing session affinity, which the one-server demo relies on.
+    owner: claude-agent
+    expires: 2027-03-01

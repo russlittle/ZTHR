@@ -2,7 +2,7 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 import { bodyLimit } from 'hono/body-limit';
-import { Window, clientOf, rateLimit, securityHeaders } from './guard.js';
+import { Window, clientOf, rateLimit, sameOrigin, securityHeaders } from './guard.js';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { existsSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
@@ -110,6 +110,7 @@ const root = new Hono({ strict: false });
 
 // Guards for a public server (guard.ts): security headers, a body size limit, and a per-client request rate.
 root.use('*', securityHeaders());
+root.use('*', sameOrigin());
 root.use('*', bodyLimit({ maxSize: 256 * 1024, onError: (c) => c.text('That request is too large.', 413) }));
 root.use('*', rateLimit(new Window(Number(process.env.ADVOCATE_RATE_PER_MIN ?? 600), 60_000)));
 // Starting a demo sandbox builds twelve students; a client may start only a few an hour, so no one can push
