@@ -19,7 +19,7 @@ flowchart LR
 In Markdown, a number is written between markers, which render as nothing:
 
 ```md
-a guide of <!--fact:guide_entries-->270<!--/fact--> checked entries
+a guide of <!--fact:guide_entries-->268<!--/fact--> checked entries
 ```
 
 - **Repository facts** are counted from the repository: entries in the guide, gates (from their proofs), locked journey cards, reusable blocks, campus services, phases, patterns, modules in mutation scope, held-out crisis phrasings, and lines of code and documentation. The `facts-current` gate fails a push when any of them is stale. A rounded figure, such as "about 28,500 lines", holds while it is within five percent.
