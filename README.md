@@ -8,6 +8,8 @@ Two claims are on trial here, in public: that a ZTHR factory takes weeks to stan
 is real and manageable. Every measure is computed from an append-only evidence store and published on the
 evidence page; anything not yet measured is shown as not measured.
 
+**Reviewing this work?** Start with [docs/review.md](docs/review.md): each claim, where its evidence is, how to check it yourself, and where it stops. `npm run verify` reproduces every check a push runs.
+
 ## Layout
 
 | Path | What it is |

@@ -91,5 +91,5 @@ Production data, or anything the Advocate decides; it only answers like a vendor
 ## Verified by
 
 <!-- verified-by:start -->
-- [`apps/campus-services/test/services.test.ts`](../../apps/campus-services/test/services.test.ts) (36 test definitions)
+- [`apps/campus-services/test/services.test.ts`](../../apps/campus-services/test/services.test.ts) (38 test definitions)
 <!-- verified-by:end -->

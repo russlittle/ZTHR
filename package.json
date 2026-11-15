@@ -31,7 +31,8 @@
     "crawl": "tsx tools/crawl.ts",
     "walk": "tsx tools/ui/walk.ts",
     "campus": "tsx apps/campus-services/src/main.ts",
-    "contract": "tsx tools/contract.ts"
+    "contract": "tsx tools/contract.ts",
+    "verify": "npm run typecheck && npm test && GATES_VERIFY=1 npm run gates && npm run journeys && npm run docs:check && tsx tools/facts.ts --check && tsx tools/deps.ts"
   },
   "devDependencies": {
     "@stryker-mutator/core": "^9.0.0",
