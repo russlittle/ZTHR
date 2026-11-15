@@ -3,6 +3,9 @@ name: Deploy zthr.ai to Firebase Hosting
 on:
   push:
     branches: [main]
+  # zthr.ai follows the reference build: every two hours, publish the copy the latest Cloud Build made, if it is new.
+  schedule:
+    - cron: '23 */2 * * *'
   workflow_dispatch:
 
 permissions:
@@ -14,11 +17,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Take the reference site from the build that measured it
+        # The Cloud Build that deploys the app also builds zthr.ai's copy of the reference site from that run's own
+        # evidence, and the app serves it in parts. It is used as built: never rebuilt here, never edited by hand.
+        id: ref
+        run: |
+          set -euo pipefail
+          APP=https://advocate-fsy7whk33q-uc.a.run.app
+          UA='zthr-factory (+https://zthr.ai)'
+          if ! curl -sSf -m 60 -A "$UA" -o stamp.json "$APP/_publish/stamp.json"; then
+            # Until the app's first build that serves its copy is deployed, the copy in this repository stays.
+            echo "::warning::The app does not serve its reference build yet; keeping the reference site already in this repository."
+            echo "same=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          curl -sSf -m 60 -A "$UA" -o parts.txt "$APP/_publish/parts.txt"
+          curl -sSf -m 60 -A "$UA" -o parts.sha256 "$APP/_publish/parts.sha256"
+          while read -r part; do curl -sSf -m 300 -A "$UA" -o "$part" "$APP/_publish/$part"; done < parts.txt
+          sha256sum -c parts.sha256
+          commit=$(python3 -c "import json;print(json.load(open('stamp.json'))['commit'])")
+          live=$(curl -sS -m 30 -A "$UA" https://zthr.ai/reference/stamp.json | python3 -c "import json,sys;print(json.load(sys.stdin).get('commit',''))" 2>/dev/null || true)
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "$commit" = "$live" ]; then
+            echo "same=true" >> "$GITHUB_OUTPUT"; echo "::notice::zthr.ai already shows the reference build of $commit."; exit 0
+          fi
+          cat $(cat parts.txt) | tar -xzf -
+          rm -rf docs/reference docs/reference.html docs/advocate.html docs/advocate-preview.html
+          mv site-static docs/reference
+          mv site-static.entry.html docs/reference.html
+          mv site-static.advocate.html docs/advocate.html
+          rm -f docs/reference/advocate-preview.html
+          rm -f reference.tgz.part-* parts.txt parts.sha256 stamp.json
+          echo "::notice::Publishing the reference site built from $commit."
+
       - name: Every link lands where it should
+        if: steps.ref.outputs.same != 'true'
         # A broken link stops the deploy; the live site stays as it was.
         run: python3 -I tools/linkcheck.py .
 
       - name: Check for Firebase credentials
+        if: steps.ref.outputs.same != 'true'
         id: creds
         env:
           SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
