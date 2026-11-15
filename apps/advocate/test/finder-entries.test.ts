@@ -289,3 +289,37 @@ describe('CSV and the census file, at their edges', () => {
     expect([...F.zipCountyFrom(rel, ['39113'])]).toEqual([['45402', 'Montgomery'], ['45999', 'Montgomery']]);
   });
 });
+
+describe('pass 4: the survivors that were not equivalent', () => {
+  it('a leading 1 is dropped only from exactly eleven digits', () => {
+    expect(F.digits('21-937-555-0100')).toBe('219375550100');
+    expect(F.digits('1-937-555-0100-1')).toBe('193755501001');
+    expect(F.digits(undefined)).toBe('');
+  });
+  it('a link is a host and a path with no spaces', () => {
+    expect([F.url('see a.org'), F.url('a.org now'), F.url('https://a.org now'), F.url('a.'), F.url('www.none.org'), F.url(' a.org/x?y=1 ')]).toEqual([undefined, undefined, undefined, undefined, 'https://www.none.org', 'https://a.org/x?y=1']);
+  });
+  it('a name that starts with DBA and two spaces, and a site name with its own parentheses', () => {
+    expect(F.title(F.undba('DBA  HOPE HOUSE'))).toBe('Hope House');
+    const e = (name: string, address: string) => ({ name, location: { address, city: 'Dayton', zip: '45402' } }) as never;
+    expect(F.nameSites([e('Hope (East)', '1 Main St'), e('Hope (East)', '9 Elm St')]).map((x: { name: string }) => x.name)).toEqual(['Hope (East) (Dayton, 1 Main St)', 'Hope (East) (Dayton, 9 Elm St)']);
+  });
+  it('an address that does not start with its number is compared by name', () => {
+    const at = (name: string, address: string) => ({ name, phone: '937-555-0100', location: { address, city: 'Dayton', zip: '45402' } });
+    expect(F.samePlace(at('A', 'Suite 5, 100 Main St'), at('B', 'Suite 5, 200 Main St'))).toBe(false);
+    expect(F.samePlace(at('A', 'Suite 5, 100 Main St'), at('a', 'Suite 9, 200 Main St'))).toBe(true);
+  });
+  it('apartment numerals only at the end, with any spaces around the comma', () => {
+    const name = (n: string) => F.fromHudMultifamily([{ attributes: { PROPERTY_NAME_TEXT: n, STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: '9375550123' } }], area).entries[0]!.name;
+    expect(name('OAK ,  II')).toBe('Oak II');
+    expect(name('OAK, II ANNEX')).toBe('Oak, II Annex');
+  });
+  it('an IRS lead in the state but outside the area, or in the area under another state, is not a lead', () => {
+    const lead = { EIN: '1', NAME: 'HOPE PANTRY', STATE: 'OH', ZIP: '45402', NTEE_CD: 'K31' };
+    expect(F.leadsFromIrs([{ ...lead, ZIP: '45005' }, { ...lead, STATE: 'KY' }], area)).toEqual([]);
+  });
+  it('a FindTreatment service with no label or text is read as empty', () => {
+    const e = F.fromFindTreatment([{ name2: 'C', state: 'OH', zip: '45402', type_facility: 'MH', services: [{}, { f1: 'Payment/Insurance/Funding Accepted' }] } as never], area).entries[0]!;
+    expect([e.description, 'cost' in e]).toEqual(['Treatment for mental health.', false]);
+  });
+});

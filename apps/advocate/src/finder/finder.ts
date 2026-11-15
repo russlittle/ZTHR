@@ -45,10 +45,10 @@ export interface Lead {
 
 export const FRESH_DAYS = 30;
 export function zip5(z: unknown) {
-  return String(z ?? '').replace(/\D/g, '').slice(0, 5);
+  return String(z).replace(/\D/g, '').slice(0, 5);
 }
 export function digits(p: unknown) {
-  return String(p ?? '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  return String(p).replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
 }
 export function phoneOf(p: unknown): string | undefined {
   const d = digits(p);
@@ -59,7 +59,7 @@ export function slug(s: string) {
   return s.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
 }
 export function undba(s: string) {
-  return s.replace(/^\s*dba\s+/i, '');
+  return s.replace(/^\s*dba\s/i, '');
 }
 export function title(raw: string) {
   const s = raw.replace(/\s+/g, ' ').trim();
@@ -73,9 +73,10 @@ export function title(raw: string) {
     .replace(/\b(Ii|Iii|Iv|Vi|Vii)\b/g, (m) => m.toUpperCase());
 }
 export function url(u: unknown) {
-  const s = String(u ?? '').trim();
-  if (!s || /in progress|n\/a|none/i.test(s)) return undefined;
-  return /^https?:\/\//i.test(s) ? s : /^[\w-]+(\.[\w-]+)+/.test(s) ? `https://${s}` : undefined;
+  // A host, then a path with no spaces; "N/A", "none" or "in progress" is not a link.
+  const s = String(u).trim();
+  if (/^https?:\/\/\S+$/i.test(s)) return s;
+  return /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(s) ? `https://${s}` : undefined;
 }
 
 /** The county a ZIP belongs to in this area, or undefined when it is outside. */
@@ -85,7 +86,7 @@ export function countyOf(area: Area, zip: unknown) {
 
 /** Build the ZIP-to-county map from the Census 2020 ZCTA-to-county relationship file (pipe-separated). */
 export function zipCountyFrom(relationship: string, fips: string[]): Map<string, string> {
-  const lines = relationship.replace(/^﻿/, '').split(/\r?\n/);
+  const lines = relationship.split(/\r?\n/);
   const head = lines[0]!.split('|');
   const col = (n: string) => head.indexOf(n);
   const [z, c, name, land] = [col('GEOID_ZCTA5_20'), col('GEOID_COUNTY_20'), col('NAMELSAD_COUNTY_20'), col('AREALAND_PART')];
@@ -134,7 +135,7 @@ export function dedupe(entries: Resource[], skipped: Found['skipped']): Resource
   const out: Resource[] = [];
   const ids = new Set<string>();
   for (const e of entries) {
-    const key = `${digits(e.phone)}|${(e.location?.address ?? '').match(/^\d+/)?.[0] ?? e.name.toLowerCase()}`;
+    const key = `${digits(e.phone)}|${e.location?.address.match(/^\d+/)?.[0] ?? e.name.toLowerCase()}`;
     if (seen.has(key)) {
       skipped.push({ source: e.source.url, name: e.name, why: `the same place as ${seen.get(key)}` });
       continue;
@@ -173,7 +174,7 @@ export function fromFindTreatment(rows: FtRow[], area: Area): Found {
   const skipped: Found['skipped'] = [];
   const entries: Resource[] = [];
   for (const r of rows) {
-    const name = title(undba(String(r.name2 || r.name1 || '').trim()));
+    const name = title(undba(String(r.name2 || r.name1 || '')));
     const county = r.state === area.state ? countyOf(area, r.zip) : undefined;
     if (!county) {
       skipped.push({ source: FINDTREATMENT_PAGE, name, why: 'outside the area' });
@@ -221,7 +222,7 @@ export function fromHrsa(rows: Record<string, string>[], area: Area): Found {
   const skipped: Found['skipped'] = [];
   const entries: Resource[] = [];
   for (const r of rows) {
-    const name = title((r['Site Name'] ?? '').trim());
+    const name = title(r['Site Name'] ?? '');
     if (r['Site State Abbreviation'] !== area.state) continue;
     const county = countyOf(area, r['Site Postal Code']);
     if (!county) continue;
@@ -235,7 +236,7 @@ export function fromHrsa(rows: Record<string, string>[], area: Area): Found {
       continue;
     }
     const phone = phoneOf(r['Site Telephone Number']);
-    const org = title((r['Health Center Name'] || r['Health Center Organization Name'] || name).trim());
+    const org = title(r['Health Center Name'] || r['Health Center Organization Name'] || name);
     const look = /look-?alike/i.test(r['Health Center Type'] ?? '');
     entries.push({
       id: `hrsa-${slug(name)}-${zip5(r['Site Postal Code'])}`,
@@ -304,7 +305,7 @@ export function fromHudCounseling(rows: HudRow[], area: Area): Found {
   for (const r of rows) {
     if (seen.has(String(r.agcid))) continue;
     seen.add(String(r.agcid));
-    const name = title(String(r.nme ?? '').trim());
+    const name = title(String(r.nme ?? ''));
     const county = r.statecd === area.state ? countyOf(area, r.zipcd) : undefined;
     if (!county) {
       skipped.push({ source: HUD_COUNSELING_PAGE, name, why: 'outside the area' });
@@ -350,7 +351,7 @@ export function fromHudPha(features: { attributes: Record<string, unknown> }[], 
   for (const { attributes: a } of features) {
     const county = countyOf(area, a.STD_ZIP5);
     if (!county) continue;
-    const name = title(String(a.FORMAL_PARTICIPANT_NAME ?? '').replace(/Metropolitian/g, 'Metropolitan').trim());
+    const name = title(String(a.FORMAL_PARTICIPANT_NAME ?? '').replace(/Metropolitian/g, 'Metropolitan'));
     const phone = phoneOf(a.HA_PHN_NUM);
     entries.push({
       id: `pha-${slug(name)}`,
@@ -406,7 +407,7 @@ export function fromHudMultifamily(features: { attributes: Record<string, unknow
       categories: ['housing'],
       description: `Apartments where HUD helps pay the rent, so what you pay is based on your income${units ? ` (${units} such units)` : ''}.`,
       serves: { counties: [county] },
-      location: { address: title(String(a.STD_ADDR ?? '').trim()), city: title(String(a.STD_CITY ?? '')), zip: zip5(a.STD_ZIP5) },
+      location: { address: title(String(a.STD_ADDR ?? '')), city: title(String(a.STD_CITY ?? '')), zip: zip5(a.STD_ZIP5) },
       phone,
       eligibility: { text: elderly ? 'For older adults, based on income.' : disabled ? 'For people with disabilities, based on income.' : 'Based on income and household size.' },
       howToApply: [`Call ${phone} to ask if the wait list is open.`, 'Ask how to apply, and what to bring.'],
@@ -437,7 +438,7 @@ export function fromLibraries(rows: Record<string, string>[], area: Area): Found
     if (r.STABR !== area.state) continue;
     const county = countyOf(area, r.ZIP);
     if (!county) continue;
-    const name = title((r.LIBNAME ?? '').trim());
+    const name = title(r.LIBNAME ?? '');
     if (/BS|BM/.test(r.C_OUT_TY ?? '')) {
       skipped.push({ source: IMLS_PAGE, name, why: 'a bookmobile, with no fixed place' });
       continue;
@@ -448,11 +449,11 @@ export function fromLibraries(rows: Record<string, string>[], area: Area): Found
     entries.push({
       id: `lib-${slug(name)}-${zip5(r.ZIP)}`,
       name,
-      organization: title((r.STATNAME ?? name).trim()) || name,
+      organization: title(r.STATNAME ?? name) || name,
       categories: ['phone-internet', 'academic'],
       description: 'A public library. Use the computers, Wi-Fi and printers for free, and study there.',
       serves: { counties: [county] },
-      location: { address: title((r.ADDRESS ?? '').trim()), city: title((r.CITY ?? '').trim()), zip: zip5(r.ZIP) },
+      location: { address: title(r.ADDRESS ?? ''), city: title(r.CITY ?? ''), zip: zip5(r.ZIP) },
       ...(phone ? { phone } : {}),
       eligibility: { text: 'Anyone can come in.' },
       howToApply: ['Go in during open hours.', 'Ask for a library card to borrow things and use the computers longer.'],
@@ -499,7 +500,7 @@ export function leadsFromIrs(rows: Record<string, string>[], area: Area): Lead[]
     const ntee = (r.NTEE_CD ?? '').trim().toUpperCase();
     const barrier = NTEE_BARRIER.find(([re]) => re.test(ntee))?.[1];
     if (!barrier) continue;
-    out.push({ ein: r.EIN!, name: title((r.NAME ?? '').trim()), address: title((r.STREET ?? '').trim()), city: title((r.CITY ?? '').trim()), zip: zip5(r.ZIP), county, ntee, barrier, source: IRS_EO(area.state) });
+    out.push({ ein: r.EIN!, name: title(r.NAME ?? ''), address: title(r.STREET ?? ''), city: title(r.CITY ?? ''), zip: zip5(r.ZIP), county, ntee, barrier, source: IRS_EO(area.state) });
   }
   return out.sort((a, b) => a.barrier!.localeCompare(b.barrier!) || a.name.localeCompare(b.name));
 }
@@ -510,7 +511,7 @@ export function parseCsv(text: string): Record<string, string>[] {
   let row: string[] = [];
   let cell = '';
   let q = false;
-  const t = text.replace(/^﻿/, '');
+  const t = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   for (let i = 0; i < t.length; i++) {
     const ch = t[i]!;
     if (q) {
@@ -524,17 +525,15 @@ export function parseCsv(text: string): Record<string, string>[] {
       row.push(cell);
       cell = '';
     } else if (ch === '\n' || ch === '\r') {
-      if (ch === '\r' && t[i + 1] === '\n') i++;
+      // "\r\n" ends a row and leaves an empty one, which is dropped with the other empty rows.
       row.push(cell);
       rows.push(row);
       row = [];
       cell = '';
     } else cell += ch;
   }
-  if (cell || row.length) {
-    row.push(cell);
-    rows.push(row);
-  }
+  row.push(cell);
+  rows.push(row);
   const [head, ...body] = rows;
   return body.filter((r) => r.length > 1).map((r) => Object.fromEntries(head!.map((h, i) => [h, r[i] ?? ''])));
 }
@@ -555,7 +554,7 @@ export function drift(before: SourceRead[], now: SourceRead[]): string[] {
     if (n.status < 200 || n.status >= 300) out.push(`${b.name}: answered ${n.status || 'nothing'}`);
     else if (b.records > 0 && n.records === 0) out.push(`${b.name}: answered with no records (last run ${b.records})`);
     else if (n.records < b.records / 2) out.push(`${b.name}: ${n.records} records, under half of last run's ${b.records}`);
-    else if (b.kept > 0 && n.kept === 0 && n.records > 0) out.push(`${b.name}: ${n.records} records read and none kept; a field may have been renamed`);
+    else if (b.kept > 0 && n.kept === 0) out.push(`${b.name}: ${n.records} records read and none kept; a field may have been renamed`);
     else if (b.kept >= 10 && n.kept < b.kept / 2) out.push(`${b.name}: ${n.kept} kept, under half of last run's ${b.kept}`);
   }
   return out;

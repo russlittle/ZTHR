@@ -30,7 +30,7 @@ export function admit(r: Resource, catalog: Resource[], owners: Set<string>): Ch
   push('verified on a real date', isDate(r.verifiedOn), r.verifiedOn);
   push('freshness declared', r.freshnessDays > 0 && r.freshnessDays <= 365, `${r.freshnessDays} days`);
   push('barriers from the taxonomy', r.categories.length > 0 && r.categories.every((c) => !!BARRIER[c]), r.categories.join(', '));
-  push('provider stated', !!r.provider?.kind && !!r.provider?.level, r.provider ? `${r.provider.kind}, ${r.provider.level}` : 'missing');
+  push('provider stated', !!(r.provider?.kind && r.provider.level), r.provider ? `${r.provider.kind}, ${r.provider.level}` : 'missing');
   push('serves somewhere', !!(r.serves.national || r.serves.counties?.length || r.serves.colleges?.length), JSON.stringify(r.serves));
   push('a way to reach it', !!(r.phone || r.url || r.location), [r.phone, r.url, r.location?.address].filter(Boolean).join(' | ') || 'none');
   push('phone is a phone number', !r.phone || [10, 11].includes(digits(r.phone).length) || digits(r.phone).length === 3, r.phone ?? 'none');
