@@ -1,0 +1,44 @@
+name: Security scan of the live app
+
+# OWASP ZAP's baseline scan of the deployed Student Advocate: a passive scan of every page it can reach, the same
+# check an outside reviewer would run first. A high-risk alert fails the run; every alert is printed and the full
+# report is kept with the run. Weekly, after each zthr.ai deploy, and on demand.
+on:
+  schedule:
+    - cron: '41 9 * * 1'
+  workflow_run:
+    workflows: ['Deploy zthr.ai to Firebase Hosting']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Baseline scan
+        run: |
+          mkdir -p zap && chmod 777 zap
+          set +e
+          docker run --rm -v "$PWD/zap:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:2.16.1 zap-baseline.py \
+            -t https://advocate-fsy7whk33q-uc.a.run.app/studentadvocate/ -m 5 -J report.json -r report.html -I
+          set -e
+          python3 - <<'PY'
+          import json, sys
+          r = json.load(open('zap/report.json'))
+          alerts = [a for s in r.get('site', []) for a in s.get('alerts', [])]
+          risk = {'3': 'High', '2': 'Medium', '1': 'Low', '0': 'Informational'}
+          for a in sorted(alerts, key=lambda a: -int(a['riskcode'])):
+              print(f"{risk[a['riskcode']]:<14} {a['name']} ({len(a.get('instances', []))} instances)")
+          high = [a for a in alerts if a['riskcode'] == '3']
+          print(f"{len(alerts)} alert types; {len(high)} high risk")
+          sys.exit(1 if high else 0)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-baseline
+          path: zap/

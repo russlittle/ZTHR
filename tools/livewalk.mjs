@@ -178,6 +178,21 @@ for (const width of [1280, 390]) {
     else warnings.push(`nightly factory run: ${msg}`);
   }
 }
+// zthr.ai's reference site must be the copy the deployed app's own build made: the same commit, no older than the
+// zthr.ai deploy that follows every build (every two hours). Behind on the daily walk is a problem.
+{
+  const get = (u) => fetch(u).then((r) => (r.ok ? r.json() : undefined)).catch(() => undefined);
+  const built = await get('https://advocate-fsy7whk33q-uc.a.run.app/_publish/stamp.json');
+  const live = await get(`${ORIGIN}/reference/stamp.json`);
+  if (!built) warnings.push('reference site: the app does not serve its build stamp yet');
+  else if (!live) bad('/reference/stamp.json', 'zthr.ai shows a reference site with no build stamp; it was not published from a build');
+  else if (live.commit !== built.commit) {
+    const hours = (Date.now() - Date.parse(built.builtAt)) / 3_600_000;
+    const msg = `zthr.ai shows the reference site of ${live.commit}; the app was built from ${built.commit} ${hours.toFixed(1)} hours ago`;
+    if (hours > 3 && process.env.GITHUB_EVENT_NAME === 'schedule') bad('/reference/stamp.json', msg);
+    else warnings.push(`reference site: ${msg}`);
+  }
+}
 await browser.close();
 
 // 5. Every link, followed to where it lands. Links into the site and the app must land on a 200; links out
