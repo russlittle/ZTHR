@@ -187,7 +187,10 @@ export function facilityName(r: Pick<FtRow, 'name1' | 'name2' | 'city'>): string
   const org = String(r.name1 ?? '').trim();
   const town = String(r.city ?? '').trim().toLowerCase();
   if (!second || UNIT.test(second) || second.toLowerCase() === town) return title(undba(org || second));
-  if (OFFICE.test(second) && org) return title(`${undba(org)} (${second})`);
+  // A second name that only says where or which program: one word ("Kenwood"), or a short code at its end
+  // ("Dayton AOD", "Dayton MH"), or an office. The organization leads; that name stays beside it.
+  const where = !/\s/.test(second) || /\s[A-Z]{2,4}$/.test(second) || OFFICE.test(second);
+  if (where && org) return title(`${undba(org)} (${second})`);
   return title(undba(second));
 }
 /** A name that only says which office: "Dayton Regional Office", "Main Office". */

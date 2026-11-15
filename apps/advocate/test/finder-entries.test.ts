@@ -346,6 +346,11 @@ describe('names a student can recognize', () => {
     expect(n('Suite 200')).toBe('Armada Recovery');
     expect(n('', 'DBA Hope House')).toBe('Hope House');
     expect(n('Box Office Recovery')).toBe('Box Office Recovery');
+    expect(n('Kenwood', 'Mindfully')).toBe('Mindfully (Kenwood)');
+    expect(n('Dayton AOD', 'Mahajan Therapeutics')).toBe('Mahajan Therapeutics (Dayton AOD)');
+    expect(n('Dayton MH', 'Mahajan Therapeutics')).toBe('Mahajan Therapeutics (Dayton MH)');
+    expect(n('Dayton Treatment Services', 'Pinnacle Treatment Centers OH-V, LLC')).toBe('Dayton Treatment Services');
+    expect(n('Kenwood', '')).toBe('Kenwood');
   });
   it('a HUD property whose registered name uses an outdated term for disability is held for a person, not shown', () => {
     const f = F.fromHudMultifamily([{ attributes: { PROPERTY_NAME_TEXT: 'SECOND MENTAL RETARDATION HSE', STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: '9375550123', CLIENT_GROUP_NAME: 'Disabled' } }, { attributes: { PROPERTY_NAME_TEXT: 'OAK HOMES', STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: '9375550124' } }], area);
