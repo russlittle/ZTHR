@@ -24,8 +24,8 @@ export interface EligibilityResult {
 
 const at = <T>(arr: T[], size: number, extra: number, toNum: (t: T) => number): number => {
   const i = Math.min(size, arr.length) - 1;
-  const base = toNum(arr[i]!);
-  return size > arr.length ? base + extra * (size - arr.length) : base;
+  // Past the end of the table, each further person adds the published increment.
+  return toNum(arr[i]!) + extra * Math.max(0, size - arr.length);
 };
 
 const STATUS_NOTE =
@@ -55,7 +55,8 @@ export function snap(s: Student, on: string): EligibilityResult {
     reasons.push('Under half-time, the student rule does not apply.');
   } else {
     const exemptions: string[] = [];
-    if (s.age !== undefined && (s.age < 18 || s.age >= 50)) exemptions.push('your age');
+    const age = Number(s.age); // NaN when not given, which is neither under 18 nor 50 or older
+    if (age < 18 || age >= 50) exemptions.push('your age');
     if ((s.enrollment.weeklyWorkHours ?? 0) >= 20) exemptions.push('you work 20 or more hours a week');
     if (s.enrollment.workStudy) exemptions.push('you have work-study');
     if ((s.household.childrenUnder6 ?? 0) > 0) exemptions.push('you care for a child under 6');
@@ -83,14 +84,13 @@ export function snap(s: Student, on: string): EligibilityResult {
     const grossLimit = at(p.gross130, size, p.grossExtra, (x) => x);
     incomeOk = gross <= grossLimit;
     reasons.push(incomeOk ? `Household income is under the limit of $${grossLimit} a month.` : `Household income is over the limit of $${grossLimit} a month.`);
-    if (incomeOk) {
-      const earned = s.household.monthlyEarnedIncome ?? gross;
-      const stdDed = p.standardDeduction[Math.min(size, 6) - 1]!;
-      const net = Math.max(0, gross - 0.2 * earned - stdDed);
-      // Households larger than the published table get no estimate rather than a guessed one.
-      const max = size <= p.maxAllotment.length ? p.maxAllotment[size - 1]! : undefined;
-      estimate = max === undefined ? undefined : Math.max(0, Math.round(max - 0.3 * net));
-    }
+    // The estimate is shown only with a likely result, so it is worked out whatever the income.
+    const earned = s.household.monthlyEarnedIncome ?? gross;
+    const stdDed = p.standardDeduction[Math.min(size, 6) - 1]!;
+    const net = Math.max(0, gross - 0.2 * earned - stdDed);
+    // Households larger than the published table get no estimate rather than a guessed one.
+    const max = p.maxAllotment[size - 1];
+    estimate = max === undefined ? undefined : Math.max(0, Math.round(max - 0.3 * net));
   }
 
   if (studentOk === false || incomeOk === false) return { ...base, status: 'unlikely', reasons, needs };

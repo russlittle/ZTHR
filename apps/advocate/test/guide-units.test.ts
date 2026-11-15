@@ -7,7 +7,7 @@ import { coverage, feed, FEED_VERSION, LICENSE, toFeedService } from '../src/gui
 import { helpScore, needsReview, OUTCOME_LABEL, OUTCOMES, tally } from '../src/guide/feedback.js';
 import { PACKAGES } from '../src/guide/packages.js';
 import { signals } from '../src/guide/signals.js';
-import { BARRIER, BARRIERS } from '../src/guide/taxonomy.js';
+import { BARRIER, BARRIERS, DOMAIN_LABEL } from '../src/guide/taxonomy.js';
 
 /**
  * The guide's rules, one at a time, where a mutation run showed the broader tests would not notice a change: how
@@ -135,5 +135,24 @@ describe('feedback, exactly', () => {
     expect(helpScore({ helped: 3, tried: 8, unreachable: 0 })).toBe(0.4);
     expect(needsReview({ helped: 3, tried: 12, unreachable: 0 })).toBe(false);
     expect(needsReview({ helped: 2, tried: 12, unreachable: 0 })).toBe(true);
+  });
+});
+
+describe('the guide where an entry or a barrier is outside what it knows', () => {
+  it('a barrier the taxonomy does not name is still signalled, in its own id', () => {
+    const need = 'not-a-barrier' as Resource['categories'][number];
+    const book = B.open(B.empty(), need, 'student', 'soon', TODAY);
+    const s = signals({ book, today: TODAY, optionsFor: () => [make('x')], record: noRecord });
+    expect(s.map((x) => x.why)).toEqual(['For not-a-barrier: About x.']);
+  });
+  it('a category outside the taxonomy is shown in the domain every barrier falls back to, with that domain\'s words', () => {
+    const odd = toFeedService(make('odd', { categories: ['not-a-barrier' as Resource['categories'][number]] }), TODAY);
+    expect(odd.taxonomy).toEqual([{ barrier: 'not-a-barrier', label: 'not-a-barrier', domain: 'feasible', domain_label: 'Making college life work' }]);
+    expect(DOMAIN_LABEL.feasible).toBe('Making college life work');
+  });
+  it('a service for a college the guide does not know counts in no county, and does not stop the count', () => {
+    const cells = coverage([make('u', { categories: ['books'], serves: { colleges: ['no-such-college'] } })], TODAY).cells;
+    expect(cells.filter((c) => c.services > 0)).toEqual([]);
+    expect(cells).toHaveLength(BARRIERS.length * 2);
   });
 });

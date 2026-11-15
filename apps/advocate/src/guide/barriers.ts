@@ -33,9 +33,10 @@ export interface BarrierBook {
   items: StudentBarrier[];
 }
 
+const URGENCIES: Urgency[] = ['tonight', 'soon', 'someday'];
 const RANK: Record<Urgency, number> = { tonight: 0, soon: 1, someday: 2 };
 function higher(a: Urgency, b: Urgency): Urgency {
-  return RANK[a] <= RANK[b] ? a : b;
+  return URGENCIES[Math.min(RANK[a], RANK[b])]!;
 }
 const day = 86_400_000;
 function addDays(d: string, n: number): string {

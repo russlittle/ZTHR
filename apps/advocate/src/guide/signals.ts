@@ -30,11 +30,8 @@ export interface SignalInputs {
   record: (resourceId: string) => Record_;
 }
 
-const URG = { tonight: 0, soon: 1, someday: 2 } as const;
-
 function bestFor(o: SignalInputs, need: Resource['categories'][number]): Resource | undefined {
   const opts = o.optionsFor(need);
-  if (!opts.length) return undefined;
   const pkg = packageFor(need);
   const order = (r: Resource) => {
     const i = pkg ? pkg.entries.indexOf(r.id) : -1;
@@ -57,5 +54,6 @@ export function signals(o: SignalInputs): Signal[] {
         : { need: b.need, urgency: b.urgency, title: `${def?.label ?? b.need}: call 2-1-1`, why: 'I have no checked resource near you for this yet. 2-1-1 can help any time, and I have counted the gap.', gap: true },
     );
   }
-  return out.sort((a, b) => URG[a.urgency] - URG[b.urgency]).slice(0, MAX);
+  // active() already gives the most urgent first, so the first MAX are the ones to show.
+  return out.slice(0, MAX);
 }
