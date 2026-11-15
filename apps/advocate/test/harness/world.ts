@@ -48,10 +48,22 @@ const ID = /(dl|hd|rm|dr|mt)_[0-9a-f]{8}/g;
  * whether a draft is waiting, whether a question is pending) and the buttons on screen, so every screen is
  * reached in every state that changes its behavior, and the walk ends.
  */
+// A button by what tapping it leads to, not which entry it names. With hundreds of guide entries, the same screen
+// offering a different clinic or pantry made a new state each time and kept the walk from a fixpoint. A resource keeps
+// what changes its flow: an eligibility rule, a form it fills in, availability facts. A call or a share leads to the
+// same flow whatever the number or the entry.
+const SHAPE = new Map(DAYTON_CATALOG.map((r) => [r.id, `${r.eligibility.rule ?? 'none'}${r.prefill.length ? '+form' : ''}${r.availability?.length ? '+facts' : ''}`]));
+export function button(action: string): string {
+  const a = action.replace(ID, '*');
+  const m = /^(start-resource|share|call):(.*)$/.exec(a);
+  if (!m) return a;
+  return m[1] === 'start-resource' ? `start-resource:${SHAPE.get(m[2]!) ?? 'unknown'}` : `${m[1]}:*`;
+}
+
 export function signature(w: World, last: Outcome | undefined): string {
   if (w.deleted) return 'deleted';
   const parts = stateParts(w);
-  const next = last ? (last.via === 'tap' ? last.result.message.nextSteps.map((n) => n.action.replace(ID, '*')) : last.replies.flatMap((r) => r.nextSteps.map((n) => n.action.replace(ID, '*')))) : [];
+  const next = last ? (last.via === 'tap' ? last.result.message.nextSteps.map((n) => button(n.action)) : last.replies.flatMap((r) => r.nextSteps.map((n) => button(n.action)))) : [];
   return hash(`${parts.join('\n')}\n--\n${next.join(',')}`);
 }
 
