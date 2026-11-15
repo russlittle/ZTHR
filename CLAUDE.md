@@ -21,7 +21,7 @@ This repository is built and kept by agents under ZTHR fixtures. These rules hol
 
 ## What only a person does
 
-- Locked journey cards (`control/journeys`, `control/lock.json`), `control/people.json`, `control/ratchet-resets.jsonl` and `control/mutation-floors.json` are changed only by a person.
+- Locked journey cards (`control/journeys`, `control/lock.json`), held-out phrasings (`control/heldout`), `control/people.json`, `control/ratchet-resets.jsonl`, `control/mutation-floors.json`, `control/required-checks.yaml` and `tools/person-signed.ts` are changed only by a person, in a commit GitHub verifies; the `person-signed` build step fails any other. An agent proposes a journey card in `control/proposals` instead.
 - No credentials entered, no IAM or Google Cloud changes by an agent.
 
 ## Commits

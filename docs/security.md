@@ -54,7 +54,7 @@ The application image installs production packages only: five libraries and the 
 
 ## Changes only a person makes
 
-Some changes loosen what the factory holds the code to: a locked journey card or the lock itself, the people who may sign, a ratchet reset, a mutation floor, the list of required checks, and the rule below. An agent may not make them, and the build enforces that rather than trusting it.
+Some changes loosen what the factory holds the code to: a locked journey card or the lock itself, the held-out phrasings the safety screen is never shaped around, the people who may sign, a ratchet reset, a mutation floor, the list of required checks, and the rule below. An agent may not make them, and the build enforces that rather than trusting it.
 
 ```mermaid
 flowchart TD

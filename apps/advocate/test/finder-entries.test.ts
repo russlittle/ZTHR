@@ -323,3 +323,37 @@ describe('pass 4: the survivors that were not equivalent', () => {
     expect([e.description, 'cost' in e]).toEqual(['Treatment for mental health.', false]);
   });
 });
+
+describe('a second name that is part of an address', () => {
+  it('a suite, floor, building, room or unit in name2 is never the name; name1 is', () => {
+    const one = (name2: string) => F.fromFindTreatment([{ name1: 'Miami Valley Recovery LLC', name2, state: 'OH', zip: '45402', services: [] } as never], area).entries[0]!.name;
+    for (const n2 of ['Suite NWB 40', 'Ste 200', 'Floor 3', 'Fl 2', 'Building B', 'Bldg 4', 'Room 12', 'Rm 5', 'Unit 9', '#300']) expect(one(n2), n2).toBe('Miami Valley Recovery LLC');
+    expect(one('Hope Center')).toBe('Hope Center');
+    expect(one('Stepping Stones')).toBe('Stepping Stones');
+    expect(one('Unity Recovery')).toBe('Unity Recovery');
+  });
+});
+
+describe('names a student can recognize', () => {
+  it('a town or an office in name2 is not a name: the organization leads, with an office kept beside it', () => {
+    const n = (name2: string, name1 = 'Armada Recovery', city = 'Dayton') => F.facilityName({ name1, name2, city });
+    expect(n('Dayton')).toBe('Armada Recovery');
+    expect(n('DAYTON')).toBe('Armada Recovery');
+    expect(n('Dayton Regional Office', 'National Youth Advocate Program Inc')).toBe('National Youth Advocate Program Inc (Dayton Regional Office)');
+    expect(n('Main Office', 'Hope Center')).toBe('Hope Center (Main Office)');
+    expect(n('Fairborn', 'DeCoach Rehabilitation Centre', 'Fairborn')).toBe('DeCoach Rehabilitation Centre');
+    expect(n('New Season Dayton Treatment Center', 'New Season of Ohio, L.P.')).toBe('New Season Dayton Treatment Center');
+    expect(n('Suite 200')).toBe('Armada Recovery');
+    expect(n('', 'DBA Hope House')).toBe('Hope House');
+    expect(n('Box Office Recovery')).toBe('Box Office Recovery');
+  });
+  it('a HUD property whose registered name uses an outdated term for disability is held for a person, not shown', () => {
+    const f = F.fromHudMultifamily([{ attributes: { PROPERTY_NAME_TEXT: 'SECOND MENTAL RETARDATION HSE', STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: '9375550123', CLIENT_GROUP_NAME: 'Disabled' } }, { attributes: { PROPERTY_NAME_TEXT: 'OAK HOMES', STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: '9375550124' } }], area);
+    expect(f.entries.map((e) => e.name)).toEqual(['Oak Homes']);
+    expect(f.skipped).toEqual([{ source: F.HUD_MF_PAGE, name: 'Second Mental Retardation Hse', why: 'its registered name uses an outdated term for disability; a person decides how to list it' }]);
+  });
+  it('two programs of one organization at one address are told apart by their own phone numbers', () => {
+    const e = (phone: string) => ({ name: 'DeCoach Rehabilitation Centre', phone, location: { address: '36 North Detroit Street, Suite 105', city: 'Xenia', zip: '45385' } }) as never;
+    expect(F.nameSites([e('937-712-7628'), e('513-448-1117')]).map((x: { name: string }) => x.name)).toEqual(['DeCoach Rehabilitation Centre (Xenia, 36 North Detroit Street, 937-712-7628)', 'DeCoach Rehabilitation Centre (Xenia, 36 North Detroit Street, 513-448-1117)']);
+  });
+});

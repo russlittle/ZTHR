@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { CONTROL } from './lib.js';
 
 /** This file and the list of required checks are protected too, so the rule cannot be loosened by the change it judges. */
-export const PROTECTED = ['control/journeys/', 'control/lock.json', 'control/people.json', 'control/ratchet-resets.jsonl', 'control/mutation-floors.json', 'control/required-checks.yaml', 'tools/person-signed.ts'];
+export const PROTECTED = ['control/journeys/', 'control/lock.json', 'control/people.json', 'control/ratchet-resets.jsonl', 'control/mutation-floors.json', 'control/required-checks.yaml', 'control/heldout/', 'tools/person-signed.ts'];
 
 /** Each listed person's GitHub account. Kept here, in a protected file, so only a person can add one. */
 export const GITHUB: Record<string, string> = { russ: 'russlittle' };

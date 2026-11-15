@@ -118,7 +118,11 @@ export function nameSites(entries: Resource[]): Resource[] {
   // Two sites in the same town: the street tells them apart.
   const again = new Map<string, number>();
   for (const e of byTown) again.set(e.name.toLowerCase(), (again.get(e.name.toLowerCase()) ?? 0) + 1);
-  return byTown.map((e) => ((again.get(e.name.toLowerCase()) ?? 0) > 1 && e.location?.address ? { ...e, name: e.name.replace(/\)$/, `, ${e.location.address.split(',')[0]})`) } : e));
+  const byStreet = byTown.map((e) => ((again.get(e.name.toLowerCase()) ?? 0) > 1 && e.location?.address ? { ...e, name: e.name.replace(/\)$/, `, ${e.location.address.split(',')[0]})`) } : e));
+  // Two programs of one organization at one address: their own phone numbers tell them apart.
+  const third = new Map<string, number>();
+  for (const e of byStreet) third.set(e.name.toLowerCase(), (third.get(e.name.toLowerCase()) ?? 0) + 1);
+  return byStreet.map((e) => ((third.get(e.name.toLowerCase()) ?? 0) > 1 && e.phone ? { ...e, name: e.name.replace(/\)$/, `, ${e.phone})`) } : e));
 }
 
 /** The same phone and the same street number: one place. A shared main number alone (a library system) is not. */
@@ -170,11 +174,30 @@ interface FtRow {
   services?: { f1?: string; f2?: string; f3?: string }[];
 }
 
+/** A line that is part of an address, not a name: a suite, floor, building, room or unit. */
+const UNIT = /^(?:(?:suite|ste|floor|fl|building|bldg|room|rm|unit)\b|#)/i;
+
+/**
+ * name2 is the facility's own name when it has one. Some records put a suite or floor there, or only the town or
+ * "Regional Office", which says nothing on its own: then the organization's name (name1) leads, with an office kept
+ * beside it.
+ */
+export function facilityName(r: Pick<FtRow, 'name1' | 'name2' | 'city'>): string {
+  const second = String(r.name2 ?? '').trim();
+  const org = String(r.name1 ?? '').trim();
+  const town = String(r.city ?? '').trim().toLowerCase();
+  if (!second || UNIT.test(second) || second.toLowerCase() === town) return title(undba(org || second));
+  if (OFFICE.test(second) && org) return title(`${undba(org)} (${second})`);
+  return title(undba(second));
+}
+/** A name that only says which office: "Dayton Regional Office", "Main Office". */
+const OFFICE = /^(?:[\w.]+\s){0,3}(?:regional|main|area|branch|district|county)?\s?office$/i;
+
 export function fromFindTreatment(rows: FtRow[], area: Area): Found {
   const skipped: Found['skipped'] = [];
   const entries: Resource[] = [];
   for (const r of rows) {
-    const name = title(undba(String(r.name2 || r.name1 || '')));
+    const name = facilityName(r);
     const county = r.state === area.state ? countyOf(area, r.zip) : undefined;
     if (!county) {
       skipped.push({ source: FINDTREATMENT_PAGE, name, why: 'outside the area' });
@@ -384,6 +407,8 @@ export const HUD_MF = (state: string, offset = 0) =>
 export const HUD_MF_PAGE = 'https://resources.hud.gov/';
 
 /** Apartments where HUD helps pay the rent, so rent is based on income. Each has its own application and wait list. */
+const OUTDATED = /\b(retard\w*|handicapped|crippled|insane|feeble[- ]?minded)\b/i;
+
 export function fromHudMultifamily(features: { attributes: Record<string, unknown> }[], area: Area): Found {
   const skipped: Found['skipped'] = [];
   const entries: Resource[] = [];
@@ -394,6 +419,12 @@ export function fromHudMultifamily(features: { attributes: Record<string, unknow
     const phone = phoneOf(a.PROPERTY_ON_SITE_PHONE_NUMBER);
     if (!phone) {
       skipped.push({ source: HUD_MF_PAGE, name, why: 'no phone number in the record' });
+      continue;
+    }
+    // A registered name that uses an outdated term for disability is not shown to students as written; a person
+    // decides how it is listed.
+    if (OUTDATED.test(name)) {
+      skipped.push({ source: HUD_MF_PAGE, name, why: 'its registered name uses an outdated term for disability; a person decides how to list it' });
       continue;
     }
     const group = String(a.CLIENT_GROUP_NAME ?? '');

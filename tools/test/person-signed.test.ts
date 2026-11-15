@@ -7,7 +7,7 @@ const people = { russ: 'russlittle' };
 
 describe('what only a person changes is changed only by a person', () => {
   it('protects the locked cards, the lock, people, resets, floors, the required checks and this rule itself', () => {
-    expect(touchesProtected(['control/journeys/p6-x.yaml', 'control/lock.json', 'control/people.json', 'control/ratchet-resets.jsonl', 'control/mutation-floors.json', 'control/required-checks.yaml', 'tools/person-signed.ts'])).toHaveLength(7);
+    expect(touchesProtected(['control/journeys/p6-x.yaml', 'control/lock.json', 'control/people.json', 'control/ratchet-resets.jsonl', 'control/mutation-floors.json', 'control/required-checks.yaml', 'control/heldout/crisis.txt', 'tools/person-signed.ts'])).toHaveLength(8);
     expect(touchesProtected(['control/journeys.md', 'control/lock.json.bak', 'apps/advocate/src/x.ts', 'tools/person-signed.test.ts'])).toEqual([]);
     expect(PROTECTED).toContain('tools/person-signed.ts');
   });

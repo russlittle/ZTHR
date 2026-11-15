@@ -435,8 +435,8 @@ export const FOUND_DAYTON: Resource[] = [
   ]
  },
  {
-  "id": "ft-suite-nwb-40-45417",
-  "name": "Suite NWB 40",
+  "id": "ft-miami-valley-recovery-llc-45417",
+  "name": "Miami Valley Recovery LLC",
   "organization": "Miami Valley Recovery LLC",
   "categories": [
    "mental-health"
