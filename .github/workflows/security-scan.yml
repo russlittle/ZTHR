@@ -33,6 +33,9 @@ jobs:
           risk = {'3': 'High', '2': 'Medium', '1': 'Low', '0': 'Informational'}
           for a in sorted(alerts, key=lambda a: -int(a['riskcode'])):
               print(f"{risk[a['riskcode']]:<14} {a['name']} ({len(a.get('instances', []))} instances)")
+              if a['riskcode'] in ('1', '2', '3'):
+                  for i in a.get('instances', [])[:4]:
+                      print(f"                 {i.get('method', '')} {i.get('uri', '')} {i.get('param', '')} {i.get('evidence', '')[:80]}")
           high = [a for a in alerts if a['riskcode'] == '3']
           print(f"{len(alerts)} alert types; {len(high)} high risk")
           sys.exit(1 if high else 0)
