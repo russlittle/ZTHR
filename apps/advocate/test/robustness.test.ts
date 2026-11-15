@@ -204,3 +204,19 @@ describe('a copy restores exactly', () => {
     expect(b.ledger.entries(ids[0]!).length).toBe(a.ledger.entries(ids[0]!).length);
   });
 });
+
+describe('text that would split a character never breaks a redirect (a defect the walks once found)', () => {
+  it('a course name cut at its limit in the middle of an emoji, or with a broken surrogate, still redirects', async () => {
+    const a = new Advocate({ today: () => '2026-11-02', now: () => new Date('2026-11-02T15:00:00Z') });
+    const sid = PERSONAS.Maria!(a).id;
+    const app = new Hono().route('/sa', createApp(a, { base: '/sa' }));
+    // Eleven letters and an emoji: a cut at twelve UTF-16 units would leave half of the emoji, which encodeURIComponent refuses.
+    for (const course of ['BIO 1111111\u{1F600}', 'X\uD83D', '\uDE00tail', '\u{1F600}'.repeat(20)]) {
+      const r = await app.request(`/sa/s/${sid}/school/drop/pick`, { method: 'POST', body: new URLSearchParams({ course }), headers: { 'content-type': 'application/x-www-form-urlencoded' } });
+      expect(r.status, JSON.stringify(course)).toBe(302);
+      const to = decodeURIComponent(new URL(r.headers.get('location')!, 'http://x').searchParams.get('course') ?? '');
+      expect([...to].length).toBeLessThanOrEqual(12);
+      expect(to).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/);
+    }
+  });
+});

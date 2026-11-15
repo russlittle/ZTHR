@@ -11,6 +11,8 @@ import { parse } from 'yaml';
 import { FOUND_DAYTON } from '../apps/advocate/src/catalog/found/dayton.js';
 import { DAYTON_CATALOG } from '../apps/advocate/src/catalog/dayton.js';
 import { apply, check, unmarked, type Facts } from './facts-core.js';
+import { execFileSync } from 'node:child_process';
+import { COLLECTIONS, SEALED_FACTS } from '../apps/advocate/src/domain/schema.js';
 import { CONTROL, OUT, ROOT } from './lib.js';
 
 /** Public material: what a reader of the repository or zthr.ai sees stated as true. */
@@ -24,6 +26,18 @@ function files(p: string, ext = '.md'): string[] {
 }
 const lineCount = (fs: string[]) => fs.reduce((n, f) => n + readFileSync(f, 'utf8').split('\n').length, 0);
 const json = <T>(p: string): T | undefined => (existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as T) : undefined);
+
+const AGENCY: Record<string, string> = { 'found:findtreatment': 'SAMHSA', 'found:hrsa': 'HRSA', 'found:hud-counseling': 'HUD', 'found:hud-pha': 'HUD', 'found:hud-multifamily': 'HUD', 'found:imls': 'IMLS' };
+
+/** Days from the repository's first commit to its latest, counting both. */
+function buildDays(): number | undefined {
+  try {
+    const dates = execFileSync('git', ['log', '--format=%cs'], { cwd: ROOT, encoding: 'utf8' }).trim().split('\n');
+    return Math.round((Date.parse(dates[0]!) - Date.parse(dates.at(-1)!)) / 86_400_000) + 1;
+  } catch {
+    return undefined;
+  }
+}
 
 export function repoFacts(): Facts {
   const ts = ['apps', 'packages', 'tools'].flatMap((d) => files(d, '.ts')).filter((f) => !f.includes('/catalog/found/'));
@@ -47,6 +61,10 @@ export function repoFacts(): Facts {
     doc_lines: { kind: 'repo', value: lineCount(files('docs')), style: 'hundred' },
     mutation_modules: { kind: 'repo', value: inScope.size },
     heldout_crisis: { kind: 'repo', value: heldout.length },
+    // Systems of record and the agencies that keep them: HUD keeps three of the six.
+    found_agencies: { kind: 'repo', value: new Set(FOUND_DAYTON.flatMap((r) => r.tags ?? []).filter((t) => t.startsWith('found:')).map((t) => AGENCY[t] ?? t)).size, style: 'word' },
+    sensitive_fields: { kind: 'repo', value: COLLECTIONS.flatMap((c) => c.fields).filter((f) => f.cls === 'personal' || f.cls === 'sensitive' || f.cls === 'secret').length + SEALED_FACTS.length },
+    build_days: { kind: 'repo', value: buildDays(), style: 'word' },
   };
 }
 
@@ -57,6 +75,9 @@ export function runFacts(out = OUT): Facts {
   const deep = json<{ controls: number; maxDepth: number }>(join(out, 'deep', 'deep.json'));
   const ui = json<{ stops: unknown[] }>(join(out, 'ui', 'manifest.json'));
   const plan = json<{ valid: unknown[]; stale: unknown[] }>(join(out, 'explore-plan.json'));
+  const trace = json<{ canaries: unknown[] | number }>(join(out, 'sensitive-trace.json'));
+  const blocks = json<{ blocks: { mutation?: { score: number } }[] }>(join(out, 'blocks.json'));
+  const deepFull = json<{ students: unknown[] }>(join(out, 'deep', 'deep.json'));
   const walked = plan ? plan.valid.length : undefined;
   const students = plan ? plan.valid.length + plan.stale.length : undefined;
   return {
@@ -65,6 +86,9 @@ export function runFacts(out = OUT): Facts {
     controls_clicked: { kind: 'run', value: deep?.controls },
     deep_screens: { kind: 'run', value: deep?.maxDepth, style: 'word' },
     browser_stops: { kind: 'run', value: ui?.stops.length },
+    deep_students: { kind: 'run', value: deepFull?.students.length, style: 'word' },
+    trace_fields: { kind: 'run', value: trace ? (Array.isArray(trace.canaries) ? trace.canaries.length : trace.canaries) : undefined },
+    blocks_under_target: { kind: 'run', value: blocks ? blocks.blocks.filter((b) => b.mutation && b.mutation.score < 80).length : undefined, style: 'word' },
     walk_claim: {
       kind: 'run',
       value: walked === undefined ? undefined : walked === students ? 'every button walked for every student' : `every button walked to a fixpoint for ${walked} of ${students} students so far`,

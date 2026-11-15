@@ -313,3 +313,29 @@ describe('lms', () => {
     for (const a of up) expect(Date.parse(a.due_at)).toBeGreaterThanOrEqual(Date.parse('2026-11-02T12:00:00Z'));
   });
 });
+
+describe('the trip planner takes the direct bus when one exists (a defect the walks once found)', () => {
+  it('on one route, every option is direct, leaving at or after the time asked or arriving by it', async () => {
+    const { plan } = await import('../src/transit.js');
+    for (const [from, to, route] of [['salem-catalpa', 'xenia-smithville', '1'], ['salem-hillcrest', 'huffman-linden', '1'], ['hub', 'wright-union', '2']] as const) {
+      const leave = plan('2026-11-16', from, to, { departAt: 7 * 60 });
+      expect(leave.length, `${from} to ${to}`).toBeGreaterThan(0);
+      expect(leave.every((o) => o.transfers === 0 && o.legs.length === 1 && o.legs[0]!.route === route), `${from} to ${to}`).toBe(true);
+      expect(leave[0]!.depart >= '07:00').toBe(true);
+      const arrive = plan('2026-11-16', from, to, { arriveBy: 9 * 60 });
+      expect(arrive.every((o) => o.transfers === 0 && o.arrive <= '09:00'), `${from} to ${to} by 9`).toBe(true);
+    }
+  });
+  it('a transfer is offered only where no one route serves both stops, with at least three minutes to change', async () => {
+    const { plan } = await import('../src/transit.js');
+    const t = plan('2026-11-16', 'sinclair-3rd', 'wright-union', { departAt: 7 * 60 });
+    expect(t.length).toBeGreaterThan(0);
+    for (const o of t) {
+      expect(o.transfers).toBe(1);
+      const [a, b] = o.legs;
+      expect(a!.route).not.toBe(b!.route);
+      const min = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3));
+      expect(min(b!.depart) - min(a!.arrive)).toBeGreaterThanOrEqual(3);
+    }
+  });
+});

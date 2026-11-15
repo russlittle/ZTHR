@@ -12,11 +12,11 @@ factory that built it means for anyone who builds software.
 
 | | |
 | --- | --- |
-| **Built by** | AI agents, inside a factory of gates, locked intent and exhaustive walks. No person wrote the code; a person signs only destructive changes. |
-| **Elapsed time** | Days, from an empty repository to a deployed application with <!--fact:phases-->six<!--/fact--> phases of features, a community resource guide of <!--fact:guide_entries-->270<!--/fact--> checked entries (<!--fact:found_entries-->202<!--/fact--> found by agents in <!--fact:found_systems-->six<!--/fact--> federal systems of record) published as open data, <!--fact:campus_services-->five<!--/fact--> synthetic campus services, <!--fact:blocks-->fifteen<!--/fact--> reusable blocks and full documentation. |
-| **Direction** | About 125 prompts from the author, from the idea to the deployed application. |
-| **Size** | About <!--fact:ts_lines-->28,600<!--/fact--> lines of TypeScript and <!--fact:doc_lines-->5,000<!--/fact--> lines of documentation, every data structure drawn as an ERD. |
-| **Evidence** | <!--fact:tests_run-->2,053<!--/fact--> tests run; <!--fact:gates-->28<!--/fact--> gates, each proven able to fail; <!--fact:journeys-->47<!--/fact--> locked user journeys; <!--fact:redteam_held-->110 of 110<!--/fact--> red-team attacks held; <!--fact:walk_claim-->every button walked for every student<!--/fact-->, and <!--fact:controls_clicked-->886<!--/fact--> controls clicked in a real browser down to <!--fact:deep_screens-->seven<!--/fact--> screens deep; <!--fact:browser_stops-->454<!--/fact--> browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks. |
+| **Built by** | AI agents, inside a factory of gates, locked intent and exhaustive walks. No person wrote the code. A change that loosens what the factory holds the code to (locked intent, ratchets, who may sign) passes only in a commit GitHub verified as the author's own. |
+| **Elapsed time** | <!--fact:build_days-->Thirteen<!--/fact--> days by the commit history, from an empty repository to a deployed application with <!--fact:phases-->six<!--/fact--> phases of features, a community resource guide of <!--fact:guide_entries-->270<!--/fact--> checked entries (<!--fact:found_entries-->202<!--/fact--> found by agents in <!--fact:found_systems-->six<!--/fact--> systems of record kept by <!--fact:found_agencies-->four<!--/fact--> federal agencies) published as open data, <!--fact:campus_services-->five<!--/fact--> synthetic campus services, <!--fact:blocks-->fifteen<!--/fact--> reusable blocks and full documentation. |
+| **Direction** | The author's prompts, from the idea to the deployed application; no code by hand. |
+| **Size** | About <!--fact:ts_lines-->29,000<!--/fact--> lines of TypeScript and <!--fact:doc_lines-->5,000<!--/fact--> lines of documentation, with every collection the app keeps drawn as an ERD. |
+| **Evidence** | <!--fact:tests_run-->2,053<!--/fact--> tests run; <!--fact:gates-->28<!--/fact--> gates, each proven to fail on every defect planted for it; <!--fact:journeys-->47<!--/fact--> locked user journeys; <!--fact:redteam_held-->110 of 110<!--/fact--> red-team attacks held; <!--fact:walk_claim-->every button walked for every student<!--/fact-->, and <!--fact:controls_clicked-->886<!--/fact--> controls clicked in a real browser down to <!--fact:deep_screens-->seven<!--/fact--> screens deep for <!--fact:deep_students-->five<!--/fact--> students; <!--fact:browser_stops-->454<!--/fact--> browser stops passing every WCAG 2.2 A and AA rule that can be checked automatically; generated input and failing services that never break it; a planted-marker trace of <!--fact:trace_fields-->21<!--/fact--> of the <!--fact:sensitive_fields-->87<!--/fact--> personal, sensitive and secret fields, with no leaks. |
 | **Cost to run** | No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The public demo runs on one small server, so a visitor's session holds from start to finish. |
 | **Open** | Every test, gate, walk, decision and line of source is public. |
 
@@ -70,10 +70,12 @@ flowchart TB
   own -. never .-> logs[(Evidence, ledger, admin, outcomes, logs)]
 ```
 
-- **Every field is classified**, and every build plants a unique marker in each personal, sensitive and secret
-  field, uses the app the way a student would, and searches every place data can land. A marker found where its
-  class may not go fails the build, naming the field and the place.
-- **One door to the network.** The app can reach only the hosts it declared; anything else is refused and recorded.
+- **Every field is classified**, and every build plants a unique marker in <!--fact:trace_fields-->21<!--/fact--> of the <!--fact:sensitive_fields-->87<!--/fact--> personal, sensitive and
+  secret fields, uses the app the way a student would, and searches every place data can land. A marker found where
+  its class may not go fails the build, naming the field and the place. The rest of the fields are next.
+- **One door to the network.** The app's own code reaches the network through one module, which allows only the hosts
+  it declared and refuses and records anything else; a gate fails any other network call it finds in that code. It is
+  a check on the code, not a sandbox around it.
 - **Counts never point at a person.** Outcome measures are never shown for a group smaller than five.
 - **The public server is hardened** against the obvious attacks: floods, oversized requests, injected script,
   framing, forged sessions and attempts to reach other hosts. [Each attack, what stops it and what proves it](docs/security.html).
@@ -87,32 +89,32 @@ by checks that are themselves proven, against intent that the agents cannot edit
 flowchart TB
   intent[Intent: a student's goal in plain words, locked by hash] --> build[Agents build]
   build --> gates{Every gate, each proven to fail on planted defects}
-  gates --> walks{Every button and page, for every student, walked to a fixpoint}
+  gates --> walks{Button and page walks: a spot check on every change, every student to a fixpoint on the nightly rotation}
   walks --> trace{Sensitive-data trace}
   trace --> admit[Admitted by the factory]
   admit --> serve[Deployed; the public address must serve the commit that passed]
   gates & walks & trace -- any failure --> back[Back to the agents, with the reason]
-  person([A person]) -. signs only destructive changes .-> admit
+  person([A person]) -. signs changes that loosen intent or the gates .-> admit
 ```
 
 | Fixture | What it guarantees |
 | --- | --- |
-| **Locked intent** | Each user goal is a card in plain words with outcomes that must never happen, locked by hash. The change being judged cannot edit the goal it is judged by. |
-| **Gates proven to fail** | A check counts only after every planted defect makes it fail; the proof is pinned to the check's own definition. |
-| **Exhaustive walks** | Every button and every page, for every student, at every depth, until nothing new is left, checking tone, privacy and dead ends at every step. |
+| **Locked intent** | Each user goal is a card in plain words with outcomes that must never happen, locked by hash. A card or the lock changes only in a commit GitHub verified as a listed person's, so the agents whose work is judged cannot edit the goal it is judged by. |
+| **Gates proven to fail** | A check counts only after every planted defect makes it fail. The proof is pinned to a hash of the check's source and its planted defects, and the build fails a gate that changed without a new committed proof. |
+| **Exhaustive walks** | Every button and every page, for a rotation of students each night, at every depth, until nothing new is left, checking tone, privacy and dead ends at every step. A phase is certified only when all twelve students hold a walk for the current code. |
 | **Walk only what changed** | Each walk records the lines it executed; a later change re-walks only what could alter what the walk saw. |
 | **Unknown is a state** | Anything not measured in a build says "not measured"; it never counts as a pass. |
-| **Register, don't hide** | Every known gap has an owner and an expiry date, in the open. |
+| **Register, don't hide** | Each registered gap has an owner, a reason and an expiry date, in the open, and an expired one fails the build. |
 | **Reusable blocks** | <!--fact:blocks-->Fifteen<!--/fact--> parts, each with its own tests and mutation score, inherited by the app, never copied. |
-| **Published rules as oracles** | Financial-aid progress, the federal aid-return formula and SNAP limits are checked against the regulation and the Handbook's own worked cases, to the cent. |
+| **Published rules as oracles** | SNAP limits are checked against the published table at and just over every limit; the federal aid-return formula against a worked case from the Federal Student Aid Handbook, to the cent; financial-aid progress against the regulation. |
 | **Generated input** | Any text, form, JSON or action name, thousands of times a night; services failing five ways each. Nothing may crash or show a student a programming artifact. |
-| **Accessible by construction** | Every screen held to WCAG 2.2 AA and read the way a screen reader reads it, on every change. |
+| **Accessible by construction** | Every screen checked on every change against every WCAG 2.2 A and AA rule that can be checked automatically, and its accessibility tree read the way a screen reader reads it. Testing by people who use screen readers is next. |
 
 The factory finds what review misses. In building the Advocate it found, without being asked: a webhook signing
 secret in a student's export, document names in a permanent ledger, a brief-mode answer too long to deliver, a
 bus plan that took a transfer when a direct route existed, a synthetic mentor sharing a first name with a
 student, an action name that reached JavaScript's built-in methods, and text that could split a character and
-crash a redirect. Each became a fixture, so it cannot return.
+crash a redirect. Each became a test, a gate or a generated-input case, so it cannot return unseen.
 
 ## The economics
 
@@ -127,7 +129,7 @@ flowchart LR
 - **The cost is compute, not people.** More fixtures cost machine time, which is cheap next to unverified output.
   The exhaustive walks are the one cost that grows with the application; more cores shorten the night without
   changing the total.
-- **Speed is safe because of the fixtures, not despite them.** Two days of agent output would be a large pile of
+- **Speed is safe because of the fixtures, not despite them.** Days of agent output would be a large pile of
   unverified code without them; with them it is an application whose every claim is checked on every change.
 
 ## What it could mean, used well
@@ -158,7 +160,9 @@ documentation. Open, each with an owner and a date:
 - **Phase certificates** wait for the nightly rotation to give every student a full walk that holds for the
   current code.
 - **Spanish** covers starting by text, finding help and crisis replies; the remaining screens are scheduled.
-- **Six blocks** score under the 80% mutation target on their own tests; their floors only rise.
+- **<!--fact:blocks_under_target-->Six<!--/fact--> blocks** score under the 80% mutation target on their own tests; their floors only rise.
+- **Held-out safety phrasings** are few, and written by an agent. Phrasings from people who do crisis work, which the
+  safety screen is never shaped around, are next.
 - **Model review from several families** is designed and switched off until providers are configured.
 - **Persistence and credits** need a college's records for students who opt in; they are never estimated.
 - **Screen readers in people's hands.** Every build is checked automatically; testing with people who use NVDA,
