@@ -5,7 +5,8 @@ COPY package.json package-lock.json tsconfig.json ./
 COPY packages packages
 COPY apps apps
 COPY control control
-RUN npm ci --no-audit --no-fund && npm cache clean --force
+# Production packages only: the test runner, mutation tools and browsers never ship (docs/security.md).
+RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 # Built by the factory in this same run: docs and console pages, screenshots and video.
 COPY site-out site-out
 ENV NODE_ENV=production ADVOCATE_DEMO=1 ADVOCATE_BASE=/studentadvocate ADVOCATE_TODAY=2026-11-02 ADVOCATE_CLOCK=07:30 PORT=8080

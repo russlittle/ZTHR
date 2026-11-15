@@ -49,6 +49,13 @@ steps:
     entrypoint: npm
     args: ['ci']
 
+  - id: dependencies
+    # Every production dependency audited; a high or critical advisory passes only while registered, owned and
+    # unexpired. Writes the advisories and a CycloneDX bill of materials into the evidence (docs/security.md).
+    name: node:22-bookworm
+    entrypoint: npx
+    args: ['tsx', 'tools/deps.ts']
+
   - id: typecheck
     name: node:22-bookworm
     entrypoint: npm
@@ -68,6 +75,13 @@ steps:
     entrypoint: npm
     env: ['GATES_VERIFY=1']
     args: ['run', 'gates']
+
+  - id: person-signed
+    # What only a person changes (CLAUDE.md) is changed only in a commit GitHub verified, by a listed person's account.
+    name: node:22-bookworm
+    entrypoint: npx
+    env: ['COMMIT=$COMMIT_SHA']
+    args: ['tsx', 'tools/person-signed.ts', '$COMMIT_SHA']
 
   - id: journeys
     name: node:22-bookworm

@@ -27,12 +27,14 @@ findings:
     expires: 2027-01-15
   - id: zod-major-upgrade
     gate: dependencies
+    packages: [zod, zod-to-json-schema]
     finding: The schema library (zod 3) has a high-severity advisory, memory exhaustion while validating oversized constrained collections; the fix is zod 4, a breaking change.
     reason: Every untrusted input is capped at 256 KB before validation, which bounds the attack; the upgrade is scheduled with its own walk.
     owner: claude-agent
     expires: 2026-12-15
   - id: vitest-dev-advisories
     gate: dependencies
+    packages: [vitest, tinypool, '@vitest/mocker']
     finding: The test runner (vitest 3, and tinypool under it) has critical advisories, path traversal in its mocker and prototype pollution in worker options; the fix is vitest 5, a breaking change.
     reason: Development only; nothing from it ships in the application image, and it runs only on trusted code in CI. The upgrade is scheduled with a full test and mutation run.
     owner: claude-agent

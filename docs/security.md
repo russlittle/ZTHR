@@ -38,10 +38,31 @@ flowchart LR
 
 ## Dependencies
 
-Production dependencies are audited on every change. Findings that cannot be fixed without a breaking upgrade are
-registered rather than hidden, each with a reason and an expiry: the schema library's memory exhaustion on oversized
-collections (the 256 KB body limit bounds every input the app validates until the upgrade lands), and advisories in
-the test runner, which never ships in the application image.
+The application image installs production packages only: five libraries and the TypeScript loader it runs on. The test runner, the mutation tools and the browsers never ship in it.
+
+- **Every build audits them.** The `dependencies` step reads npm's advisories for every production package. A high or critical advisory passes only while it is registered in `control/register.yaml` with the packages it covers, an owner, a reason and an expiry that has not passed; any other fails the build, naming the package. Lower advisories are recorded.
+- **Every build lists them.** The same step writes a CycloneDX bill of materials, `sbom.cdx.json`, with each production package's version and package URL, kept with the build's evidence.
+- **Registered now:** the schema library's memory exhaustion on oversized collections. Its fix is a breaking upgrade, and the 256 KB body limit bounds every input the app validates until that upgrade lands. Advisories in the test runner are registered too, though it is not in the image.
+
+## Changes only a person makes
+
+Some changes loosen what the factory holds the code to: a locked journey card or the lock itself, the people who may sign, a ratchet reset, a mutation floor, the list of required checks, and the rule below. An agent may not make them, and the build enforces that rather than trusting it.
+
+```mermaid
+flowchart TD
+  push["A push to the reference branch"] --> base["The commit the app now serves"]
+  base --> list["Every commit between them, from GitHub"]
+  list --> touch{"Touches what only a person changes?"}
+  touch -- no --> ok["Passes this step"]
+  touch -- yes --> who{"Authored by a listed person's GitHub account, and verified by GitHub?"}
+  who -- yes --> ok
+  who -- no --> stop["The build fails, naming the commit and the file"]
+```
+
+- **Verified** means GitHub checked the commit's signature: the person's own signing key, or GitHub's own signature on a change made in its web editor. Agents commit as `claude-agent` and hold no person's key.
+- The list of protected paths and each person's GitHub account live in `tools/person-signed.ts`, which is itself protected, as is `control/required-checks.yaml`, so the rule cannot be loosened by the change it judges.
+- The check fails closed: if the app does not report the commit it serves, or GitHub does not answer, the build does not pass.
+- **Its limits.** A person's account or key that is compromised passes. The pipeline definition itself (`cloudbuild.yaml`) is not protected: removing the step would be caught by the zero-bypass gate, which checks that every required check runs, but that gate's code is agent-editable, and its committed proof is the pin a reviewer sees change.
 
 ## Reporting a problem
 
@@ -51,4 +72,6 @@ Email russ@zthr.ai. The published site serves the same contact at `/.well-known/
 
 <!-- verified-by:start -->
 - [`apps/advocate/test/guard.test.ts`](../apps/advocate/test/guard.test.ts) (9 test definitions)
+- [`tools/test/deps.test.ts`](../tools/test/deps.test.ts) (3 test definitions)
+- [`tools/test/person-signed.test.ts`](../tools/test/person-signed.test.ts) (4 test definitions)
 <!-- verified-by:end -->

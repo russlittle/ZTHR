@@ -12,3 +12,5 @@ required:
   - { check: browser walk, step: walk }
   - { check: campus service contracts, step: contract }
   - { check: mutation floors, module by module (nightly), step: mutation }
+  - { check: changes only a person makes are signed by that person, step: person-signed }
+  - { check: production dependencies audited, serious advisories registered, step: dependencies }
