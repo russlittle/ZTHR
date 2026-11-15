@@ -93,7 +93,12 @@ if (args.includes('--merge')) {
   names = parts.flatMap((x) => x.only);
 } else r = args.includes('--serial') || names.length === 1 ? exploreAdvocate({ only: names, maxNodes: max, withTyping: typing, campus }) : await runParallel(names);
 mkdirSync(OUT, { recursive: true });
-writeFileSync(`${OUT}/explore${part ? `-part-${part}` : ''}.json`, JSON.stringify({ ...r, ms: Date.now() - t0, commit: headCommit(), only: names }, null, 1));
+// Headroom: a full walk that finishes above 80% of the per-seed cap is one feature away from being cut short. It is
+// recorded and printed, so the state is reduced before the walk fails (docs/testing/exploration.md).
+const CAP = 20_000;
+const tight = max ? [] : r.seeds.filter((s) => s.exhausted && s.states > CAP * 0.8).map((s) => ({ seed: s.name, states: s.states, cap: CAP }));
+writeFileSync(`${OUT}/explore${part ? `-part-${part}` : ''}.json`, JSON.stringify({ ...r, ms: Date.now() - t0, commit: headCommit(), only: names, headroom: tight }, null, 1));
+for (const t of tight) console.log(`HEADROOM ${t.seed}: ${t.states} of ${t.cap} states (${Math.round((t.states / t.cap) * 100)}%); reduce what its state counts before the next feature`);
 for (const s of r.seeds) console.log(`${s.name.padEnd(22)} states ${String(s.states).padStart(6)}  transitions ${String(s.transitions).padStart(7)}  depth ${s.maxDepth}  ${s.exhausted ? 'exhausted' : 'CUT SHORT'}`);
 const byProblem = new Map<string, { n: number; path: string[]; seed: string }>();
 for (const v of r.violations) {

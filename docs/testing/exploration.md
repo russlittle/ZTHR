@@ -58,8 +58,10 @@ flowchart LR
 ## Why it ends
 
 The exact state of a student multiplies independent features together (every combination of drafts, reminders and
-held time) and never reaches a fixpoint. The walk uses an abstract state: each deadline's status, each playbook's
-step, whether a draft is waiting, whether a question is pending, which sources are on, and the buttons on screen.
+held time) and never reaches a fixpoint. The walk uses an abstract state: deadlines counted by kind and status,
+each playbook's step, whether a draft is waiting, whether a question is pending, which sources are on, counts that
+stop at two (a third shift behaves as the second did), and the buttons on screen, each named by what tapping it
+leads to rather than which of the guide's entries it names.
 Settings are independent switches, so they are set by the seeds and walked on their own instead of being multiplied
 into every path.
 
@@ -69,6 +71,8 @@ flowchart LR
   abstract --> finite[Finite: the walk ends]
   settings[Settings switches] -->|seed variants + own walk| finite
 ```
+
+Each seed is walked to at most 20,000 states. A full walk that finishes above 80% of that is one feature away from being cut short, so it is recorded as headroom in the walk's report and printed as `HEADROOM`. The fix is to find which part of the state multiplies, and name it by what changes behavior; it is never to raise the cap.
 
 ## Walk only when the walk could see the change
 
