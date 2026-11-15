@@ -63,8 +63,10 @@ steps:
     args: ['-c', 'if [ "$$MUTATION" = "true" ]; then export FUZZ_RUNS=2000; fi; npm test -- --maxWorkers=4']
 
   - id: gates
+    # Against the committed proofs: a gate changed without a new committed proof fails here.
     name: node:22-bookworm
     entrypoint: npm
+    env: ['GATES_VERIFY=1']
     args: ['run', 'gates']
 
   - id: journeys

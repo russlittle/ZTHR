@@ -28,8 +28,13 @@ export interface Proof {
   valid: boolean;
 }
 
-export const gateHash = (g: Pick<Gate<unknown>, 'id' | 'protects' | 'definition'>): string =>
-  sha256(`${g.id}\n${g.protects}\n${g.definition}`);
+/**
+ * A gate's identity: what it protects, how it is defined, the source of its check and the source of each planted
+ * defect. Changing any of them changes the hash, so a committed proof no longer matches and the change has to carry a
+ * new proof that a reviewer sees.
+ */
+export const gateHash = (g: Pick<Gate<unknown>, 'id' | 'protects' | 'definition'> & Partial<Pick<Gate<unknown>, 'check' | 'falsification'>>): string =>
+  sha256([g.id, g.protects, g.definition, g.check ? String(g.check) : '', ...(g.falsification ?? []).map((f) => `${f.name}\n${String(f.plant)}`)].join('\n'));
 
 /** Run every planted defect. The gate is proven only if every one is caught (fail). */
 export async function proveGate<S>(g: Gate<S>): Promise<Proof> {

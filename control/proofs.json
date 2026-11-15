@@ -1,7 +1,7 @@
 [
   {
     "gate": "tone-and-next-step",
-    "gateHash": "acc3ce507609627bbbeccd05ddc76cd65443df601c088699e68ce81c4e515ba8",
+    "gateHash": "f60686d959ee7396b7030c895d77ed7dcf90b93ee8fde86e885c00995a83fd28",
     "valid": true,
     "cases": [
       "planted scolding message",
@@ -10,7 +10,7 @@
   },
   {
     "gate": "student-sends",
-    "gateHash": "9291ad61107c7377d42568c96789f0fc3fe8a121fe05c95f33a31a0238cf620e",
+    "gateHash": "893a6dbcccb4d93589077182c675205f02d4b916c3fbb4e7f696c4b22efb4a0c",
     "valid": true,
     "cases": [
       "planted dispatcher that ignores tokens"
@@ -18,7 +18,7 @@
   },
   {
     "gate": "safety-router",
-    "gateHash": "6b40e067a39959b93d0480bb60b792c90de14c9de3a5c77e5181c3efe5cdd7d1",
+    "gateHash": "b43ff82f9ead1aa8c4d90766fab99e8cbb6651d32d69dfd13616fba44c0b1e9b",
     "valid": true,
     "cases": [
       "planted router that only knows one phrase"
@@ -26,7 +26,7 @@
   },
   {
     "gate": "freshness",
-    "gateHash": "fcbe7416131557ee562e10284423a841f7990bce5a0b27fd617df0d58128c726",
+    "gateHash": "1388724407a4f275867d678c1c97fdb5d7cf5983bdddfe9f75dd70746c20de57",
     "valid": true,
     "cases": [
       "planted finder that ignores freshness"
@@ -34,7 +34,7 @@
   },
   {
     "gate": "sealed-facts",
-    "gateHash": "83a9376487361146e30276c8b09c5b5fe226f2ebadef3f23affd08c06f18545e",
+    "gateHash": "7fb2638dc023e21afadf9e8ba205be14a25b8ca06895f6e73750677e083d5043",
     "valid": true,
     "cases": [
       "planted message quoting the sealed fact"
@@ -42,7 +42,7 @@
   },
   {
     "gate": "evidence-pseudonymous",
-    "gateHash": "0090315f6b70f99ce1cea2238224b73114e0d667a1dc9814021436def1501b11",
+    "gateHash": "26a3b5600ef783b89a0e331d0ec619924ffc7aa5c6140173757d9aa7949288ca",
     "valid": true,
     "cases": [
       "planted evidence row with a phone number"
@@ -50,7 +50,7 @@
   },
   {
     "gate": "no-status-question",
-    "gateHash": "a385b8910465ba4f0a60f64181372a0401868fe583d26557622b375a8bedbf82",
+    "gateHash": "d12588745281234219caa26b82498c748e92667897439d0cb982538dfc04ad21",
     "valid": true,
     "cases": [
       "planted citizenship question"
@@ -58,7 +58,7 @@
   },
   {
     "gate": "snap-income-oracle",
-    "gateHash": "476d7f2fa140ea58e75709f79ac4404ab103f769d4995a526c6e3ae290a38386",
+    "gateHash": "ee330e16682acff60c8ebf28eccb231ad28b23afcfd2c85b97644eed688b9b0d",
     "valid": true,
     "cases": [
       "planted off-by-one limit"
@@ -66,7 +66,7 @@
   },
   {
     "gate": "journey-lock",
-    "gateHash": "cc9247717e08b1fd223c7bdeb09c59c66c91979f349738d196d2bcde0e0c884b",
+    "gateHash": "d9efcbc0be5939fa2d8a2f4895f17d91ac6b0e65a1d1cdfd571449f75ab9f2be",
     "valid": true,
     "cases": [
       "planted lock missing a card"
@@ -74,7 +74,7 @@
   },
   {
     "gate": "community-moderation",
-    "gateHash": "ea36f3492c714236484ee3f92f8c59ecf4898630da66c5bc8c21fa96ca982cbd",
+    "gateHash": "fea5616eaa952bb51c9a642ededd1d319ecd3ac3b5fa37966f993f9a9a7bd02f",
     "valid": true,
     "cases": [
       "planted community with no filters"
@@ -82,7 +82,7 @@
   },
   {
     "gate": "no-dead-ends",
-    "gateHash": "6e53f2ec92aef046b30af0d421edae83cd9a22c0539a55e926d1d78f79031397",
+    "gateHash": "7d3cf0519367de083a834af7564bea0727b4703d9b328eac547b1d1ee8989423",
     "valid": true,
     "cases": [
       "planted registry missing a handler",
@@ -91,7 +91,7 @@
   },
   {
     "gate": "docs-linked",
-    "gateHash": "4dc1f4192ee8412d31a918078e9f6651bfb469263b45bdc3d1140ae306de0524",
+    "gateHash": "f8f1bc11175320e8216dc2f43a9b88a3d6a9e36d83eb73e739ff401d0b383a2d",
     "valid": true,
     "cases": [
       "planted test file with no doc",
@@ -100,7 +100,7 @@
   },
   {
     "gate": "no-hidden-egress",
-    "gateHash": "6b1258fc1bb0c2dcc811ec071308553f1b07e98be808ab12cffa5085b3cde724",
+    "gateHash": "d7c25fc7b19b653f8fcce623fc1741aae509ad62243a36c2cceaa2f3700c80a2",
     "valid": true,
     "cases": [
       "planted fetch in a domain file"
@@ -108,7 +108,7 @@
   },
   {
     "gate": "pattern-coverage",
-    "gateHash": "2b875b39253f5feb0cb073d4276ed15a526fb4ce18b58a8b5bcb927d47c97cf0",
+    "gateHash": "15986dda4c958a07d5ba1c0309b618b194d6060a0a1ffa06e8f4340c48a1242c",
     "valid": true,
     "cases": [
       "planted map missing a pattern",
@@ -117,7 +117,7 @@
   },
   {
     "gate": "findings-register",
-    "gateHash": "632a7ae48af522dfd6504bffd94a41c770167935497800634d1dcb40084b67c8",
+    "gateHash": "3a9834f0f8ac564999fe9601db53b7937461a6a2bdd2daeaceebe2cadcbc5c37",
     "valid": true,
     "cases": [
       "planted expired finding",
@@ -126,7 +126,7 @@
   },
   {
     "gate": "zero-bypass",
-    "gateHash": "fbf44a6a070ac21b034398960ee24ef3bdce783fcada4c33403d50a051954af8",
+    "gateHash": "5d340832e05c4ff9f32cfc33a4ec3f649bc5e450201845caf1c750184a029550",
     "valid": true,
     "cases": [
       "planted pipeline without the gates step",
@@ -137,7 +137,7 @@
   },
   {
     "gate": "authorship-tiers",
-    "gateHash": "1f87e495db719493080563c91f6d45b2166e275abd8df6490edb3752f700e75d",
+    "gateHash": "60c118754cfa506776db1f1269597b1b89e7626acab6b8e61caf0888cdd2764b",
     "valid": true,
     "cases": [
       "planted tier with no guard",
@@ -146,7 +146,7 @@
   },
   {
     "gate": "held-out",
-    "gateHash": "987f0ab15c2316ec26d0fe458e891426118811a70f63cfde424d56422422d8ff",
+    "gateHash": "3125e8d5392e068c578b96d00fdddd22c222166eed4238308ad8a8f1e3e4642f",
     "valid": true,
     "cases": [
       "planted rule written against a held-out line"
@@ -154,7 +154,7 @@
   },
   {
     "gate": "sensitive-data",
-    "gateHash": "6f4ea8d980b0ab388e6ce345440b29c173b877d0fad4fe46caff89ad622d71f7",
+    "gateHash": "204ea059517e8f9913edcc80269172cab0f5ac587e9a638429b84df1d076f495",
     "valid": true,
     "cases": [
       "planted field with no class",
@@ -164,7 +164,7 @@
   },
   {
     "gate": "block-library",
-    "gateHash": "b23795afc27fc9cdba33932e967503503a7f0f951520a09b0bcde477fdc856bb",
+    "gateHash": "3b20f3001dcd41cedbd001f7615a06c627dabbfda6fe4e55a6bbcacda7ad913e",
     "valid": true,
     "cases": [
       "planted block with no tests",
@@ -176,7 +176,7 @@
   },
   {
     "gate": "r2t4-oracle",
-    "gateHash": "ce2a49cf9cc31d11454144dbed51c30c2d4ca7c53d1b466b7daaec23f0c5c33d",
+    "gateHash": "4afebe629d68de4ee86c1a7824d329e75deb25fbcd6e9650bede2f4e100fec4a",
     "valid": true,
     "cases": [
       "planted count that keeps scheduled breaks in the term",
@@ -185,7 +185,7 @@
   },
   {
     "gate": "sap-oracle",
-    "gateHash": "7ceede46f990547469fdc7bca2909800066a16e91fb175b684882ab3b5bc5377",
+    "gateHash": "561fbb938a1337e99e67890a01f541d0ebc46c2436ad02f19e84c9ca94555407",
     "valid": true,
     "cases": [
       "planted measure that leaves W out of attempted credits",
@@ -194,7 +194,7 @@
   },
   {
     "gate": "share-scope",
-    "gateHash": "cd82bd9f38a51df2521c62137acdeb38214810d8ea68fb7026ebb252791f84cf",
+    "gateHash": "e71d4715ebfc9c7b4847edf9051e53416971e70289e140afbaf2bff9b2ca14b8",
     "valid": true,
     "cases": [
       "planted link that shows every part",
@@ -204,7 +204,7 @@
   },
   {
     "gate": "guide-admission",
-    "gateHash": "5814340d1cd4f257a3a7e1cbf30b1626b1cdca5e2f7a8cd39753dd3d59515586",
+    "gateHash": "c6a4d9cff89f779520a07546e7016668a22652e5717f1959a7d6d8771dceac59",
     "valid": true,
     "cases": [
       "planted catalog with an entry that has no source",
@@ -214,7 +214,7 @@
   },
   {
     "gate": "guide-feed",
-    "gateHash": "6ef5ed5814be8b0d755b8e1bda0fbe4bffd336ec685f7fe3d257c25c5b37a802",
+    "gateHash": "bd6830646b354420750beaee1f3432376fd1d060c729ea9955dfae7a3f425ef2",
     "valid": true,
     "cases": [
       "planted feed that carries the student name",
@@ -224,7 +224,7 @@
   },
   {
     "gate": "barrier-lifecycle",
-    "gateHash": "2c8a228dea1e28ab9593b91ffc02928e6a29b4de200fc506bd5bbb5ba57ea116",
+    "gateHash": "3eb690a8d357889fe4cb64cb97442d2043d814e83b3db508d750020b5e8a9df9",
     "valid": true,
     "cases": [
       "planted open that lowers urgency",
@@ -234,7 +234,7 @@
   },
   {
     "gate": "mutation-scope",
-    "gateHash": "912d8af5acb53b0abb97c6314eafec3759b5482258366b6788e60c9b83d18927",
+    "gateHash": "401cd2b0d8720eadc1d3957d705290bbecbf9c79af2d65f51a99e167ba26d48f",
     "valid": true,
     "cases": [
       "planted new module that is not mutated",
@@ -245,7 +245,7 @@
   },
   {
     "gate": "facts-current",
-    "gateHash": "9f14f4438eb6d685591916fa60a0ec8f8604863a107575bcfa04e470f7da2e2f",
+    "gateHash": "8e5906ff0a1c325529a2e3daae2a13d5a238d9870721fdebecd71ddf378127c3",
     "valid": true,
     "cases": [
       "planted stale count",

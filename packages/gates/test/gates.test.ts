@@ -49,6 +49,14 @@ describe('falsification proofs', () => {
     expect((await runProvenGate(changed, 'clean', p)).status).toBe('unknown');
     expect((await runProvenGate(noTodo, 'clean', p)).status).toBe('pass');
   });
+  it('a proof is pinned to the check and the planted defects, not only to the description', async () => {
+    const p = await proveGate(noTodo);
+    const looser = { ...noTodo, check: (s: string) => (s.includes('TODO!') ? fail('no-todo', 'TODO') : pass('no-todo', 'clean')) };
+    expect(gateHash(looser as Gate<unknown>)).not.toBe(p.gateHash);
+    const fewer = { ...noTodo, falsification: noTodo.falsification.map((f) => ({ ...f, plant: () => 'a TODO here' })) };
+    expect(gateHash(fewer as Gate<unknown>)).not.toBe(p.gateHash);
+    expect(gateHash(noTodo as Gate<unknown>)).toBe(p.gateHash);
+  });
 });
 
 describe('ratchets', () => {

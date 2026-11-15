@@ -838,13 +838,28 @@ export function gateCatalog(): { id: string; protects: string; plants: string[] 
   return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate, mutationScopeGate, factsCurrentGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
 }
 
+/** --verify (CI): compare each proof with the committed one and never rewrite it. */
+const VERIFY = process.argv.includes('--verify') || process.env.GATES_VERIFY === '1';
+
 export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdict[]; proofs: Proof[] }> {
   const ev = store ?? (mkdirSync(OUT, { recursive: true }), new EvidenceStore(`${OUT}/evidence.db`));
   const proofs: Proof[] = [];
   const verdicts: Verdict[] = [];
+  // In CI the committed proofs are the pin: a gate whose check, definition or plants changed since its proof was
+  // committed is stale, and the run fails until the new proof is committed with the change (CLAUDE.md).
+  const committed = VERIFY && existsSync(`${CONTROL}/proofs.json`) ? (JSON.parse(readFileSync(`${CONTROL}/proofs.json`, 'utf8')) as { gate: string; gateHash: string }[]) : undefined;
   const run = async <S>(g: Gate<S>, subject: () => S) => {
     const proof = await proveGate(g);
     proofs.push(proof);
+    if (committed) {
+      const pin = committed.find((c) => c.gate === g.id);
+      if (!pin || pin.gateHash !== proof.gateHash) {
+        const v = fail(g.id, pin ? 'the committed proof is stale: the gate changed since it was proven; run npx tsx tools/gates.ts and commit control/proofs.json' : 'the gate has no committed proof');
+        verdicts.push(v);
+        ev.append('gate', g.id, { status: v.status, reason: v.reason });
+        return;
+      }
+    }
     ev.append('gate_proof', g.id, { valid: proof.valid, cases: proof.cases.length, gateHash: proof.gateHash });
     const v = await runProvenGate(g, subject(), proof);
     verdicts.push(v);
@@ -885,7 +900,7 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   await run(barrierGate, () => REAL_BARRIERS);
   await run(mutationScopeGate, realScope);
   await run(factsCurrentGate, realFacts);
-  writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
+  if (!VERIFY) writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
   return { verdicts, proofs };
 }
 
