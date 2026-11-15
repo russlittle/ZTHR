@@ -242,5 +242,15 @@
       "planted mutate entry for a file that is gone",
       "planted exception with no reason"
     ]
+  },
+  {
+    "gate": "facts-current",
+    "gateHash": "9f14f4438eb6d685591916fa60a0ec8f8604863a107575bcfa04e470f7da2e2f",
+    "valid": true,
+    "cases": [
+      "planted stale count",
+      "planted count with no source",
+      "planted fact that does not exist"
+    ]
   }
 ]

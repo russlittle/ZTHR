@@ -13,10 +13,10 @@ factory that built it means for anyone who builds software.
 | | |
 | --- | --- |
 | **Built by** | AI agents, inside a factory of gates, locked intent and exhaustive walks. No person wrote the code; a person signs only destructive changes. |
-| **Elapsed time** | Days, from an empty repository to a deployed application with six phases of features, a community resource guide of 270 checked entries (202 found by agents in six federal systems of record) published as open data, five synthetic campus services, fifteen reusable blocks and full documentation. |
+| **Elapsed time** | Days, from an empty repository to a deployed application with <!--fact:phases-->six<!--/fact--> phases of features, a community resource guide of <!--fact:guide_entries-->270<!--/fact--> checked entries (<!--fact:found_entries-->202<!--/fact--> found by agents in <!--fact:found_systems-->six<!--/fact--> federal systems of record) published as open data, <!--fact:campus_services-->five<!--/fact--> synthetic campus services, <!--fact:blocks-->fifteen<!--/fact--> reusable blocks and full documentation. |
 | **Direction** | About 125 prompts from the author, from the idea to the deployed application. |
-| **Size** | About 22,000 lines of TypeScript and 4,200 lines of documentation, every data structure drawn as an ERD. |
-| **Evidence** | 2,053 tests; 27 gates, each proven able to fail; 47 locked user journeys; 110 of 110 red-team attacks held; every button walked for every student, and 886 controls clicked in a real browser down to seven screens deep; 454 browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks. |
+| **Size** | About <!--fact:ts_lines-->28,600<!--/fact--> lines of TypeScript and <!--fact:doc_lines-->5,000<!--/fact--> lines of documentation, every data structure drawn as an ERD. |
+| **Evidence** | <!--fact:tests_run-->2,053<!--/fact--> tests run; <!--fact:gates-->28<!--/fact--> gates, each proven able to fail; <!--fact:journeys-->47<!--/fact--> locked user journeys; <!--fact:redteam_held-->110 of 110<!--/fact--> red-team attacks held; <!--fact:walk_claim-->every button walked for every student<!--/fact-->, and <!--fact:controls_clicked-->886<!--/fact--> controls clicked in a real browser down to <!--fact:deep_screens-->seven<!--/fact--> screens deep; <!--fact:browser_stops-->454<!--/fact--> browser stops meeting WCAG 2.2 AA; generated input and failing services that never break it; a planted-marker trace of every sensitive field, with no leaks. |
 | **Cost to run** | No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The public demo runs on one small server, so a visitor's session holds from start to finish. |
 | **Open** | Every test, gate, walk, decision and line of source is public. |
 
@@ -86,7 +86,7 @@ by checks that are themselves proven, against intent that the agents cannot edit
 ```mermaid
 flowchart TB
   intent[Intent: a student's goal in plain words, locked by hash] --> build[Agents build]
-  build --> gates{27 gates, each proven to fail on planted defects}
+  build --> gates{Every gate, each proven to fail on planted defects}
   gates --> walks{Every button and page, for every student, walked to a fixpoint}
   walks --> trace{Sensitive-data trace}
   trace --> admit[Admitted by the factory]
@@ -103,7 +103,7 @@ flowchart TB
 | **Walk only what changed** | Each walk records the lines it executed; a later change re-walks only what could alter what the walk saw. |
 | **Unknown is a state** | Anything not measured in a build says "not measured"; it never counts as a pass. |
 | **Register, don't hide** | Every known gap has an owner and an expiry date, in the open. |
-| **Reusable blocks** | Fifteen parts, each with its own tests and mutation score, inherited by the app, never copied. |
+| **Reusable blocks** | <!--fact:blocks-->Fifteen<!--/fact--> parts, each with its own tests and mutation score, inherited by the app, never copied. |
 | **Published rules as oracles** | Financial-aid progress, the federal aid-return formula and SNAP limits are checked against the regulation and the Handbook's own worked cases, to the cent. |
 | **Generated input** | Any text, form, JSON or action name, thousands of times a night; services failing five ways each. Nothing may crash or show a student a programming artifact. |
 | **Accessible by construction** | Every screen held to WCAG 2.2 AA and read the way a screen reader reads it, on every change. |

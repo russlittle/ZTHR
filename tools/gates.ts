@@ -1,4 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { check as checkFacts, unmarked as unmarkedFacts, type Facts } from './facts-core.js';
+import { allFacts, publicFiles } from './facts.js';
 import { parse as parseYaml } from 'yaml';
 import { join } from 'node:path';
 import { EvidenceStore } from '@zthr/evidence';
@@ -479,6 +481,27 @@ const mutationScopeGate: Gate<ScopeProbe> = {
     { name: 'planted exception with no reason', plant: () => { const r = realScope(); return { ...r, scope: { ...r.scope, except: { ...r.scope.except, [r.mutate[0]!]: '' } }, mutate: r.mutate }; } },
   ],
 };
+
+// Facts: every number public material states from the repository is current, and none is stated without a source.
+type FactsProbe = { texts: { file: string; text: string }[]; facts: Facts };
+const realFacts = (): FactsProbe => ({ texts: publicFiles().map((f) => ({ file: f.slice(ROOT.length), text: readFileSync(f, 'utf8') })), facts: allFacts() });
+const factsCurrentGate: Gate<FactsProbe> = {
+  id: 'facts-current',
+  protects: 'Every number the README, the docs and the case study state from the repository matches the repository, and no count is stated without a source.',
+  definition: 'each <!--fact:name-->value<!--/fact--> of a repository fact renders to its current value; each fact name exists; no unmarked count of tests, gates, journeys, entries, blocks, modules, students or lines',
+  check: ({ texts, facts }) => {
+    const bad = texts.flatMap(({ file, text }) => [
+      ...checkFacts(text, facts).map((m) => `${file}: ${m.fact} written "${m.written}", now "${m.current}"`),
+      ...unmarkedFacts(text).map((u) => `${file}: "${u}" has no source`),
+    ]);
+    return bad.length ? fail('facts-current', `${bad.length} stale or unsourced: ${bad.slice(0, 4).join('; ')}. Run npx tsx tools/facts.ts --write`) : pass('facts-current', `${texts.length} public files, every stated count current and sourced`);
+  },
+  falsification: [
+    { name: 'planted stale count', plant: () => { const r = realFacts(); return { ...r, texts: [...r.texts, { file: 'planted.md', text: 'There are <!--fact:gates-->3<!--/fact--> gates.' }] }; } },
+    { name: 'planted count with no source', plant: () => { const r = realFacts(); return { ...r, texts: [...r.texts, { file: 'planted.md', text: 'It has 4,000 tests.' }] }; } },
+    { name: 'planted fact that does not exist', plant: () => { const r = realFacts(); return { ...r, texts: [...r.texts, { file: 'planted.md', text: '<!--fact:made_up-->9<!--/fact-->' }] }; } },
+  ],
+};
 const livePipeline = () => parseYaml(readFileSync(`${ROOT}cloudbuild.yaml`, 'utf8')) as Pipeline;
 
 type Tiers = { tiers: { tier: string; guard: string; paths: string[] }[] };
@@ -794,7 +817,7 @@ const barrierGate: Gate<BarrierOps> = {
   ],
 };
 
-const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate, mutationScopeGate].map((g) => g.id);
+const gateIds = () => [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate, mutationScopeGate, factsCurrentGate].map((g) => g.id);
 
 function repoFiles(): string[] {
   const out: string[] = [];
@@ -812,7 +835,7 @@ function repoFiles(): string[] {
 
 /** What each gate protects and what it is proven against, for the docs and the console. */
 export function gateCatalog(): { id: string; protects: string; plants: string[] }[] {
-  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate, mutationScopeGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
+  return [toneGate, approvalGate, safetyGate, freshnessGate, sealedGate, evidenceGate, statusGate, oracleGate, lockGate, moderationGate, deadEndGate, docsGate, egressGate, patternGate, registerGate, zeroBypassGate, tiersGate, heldOutGate, sensitiveGate, blockGate, r2t4Gate, sapGate, shareGate, guideAdmissionGate, guideFeedGate, barrierGate, mutationScopeGate, factsCurrentGate].map((g) => ({ id: g.id, protects: g.protects, plants: g.falsification.map((f) => f.name) }));
 }
 
 export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdict[]; proofs: Proof[] }> {
@@ -861,6 +884,7 @@ export async function runGates(store?: EvidenceStore): Promise<{ verdicts: Verdi
   await run(guideFeedGate, () => realFeedProbe);
   await run(barrierGate, () => REAL_BARRIERS);
   await run(mutationScopeGate, realScope);
+  await run(factsCurrentGate, realFacts);
   writeFileSync(`${CONTROL}/proofs.json`, `${JSON.stringify(proofs.map(({ gate, gateHash, valid, cases }) => ({ gate, gateHash, valid, cases: cases.map((c) => c.name) })), null, 2)}\n`);
   return { verdicts, proofs };
 }

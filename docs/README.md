@@ -53,6 +53,7 @@ flowchart LR
 - [Running the factory on Google Cloud Build](testing/ci.md)
 - [Coverage](testing/coverage.md)
 - [Exhaustive walks](testing/exploration.md)
+- [Facts](testing/facts.md)
 - [Gates](testing/gates.md)
 - [Intent journeys](testing/journeys.md)
 - [Mutation testing and ratchets](testing/mutation.md)

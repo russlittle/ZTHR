@@ -195,10 +195,21 @@ steps:
         if [ -f reports/mutation.json ] && [ "$_MUTATION" = "true" ]; then gcloud storage cp reports/mutation.json reports/mutation-floors.json reports/mutation-survivors.json "$$BUCKET/latest/"; gcloud storage cp -r reports/blocks "$$BUCKET/latest/"; fi
 
   - id: site
-    # The published docs and factory console, from everything this run recorded.
+    # The published docs and factory console, from everything this run recorded. The static copy for zthr.ai is built
+    # from the same evidence and served by the app in parts under /_publish/, where zthr.ai's deploy takes it from;
+    # no copy of the site is ever built by hand (docs/testing/facts.md).
     name: node:22-bookworm
-    entrypoint: npx
-    args: ['tsx', 'tools/site.ts']
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        set -e
+        npx tsx tools/site.ts
+        npx tsx tools/site.ts --static
+        mkdir -p site-out/_publish
+        tar -czf - site-static site-static.entry.html site-static.advocate.html | split -b 24m -d - site-out/_publish/reference.tgz.part-
+        cp site-static/stamp.json site-out/_publish/stamp.json
+        ( cd site-out/_publish && ls reference.tgz.part-* > parts.txt && sha256sum reference.tgz.part-* > parts.sha256 )
 
   - id: image
     # Only the main line of the reference implementation is deployed; other branches stop after the evidence.

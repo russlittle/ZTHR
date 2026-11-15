@@ -1,4 +1,6 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { apply as applyFacts } from './facts-core.js';
+import { allFacts } from './facts.js';
 import { basename, dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Marked } from 'marked';
@@ -151,7 +153,8 @@ function buildCase(): void {
       },
     },
   });
-  const body = marked.parse(readFileSync(src, 'utf8')) as string;
+  // Every marked number from this build's own evidence (docs/testing/facts.md).
+  const body = marked.parse(applyFacts(readFileSync(src, 'utf8'), allFacts())) as string;
   const title = readFileSync(src, 'utf8').match(/^# (.+)$/m)![1]!;
   const css = `article.case{max-width:860px;margin:0 auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 80px max(16px,env(safe-area-inset-left,0px))}
 article.case h1{font-size:clamp(30px,4.4vw,46px);line-height:1.08;letter-spacing:-.02em;text-wrap:balance;margin:18px 0 14px}
@@ -169,6 +172,7 @@ article.case code{background:var(--calm);padding:1px 5px;border-radius:5px}
 }
 
 function buildDocs(): number {
+  const facts = allFacts();
   const files = walkFiles(join(ROOT, 'docs'), '.md').filter((f) => !f.endsWith('.png'));
   const rel = (f: string) => relative(join(ROOT, 'docs'), f);
   const title = (f: string) => readFileSync(f, 'utf8').match(/^# (.+)$/m)?.[1] ?? rel(f);
@@ -197,7 +201,7 @@ function buildDocs(): number {
         },
       },
     });
-    const body = marked.parse(readFileSync(f, 'utf8').replace(/<!--[\s\S]*?-->/g, '')) as string;
+    const body = marked.parse(applyFacts(readFileSync(f, 'utf8'), facts).replace(/<!--[\s\S]*?-->/g, '')) as string;
     const nav = groups.map(([g, keep]) => ({ title: g, items: files.map(rel).filter(keep).sort().map((x) => ({ href: `${up}${x.replace(/\.md$/, '.html')}`, label: title(join(ROOT, 'docs', x)), current: x === r })) }));
     const rootRel = `${up}../`;
     write(join(SITE, 'docs', out), ui.consoleShell({ title: `${title(f)} · Docs · ZTHR factory`, brand: 'Docs', brandHref: `${up}index.html`, base: fontBase(rootRel), head: head(rootRel), theme: 'factory', surface: 'docs', groups: [{ title: '', items: [{ href: `${up}index.html`, label: 'Docs home', icon: 'doc', current: r === 'README.md' }] }, ...nav], body: `<article class="prose">${body}</article>` }));
@@ -435,5 +439,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   buildCase();
   const d = buildDocs();
   const f = buildFactory();
+  // The commit this copy was built from, so zthr.ai can be checked against the code it claims to describe.
+  writeFileSync(join(SITE, 'stamp.json'), JSON.stringify({ commit: headCommit(), builtAt: new Date().toISOString(), static: STATIC }));
   console.log(`site built: ${d} doc pages, ${f} factory pages in ${relative(ROOT, SITE)}/`);
 }

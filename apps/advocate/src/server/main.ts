@@ -137,6 +137,8 @@ if (existsSync('site-out')) {
     c.header('Access-Control-Allow-Origin', '*');
     c.header('Cache-Control', 'no-cache');
   });
+  // The static copy for zthr.ai, built by this same build (cloudbuild.yaml, site step), in parts.
+  root.use('/_publish/*', serveStatic({ root: 'site-out' }));
   for (const p of ['docs', 'factory', 'assets']) {
     root.use(`/${p}/*`, async (c, next) => (new URL(c.req.url).pathname === `/${p}` ? c.redirect(`/${p}/`) : next()));
     root.use(`/${p}/*`, serveStatic({ root: 'site-out', rewriteRequestPath: (path) => (path.endsWith('/') ? `${path}index.html` : path) }));

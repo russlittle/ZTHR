@@ -13,3 +13,8 @@ site-static.entry.html
 site-static.advocate.html
 .cov-*/
 .stryker-tmp-guide/
+
+# Built by tools/site.ts --static in Cloud Build and published from there; never committed (CLAUDE.md).
+site-static/
+site-static.entry.html
+site-static.advocate.html

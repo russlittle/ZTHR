@@ -223,7 +223,7 @@ A program can exist, match a student and still not help in time. The guide keeps
 
 ## How good it is: feedback
 
-After a student uses a resource, the Advocate asks one question: did it help? The answers (helped, tried and it did not help, could not reach them) become the entry's record, shown as plain counts ("helped 14 of 19 students who tried, this term") once there are enough to mean something. A resource that rarely helps is flagged to the curator, not hidden, because it may still be the only one.
+After a student uses a resource, the Advocate asks one question: did it help? The answers (helped, tried and it did not help, could not reach them) become the entry's record, shown as plain counts ("Helped 14 of 19 students who tried it.") once there are enough to mean something. A resource that rarely helps is flagged to the curator, not hidden, because it may still be the only one.
 
 ## Check-ins: finding barriers without a form
 
@@ -315,7 +315,7 @@ CCRC's framework for advising (sustained, strategic, integrated, proactive, pers
 - **Warm handoffs.** Instead of a phone number, a prepared message to a named office, sent only with the student's approval, carrying only what the student chose to include.
 - **Seasonal help.** The winter crisis utility program, free tax preparation and the earned income credit in tax season, summer meal programs, the second-year registration window: the guide knows when each matters and the Advocate brings it up then.
 - **Coverage gaps.** The QA agents publish which barriers have little or no help in each county, by provider kind. For a region, that is a map of where the safety net is thin; for a funder, where to put money.
-- **Peer record.** After enough students have used a resource, it shows how often it helped ("helped 14 of 19 students who tried, this term"), so the next student knows what to expect.
+- **Peer record.** After enough students have used a resource, it shows how often it helped ("Helped 14 of 19 students who tried it."), so the next student knows what to expect.
 - **Well-being that is not an emergency.** When a student says it has been a hard week, the Advocate can offer a walk on a nearby trail between classes, a free yoga class or a park event alongside counseling, because movement helps and costs nothing, and it never replaces a crisis route.
 - **Community connection.** Belonging is part of the guide: mentoring, student parent groups, veterans centers, congregations and community programs that welcome students, not only services for emergencies.
 

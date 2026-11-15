@@ -2,7 +2,7 @@
 
 Every county already has help that a student, a parent or a neighbor could use: health centers that charge less if you earn less, apartments where rent is based on income, treatment programs, libraries with free computers, housing counselors. Most of it is listed in a government system of record. Nobody reads all of those systems for one place, so every agency, college and congregation keeps its own short list, and each list goes stale on its own.
 
-The resource finder reads those systems for an area and turns what it finds into checked guide entries. Anyone can run it for their own county. For Montgomery and Greene counties in Ohio, it finds about 200 entries the guide did not have by hand, from six federal systems, in a few minutes.
+The resource finder reads those systems for an area and turns what it finds into checked guide entries. Anyone can run it for their own county. For Montgomery and Greene counties in Ohio, it finds <!--fact:found_entries-->202<!--/fact--> entries the guide did not have by hand, from <!--fact:found_systems-->six<!--/fact--> federal systems, in a few minutes.
 
 ```mermaid
 flowchart LR
@@ -122,7 +122,7 @@ A person then reads the source and fixes its adapter, or confirms that the chang
 |---|---|---|
 | Whole entries (tests) | For each system, one record against the whole entry a student sees, worked by hand: every field, and nothing more | `finder-entries.test.ts` |
 | Adapters (tests) | Each system's records, shaped as each system returned them, are kept or left out for the stated reason, and nothing is claimed that the record does not give | `finder.test.ts` |
-| Admission (tests and gate) | Every entry an adapter writes passes the guide's gates. All 270 entries in the guide are admitted | `finder.test.ts`, `guide-admission` |
+| Admission (tests and gate) | Every entry an adapter writes passes the guide's gates. All <!--fact:guide_entries-->270<!--/fact--> entries in the guide are admitted | `finder.test.ts`, `guide-admission` |
 | One place, or two (tests) | The same phone and street is one place; a shared main number at two addresses is two; same-name sites are named by town and street | `finder.test.ts` |
 | Names inside place names (tests) | A first name inside a guide place name (a clinic on Alex Road) is not reported as another student's name, and any other appearance still is | `finder.test.ts` |
 | Drift (tests) | Each way a source can go quiet fails the run by name; the stored run is a baseline the check reads | `finder.test.ts` |

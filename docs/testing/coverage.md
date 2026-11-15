@@ -28,65 +28,65 @@ pie showData title 1192 tests
 
 ## Button walk
 
-1,977 states and 27,844 transitions across 12 seeds; some seeds were cut short; 0 violations.
+60,027 states and 2,229,527 transitions across 3 seeds; some seeds were cut short; 0 violations.
 
 ```mermaid
 xychart-beta
   title "Button walk: transitions per student"
-  x-axis ["Ana", "Keisha", "Maria", "Sam"]
+  x-axis ["Maria"]
   y-axis "Transitions"
-  bar [1856, 1626, 1807, 1861]
+  bar [723307]
 ```
 
 | Verb | Times tried |
 | --- | --- |
-| `say` | 11,753 |
-| `need` | 4,599 |
-| `situation` | 2,555 |
-| `show-draft` | 547 |
-| `find-help` | 519 |
-| `today` | 511 |
-| `screen` | 511 |
-| `week` | 511 |
-| `settings` | 511 |
-| `review-deadlines` | 511 |
-| `add-shifts` | 511 |
-| `upload-syllabus` | 511 |
-| `campus-food` | 511 |
-| `free-food` | 511 |
-| `study-spots` | 511 |
-| `leave-by` | 511 |
-| `jobs-fit` | 511 |
-| `mentors` | 511 |
-| `delete-account` | 511 |
-| `start-resource` | 246 |
-| `call` | 88 |
-| `dial` | 56 |
-| `set-stop` | 39 |
-| `add-date` | 32 |
-| `draft` | 32 |
-| `share` | 32 |
-| `mentor-intro` | 24 |
-| `playbook` | 24 |
-| `book-room` | 14 |
-| `ask` | 12 |
-| `remind` | 12 |
-| `contact` | 12 |
-| `plan-next` | 12 |
-| `find-tutor` | 12 |
-| `screen-more` | 11 |
-| `plan` | 10 |
-| `start-program` | 7 |
-| `calendar-steps` | 6 |
-| `edit-steps` | 6 |
-| `why-qualify` | 5 |
-| `meals` | 4 |
-| `fair-chance` | 4 |
-| `jobs-fair-chance` | 4 |
-| `career` | 4 |
-| `approve` | 4 |
-| `next-bus` | 3 |
-| `draft-instructor-note` | 2 |
+| `say` | 939,527 |
+| `need` | 367,641 |
+| `situation` | 204,245 |
+| `show-draft` | 42,121 |
+| `find-help` | 41,651 |
+| `today` | 40,849 |
+| `screen` | 40,849 |
+| `week` | 40,849 |
+| `settings` | 40,849 |
+| `review-deadlines` | 40,849 |
+| `add-shifts` | 40,849 |
+| `upload-syllabus` | 40,849 |
+| `campus-food` | 40,849 |
+| `free-food` | 40,849 |
+| `study-spots` | 40,849 |
+| `leave-by` | 40,849 |
+| `jobs-fit` | 40,849 |
+| `mentors` | 40,849 |
+| `delete-account` | 40,849 |
+| `start-resource` | 17,782 |
+| `call` | 7,007 |
+| `share` | 6,344 |
+| `draft` | 3,709 |
+| `playbook` | 3,127 |
+| `add-date` | 2,404 |
+| `dial` | 2,372 |
+| `set-stop` | 2,138 |
+| `mentor-intro` | 1,600 |
+| `plan` | 1,438 |
+| `start-program` | 1,311 |
+| `hold-block` | 984 |
+| `why-qualify` | 802 |
+| `book-room` | 802 |
+| `next-bus` | 802 |
+| `calendar-steps` | 800 |
+| `edit-steps` | 800 |
+| `ask` | 800 |
+| `remind` | 800 |
+| `contact` | 800 |
+| `plan-next` | 800 |
+| `find-tutor` | 800 |
+| `meals` | 800 |
+| `fair-chance` | 800 |
+| `jobs-fair-chance` | 800 |
+| `career` | 800 |
+| `draft-instructor-note` | 656 |
+| `approve` | 378 |
 
 ## Feature walk
 

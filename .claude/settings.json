@@ -1,0 +1,9 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "bash tools/hooks/session-end.sh", "timeout": 120 }]
+      }
+    ]
+  }
+}
