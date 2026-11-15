@@ -37,6 +37,18 @@ flowchart LR
 Any violation fails the build. The conformance statement on the evidence pages lists every stop of the latest walk
 and anything left for a person to review.
 
+## A screen-reader pass (a person's work)
+
+Automated checks cannot tell whether the Advocate is pleasant to use by ear. One pass by someone who uses a screen reader every day answers that. For each of NVDA with Firefox or Chrome on Windows, VoiceOver with Safari on an iPhone, and TalkBack with Chrome on Android:
+
+1. Open the demo as Maria, and do the day: hear what Today says first, open the one thing to do, and come back.
+2. Ask for help with food by typing it, open a resource, and start it. Check that each result is announced without hunting for it.
+3. Open a draft, change its words, and approve it. Check that the approval and its result are announced.
+4. Open the guide without signing in, filter by a barrier, and open an entry. Check that headings and the filter make sense out of context.
+5. Turn on brief mode in You, and repeat step 1.
+
+For each step, note what was hard, slow or wrong, with the screen and the reader. Each note becomes a fix with its own check in the browser walk.
+
 ## Limits
 
 - **Automated checks only, so far.** They cover what a machine can decide. Testing with NVDA, JAWS, VoiceOver and

@@ -32,6 +32,17 @@ flowchart LR
 | Paths | Never a file, never another record, never a server error |
 | API | Covered in [the API tests](../api.md) |
 
+## Adding held-out phrasings (a person's work)
+
+The safety screen is scored on crisis phrasings it was never shaped around. Those must come from someone other than the agent that writes the screen, and they are among what only a person changes, so the build refuses them from anyone else.
+
+1. Open `control/heldout/crisis.txt` on GitHub and choose **Edit**. A change made in GitHub's web editor is signed by GitHub, which the `person-signed` step requires.
+2. Add one phrasing per line, as a student might send it by text: misspellings, no punctuation, indirect words. Each must mean the student may be in danger.
+3. Harmful community-board posts that moderation must catch (selling pills, scams, threats) go in `control/heldout/community.txt` the same way.
+4. Commit to `reference-implementation`. The `safety-router` gate scores the screen on every crisis line, and a line it misses fails the build. The `held-out` gate fails if any line is ever copied into a rule, so the agents fix the screen by its meaning, not by the line.
+
+Good sources are people who staff crisis lines, campus counselors and peer supporters. Fifty or more phrasings is a meaningful set.
+
 ## What the red team found
 
 | Attack that got through | Fix |
