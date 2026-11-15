@@ -204,7 +204,7 @@
   },
   {
     "gate": "guide-admission",
-    "gateHash": "cc16d1c68d08bbbd2ca0cd7a08a0fe5a1886f2936ab6a5b8eb811f5a9faed3c3",
+    "gateHash": "5814340d1cd4f257a3a7e1cbf30b1626b1cdca5e2f7a8cd39753dd3d59515586",
     "valid": true,
     "cases": [
       "planted catalog with an entry that has no source",
