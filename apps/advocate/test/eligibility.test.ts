@@ -134,9 +134,144 @@ describe('SNAP, exactly', () => {
     // eight people: net = 3000 - 20% of 3000 - 308 = 2092; 1841 - 30% of 2092 = 1213.4, rounded to 1213
     expect(snap(st({ household: { size: 8, monthlyGrossIncome: 3000 } }), TODAY).estimatedMonthlyValue).toBe(1213);
   });
+  it('past the eighth row there is no published allotment, so a likely result carries no estimate rather than a guess', () => {
+    // nine people: limit 6,037 + 616 = 6,653
+    expect(snap(st({ household: { size: 9, monthlyGrossIncome: 3000 } }), TODAY)).toEqual({ ...SNAP, status: 'likely', reasons: [UNDER_HALF, under(6653)], needs: [], estimatedMonthlyValue: undefined, valueIsEstimate: true });
+  });
+  it('credits not given: the student rule is still applied, and credits are asked for', () => {
+    // fifty years old is exempt, so the student rule is met whatever the credits; one person, under $1,729
+    expect(snap(fullTime({ age: 50, enrollment: { creditHours: undefined } }), TODAY)).toEqual({ ...SNAP, status: 'likely', reasons: ['You meet a student exemption: your age.', under(1729)], needs: ['How many credits you take'], estimatedMonthlyValue: 155, valueIsEstimate: true });
+  });
+  it('the single-parent exemption needs full-time study: 11 credits is not enough, 12 is', () => {
+    const parent = (creditHours: number) => fullTime({ enrollment: { creditHours }, household: { size: 2, singleParent: true, childrenUnder12: 1 } });
+    expect(snap(parent(11), TODAY)).toMatchObject({ status: 'unlikely', reasons: [NEEDS_EXEMPTION, under(2345)] });
+    expect(snap(parent(12), TODAY).status).toBe('likely');
+  });
   it('each person past eight adds $616 to the limit: ten people, $7,269', () => {
     expect(snap(st({ household: { size: 10, monthlyGrossIncome: 7269 } }), TODAY).reasons).toEqual([UNDER_HALF, under(7269)]);
     expect(snap(st({ household: { size: 10, monthlyGrossIncome: 7270 } }), TODAY).status).toBe('unlikely');
+  });
+});
+
+/**
+ * Lifeline, HEAP and the Sinclair grant, rule by rule, where a mutation run showed the tests above would not notice a
+ * change. Expected values are worked by hand from LIFELINE_2026 and OHIO_HEAP_2026_27 in params.ts and the grant's
+ * published criteria, never read from the engine.
+ */
+type Facts = { household?: Partial<Student['household']>; enrollment?: Partial<Student['enrollment']>; receives?: Student['receives'] };
+const person = (o: Facts = {}): Student =>
+  makeAdvocate().createStudent({ chosenName: 'U', zip: '45402', age: 30, household: { size: 1, ...o.household }, enrollment: { college: 'sinclair', ...o.enrollment }, receives: o.receives });
+
+describe('Lifeline, exactly', () => {
+  const LIFELINE = {
+    program: 'lifeline',
+    title: 'Lifeline phone or internet discount',
+    source: 'https://www.usac.org/lifeline/consumer-eligibility/',
+    howToApply: 'Apply through the National Verifier at lifelinesupport.org, or through a participating phone company.',
+  };
+  const UNCONFIRMED = { ...LIFELINE, status: 'unconfirmed', reasons: ['Lifeline limits for this date have not been verified yet.'], needs: [] };
+
+  it('is verified from 2026-01-15 through 2027-01-31, and unconfirmed a day either side', () => {
+    const s = person({ household: { monthlyGrossIncome: 1000 } });
+    expect(lifeline(s, '2026-01-14')).toEqual(UNCONFIRMED);
+    expect(lifeline(s, '2026-01-15').status).toBe('likely');
+    expect(lifeline(s, '2027-01-31').status).toBe('likely');
+    expect(lifeline(s, '2027-02-01')).toEqual(UNCONFIRMED);
+  });
+  it('receiving SNAP, Medicaid or SSI qualifies on its own, names the program, and is worth $9.25 a month', () => {
+    const over = { monthlyGrossIncome: 9000 };
+    expect(lifeline(person({ household: over, receives: { snap: true } }), TODAY)).toEqual({ ...LIFELINE, status: 'likely', reasons: ['You receive SNAP, which qualifies.'], needs: [], estimatedMonthlyValue: 9.25 });
+    expect(lifeline(person({ household: over, receives: { medicaid: true } }), TODAY).reasons).toEqual(['You receive MEDICAID, which qualifies.']);
+    expect(lifeline(person({ household: over, receives: { ssi: true } }), TODAY).reasons).toEqual(['You receive SSI, which qualifies.']);
+    expect(lifeline(person({ household: over, receives: { snap: true, medicaid: true, ssi: true } }), TODAY).reasons).toEqual(['You receive SNAP, MEDICAID, SSI, which qualifies.']);
+  });
+  it('TANF and Pell do not qualify on their own: income decides', () => {
+    expect(lifeline(person({ household: { monthlyGrossIncome: 9000 }, receives: { tanf: true, pell: true, snap: false } }), TODAY).status).toBe('unlikely');
+  });
+  it('a stored record with no benefits listed is judged by income', () => {
+    const s = { ...person({ household: { monthlyGrossIncome: 1000 } }), receives: undefined };
+    expect(lifeline(s, TODAY).status).toBe('likely');
+  });
+  it('without income it asks for income and nothing else', () => {
+    expect(lifeline(person(), TODAY)).toEqual({ ...LIFELINE, status: 'needs-info', reasons: [], needs: ['Money your home gets each month'] });
+  });
+  it('one person: $21,546 a year is under the limit, a dollar a month more is over', () => {
+    // 1795.50 a month is 21,546 a year, exactly the limit; 1796 a month is 21,552
+    expect(lifeline(person({ household: { monthlyGrossIncome: 1795.5 } }), TODAY)).toEqual({ ...LIFELINE, status: 'likely', reasons: ['Household income is under $21,546 a year.'], needs: [], estimatedMonthlyValue: 9.25 });
+    expect(lifeline(person({ household: { monthlyGrossIncome: 1796 } }), TODAY)).toEqual({ ...LIFELINE, status: 'unlikely', reasons: ['Household income is over $21,546 a year.'], needs: [] });
+  });
+  it('each further person adds $7,668: three people, $36,882', () => {
+    // 21,546 + 2 x 7,668 = 36,882; 3073.50 a month is exactly that
+    expect(lifeline(person({ household: { size: 3, monthlyGrossIncome: 3073.5 } }), TODAY).reasons).toEqual(['Household income is under $36,882 a year.']);
+    expect(lifeline(person({ household: { size: 3, monthlyGrossIncome: 3074 } }), TODAY).reasons).toEqual(['Household income is over $36,882 a year.']);
+  });
+  it('a household recorded as zero people is held to the one-person limit, never a lower one', () => {
+    const s = { ...person({ household: { monthlyGrossIncome: 1795.5 } }) };
+    expect(lifeline({ ...s, household: { ...s.household, size: 0 } }, TODAY).reasons).toEqual(['Household income is under $21,546 a year.']);
+  });
+});
+
+describe('Ohio HEAP, exactly', () => {
+  const HEAP = {
+    program: 'ohio-heap',
+    title: 'Ohio HEAP heating help',
+    source: 'https://www.occ.ohio.gov/factsheet/home-energy-assistance-program-heap',
+    howToApply: 'Apply at energyhelp.ohio.gov, or make an appointment with Miami Valley Community Action Partnership.',
+    statusRuleNote: 'Some programs have citizenship or immigration rules. We never ask about that. The agency explains its rules, and you and your family decide whether to apply.',
+  };
+  const UNCONFIRMED = { ...HEAP, status: 'unconfirmed', reasons: ['HEAP limits for this season have not been verified yet.'], needs: [] };
+
+  it('is verified for the season 2026-07-01 through 2027-05-31, and unconfirmed a day either side', () => {
+    const s = person({ household: { monthlyGrossIncome: 1000 } });
+    expect(heap(s, '2026-06-30')).toEqual(UNCONFIRMED);
+    expect(heap(s, '2026-07-01').status).toBe('likely');
+    expect(heap(s, '2027-05-31').status).toBe('likely');
+    expect(heap(s, '2027-06-01')).toEqual(UNCONFIRMED);
+  });
+  it('without income it asks for income and nothing else', () => {
+    expect(heap(person(), TODAY)).toEqual({ ...HEAP, status: 'needs-info', reasons: [], needs: ['Money your home gets each month'] });
+  });
+  it('one person: $27,930 a year is under 175% of poverty, a dollar a month more is over', () => {
+    // 2327.50 a month is 27,930 a year, exactly the limit; 2328 a month is 27,936
+    expect(heap(person({ household: { monthlyGrossIncome: 2327.5 } }), TODAY)).toEqual({ ...HEAP, status: 'likely', reasons: ['Household income is under $27,930 a year (175% of poverty).'], needs: [] });
+    expect(heap(person({ household: { monthlyGrossIncome: 2328 } }), TODAY)).toEqual({ ...HEAP, status: 'unlikely', reasons: ['Household income is over $27,930 a year.'], needs: [] });
+  });
+  it('each household size reads its own row: four people, $57,750', () => {
+    expect(heap(person({ household: { size: 4, monthlyGrossIncome: 4812.5 } }), TODAY).reasons).toEqual(['Household income is under $57,750 a year (175% of poverty).']);
+    expect(heap(person({ household: { size: 4, monthlyGrossIncome: 4813 } }), TODAY).status).toBe('unlikely');
+  });
+  it('the table stops at twelve people: twelve and thirteen are both held to $103,132', () => {
+    expect(heap(person({ household: { size: 12, monthlyGrossIncome: 8000 } }), TODAY).reasons).toEqual(['Household income is under $103,132 a year (175% of poverty).']);
+    expect(heap(person({ household: { size: 13, monthlyGrossIncome: 9000 } }), TODAY).reasons).toEqual(['Household income is over $103,132 a year.']);
+  });
+});
+
+describe('the Sinclair Student Emergency Grant, exactly', () => {
+  const GRANT = {
+    program: 'sinclair-emergency-grant',
+    title: 'Sinclair Student Emergency Grant',
+    source: 'https://sinclair.edu/emergencygrant',
+    howToApply: 'Apply through the link on sinclair.edu/emergencygrant with documentation of the emergency. It can be received once while at Sinclair.',
+  };
+  const CREDITS = 'How many credits you take';
+  const PROGRAM = 'Whether you are in a degree or certificate program';
+
+  it('a Sinclair student taking 6 credits in a degree program is likely, and is told what else the college weighs', () => {
+    expect(sinclairEmergencyGrant(person({ enrollment: { creditHours: 6, degreeSeeking: true } }))).toEqual({ ...GRANT, status: 'likely', reasons: ['You meet the enrollment requirements; the college also considers GPA, aid status and past awards.'], needs: [] });
+  });
+  it('is for Sinclair students only, whatever else is true', () => {
+    expect(sinclairEmergencyGrant(person({ enrollment: { college: 'wright-state', creditHours: 12, degreeSeeking: true } }))).toEqual({ ...GRANT, status: 'unlikely', reasons: ['This grant is for Sinclair students.'], needs: [] });
+  });
+  it('asks for credits, for the program, or for both, in that order', () => {
+    expect(sinclairEmergencyGrant(person({ enrollment: { degreeSeeking: true } }))).toEqual({ ...GRANT, status: 'needs-info', reasons: [], needs: [CREDITS] });
+    expect(sinclairEmergencyGrant(person({ enrollment: { creditHours: 12 } }))).toEqual({ ...GRANT, status: 'needs-info', reasons: [], needs: [PROGRAM] });
+    expect(sinclairEmergencyGrant(person())).toEqual({ ...GRANT, status: 'needs-info', reasons: [], needs: [CREDITS, PROGRAM] });
+  });
+  it('six credit hours is the floor: 5 is unlikely and says so', () => {
+    expect(sinclairEmergencyGrant(person({ enrollment: { creditHours: 5, degreeSeeking: true } }))).toEqual({ ...GRANT, status: 'unlikely', reasons: ['It requires at least 6 credit hours this semester.'], needs: [] });
+  });
+  it('a student not in a degree or certificate program is unlikely and is told why', () => {
+    expect(sinclairEmergencyGrant(person({ enrollment: { creditHours: 12, degreeSeeking: false } }))).toEqual({ ...GRANT, status: 'unlikely', reasons: ['It requires being in a degree or certificate program.'], needs: [] });
   });
 });
 
