@@ -101,6 +101,16 @@
         "regex": "^/twins/(?P<rest>.*)$",
         "destination": "https://advocate-fsy7whk33q-uc.a.run.app/twins/:rest",
         "type": 302
+      },
+      {
+        "source": "/ledgerlock",
+        "destination": "https://ledgerlock-fsy7whk33q-uc.a.run.app/ledgerlock/",
+        "type": 302
+      },
+      {
+        "regex": "^/ledgerlock/(?P<rest>.*)$",
+        "destination": "https://ledgerlock-fsy7whk33q-uc.a.run.app/ledgerlock/:rest",
+        "type": 302
       }
     ]
   }
