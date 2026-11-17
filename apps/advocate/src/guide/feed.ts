@@ -95,7 +95,7 @@ export function coverage(catalog: Resource[], today: string, counties = ['Montgo
   for (const b of BARRIERS) {
     for (const county of counties) {
       // A college's own service counts in the county the college is in: students elsewhere cannot use it.
-      const hits = catalog.filter((r) => isFresh(r, today) && r.categories.includes(b.id) && (r.serves.national || r.serves.counties?.includes(county) || (r.serves.colleges ?? []).some((c) => collegeCounty(c) === county)));
+      const hits = catalog.filter((r) => isFresh(r, today) && r.categories.includes(b.id) && (r.serves.national || r.serves.counties?.includes(county) || r.serves.colleges?.some((c) => collegeCounty(c) === county)));
       cells.push({ barrier: b.id, county, services: hits.length, kinds: [...new Set(hits.map((r) => r.provider.kind))].sort() as ProviderKind[] });
     }
   }

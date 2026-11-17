@@ -362,3 +362,45 @@ describe('names a student can recognize', () => {
     expect(F.nameSites([e('937-712-7628'), e('513-448-1117')]).map((x: { name: string }) => x.name)).toEqual(['DeCoach Rehabilitation Centre (Xenia, 36 North Detroit Street, 937-712-7628)', 'DeCoach Rehabilitation Centre (Xenia, 36 North Detroit Street, 513-448-1117)']);
   });
 });
+
+describe('pass 5: each rule a mutation run showed unstated', () => {
+  it('a link must start with its scheme; text before it is not a link', () => {
+    expect([F.url('see https://a.org'), F.url('https://a.org/x')]).toEqual([undefined, 'https://a.org/x']);
+  });
+
+  it('the census file: the first line is the header, never a ZIP; only a trailing " County" is dropped; a line cut short names no county', () => {
+    expect([...F.zipCountyFrom(REL, ['GEOID_COUNTY_20'])]).toEqual([]);
+    const head = REL.split('\n')[0]!;
+    const rel = [head, '1|45402|Z|1|0|G|B|S|1|39113|Lake County Shores County|1|0|G|H|A|100|0', '1|45403|Z|1|0|G|B|S|1|39057'].join('\n');
+    expect([...F.zipCountyFrom(rel, ['39113', '39057'])]).toEqual([['45402', 'Lake County Shores'], ['45403', '']]);
+  });
+
+  it('two programs at one address whose name already has parentheses: the phone goes in the last ones', () => {
+    const e = (phone: string) => ({ name: 'Hope (East)', phone, location: { address: '1 Main St', city: 'Dayton', zip: '45402' } }) as never;
+    expect(F.nameSites([e('937-555-0100'), e('937-555-0199')]).map((x: { name: string }) => x.name)).toEqual(['Hope (East) (Dayton, 1 Main St, 937-555-0100)', 'Hope (East) (Dayton, 1 Main St, 937-555-0199)']);
+  });
+
+  it('names: spaces around name1, name2 and the town are dropped before they are judged', () => {
+    const n = (name2: string, name1: string, city?: string) => F.facilityName({ name1, name2, city });
+    expect(n('  Kenwood  ', 'Mindfully', 'Dayton')).toBe('Mindfully (Kenwood)');
+    expect(n('Suite 2', '   ', 'Dayton')).toBe('Suite 2');
+    expect(n('Kenwood', 'Mindfully', ' Kenwood ')).toBe('Mindfully');
+    expect(n('Kenwood', 'Mindfully')).toBe('Mindfully (Kenwood)');
+    // A short code says which program only at the end of the name.
+    expect(n('Dayton AOD Center', 'Mahajan Therapeutics', 'Dayton')).toBe('Dayton AOD Center');
+  });
+
+  it('a facility typed as substance use with mental health care listed offers both', () => {
+    const e = F.fromFindTreatment([{ name2: 'C', state: 'OH', zip: '45402', type_facility: 'SA', services: [{ f1: 'Type of Care', f3: 'Mental health treatment' }] } as never], area).entries[0]!;
+    expect(e.description).toBe('Treatment for mental health and substance use.');
+  });
+
+  it('HRSA: a "Lookalike" written as one word is still a look-alike, not called federally funded', () => {
+    const e = F.fromHrsa([{ 'Site Name': 'Clinic', 'Health Center Type': 'Health Center Program Lookalike', 'Site State Abbreviation': 'OH', 'Site Postal Code': '45385', 'Site Status Description': 'Active' }], area).entries[0]!;
+    expect(e.description).toBe('A community health center. It sees you with or without insurance, and charges less if you earn less.');
+  });
+
+  it('CSV: a row shorter than the header reads its missing cells as empty', () => {
+    expect(F.parseCsv('a,b,c\n1,2\n')).toEqual([{ a: '1', b: '2', c: '' }]);
+  });
+});

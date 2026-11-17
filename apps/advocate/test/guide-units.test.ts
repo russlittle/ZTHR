@@ -1,5 +1,5 @@
 // Verifies docs/flows/resource-guide.md
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Resource } from '../src/catalog/types.js';
 import { DAYTON_CATALOG } from '../src/catalog/dayton.js';
 import * as B from '../src/guide/barriers.js';
@@ -64,6 +64,8 @@ describe('coverage: what counts where', () => {
     expect(only(make('s', { categories: ['books'], serves: { colleges: ['sinclair'] } }))).toEqual(['books/Montgomery']);
     expect(only(make('w', { categories: ['books'], serves: { colleges: ['wright-state'] } }))).toEqual(['books/Greene']);
     expect(only(make('k', { categories: ['books'], serves: { colleges: ['clark-state'] } }))).toEqual([]);
+    // A service for two colleges counts in each one's county.
+    expect(only(make('sw', { categories: ['books'], serves: { colleges: ['sinclair', 'wright-state'] } }))).toEqual(['books/Greene', 'books/Montgomery']);
   });
   it('a stale service does not count, and every empty cell is a named gap', () => {
     const stale = make('old', { categories: ['food'], serves: { national: true }, verifiedOn: '2025-01-01', freshnessDays: 30 });
@@ -154,5 +156,95 @@ describe('the guide where an entry or a barrier is outside what it knows', () =>
     const cells = coverage([make('u', { categories: ['books'], serves: { colleges: ['no-such-college'] } })], TODAY).cells;
     expect(cells.filter((c) => c.services > 0)).toEqual([]);
     expect(cells).toHaveLength(BARRIERS.length * 2);
+  });
+});
+
+// A module's constants are made once, when it is loaded. These tests load each module afresh, so what they check is
+// what the module makes as it loads, not a copy another test file already holds.
+describe('each guide module as it loads', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('feedback: the three answers, in the words a student sees', async () => {
+    const F = await import('../src/guide/feedback.js');
+    expect(F.OUTCOMES).toEqual(['helped', 'did-not-help', 'could-not-reach']);
+    expect(F.OUTCOME_LABEL).toEqual({ helped: 'It helped', 'did-not-help': 'I tried; it did not help', 'could-not-reach': 'I could not reach them' });
+  });
+
+  it('barriers: urgency only rises, tonight over soon over someday', async () => {
+    const F = await import('../src/guide/barriers.js');
+    const at = (first: 'tonight' | 'soon' | 'someday', then: 'tonight' | 'soon' | 'someday') => F.find(F.open(F.open(F.empty(), 'food', 'student', first, TODAY), 'food', 'student', then, TODAY), 'food')!.urgency;
+    expect(at('someday', 'soon')).toBe('soon');
+    expect(at('soon', 'tonight')).toBe('tonight');
+    expect(at('someday', 'tonight')).toBe('tonight');
+    expect(at('tonight', 'someday')).toBe('tonight');
+    expect(at('soon', 'someday')).toBe('soon');
+    const quiet = F.open(F.empty(), 'food', 'student', 'someday', TODAY);
+    expect(F.open(quiet, 'food', 'student', 'someday', '2026-11-03')).toBe(quiet);
+    expect(F.find(quiet, 'food')!.urgency).toBe('someday');
+    let book = F.open(F.empty(), 'food', 'student', 'someday', TODAY);
+    book = F.open(book, 'housing', 'student', 'tonight', '2026-11-03');
+    book = F.open(book, 'health', 'student', 'soon', '2026-11-04');
+    expect(F.active(book).map((b) => b.need)).toEqual(['housing', 'health', 'food']);
+  });
+
+  it('feed: its version and license, word for word', async () => {
+    const F = await import('../src/guide/feed.js');
+    expect(F.FEED_VERSION).toBe('1.0');
+    expect(F.LICENSE).toEqual({
+      name: 'Creative Commons Attribution 4.0',
+      url: 'https://creativecommons.org/licenses/by/4.0/',
+      attribution: "Community resource guide, Student Advocate (zthr.ai). Facts from each entry's cited source of record.",
+    });
+  });
+
+  it('feed: the published schema keeps every field of a full service and of the feed around it', async () => {
+    const F = await import('../src/guide/feed.js');
+    const full = make('full', {
+      categories: ['food', 'housing'],
+      organization: 'Org',
+      provider: { kind: 'faith', level: 'local', faithNote: 'Help does not depend on faith.' },
+      serves: { counties: ['Greene'], colleges: ['sinclair'] },
+      location: { address: '1 Main St', city: 'Xenia', zip: '45385' },
+      phone: '937-555-0100',
+      url: 'https://example.org/full',
+      hours: 'Mon 9-5',
+      cost: 'free',
+      howToApply: ['Call.', 'Go in.'],
+      documents: ['An ID'],
+      whatToExpect: 'A short wait.',
+      situations: ['veteran'],
+      availability: [{ fact: 'funding', value: 'Funds left', source: 'https://example.org/f', checkedOn: TODAY }],
+    });
+    const service = {
+      id: 'full',
+      name: 'Name full',
+      description: 'About full.',
+      organization: { name: 'Org', kind: 'faith', kind_label: 'Faith-based', level: 'local', faith_note: 'Help does not depend on faith.' },
+      taxonomy: [
+        { barrier: 'food', label: BARRIER.food!.label, domain: BARRIER.food!.domain, domain_label: DOMAIN_LABEL[BARRIER.food!.domain] },
+        { barrier: 'housing', label: BARRIER.housing!.label, domain: BARRIER.housing!.domain, domain_label: DOMAIN_LABEL[BARRIER.housing!.domain] },
+      ],
+      situations: [{ id: 'veteran', label: 'Veterans' }],
+      serves: { counties: ['Greene'], colleges: ['sinclair'], national: false },
+      location: { address: '1 Main St', city: 'Xenia', postal_code: '45385' },
+      phone: '937-555-0100',
+      url: 'https://example.org/full',
+      hours: 'Mon 9-5',
+      cost: 'free',
+      eligibility: base.eligibility.text,
+      how_to_use: { steps: ['Call.', 'Go in.'], documents: ['An ID'], what_to_expect: 'A short wait.' },
+      availability: [{ fact: 'funding', value: 'Funds left', source: 'https://example.org/f', checked_on: TODAY }],
+      source: { url: base.source.url, license: base.source.license },
+      verification: { verified_on: base.verifiedOn, freshness_days: base.freshnessDays, current: true },
+    };
+    // A schema that dropped a field, or held a list to one item, would not give this back.
+    expect(F.FeedService.parse(F.toFeedService(full, TODAY))).toEqual(service);
+    const whole = F.feed([full], TODAY);
+    expect(F.Feed.parse(whole)).toEqual({ feed: 'community-resource-guide', version: '1.0', region: 'Montgomery and Greene counties, Ohio', generated_on: TODAY, license: F.LICENSE, count: 1, services: [service] });
+    expect(F.Feed.safeParse({ ...whole, feed: 'another-feed' }).success).toBe(false);
+    expect(F.FeedService.safeParse({ ...service, taxonomy: [] }).success).toBe(false);
+    expect(F.FeedService.safeParse({ ...service, how_to_use: { ...service.how_to_use, steps: [] } }).success).toBe(false);
   });
 });

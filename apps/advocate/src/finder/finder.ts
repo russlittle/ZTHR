@@ -185,7 +185,7 @@ const UNIT = /^(?:(?:suite|ste|floor|fl|building|bldg|room|rm|unit)\b|#)/i;
 export function facilityName(r: Pick<FtRow, 'name1' | 'name2' | 'city'>): string {
   const second = String(r.name2 ?? '').trim();
   const org = String(r.name1 ?? '').trim();
-  const town = String(r.city ?? '').trim().toLowerCase();
+  const town = r.city?.trim().toLowerCase();
   if (!second || UNIT.test(second) || second.toLowerCase() === town) return title(undba(org || second));
   // A second name that only says where or which program: one word ("Kenwood"), or a short code at its end
   // ("Dayton AOD", "Dayton MH"), or an office. The organization leads; that name stays beside it.
@@ -271,7 +271,7 @@ export function fromHrsa(rows: Record<string, string>[], area: Area): Found {
       categories: ['health'],
       description: `A community health center${look ? '' : ' funded by the federal government'}. It sees you with or without insurance, and charges less if you earn less.`,
       serves: { counties: [county] },
-      location: { address: (r['Site Address'] ?? '').trim(), city: title((r['Site City'] ?? '').trim()), zip: zip5(r['Site Postal Code']) },
+      location: { address: (r['Site Address'] ?? '').trim(), city: title(r['Site City'] ?? ''), zip: zip5(r['Site Postal Code']) },
       ...(phone ? { phone } : {}),
       ...(url(r['Site Web Address']) ? { url: url(r['Site Web Address']) } : {}),
       eligibility: { text: 'Anyone, with or without insurance.' },

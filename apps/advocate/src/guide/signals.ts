@@ -34,7 +34,8 @@ function bestFor(o: SignalInputs, need: Resource['categories'][number]): Resourc
   const opts = o.optionsFor(need);
   const pkg = packageFor(need);
   const order = (r: Resource) => {
-    const i = pkg ? pkg.entries.indexOf(r.id) : -1;
+    // With no package every option ranks the same here, and the record decides.
+    const i = pkg?.entries.indexOf(r.id) ?? 0;
     return i < 0 ? 99 : i;
   };
   const deadline = (r: Resource) => (r.availability?.some((f) => f.fact === 'applications-open') ? 0 : 1);
