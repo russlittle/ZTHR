@@ -109,3 +109,131 @@ describe('consent ledger and sealed store', () => {
     expect(ledger.entries('s1').filter((e) => e.kind === 'release')).toHaveLength(1);
   });
 });
+
+// Each rule below is worked by hand from docs/blocks/runtime.md; the expected text is the fixed text a student reads.
+describe('crisis replies, word for word', () => {
+  const opening = "I'm really glad you told me. You deserve support right now. You can call or text 988 any time to reach the Suicide & Crisis Lifeline, free and confidential.";
+  const danger = 'If you are in immediate danger, call 911.';
+  const hotline = 'The National Domestic Violence Hotline is 1-800-799-7233, or text START to 88788.';
+  const close = "I'm here too. Would it help if I stayed with you while you reach out?";
+  it('self-harm alone names 988 and stays, with no 911 and no hotline', () => {
+    expect(crisisReply(['self-harm'])).toBe(`${opening} ${close}`);
+  });
+  it('danger from others alone adds 911 and no hotline', () => {
+    expect(crisisReply(['danger-from-others'])).toBe(`${opening} ${danger} ${close}`);
+  });
+  it('a medical emergency alone adds 911 and no hotline', () => {
+    expect(crisisReply(['medical-emergency'])).toBe(`${opening} ${danger} ${close}`);
+  });
+  it('abuse alone adds 911 and then the hotline', () => {
+    expect(crisisReply(['abuse'])).toBe(`${opening} ${danger} ${hotline} ${close}`);
+  });
+  it('more than one category still says 911 once', () => {
+    expect(crisisReply(['self-harm', 'danger-from-others', 'medical-emergency', 'abuse'])).toBe(`${opening} ${danger} ${hotline} ${close}`);
+  });
+});
+
+describe('the second check only adds a route', () => {
+  it('a route the patterns found is kept whole, whatever the model says', () => {
+    const first = { crisis: true, categories: ['abuse' as const] };
+    expect(mergeSecondCheck(first, true)).toEqual({ crisis: true, categories: ['abuse'] });
+    expect(mergeSecondCheck(first, false)).toEqual({ crisis: true, categories: ['abuse'] });
+  });
+  it('a model that sees a crisis the patterns missed routes it as self-harm', () => {
+    expect(mergeSecondCheck({ crisis: false, categories: [] }, true)).toEqual({ crisis: true, categories: ['self-harm'] });
+  });
+  it('no route from either check stays no route', () => {
+    expect(mergeSecondCheck({ crisis: false, categories: [] }, false)).toEqual({ crisis: false, categories: [] });
+    expect(mergeSecondCheck({ crisis: false, categories: [] }, undefined)).toEqual({ crisis: false, categories: [] });
+  });
+});
+
+describe('the sandwich, step by step', () => {
+  const okPost = (o: string) => (o === 'good' ? { ok: true as const } : { ok: false as const, reason: 'not good' });
+  it('a failed pre-check never calls the model and falls back with its reason', async () => {
+    let calls = 0;
+    const r = await sandwich({ pre: () => ({ ok: false, reason: 'too long' }), model: async () => { calls++; return 'good'; }, post: okPost, fallback: (i: number, why) => `fallback ${i}: ${why}` }, 7);
+    expect(r).toEqual({ output: 'fallback 7: too long', usedModel: false, reason: 'too long' });
+    expect(calls).toBe(0);
+  });
+  it('model output that passes the post-check is used, with no reason', async () => {
+    const r = await sandwich({ pre: () => ({ ok: true }), model: async () => 'good', post: okPost, fallback: () => 'safe' }, 1);
+    expect(r).toEqual({ output: 'good', usedModel: true });
+  });
+  it('tries the model twice by default, then falls back with the last reason', async () => {
+    let calls = 0;
+    const r = await sandwich({ pre: () => ({ ok: true }), model: async () => { calls++; return 'bad'; }, post: okPost, fallback: (_i, why) => `safe: ${why}` }, 1);
+    expect(calls).toBe(2);
+    expect(r).toEqual({ output: 'safe: not good', usedModel: false, reason: 'not good' });
+  });
+  it('a second attempt that passes is used', async () => {
+    let calls = 0;
+    const r = await sandwich({ pre: () => ({ ok: true }), model: async () => (++calls === 2 ? 'good' : 'bad'), post: okPost, fallback: () => 'safe' }, 1);
+    expect(r).toEqual({ output: 'good', usedModel: true });
+  });
+  it('honours the attempts asked for: one, three, and none', async () => {
+    for (const attempts of [1, 3]) {
+      let calls = 0;
+      await sandwich({ pre: () => ({ ok: true }), model: async () => { calls++; return 'bad'; }, post: okPost, fallback: () => 'safe', attempts }, 1);
+      expect(calls).toBe(attempts);
+    }
+    const none = await sandwich({ pre: () => ({ ok: true }), model: async () => 'good', post: okPost, fallback: (_i, why) => why, attempts: 0 }, 1);
+    expect(none).toEqual({ output: 'model not attempted', usedModel: false, reason: 'model not attempted' });
+  });
+  it('a model that throws falls back naming the error', async () => {
+    const r = await sandwich({ pre: () => ({ ok: true }), model: async () => { throw new Error('down'); }, post: () => ({ ok: true }), fallback: () => 'safe' }, 1);
+    expect(r).toEqual({ output: 'safe', usedModel: false, reason: 'model error: down' });
+  });
+});
+
+describe('refusing to start, condition by condition', () => {
+  it('starts when every condition holds', () => {
+    expect(() => refuseToStartUnless([])).not.toThrow();
+    expect(() => refuseToStartUnless([{ name: 'secret', check: () => true }])).not.toThrow();
+  });
+  it('names each failed condition on its own line, with its reason or "failed"', () => {
+    expect(() =>
+      refuseToStartUnless([
+        { name: 'secret', check: () => 'missing' },
+        { name: 'sign-in', check: () => true },
+        { name: 'database', check: () => false },
+      ]),
+    ).toThrow(new Error('refusing to start:\n  secret: missing\n  database: failed'));
+  });
+});
+
+describe('approval tokens, refusal by refusal', () => {
+  const secret = randomBytes(32);
+  it('a secret under 32 bytes is refused by name; 32 bytes is accepted', () => {
+    expect(() => new ApprovalService(randomBytes(31))).toThrow(new Error('approval secret must be at least 32 bytes'));
+    expect(() => new ApprovalService(randomBytes(32))).not.toThrow();
+  });
+  it('a token carries a 64-character hex signature', () => {
+    expect(new ApprovalService(secret).issue(action).signature).toMatch(/^[0-9a-f]{64}$/);
+  });
+  it('no token is refused by name', () => {
+    expect(new ApprovalService(secret).consume(undefined, action)).toEqual({ ok: false, reason: 'no approval token' });
+  });
+  it('a signature of the wrong length, or one that no longer matches an edited field, is invalid', () => {
+    const svc = new ApprovalService(secret);
+    const t = svc.issue(action);
+    expect(svc.consume({ ...t, signature: 'abcd' }, action)).toEqual({ ok: false, reason: 'signature invalid' });
+    const later = new Date(Date.parse(t.expiresAt) + 24 * 60 * 60 * 1000).toISOString();
+    expect(svc.consume({ ...t, expiresAt: later }, action)).toEqual({ ok: false, reason: 'signature invalid' });
+    expect(svc.consume(t, action)).toEqual({ ok: true });
+  });
+  it('each mismatch is refused with its own reason', () => {
+    const svc = new ApprovalService(secret);
+    const t = svc.issue(action);
+    expect(svc.consume(t, { ...action, studentId: 's2' })).toEqual({ ok: false, reason: 'token belongs to another student' });
+    expect(svc.consume(t, { ...action, recipient: 'someone@else' })).toEqual({ ok: false, reason: 'token does not match this content and recipient' });
+  });
+  it('a token is good through the last millisecond of its 30 minutes and expired one after', () => {
+    const issuedAt = Date.parse('2026-11-02T17:00:00Z');
+    const svc = new ApprovalService(secret);
+    const t = svc.issue(action, issuedAt);
+    expect(t.expiresAt).toBe('2026-11-02T17:30:00.000Z');
+    expect(svc.consume(t, action, issuedAt + 30 * 60 * 1000 + 1)).toEqual({ ok: false, reason: 'token expired' });
+    expect(svc.consume(t, action, issuedAt + 30 * 60 * 1000)).toEqual({ ok: true });
+  });
+});
