@@ -29,5 +29,5 @@ dispatcher that ignores tokens.
 
 <!-- verified-by:start -->
 - [`apps/advocate/test/hardening.test.ts`](../../apps/advocate/test/hardening.test.ts) (14 test definitions)
-- [`packages/runtime/test/runtime.test.ts`](../../packages/runtime/test/runtime.test.ts) (37 test definitions)
+- [`packages/runtime/test/runtime.test.ts`](../../packages/runtime/test/runtime.test.ts) (50 test definitions)
 <!-- verified-by:end -->

@@ -64,7 +64,7 @@ export class SealedStore {
   seal(studentId: string, fact: string, value: string): void {
     const key = this.dataKey(studentId);
     const r = this.records.get(studentId)!;
-    r.facts[fact] = encrypt(key, Buffer.from(value, 'utf8'));
+    r.facts[fact] = encrypt(key, Buffer.from(value));
     this.ledger.append(studentId, 'grant', `sealed:${fact}`, { action: 'sealed' });
   }
 
@@ -91,7 +91,7 @@ export class SealedStore {
     const r = this.records.get(studentId);
     const blob = r?.facts[fact];
     if (!r || !blob) throw new Error(`no sealed fact ${fact}`);
-    if (!(r.grants[fact] ?? []).includes(identity)) throw new Error(`${identity} is not granted ${fact}`);
+    if (!r.grants[fact]?.includes(identity)) throw new Error(`${identity} is not granted ${fact}`);
     const value = decrypt(this.dataKey(studentId), blob).toString('utf8');
     this.ledger.append(studentId, 'release', `sealed:${fact}`, { identity, purpose });
     return value;

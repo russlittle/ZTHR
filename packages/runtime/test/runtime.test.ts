@@ -237,3 +237,149 @@ describe('approval tokens, refusal by refusal', () => {
     expect(svc.consume(t, action, issuedAt + 30 * 60 * 1000)).toEqual({ ok: true });
   });
 });
+
+describe('quiet hours that start and end at the same minute', () => {
+  it('a window of no length holds nothing, at that minute or any other', () => {
+    const none = { maxPerDay: 3, quietStart: '22:00', quietEnd: '22:00', timeZone: 'America/New_York' };
+    // 22:00, 21:59 and 03:00 Eastern on Nov 2, 2026 (UTC-5).
+    for (const at of ['2026-11-03T03:00:00Z', '2026-11-03T02:59:00Z', '2026-11-02T08:00:00Z']) {
+      expect(inQuietHours(none, new Date(at))).toBe(false);
+      expect(decideContact(none, new Date(at), 0, 'routine')).toEqual({ action: 'send' });
+    }
+  });
+});
+
+describe('the consent ledger, entry by entry', () => {
+  it('append returns the entry as it is stored, the first chained to genesis', () => {
+    const l = new ConsentLedger();
+    const first = l.append('s1', 'grant', 'calendar', { scope: 'read' });
+    const second = l.append('s1', 'revoke', 'calendar');
+    expect(l.entries()).toEqual([first, second]);
+    expect(first).toMatchObject({ seq: 1, studentId: 's1', kind: 'grant', subject: 'calendar', detail: { scope: 'read' }, prevHash: 'genesis' });
+    expect(second).toMatchObject({ seq: 2, kind: 'revoke', detail: {}, prevHash: first.hash });
+    expect(first.hash).toMatch(/^[0-9a-f]{64}$/);
+  });
+  it('a copy holds every row, hashes and all, and its chain still verifies and continues', () => {
+    const l = new ConsentLedger();
+    l.append('s1', 'grant', 'calendar');
+    l.append('s2', 'share', 'transcript', { to: 'advisor' });
+    const copy = new ConsentLedger();
+    l.copyInto(copy);
+    expect(copy.dump()).toEqual(l.dump());
+    expect(copy.dump()).toHaveLength(2);
+    expect(copy.dump()[1]).toMatchObject({ seq: 2, student_id: 's2', kind: 'share', subject: 'transcript', detail: '{"to":"advisor"}' });
+    expect(copy.entries('s2')).toEqual(l.entries('s2'));
+    const next = copy.append('s1', 'export', 'all');
+    expect(next.seq).toBe(3);
+    expect(next.prevHash).toBe(l.entries()[1]!.hash);
+    expect(ConsentLedger.verify(copy.entries())).toEqual({ ok: true });
+  });
+});
+
+describe('sealed facts, rule by rule', () => {
+  const key = randomBytes(32);
+  const ledgerOf = (l: ConsentLedger) => l.entries('s1').map((e) => [e.kind, e.subject, e.detail]);
+  it('a master key must be exactly 32 bytes', () => {
+    expect(() => new SealedStore(randomBytes(31), new ConsentLedger())).toThrow('master key must be 32 bytes');
+    expect(() => new SealedStore(randomBytes(33), new ConsentLedger())).toThrow('master key must be 32 bytes');
+    expect(() => new SealedStore(randomBytes(32), new ConsentLedger())).not.toThrow();
+  });
+  it('sealing, granting, opening and revoking each write their own ledger entry', () => {
+    const l = new ConsentLedger();
+    const store = new SealedStore(key, l);
+    store.seal('s1', 'veteran_status', 'yes');
+    store.grant('s1', 'veteran_status', 'playbook:gi-bill');
+    expect(store.open('s1', 'veteran_status', 'playbook:gi-bill', 'certify')).toBe('yes');
+    store.revoke('s1', 'veteran_status', 'playbook:gi-bill');
+    expect(ledgerOf(l)).toEqual([
+      ['grant', 'sealed:veteran_status', { action: 'sealed' }],
+      ['grant', 'sealed:veteran_status', { identity: 'playbook:gi-bill' }],
+      ['release', 'sealed:veteran_status', { identity: 'playbook:gi-bill', purpose: 'certify' }],
+      ['revoke', 'sealed:veteran_status', { identity: 'playbook:gi-bill' }],
+    ]);
+  });
+  it('a fact never sealed cannot be granted or opened, for a known student or an unknown one', () => {
+    const l = new ConsentLedger();
+    const store = new SealedStore(key, l);
+    expect(() => store.grant('s1', 'income', 'a')).toThrow('no sealed fact income');
+    expect(() => store.open('s1', 'income', 'a', 'p')).toThrow('no sealed fact income');
+    store.seal('s1', 'veteran_status', 'yes');
+    expect(() => store.grant('s1', 'income', 'a')).toThrow('no sealed fact income');
+    expect(() => store.open('s1', 'income', 'a', 'p')).toThrow('no sealed fact income');
+    expect(ledgerOf(l)).toEqual([['grant', 'sealed:veteran_status', { action: 'sealed' }]]);
+  });
+  it('a fact sealed with no grants opens for no one, and a refused open is not logged', () => {
+    const l = new ConsentLedger();
+    const store = new SealedStore(key, l);
+    store.seal('s1', 'veteran_status', 'yes');
+    expect(() => store.open('s1', 'veteran_status', 'playbook:gi-bill', 'certify')).toThrow('playbook:gi-bill is not granted veteran_status');
+    expect(l.entries('s1').filter((e) => e.kind === 'release')).toEqual([]);
+  });
+  it('granting twice lists the identity once; revoking removes only that identity', () => {
+    const store = new SealedStore(key, new ConsentLedger());
+    store.seal('s1', 'veteran_status', 'yes');
+    store.grant('s1', 'veteran_status', 'a');
+    store.grant('s1', 'veteran_status', 'a');
+    store.grant('s1', 'veteran_status', 'b');
+    expect(store.raw('s1')!.grants).toEqual({ veteran_status: ['a', 'b'] });
+    store.revoke('s1', 'veteran_status', 'a');
+    expect(store.raw('s1')!.grants).toEqual({ veteran_status: ['b'] });
+    expect(() => store.open('s1', 'veteran_status', 'a', 'p')).toThrow('a is not granted veteran_status');
+    expect(store.open('s1', 'veteran_status', 'b', 'p')).toBe('yes');
+  });
+  it('revoking where nothing was granted leaves an empty list; revoking for an unknown student does nothing', () => {
+    const l = new ConsentLedger();
+    const store = new SealedStore(key, l);
+    store.seal('s1', 'veteran_status', 'yes');
+    store.revoke('s1', 'veteran_status', 'a');
+    expect(store.raw('s1')!.grants).toEqual({ veteran_status: [] });
+    store.revoke('s9', 'veteran_status', 'a');
+    expect(store.raw('s9')).toBeUndefined();
+    expect(l.entries('s9')).toEqual([]);
+  });
+  it('has says whether a fact is sealed, for a known student and an unknown one', () => {
+    const store = new SealedStore(key, new ConsentLedger());
+    expect(store.has('s1', 'veteran_status')).toBe(false);
+    store.seal('s1', 'veteran_status', 'yes');
+    expect(store.has('s1', 'veteran_status')).toBe(true);
+    expect(store.has('s1', 'income')).toBe(false);
+  });
+  it('removing a fact drops it and its grants, logs the deletion, and leaves other facts', () => {
+    const l = new ConsentLedger();
+    const store = new SealedStore(key, l);
+    store.seal('s1', 'veteran_status', 'yes');
+    store.seal('s1', 'income', '12000');
+    store.grant('s1', 'veteran_status', 'a');
+    store.remove('s1', 'veteran_status');
+    expect(store.has('s1', 'veteran_status')).toBe(false);
+    expect(store.raw('s1')!.grants).toEqual({});
+    expect(store.has('s1', 'income')).toBe(true);
+    expect(l.entries('s1').at(-1)).toMatchObject({ kind: 'delete', subject: 'sealed:veteran_status', detail: {} });
+    store.remove('s9', 'veteran_status');
+    expect(l.entries('s9')).toEqual([]);
+  });
+  it('forgetting a student drops every record and logs one deletion of everything', () => {
+    const l = new ConsentLedger();
+    const store = new SealedStore(key, l);
+    store.seal('s1', 'veteran_status', 'yes');
+    store.forget('s1');
+    expect(store.raw('s1')).toBeUndefined();
+    expect(store.has('s1', 'veteran_status')).toBe(false);
+    expect(l.entries('s1').at(-1)).toMatchObject({ kind: 'delete', subject: 'sealed:*', detail: {} });
+  });
+  it('a copy under the same master key holds every record, still encrypted, and opens as the original does', () => {
+    const store = new SealedStore(key, new ConsentLedger());
+    store.seal('s1', 'veteran_status', 'yes');
+    store.grant('s1', 'veteran_status', 'a');
+    store.seal('s2', 'income', '12000');
+    const copy = new SealedStore(key, new ConsentLedger());
+    store.copyInto(copy);
+    expect(copy.dump()).toEqual(store.dump());
+    expect(copy.dump().map(([k]) => k)).toEqual(['s1', 's2']);
+    expect(JSON.stringify(copy.dump())).not.toContain('12000');
+    expect(copy.open('s1', 'veteran_status', 'a', 'p')).toBe('yes');
+    copy.grant('s2', 'income', 'b');
+    expect(copy.open('s2', 'income', 'b', 'p')).toBe('12000');
+    expect(store.raw('s2')!.grants).toEqual({});
+  });
+});
