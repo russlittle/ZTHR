@@ -31,6 +31,6 @@ Ordinary unit tests, or any check that has never been seen to fail.
 ## Verified by
 
 <!-- verified-by:start -->
-- [`packages/gates/test/gates.test.ts`](../../packages/gates/test/gates.test.ts) (17 test definitions)
+- [`packages/gates/test/gates.test.ts`](../../packages/gates/test/gates.test.ts) (33 test definitions)
 - [`packages/gates/test/hardening.test.ts`](../../packages/gates/test/hardening.test.ts) (6 test definitions)
 <!-- verified-by:end -->

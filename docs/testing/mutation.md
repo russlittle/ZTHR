@@ -113,6 +113,6 @@ Mutation runs nightly on an 8-CPU Cloud Build machine. The factory console's Mut
 ## Verified by
 
 <!-- verified-by:start -->
-- [`packages/gates/test/gates.test.ts`](../../packages/gates/test/gates.test.ts) (17 test definitions)
+- [`packages/gates/test/gates.test.ts`](../../packages/gates/test/gates.test.ts) (33 test definitions)
 - [`tools/test/mutation.test.ts`](../../tools/test/mutation.test.ts) (6 test definitions)
 <!-- verified-by:end -->

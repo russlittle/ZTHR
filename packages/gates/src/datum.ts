@@ -16,7 +16,7 @@ export interface Datum {
 export function checkDatum(d: Datum, measured: number | undefined): Verdict {
   const gate = `datum:${d.id}`;
   if (measured === undefined || Number.isNaN(measured)) return unknown(gate, `${d.measure} not measured`);
-  if (d.min !== undefined && measured < d.min) return fail(gate, `${d.measure} ${measured} below ${d.min}`);
-  if (d.max !== undefined && measured > d.max) return fail(gate, `${d.measure} ${measured} above ${d.max}`);
+  if (measured < (d.min ?? -Infinity)) return fail(gate, `${d.measure} ${measured} below ${d.min}`);
+  if (measured > (d.max ?? Infinity)) return fail(gate, `${d.measure} ${measured} above ${d.max}`);
   return pass(gate, `${d.measure} ${measured} within zone (target ${d.target})`);
 }
