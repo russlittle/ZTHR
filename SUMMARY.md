@@ -12,7 +12,7 @@ Waiting for a model good enough to trust repeats the old assumption that quality
 
 ## The answer in one sentence
 
-Let AI write the code, and build a factory that cannot be fooled about whether the code works.
+Let AI write the code, and build a factory that judges whether the code works only on evidence the author does not control.
 
 ## Two principles
 
@@ -26,7 +26,7 @@ The AI generates candidates. The fixtures judge them. A rejected candidate goes 
 
 Every change is reviewed by at least three models from different families before commit: one given the context, one given only the diff, and one checking the code independently. A fourth reviews it in place before full promotion. The strongest checks read the system in different forms (the source, the database, the built artifact, the rendered screen and the running service) because readers of different representations cannot all share the same blind spot.
 
-When a defect slips through, the fix is not only to the code. A new fixture is added so that kind of defect can never pass again. Mutation testing, nightly attempts to break the system, calibrated twins of external services, and re-review by each new generation of models keep finding what nobody thought to test. The factory gets stricter every week, and so does everything it builds.
+When a defect slips through, the fix is not only to the code. A new fixture is added so that the next defect of that kind is caught by a check, not by luck. Mutation testing, nightly attempts to break the system, calibrated twins of external services, and re-review by each new generation of models keep finding what nobody thought to test. The factory gets stricter every week, and so does everything it builds.
 
 ## What changes for people
 
