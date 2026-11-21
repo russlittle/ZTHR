@@ -58,6 +58,79 @@ describe('tone rubric', () => {
   it('limits length in brief mode', () => expect(checkTone({ ...ok, text: 'Okay. '.repeat(80) }, 'brief', 8).ok).toBe(false));
 });
 
+describe('tone rubric, stated rule by rule', () => {
+  const step = [{ label: 'Hold it', action: 'x' }];
+  const plain = { text: 'Go. ', nextSteps: step, urgency: 'routine' as const };
+  // Worked by hand: 3 words, 5 syllables each (vowel groups), 1 sentence: 0.39 * 3 + 11.8 * 5 - 15.59 = 44.58.
+  const dense = { ...plain, text: 'Administration documentation consideration.' };
+  it('a clean message passes with no problems and its grade', () => {
+    const r = checkTone({ ...plain, text: 'Go now.' }, 'standard', 8);
+    expect(r).toEqual({ ok: true, problems: [], grade: expect.any(Number) });
+    // 2 words, 2 syllables, 1 sentence: 0.39 * 2 + 11.8 * 1 - 15.59 = -3.01.
+    expect(r.grade).toBeCloseTo(-3.01, 5);
+  });
+  it('a message with no next step is named, unless it is a safety message', () => {
+    expect(checkTone({ ...plain, nextSteps: [] }, 'standard', 8).problems).toEqual(['reports without offering a next step']);
+    expect(checkTone({ ...plain, nextSteps: [], urgency: 'safety' }, 'standard', 8)).toMatchObject({ ok: true, problems: [] });
+  });
+  it('a grade above the target plus slack is named with both numbers; standard and brief allow 2 grades, walk-me-through none', () => {
+    expect(checkTone(dense, 'standard', 8).problems).toEqual(['reads at grade 44.6, above 10']);
+    expect(checkTone(dense, 'brief', 8).problems).toEqual(['reads at grade 44.6, above 10']);
+    expect(checkTone(dense, 'walk-me-through', 8).problems).toEqual(['reads at grade 44.6, above 8']);
+    expect(checkTone(dense, 'standard', 43).ok).toBe(true);
+    expect(checkTone(dense, 'standard', 42).ok).toBe(false);
+    expect(checkTone(dense, 'brief', 43).ok).toBe(true);
+    expect(checkTone(dense, 'walk-me-through', 45).ok).toBe(true);
+    expect(checkTone(dense, 'walk-me-through', 44).ok).toBe(false);
+    expect(checkTone(dense, 'standard', 8).grade).toBeCloseTo(44.58, 5);
+  });
+  it('a safety message is not held to a grade', () => {
+    expect(checkTone({ ...dense, urgency: 'safety' }, 'walk-me-through', 6)).toMatchObject({ ok: true, problems: [] });
+  });
+  it('Spanish is not graded: no grade problem and a grade of 0; English is the default', () => {
+    expect(checkTone(dense, 'walk-me-through', 6, 'es')).toEqual({ ok: true, problems: [], grade: 0 });
+    expect(checkTone(dense, 'walk-me-through', 6).problems).toEqual(['reads at grade 44.6, above 6']);
+    // Not graded means no target can fail it: a grade of 0 against a limit below 0 still passes.
+    expect(checkTone(dense, 'walk-me-through', -5, 'es')).toEqual({ ok: true, problems: [], grade: 0 });
+  });
+  it('a grade exactly at the target plus slack is admitted', () => {
+    // Worked by hand: a message with no words has grade 0.
+    const wordless = { ...plain, text: '1 2 3' };
+    expect(checkTone(wordless, 'standard', -2)).toEqual({ ok: true, problems: [], grade: 0 });
+    expect(checkTone(wordless, 'walk-me-through', 0)).toEqual({ ok: true, problems: [], grade: 0 });
+    expect(checkTone(wordless, 'walk-me-through', -1).problems).toEqual(['reads at grade 0.0, above -1']);
+  });
+  it('length: each depth admits its limit and names one character more', () => {
+    const at = (n: number) => 'Go. '.repeat(n / 4);
+    expect(checkTone({ ...plain, text: at(320) }, 'brief', 8).ok).toBe(true);
+    expect(checkTone({ ...plain, text: `${at(320)}x` }, 'brief', 8).problems).toEqual(['321 characters is too long for brief mode']);
+    expect(checkTone({ ...plain, text: at(1200) }, 'standard', 8).ok).toBe(true);
+    expect(checkTone({ ...plain, text: `${at(1200)}x` }, 'standard', 8).problems).toEqual(['1201 characters is too long for standard mode']);
+    expect(checkTone({ ...plain, text: at(2400) }, 'walk-me-through', 8).ok).toBe(true);
+    expect(checkTone({ ...plain, text: `${at(2400)}x` }, 'walk-me-through', 8).problems).toEqual(['2401 characters is too long for walk-me-through mode']);
+  });
+  it('scolding in either language is named by what it does', () => {
+    expect(checkTone({ ...plain, text: 'You must go.' }, 'standard', 8).problems).toEqual(['commands the student']);
+    expect(checkTone({ ...plain, text: 'Debes ir.' }, 'standard', 8, 'es').problems).toEqual(['commands the student']);
+  });
+  it('careless writing is named', () => {
+    expect(checkTone({ ...plain, text: 'Go now..' }, 'standard', 8).problems).toEqual(['has a doubled period']);
+  });
+  it('a button with a blank label is named, once per button', () => {
+    const blank = [{ label: '  ', action: 'x' }, { label: 'Ok', action: 'y' }, { label: '', action: 'z' }];
+    expect(checkTone({ ...plain, nextSteps: blank }, 'standard', 8).problems).toEqual(['has a button with no label', 'has a button with no label']);
+  });
+  it('every problem is listed, in order: phrasing, next step, grade, length, care, labels', () => {
+    const text = `You must read the administration documentation consideration.. ${'Go. '.repeat(80)}`;
+    const r = checkTone({ text, nextSteps: [], urgency: 'routine' }, 'brief', 0);
+    expect(r.ok).toBe(false);
+    expect(r.problems[0]).toBe('commands the student');
+    expect(r.problems[1]).toBe('reports without offering a next step');
+    expect(r.problems[2]).toMatch(/^reads at grade -?\d+\.\d, above 2$/);
+    expect(r.problems.slice(3)).toEqual([`${text.length} characters is too long for brief mode`, 'has a doubled period']);
+  });
+});
+
 describe('planner', () => {
   it('finds open blocks around classes and shifts', () => {
     const blocks = openBlocks('2026-11-03', '2026-11-06', [{ course: 'ENG', days: ['Tue', 'Thu'], start: '09:00', end: '12:00' }], [{ date: '2026-11-04', start: '09:00', end: '21:00' }], 3);

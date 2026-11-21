@@ -3,8 +3,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkDatum, checkRatchet, checkRegister, combine, fail, gateHash, pass, proveGate, runProvenGate, unknown, verifyFloorChange,
-  contentHash, isAccepted, type Gate,
+  contentHash, isAccepted, sha256, stableStringify, type Gate,
 } from '@zthr/gates';
+import { createHash } from 'node:crypto';
 
 describe('three-valued verdicts', () => {
   it('unknown never becomes pass', () => {
@@ -193,5 +194,89 @@ describe('ratchets and resets, word for word', () => {
 describe('combined unknowns', () => {
   it('every unknown is named, separated by a semicolon', () => {
     expect(combine('all', [unknown('a', 'no data'), pass('b'), unknown('c', 'not run')]).reason).toBe('a: no data; c: not run');
+  });
+});
+
+describe('stable content hashes, stated rule by rule', () => {
+  it('a scalar or null is written as JSON', () => {
+    expect(stableStringify(null)).toBe('null');
+    expect(stableStringify('a')).toBe('"a"');
+    expect(stableStringify(3)).toBe('3');
+    expect(stableStringify(true)).toBe('true');
+  });
+  it('keys are sorted, nested objects too, and a key with no value is left out', () => {
+    expect(stableStringify({ c: 3, a: 1, b: { z: 1, y: [2, 1] }, d: undefined })).toBe('{"a":1,"b":{"y":[2,1],"z":1},"c":3}');
+    expect(stableStringify({ b: 1, a: 2, c: 3 })).toBe('{"a":2,"b":1,"c":3}');
+    expect(stableStringify({ a: 1, b: 2 })).toBe('{"a":1,"b":2}');
+    expect(stableStringify({})).toBe('{}');
+  });
+  it('a key compares by its characters, so equal keys cannot appear and an upper-case key sorts first', () => {
+    expect(stableStringify({ b: 1, B: 2, a: 3 })).toBe('{"B":2,"a":3,"b":1}');
+  });
+  it('arrays keep their order and their values are written stably', () => {
+    expect(stableStringify([3, { b: 1, a: 2 }, null])).toBe('[3,{"a":2,"b":1},null]');
+    expect(stableStringify([])).toBe('[]');
+  });
+  it('sha256 is the hex digest, of text or of bytes', () => {
+    const abc = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad';
+    expect(sha256('abc')).toBe(abc);
+    expect(sha256(Buffer.from('abc'))).toBe(abc);
+  });
+  it('a content hash is the digest of the stable text', () => {
+    expect(contentHash({ b: 2, a: 1 })).toBe(createHash('sha256').update('{"a":1,"b":2}').digest('hex'));
+    expect(contentHash({ a: 1 })).not.toBe(contentHash({ a: 2 }));
+  });
+});
+
+describe('gate identity and proofs, stated rule by rule', () => {
+  const digest = (s: string) => createHash('sha256').update(s).digest('hex');
+  it("a gate's hash is its id, purpose, definition, check and each planted defect, one per line", () => {
+    const bare = { id: 'g', protects: 'p', definition: 'd' };
+    expect(gateHash(bare)).toBe(digest('g\np\nd\n'));
+    const check = () => pass('g');
+    const plant = () => 'x';
+    const full = { ...bare, check, falsification: [{ name: 'one', plant }, { name: 'two', plant }] };
+    expect(gateHash(full)).toBe(digest(['g', 'p', 'd', String(check), `one\n${String(plant)}`, `two\n${String(plant)}`].join('\n')));
+  });
+  it('a proof names the gate, its hash, and each planted case with its status and reason', async () => {
+    const before = Date.now();
+    const p = await proveGate(noTodo);
+    expect(p).toMatchObject({ gate: 'no-todo', gateHash: gateHash(noTodo as Gate<unknown>), valid: true });
+    expect(p.cases).toEqual([{ name: 'planted TODO', status: 'fail', reason: 'found TODO' }]);
+    expect(Date.parse(p.provenAt)).toBeGreaterThanOrEqual(before - 1000);
+  });
+  it('a planted defect that throws, in the plant or the check, is unknown with the error stated, and the gate is not proven', async () => {
+    const throwsInCheck: Gate<string> = { ...noTodo, check: () => { throw new Error('boom'); } };
+    const p = await proveGate(throwsInCheck);
+    expect(p.cases).toEqual([{ name: 'planted TODO', status: 'unknown', reason: 'check threw on planted defect: boom' }]);
+    expect(p.valid).toBe(false);
+    const throwsInPlant: Gate<string> = { ...noTodo, falsification: [{ name: 'bad plant', plant: () => { throw new Error('no subject'); } }] };
+    expect((await proveGate(throwsInPlant)).cases[0]).toEqual({ name: 'bad plant', status: 'unknown', reason: 'check threw on planted defect: no subject' });
+  });
+  it('one caught case does not prove a gate whose other case slips through', async () => {
+    const half: Gate<string> = { ...noTodo, falsification: [...noTodo.falsification, { name: 'no marker', plant: () => 'clean' }] };
+    const p = await proveGate(half);
+    expect(p.cases.map((c) => c.status)).toEqual(['fail', 'pass']);
+    expect(p.valid).toBe(false);
+    const both: Gate<string> = { ...noTodo, falsification: [...noTodo.falsification, { name: 'second', plant: () => 'TODO again' }] };
+    expect((await proveGate(both)).valid).toBe(true);
+  });
+  it('an unproven, expired or failed proof each give their own verdict, word for word', async () => {
+    expect(await runProvenGate(noTodo, 'clean', undefined)).toMatchObject({ gate: 'no-todo', status: 'unknown', reason: 'gate has no falsification proof' });
+    const p = await proveGate(noTodo);
+    const changed = { ...noTodo, protects: 'something else' };
+    expect(await runProvenGate(changed, 'clean', p)).toMatchObject({ gate: 'no-todo', status: 'unknown', reason: 'falsification proof expired: gate changed since it was proven' });
+    const failed = { ...p, valid: false };
+    const v = await runProvenGate(noTodo, 'clean', failed);
+    expect(v).toMatchObject({ gate: 'no-todo', status: 'fail', reason: 'gate failed its own falsification proof' });
+    expect(v.evidence).toBe(failed);
+  });
+  it("a proven gate gives its own check's verdict, and a check that throws is unknown with the error stated", async () => {
+    const p = await proveGate(noTodo);
+    expect(await runProvenGate(noTodo, 'a TODO', p)).toMatchObject({ gate: 'no-todo', status: 'fail', reason: 'found TODO' });
+    const flaky: Gate<string> = { ...noTodo, check: (s) => { if (s === 'live') throw new Error('timeout'); return fail('no-todo', 'x'); } };
+    const fp = await proveGate(flaky);
+    expect(fp.valid).toBe(true);
+    expect(await runProvenGate(flaky, 'live', fp)).toMatchObject({ gate: 'no-todo', status: 'unknown', reason: 'gate check threw: timeout' });
   });
 });
