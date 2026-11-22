@@ -65,12 +65,19 @@ export function title(raw: string) {
   const s = raw.replace(/\s+/g, ' ').trim();
   // A name already in mixed case is kept as written; one in capitals is put in title case.
   if (/[a-z]/.test(s)) return s;
-  return s
+  const t = s
     .toLowerCase()
     .replace(/\b([a-z])/g, (m) => m.toUpperCase())
-    .replace(/\b(Of|And|For|The|In|At)\b/g, (m) => m.toLowerCase())
-    .replace(/^./, (m) => m.toUpperCase())
-    .replace(/\b(Ii|Iii|Iv|Vi|Vii)\b/g, (m) => m.toUpperCase());
+    .replace(/\b(Of|And|For|The|In|At)\b/g, (m) => m.toLowerCase());
+  // The first word keeps its capital, even when it is one of the small words above.
+  return `${t.charAt(0).toUpperCase()}${t.slice(1)}`.replace(/\b(Ii|Iii|Iv|Vi|Vii)\b/g, (m) => m.toUpperCase());
+}
+/**
+ * Whether a field that may be missing matches. A missing field is read as the word "undefined", which none of the
+ * patterns this file tests can match, so it matches nothing.
+ */
+function matches(re: RegExp, field: unknown) {
+  return re.test(String(field));
 }
 export function url(u: unknown) {
   // A host, then a path with no spaces; "N/A", "none" or "in progress" is not a link.
@@ -207,18 +214,19 @@ export function fromFindTreatment(rows: FtRow[], area: Area): Found {
       continue;
     }
     const phone = phoneOf(r.intake1) ?? phoneOf(r.phone);
-    const svc = (label: RegExp) => (r.services ?? []).filter((s) => label.test(s.f1 ?? '')).map((s) => s.f3 ?? '').join('; ');
-    const care = svc(/type of care/i);
-    const pay = svc(/payment|insurance|funding/i);
-    const mh = /mental health/i.test(care) || r.type_facility === 'MH';
-    const sa = /substance use|detox|opioid|buprenorphine|methadone/i.test(care) || /SA|BUPREN|OTP/.test(r.type_facility ?? '');
+    // Whether a service under this label says this; a label or text that is missing says nothing.
+    const says = (label: RegExp, what: RegExp) => !!r.services?.some((s) => matches(label, s.f1) && matches(what, s.f3));
+    const care = /type of care/i;
+    const slidingFee = says(/payment|insurance|funding/i, /sliding fee/i);
+    const mh = says(care, /mental health/i) || r.type_facility === 'MH';
+    const sa = says(care, /substance use|detox|opioid|buprenorphine|methadone/i) || matches(/SA|BUPREN|OTP/, r.type_facility);
     const what = mh && sa ? 'mental health and substance use' : mh ? 'mental health' : 'substance use';
     entries.push({
       id: `ft-${slug(name)}-${zip5(r.zip)}`,
       name,
       organization: title(undba(String(r.name1 || name))),
       categories: ['mental-health'],
-      description: `Treatment for ${what}.${/sliding fee/i.test(pay) ? ' It charges less if you earn less.' : ''}`,
+      description: `Treatment for ${what}.${slidingFee ? ' It charges less if you earn less.' : ''}`,
       serves: { counties: [county] },
       location: { address: [r.street1, r.street2].filter(Boolean).join(', '), city: title(String(r.city ?? '')), zip: zip5(r.zip) },
       ...(phone ? { phone } : {}),
@@ -227,7 +235,7 @@ export function fromFindTreatment(rows: FtRow[], area: Area): Found {
       howToApply: [`Call${phone ? ` ${phone}` : ''} to ask for a first visit.`, 'Ask if they take your insurance or charge less if you earn less.'],
       documents: [],
       prefill: [],
-      ...(/sliding fee/i.test(pay) ? { cost: 'sliding-scale' as const } : {}),
+      ...(slidingFee ? { cost: 'sliding-scale' as const } : {}),
       source: { url: FINDTREATMENT_PAGE, license: 'public-information' },
       verifiedOn: area.today,
       freshnessDays: FRESH_DAYS,
@@ -252,18 +260,17 @@ export function fromHrsa(rows: Record<string, string>[], area: Area): Found {
     if (r['Site State Abbreviation'] !== area.state) continue;
     const county = countyOf(area, r['Site Postal Code']);
     if (!county) continue;
-    if (!/^\s*active\s*$/i.test(r['Site Status Description'] ?? '')) {
+    if (!matches(/^\s*active\s*$/i, r['Site Status Description'])) {
       skipped.push({ source: HRSA_PAGE, name, why: `status ${r['Site Status Description'] || 'unknown'}` });
       continue;
     }
-    const setting = r['Health Center Service Delivery Site Location Setting Description'] ?? '';
-    if (/school/i.test(setting)) {
+    if (matches(/school/i, r['Health Center Service Delivery Site Location Setting Description'])) {
       skipped.push({ source: HRSA_PAGE, name, why: 'a school-based site, for that school\'s students' });
       continue;
     }
     const phone = phoneOf(r['Site Telephone Number']);
     const org = title(r['Health Center Name'] || r['Health Center Organization Name'] || name);
-    const look = /look-?alike/i.test(r['Health Center Type'] ?? '');
+    const look = matches(/look-?alike/i, r['Health Center Type']);
     entries.push({
       id: `hrsa-${slug(name)}-${zip5(r['Site Postal Code'])}`,
       name,
@@ -430,7 +437,8 @@ export function fromHudMultifamily(features: { attributes: Record<string, unknow
       skipped.push({ source: HUD_MF_PAGE, name, why: 'its registered name uses an outdated term for disability; a person decides how to list it' });
       continue;
     }
-    const group = String(a.CLIENT_GROUP_NAME ?? '');
+    // A missing group reads as "undefined", which names no group below.
+    const group = String(a.CLIENT_GROUP_NAME);
     const elderly = /elderly/i.test(group) && !/family/i.test(group);
     const disabled = /disab/i.test(group) && !/family|elderly/i.test(group);
     const units = Number(a.TOTAL_ASSISTED_UNIT_COUNT ?? 0);
@@ -473,7 +481,7 @@ export function fromLibraries(rows: Record<string, string>[], area: Area): Found
     const county = countyOf(area, r.ZIP);
     if (!county) continue;
     const name = title(r.LIBNAME ?? '');
-    if (/BS|BM/.test(r.C_OUT_TY ?? '')) {
+    if (matches(/BS|BM/, r.C_OUT_TY)) {
       skipped.push({ source: IMLS_PAGE, name, why: 'a bookmobile, with no fixed place' });
       continue;
     }
@@ -531,7 +539,8 @@ export function leadsFromIrs(rows: Record<string, string>[], area: Area): Lead[]
   for (const r of rows) {
     const county = countyOf(area, r.ZIP);
     if (!county || r.STATE !== area.state) continue;
-    const ntee = (r.NTEE_CD ?? '').trim().toUpperCase();
+    // A missing code reads as "UNDEFINED", which starts no major group below, so the row is not a lead.
+    const ntee = String(r.NTEE_CD).trim().toUpperCase();
     const barrier = NTEE_BARRIER.find(([re]) => re.test(ntee))?.[1];
     if (!barrier) continue;
     out.push({ ein: r.EIN!, name: title(r.NAME ?? ''), address: title(r.STREET ?? ''), city: title(r.CITY ?? ''), zip: zip5(r.ZIP), county, ntee, barrier, source: IRS_EO(area.state) });

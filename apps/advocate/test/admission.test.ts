@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { DAYTON_CATALOG } from '../src/catalog/dayton.js';
 import type { Resource } from '../src/catalog/types.js';
 import type { NeedCategory } from '../src/domain/types.js';
+import { readingGrade } from '../src/domain/tone.js';
 import { admit, admitAll } from '../src/guide/admission.js';
 
 const OWNERS = new Set(DAYTON_CATALOG.map((r) => r.id));
@@ -168,5 +169,54 @@ describe('admission: each gate at its edge', () => {
       ['daybreak', true, []],
       ['bad-one', false, ['freshness declared', 'phone is a phone number']],
     ]);
+  });
+});
+
+/**
+ * The reading-grade limits, each at the limit and just past it. Grades are seldom whole numbers, so each text is built
+ * to land on one: Flesch-Kincaid is 0.39 x words per sentence + 11.8 x syllables per word - 15.59, worked by hand from
+ * the counts below ("go" has one syllable, "water" two, "banana" three). 13 sentences of 33 words and 66 syllables is grade 9; 26
+ * sentences of 236 words is grade 8 at 401 syllables and grade 10 at 441. One syllable more is just past each.
+ */
+describe('admission: reading grades at their limits', () => {
+  const graded = (sentences: number, words: number, syllables: number) => {
+    // Two syllables a word, then a "go" for each syllable fewer or a "banana" for each one more.
+    const odd = syllables - 2 * words;
+    const all = Array.from({ length: words }, (_, i) => (i < Math.abs(odd) ? (odd < 0 ? 'go' : 'banana') : 'water'));
+    const out: string[][] = Array.from({ length: sentences }, () => []);
+    all.forEach((w, i) => out[i % sentences]!.push(w));
+    return out.map((s) => `${s[0]!.charAt(0).toUpperCase()}${s[0]!.slice(1)} ${s.slice(1).join(' ')}.`).join(' ');
+  };
+  const grade8 = graded(26, 236, 401);
+  const past8 = graded(26, 236, 402);
+  const grade9 = graded(13, 33, 66);
+  const past9 = graded(13, 33, 67);
+  const grade10 = graded(26, 236, 441);
+  const past10 = graded(26, 236, 442);
+
+  it('the texts land where the counts put them', () => {
+    expect([grade8, grade9, grade10].map(readingGrade)).toEqual([8, 9, 10]);
+    // One syllable more adds 11.8 / words to the grade.
+    expect(readingGrade(past8)).toBeCloseTo(8 + 11.8 / 236, 9);
+    expect(readingGrade(past9)).toBeCloseTo(9 + 11.8 / 33, 9);
+    expect(readingGrade(past10)).toBeCloseTo(10 + 11.8 / 236, 9);
+  });
+
+  it('eligibility: grade 10 is plain, just past it is not', () => {
+    expect(failed({ eligibility: { text: grade10 } })).toEqual([]);
+    expect(failed({ eligibility: { text: past10 } })).toEqual(['eligibility in plain words']);
+    expect(detail({ eligibility: { text: grade10 } }, 'eligibility in plain words')).toBe('grade 10.0');
+  });
+
+  it('description: grade 9 is plain, just past it is not', () => {
+    expect(failed({ description: grade9 })).toEqual([]);
+    expect(failed({ description: past9 })).toEqual(['description reads plainly']);
+    expect(detail({ description: grade9 }, 'description reads plainly')).toBe('grade 9.0');
+  });
+
+  it('steps: grade 8 is plain, just past it is not', () => {
+    expect(failed({ howToApply: [plain, grade8] })).toEqual([]);
+    expect(failed({ howToApply: [plain, past8] })).toEqual(['every step reads plainly']);
+    expect(detail({ howToApply: [plain, grade8] }, 'every step reads plainly')).toBe('1.3, 8.0');
   });
 });

@@ -1,6 +1,6 @@
 // Verifies docs/blocks/runtime.md
 // Verifies docs/flows/drafts-and-approval.md
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { randomBytes } from 'node:crypto';
 import {
   ApprovalService, ConsentLedger, OutboundGate, SealedStore, crisisReply, decideContact, inQuietHours,
@@ -381,5 +381,70 @@ describe('sealed facts, rule by rule', () => {
     copy.grant('s2', 'income', 'b');
     expect(copy.open('s2', 'income', 'b', 'p')).toBe('12000');
     expect(store.raw('s2')!.grants).toEqual({});
+  });
+});
+
+// The safety patterns and the sealed store's cipher are made once, as each module loads. These tests load the module
+// afresh, so what they check is what the module makes as it loads, not a copy another test file already holds.
+describe('the safety router as it loads', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+  // Each phrase routes to its own category and no other, with single spaces and with every space doubled, since the
+  // patterns allow any run of spaces between words.
+  const routes = async (category: string, phrases: string[]) => {
+    const S = await import('../src/safety.js');
+    for (const p of phrases) {
+      for (const text of [p, p.replace(/ /g, '  ')]) expect([text, S.screen(text).categories]).toEqual([text, [category]]);
+    }
+  };
+
+  it('a medical emergency: cannot breathe, with or without the apostrophe, and chest pain', async () => {
+    await routes('medical-emergency', ["I can't breathe", 'I cant breathe', 'I cannot breathe', 'I have chest pain', 'he had a seizure', 'she is unconscious']);
+  });
+
+  it('abuse: in Spanish, by a partner, and the word abuse with me or my anywhere after it', async () => {
+    await routes('abuse', [
+      'mi novio me pega',
+      'mi esposo me golpea',
+      'mi pareja me maltrata',
+      'my boyfriend hits me',
+      'my partner choked me',
+      'they beat me',
+      'the abuse at home scares me',
+      'abusive words from my ex',
+    ]);
+  });
+
+  it('danger from others: a threat in Spanish, not being safe, and fear of being hurt', async () => {
+    await routes('danger-from-others', [
+      'mi ex me quiere matar',
+      'I am not safe at home',
+      'I am not safe here',
+      'I am not safe right now',
+      "I'm afraid he'll hurt me",
+      'scared they will kill me',
+      'afraid she will hurt me',
+    ]);
+  });
+
+  it('a message with none of these routes nowhere', async () => {
+    const S = await import('../src/safety.js');
+    expect(S.screen('I need help with my rent')).toEqual({ crisis: false, categories: [] });
+  });
+});
+
+describe('the sealed store as it loads', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('a sealed fact opens to what was sealed, under the cipher the module makes', async () => {
+    const { SealedStore: Store } = await import('../src/sealed.js');
+    const { ConsentLedger: Ledger } = await import('../src/ledger.js');
+    const store = new Store(randomBytes(32), new Ledger());
+    store.seal('s1', 'veteran_status', 'yes');
+    store.grant('s1', 'veteran_status', 'playbook:gi-bill');
+    expect(store.open('s1', 'veteran_status', 'playbook:gi-bill', 'certify')).toBe('yes');
   });
 });

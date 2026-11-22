@@ -1,5 +1,5 @@
 // Verifies docs/flows/money.md
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { heap, lifeline, screenAll, sinclairEmergencyGrant, snap } from '../src/eligibility/engine.js';
 import type { Student } from '../src/domain/types.js';
 import { makeAdvocate, maria, TODAY } from './helpers.js';
@@ -280,5 +280,21 @@ describe('screening every program', () => {
     const s = maria(makeAdvocate());
     expect(screenAll(s, TODAY)).toEqual([snap(s, TODAY), lifeline(s, TODAY), heap(s, TODAY), sinclairEmergencyGrant(s)]);
     expect(screenAll(s, TODAY).map((r) => r.program)).toEqual(['snap', 'lifeline', 'ohio-heap', 'sinclair-emergency-grant']);
+  });
+});
+
+// The status note is made once, as the engine loads. This loads the engine afresh, so what it checks is the note the
+// engine makes, not one another test already holds.
+describe('the eligibility engine as it loads', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('SNAP and HEAP carry the status note word for word; it says the agency explains and the family decides', async () => {
+    const E = await import('../src/eligibility/engine.js');
+    const s = maria(makeAdvocate());
+    const NOTE = 'Some programs have citizenship or immigration rules. We never ask about that. The agency explains its rules, and you and your family decide whether to apply.';
+    expect(E.snap(s, TODAY).statusRuleNote).toBe(NOTE);
+    expect(E.heap(s, TODAY).statusRuleNote).toBe(NOTE);
   });
 });

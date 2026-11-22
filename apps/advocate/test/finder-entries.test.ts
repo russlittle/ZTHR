@@ -263,6 +263,11 @@ describe('one place or two, at the edges', () => {
     const skipped: F.Found['skipped'] = [];
     expect(F.dedupe([e('a', '937-555-0100', '1200 Main St'), e('b', '937-555-0100', '12 Main St'), e('c', '937-555-0100', 'Main St 12')], skipped).map((x: { id: string }) => x.id)).toEqual(['a', 'b', 'c']);
     expect(F.dedupe([e('a', '937-555-0100'), e('b', '937-555-0100')], []).map((x: { id: string }) => x.id)).toEqual(['a']);
+    // With no street number, names are compared in lower case, letter for letter: "SAME" and "Same" are one place, but
+    // "STRASSE" and "Straße", which meet only in capitals, are two.
+    const named = (id: string, name: string) => ({ id, name, phone: '937-555-0100', source: { url: 'https://s.gov' } }) as never;
+    expect(F.dedupe([named('a', 'Same'), named('b', 'SAME')], []).map((x: { id: string }) => x.id)).toEqual(['a']);
+    expect(F.dedupe([named('a', 'STRASSE'), named('b', 'Straße')], []).map((x: { id: string }) => x.id)).toEqual(['a', 'b']);
     expect(F.samePlace({ name: 'X', phone: '937-555-0100', location: { address: '1200 Main', city: 'D', zip: '1' } }, { name: 'X', phone: '937-555-0100', location: { address: '12 Main', city: 'D', zip: '1' } })).toBe(false);
     expect(F.nameSites([{ name: 'Same' } as never, { name: 'Same' } as never]).map((x: { name: string }) => x.name)).toEqual(['Same', 'Same']);
     expect(F.nameSites([{ name: 'Same', location: { address: '', city: 'Dayton', zip: '1' } } as never, { name: 'Same', location: { address: '', city: 'Dayton', zip: '1' } } as never]).map((x: { name: string }) => x.name)).toEqual(['Same (Dayton)', 'Same (Dayton)']);
@@ -317,10 +322,34 @@ describe('pass 4: the survivors that were not equivalent', () => {
   it('an IRS lead in the state but outside the area, or in the area under another state, is not a lead', () => {
     const lead = { EIN: '1', NAME: 'HOPE PANTRY', STATE: 'OH', ZIP: '45402', NTEE_CD: 'K31' };
     expect(F.leadsFromIrs([{ ...lead, ZIP: '45005' }, { ...lead, STATE: 'KY' }], area)).toEqual([]);
+    // A record with no NTEE code at all is in no major group, so it is not a lead.
+    const { NTEE_CD: _code, ...uncoded } = lead;
+    expect(F.leadsFromIrs([uncoded], area)).toEqual([]);
   });
   it('a FindTreatment service with no label or text is read as empty', () => {
     const e = F.fromFindTreatment([{ name2: 'C', state: 'OH', zip: '45402', type_facility: 'MH', services: [{}, { f1: 'Payment/Insurance/Funding Accepted' }] } as never], area).entries[0]!;
     expect([e.description, 'cost' in e]).toEqual(['Treatment for mental health.', false]);
+  });
+  it('a FindTreatment record with no services at all is judged by its facility type alone', () => {
+    const e = (type_facility?: string) => F.fromFindTreatment([{ name2: 'C', state: 'OH', zip: '45402', ...(type_facility ? { type_facility } : {}) } as never], area).entries[0]!;
+    expect([e('MH').description, 'cost' in e('MH')]).toEqual(['Treatment for mental health.', false]);
+    expect(e('SA').description).toBe('Treatment for substance use.');
+    expect(e().description).toBe('Treatment for substance use.');
+  });
+  it('a FindTreatment service counts only under its own label, and any one of them is enough', () => {
+    const e = (services: { f1?: string; f3?: string }[]) => F.fromFindTreatment([{ name2: 'C', state: 'OH', zip: '45402', type_facility: 'X', services } as never], area).entries[0]!;
+    // Care named under the payment label is not care; a sliding fee named under the care label is not a fee.
+    expect(e([{ f1: 'Payment/Insurance/Funding Accepted', f3: 'Mental health treatment' }]).description).toBe('Treatment for substance use.');
+    expect('cost' in e([{ f1: 'Type of Care', f3: 'Sliding fee scale' }])).toBe(false);
+    // One care service of several is enough, and so is one payment service of several.
+    const both = e([
+      { f1: 'Type of Care', f3: 'Outpatient' },
+      { f1: 'Type of Care', f3: 'Mental health treatment' },
+      { f1: 'Type of Care', f3: 'Detox' },
+      { f1: 'Payment/Insurance/Funding Accepted', f3: 'Medicaid' },
+      { f1: 'Payment/Insurance/Funding Accepted', f3: 'Sliding fee scale' },
+    ]);
+    expect([both.description, both.cost]).toEqual(['Treatment for mental health and substance use. It charges less if you earn less.', 'sliding-scale']);
   });
 });
 
