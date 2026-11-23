@@ -26,7 +26,8 @@ const PATTERNS: Record<CrisisCategory, RegExp[]> = {
     /\bunaliv(e|ing)\b/i,
     /\b(disappear|vanish)\s+(forever|for\s+good)\b/i,
     /\b(no\s?one|nobody)\s+would\s+(care|notice|miss\s+me)\b.*\b(gone|dead|died|disappeared)\b/i,
-    /\b(plan|planning)\s+to\s+(end\s+my\s+life|kill\s+myself)\b/i,
+    // A plan to end my life or kill myself is routed by the ending and killing patterns above, which hold every phrase
+    // a separate plan pattern would.
     // Spanish: the same words students use, routed the same way.
     /\b(me\s+quiero\s+matar|quiero\s+morir(me)?|matarme|suicid(arme|io)|quitarme\s+la\s+vida|no\s+quiero\s+vivir)\b/i,
   ],

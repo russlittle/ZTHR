@@ -428,6 +428,47 @@ describe('the safety router as it loads', () => {
     ]);
   });
 
+  it('self-harm: hurting myself, with or without a space before self', async () => {
+    await routes('self-harm', ['I keep hurting myself', 'I want to hurt my self']);
+  });
+
+  it('self-harm: ending my life or ending it all, with or without -ing', async () => {
+    await routes('self-harm', ['I want to end my life', 'I am thinking of ending it all']);
+  });
+
+  it('self-harm: wanting to die, said either way', async () => {
+    await routes('self-harm', ['I want to die', 'I wanna die']);
+  });
+
+  it("self-harm: not wanting to be alive, to live or to wake up", async () => {
+    await routes('self-harm', ["I don't want to be alive", 'I dont want to live', "I don't want to wake up"]);
+  });
+
+  it('self-harm: no reason to live, better off dead or without me, too many pills or tablets', async () => {
+    await routes('self-harm', ['there is no reason to live', 'I would be better off dead', 'they are better off without me', 'I took too many pills', 'I swallowed too many tablets']);
+  });
+
+  it('self-harm: disappearing or vanishing forever or for good', async () => {
+    await routes('self-harm', ['I want to disappear for good', 'I just want to vanish forever']);
+  });
+
+  it('self-harm: nobody would care, notice or miss me, with words between that and being gone', async () => {
+    await routes('self-harm', ['nobody would care if I was gone', 'nobody would miss me if I died']);
+    // "no one" allows one space or none, so these are checked as written, not with the spaces doubled.
+    const S = await import('../src/safety.js');
+    for (const text of ['no one would notice if I disappeared', 'noone would miss me when I am dead']) {
+      expect([text, S.screen(text).categories]).toEqual([text, ['self-harm']]);
+    }
+  });
+
+  it('a plan to end my life or kill myself routes as self-harm', async () => {
+    await routes('self-harm', ['I have a plan to end my life', 'I am planning to kill myself']);
+  });
+
+  it('danger from others: someone following me', async () => {
+    await routes('danger-from-others', ['I think someone is following me']);
+  });
+
   it('a message with none of these routes nowhere', async () => {
     const S = await import('../src/safety.js');
     expect(S.screen('I need help with my rent')).toEqual({ crisis: false, categories: [] });

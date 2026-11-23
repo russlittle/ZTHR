@@ -29,5 +29,5 @@ The app's own business rules.
 
 <!-- verified-by:start -->
 - [`packages/runtime/test/hardening.test.ts`](../../packages/runtime/test/hardening.test.ts) (4 test definitions)
-- [`packages/runtime/test/runtime.test.ts`](../../packages/runtime/test/runtime.test.ts) (55 test definitions)
+- [`packages/runtime/test/runtime.test.ts`](../../packages/runtime/test/runtime.test.ts) (64 test definitions)
 <!-- verified-by:end -->
