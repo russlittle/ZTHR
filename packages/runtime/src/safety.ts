@@ -33,7 +33,9 @@ const PATTERNS: Record<CrisisCategory, RegExp[]> = {
   ],
   'danger-from-others': [
     /\b(he|she|they|someone)\s+(is\s+)?(threaten(ing|ed)?|going\s+to\s+(hurt|kill))\s+(me|to)\b/i,
-    /\b(he|she|they)('s|'re|\s+is|\s+are)\s+(threaten(ing|ed)?\s+to\s+(kill|hurt)|going\s+to\s+(kill|hurt))\s+me\b/i,
+    // "He is threatening to" and "he is going to hurt" are routed by the pattern above, so this one holds the
+    // contractions and "are" alone.
+    /\b(he|she|they)('s|'re|\s+are)\s+(threaten(ing|ed)?\s+to\s+(kill|hurt)|going\s+to\s+(kill|hurt))\s+me\b/i,
     /\bme\s+quiere\s+matar\b/i,
     /\bnot\s+safe\s+(at\s+home|here|right\s+now)\b/i,
     /\b(afraid|scared)\s+(he|she|they)('ll|\s+will)\s+(hurt|kill)\b/i,

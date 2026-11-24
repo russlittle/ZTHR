@@ -2,6 +2,9 @@
 // Verifies docs/flows/drafts-and-approval.md
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { randomBytes } from 'node:crypto';
+import { existsSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   ApprovalService, ConsentLedger, OutboundGate, SealedStore, crisisReply, decideContact, inQuietHours,
   mergeSecondCheck, refuseToStartUnless, sandwich, screen, type OutboundAction,
@@ -259,6 +262,17 @@ describe('the consent ledger, entry by entry', () => {
     expect(second).toMatchObject({ seq: 2, kind: 'revoke', detail: {}, prevHash: first.hash });
     expect(first.hash).toMatch(/^[0-9a-f]{64}$/);
   });
+  it('a ledger made without a path is held in memory, and one made with a path is written to that file', () => {
+    // SQLite keeps an in-memory database's journal in memory; a database on disk journals to a file beside it.
+    const journal = (l: ConsentLedger) => (l.db.prepare('PRAGMA journal_mode').get() as { journal_mode: string }).journal_mode;
+    expect(journal(new ConsentLedger())).toBe('memory');
+    const path = join(mkdtempSync(join(tmpdir(), 'ledger-')), 'consent.db');
+    const onDisk = new ConsentLedger(path);
+    onDisk.append('s1', 'grant', 'calendar');
+    expect(journal(onDisk)).toBe('delete');
+    expect(existsSync(path)).toBe(true);
+    onDisk.db.close();
+  });
   it('a copy holds every row, hashes and all, and its chain still verifies and continues', () => {
     const l = new ConsentLedger();
     l.append('s1', 'grant', 'calendar');
@@ -467,6 +481,46 @@ describe('the safety router as it loads', () => {
 
   it('danger from others: someone following me', async () => {
     await routes('danger-from-others', ['I think someone is following me']);
+  });
+
+  it('self-harm in Spanish: wanting to kill myself or to die, taking my life, suicide, not wanting to live', async () => {
+    await routes('self-harm', [
+      'me quiero matar',
+      'quiero morir',
+      'quiero morirme',
+      'voy a matarme',
+      'quiero suicidarme',
+      'pienso en el suicidio',
+      'quiero quitarme la vida',
+      'no quiero vivir',
+    ]);
+  });
+
+  it('danger from others: he, she, they or someone threatening me or threatening to, with or without "is"', async () => {
+    await routes('danger-from-others', [
+      'he threatened me',
+      'she is threatening me',
+      'they threaten me',
+      'someone is threatening me',
+      'he threatened to take my kids',
+      'she is threatening to call my boss',
+    ]);
+  });
+
+  it('danger from others: someone is going to hurt or kill me', async () => {
+    await routes('danger-from-others', ['someone is going to hurt me', 'he is going to kill me', 'she is going to hurt me', 'they going to kill me']);
+  });
+
+  it("danger from others: he's, she's, they're or they are threatening, threatened or going to kill or hurt me", async () => {
+    await routes('danger-from-others', [
+      "he's threatening to kill me",
+      "she's threatened to hurt me",
+      "they're threaten to kill me",
+      'they are threatening to hurt me',
+      "he's going to kill me",
+      "they're going to hurt me",
+      'they are going to kill me',
+    ]);
   });
 
   it('a message with none of these routes nowhere', async () => {
