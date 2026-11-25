@@ -19,9 +19,14 @@ export interface Seat {
 
 export interface ReviewInput {
   diff: string;
+  /** What the change must preserve: the locked datum, never the author's account of the change. */
   intent: string;
+  /** The author's description of the change: a claim for the context-aided seat to test, never evidence. */
+  claim?: string;
   context?: string;
   repoFiles?: Record<string, string>;
+  /** Parts of the change the seats were not shown. Any entry makes every seat unknown (Pattern 9). */
+  omitted?: string[];
 }
 
 export interface Finding {
@@ -39,7 +44,7 @@ const SYSTEM =
 export function promptFor(role: SeatRole, input: ReviewInput): string {
   switch (role) {
     case 'context-aided':
-      return `Intent:\n${input.intent}\n\nContext:\n${input.context ?? '(none)'}\n\nDiff:\n${input.diff}`;
+      return `Intent:\n${input.intent}\n\nContext:\n${input.context ?? '(none)'}\n\n${input.claim === undefined ? '' : `The author's description of the change, a claim to test, not evidence:\n${input.claim}\n\n`}Diff:\n${input.diff}`;
     case 'unaided':
       return `Diff:\n${input.diff}`;
     case 'independent':
@@ -73,6 +78,8 @@ export function parseReview(text: string): { verdict: 'pass' | 'fail'; findings:
 
 export async function reviewSeat(seat: Seat, input: ReviewInput): Promise<{ verdict: Verdict; findings: Finding[] }> {
   const gate = `review:${seat.role}:${seat.family}`;
+  // A reviewer that saw part of a change has approved nothing about the rest.
+  if (input.omitted?.length) return { verdict: unknown(gate, `saw only part of the change; not shown: ${input.omitted.join('; ')}`), findings: [] };
   try {
     const r = await seat.client.complete({
       model: seat.model,
@@ -101,4 +108,35 @@ export async function reviewPanel(seats: Seat[], input: ReviewInput): Promise<{ 
   if (families.size < 3) return { verdict: fail('review-panel', `only ${families.size} model families before commit; three are required`), findings: [] };
   const results = await Promise.all(pre.map((s) => reviewSeat(s, input)));
   return { verdict: combine('review-panel', results.map((r) => r.verdict)), findings: results.flatMap((r) => r.findings) };
+}
+
+/** The locked journeys as the intent every seat reviews against: each goal, and what must never happen. */
+export function datumIntent(cards: { id: string; goal: string; forbidden?: string[] }[]): string {
+  return cards
+    .map((c) => `${c.id}: ${c.goal}${c.forbidden?.length ? `\n  Never: ${c.forbidden.join('; ')}` : ''}`)
+    .join('\n');
+}
+
+export interface Limits {
+  diffChars: number;
+  fileChars: number;
+  files: number;
+}
+
+/**
+ * Fit a change to what a seat can be shown, saying exactly what was left out. Nothing is cut silently: anything
+ * omitted is named, and an omission makes every seat unknown, so a change too large to review must be split.
+ */
+export function boundInput(diff: string, files: Record<string, string>, limits: Limits): { diff: string; repoFiles: Record<string, string>; omitted: string[] } {
+  const omitted: string[] = [];
+  if (diff.length > limits.diffChars) omitted.push(`the diff past ${limits.diffChars} of ${diff.length} characters`);
+  const names = Object.keys(files);
+  if (names.length > limits.files) omitted.push(`${names.length - limits.files} of ${names.length} changed files`);
+  const repoFiles: Record<string, string> = {};
+  for (const n of names.slice(0, limits.files)) {
+    const c = files[n]!;
+    if (c.length > limits.fileChars) omitted.push(`${n} past ${limits.fileChars} of ${c.length} characters`);
+    repoFiles[n] = c.slice(0, limits.fileChars);
+  }
+  return { diff: diff.slice(0, limits.diffChars), repoFiles, omitted };
 }
