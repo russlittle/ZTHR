@@ -1,6 +1,6 @@
 // Verifies docs/blocks/gates.md
 // Verifies docs/testing/mutation.md
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   checkDatum, checkRatchet, checkRegister, combine, fail, gateHash, pass, proveGate, runProvenGate, unknown, verifyFloorChange,
   contentHash, isAccepted, sha256, stableStringify, type Gate,
@@ -278,5 +278,51 @@ describe('gate identity and proofs, stated rule by rule', () => {
     const fp = await proveGate(flaky);
     expect(fp.valid).toBe(true);
     expect(await runProvenGate(flaky, 'live', fp)).toMatchObject({ gate: 'no-todo', status: 'unknown', reason: 'gate check threw: timeout' });
+  });
+});
+
+// These tests import each module afresh, so what they check is what the module makes as it loads, not a copy another
+// test file already holds.
+describe('verdicts, hashes and gate identity as each module loads', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+  const iso = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+  it('a verdict holds its gate, status, reason, evidence and the time it was made', async () => {
+    const V = await import('../src/verdict.js');
+    const before = Date.now();
+    const v = V.verdict('g', 'fail', 'why', { n: 1 });
+    expect(v).toEqual({ gate: 'g', status: 'fail', reason: 'why', evidence: { n: 1 }, at: expect.stringMatching(iso) });
+    expect(Date.parse(v.at)).toBeGreaterThanOrEqual(before);
+  });
+
+  it('pass, fail and unknown each give their own status, pass with the reason "ok" unless one is given', async () => {
+    const V = await import('../src/verdict.js');
+    expect(V.pass('a')).toEqual({ gate: 'a', status: 'pass', reason: 'ok', evidence: undefined, at: expect.stringMatching(iso) });
+    expect(V.pass('a', 'fine', [1])).toMatchObject({ gate: 'a', status: 'pass', reason: 'fine', evidence: [1] });
+    expect(V.fail('b', 'broke', 'e')).toMatchObject({ gate: 'b', status: 'fail', reason: 'broke', evidence: 'e' });
+    expect(V.unknown('c', 'unsure')).toMatchObject({ gate: 'c', status: 'unknown', reason: 'unsure', evidence: undefined });
+  });
+
+  it('only an explicit pass admits', async () => {
+    const V = await import('../src/verdict.js');
+    expect(V.admits(V.pass('a'))).toBe(true);
+    expect(V.admits(V.fail('a', 'x'))).toBe(false);
+    expect(V.admits(V.unknown('a', 'x'))).toBe(false);
+  });
+
+  it('a content hash is the sha256 of the stable JSON, keys sorted', async () => {
+    const H = await import('../src/hash.js');
+    expect(H.contentHash({ b: 2, a: 1 })).toBe(createHash('sha256').update('{"a":1,"b":2}').digest('hex'));
+    expect(H.contentHash([2, 1])).toBe(createHash('sha256').update('[2,1]').digest('hex'));
+  });
+
+  it("a gate's hash is its id, purpose, definition and check, one per line", async () => {
+    const G = await import('../src/gate.js');
+    const digest = (s: string) => createHash('sha256').update(s).digest('hex');
+    expect(G.gateHash({ id: 'g', protects: 'p', definition: 'd' })).toBe(digest('g\np\nd\n'));
+    const check = () => null;
+    expect(G.gateHash({ id: 'g', protects: 'p', definition: 'd', check: check as never })).toBe(digest(`g\np\nd\n${String(check)}`));
   });
 });

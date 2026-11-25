@@ -26,7 +26,7 @@ explains them. Every limit is checked against the published table by the `snap-i
 ## Verified by
 
 <!-- verified-by:start -->
-- [`apps/advocate/test/domain.test.ts`](../../apps/advocate/test/domain.test.ts) (25 test definitions)
+- [`apps/advocate/test/domain.test.ts`](../../apps/advocate/test/domain.test.ts) (30 test definitions)
 - [`apps/advocate/test/eligibility.test.ts`](../../apps/advocate/test/eligibility.test.ts) (45 test definitions)
 - [`apps/advocate/test/plain-language.test.ts`](../../apps/advocate/test/plain-language.test.ts) (5 test definitions)
 <!-- verified-by:end -->

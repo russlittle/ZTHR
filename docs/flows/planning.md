@@ -23,6 +23,6 @@ no recovery note. Re-uploading a syllabus never duplicates a date.
 ## Verified by
 
 <!-- verified-by:start -->
-- [`apps/advocate/test/domain.test.ts`](../../apps/advocate/test/domain.test.ts) (25 test definitions)
+- [`apps/advocate/test/domain.test.ts`](../../apps/advocate/test/domain.test.ts) (30 test definitions)
 - [`apps/advocate/test/phase1-extras.test.ts`](../../apps/advocate/test/phase1-extras.test.ts) (8 test definitions)
 <!-- verified-by:end -->

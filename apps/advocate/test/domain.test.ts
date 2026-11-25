@@ -1,6 +1,6 @@
 // Verifies docs/flows/planning.md
 // Verifies docs/flows/money.md
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { classifyAiPolicy, parseSyllabus } from '../src/domain/syllabus.js';
 import { checkTone, readingGrade } from '../src/domain/tone.js';
 import { openBlocks, upcomingMessages } from '../src/domain/planner.js';
@@ -128,6 +128,71 @@ describe('tone rubric, stated rule by rule', () => {
     expect(r.problems[1]).toBe('reports without offering a next step');
     expect(r.problems[2]).toMatch(/^reads at grade -?\d+\.\d, above 2$/);
     expect(r.problems.slice(3)).toEqual([`${text.length} characters is too long for brief mode`, 'has a doubled period']);
+  });
+});
+
+// These tests import the rubric afresh, so what they check is the phrase list and the limits the module makes as it
+// loads, not a copy another test file already holds.
+describe('the tone rubric as it loads', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+  const step = [{ label: 'Hold it', action: 'x' }];
+  // A target this high leaves the grade out of it, so each phrase is the only problem the message has.
+  const problems = async (text: string, language: 'en' | 'es' = 'en') => {
+    const T = await import('../src/domain/tone.js');
+    return T.checkTone({ text, nextSteps: step, urgency: 'routine' }, 'standard', 99, language).problems;
+  };
+  const named = async (why: string, phrases: string[], language: 'en' | 'es' = 'en') => {
+    for (const text of phrases) expect([text, await problems(text, language)]).toEqual([text, [why]]);
+  };
+
+  it('English: late or behind, blame, second-guessing and interrogating are each named by what they do', async () => {
+    await named('tells the student they are late or behind', ["You're late.", 'You are behind.', 'You are falling behind.']);
+    await named('blames the student', ['You failed the quiz.', 'You forgot the form.', 'You missed class.', 'You neglected it.']);
+    await named('second-guesses the student', ['You should have asked.']);
+    await named('interrogates the student', ["Why didn't you call?", 'Why didnt you call?']);
+  });
+
+  it('English: alarm, scolding, compliance, bad-news, command, collections and judging words are each named', async () => {
+    await named('uses alarm language', ['This is a warning.']);
+    await named('uses scolding language for a passed date', ['The bill is overdue.']);
+    await named('uses compliance language', ['Failure to pay ends it.']);
+    await named('opens with bad-news framing', ['Unfortunately it closed.']);
+    await named('commands the student', ['You must sign it.']);
+    await named('uses collections language', ['The account is delinquent.']);
+    await named('judges the student', ['That was irresponsible.']);
+  });
+
+  it('Spanish: late, second-guessing, alarm and command words are each named, in either language mode', async () => {
+    for (const language of ['es', 'en'] as const) {
+      await named('tells the student they are late', ['Llegas tarde.', 'Estás atrasado.', 'Estás atrasada.'], language);
+      await named('second-guesses the student', ['Debiste llamar.', 'Deberías haber llamado.'], language);
+      await named('uses alarm language', ['Advertencia.', 'Está vencido.', 'Está vencida.'], language);
+      await named('commands the student', ['Tienes que firmar.', 'Debes firmar.'], language);
+    }
+  });
+
+  it('a kind message names nothing', async () => {
+    expect(await problems('Your essay is due Thursday. Want me to hold Tuesday?')).toEqual([]);
+  });
+
+  it('each depth admits its own length and grade slack, and names one past either', async () => {
+    const T = await import('../src/domain/tone.js');
+    const m = (text: string) => ({ text, nextSteps: step, urgency: 'routine' as const });
+    const at = (n: number) => 'Go. '.repeat(n / 4);
+    for (const [depth, max] of [['brief', 320], ['standard', 1200], ['walk-me-through', 2400]] as const) {
+      expect(T.checkTone(m(at(max)), depth, 8).problems).toEqual([]);
+      expect(T.checkTone(m(`${at(max)}x`), depth, 8).problems).toEqual([`${max + 1} characters is too long for ${depth} mode`]);
+    }
+    // Worked by hand: 3 words, 5 syllables each, 1 sentence: 0.39 * 3 + 11.8 * 5 - 15.59 = 44.58.
+    const dense = m('Administration documentation consideration.');
+    expect(T.checkTone(dense, 'brief', 43).problems).toEqual([]);
+    expect(T.checkTone(dense, 'brief', 42).problems).toEqual(['reads at grade 44.6, above 44']);
+    expect(T.checkTone(dense, 'standard', 43).problems).toEqual([]);
+    expect(T.checkTone(dense, 'standard', 42).problems).toEqual(['reads at grade 44.6, above 44']);
+    expect(T.checkTone(dense, 'walk-me-through', 45).problems).toEqual([]);
+    expect(T.checkTone(dense, 'walk-me-through', 44).problems).toEqual(['reads at grade 44.6, above 44']);
   });
 });
 
