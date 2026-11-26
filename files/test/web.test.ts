@@ -16,7 +16,7 @@ test('in a browser: sign in, make a folder, upload over WebDAV with the request 
     assert.equal(ok.status, 303);
     const cookie = ok.headers.get('set-cookie')!.split(';')[0]!;
     assert.match(ok.headers.get('set-cookie')!, /HttpOnly; Secure; SameSite=Lax/);
-    const as = (path: string, init: RequestInit & { headers?: Record<string, string> } = {}) => s.anon(path, { ...init, headers: { cookie, ...(init.headers ?? {}) } });
+    const as = (path: string, init: RequestInit & { headers?: Record<string, string> } = {}) => s.anon(path, { ...init, headers: { cookie, ...((init.headers ?? {}) as Record<string, string>) } });
     const list = await (await as('/apps/files')).text();
     const token = /name="requesttoken" value="([^"]+)"/.exec(list)![1]!;
     assert.match(list, /This folder is empty/);
