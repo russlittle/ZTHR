@@ -73,8 +73,10 @@ export function suggestJourneys(p: Prepared): Suggestion[] {
   if (texts) for (const g of base) add('by text', 'It contacts people, so the journey is walked from the message as well as the app.', [texts.balloon], { persona: g.persona, goal: `From the message alone: ${g.goal}`, channels: ['text'] }, g.id);
   // The experience is part of the intent: the same outcome in low vision mode, in another language, on a small phone.
   for (const g of base.slice(0, 2)) {
-    add('low vision', 'Low vision and high contrast are offered, so the outcome must be reachable with them on.', [], { persona: `${g.persona} with low vision`, goal: `With low vision mode and high contrast on: ${g.goal}` }, g.id);
-    add('another language', 'The whole app can switch language; the outcome must hold in it, not only in English.', [], { persona: `${g.persona} who reads Spanish`, goal: `With the app in Spanish: ${g.goal}` }, g.id);
+    const o = outcomes.find((x) => slug(x.text) === g.id);
+    const b = o ? [o.balloon] : [];
+    add('low vision', 'Low vision and high contrast are offered, so the outcome must be reachable with them on.', b, { persona: `${g.persona} with low vision`, goal: `With low vision mode and high contrast on: ${g.goal}` }, g.id);
+    add('another language', 'The whole app can switch language; the outcome must hold in it, not only in English.', b, { persona: `${g.persona} who reads Spanish`, goal: `With the app in Spanish: ${g.goal}` }, g.id);
   }
   const phone = st.find((s) => s.supplied.kind === 'lexicon' && s.supplied.term === 'on a phone');
   if (phone) for (const g of base) add('small phone', 'You said it should work on a phone: walked one-handed on a 320-pixel screen over a slow connection.', [phone.balloon], { persona: `${g.persona} on a small phone`, goal: `One-handed, on a small phone, on a slow connection: ${g.goal}` }, g.id);

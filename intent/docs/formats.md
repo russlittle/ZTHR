@@ -40,6 +40,8 @@ flowchart LR
 | `training/<feature>.md` and `training/cmi5.xml` | A lesson for every feature from its journeys and measures; the cmi5 course lists only what is published | Learning systems that read cmi5 and xAPI |
 | `admin/environments.json` | Which admin tools are built into which environment; the query console is left out of production by default | The factory's build and deploy steps |
 | `admin/query.md` | The views each feature answers to the query console, and the guards on every query | Support and analysts |
+| `outcomes/framework.json` and `.md` | The outcome framework, set before building: for every outcome, how it is assessed (a journey before release, measures, and use observed after), the performance criteria, the passing target and the evidence to review | People reviewing the release, the factory's QA, and the reports |
+| `outcomes/map.md` | The platform outcomes (accessible, plain, private, explainable, reliable, recoverable, inclusive, secure) mapped across every feature as introduced, refined or mastered, with why | Product and QA |
 | `reports/catalogue.json`, `reports/<id>.sql`, `reports/README.md` | A report for every feature, for operations, for use as a whole, for journeys as walked, for the measures, and a weekly brief on what to improve: each a saved query with a chart, schedule and audience | The report builder, report delivery, and people |
 | `analytics/tracking-plan.json` | What use is recorded at the spec sheet's level, under which keys, what is never recorded, and for how long | Privacy review, and the app's analytics part |
 | `connections.json` | Where factory progress, docs and data feeds go: tool names and mappings, never credentials | The factory's release step |

@@ -7,6 +7,7 @@
  *
  * A grade is the share of a rater's checks that hold, as a letter; every check says why and where to fix it.
  */
+import { framework } from './outcomes.ts';
 import type { Ballooned } from './frame.ts';
 import { chosenJourneys, neededKinds, suggestJourneys } from './journeys.ts';
 import { manifest } from './manifest.ts';
@@ -14,7 +15,7 @@ import type { Prepared } from './pipeline.ts';
 import { outcomeGauges, type Gauge } from './release.ts';
 
 /** Where a finding is fixed: a balloon, a question, a view, or your words. */
-export type Fix = { kind: 'balloon'; balloon: number } | { kind: 'question'; id: string } | { kind: 'view'; view: 'plan' | 'build' | 'map' | 'hire' } | { kind: 'words'; add: string };
+export type Fix = { kind: 'balloon'; balloon: number } | { kind: 'question'; id: string } | { kind: 'view'; view: 'plan' | 'build' | 'map' | 'hire' | 'outcomes' } | { kind: 'words'; add: string };
 
 export interface Check {
   readonly id: string;
@@ -137,6 +138,9 @@ export function review(p: Prepared): Review {
     const x = p.questions.find((qq) => pred(qq.id));
     return x ? { kind: 'question', id: x.id } : undefined;
   };
+  const fw = framework(p, m);
+  const unset = fw.outcomes.filter((o) => !o.complete);
+  const unmastered = fw.platform.filter((x) => x.highest !== 'M');
   const c = (id: string, holds: boolean, yes: string, no: string, why: string, fix?: Fix): Check => ({ id, holds, text: holds ? yes : no, why, ...(fix && !holds ? { fix } : {}) });
 
   const panel: Rater[] = [
@@ -150,6 +154,7 @@ export function review(p: Prepared): Review {
         c('measured', measures.length > 0, `${measures.length} measure${measures.length === 1 ? ' says' : 's say'} how anyone would know`, 'Nothing says how anyone would know it is doing a good job', 'A measure is what turns working into proven.', { kind: 'words', add: 'I would know it is doing a good job when: ' }),
         c('tolerances', !loose.length, 'Every measure says how close is close enough', `${loose.length} measure${loose.length === 1 ? '' : 's'} with no tolerance`, 'A measure with no tolerance cannot fail, so it proves nothing.', loose[0] ? q((id) => id.endsWith(loose[0]!.id)) ?? { kind: 'balloon', balloon: loose[0].balloon } : undefined),
         c('nongoals', st.some((s) => s.slot === 'nonGoals'), 'What is left out on purpose is said', 'Nothing is left out on purpose', 'Saying what it will not do stops the factory gold-plating.', { kind: 'words', add: 'It will not: ' }),
+        c('framework', outcomes.length > 0 && !unset.length, 'Every outcome is assessed, judged on criteria, held to a target and documented, before it is built', `${unset.length} outcome${unset.length === 1 ? '' : 's'} still need${unset.length === 1 ? 's' : ''} ${unset[0]?.missing[0] ?? 'its assessments set'}`, 'Set the measure before the build, and nobody can bend it to fit what happened.', q((id) => id.startsWith('pair:achieved:')) ?? { kind: 'view', view: 'outcomes' }),
         c('hire', !!hire, 'Framed as a hire: the job, a good job, a good year', 'Not framed as a hire: no job, good job or good year stated', 'Leaders judge it the way they judge any hire.', { kind: 'view', view: 'hire' }),
       ],
       grade: '',
@@ -176,6 +181,7 @@ export function review(p: Prepared): Review {
         c('refused', !refusals.length || refused.length === refusals.length, refusals.length ? `Every never is tried and must be refused (${refused.length} of ${refusals.length})` : 'Nothing must never happen yet', `${refusals.length - refused.length} of ${refusals.length} things that must never happen are never tried`, 'A forbidden outcome is only proven by a journey that tries to cause it.', { kind: 'view', view: 'plan' }),
         c('edges', kinds.has('missing input') || kinds.has('take back') || kinds.has('first time'), 'Walked off the happy path too', 'Only the happy path is walked', 'Defects live where inputs are missing, permission is withdrawn, or someone is new.', { kind: 'view', view: 'plan' }),
         c('floors', loose.length === 0, 'Every measure has a floor a ratchet can hold', 'A measure has no floor to hold', 'A ratchet needs a starting floor.', loose[0] ? { kind: 'balloon', balloon: loose[0].balloon } : undefined),
+        c('mastered', !unmastered.length, 'Every platform outcome is mastered by a feature', `${unmastered.length} of ${fw.platform.length} platform outcomes are not mastered anywhere: ${unmastered.slice(0, 3).map((x) => x.id).join(', ')}${unmastered.length > 3 ? '…' : ''}`, 'Introduced everywhere is a promise; mastered somewhere is proof.', { kind: 'view', view: 'outcomes' }),
         c('many', all.length >= Math.max(3, outcomes.length * 3), `${all.length} journeys: enough to catch a regression`, `${all.length} journey${all.length === 1 ? '' : 's'}: too few to catch a regression`, 'Software is tested well by many journeys, not one per outcome.', { kind: 'view', view: 'plan' }),
       ],
       grade: '',

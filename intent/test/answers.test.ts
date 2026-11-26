@@ -44,7 +44,11 @@ test('answers become the person\'s own statements, answered questions are not as
   assert.ok(mine.every((s) => s.state === 'confirmed'));
   assert.ok(!after.questions.some((q) => [why.id, outcome.id, 'end'].includes(q.id)));
   assert.equal(after.model.end, 'I want students to stop getting their power shut off.');
-  assert.equal(after.questions.length, before.questions.length - 3);
+  const others = (qs: readonly { id: string }[]) => qs.filter((q) => !q.id.startsWith('pair:achieved:')).length;
+  assert.equal(others(after.questions), others(before.questions) - 3);
+  // Each outcome, the person's own included, is asked for its target in use before anything is built.
+  for (const o of after.statements.filter((s) => s.slot === 'outcome'))
+    assert.ok(after.questions.some((q) => q.id === `pair:achieved:${o.id}`) || after.statements.some((s) => s.slot === 'measures' && s.text === `Achieved in use: ${o.text}`), `a target for "${o.text}"`);
 });
 
 test('confirming a proposed problem and typing an outcome fill their slots, and only what is still open is asked', () => {
@@ -54,7 +58,8 @@ test('confirming a proposed problem and typing an outcome fill their slots, and 
   assert.ok(p1.statements.some((s) => s.slot === 'problem' && s.state === 'confirmed'));
   assert.ok(p1.statements.some((s) => s.slot === 'outcome' && s.text === 'no student loses power over a missed bill'));
   assert.ok(!p1.questions.some((q) => q.id === 'pair:problem' || q.id === 'pair:outcome'));
-  assert.deepEqual(p1.questions.map((q) => q.id), ['who-sees', 'end']);
+  const typed = p1.statements.find((s) => s.slot === 'outcome' && s.text === 'no student loses power over a missed bill')!;
+  assert.deepEqual(p1.questions.map((q) => q.id), ['who-sees', 'end', `pair:achieved:${typed.id}`]);
 });
 
 test('the questions page: one fieldset per question, every input labelled, Other on every choice, nothing unescaped', () => {

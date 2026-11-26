@@ -116,6 +116,9 @@ export function checkFlow(flow: Flow): Question[] {
 
 // ---------------------------------------------------------------- Pairings
 
+/** The measure an outcome's target becomes: achieved in use, by the people it serves. */
+export const achievedText = (outcome: string): string => `Achieved in use: ${outcome}`;
+
 /** The pairings every intent needs: a problem, an outcome, a measure for each outcome, a tolerance for each measure. */
 export function checkPairings(statements: readonly Statement[]): Question[] {
   const has = (slot: Statement['slot']) => statements.some((s) => s.slot === slot);
@@ -125,6 +128,11 @@ export function checkPairings(statements: readonly Statement[]): Question[] {
   if (has('outcome') && !has('measures')) out.push({ id: 'pair:measure', origin: 'missing', slot: 'measures', text: 'How will you know it worked?', protects: 'how anyone will know it worked', consequence: 'high' });
   for (const m of statements.filter((s) => s.slot === 'measures' && !s.tolerance))
     out.push({ id: `pair:tolerance:${m.id}`, origin: 'pairing', slot: 'measures', text: `How close is close enough for "${m.text}"?`, tolerates: m.text, answer: { kind: 'single', options: ['every time', 'nine times in ten', 'most of the time'], other: true, recommended: 'nine times in ten' }, protects: 'that the measure can pass or fail', consequence: 'medium' });
+  // Every outcome is judged in use against a target set now, before anything is built: what share of the people it
+  // serves must achieve it for it to count. Set after the fact, a target bends to fit what happened.
+  for (const o of statements.filter((s) => s.slot === 'outcome'))
+    if (!statements.some((s) => s.slot === 'measures' && s.text === achievedText(o.text)))
+      out.push({ id: `pair:achieved:${o.id}`, origin: 'pairing', slot: 'measures', text: `For "${o.text}": what share of the people it serves must achieve it, for it to count as working?`, tolerates: achievedText(o.text), answer: { kind: 'single', options: ['every one', 'nine in ten people', 'eight in ten people'], other: true, recommended: 'nine in ten people' }, protects: 'that the outcome is judged against a target set before it is built, not after', consequence: 'high' });
   for (const i of statements.filter((s) => s.slot === 'implications' && s.supplied.kind === 'derived' && s.supplied.rule === 'irreversible'))
     out.push({ id: `pair:confirm:${i.id}`, origin: 'pairing', slot: 'constraints', text: `Before "${i.words ?? 'this'}" happens, who confirms it?`, protects: 'that nothing irreversible happens by accident', consequence: 'high' });
   return out;

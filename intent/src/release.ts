@@ -23,6 +23,7 @@ import { chosenJourneys } from './journeys.ts';
 import { manifest, manifestFiles } from './manifest.ts';
 import { interfaceFiles } from './interfaces.ts';
 import { reportFiles } from './reports.ts';
+import { framework, frameworkFiles } from './outcomes.ts';
 import type { Ballooned } from './frame.ts';
 import { same } from './diff.ts';
 import { balloonKey, modelContext, type Prepared } from './pipeline.ts';
@@ -251,6 +252,10 @@ export function release(p: Prepared, r: ReleaseInput): Release {
   Object.assign(files, interfaceFiles(p, bom, r.revision));
   // Reports for every feature, for running it and for use as a whole, and the tracking plan that feeds them.
   Object.assign(files, reportFiles(p, bom, p.options, g));
+  // The outcome framework, set before anything is built: assessments, criteria, targets and evidence for every outcome.
+  const fw = framework(p, bom);
+  Object.assign(files, frameworkFiles(fw));
+  for (const o of fw.outcomes) for (const miss of o.missing) problems.push(`outcome ${o.balloon} ("${o.outcome}") needs ${miss}`);
   for (const gap of bom.gaps) problems.push(`balloon ${gap.balloon}: ${gap.why}`);
 
   const hashes = Object.fromEntries(Object.entries(files).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, sha(v)]));

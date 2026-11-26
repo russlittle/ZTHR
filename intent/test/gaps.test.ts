@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { derive } from '../src/derive.ts';
 import type { Statement } from '../src/frame.ts';
-import { checkFlow, checkPairings, checkTable, satisfies, type DecisionTable } from '../src/gaps.ts';
+import { achievedText, checkFlow, checkPairings, checkTable, satisfies, type DecisionTable } from '../src/gaps.ts';
 
 test('tests on numbers, ranges, values and any behave at their boundaries', () => {
   assert.equal(satisfies('<700', 699.99), true);
@@ -66,9 +66,9 @@ test('a flow with a state nothing reaches, a dead end, and a step nobody owns ra
 test('every intent needs a problem and an outcome; outcomes need measures; measures need tolerances', () => {
   const st = (slot: Statement['slot'], text: string, tolerance?: string): Statement => ({ id: text, slot, text, state: 'assumed', supplied: { kind: 'person' }, ...(tolerance ? { tolerance } : {}) });
   assert.deepEqual(checkPairings([]).map((q) => q.id), ['pair:problem', 'pair:outcome']);
-  assert.deepEqual(checkPairings([st('problem', 'p'), st('outcome', 'o')]).map((q) => q.id), ['pair:measure']);
-  assert.deepEqual(checkPairings([st('problem', 'p'), st('outcome', 'o'), st('measures', 'm')]).map((q) => q.id), ['pair:tolerance:m']);
-  assert.deepEqual(checkPairings([st('problem', 'p'), st('outcome', 'o'), st('measures', 'm', 'all')]), []);
+  assert.deepEqual(checkPairings([st('problem', 'p'), st('outcome', 'o')]).map((q) => q.id), ['pair:measure', 'pair:achieved:o']);
+  assert.deepEqual(checkPairings([st('problem', 'p'), st('outcome', 'o'), st('measures', 'm')]).map((q) => q.id), ['pair:tolerance:m', 'pair:achieved:o']);
+  assert.deepEqual(checkPairings([st('problem', 'p'), st('outcome', 'o'), st('measures', 'm', 'all'), st('measures', achievedText('o'), 'nine in ten people')]), []);
 });
 
 test('rules derive prerequisites, implications and the other side, naming the rule and the words that fired it', () => {
@@ -82,6 +82,6 @@ test('rules derive prerequisites, implications and the other side, naming the ru
 });
 
 test('an irreversible action derives a question about who confirms it', () => {
-  const q = checkPairings([...derive(['Let students delete old bills']), { id: 'p', slot: 'problem', text: 'p', state: 'confirmed', supplied: { kind: 'person' } }, { id: 'o', slot: 'outcome', text: 'o', state: 'confirmed', supplied: { kind: 'person' } }, { id: 'm', slot: 'measures', text: 'm', tolerance: 't', state: 'confirmed', supplied: { kind: 'person' } }]);
+  const q = checkPairings([...derive(['Let students delete old bills']), { id: 'p', slot: 'problem', text: 'p', state: 'confirmed', supplied: { kind: 'person' } }, { id: 'o', slot: 'outcome', text: 'o', state: 'confirmed', supplied: { kind: 'person' } }, { id: 'm', slot: 'measures', text: 'm', tolerance: 't', state: 'confirmed', supplied: { kind: 'person' } }, { id: 'a', slot: 'measures', text: achievedText('o'), tolerance: 'every one', state: 'confirmed', supplied: { kind: 'person' } }]);
   assert.deepEqual(q.map((x) => x.text), ['Before "delete" happens, who confirms it?']);
 });

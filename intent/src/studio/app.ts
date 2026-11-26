@@ -15,12 +15,13 @@ import { release } from '../release.ts';
 import { zip } from '../zip.ts';
 import { graph, type Graph } from '../graph.ts';
 import { suggestJourneys, type OwnJourney } from '../journeys.ts';
-import { buildView, specSheet, reviewView, type TrailStep, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
+import { buildView, specSheet, outcomesView, reviewView, type TrailStep, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
 import { manifest, type Manifest, type Source } from '../manifest.ts';
 import { review, type Review } from '../review.ts';
 import type { Tune } from '../pipeline.ts';
 import { sha256 } from '../hash.ts';
 import { settle, type Options } from '../interfaces.ts';
+import { framework } from '../outcomes.ts';
 
 // ---------------------------------------------------------------- platform capabilities, each optional
 
@@ -75,11 +76,12 @@ interface State {
   wide: boolean;
   buildFilter: Source | 'all';
 }
-type View = 'map' | 'review' | 'hire' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
+type View = 'map' | 'review' | 'hire' | 'outcomes' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
 const VIEWS: readonly { key: View; label: string; ico: string }[] = [
   { key: 'map', label: 'Intent map', ico: 'end' },
   { key: 'review', label: 'Review', ico: 'scenario' },
   { key: 'hire', label: 'The hire', ico: 'doc' },
+  { key: 'outcomes', label: 'Outcomes', ico: 'gauge' },
   { key: 'structure', label: 'Datum structure', ico: 'group' },
   { key: 'plan', label: 'Inspection plan', ico: 'gauge' },
   { key: 'build', label: 'Build manifest', ico: 'group' },
@@ -517,7 +519,7 @@ function trailOf(p: Prepared): TrailStep[] {
 
 function tabCount(p: Prepared, v: View): string {
   if (!lastGraph) return '';
-  const n = v === 'map' ? lastGraph.nodes.length : v === 'plan' ? lastGraph.nodes.filter((x) => x.lane === 'instruments').length : v === 'preview' ? Object.keys(lastFiles).length : v === 'build' ? (lastManifest?.lines.length ?? 0) : v === 'review' ? 0 : v === 'parts' ? p.statements.length : 0;
+  const n = v === 'map' ? lastGraph.nodes.length : v === 'plan' ? lastGraph.nodes.filter((x) => x.lane === 'instruments').length : v === 'preview' ? Object.keys(lastFiles).length : v === 'build' ? (lastManifest?.lines.length ?? 0) : v === 'review' ? 0 : v === 'outcomes' ? p.statements.filter((x) => x.slot === 'outcome').length : v === 'parts' ? p.statements.length : 0;
   return n ? `<span class="tab-n">${n}</span>` : '';
 }
 
@@ -563,6 +565,8 @@ function viewBody(p: Prepared, parts: string): string {
       return reviewView(lastReview!, state.holder, state.tune, trailOf(p), state.product);
     case 'hire':
       return `<div class="view-bar"><p class="view-lede">The same schematic, in the terms a leader uses for any hire: the job, how you would know it is done well, and what would make it a good hire a year from now.</p></div>${hireCard(p)}`;
+    case 'outcomes':
+      return outcomesView(framework(p, lastManifest!), p.questions);
     case 'build':
       return specSheet(lastManifest!, settle(state.options)) + buildView(lastManifest!, state.buildFilter, p.model.title && p.model.title !== state.path ? p.model.title : 'this intent', `${wide}<div class="zoom" role="group" aria-label="Zoom"><button type="button" class="btn quiet" data-zoom="-1" aria-label="Zoom out">−</button><button type="button" class="btn quiet" data-zoom="0" aria-label="Fit to width, or full size">Fit</button><button type="button" class="btn quiet" data-zoom="1" aria-label="Zoom in">+</button></div>`);
     case 'preview': {

@@ -11,6 +11,7 @@ import type { Tune } from '../pipeline.ts';
 import { describe, features, QUERY_REACH, type Reach, type Settled } from '../interfaces.ts';
 import { byKind, type Kind } from '../connectors.ts';
 import { USAGE, USAGE_WHAT } from '../reports.ts';
+import { LEVEL_NAME, LEVEL_WHAT, type Framework, type Level } from '../outcomes.ts';
 import { BUILD_ORDER, MAINTAINER_LABEL, MAINTAINER_WHAT, SOURCE_LABEL, SOURCE_WHAT, type Line, type Manifest, type Source } from '../manifest.ts';
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -456,7 +457,7 @@ export function inspectionPlan(g: Graph, suggestions: readonly Suggestion[], acc
     if (k === 'scenario') return s.slot === 'measures' && s.tolerance === 'exactly as stated';
     return !!s.mark;
   };
-  const matrix = `<div class="matrix-wrap"><table class="matrix"><caption>What checks each statement. A red square is a statement that needs that check and has none yet.</caption><thead><tr><th scope="col">Statement</th>${KINDS.map((k) => `<th scope="col"><span class="th-ico">${icon(k)}</span>${esc(k === 'gauge' ? 'Journeys' : k === 'forbidden' ? 'Forbidden' : k === 'ratchet' ? 'Ratchet' : k === 'scenario' ? 'Scenario' : 'Control')}</th>`).join('')}</tr></thead><tbody>${rows
+  const matrix = `<div class="matrix-wrap" tabindex="0" role="region" aria-label="Table; scroll sideways for more"><table class="matrix"><caption>What checks each statement. A red square is a statement that needs that check and has none yet.</caption><thead><tr><th scope="col">Statement</th>${KINDS.map((k) => `<th scope="col"><span class="th-ico">${icon(k)}</span>${esc(k === 'gauge' ? 'Journeys' : k === 'forbidden' ? 'Forbidden' : k === 'ratchet' ? 'Ratchet' : k === 'scenario' ? 'Scenario' : 'Control')}</th>`).join('')}</tr></thead><tbody>${rows
     .map((n) => {
       const cells = KINDS.map((k) => {
         const c = cover(n, k);
@@ -670,10 +671,10 @@ export function buildView(m: Manifest, filter: Source | 'all', schematicTitle: s
 <div class="maint"><p class="maint-h"><strong>Who maintains it after it ships</strong></p><div class="mbar big" role="img" aria-label="${m.maintained.fleet} maintained by the fleet, ${m.maintained.local} by your team"><span class="seg fleet" style="width:${(m.maintained.fleet / n) * 100}%"></span><span class="seg local" style="width:${(m.maintained.local / n) * 100}%"></span></div><ul class="maint-legend"><li><span class="sw fleet" aria-hidden="true"></span><strong>${m.maintained.fleet}</strong> by the fleet: standard assemblies and parts. A fix made once is pushed to every app that uses them. ${m.baseline.count} of these are the <button type="button" class="linklike" data-baseline>${esc(m.baseline.name)}</button>, inherited by every app this team builds.</li><li><span class="sw local" aria-hidden="true"></span><strong>${m.maintained.local}</strong> by your team: the custom assemblies that exist only in this app, held by its journeys.</li></ul></div>
 ${m.gaps.length ? `<div class="gaps"><h4>On the schematic, but nothing on the manifest builds it (${m.gaps.length})</h4><ul>${m.gaps.map((g) => `<li><button type="button" class="link-row" data-node="b${g.balloon}"><span class="mini-balloon">${g.balloon}</span>${esc(g.text)}</button>: ${esc(g.why)}</li>`).join('')}</ul></div>` : '<p class="ok-line">Every balloon on the schematic is built by a line on this manifest, or is left out or taken as given on purpose.</p>'}</div>`;
   const shown = m.lines.filter((l) => filter === 'all' || l.source === filter);
-  const bom = `<div class="matrix-wrap"><table class="matrix bom"><caption>The bill of materials, in build order. ${filter === 'all' ? '' : `Showing ${esc(SOURCE_LABEL[filter])} only. <button type="button" class="btn quiet" data-src="all">Show all</button>`}</caption><thead><tr><th scope="col">Find</th><th scope="col">Part</th><th scope="col">Source</th><th scope="col">Maintained by</th><th scope="col">Standard assembly</th><th scope="col">Called for by</th><th scope="col">Journeys</th></tr></thead><tbody>${shown
+  const bom = `<div class="matrix-wrap" tabindex="0" role="region" aria-label="Table; scroll sideways for more"><table class="matrix bom"><caption>The bill of materials, in build order. ${filter === 'all' ? '' : `Showing ${esc(SOURCE_LABEL[filter])} only. <button type="button" class="btn quiet" data-src="all">Show all</button>`}</caption><thead><tr><th scope="col">Find</th><th scope="col">Part</th><th scope="col">Source</th><th scope="col">Maintained by</th><th scope="col">Standard assembly</th><th scope="col">Called for by</th><th scope="col">Journeys</th></tr></thead><tbody>${shown
     .map((l) => `<tr class="${SRC_CLASS[l.source]}"><td class="find">${l.find}</td><th scope="row"><button type="button" class="link-row" data-node="line:${l.find}">${esc(l.part.replace(/^Custom assembly: /, ''))}</button><span class="bom-gives">${l.source === 'make: new' ? `Assembled from ${l.uses.length ? l.uses.map((u) => `<button type="button" class="findref" data-node="line:${u}">${u}</button>`).join(' ') : 'new code only'}` : esc(l.gives)}</span></th><td>${sourceBadge(l.source)}</td><td><span class="mt ${l.maintainedBy}">${esc(MAINTAINER_LABEL[l.maintainedBy])}</span>${l.floor ? '<span class="muted small"> inherited</span>' : ''}</td><td>${l.library.length ? l.library.map((b) => `<span class="lib">${esc(b.name)}</span><span class="muted small"> ${b.tests} tests${b.mutationFloor !== null ? `, floor ${b.mutationFloor}%` : ''}</span>`).join('<br>') : '<span class="muted">none yet</span>'}</td><td>${l.balloons.length ? l.balloons.map((b) => `<button type="button" class="mini-balloon" data-node="b${b}" aria-label="Balloon ${b}">${b}</button>`).join(' ') : '<span class="muted small">team minimum</span>'}</td><td class="num">${l.journeys.length}</td></tr>`)
     .join('')}</tbody></table></div>`;
-  const trace = `<div class="matrix-wrap"><table class="matrix trace"><caption>The schematic against the manifest: each balloon and the lines that build it.</caption><thead><tr><th scope="col">Balloon</th><th scope="col">Statement</th><th scope="col">Built by</th></tr></thead><tbody>${m.trace
+  const trace = `<div class="matrix-wrap" tabindex="0" role="region" aria-label="Table; scroll sideways for more"><table class="matrix trace"><caption>The schematic against the manifest: each balloon and the lines that build it.</caption><thead><tr><th scope="col">Balloon</th><th scope="col">Statement</th><th scope="col">Built by</th></tr></thead><tbody>${m.trace
     .map((t) => {
       const gap = !t.by.length && !t.note;
       return `<tr${gap ? ' class="gaprow"' : ''}><td><button type="button" class="mini-balloon" data-node="b${t.balloon}">${t.balloon}</button></td><td>${esc(t.text)}</td><td>${t.by.length ? t.by.map((f) => `<button type="button" class="findref" data-node="line:${f}" title="${esc(m.lines[f - 1]!.part)}">${f}</button>`).join(' ') : t.note ? `<span class="muted small">${esc(t.note)}</span>` : '<strong class="red">nothing builds it</strong>'}</td></tr>`;
@@ -713,6 +714,34 @@ export function specSheet(m: Manifest, o: Settled): string {
 </div></section>`;
 }
 
+/** The outcome framework: every outcome with how it is assessed, and the platform outcomes mapped across the features. */
+export function outcomesView(fw: Framework, questions: readonly { id: string }[]): string {
+  const done = fw.outcomes.filter((o) => o.complete).length;
+  const lede = `<div class="view-bar"><p class="view-lede">Set before anything is built. Each outcome says what every person it serves can do when it works, how it is assessed, what a performance is judged on, the target that counts as passing, and the evidence anyone can review. The factory may build it any way it likes; people are measured the same, pre-defined way.</p></div>`;
+  const status = `<p class="${fw.complete ? 'ok-line' : 'gapfill'}">${fw.complete ? `<strong>Complete.</strong> All ${fw.outcomes.length} outcomes have their assessments, criteria, targets and evidence.` : `<strong>${done} of ${fw.outcomes.length} outcomes are fully set.</strong> The rest need a target before release.`}</p>`;
+  const cards = fw.outcomes
+    .map((o) => {
+      const ask = questions.find((q) => q.id.startsWith('pair:achieved:') && o.missing.length);
+      return `<article class="oc${o.complete ? '' : ' oc-open'}" aria-labelledby="oc-${esc(o.id)}"><h4 id="oc-${esc(o.id)}"><button type="button" class="mini-balloon" data-node="b${o.balloon}" aria-label="Balloon ${o.balloon}">${o.balloon}</button> ${esc(o.outcome)}</h4>
+<div class="matrix-wrap" tabindex="0" role="region" aria-label="Table; scroll sideways for more"><table class="matrix oc-t"><caption class="sr">How this outcome is assessed</caption><thead><tr><th scope="col">Assessment</th><th scope="col">When</th><th scope="col">Performance criteria</th><th scope="col">Passing</th><th scope="col">Evidence</th></tr></thead><tbody>${o.assessments
+        .map((a) => `<tr><th scope="row">${esc(a.method)}<span class="muted small po-id">${esc(a.instrument)}</span></th><td>${esc(a.when)}</td><td><ul class="oc-c">${a.criteria.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></td><td>${a.passing ? `<strong>${esc(a.passing)}</strong>` : `<strong class="red">not set</strong>${ask && a.method === 'observed in use' ? ` <button type="button" class="btn quiet" data-answer="${esc(ask.id)}">Set it</button>` : ''}`}</td><td>${a.evidence.map((e) => `<button type="button" class="chip file" data-file="${esc(e)}">${esc(e)}</button>`).join(' ')}</td></tr>`)
+        .join('')}</tbody></table></div></article>`;
+    })
+    .join('');
+  const lv = (l: Level) => `<span class="lv lv-${l}" aria-label="${LEVEL_NAME[l]}">${l}</span>`;
+  const grid = `<div class="matrix-wrap" tabindex="0" role="region" aria-label="Table; scroll sideways for more"><table class="matrix irm"><caption>Platform outcomes across the features. ${(['I', 'R', 'M'] as const).map((l) => `${lv(l)} ${LEVEL_NAME[l]}: ${esc(LEVEL_WHAT[l].toLowerCase())}`).join('. ')}.</caption><thead><tr><th scope="col">Feature</th>${fw.platform.map((po) => `<th scope="col" title="${esc(po.outcome)}">${esc(po.id)}</th>`).join('')}</tr></thead><tbody>${fw.features
+    .map((f) => `<tr><th scope="row">${esc(f.gives)}</th>${fw.platform.map((po) => {
+      const c = fw.map.find((x) => x.feature === f.id && x.platform === po.id)!;
+      return `<td title="${esc(`${po.id}: ${LEVEL_NAME[c.level]}, ${c.because}`)}">${lv(c.level)}</td>`;
+    }).join('')}</tr>`)
+    .join('')}<tr class="irm-top"><th scope="row">Highest</th>${fw.platform.map((po) => `<td>${lv(po.highest)}</td>`).join('')}</tr></tbody></table></div>`;
+  const notYet = fw.platform.filter((po) => po.highest !== 'M');
+  const platform = `<div class="matrix-wrap" tabindex="0" role="region" aria-label="Table; scroll sideways for more"><table class="matrix po-t"><caption>What every person can count on, in every app</caption><thead><tr><th scope="col">Platform outcome</th><th scope="col">Assessed by</th><th scope="col">Criteria</th><th scope="col">Passing</th></tr></thead><tbody>${fw.platform.map((po) => `<tr><th scope="row">${esc(po.outcome)}<span class="muted small po-id">${esc(po.id)}</span></th><td>${esc(po.assessment)}</td><td><ul class="oc-c">${po.criteria.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></td><td>${esc(po.passing)}</td></tr>`).join('')}</tbody></table></div>`;
+  return `${lede}${status}<section aria-labelledby="h-oc"><h3 id="h-oc">Outcomes, and how each is assessed</h3>${cards || '<p class="muted">No outcome on the schematic yet.</p>'}</section>
+<section aria-labelledby="h-irm"><h3 id="h-irm">Introduced, refined, mastered</h3><p class="muted small">Like general education outcomes across a program: every feature introduces each one, some refine it, and at least one should master it with a journey that proves it at full depth.${notYet.length ? ` Not yet mastered anywhere: ${notYet.map((po) => esc(po.id)).join(', ')}. <button type="button" class="btn quiet" data-view="plan">Add journeys</button>` : ''}</p>${grid}</section>
+<section aria-labelledby="h-po"><h3 id="h-po">Platform outcomes</h3>${platform}</section>`;
+}
+
 export function lineDetail(m: Manifest, find: number): { title: string; html: string } | null {
   const l: Line | undefined = m.lines[find - 1];
   if (!l) return null;
@@ -737,7 +766,7 @@ export function lineDetail(m: Manifest, find: number): { title: string; html: st
 
 const fixAttrs = (f?: Fix) =>
   !f ? '' : f.kind === 'balloon' ? `data-node="b${f.balloon}"` : f.kind === 'question' ? `data-answer="${esc(f.id)}"` : f.kind === 'view' ? `data-view="${f.view}"` : `data-add-words="${esc(f.add)}"`;
-const fixLabel = (f?: Fix) => (!f ? '' : f.kind === 'balloon' ? 'Show it' : f.kind === 'question' ? 'Answer it' : f.kind === 'view' ? (f.view === 'plan' ? 'Add journeys' : f.view === 'build' ? 'See the manifest' : 'Open it') : 'Add it to your words');
+const fixLabel = (f?: Fix) => (!f ? '' : f.kind === 'balloon' ? 'Show it' : f.kind === 'question' ? 'Answer it' : f.kind === 'view' ? (f.view === 'plan' ? 'Add journeys' : f.view === 'build' ? 'See the manifest' : f.view === 'outcomes' ? 'See the outcomes' : 'Open it') : 'Add it to your words');
 const checkRow = (c: Check) => `<li class="ck ${c.holds ? 'ok' : 'no'}"><span class="ck-m" aria-hidden="true">${c.holds ? '✓' : '✕'}</span><div><span class="ck-t">${esc(c.text)}</span>${c.holds ? '' : `<span class="ck-why">${esc(c.why)}</span>`}</div>${!c.holds && c.fix ? `<button type="button" class="btn quiet ck-fix" ${fixAttrs(c.fix)}>${fixLabel(c.fix)}</button>` : ''}</li>`;
 const gradeCls = (g: string) => (g.startsWith('A') ? 'ga' : g.startsWith('B') ? 'gb' : g.startsWith('C') ? 'gc' : 'gd');
 
