@@ -48,6 +48,14 @@ const example = (() => {
   return { p, m, r, s, g: gauges(p), sc: scopeOf(p, s) };
 })();
 
+// ---------------------------------------------------------------- Files: the first product through the whole line
+
+const files = (() => {
+  const d = 'eval/nextcloud';
+  const readings = readdirSync(join(HERE, d)).filter((f) => /^reading-.*\.json$/.test(f)).sort().map((f) => JSON.parse(read(`${d}/${f}`)));
+  return manifest(prepare({ files: [{ path: 'rough.md', text: read(`${d}/rough.md`) }], readings }));
+})();
+
 const catalog = {
   groups: json<{ groups: Record<string, string[]> }>('catalog/groups.json').groups,
   minimum: json<{ parts: unknown[] }>('catalog/baseline.json').parts.length,
@@ -197,6 +205,34 @@ export const DIAGRAMS: Record<string, () => Diagram> = {
     nodes: [{ id: 'i', label: 'Intake', sub: 'every form, by rule' }, { id: 'p', label: 'Prepare', sub: 'schematic, questions' }, { id: 'e', label: 'Specify', sub: 'manifest, schema, controls' }, { id: 'r', label: 'Release', sub: 'hashed package' }, { id: 'a', label: 'Agent API', sub: 'roles, ledger, cases' }, { id: 'o', label: 'Deliver and run', sub: 'stages, levels, fleet' }],
     edges: [...chain(['i', 'p', 'e', 'r', 'a', 'o']), { from: 'o', to: 'p', label: 'cases and clarifications', back: true }],
   }),
+  checks: () => ({ kind: 'flow', caption: 'Required checks, cheapest first: the first failure stops the run, and a pass on an identical tree is reused.', nodes: REQUIRED_CHECKS.map((c, i) => ({ id: `c${i}`, label: c.check })), edges: chain(REQUIRED_CHECKS.map((_, i) => `c${i}`)) }),
+  correction: () => ({
+    kind: 'flow',
+    caption: 'The correction loop: every failure is diagnosed before anything is tried, and only what needs a person reaches one.',
+    nodes: [{ id: 'f', label: 'Failure', sub: 'check, review, stage, ticket' }, { id: 'c', label: 'Case opened' }, { id: 'd', label: 'Diagnosed', sub: 'bug, intent, infeasible, factory' }, { id: 'x', label: 'Fixed or clarified', sub: 'Class II by delegation' }, { id: 'v', label: 'Evidence passes', sub: 'case closed' }, { id: 'p', label: 'A person decides', sub: 'Class I, infeasible, over budget' }],
+    edges: [...chain(['f', 'c', 'd', 'x', 'v']), { from: 'x', to: 'd', label: 'still failing: try again', back: true }, { from: 'd', to: 'p' }],
+  }),
+  instruments: () => ({
+    kind: 'flow',
+    caption: 'QA certifies a build only when every instrument the factory cannot change agrees on the exact commit.',
+    nodes: [{ id: 'b', label: 'Build at one commit' }, { id: 'j', label: 'Journeys', sub: 'locked, every mode' }, { id: 'g', label: 'Gates', sub: 'proven on planted defects' }, { id: 'm', label: 'Mutation', sub: 'at or above its ratchet' }, { id: 'o', label: 'Oracle', sub: 'the replaced system' }, { id: 'c', label: 'Certified', sub: 'names the commit' }],
+    edges: chain(['b', 'j', 'g', 'm', 'o', 'c']),
+  }),
+  approval: () => ({
+    kind: 'flow',
+    caption: 'Who does what in a release: the operator asks, the pipeline runs and records, a person approves production.',
+    nodes: [{ id: 'o', label: 'Operator', sub: 'requests each stage' }, { id: 'p', label: 'Pipeline', sub: 'runs it, records what it proved' }, { id: 'c', label: 'Canary', sub: 'error budgets hold' }, { id: 'h', label: 'A named person', sub: 'approves this release' }, { id: 'r', label: 'Release', sub: 'serving, checked from outside' }],
+    edges: [...chain(['o', 'p', 'c', 'h', 'r']), { from: 'r', to: 'o', label: 'roll back: always one step', back: true }],
+  }),
+  'library-tests': () => ({ kind: 'bars', caption: 'Library blocks built in this repository, by the tests each carries; every product that uses one inherits them.', unit: 'tests', bars: ownBlocks.map((b) => ({ label: b.name, value: b.tests ?? 0 })).sort((a, b) => b.value - a.value) }),
+  'line-choices': () => ({ kind: 'flow', caption: 'The choices a product line makes once, for every product in it.', nodes: [{ id: 'l', label: 'Product line' }, ...LINE_CHOICES.map((c) => ({ id: c, label: c[0]!.toUpperCase() + c.slice(1) }))], edges: LINE_CHOICES.map((c, i) => ({ from: i ? LINE_CHOICES[i - 1]! : 'l', to: c })) }),
+  waiting: () => ({
+    kind: 'flow',
+    caption: 'What waits on a person: only the acts no agent role has a tool for.',
+    nodes: [{ id: 'r', label: 'Raised by a department' }, { id: 'w', label: 'Waiting on you', sub: 'one action clears it' }, { id: 'h', label: 'Holder', sub: 'sign, release, clarify' }, { id: 'a', label: 'Approver', sub: 'production' }, { id: 'l', label: 'Ledger', sub: 'the signed act, recorded' }],
+    edges: chain(['r', 'w', 'h', 'a', 'l']),
+  }),
+  'files-manifest': () => ({ kind: 'bars', caption: `Files, the first product through the whole line: where each of its ${files.lines.length} manifest lines comes from.`, unit: 'lines', bars: [{ label: 'Standard, as is', value: files.counts.stock }, { label: 'Standard, extended', value: files.counts.modify }, { label: 'Catalogued, to make', value: files.counts['make: catalogued'] }, { label: 'Custom to Files', value: files.counts['make: new'] }] }),
   'package-erd': () => ({
     kind: 'erd',
     caption: 'What a released package holds, and how its parts refer to each other.',
@@ -244,7 +280,7 @@ export function mermaid(d: Diagram): string {
 export function svg(d: Diagram, title: string): string {
   if (d.kind === 'erd') return `<ul class="erd">${d.relations.map((r) => `<li>${x(r)}</li>`).join('')}</ul>`;
   if (d.kind === 'bars') {
-    const W = 760, H = 300, L = 150, max = Math.max(...d.bars.map((b) => b.value)), bh = (H - 30) / d.bars.length;
+    const W = 760, H = Math.min(300, 30 + d.bars.length * 34), L = 150, max = Math.max(...d.bars.map((b) => b.value)), bh = (H - 30) / d.bars.length;
     return `<figure class="fig"><svg viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="${title}-t"><title id="${title}-t">${x(d.caption)}</title>${d.bars.map((b, i) => { const w = ((W - L - 70) * b.value) / max; const y = 10 + i * bh; return `<text x="${L - 8}" y="${y + bh / 2 + 4}" text-anchor="end" font-size="13" fill="var(--ink)">${x(b.label)}</text><rect x="${L}" y="${y + 4}" width="${Math.max(2, w)}" height="${bh - 8}" fill="var(--ink)" opacity="${0.35 + (0.65 * (i + 1)) / d.bars.length}"/><text x="${L + w + 6}" y="${y + bh / 2 + 4}" font-size="13" fill="var(--ink)">${n(b.value)}</text>`; }).join('')}</svg><figcaption>${x(d.caption)}</figcaption></figure>`;
   }
   // Up to six boxes sit in one row; more wrap into rows of four. Loops run in the gap under their own row; a loop

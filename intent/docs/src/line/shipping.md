@@ -26,6 +26,8 @@ The shelf is delivered to one classroom first. Someone watches it for a day. If 
 | Pipeline | Runs each stage under its own identity and records what it proved, with the build id | Request, approve or roll back |
 | A named person | Approves production after the canary | Be replaced by a tool |
 
+{{diagram:approval}}
+
 ### Service levels
 
 Every product is held to the service levels its schematic sets, watched from the first canary on. For the worked example: {{shipping.levels}}. A fast burn of any error budget rolls it back first and asks questions after.

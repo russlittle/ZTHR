@@ -55,6 +55,20 @@ The shelf is delivered to one classroom first. Someone watches it for a day. If 
 | Pipeline | Runs each stage under its own identity and records what it proved, with the build id | Request, approve or roll back |
 | A named person | Approves production after the canary | Be replaced by a tool |
 
+```mermaid
+flowchart LR
+  o["Operator<br><small>requests each stage</small>"]
+  p["Pipeline<br><small>runs it, records what it proved</small>"]
+  c["Canary<br><small>error budgets hold</small>"]
+  h["A named person<br><small>approves this release</small>"]
+  r["Release<br><small>serving, checked from outside</small>"]
+  o --> p
+  p --> c
+  c --> h
+  h --> r
+  r -.->|roll back: always one step| o
+```
+
 ### Service levels
 
 Every product is held to the service levels its schematic sets, watched from the first canary on. For the worked example: 99.5% Requests answered without a server error and 95.0% Requests answered within 1000 ms. A fast burn of any error budget rolls it back first and asks questions after.

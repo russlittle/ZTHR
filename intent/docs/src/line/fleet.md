@@ -33,6 +33,8 @@ The fleet maintains the code most apps get wrong, as tested blocks every product
 
 {{table:blocks}}
 
+{{diagram:library-tests}}
+
 ## Architect
 
 The fleet is where compounding pays out: every fix, part and rule made once applies everywhere it is used.

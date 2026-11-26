@@ -65,9 +65,48 @@ Every call to the API is logged in a hash chain. A refusal says why and what to 
 
 Checks run cheapest first, stop at the first failure, and are not run again on an identical tree. A model reviews a change only after every check has passed.
 
+```mermaid
+flowchart LR
+  c0["typecheck"]
+  c1["changes only a person makes are signed by that person"]
+  c2["production dependencies audited"]
+  c3["docs derived and fresh"]
+  c4["unit and integration tests"]
+  c5["proven gates"]
+  c6["locked journeys"]
+  c7["exhaustive button walk"]
+  c8["exhaustive page walk"]
+  c9["browser walk"]
+  c0 --> c1
+  c1 --> c2
+  c2 --> c3
+  c3 --> c4
+  c4 --> c5
+  c5 --> c6
+  c6 --> c7
+  c7 --> c8
+  c8 --> c9
+```
+
 ### Correction without asking
 
 A failure opens a case. The builder diagnoses it: a **bug** (the work misses a clear datum) is fixed, test first, with nobody asked. **Intent**, **infeasible** or **factory** must name the balloons and be confirmed by a reviewer of another family. A confirmed intent case is clarified with examples and notes; the API compares the draft with the signed revision, and a Class II clarification is issued by the factory under the holder's delegation. A case goes to a person when the intent cannot be met, a change would be Class I, three attempts in a row fail no better, or it passes its spending ceiling.
+
+```mermaid
+flowchart LR
+  f["Failure<br><small>check, review, stage, ticket</small>"]
+  c["Case opened"]
+  d["Diagnosed<br><small>bug, intent, infeasible, factory</small>"]
+  x["Fixed or clarified<br><small>Class II by delegation</small>"]
+  v["Evidence passes<br><small>case closed</small>"]
+  p["A person decides<br><small>Class I, infeasible, over budget</small>"]
+  f --> c
+  c --> d
+  d --> x
+  x --> v
+  x -.->|still failing: try again| d
+  d --> p
+```
 
 ### Cost
 

@@ -21,6 +21,8 @@ It is the front office's whiteboard. Each order has a row; each department has a
 - **How the platform works.** Every intent's lamps, by department, and the measure: journeys walked as a person would, and passing.
 - **Drill-down.** Platform, then product, then intent, then a journey's trail through every department.
 
+{{diagram:waiting}}
+
 ### Lamps
 
 | Lamp | Means |

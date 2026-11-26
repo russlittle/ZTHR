@@ -70,6 +70,14 @@ The fleet maintains the code most apps get wrong, as tested blocks every product
 | [dav](../../blocks/dav/index.ts) | The DAV core: a namespace-aware XML reader that refuses DTDs, the multistatus writer, and the WebDAV headers | 8 |
 | [oracle](../../blocks/oracle/index.ts) | Differential checks: the same requests to the reference and the candidate, answers normalised and compared, or recorded once | 4 |
 
+```mermaid
+xychart-beta
+  title "Library blocks built in this repository, by the tests each carries; every product that uses one inherits them."
+  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "conflicts", "resilience", "idempotency", "money", "oracle", "paging", "retention", "watchdog", "expiry"]
+  y-axis "tests" 0 --> 50
+  bar [12, 10, 8, 8, 8, 6, 6, 5, 4, 4, 4, 4, 3, 3, 3, 2]
+```
+
 ## Architect
 
 The fleet is where compounding pays out: every fix, part and rule made once applies everywhere it is used.

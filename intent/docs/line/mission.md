@@ -32,6 +32,19 @@ It is the front office's whiteboard. Each order has a row; each department has a
 - **How the platform works.** Every intent's lamps, by department, and the measure: journeys walked as a person would, and passing.
 - **Drill-down.** Platform, then product, then intent, then a journey's trail through every department.
 
+```mermaid
+flowchart LR
+  r["Raised by a department"]
+  w["Waiting on you<br><small>one action clears it</small>"]
+  h["Holder<br><small>sign, release, clarify</small>"]
+  a["Approver<br><small>production</small>"]
+  l["Ledger<br><small>the signed act, recorded</small>"]
+  r --> w
+  w --> h
+  h --> a
+  a --> l
+```
+
 ### Lamps
 
 | Lamp | Means |

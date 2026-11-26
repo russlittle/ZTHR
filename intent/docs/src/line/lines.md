@@ -28,6 +28,8 @@ A furniture company makes a line of school shelves. Every school shelf uses the 
 | API | Closed, open for some features, or open for all |
 | Use tracking | Counts only, with consent, or off |
 
+{{diagram:line-choices}}
+
 ### Starting a product in a line
 
 A new product opens in the intent studio with its title, the line's end in mind under *The end in mind*, an empty first line under *What it should do* with the cursor on it, and the line's choices on its spec sheet. Each choice can still be changed for that product alone in engineering. A product can also join a line later without changing its own choices.

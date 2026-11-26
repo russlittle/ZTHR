@@ -58,6 +58,18 @@ The catalogue holds 219 parts in 9 groups. 93 are a team minimum every product i
 | Appearance | 10 |
 | Data movement and reporting | 20 |
 
+### The first product through the whole line
+
+Files, a file server the Nextcloud apps connect to unchanged, was specified here from eleven rough lines. Its manifest is mostly parts the catalogue already describes; what is custom to it is a thin layer of protocol joining library blocks. [The Files server](https://github.com/russlittle/ZTHR/tree/main/files).
+
+```mermaid
+xychart-beta
+  title "Files, the first product through the whole line: where each of its 135 manifest lines comes from."
+  x-axis ["Standard, as is", "Standard, extended", "Catalogued, to make", "Custom to Files"]
+  y-axis "lines" 0 --> 100
+  bar [6, 36, 82, 11]
+```
+
 ### The package
 
 For the worked example, a released revision is 115 files:

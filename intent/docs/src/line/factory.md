@@ -30,9 +30,13 @@ Every call to the API is logged in a hash chain. A refusal says why and what to 
 
 Checks run cheapest first, stop at the first failure, and are not run again on an identical tree. A model reviews a change only after every check has passed.
 
+{{diagram:checks}}
+
 ### Correction without asking
 
 A failure opens a case. The builder diagnoses it: a **bug** (the work misses a clear datum) is fixed, test first, with nobody asked. **Intent**, **infeasible** or **factory** must name the balloons and be confirmed by a reviewer of another family. A confirmed intent case is clarified with examples and notes; the API compares the draft with the signed revision, and a Class II clarification is issued by the factory under the holder's delegation. A case goes to a person when the intent cannot be met, a change would be Class I, three attempts in a row fail no better, or it passes its spending ceiling.
+
+{{diagram:correction}}
 
 ### Cost
 

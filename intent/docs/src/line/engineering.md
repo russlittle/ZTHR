@@ -33,6 +33,12 @@ The catalogue holds {{catalog.parts}} parts in {{catalog.groups}} groups. {{cata
 
 {{table:catalog-groups}}
 
+### The first product through the whole line
+
+Files, a file server the Nextcloud apps connect to unchanged, was specified here from eleven rough lines. Its manifest is mostly parts the catalogue already describes; what is custom to it is a thin layer of protocol joining library blocks. [The Files server](https://github.com/russlittle/ZTHR/tree/main/files).
+
+{{diagram:files-manifest}}
+
 ### The package
 
 For the worked example, a released revision is {{example.files}} files:

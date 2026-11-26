@@ -18,6 +18,8 @@ An inspector does not just measure each part. They try the finished shelf: a chi
 
 Each outcome on the schematic generates a journey: who walks it, the goal in their words, what must never happen on the way, and an action budget. For the worked example, {{example.gauges}} gauges are generated. Journeys are proposed to the factory; only a person locks them into its set. A journey passes only when the goal is reached, within budget, in every mode and channel it names, with nothing forbidden happening.
 
+{{diagram:instruments}}
+
 ### Gates and ratchets
 
 Every structural gate carries a proof: planted defects it must catch. A gate whose proof no longer holds counts as unproven. A ratchet starts where the build measured it and only tightens; resetting one is a person's signed act, recorded in the open.

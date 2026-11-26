@@ -128,6 +128,8 @@ npm run build -- --open   # the same, with no sign-in, for local checks or your 
 - [The release package, file by file](docs/formats.md)
 - [The information it keeps: schema from your sentences, patterns and Prisma](docs/information.md)
 - [Intent as the Datum: the pattern paper (draft for review)](PAPER.md)
+- [The line, in papers: the roll-up and a pattern paper for each department (drafts for review)](papers/README.md)
+- [Files: the first product through the whole line, a Nextcloud-compatible server](../files/README.md)
 - [Housekeeping blocks: known-good code for what most apps get wrong](blocks/README.md)
 - [The parts catalogue](catalog/README.md)
 - [How the line works, at four depths](docs/line/README.md) (also on [zthr.ai/line](https://zthr.ai/line/))
