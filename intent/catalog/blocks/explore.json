@@ -1,0 +1,34 @@
+{
+  "name": "explore",
+  "purpose": "Walks every action from every state to a fixpoint, checking invariants",
+  "provides": [
+    "ExploreReport",
+    "ExploreSpec",
+    "Step",
+    "Violation",
+    "explore",
+    "exploreAsync",
+    "hash",
+    "verbOf"
+  ],
+  "requires": [],
+  "externalRequires": [],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "Walking a deterministic model to a fixpoint: every action from every reachable state, with invariants checked on every step and frozen snapshots instead of replays.",
+  "notFor": "Systems that talk to the network or depend on the clock mid-walk (feed them fixtures first), load testing, or random fuzzing.",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/explore/test/explore.test.ts`](../../packages/explore/test/explore.test.ts) (5 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 62,
+  "tests": 5,
+  "source": {
+    "path": "packages/explore",
+    "sha256": "3c2c1ea83a153c0a14a1fd51d326388820c62b9dc5c1db37b3e4fb341fc96c5a"
+  }
+}

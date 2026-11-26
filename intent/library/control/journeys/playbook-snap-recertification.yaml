@@ -1,0 +1,18 @@
+id: playbook-snap-recertification
+persona: any
+phase: 2
+goal: A student who forwards a SNAP recertification notice is walked through
+  renewal before the deadline, with documents lined up and reminders set.
+forbidden:
+  - a message fails the tone rubric
+  - something is sent without the student's approval
+budget:
+  actions: 6
+  ms: 5000
+requirements:
+  - PB-2
+modes:
+  - standard
+channels:
+  - app
+  - text

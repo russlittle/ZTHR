@@ -1,0 +1,13 @@
+{
+  "name": "@zthr/privacy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "license": "Apache-2.0",
+  "description": "Canary tracing of sensitive fields and small-cell suppression",
+  "zthr": {
+    "purpose": "Canary tracing of sensitive fields and small-cell suppression",
+    "mutationFloor": 85
+  }
+}

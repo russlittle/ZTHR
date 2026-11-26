@@ -1,0 +1,12 @@
+id: p2-food-on-campus-late
+persona: jayden
+phase: 2
+goal: A student who is hungry late at night learns what on campus is open now and until when, or is told plainly that nothing is open and what opens next.
+forbidden:
+  - a place is said to be open when its posted hours say it is closed
+  - a missing dining feed is shown as nothing being open
+  - a message fails the tone rubric
+budget: { actions: 3, ms: 5000 }
+requirements: [CL-1, CL-2]
+modes: [standard, brief, walk-me-through]
+channels: [app, text]

@@ -1,0 +1,44 @@
+{
+  "name": "twin-service",
+  "purpose": "Clock, scenarios, health and OpenAPI for synthetic services",
+  "provides": [
+    "BadRequest",
+    "NotFound",
+    "ServiceInfo",
+    "WEEKDAYS",
+    "clock",
+    "dateParam",
+    "hhmm",
+    "meters",
+    "minutes",
+    "openapi",
+    "pad",
+    "pick",
+    "rng",
+    "service",
+    "setTimeZone",
+    "weekdayOf"
+  ],
+  "requires": [],
+  "externalRequires": [
+    "hono"
+  ],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "Standing in for a service you do not own (dining, transit, room booking, a job board, a learning platform) so tests, walks and demos can rely on it, with a contract that a real vendor can later be checked against.",
+  "notFor": "Production data, services you do own (test the real one), or load testing (it answers in-process and fast).",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/twin-service/test/twin-service.test.ts`](../../packages/twin-service/test/twin-service.test.ts) (10 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 85,
+  "tests": 10,
+  "source": {
+    "path": "packages/twin-service",
+    "sha256": "ef6a172058ed789434aa154851fd6ab2cea30d8b8c77be0b16dd42a552806f2a"
+  }
+}

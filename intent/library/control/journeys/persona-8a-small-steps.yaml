@@ -1,0 +1,12 @@
+id: persona-8a-small-steps
+persona: sam
+delight: 8a
+phase: 1
+goal: Sam gets a big assignment broken into short, concrete steps placed in open time, written at the reading level Sam chose.
+forbidden:
+  - a step is longer than an hour
+  - a message fails the tone rubric
+budget: { actions: 4, ms: 5000 }
+requirements: [CRS-1, DAY-3, ON-5]
+modes: [walk-me-through]
+channels: [app, text]

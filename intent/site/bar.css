@@ -1,0 +1,8 @@
+/* The bar every ZTHR surface shares: intent, factory, mission control, evidence. */
+.zbar { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 10px max(4vw, 16px); background: var(--ink); color: var(--sheet); }
+.zbar .brand { font: 700 19px/1 var(--letter); color: var(--sheet); text-decoration: none; letter-spacing: .02em; }
+.zbar nav { display: flex; gap: 2px; flex-wrap: wrap; }
+.zbar nav a { color: color-mix(in srgb, var(--sheet) 78%, transparent); text-decoration: none; padding: 8px 12px; min-height: 40px; display: inline-flex; align-items: center; border-radius: 6px; font: 600 15px/1 var(--letter); }
+.zbar nav a:hover { color: var(--sheet); background: color-mix(in srgb, var(--sheet) 12%, transparent); }
+.zbar nav a[aria-current=page] { color: var(--ink); background: var(--sheet); }
+.zbar a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }

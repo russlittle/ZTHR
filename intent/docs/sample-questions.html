@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A few questions: Bill help</title>
+<style>
+:root[data-theme=dark] { --ink:#e8ecf2; --muted:#b4bccb; --line:#3b4452; --field:#8a94a5; --bg:#14181e; --card:#1b2028; --accent:#8db8f0; --focus:#f0a35e; }
+:root, :root[data-theme=light] { --ink:#1d2430; --muted:#4a5565; --line:#c9cfd8; --field:#6b7585; --bg:#fbfbf8; --card:#fff; --accent:#1f5fae; --focus:#b8530b; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]) { --ink:#e8ecf2; --muted:#b4bccb; --line:#3b4452; --field:#8a94a5; --bg:#14181e; --card:#1b2028; --accent:#8db8f0; --focus:#f0a35e; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font: 1.0625rem/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 40rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 .5rem; }
+.end { color: var(--muted); margin: 0 0 1.5rem; }
+fieldset { border: 1px solid var(--line); border-radius: .5rem; background: var(--card); margin: 0 0 1rem; padding: 1rem; }
+legend { font-weight: 600; padding: 0 .25rem; }
+.n { color: var(--muted); }
+.hint { color: var(--muted); font-size: .9375rem; margin: .25rem 0 .75rem; }
+blockquote { margin: 0 0 .75rem; padding: .5rem .75rem; border-left: 3px solid var(--accent); }
+.opt { display: flex; align-items: center; gap: .625rem; min-height: 2.75rem; flex-wrap: wrap; }
+.opt input[type=radio], .opt input[type=checkbox] { width: 1.375rem; height: 1.375rem; margin: 0; accent-color: var(--accent); flex: none; }
+.opt label { flex: 1; min-width: 8rem; padding: .375rem 0; cursor: pointer; }
+.other-text, textarea { flex-basis: 100%; font: inherit; color: inherit; background: transparent; border: 1px solid var(--field); border-radius: .375rem; padding: .5rem .625rem; min-height: 2.75rem; }
+textarea { width: 100%; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+button { font: inherit; font-weight: 600; min-height: 2.75rem; padding: .5rem 1.25rem; border-radius: .375rem; border: 0; background: var(--accent); color: var(--bg); cursor: pointer; }
+output { display: block; white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: .875rem; margin-top: 1rem; }
+.held { color: var(--muted); }
+.steps { margin: 0 0 1.5rem; }
+.steps ol { list-style: none; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .25rem; margin: 0; padding: 0; position: relative; }
+.steps li { display: grid; justify-items: center; gap: .25rem; text-align: center; font-size: .8125rem; color: var(--muted); }
+.steps .dot { width: 1.75rem; height: 1.75rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .8125rem; border: 2px solid var(--field); background: var(--card); color: var(--muted); position: relative; z-index: 1; }
+.steps li.done .dot { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.steps li.now .dot { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+.steps li.now .name { color: var(--ink); font-weight: 600; }
+.steps .track { position: relative; height: 2px; background: var(--line); margin: 0 8.33%; top: calc(.875rem + 1px); }
+.steps .fill { position: absolute; inset: 0 auto 0 0; width: var(--to); background: var(--accent); }
+.steps .doing { margin: .75rem 0 0; font-weight: 600; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 30rem) { .steps .name { font-size: .6875rem; } }
+@media (prefers-reduced-motion: no-preference) { .steps .fill { animation: fill .9s ease-out both; } @keyframes fill { from { width: 0; } to { width: var(--to); } } }
+
+.rec { font-size: .8125rem; font-weight: 600; color: var(--accent); margin-left: .375rem; }
+.follow { margin: .25rem 0 .75rem 2rem; }
+.js .follow[hidden] { display: none; }
+fieldset.nested { margin: .5rem 0 0; border-style: dashed; }
+@media (prefers-reduced-motion: no-preference) { button { transition: filter .15s; } button:hover { filter: brightness(1.1); } }
+</style>
+</head>
+<body>
+<main>
+<nav class="steps" aria-label="Where this intent is">
+<div class="track" aria-hidden="true"><div class="fill" style="--to:40%"></div></div>
+<ol><li class="done"><span class="dot" aria-hidden="true">✓</span><span class="name">Rough intent</span><span class="sr"> (done)</span></li><li class="done"><span class="dot" aria-hidden="true">✓</span><span class="name">Read</span><span class="sr"> (done)</span></li><li class="now" aria-current="step"><span class="dot" aria-hidden="true">3</span><span class="name">Questions</span></li><li class="next"><span class="dot" aria-hidden="true">4</span><span class="name">Read-back</span></li><li class="next"><span class="dot" aria-hidden="true">5</span><span class="name">Signed</span></li><li class="next"><span class="dot" aria-hidden="true">6</span><span class="name">Released</span></li></ol>
+<p class="doing">Step 3 of 6: A few quick answers settle what the readings and checks left open.</p>
+</nav>
+<h1>A few questions before building Bill help</h1>
+
+<form id="answers">
+<fieldset class="" data-q="q1" aria-describedby="q1-hint"><legend id="q1-legend"><span class="n">1.</span> What are you ultimately trying to achieve?</legend><p class="hint" id="q1-hint">It decides choosing between ways of meeting it.</p><div class="opt"><input type="radio" id="q1-0" name="D1" value="stay housed and in school"><label for="q1-0">stay housed and in school</label></div><div class="opt"><input type="radio" id="q1-1" name="D1" value="avoid late fees"><label for="q1-1">avoid late fees</label></div><div class="opt other"><input type="radio" id="q1-o" name="D1" value="__other__"><label for="q1-o">Other</label><input type="text" class="other-text" aria-label="Other, in your words" data-for="q1-o"></div></fieldset>
+<fieldset class="" data-q="q2" aria-describedby="q2-hint"><legend id="q2-legend"><span class="n">2.</span> Which of these are outcomes? Pick any that apply.</legend><p class="hint" id="q2-hint">It decides what counts as done.</p><div class="opt"><input type="checkbox" id="q2-0" name="D2" value="a warning when money will be short"><label for="q2-0">a warning when money will be short</label></div><div class="opt other"><input type="checkbox" id="q2-o" name="D2" value="__other__"><label for="q2-o">Other</label><input type="text" class="other-text" aria-label="Other, in your words" data-for="q2-o"></div></fieldset>
+<fieldset class="" data-q="q3" aria-describedby="q3-hint"><legend id="q3-legend"><span class="n">3.</span> How strict should &quot;shut-offs avoided&quot; be?</legend><p class="hint" id="q3-hint">It decides how anyone will know it worked.</p><div class="opt"><input type="radio" id="q3-0" name="D4" value="none in a term"><label for="q3-0">none in a term</label></div><div class="opt"><input type="radio" id="q3-1" name="D4" value="fewer than last term"><label for="q3-1">fewer than last term</label></div><div class="opt other"><input type="radio" id="q3-o" name="D4" value="__other__"><label for="q3-o">Other</label><input type="text" class="other-text" aria-label="Other, in your words" data-for="q3-o"></div></fieldset>
+<fieldset class="" data-q="q4" aria-describedby="q4-hint"><legend id="q4-legend"><span class="n">4.</span> &quot;Staff should see who is struggling&quot;: where do these staff work? Pick any that apply.</legend><p class="hint" id="q4-hint">It decides who outside the student sees this, and from where.</p><div class="opt"><input type="checkbox" id="q4-0" name="who-sees" value="At the college"><label for="q4-0">At the college</label></div><div class="follow" data-when="q4-0"><fieldset class="nested" data-q="q4-0-0" aria-describedby="q4-0-0-hint"><legend id="q4-0-0-legend">Which offices? Pick any that apply.</legend><p class="hint" id="q4-0-0-hint">It decides exactly who sees it.</p><div class="opt"><input type="checkbox" id="q4-0-0-0" name="who-sees:units:1" value="Counseling"><label for="q4-0-0-0">Counseling</label></div><div class="opt"><input type="checkbox" id="q4-0-0-1" name="who-sees:units:1" value="Academic advising"><label for="q4-0-0-1">Academic advising</label></div><div class="opt"><input type="checkbox" id="q4-0-0-2" name="who-sees:units:1" value="Financial aid"><label for="q4-0-0-2">Financial aid</label></div><div class="opt"><input type="checkbox" id="q4-0-0-3" name="who-sees:units:1" value="Basic needs or student services"><label for="q4-0-0-3">Basic needs or student services</label></div><div class="opt"><input type="checkbox" id="q4-0-0-4" name="who-sees:units:1" value="Faculty"><label for="q4-0-0-4">Faculty</label></div><div class="opt"><input type="checkbox" id="q4-0-0-5" name="who-sees:units:1" value="Case management"><label for="q4-0-0-5">Case management</label></div><div class="opt other"><input type="checkbox" id="q4-0-0-o" name="who-sees:units:1" value="__other__"><label for="q4-0-0-o">Other</label><input type="text" class="other-text" aria-label="Other, in your words" data-for="q4-0-0-o"></div></fieldset></div><div class="opt"><input type="checkbox" id="q4-1" name="who-sees" value="At an outside service"><label for="q4-1">At an outside service</label></div><div class="follow" data-when="q4-1"><fieldset class="nested" data-q="q4-1-0" aria-describedby="q4-1-0-hint"><legend id="q4-1-0-legend">Which services? Pick any that apply.</legend><p class="hint" id="q4-1-0-hint">It decides exactly who sees it.</p><div class="opt"><input type="checkbox" id="q4-1-0-0" name="who-sees:units:2" value="Housing support"><label for="q4-1-0-0">Housing support</label></div><div class="opt"><input type="checkbox" id="q4-1-0-1" name="who-sees:units:2" value="Utility assistance"><label for="q4-1-0-1">Utility assistance</label></div><div class="opt"><input type="checkbox" id="q4-1-0-2" name="who-sees:units:2" value="Food or benefits assistance"><label for="q4-1-0-2">Food or benefits assistance</label></div><div class="opt"><input type="checkbox" id="q4-1-0-3" name="who-sees:units:2" value="Community health"><label for="q4-1-0-3">Community health</label></div><div class="opt other"><input type="checkbox" id="q4-1-0-o" name="who-sees:units:2" value="__other__"><label for="q4-1-0-o">Other</label><input type="text" class="other-text" aria-label="Other, in your words" data-for="q4-1-0-o"></div></fieldset></div><div class="opt other"><input type="checkbox" id="q4-o" name="who-sees" value="__other__"><label for="q4-o">Other</label><input type="text" class="other-text" aria-label="Other, in your words" data-for="q4-o"></div></fieldset><div class="follow" data-when-any="q4"><fieldset class="nested" data-q="q4-a-0" aria-describedby="q4-a-0-hint"><legend id="q4-a-0-legend">What can they see, and when?</legend><p class="hint" id="q4-a-0-hint">It decides what staff learn about each student, and when.</p><div class="opt"><input type="radio" id="q4-a-0-0" name="who-sees:access" value="Only what the student chooses to share, after they grant it: one way, from the student to staff" checked><label for="q4-a-0-0">Only what the student chooses to share, after they grant it: one way, from the student to staff <span class="rec">recommended</span></label></div><div class="follow" data-when="q4-a-0-0"><fieldset class="nested" data-q="q4-a-0-0-0" aria-describedby="q4-a-0-0-0-hint"><legend id="q4-a-0-0-0-legend">Can the student take that permission back?</legend><p class="hint" id="q4-a-0-0-0-hint">It decides that the student stays in control of what they shared.</p><div class="opt"><input type="radio" id="q4-a-0-0-0-0" name="who-sees:revoke" value="Yes, at any time, and staff stop seeing it at once" checked><label for="q4-a-0-0-0-0">Yes, at any time, and staff stop seeing it at once <span class="rec">recommended</span></label></div><div class="opt"><input type="radio" id="q4-a-0-0-0-1" name="who-sees:revoke" value="Yes, but what staff already saw stays in their records"><label for="q4-a-0-0-0-1">Yes, but what staff already saw stays in their records</label></div><div class="opt"><input type="radio" id="q4-a-0-0-0-2" name="who-sees:revoke" value="No"><label for="q4-a-0-0-0-2">No</label></div><div class="opt other"><input type="radio" id="q4-a-0-0-0-o" name="who-sees:revoke" value="__other__"><label for="q4-a-0-0-0-o">Other</label><input type="text" class="other-text" aria-label="Other, in your words" data-for="q4-a-0-0-0-o"></div></fieldset></div><div class="opt"><input type="radio" id="q4-a-0-1" name="who-sees:access" value="A summary the student can also see"><label for="q4-a-0-1">A summary the student can also see</label></div><div class="opt"><input type="radio" id="q4-a-0-2" name="who-sees:access" value="Everything, as soon as it is entered"><label for="q4-a-0-2">Everything, as soon as it is entered</label></div><div class="opt other"><input type="radio" id="q4-a-0-o" name="who-sees:access" value="__other__"><label for="q4-a-0-o">Other</label><input type="text" class="other-text" aria-label="Other, in your words" data-for="q4-a-0-o"></div></fieldset></div>
+<fieldset class="" data-q="q5" aria-describedby="q5-hint"><legend id="q5-legend"><span class="n">5.</span> Is this the end the whole thing serves?</legend><p class="hint" id="q5-hint">It decides what every feature is built toward.</p><blockquote>I want students to stop getting their power shut off.</blockquote><div class="opt"><input type="radio" id="q5-y" name="end" value="__yes__"><label for="q5-y">Yes</label></div><div class="opt other"><input type="radio" id="q5-o" name="end" value="__other__"><label for="q5-o">Not quite</label><input type="text" class="other-text" aria-label="Not quite: what would you say?" data-for="q5-o"></div></fieldset>
+<fieldset class="" data-q="q6" aria-describedby="q6-hint"><legend id="q6-legend"><span class="n">6.</span> Which of these are people involved? Pick any that apply.</legend><p class="hint" id="q6-hint">It decides who it is built for, and who else it reaches.</p><div class="opt"><input type="checkbox" id="q6-0" name="D3" value="advisor (on the other side)"><label for="q6-0">advisor (on the other side)</label></div><div class="opt other"><input type="checkbox" id="q6-o" name="D3" value="__other__"><label for="q6-o">Other</label><input type="text" class="other-text" aria-label="Other, in your words" data-for="q6-o"></div></fieldset>
+
+<button type="button" id="done">Save my answers</button>
+<p id="status" role="status"></p>
+<output id="result"></output>
+</form>
+</main>
+<script>
+(function () {
+  document.documentElement.classList.add('js');
+  var form = document.getElementById('answers');
+  // A branch opens only when its option is chosen; without script every branch simply shows.
+  function sync() {
+    form.querySelectorAll('.follow[data-when]').forEach(function (f) { var on = document.getElementById(f.getAttribute('data-when')); f.hidden = !(on && on.checked); });
+    form.querySelectorAll('.follow[data-when-any]').forEach(function (f) { var fs = form.querySelector('fieldset[data-q="' + f.getAttribute('data-when-any') + '"]'); f.hidden = !(fs && fs.querySelector(':scope > .opt input:checked')); });
+  }
+  form.addEventListener('change', sync);
+  sync();
+  form.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.classList && t.classList.contains('other-text') && t.value) document.getElementById(t.getAttribute('data-for')).checked = true;
+  });
+  document.getElementById('done').addEventListener('click', function () {
+    var out = {};
+    form.querySelectorAll('fieldset').forEach(function (fs) {
+      if (fs.closest('.follow[hidden]')) return;
+      var inputs = fs.querySelectorAll(':scope > .opt input[type=radio]:checked, :scope > .opt input[type=checkbox]:checked');
+      var area = fs.querySelector(':scope > textarea');
+      var name = (fs.querySelector(':scope > .opt [name], :scope > textarea') || {}).name;
+      if (!name) return;
+      var a = {};
+      var picks = [];
+      inputs.forEach(function (i) {
+        if (i.value === '__yes__') a.yes = true;
+        else if (i.value === '__other__') { var txt = fs.querySelector(':scope > .opt .other-text').value.trim(); if (txt) a.other = txt; }
+        else picks.push(i.value);
+      });
+      if (area && area.value.trim()) a.other = area.value.trim();
+      if (picks.length) { if (fs.querySelector(':scope > .opt input[type=checkbox]')) a.picks = picks; else a.pick = picks[0]; }
+      if (Object.keys(a).length) out[name] = a;
+    });
+    var json = JSON.stringify(out, null, 2);
+    var result = document.getElementById('result');
+    var status = document.getElementById('status');
+    result.textContent = json;
+    // Copy where the browser allows it, and save a file where it allows that; the answers stay on the page either way.
+    try {
+      navigator.clipboard.writeText(json).then(function () { status.textContent = 'Your answers are copied. Paste them back to continue.'; }, function () { status.textContent = 'Select the answers below and copy them.'; });
+    } catch (e) { status.textContent = 'Select the answers below and copy them.'; }
+    try {
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      link.download = 'answers.json';
+      link.click();
+    } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>

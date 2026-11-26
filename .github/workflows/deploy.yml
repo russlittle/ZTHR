@@ -49,6 +49,22 @@ jobs:
           rm -f reference.tgz.part-* parts.txt parts.sha256 stamp.json
           echo "::notice::Publishing the reference site built from $commit."
 
+      - uses: actions/setup-node@v4
+        if: steps.ref.outputs.same != 'true'
+        with:
+          node-version: 22
+
+      - name: Build /intent, /factory and /mission from their source
+        # The studio, the factory console and mission control are built here from intent/, after their own checks
+        # pass, and never committed: what zthr.ai serves is always what this commit's source makes.
+        if: steps.ref.outputs.same != 'true'
+        working-directory: intent
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+          npm run build
+
       - name: Every link lands where it should
         if: steps.ref.outputs.same != 'true'
         # A broken link stops the deploy; the live site stays as it was.

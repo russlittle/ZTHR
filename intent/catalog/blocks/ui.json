@@ -1,0 +1,71 @@
+{
+  "name": "ui",
+  "purpose": "Accessible, themed page parts shared by the app and the factory console",
+  "provides": [
+    "Action",
+    "Field",
+    "NavItem",
+    "NoteOpts",
+    "Reading",
+    "Row",
+    "SURFACES",
+    "ShellOpts",
+    "Stop",
+    "Surface",
+    "THEMES",
+    "TOKENS",
+    "Theme",
+    "Tile",
+    "WeekDay",
+    "actions",
+    "appShell",
+    "bar",
+    "bareShell",
+    "button",
+    "card",
+    "chip",
+    "consoleShell",
+    "copyField",
+    "dayLine",
+    "esc",
+    "figure",
+    "form",
+    "glance",
+    "icon",
+    "join",
+    "kpis",
+    "note",
+    "readings",
+    "rows",
+    "section",
+    "segmented",
+    "styles",
+    "table",
+    "tiles",
+    "uiAsset",
+    "weekGrid",
+    "zbar"
+  ],
+  "requires": [],
+  "externalRequires": [
+    ">${n.icon ? `<span class="
+  ],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "Escaped HTML components, light and dark tokens, and the shells for the app and the consoles, shared by every screen.",
+  "notFor": "Client-side state, frameworks, or anything that renders unescaped input.",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/ui/test/ui.test.ts`](../../packages/ui/test/ui.test.ts) (16 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 12,
+  "tests": 18,
+  "source": {
+    "path": "packages/ui",
+    "sha256": "719ac4d46c2b2e36b96ba9ab386c63432ded30fbfc57043b70e29e3cecaef166"
+  }
+}

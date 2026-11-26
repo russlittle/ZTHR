@@ -1,0 +1,40 @@
+{
+  "name": "intent",
+  "purpose": "Locked journey cards: goals in plain words, run in every mode and channel",
+  "provides": [
+    "JourneyCard",
+    "JourneyContext",
+    "JourneyImpl",
+    "JourneyRun",
+    "Lock",
+    "cardHash",
+    "loadCards",
+    "lockVerdict",
+    "runJourney"
+  ],
+  "requires": [
+    "gates"
+  ],
+  "externalRequires": [
+    "yaml",
+    "zod"
+  ],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "Journey cards: whole user goals with forbidden outcomes and budgets, locked by hash and run in every mode and channel.",
+  "notFor": "Unit-level assertions, or editing a goal so that a change passes.",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/intent/test/intent-more.test.ts`](../../packages/intent/test/intent-more.test.ts) (12 test definitions)\n- [`packages/intent/test/intent.test.ts`](../../packages/intent/test/intent.test.ts) (6 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 79,
+  "tests": 18,
+  "source": {
+    "path": "packages/intent",
+    "sha256": "58b7fa7a04f3f0e962ef60c53060f9c1d653874bc3b6defd562c8379f829395e"
+  }
+}

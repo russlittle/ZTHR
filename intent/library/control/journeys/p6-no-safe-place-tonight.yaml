@@ -1,0 +1,13 @@
+id: p6-no-safe-place-tonight
+persona: maria
+phase: 6
+goal: A student who answers that she has no safe place to stay tonight is shown shelters that answer by phone and 2-1-1 right away, and that need stays first on her day until she says it is resolved.
+forbidden:
+  - the answer is treated as routine or put off until later
+  - the first thing offered has no phone number to call tonight
+  - the need leaves Today before the student resolves it
+  - a message fails the tone rubric
+budget: { actions: 4, ms: 5000 }
+requirements: [GUIDE-1, GUIDE-2]
+modes: [standard, brief]
+channels: [app, text]

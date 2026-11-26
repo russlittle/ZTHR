@@ -1,0 +1,221 @@
+{
+  "source": {
+    "repository": "https://github.com/russlittle/zthr",
+    "branch": "reference-implementation",
+    "commit": "362d54f9af4b484a6698ab724c1a0b9691b1ab0d",
+    "copied": [
+      "packages",
+      "docs",
+      "control/journeys",
+      "LICENSE"
+    ],
+    "license": "Apache-2.0, kept with the copied files",
+    "purpose": "The starting block library: the 15 blocks from the Student Advocate reference implementation, with their design docs and journey cards."
+  },
+  "buildOrder": [
+    "egress",
+    "evidence",
+    "explore",
+    "gates",
+    "intent",
+    "models",
+    "operator",
+    "plain-language",
+    "privacy",
+    "review",
+    "runtime",
+    "store",
+    "twin-service",
+    "twins",
+    "ui"
+  ],
+  "blocks": [
+    {
+      "name": "egress",
+      "purpose": "The one door to the network: allow-listed https hosts, named purposes, recorded",
+      "requires": [],
+      "tests": 12,
+      "mutationFloor": 80,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "evidence",
+      "purpose": "Append-only, pseudonymous record of what the factory and the product did",
+      "requires": [],
+      "tests": 6,
+      "mutationFloor": 61,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "explore",
+      "purpose": "Walks every action from every state to a fixpoint, checking invariants",
+      "requires": [],
+      "tests": 5,
+      "mutationFloor": 62,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "gates",
+      "purpose": "Gates that count only after planted defects make them fail; verdicts and ratchets",
+      "requires": [],
+      "tests": 51,
+      "mutationFloor": 68,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "intent",
+      "purpose": "Locked journey cards: goals in plain words, run in every mode and channel",
+      "requires": [
+        "gates"
+      ],
+      "tests": 18,
+      "mutationFloor": 79,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "models",
+      "purpose": "Model calls behind one interface, with a twin, budgets and family labels",
+      "requires": [],
+      "tests": 9,
+      "mutationFloor": 80,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "operator",
+      "purpose": "Leases, idempotent dispatches confirmed by lookup, and holds",
+      "requires": [],
+      "tests": 14,
+      "mutationFloor": 90,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "plain-language",
+      "purpose": "Reading grade, phrase rules and carelessness checks for any text",
+      "requires": [],
+      "tests": 11,
+      "mutationFloor": 80,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "privacy",
+      "purpose": "Canary tracing of sensitive fields and small-cell suppression",
+      "requires": [],
+      "tests": 6,
+      "mutationFloor": 85,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "review",
+      "purpose": "A multi-family review panel that can fail a change, never pass one alone",
+      "requires": [
+        "gates",
+        "models"
+      ],
+      "tests": 15,
+      "mutationFloor": 80,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "runtime",
+      "purpose": "Consent ledger, sealed facts, approvals, outbound gate and refuse-to-start",
+      "requires": [
+        "gates"
+      ],
+      "tests": 73,
+      "mutationFloor": 48,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "store",
+      "purpose": "Owner-scoped document store and the classified data declaration",
+      "requires": [],
+      "tests": 8,
+      "mutationFloor": 85,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "twin-service",
+      "purpose": "Clock, scenarios, health and OpenAPI for synthetic services",
+      "requires": [],
+      "tests": 10,
+      "mutationFloor": 85,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "twins",
+      "purpose": "Twins of outside services (SMS, mail, calendars) with calibration dates",
+      "requires": [],
+      "tests": 8,
+      "mutationFloor": 80,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "ui",
+      "purpose": "Accessible, themed page parts shared by the app and the factory console",
+      "requires": [],
+      "tests": 18,
+      "mutationFloor": 12,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    }
+  ]
+}

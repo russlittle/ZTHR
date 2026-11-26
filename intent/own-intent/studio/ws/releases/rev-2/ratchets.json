@@ -1,0 +1,38 @@
+[
+  {
+    "id": "balloon-19",
+    "metric": "no more than five things to choose on any screen (count, at most)",
+    "direction": "down",
+    "floor": 5
+  },
+  {
+    "id": "balloon-20",
+    "metric": "visible response to every tap (ms, at most)",
+    "direction": "down",
+    "floor": 100
+  },
+  {
+    "id": "balloon-21",
+    "metric": "each screen ready (ms, at most)",
+    "direction": "down",
+    "floor": 1000
+  },
+  {
+    "id": "balloon-22",
+    "metric": "works on a screen 320 pixels wide (% of runs, at least)",
+    "direction": "up",
+    "floor": 100
+  },
+  {
+    "id": "balloon-23",
+    "metric": "usable on a slow connection (ms, at most)",
+    "direction": "down",
+    "floor": 3000
+  },
+  {
+    "id": "balloon-24",
+    "metric": "text at or below the audience's reading level (% of runs, at least)",
+    "direction": "up",
+    "floor": 100
+  }
+]

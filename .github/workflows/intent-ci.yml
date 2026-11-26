@@ -1,0 +1,26 @@
+name: Intent
+
+on:
+  pull_request:
+    paths: ['intent/**', '.github/workflows/intent-ci.yml']
+  push:
+    branches: [main]
+    paths: ['intent/**']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: intent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Types, tests, secrets, and a build of all three surfaces
+        run: npm run verify

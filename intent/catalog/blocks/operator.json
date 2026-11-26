@@ -1,0 +1,41 @@
+{
+  "name": "operator",
+  "purpose": "Leases, idempotent dispatches confirmed by lookup, and holds",
+  "provides": [
+    "DispatchCore",
+    "DispatchStatus",
+    "Hold",
+    "KeyedStore",
+    "Lease",
+    "LeaseOptions",
+    "Leases",
+    "MAX_ATTEMPTS",
+    "SendOutcome",
+    "afterLookup",
+    "afterSend",
+    "due",
+    "exhausted",
+    "idempotencyKey",
+    "unsettled"
+  ],
+  "requires": [],
+  "externalRequires": [],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "Background work that writes to someone else's system on a person's behalf (bookings, requests, submissions), and any scheduled job that two processes might both try to run. Hand `Leases` any store with get, put and remove.",
+  "notFor": "Conversations (they stay synchronous and answer from cached data), exactly-once delivery across systems that ignore idempotency keys, or scheduling itself (the app owns its clock and job list).",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/operator/test/operator.test.ts`](../../packages/operator/test/operator.test.ts) (14 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 90,
+  "tests": 14,
+  "source": {
+    "path": "packages/operator",
+    "sha256": "efbb27dbf1bf74578c384003d6993d4674001f3136eb36c8106466f538afc8c7"
+  }
+}

@@ -1,0 +1,11 @@
+id: p5-degree-progress
+persona: tyler
+phase: 5
+goal: A student sees how many credits are left in each area of his published transfer pathway, where Ohio Transfer 36 stands, and when he finishes at his pace.
+forbidden:
+  - a course is counted twice, or a failed or withdrawn course is counted as done
+  - progress is shown against requirements the published pathway does not contain
+budget: { actions: 3, ms: 5000 }
+requirements: [ACA-5]
+modes: [standard]
+channels: [app, text]

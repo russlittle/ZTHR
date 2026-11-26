@@ -1,0 +1,28 @@
+{
+  "name": "zthr-intent",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Capture what people mean, read it back, and release it as the datum a factory builds to.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "bin": {
+    "intent": "src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "gates": "node tools/gates.ts",
+    "verify": "npm run typecheck && npm test && npm run secrets && npm run build -- --out ../.site-check",
+    "secrets": "node tools/secret-scan.ts",
+    "build": "node tools/build-site.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "esbuild": "^0.25.12",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

@@ -1,0 +1,12 @@
+id: persona-5c-money-saved
+persona: tyler
+delight: 5c
+phase: 1
+goal: Tyler sees free ways to get his books first, then cheaper ones, and the money he likely qualifies for.
+forbidden:
+  - a paid option is listed before the free ones
+  - a resource is offered that is stale or the student is ineligible for
+budget: { actions: 3, ms: 5000 }
+requirements: [BK-1, NAV-1, NAV-5]
+modes: [standard]
+channels: [app]

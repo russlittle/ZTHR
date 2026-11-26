@@ -1,0 +1,11 @@
+id: p2-retraining
+persona: darnell
+phase: 2
+goal: An adult student who lost a job learns that workforce training funds may pay for their program, knows what to bring, and has a note to the OhioMeansJobs center drafted for approval.
+forbidden:
+  - something is sent without the student's approval
+  - a message fails the tone rubric
+budget: { actions: 6, ms: 5000 }
+requirements: [PB-5]
+modes: [standard, brief]
+channels: [app, text]

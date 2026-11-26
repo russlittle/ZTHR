@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/console/console.css">
+<link rel="stylesheet" href="/console/bar.css">
+<title>Mission control · ZTHR</title>
+<meta name="description" content="Intents on the left, the factory on the right, and working software as the measure between them.">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="zbar"><a class="brand" href="/">ZTHR</a><nav aria-label="Surfaces"><a href="/intent">Intent</a><a href="/factory">Factory</a><a href="/mission" aria-current="page">Mission control</a><a href="/reference/factory">Evidence</a></nav></header>
+<div class="page-h"><div><h1>Mission control</h1><p>What people mean on the left, what the factory built and holds on the right. Between them, the only measure that counts: journeys walked as a person would, and passing.</p></div></div>
+<main id="main">
+  <section class="sheet measure" id="measure" aria-live="polite" aria-label="The measure"><p class="muted">Reading the factory's latest build…</p></section>
+  <div class="lanes">
+    <section class="lane intents" aria-labelledby="h-intents"><header class="lane-h"><h2 id="h-intents">Intents</h2><p>What people mean, organised as the datum</p></header><div id="intents"></div></section>
+    <section class="lane journeys" aria-labelledby="journeys-h"><header class="lane-h"><h2 id="journeys-h">Journeys</h2><p>The measure: each one walked as the person would</p></header><div id="journeys"></div></section>
+    <section class="lane factory" aria-labelledby="h-factory"><header class="lane-h"><h2 id="h-factory">Factory</h2><p>What built it, and what holds it</p></header><div id="factory"></div></section>
+  </div>
+</main>
+<aside class="drawer" id="drawer" hidden aria-labelledby="dr-title">
+  <div class="dr-head"><h2 id="dr-title">Detail</h2><button class="btn quiet" type="button" id="dr-close">Close</button></div>
+  <div id="dr-body"></div>
+</aside>
+<footer class="foot"><p>Every number here is the factory's own, written by the build that measured it; anything a build did not measure is shown as not measured. Your own intent is read from this browser only, where the studio keeps it.</p></footer>
+<script src="/mission/app.js"></script>
+</body>
+</html>

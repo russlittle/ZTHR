@@ -1,0 +1,5 @@
+zthr-spec
+Copyright 2026 Russ Little
+
+The block library in library/ comes from the ZTHR reference implementation
+(https://github.com/russlittle/zthr), licensed under the Apache License, Version 2.0.

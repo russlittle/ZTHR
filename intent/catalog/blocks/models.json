@@ -1,0 +1,37 @@
+{
+  "name": "models",
+  "purpose": "Model calls behind one interface, with a twin, budgets and family labels",
+  "provides": [
+    "Budget",
+    "BudgetExhausted",
+    "ChatMessage",
+    "CompletionRequest",
+    "CompletionResult",
+    "Ledger",
+    "MeteredModel",
+    "ModelClient",
+    "ModelUnavailable",
+    "OpenRouterClient",
+    "TwinModelClient"
+  ],
+  "requires": [],
+  "externalRequires": [],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "The one model client: metered, swappable for a twin, and used only inside a deterministic sandwich.",
+  "notFor": "Decisions that must be right every time (use deterministic code), or calling a provider directly.",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/models/test/models-more.test.ts`](../../packages/models/test/models-more.test.ts) (7 test definitions)\n- [`packages/models/test/models.test.ts`](../../packages/models/test/models.test.ts) (2 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 80,
+  "tests": 9,
+  "source": {
+    "path": "packages/models",
+    "sha256": "c9c95cee384e2baa27eb1366030d373a4876ca814cc6054bdf661f04955169cd"
+  }
+}

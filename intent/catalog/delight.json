@@ -1,0 +1,149 @@
+{
+  "method": "Chosen for delight: things users notice and tell others about, and visual choices people like. Each is a block with a manifest, tests and planted-defect proofs like every other block.",
+  "delighters": [
+    {
+      "name": "Undo anything",
+      "gives": "Every action, not just text, can be undone for a while afterwards"
+    },
+    {
+      "name": "Command palette",
+      "gives": "One keystroke to search and run any action in the app"
+    },
+    {
+      "name": "Ask your data",
+      "gives": "Plain-language questions over your own records, answered with the records shown"
+    },
+    {
+      "name": "Magic paste",
+      "gives": "Paste an email, table or screenshot and the form fills itself"
+    },
+    {
+      "name": "Import from anywhere",
+      "gives": "Drop a spreadsheet; columns are matched and every row's problem is shown"
+    },
+    {
+      "name": "Never lose work",
+      "gives": "Drafts save as you type, on every form, across devices"
+    },
+    {
+      "name": "Works offline",
+      "gives": "Keep working without a connection; changes sync and merge when it returns"
+    },
+    {
+      "name": "Who's here",
+      "gives": "See who else is viewing or editing, live"
+    },
+    {
+      "name": "Share a view",
+      "gives": "A read-only link to exactly what you see, expiring when you choose"
+    },
+    {
+      "name": "Explain this screen",
+      "gives": "Help grounded in the generated docs for the screen you're on"
+    },
+    {
+      "name": "Find a time",
+      "gives": "One click finds a slot that works for everyone, from their calendars"
+    },
+    {
+      "name": "Reminders that stop",
+      "gives": "Reminders across email, text and calendar that stop the moment it's done"
+    },
+    {
+      "name": "Receipts",
+      "gives": "A plain record after every important action of what happened and when"
+    },
+    {
+      "name": "Why am I seeing this?",
+      "gives": "Every automated decision explains itself on request"
+    },
+    {
+      "name": "Your whole record",
+      "gives": "Download or delete everything about you in one click"
+    },
+    {
+      "name": "Pick up where you left off",
+      "gives": "Recent items and the exact place you stopped, on any device"
+    },
+    {
+      "name": "Smart defaults",
+      "gives": "Forms remember sensible choices, so the common path is one click"
+    },
+    {
+      "name": "Bulk edit with preview",
+      "gives": "Change many records at once and see every change before it applies"
+    },
+    {
+      "name": "Snooze",
+      "gives": "Push any item away until a time you choose"
+    },
+    {
+      "name": "Teaching empty states",
+      "gives": "First run shows sample data and the next step, never a blank page"
+    },
+    {
+      "name": "Speak instead of type",
+      "gives": "Voice input on any field"
+    },
+    {
+      "name": "Reading comfort",
+      "gives": "Read aloud, larger text, dyslexia-friendly font and reduced motion, one switch each"
+    },
+    {
+      "name": "Your language",
+      "gives": "Switch language instantly, with every screen translated and checked"
+    },
+    {
+      "name": "Progress you can feel",
+      "gives": "Quiet milestones that show what's been done, not just what's left"
+    },
+    {
+      "name": "Is it me or is it down?",
+      "gives": "Live service status inside the app, so nobody wonders"
+    }
+  ],
+  "visual": [
+    {
+      "name": "Light and dark modes",
+      "gives": "Follows the device or the person's choice, on every screen"
+    },
+    {
+      "name": "High contrast",
+      "gives": "A contrast mode that passes accessibility contrast checks on every screen"
+    },
+    {
+      "name": "Design languages",
+      "gives": "Switch the whole app between design languages from one token set: Material, Fluent, Carbon, Primer, GOV.UK-style and USWDS"
+    },
+    {
+      "name": "Layouts",
+      "gives": "Choose between sidebar, top navigation and compact layouts without changing any feature"
+    },
+    {
+      "name": "Density",
+      "gives": "Comfortable or compact spacing, per person"
+    },
+    {
+      "name": "Brand themes",
+      "gives": "An organisation's colours, type and logo applied from one file"
+    },
+    {
+      "name": "Personal settings",
+      "gives": "Each signed-in person picks their language, mode, palette, style, density and reading comfort, remembered on every device"
+    },
+    {
+      "name": "Styles",
+      "gives": "Fun but professional looks for the whole app: Paper, Studio, Midnight, Blueprint, Garden and Terminal, each a complete set of design tokens"
+    },
+    {
+      "name": "Palettes",
+      "gives": "Colour palettes such as Ocean, Forest, Ember, Slate and Lavender, plus palettes safe for each common kind of colour blindness"
+    }
+  ],
+  "visualTests": [
+    "every screen is rendered in every mode, layout and design language, and compared with the approved picture",
+    "every mode passes contrast checks on every screen",
+    "every feature's walks pass in every layout, so a layout can never hide a feature",
+    "every palette and style passes contrast checks in both light and dark mode before it can be offered"
+  ]
+}

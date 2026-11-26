@@ -1,0 +1,8 @@
+node_modules/
+evidence-out/
+.site-check/
+# Built from intent/ by the deploy workflow, never committed
+/docs/intent/
+/docs/factory/
+/docs/mission/
+/docs/console/

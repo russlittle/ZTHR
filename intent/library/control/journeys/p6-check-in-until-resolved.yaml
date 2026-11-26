@@ -1,0 +1,13 @@
+id: p6-check-in-until-resolved
+persona: maria
+phase: 6
+goal: A yes to a one-question check-in about food opens a need that stays in every recommendation, survives "not today", is asked about again after a quiet week, and leaves only when the student resolves it.
+forbidden:
+  - anything but the student closes the need
+  - '"not today" closes the need or loses it'
+  - more than three things are put in front of the student at once
+  - a resolved need keeps being suggested
+budget: { actions: 8, ms: 5000 }
+requirements: [GUIDE-2, GUIDE-3]
+modes: [standard]
+channels: [app]

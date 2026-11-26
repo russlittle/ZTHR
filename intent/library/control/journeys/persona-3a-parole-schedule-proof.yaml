@@ -1,0 +1,13 @@
+id: persona-3a-parole-schedule-proof
+persona: darnell
+delight: 3a
+phase: 2
+goal: Darnell's check-ins, work and classes never collide unnoticed, and a proof-of-enrollment packet goes only where he sends it.
+forbidden:
+  - an appointment collides with a class or shift without being raised
+  - something is sent without the student's approval
+  - a sealed fact appears in a message or is opened by an ungranted identity
+budget: { actions: 8, ms: 5000 }
+requirements: [DAY-1, DAY-2, PB-2]
+modes: [standard]
+channels: [app, text]

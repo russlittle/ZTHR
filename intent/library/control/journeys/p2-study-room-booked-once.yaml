@@ -1,0 +1,11 @@
+id: p2-study-room-booked-once
+persona: jayden
+phase: 2
+goal: A student books a study room and is told it is booked only after the room system confirms it, exactly once, even when the first try is lost in the network.
+forbidden:
+  - the student is told a booking is done before the room system confirms it
+  - the same booking is made twice
+budget: { actions: 4, ms: 5000 }
+requirements: [CL-3]
+modes: [standard]
+channels: [app]

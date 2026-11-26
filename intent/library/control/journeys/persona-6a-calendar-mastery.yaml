@@ -1,0 +1,12 @@
+id: persona-6a-calendar-mastery
+persona: priya
+delight: 6a
+phase: 1
+goal: Priya's syllabus lands on her calendar, every deadline is raised early with a plan, and each meeting comes with who, what is due, where the work stands and what remains.
+forbidden:
+  - a deadline the team could see coming is raised too late to act on
+  - a message fails the tone rubric
+budget: { actions: 6, ms: 5000 }
+requirements: [DAY-1, DAY-2, DAY-3, DAY-4, CRS-1]
+modes: [standard]
+channels: [app]

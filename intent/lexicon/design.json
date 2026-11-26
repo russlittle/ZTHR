@@ -1,0 +1,177 @@
+{
+  "version": "1",
+  "about": "Human design terms and what they usually mean. Each entry is resolved without a model; the read-back confirms each one, and every confirmed correction becomes an entry.",
+  "terms": [
+    {
+      "term": "calm",
+      "match": [
+        "\\bcalm(ing)?\\b",
+        "\\bnot scary\\b",
+        "\\breassuring\\b",
+        "\\bpeaceful\\b",
+        "\\bless stressful\\b"
+      ],
+      "meaning": "soft colours, plenty of space, few things on each screen, and no sudden movement",
+      "choices": {
+        "palette": "soft",
+        "density": "spacious",
+        "motion": "reduced",
+        "itemsPerScreen": "few"
+      },
+      "measures": [
+        {
+          "text": "no more than five things to choose on any screen",
+          "tolerance": "at most five"
+        }
+      ]
+    },
+    {
+      "term": "snappy",
+      "match": [
+        "\\bsnappy\\b",
+        "\\bfast\\b",
+        "\\bquick\\b",
+        "\\bresponsive\\b",
+        "\\bno waiting\\b"
+      ],
+      "meaning": "every tap answers at once and every screen is ready within a second",
+      "choices": {
+        "feedback": "immediate"
+      },
+      "measures": [
+        {
+          "text": "visible response to every tap",
+          "tolerance": "within 100 milliseconds"
+        },
+        {
+          "text": "each screen ready",
+          "tolerance": "within 1 second on a mid-range phone"
+        }
+      ]
+    },
+    {
+      "term": "at a glance",
+      "match": [
+        "\\bat a glance\\b",
+        "\\bglanceable\\b",
+        "\\bquick look\\b",
+        "\\bone look\\b"
+      ],
+      "meaning": "the one thing that matters most is the largest thing on the screen, readable in a few seconds",
+      "choices": {
+        "density": "tight budget",
+        "primaryFigure": "one per card"
+      },
+      "measures": [
+        {
+          "text": "the main figure understood without scrolling",
+          "tolerance": "within 5 seconds"
+        }
+      ]
+    },
+    {
+      "term": "simple",
+      "match": [
+        "\\bsimple\\b",
+        "\\bclean\\b",
+        "\\bminimal\\b",
+        "\\buncluttered\\b",
+        "\\bdon'?t make me think\\b",
+        "\\beasy\\b(?! to read)"
+      ],
+      "meaning": "one main action on each screen, plain words, and nothing shown that is not needed now",
+      "choices": {
+        "primaryActions": "one per screen",
+        "reading": "plain"
+      },
+      "measures": [
+        {
+          "text": "a first-time person finishes the main task without help",
+          "tolerance": "nine in ten people"
+        }
+      ]
+    },
+    {
+      "term": "friendly",
+      "match": [
+        "\\bfriendly\\b",
+        "\\bwarm\\b",
+        "\\bkind\\b",
+        "\\bhuman\\b",
+        "\\bnot judg(e)?mental\\b",
+        "\\bno judgment\\b"
+      ],
+      "meaning": "plain, warm words that never scold, and a next step with every problem",
+      "choices": {
+        "tone": "warm",
+        "scolding": "never"
+      },
+      "measures": [
+        {
+          "text": "messages that pass the tone check",
+          "tolerance": "all of them"
+        }
+      ]
+    },
+    {
+      "term": "professional",
+      "match": [
+        "\\bprofessional\\b",
+        "\\bpolished\\b",
+        "\\bserious\\b",
+        "\\btrustworthy\\b"
+      ],
+      "meaning": "restrained colour, consistent type and spacing, and precise wording",
+      "choices": {
+        "palette": "restrained",
+        "style": "consistent"
+      },
+      "measures": []
+    },
+    {
+      "term": "on a phone",
+      "match": [
+        "\\bon (a|my|their) phone\\b",
+        "\\bmobile\\b",
+        "\\bon the go\\b",
+        "\\bone[- ]handed\\b"
+      ],
+      "meaning": "works one-handed on a small phone screen, on a slow connection",
+      "choices": {
+        "layout": "works one-handed from a 320-pixel phone up",
+        "targets": "large"
+      },
+      "measures": [
+        {
+          "text": "works on a screen 320 pixels wide",
+          "tolerance": "no sideways scrolling"
+        },
+        {
+          "text": "usable on a slow connection",
+          "tolerance": "first screen within 3 seconds"
+        }
+      ]
+    },
+    {
+      "term": "easy to read",
+      "match": [
+        "\\beasy to read\\b",
+        "\\breadable\\b",
+        "\\bplain (english|language|words)\\b",
+        "\\blow vision\\b",
+        "\\bbig text\\b"
+      ],
+      "meaning": "plain words at the audience's reading level, large text available, and strong contrast",
+      "choices": {
+        "reading": "audience level",
+        "vision": "low vision available"
+      },
+      "measures": [
+        {
+          "text": "text at or below the audience's reading level",
+          "tolerance": "every message"
+        }
+      ]
+    }
+  ]
+}

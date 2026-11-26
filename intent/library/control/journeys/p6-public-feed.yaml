@@ -1,0 +1,13 @@
+id: p6-public-feed
+persona: any
+phase: 6
+goal: Another app takes the guide as a feed with a license, a source and a verified date for every entry, filters by barrier, county and kind of provider, and never receives anything about a student.
+forbidden:
+  - the feed carries a student's name, phone, id or answer
+  - an entry is missing its source of record or verified date
+  - an entry past its freshness is shown as current
+  - a faith-based entry does not say whether help depends on faith
+budget: { actions: 6, ms: 5000 }
+requirements: [GUIDE-6, GUIDE-7]
+modes: [standard]
+channels: [app]
