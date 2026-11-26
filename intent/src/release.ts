@@ -25,6 +25,8 @@ import { interfaceFiles } from './interfaces.ts';
 import { reportFiles } from './reports.ts';
 import { framework, frameworkFiles } from './outcomes.ts';
 import { changes, schemaFiles, schemaOf, type Schema } from './schema.ts';
+import { complianceFiles } from './compliance.ts';
+import { opsFiles } from './delivery.ts';
 import type { Ballooned } from './frame.ts';
 import { same } from './diff.ts';
 import { balloonKey, modelContext, type Prepared } from './pipeline.ts';
@@ -263,6 +265,12 @@ export function release(p: Prepared, r: ReleaseInput): Release {
   const fw = framework(p, bom);
   Object.assign(files, frameworkFiles(fw));
   Object.assign(files, schemaFiles(information, r.prior?.datum.information ?? null, r.revision));
+  // Compliance, decided on the schematic: scope, the sensitive-data inventory, the fleet gate, OSCAL and the crosswalk.
+  const comp = complianceFiles(p, information, r.revision);
+  Object.assign(files, comp.files);
+  problems.push(...comp.problems);
+  // Delivery and operations: the neutral pipeline, the Google Cloud adapter, service levels, alerts and the runbook.
+  Object.assign(files, opsFiles(p));
   for (const u of information.unread) problems.push(`the information, line ${u.line} ("${u.text}"): ${u.why}`);
   for (const o of fw.outcomes) for (const miss of o.missing) problems.push(`outcome ${o.balloon} ("${o.outcome}") needs ${miss}`);
   for (const gap of bom.gaps) problems.push(`balloon ${gap.balloon}: ${gap.why}`);

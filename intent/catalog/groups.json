@@ -43,7 +43,8 @@
       "Role switcher",
       "Security headers and CSRF",
       "Password hashing and crypto",
-      "Rate limiting and abuse protection"
+      "Rate limiting and abuse protection",
+      "Data gate"
     ],
     "Data": [
       "Validation",
@@ -68,7 +69,8 @@
       "Query console",
       "Test data generator",
       "UAT overrides",
-      "Data pipeline"
+      "Data pipeline",
+      "Sensitive data inventory"
     ],
     "Work and integrations": [
       "HTTP API and routing",
@@ -124,7 +126,10 @@
       "Nightly scanner",
       "Review panel",
       "Preference signals",
-      "Confidence walkthrough"
+      "Confidence walkthrough",
+      "Compliance evidence",
+      "Delivery pipeline",
+      "Service levels and alerts"
     ],
     "Content": [
       "Surface registry",

@@ -51,6 +51,19 @@ export function products(flows: readonly Flow[]): { name: string; flows: Flow[] 
   return [...by.entries()].map(([name, fs]) => ({ name, flows: fs }));
 }
 
+const CLASS_ORDER = ['health', 'financial', 'private', 'contact'];
+const FW: Record<string, string> = { soc2: 'SOC 2', hipaa: 'HIPAA', ferpa: 'FERPA', pci: 'PCI DSS', glba: 'GLBA', 'nist-800-171': 'NIST 800-171', 'nist-800-53': 'NIST 800-53', 'section-508': 'Section 508' };
+
+/** Every app reports its sensitive data the same way, so the fleet is read, governed and gated as one. */
+function fleetSensitive(flows: readonly Flow[]): string {
+  const reported = flows.filter((f) => f.sensitive);
+  const total = (c: string) => reported.reduce((a, f) => a + (f.sensitive!.classes[c] ?? 0), 0);
+  const rows = flows
+    .map((f) => `<tr><th scope="row">${esc(f.title)}<span class="muted small"> ${esc(f.product)}</span></th>${f.sensitive ? CLASS_ORDER.map((c) => `<td class="num">${f.sensitive!.classes[c] ?? 0}</td>`).join('') + `<td>${esc(f.sensitive.frameworks.map((x) => FW[x] ?? x).join(', ') || 'none in scope')}${f.sensitive.suggested.filter((x) => x !== 'soc2').length ? `<span class="small"> · suggested: ${esc(f.sensitive.suggested.filter((x) => x !== 'soc2').map((x) => FW[x] ?? x).join(', '))}</span>` : ''}</td>` : `<td colspan="${CLASS_ORDER.length + 1}" class="muted small">not reported yet: its build does not publish compliance/data-inventory.json</td>`}</tr>`)
+    .join('');
+  return `<p class="muted">Every app's release carries the same inventory of its sensitive fields, and one gate policy, so a central gateway decides reads, exports and queries by class the same way for all of them, and every decision is audited.</p><ul class="lib-stats">${CLASS_ORDER.map((c) => `<li><span class="n">${total(c)}</span> ${c} fields</li>`).join('')}<li><span class="n">${reported.length}</span> of ${flows.length} intents reporting</li></ul><div class="tbl-wrap" tabindex="0" role="region" aria-label="Sensitive data by intent"><table class="swim"><thead><tr><th scope="col">Intent</th>${CLASS_ORDER.map((c) => `<th scope="col">${c}</th>`).join('')}<th scope="col">Frameworks</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
 export function platform(flows: readonly Flow[], lib: Lib): string {
   const total = flows.reduce((a, f) => ({ pass: a.pass + f.measure.pass, fail: a.fail + f.measure.fail, unmeasured: a.unmeasured + f.measure.unmeasured, total: a.total + f.measure.total }), { pass: 0, fail: 0, unmeasured: 0, total: 0 });
   const stageCount = (k: StageKey, l: Light) => flows.filter((f) => f.stages.find((s) => s.key === k)!.light === l).length;
@@ -75,6 +88,7 @@ export function platform(flows: readonly Flow[], lib: Lib): string {
   return `<section class="sheet measure" aria-label="The measure across the platform"><div class="headline"><p class="eyebrowless">Across the platform</p><p class="big">${total.total && total.pass + total.fail === 0 ? `<span class="num">${total.total}</span> journeys waiting to be walked` : `<span class="num">${total.pass}</span> of <span class="num">${total.total}</span> journeys pass`}</p><p class="verdict v-${total.total && total.pass === total.total ? 'ok' : total.fail ? 'bad' : 'unk'}">${total.pass + total.fail === 0 ? 'Nothing walked yet: the measure fills in as the factory walks each journey' : total.fail ? `${total.fail} failing, ${total.unmeasured} not walked` : `${total.unmeasured} not walked yet`}</p>${bar(total)}</div></section>
 <section class="sheet" aria-labelledby="h-sys"><h2 id="h-sys">How the platform works</h2><p class="muted">Every intent goes through the same five stations the factory runs. Lamps show where each intent stands at each station: ✓ holds, ✕ open or failing, ? not measured, … waiting for an earlier station.</p>${flow}</section>
 <section class="sheet" aria-labelledby="h-swim"><h2 id="h-swim">Products</h2><p class="muted">A product, or part family, holds many intents. Each intent goes through one pass of the factory that makes its schematic, code, tests, evidence, documentation and training together, and it is validated only when its journeys pass.</p>${table}</section>
+<section class="sheet" aria-labelledby="h-sd"><h2 id="h-sd">Sensitive data across the fleet</h2>${fleetSensitive(flows)}</section>
 <section class="sheet" aria-labelledby="h-wu"><h2 id="h-wu">The library, where used</h2>${whereUsed(lib, flows)}</section>`;
 }
 

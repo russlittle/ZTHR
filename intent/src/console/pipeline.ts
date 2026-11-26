@@ -4,6 +4,8 @@
  * feed for what it built, the studio's schematic and build manifest for what is still on the desk. Nothing is inferred
  * across stages; a stage with nothing measured says so.
  */
+import { schemaOf } from '../schema.ts';
+import { CLASSES, inventory, scopeOf } from '../compliance.ts';
 import { blocksIn, manifest } from '../manifest.ts';
 import topData from '../../catalog/top50.json' with { type: 'json' };
 import delightData from '../../catalog/delight.json' with { type: 'json' };
@@ -93,6 +95,8 @@ export interface Flow {
   readonly items: readonly Item[];
   /** The measure: journeys walked and passing. */
   readonly measure: { pass: number; fail: number; unmeasured: number; total: number };
+  /** Its sensitive data, as every app reports it: fields by class, and the frameworks in scope. Null until reported. */
+  readonly sensitive?: { readonly classes: Readonly<Record<string, number>>; readonly frameworks: readonly string[]; readonly suggested: readonly string[] } | null;
 }
 
 const lightOf = (value: number | null, of: number | null): Light => (value === null || of === null ? 'not measured' : of > 0 && value >= of ? 'pass' : value === 0 && of === 0 ? 'waiting' : 'fail');
@@ -203,6 +207,8 @@ interface Saved {
   holder?: { name: string; role: string };
   product?: string;
   tune?: Record<string, Record<string, string>>;
+  options?: Record<string, unknown>;
+  provided?: { path: string; text: string } | null;
 }
 
 export function studioFlow(raw: string | null, f: Feed | null): Flow | null {
@@ -214,7 +220,11 @@ export function studioFlow(raw: string | null, f: Feed | null): Flow | null {
     return null;
   }
   if (!s.words?.trim()) return null;
-  const p = prepare({ files: [{ path: s.path ?? 'intent.md', text: s.words }], readings: s.readings ?? [], answers: s.answers ?? {}, ...(s.journeys ? { journeys: s.journeys } : {}), people: { ...(s.holder?.name ? { holder: s.holder } : {}), tune: (s.tune ?? {}) as never } });
+  const p = prepare({ files: [{ path: s.path ?? 'intent.md', text: s.words }, ...(s.provided ? [s.provided] : [])], readings: s.readings ?? [], answers: s.answers ?? {}, ...(s.journeys ? { journeys: s.journeys } : {}), ...(s.options ? { options: s.options as never } : {}), people: { ...(s.holder?.name ? { holder: s.holder } : {}), tune: (s.tune ?? {}) as never } });
+  const info = schemaOf(p);
+  const sc = scopeOf(p, info);
+  const inv = inventory(p, info, sc);
+  const sensitive = { classes: Object.fromEntries(CLASSES.map((c) => [c, inv.filter((i) => i.class === c).length])), frameworks: sc.inScope.map((x) => x.id), suggested: sc.suggested.map((x) => x.id) };
   const m = manifest(p);
   const gs = gauges(p);
   const built = new Map((f?.journeys ?? []).map((x) => [x.id, statusOf(x.status)]));
@@ -230,6 +240,7 @@ export function studioFlow(raw: string | null, f: Feed | null): Flow | null {
   const product = s.product?.trim() || 'Not yet in a product';
   return {
     id: 'studio',
+    sensitive,
     product,
     holder: s.holder?.name || null,
     people: p.statements.filter((x) => x.slot === 'people').map((x) => x.text.replace(/\s*\(.*\)$/, '')),

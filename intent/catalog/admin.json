@@ -388,6 +388,41 @@
       "studentAdvocate": {
         "coverage": "none"
       }
+    },
+    {
+      "name": "Compliance evidence",
+      "gives": "Each in-scope framework's controls mapped to evidence the factory produces on every release, collected once and serving every control that needs it, written as OSCAL for assessors",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Sensitive data inventory",
+      "gives": "Every sensitive field, in the same form in every app: its class, the frameworks it falls under, who may read it, where it may flow, how long it is kept",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Data gate",
+      "gives": "One gate policy for the fleet: a central gateway allows or refuses reads, exports and queries by data class, and records why",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Delivery pipeline",
+      "gives": "Build, test, rehearse the data, package with signed provenance, deploy without traffic, canary, release, with a gate between each",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Service levels and alerts",
+      "gives": "Objectives from the schematic (feedback budget, availability, each outcome's target), error-budget alerts, and a runbook entry for every alert",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
     }
   ],
   "rules": [

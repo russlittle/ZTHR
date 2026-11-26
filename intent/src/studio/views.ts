@@ -14,6 +14,9 @@ import { USAGE, USAGE_WHAT } from '../reports.ts';
 import { LEVEL_NAME, LEVEL_WHAT, type Framework, type Level } from '../outcomes.ts';
 import { PATTERNS, changes, type Schema } from '../schema.ts';
 import { stages } from '../datapipeline.ts';
+import { CLASSES, COVERAGE_WHAT, FRAMEWORKS, coverageOf, inventory, scopeOf, type Coverage } from '../compliance.ts';
+import { STAGES as DELIVERY, objectives } from '../delivery.ts';
+import type { Prepared } from '../pipeline.ts';
 import { BUILD_ORDER, MAINTAINER_LABEL, MAINTAINER_WHAT, SOURCE_LABEL, SOURCE_WHAT, type Line, type Manifest, type Source } from '../manifest.ts';
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -689,7 +692,7 @@ ${m.gaps.length ? `<div class="gaps"><h4>On the schematic, but nothing on the ma
 }
 
 /** The factory spec sheet: what the build carries beyond the screens. Defined always; switched on here. */
-export function specSheet(m: Manifest, o: Settled): string {
+export function specSheet(m: Manifest, o: Settled, suggested: readonly string[] = [], said: readonly string[] = []): string {
   const fs = features(m);
   const d = describe(o, fs.length);
   const reach = (key: 'api' | 'training', r: Reach, labels: [string, string, string]) =>
@@ -709,11 +712,43 @@ export function specSheet(m: Manifest, o: Settled): string {
 <div class="spec-row"><label for="opt-training-reach"><strong>Training</strong></label><div>${reach('training', o.training.reach, ['Written, held back', 'Published for every feature', 'Published for some'])}${o.training.reach === 'some' ? picks('training', o.training.features) : ''}<p class="muted small">${esc(d.training)}</p></div></div>
 <div class="spec-row"><span><strong>Docs</strong></span><div><p class="small">${esc(d.docs)}</p></div></div>
 <div class="spec-row"><label for="opt-query"><strong>Query console</strong></label><div>${sel('query', QUERY_REACH, o.admin.query, (v) => (v === 'non-production' ? 'Development, test and UAT only' : v === 'everywhere' ? 'Every environment, production too' : 'Left out of every build'))}<p class="muted small">${esc(d.admin)}</p></div></div>
+<div class="spec-row"><span><strong>Compliance</strong></span><div><fieldset class="opt-picks"><legend class="sr">Frameworks in scope</legend>${FRAMEWORKS.frameworks.map((f) => `<label><input type="checkbox" id="opt-comp-${esc(f.id)}" data-opt="compliance" value="${esc(f.id)}"${o.compliance.includes(f.id) ? ' checked' : ''}> ${esc(f.name)}${suggested.includes(f.id) ? ' <span class="kind-tag">suggested</span>' : ''}${said.includes(f.id) ? ' <span class="kind-tag">in your words</span>' : ''}</label>`).join('')}</fieldset><p class="muted small">Decided here, proved on every release. Named in your words counts too. Suggestions come from what it keeps.</p></div></div>
+<div class="spec-row"><span><strong>Runs on</strong></span><div><p class="small">Google Cloud: Cloud Build, Cloud Run, Cloud SQL, signed images only. The pipeline is written once; another cloud is another adapter.</p></div></div>
 <div class="spec-row"><label for="opt-usage"><strong>Use tracking</strong></label><div>${sel('usage', USAGE, o.usage, (v) => (v === 'counts' ? 'Counted, naming no one' : v === 'consented' ? 'Followed over time, with consent' : 'Off'))}<p class="muted small">${esc(USAGE_WHAT[o.usage])} Feeds a report for every feature, operations every day, use as a whole, and a weekly brief on what to improve. No group under 10 is ever shown.</p></div></div>
 <div class="spec-row"><span><strong>Connections</strong></span><div class="spec-conn">${tool('tickets', 'tickets', 'Progress to', o.connect.tickets)}${tool('wiki', 'docs', 'Docs to', o.connect.wiki)}${tool('chat', 'chat', 'Notes to', o.connect.chat)}${box('feed', o.connect.feed, 'A data feed for systems already in place')}${o.connect.feed ? tool('feedTo', 'feed', 'Feed by', o.connect.feedTo, false) : ''}<p class="muted small">${esc(d.connect)} Each one is a stub: the package holds the exact requests it would send, and nothing is sent until it is set up where the factory runs. Credentials are never in the package.</p></div></div>
 <div class="spec-row"><label for="opt-identity"><strong>Sign-in</strong></label><div>${tool('identity', 'identity', '', o.connect.identity, false)}<p class="muted small">How people sign in to the app the factory builds. Roles and row-level rules come from the app, not from the sign-in provider.</p></div></div>
 </div>
 </div></section>`;
+}
+
+/** Compliance, in depth: what is in scope and why, how each framework is met, the evidence crosswalk, sensitive data. */
+export function complianceView(p: Prepared, s: Schema): string {
+  const sc = scopeOf(p, s);
+  const inv = inventory(p, s, sc);
+  const fws = sc.inScope.map((x) => FRAMEWORKS.frameworks.find((f) => f.id === x.id)!);
+  const covs: Coverage[] = ['factory', 'configured', 'shared', 'platform', 'organization'];
+  const lede = `<div class="view-bar"><p class="view-lede">Compliance decided on the schematic is evidence collected while building, not an audit scramble after. Each framework's controls are met by evidence the factory produces on every release, collected once and serving every control that needs it. What only the organization can supply is named. Machine-readable output is OSCAL, for assessors' tools.</p></div>`;
+  const scope = `<section aria-labelledby="h-scope"><h3 id="h-scope">In scope</h3>${fws.length ? `<ul class="rel-list">${sc.inScope.map((x) => `<li><strong>${esc(FRAMEWORKS.frameworks.find((f) => f.id === x.id)!.name)}</strong>: ${esc(x.why.toLowerCase())}</li>`).join('')}</ul>` : '<p class="muted">No framework is in scope yet.</p>'}${sc.suggested.length ? `<h4>Suggested by what it keeps</h4><ul class="rel-list">${sc.suggested.map((x) => `<li><button type="button" class="btn quiet" data-comp-add="${esc(x.id)}">Add ${esc(FRAMEWORKS.frameworks.find((f) => f.id === x.id)!.name)}</button> ${esc(x.why)}</li>`).join('')}</ul>` : ''}</section>`;
+  const bars = fws
+    .map((f) => {
+      const n = f.controls.length;
+      return `<li class="cov-row"><span class="cov-name">${esc(f.name)}<span class="muted small po-id">${esc(f.version)}</span></span><span class="mbar big" role="img" aria-label="${esc(covs.map((c) => `${f.controls.filter((x) => coverageOf(x) === c).length} ${c}`).join(', '))}">${covs.map((c) => { const k = f.controls.filter((x) => coverageOf(x) === c).length; return k ? `<span class="seg cov-${c}" style="width:${(k / n) * 100}%" title="${k} ${c}"></span>` : ''; }).join('')}</span><span class="small">${n} controls</span></li>`;
+    })
+    .join('');
+  const legend = `<ul class="maint-legend">${covs.map((c) => `<li><span class="sw cov-${c}" aria-hidden="true"></span><strong>${c}</strong>: ${esc(COVERAGE_WHAT[c].toLowerCase())}</li>`).join('')}</ul>`;
+  const ev = Object.entries(FRAMEWORKS.evidence).filter(([id]) => fws.some((f) => f.controls.some((c) => c.by.includes(id))));
+  const cross = fws.length ? `<div class="matrix-wrap" tabindex="0" role="region" aria-label="Evidence crosswalk"><table class="matrix"><caption>Evidence collected once, and the controls it serves in each framework</caption><thead><tr><th scope="col">Evidence</th>${fws.map((f) => `<th scope="col">${esc(f.name)}</th>`).join('')}</tr></thead><tbody>${ev.map(([id, e]) => `<tr><th scope="row" class="left">${esc(id)}<span class="muted small po-id">${esc(e.what)}</span></th>${fws.map((f) => { const cs = f.controls.filter((c) => c.by.includes(id)); return `<td title="${esc(cs.map((c) => c.id).join(', '))}">${cs.length ? `<span class="cell yes">${cs.length}</span>` : ''}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>` : '';
+  const sens = `<section aria-labelledby="h-sens"><h3 id="h-sens">Sensitive data</h3><p class="muted small">${inv.length} sensitive field${inv.length === 1 ? '' : 's'}: ${CLASSES.map((c) => `${inv.filter((i) => i.class === c).length} ${c}`).join(', ')}. The same inventory in every app, so the fleet is read as one; a central gateway decides access by class from <button type="button" class="chip file" data-file="compliance/gate/policy.rego">gate/policy.rego</button>.</p>${inv.length ? `<div class="matrix-wrap" tabindex="0" role="region" aria-label="Sensitive data inventory"><table class="matrix ds"><caption class="sr">Every sensitive field</caption><thead><tr><th scope="col">Field</th><th scope="col">Class</th><th scope="col">Frameworks</th><th scope="col">Kept</th><th scope="col">Masking</th></tr></thead><tbody>${inv.map((i) => `<tr><th scope="row"><code>${esc(i.field)}</code></th><td><span class="sens sens-${esc(i.class)}">${esc(i.class)}</span></td><td>${esc(i.frameworks.map((x) => FRAMEWORKS.frameworks.find((f) => f.id === x)!.name).join(', ') || '–')}</td><td>${esc(i.retention)}</td><td>${esc(i.masking)}</td></tr>`).join('')}</tbody></table></div>` : ''}</section>`;
+  const org = [...new Set(fws.flatMap((f) => f.controls.filter((c) => c.by.includes('organization')).map((c) => `${f.name} ${c.id}: ${c.title}`)))];
+  return `${lede}${scope}${fws.length ? `<section aria-labelledby="h-cov"><h3 id="h-cov">How each framework is met</h3><ul class="cov-list">${bars}</ul>${legend}</section><section aria-labelledby="h-cross"><h3 id="h-cross">Collected once, used everywhere</h3>${cross}</section>` : ''}${sens}${org.length ? `<section aria-labelledby="h-org"><h3 id="h-org">What the organization supplies</h3><ul class="rel-list">${org.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>` : ''}`;
+}
+
+/** Delivery and operations, in depth: the gated pipeline, the service levels from the schematic, and the runbook. */
+export function operationsView(p: Prepared): string {
+  const { list } = objectives(p);
+  return `<div class="view-bar"><p class="view-lede">How a signed release becomes running software, and how it is kept running. The pipeline is written once; Google Cloud is its first adapter. Service levels come from the schematic, and every alert has a runbook entry. Nothing here changes a cloud project: setup is commands a person runs in Cloud Shell.</p></div>
+<section aria-labelledby="h-dl"><h3 id="h-dl">From release to running</h3><ol class="pipe">${DELIVERY.map((x) => `<li><strong>${esc(x.name)}</strong><span class="small po-id">Proves: ${esc(x.proves.join('; '))}.</span><span class="muted small po-id">Gate: ${esc(x.gate)}.</span></li>`).join('')}</ol><p class="muted small"><button type="button" class="chip file" data-file="delivery/gcp/cloudbuild.yaml">cloudbuild.yaml</button> <button type="button" class="chip file" data-file="delivery/gcp/setup.md">setup.md</button> <button type="button" class="chip file" data-file="delivery/gcp/binauthz-policy.yaml">binauthz-policy.yaml</button></p></section>
+<section aria-labelledby="h-slo"><h3 id="h-slo">Service levels, from the schematic</h3><div class="matrix-wrap" tabindex="0" role="region" aria-label="Service levels"><table class="matrix ds"><caption class="sr">Service level objectives</caption><thead><tr><th scope="col">Objective</th><th scope="col">Target, over 28 days</th><th scope="col">From</th></tr></thead><tbody>${list.map((o) => `<tr><th scope="row">${esc(o.what)}</th><td>${(o.goal * 100).toFixed(1)}%</td><td>${esc(o.from)}</td></tr>`).join('')}</tbody></table></div><p class="muted small">A fast burn of any error budget pages; a slow burn opens a ticket. <button type="button" class="chip file" data-file="ops/runbook.md">runbook.md</button> <button type="button" class="chip file" data-file="ops/alerts.json">alerts.json</button></p></section>`;
 }
 
 /** The information it keeps, at a glance: for the value chain, the release panel and mission control. */

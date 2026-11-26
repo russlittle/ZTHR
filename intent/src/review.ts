@@ -9,6 +9,7 @@
  */
 import { framework } from './outcomes.ts';
 import { schemaOf } from './schema.ts';
+import { FRAMEWORKS, forbiddenFields, scopeOf } from './compliance.ts';
 import type { Ballooned } from './frame.ts';
 import { chosenJourneys, neededKinds, suggestJourneys } from './journeys.ts';
 import { manifest } from './manifest.ts';
@@ -16,7 +17,7 @@ import type { Prepared } from './pipeline.ts';
 import { outcomeGauges, type Gauge } from './release.ts';
 
 /** Where a finding is fixed: a balloon, a question, a view, or your words. */
-export type Fix = { kind: 'balloon'; balloon: number } | { kind: 'question'; id: string } | { kind: 'view'; view: 'plan' | 'build' | 'map' | 'hire' | 'outcomes' | 'information' } | { kind: 'words'; add: string };
+export type Fix = { kind: 'balloon'; balloon: number } | { kind: 'question'; id: string } | { kind: 'view'; view: 'plan' | 'build' | 'map' | 'hire' | 'outcomes' | 'information' | 'compliance' } | { kind: 'words'; add: string };
 
 export interface Check {
   readonly id: string;
@@ -142,6 +143,9 @@ export function review(p: Prepared): Review {
   const fw = framework(p, m);
   const info = schemaOf(p);
   const yours = info.entities.reduce((a, e) => a + e.fields.filter((f) => f.from === 'your words' || f.from === 'provided').length, 0);
+  const scope = scopeOf(p, info);
+  const cards = forbiddenFields(info);
+  const fwName = (id: string) => FRAMEWORKS.frameworks.find((f) => f.id === id)!.name;
   const exposed = info.entities.flatMap((e) => e.fields.filter((f) => ['financial', 'private', 'health'].includes(f.sensitivity)).map((f) => `${e.name}.${f.name}`));
   const unset = fw.outcomes.filter((o) => !o.complete);
   const unmastered = fw.platform.filter((x) => x.highest !== 'M');
@@ -213,6 +217,8 @@ export function review(p: Prepared): Review {
         c('staff', !staff || (has('Row-level security controls') && has('Tamper-evident audit chain')), staff ? 'Staff access is controlled per record and every read recorded' : 'No one sees another person’s records', 'Staff see records with no per-record control or read audit', 'Someone else reading a person’s records is the highest-risk path.', { kind: 'view', view: 'build' }),
         c('consent', !contacts || st.some((s) => /consent|agreed/i.test(s.text)), contacts ? 'People are contacted only with consent' : 'Nobody is contacted', 'People are contacted with no consent on the schematic', 'Unwanted messages are a privacy harm and a legal one.'),
         c('money', !money || has('Independent second implementation'), money ? 'Every amount is calculated twice, independently' : 'No money is involved', 'Money is involved but amounts are calculated once', 'An amount wrong once is wrong for everyone.', { kind: 'view', view: 'build' }),
+        c('frameworks', !scope.suggested.some((x) => x.id !== 'soc2'), scope.inScope.length ? `In scope: ${scope.inScope.map((x) => fwName(x.id)).join(', ')}` : 'No framework is called for by what it keeps', `What it keeps calls for ${scope.suggested.filter((x) => x.id !== 'soc2').map((x) => fwName(x.id)).join(', ')}, and the schematic does not say`, 'Compliance decided before building is evidence collected while building; decided after, it is an audit scramble.', { kind: 'view', view: 'compliance' }),
+        c('cards', !cards.length, 'No card numbers are kept', `Card numbers would be kept: ${cards.join(', ')}`, 'A hosted payment page keeps card data out of the app, and most of PCI DSS with it.', { kind: 'view', view: 'information' }),
         c('sensitive', true, exposed.length ? `${exposed.length} sensitive field${exposed.length === 1 ? ' is' : 's are'} marked, and shown only to those allowed: ${exposed.slice(0, 3).join(', ')}${exposed.length > 3 ? '…' : ''}` : 'No field is marked financial, private or health', 'Every field carries its sensitivity from the data sheet.', 'Sensitivity on each field is what masking, exports and reports obey.', { kind: 'view', view: 'information' }),
         c('controls', marked.length === 0 || has('Locked datum'), `${marked.length} marked statement${marked.length === 1 ? '' : 's'} reach a control`, 'A marked statement reaches no control', 'Critical and significant characteristics need a control before they ship.'),
         c('tried', !nevers.length || refused.length > 0, 'At least one forbidden outcome is attacked by a journey', 'No journey tries what must never happen', 'A control nobody tries to break is a hope.', { kind: 'view', view: 'plan' }),

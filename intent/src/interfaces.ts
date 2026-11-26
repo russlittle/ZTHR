@@ -26,6 +26,10 @@ export interface Options {
   readonly admin?: { readonly query?: QueryReach };
   /** How much use is recorded, for reports and product improvement. */
   readonly usage?: 'off' | 'counts' | 'consented';
+  /** Compliance frameworks chosen on the spec sheet, by id. */
+  readonly compliance?: readonly string[];
+  /** Where it runs. Google Cloud today; the pipeline and operations are written for others the same way. */
+  readonly target?: 'gcp';
 }
 
 /** Where the query console runs. Out of production by default, so it cannot be used to take real data out. */
@@ -38,6 +42,8 @@ export interface Settled {
   readonly connect: { readonly tickets: Tool; readonly wiki: Tool; readonly chat: Tool; readonly feed: boolean; readonly feedTo: Tool; readonly identity: Tool };
   readonly admin: { readonly query: QueryReach };
   readonly usage: 'off' | 'counts' | 'consented';
+  readonly compliance: readonly string[];
+  readonly target: 'gcp';
 }
 
 /** A tool the catalogue holds for that kind of connection, or the fallback. Names from before the catalogue still work. */
@@ -62,6 +68,8 @@ export function settle(o: Options | undefined): Settled {
     },
     admin: { query: o?.admin?.query ?? 'non-production' },
     usage: o?.usage === 'off' || o?.usage === 'consented' ? o.usage : 'counts',
+    compliance: [...new Set(o?.compliance ?? [])].sort(),
+    target: 'gcp',
   };
 }
 

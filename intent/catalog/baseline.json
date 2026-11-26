@@ -55,6 +55,11 @@
     { "part": "Metrics and tracing", "why": "Reports: every request is timed against the feedback budget" },
     { "part": "Report delivery", "why": "Reports: each goes to its audience on a schedule" },
     { "part": "Improvement brief", "why": "Reports: what people do comes back to the intent as proposals a person decides on" },
-    { "part": "Data pipeline", "why": "The records are carried, never rebuilt: every schema revision is rehearsed, checked for loss and drift, and promoted with a ledger" }
+    { "part": "Data pipeline", "why": "The records are carried, never rebuilt: every schema revision is rehearsed, checked for loss and drift, and promoted with a ledger" },
+    { "part": "Compliance evidence", "why": "Compliance is decided on the schematic and proved on every release" },
+    { "part": "Sensitive data inventory", "why": "Every app reports its sensitive data the same way, so the fleet is governed as one" },
+    { "part": "Data gate", "why": "A central gateway decides access by data class, the same way for every app" },
+    { "part": "Delivery pipeline", "why": "Every release reaches people through the same gated pipeline" },
+    { "part": "Service levels and alerts", "why": "The schematic's measures are watched in production, with a runbook for every alert" }
   ]
 }

@@ -15,7 +15,7 @@ import { release } from '../release.ts';
 import { zip } from '../zip.ts';
 import { graph, type Graph } from '../graph.ts';
 import { suggestJourneys, type OwnJourney } from '../journeys.ts';
-import { buildView, specSheet, outcomesView, informationView, informationRollup, reviewView, type TrailStep, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
+import { buildView, specSheet, outcomesView, informationView, complianceView, operationsView, informationRollup, reviewView, type TrailStep, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
 import { manifest, type Manifest, type Source } from '../manifest.ts';
 import { review, type Review } from '../review.ts';
 import type { Tune } from '../pipeline.ts';
@@ -23,6 +23,7 @@ import { sha256 } from '../hash.ts';
 import { settle, type Options } from '../interfaces.ts';
 import { framework } from '../outcomes.ts';
 import { schemaOf } from '../schema.ts';
+import { scopeOf } from '../compliance.ts';
 
 // ---------------------------------------------------------------- platform capabilities, each optional
 
@@ -81,13 +82,15 @@ interface State {
   /** A schema the team already has, brought in as a Prisma file: kept as provided. */
   provided?: { path: string; text: string } | null;
 }
-type View = 'map' | 'review' | 'hire' | 'outcomes' | 'information' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
+type View = 'map' | 'review' | 'hire' | 'outcomes' | 'information' | 'compliance' | 'operations' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
 const VIEWS: readonly { key: View; label: string; ico: string }[] = [
   { key: 'map', label: 'Intent map', ico: 'end' },
   { key: 'review', label: 'Review', ico: 'scenario' },
   { key: 'hire', label: 'The hire', ico: 'doc' },
   { key: 'outcomes', label: 'Outcomes', ico: 'gauge' },
   { key: 'information', label: 'Information', ico: 'group' },
+  { key: 'compliance', label: 'Compliance', ico: 'control' },
+  { key: 'operations', label: 'Operations', ico: 'gauge' },
   { key: 'structure', label: 'Datum structure', ico: 'group' },
   { key: 'plan', label: 'Inspection plan', ico: 'gauge' },
   { key: 'build', label: 'Build manifest', ico: 'group' },
@@ -176,6 +179,7 @@ function specChange(o: Options, key: string, t: HTMLInputElement | HTMLSelectEle
     case 'tickets': return { ...o, connect: { ...o.connect, tickets: t.value as never } };
     case 'wiki': return { ...o, connect: { ...o.connect, wiki: t.value as never } };
     case 'feed': return { ...o, connect: { ...o.connect, feed: checked } };
+    case 'compliance': return { ...o, compliance: toggle(o.compliance, t.value) };
     case 'usage': return { ...o, usage: t.value as 'off' | 'counts' | 'consented' };
     case 'chat': return { ...o, connect: { ...o.connect, chat: t.value } };
     case 'feedTo': return { ...o, connect: { ...o.connect, feedTo: t.value } };
@@ -279,6 +283,13 @@ function renderChain(p: Prepared) {
     (() => {
       const r = informationRollup(schemaOf(p));
       return step(r.records, `records it keeps, ${r.yours} field${r.yours === 1 ? '' : 's'} in your words${r.unread ? `; ${r.unread} sentence${r.unread === 1 ? '' : 's'} not read` : ''}`, 'information', r.unread ? 'red' : '');
+    })(),
+    (() => {
+      const info = schemaOf(p);
+      const sc = scopeOf(p, info);
+      const sensitive = info.entities.reduce((a, e) => a + e.fields.filter((f) => ['contact', 'financial', 'private', 'health'].includes(f.sensitivity)).length, 0);
+      const open = sc.suggested.filter((x) => x.id !== 'soc2').length;
+      return step(sc.inScope.length, `framework${sc.inScope.length === 1 ? '' : 's'} in scope, ${sensitive} sensitive field${sensitive === 1 ? '' : 's'} governed${open ? `; ${open} more suggested` : ''}`, 'compliance', open ? 'red' : '');
     })(),
     q ? step(q, `question${q === 1 ? '' : 's'} only you can settle`, 'redlines', 'red') : step('0', 'questions left: ready to sign', 'release'),
     step(checks, 'tests and checks that will hold it', 'plan'),
@@ -575,12 +586,16 @@ function viewBody(p: Prepared, parts: string): string {
       return reviewView(lastReview!, state.holder, state.tune, trailOf(p), state.product);
     case 'hire':
       return `<div class="view-bar"><p class="view-lede">The same schematic, in the terms a leader uses for any hire: the job, how you would know it is done well, and what would make it a good hire a year from now.</p></div>${hireCard(p)}`;
+    case 'compliance':
+      return complianceView(p, schemaOf(p));
+    case 'operations':
+      return operationsView(p);
     case 'information':
       return informationView(schemaOf(p), state.record ?? null, state.provided ? `<p class="provided-bar">Kept as provided: <code>${esc(state.provided.path)}</code> <button type="button" class="btn quiet" data-provided-remove>Remove it</button></p>` : `<p class="provided-bar"><label class="btn quiet" for="file">Bring in a Prisma schema your team already has</label></p>`, (state.releases.at(-1)?.datum as { information?: import('../schema.ts').Schema } | undefined)?.information ?? null, (state.releases.at(-1)?.revision ?? 0) + 1);
     case 'outcomes':
       return outcomesView(framework(p, lastManifest!), p.questions);
     case 'build':
-      return specSheet(lastManifest!, settle(state.options)) + buildView(lastManifest!, state.buildFilter, p.model.title && p.model.title !== state.path ? p.model.title : 'this intent', `${wide}<div class="zoom" role="group" aria-label="Zoom"><button type="button" class="btn quiet" data-zoom="-1" aria-label="Zoom out">−</button><button type="button" class="btn quiet" data-zoom="0" aria-label="Fit to width, or full size">Fit</button><button type="button" class="btn quiet" data-zoom="1" aria-label="Zoom in">+</button></div>`);
+      return (() => { const sc = scopeOf(p, schemaOf(p)); return specSheet(lastManifest!, settle(state.options), sc.suggested.map((x) => x.id), sc.inScope.filter((x) => x.why.startsWith('Named')).map((x) => x.id)); })() + buildView(lastManifest!, state.buildFilter, p.model.title && p.model.title !== state.path ? p.model.title : 'this intent', `${wide}<div class="zoom" role="group" aria-label="Zoom"><button type="button" class="btn quiet" data-zoom="-1" aria-label="Zoom out">−</button><button type="button" class="btn quiet" data-zoom="0" aria-label="Fit to width, or full size">Fit</button><button type="button" class="btn quiet" data-zoom="1" aria-label="Zoom in">+</button></div>`);
     case 'preview': {
       const prior = priorFiles();
       const open = lastFiles[state.previewFile] !== undefined ? state.previewFile : 'schematic.md';
@@ -1149,9 +1164,15 @@ function wire() {
     o.click();
   });
   const onPick = (e: Event) => {
-    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-not-quite], [data-node], [data-entity], [data-view], [data-file], [data-zoom], [data-journey], [data-add-first], [data-filter], [data-answer], [data-wide], [data-src], [data-baseline], [data-add-words], [data-record], [data-provided-remove]');
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-not-quite], [data-node], [data-entity], [data-view], [data-file], [data-zoom], [data-journey], [data-add-first], [data-filter], [data-answer], [data-wide], [data-src], [data-baseline], [data-add-words], [data-record], [data-provided-remove], [data-comp-add]');
     if (!t || !prepared) return;
     const d = t.dataset;
+    if (d['compAdd'] !== undefined) {
+      state.options = { ...state.options, compliance: [...new Set([...(state.options.compliance ?? []), d['compAdd']!])] };
+      scheduleSave();
+      render();
+      return;
+    }
     if (d['providedRemove'] !== undefined) {
       state.provided = null;
       scheduleSave();

@@ -1,0 +1,45 @@
+# Delivery and operations
+
+How a signed release becomes running software, and how it is kept running. The pipeline is written once; each cloud is an
+adapter over the same stages. Google Cloud is the first.
+
+```mermaid
+flowchart LR
+  B[Build] --> T[Test<br>gates, mutation, journeys]
+  T --> D[Rehearse the data]
+  D --> P[Package and sign<br>provenance, SBOM, scan]
+  P --> N[Deploy without traffic<br>smoke journeys]
+  N --> C[Canary<br>a person approves in production]
+  C --> R[Release<br>previous revision kept ready]
+  R --> O[Operate<br>service levels, nightly watch]
+  O -.->|incident| DEF[Defect, test, ratchet]
+```
+
+| Stage | Proves | On Google Cloud |
+| --- | --- | --- |
+| Build | Dependencies from the lock file, types, no secret-shaped values | Cloud Build |
+| Test | Tests, mutation floors, ratchets, journeys on the twins | Cloud Build |
+| Rehearse the data | The migration keeps everything, integrity holds, no drift | Postgres beside the build |
+| Package and sign | Signed build provenance, a bill of materials, no critical or high vulnerability | Cloud Build with verified provenance, Artifact Registry scanning and SBOM export |
+| Deploy without traffic | Only signed images run; journeys pass on the candidate first | Binary Authorization, Cloud Run tagged revision |
+| Canary | A share of people use it while error budgets hold | Cloud Run traffic split; production needs approval |
+| Release | Everyone moves; the previous revision takes traffic back in one step | Cloud Run traffic |
+| Operate | Service levels, nightly integrity and drift, a runbook per alert | Cloud Monitoring, Cloud Scheduler, a Cloud Run job |
+
+## Service levels from the schematic
+
+| Objective | From |
+| --- | --- |
+| Availability, 99.5% over 28 days | The team minimum |
+| Requests within the feedback budget, 95% | The title block |
+| People who start an outcome achieve it, at its target | Each outcome's target in use |
+
+Each objective has a fast-burn alert that pages and a slow-burn alert that opens a ticket. Anything that must never happen
+pages the first time it is logged. Every alert has a runbook entry, and every incident ends with a defect, a test and a
+ratchet.
+
+## Nothing changes a cloud project by itself
+
+`delivery/gcp/setup.md` lists every service to turn on, every identity with the least roles it needs, the database with
+point-in-time recovery, the secrets by name, the Binary Authorization policy and the build triggers, as commands a person
+runs in Cloud Shell.
