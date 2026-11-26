@@ -12,7 +12,8 @@ import { describe, features, QUERY_REACH, type Reach, type Settled } from '../in
 import { byKind, type Kind } from '../connectors.ts';
 import { USAGE, USAGE_WHAT } from '../reports.ts';
 import { LEVEL_NAME, LEVEL_WHAT, type Framework, type Level } from '../outcomes.ts';
-import { PATTERNS, type Schema } from '../schema.ts';
+import { PATTERNS, changes, type Schema } from '../schema.ts';
+import { stages } from '../datapipeline.ts';
 import { BUILD_ORDER, MAINTAINER_LABEL, MAINTAINER_WHAT, SOURCE_LABEL, SOURCE_WHAT, type Line, type Manifest, type Source } from '../manifest.ts';
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -784,7 +785,7 @@ function informationErd(s: Schema, focus: string | null): string {
 }
 
 /** The information it keeps, in full: the diagram, a data sheet per record, the person's sentences and the rules. */
-export function informationView(s: Schema, focus: string | null, controls = ''): string {
+export function informationView(s: Schema, focus: string | null, controls = '', prior: Schema | null = null, revision = 1): string {
   const r = informationRollup(s);
   const sens = (x: string) => `<span class="sens sens-${x}" title="${esc(PATTERNS.sensitivity[x as keyof typeof PATTERNS.sensitivity] ?? x)}">${esc(x)}</span>`;
   const lede = `<div class="view-bar"><p class="view-lede">What the software keeps is the one part of it that cannot be rebuilt, so it is signed with the schematic. Screens, the API, reports and docs are generated from it and can be regenerated; these records cannot. Describe them in your own sentences under <strong>The information</strong>; common records come from the fleet's patterns, named in your words.</p>${controls}</div>`;
@@ -803,7 +804,10 @@ ${rules.length ? `<details class="rules"><summary>${rules.length} integrity rule
     .join('');
   const shapes = ['A bill has an amount, a due date and who it is for.', 'A reminder belongs to one bill.', 'A student can have many bills.', 'A bill can be open, paid or overdue.', 'The amount is private.', 'Keep bills for 7 years.'];
   const words = `<section aria-labelledby="h-iw"><h3 id="h-iw">In your words</h3>${s.unread.length ? `<div class="gaps"><h4>To read or settle (${s.unread.length})</h4><ul>${s.unread.map((u) => `<li>Line ${u.line}: “${esc(u.text)}”. ${esc(u.why)}</li>`).join('')}</ul></div>` : ''}<p class="muted small">Write each record as a plain sentence under a heading <strong>The information</strong>. These shapes are read; anything else is shown back here, never guessed at:</p><ul class="shapes">${shapes.map((x) => `<li><code>${esc(x)}</code></li>`).join('')}</ul><button type="button" class="btn quiet" data-add-words="${esc('## The information\n\n- A ')}">Add a sentence about the information</button></section>`;
-  return `${lede}${stats}<section aria-labelledby="h-erd"><h3 id="h-erd">How the records relate</h3><div class="canvas" id="canvas" tabindex="-1">${informationErd(s, focus)}</div></section>${words}<section aria-labelledby="h-sheets"><h3 id="h-sheets">Data sheets</h3>${sheets}</section>`;
+  const ch = changes(prior, s, revision);
+  const st = stages(ch);
+  const pipe = `<section aria-labelledby="h-pipe"><h3 id="h-pipe">How revision ${revision} reaches every database</h3><p class="muted small">Code is rebuilt; data is carried. ${prior ? (ch.length ? `Since the last signed schema: ${ch.map((c) => `${esc(c.kind)} ${esc(c.what)}${c.breaking ? ' (breaks existing records: migrated, nothing dropped)' : ''}`).join('; ')}.` : 'The information has not changed since the last signed schema.') : 'The first revision: every table is created from the signed schema.'}</p><ol class="pipe">${st.map((x) => `<li><strong>${esc(x.name)}</strong><span class="muted small po-id">${esc(x.does)}</span><span class="small po-id">Checks: ${esc(x.checks.join('; '))}. Gate: ${esc(x.gate)}.</span></li>`).join('')}</ol><p class="muted small">The package carries it all: <button type="button" class="chip file" data-file="information/pipeline.yaml">pipeline.yaml</button> <button type="button" class="chip file" data-file="information/ci/data-pipeline.yml">ci/data-pipeline.yml</button> <button type="button" class="chip file" data-file="information/drift.sql">drift.sql</button> <button type="button" class="chip file" data-file="information/preservation.sql">preservation.sql</button> <button type="button" class="chip file" data-file="information/fixtures/seed.sql">fixtures/seed.sql</button></p></section>`;
+  return `${lede}${stats}<section aria-labelledby="h-erd"><h3 id="h-erd">How the records relate</h3><div class="canvas" id="canvas" tabindex="-1">${informationErd(s, focus)}</div></section>${words}${pipe}<section aria-labelledby="h-sheets"><h3 id="h-sheets">Data sheets</h3>${sheets}</section>`;
 }
 
 /** The outcome framework: every outcome with how it is assessed, and the platform outcomes mapped across the features. */

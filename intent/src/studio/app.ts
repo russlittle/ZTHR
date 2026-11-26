@@ -576,7 +576,7 @@ function viewBody(p: Prepared, parts: string): string {
     case 'hire':
       return `<div class="view-bar"><p class="view-lede">The same schematic, in the terms a leader uses for any hire: the job, how you would know it is done well, and what would make it a good hire a year from now.</p></div>${hireCard(p)}`;
     case 'information':
-      return informationView(schemaOf(p), state.record ?? null, state.provided ? `<p class="provided-bar">Kept as provided: <code>${esc(state.provided.path)}</code> <button type="button" class="btn quiet" data-provided-remove>Remove it</button></p>` : `<p class="provided-bar"><label class="btn quiet" for="file">Bring in a Prisma schema your team already has</label></p>`);
+      return informationView(schemaOf(p), state.record ?? null, state.provided ? `<p class="provided-bar">Kept as provided: <code>${esc(state.provided.path)}</code> <button type="button" class="btn quiet" data-provided-remove>Remove it</button></p>` : `<p class="provided-bar"><label class="btn quiet" for="file">Bring in a Prisma schema your team already has</label></p>`, (state.releases.at(-1)?.datum as { information?: import('../schema.ts').Schema } | undefined)?.information ?? null, (state.releases.at(-1)?.revision ?? 0) + 1);
     case 'outcomes':
       return outcomesView(framework(p, lastManifest!), p.questions);
     case 'build':

@@ -21,6 +21,7 @@ import { sha256 } from './hash.ts';
 import type { InfoLine } from './model.ts';
 import type { Prepared } from './pipeline.ts';
 import { toPrisma } from './prisma.ts';
+import { pipelineFiles } from './datapipeline.ts';
 
 export type FieldType = 'id' | 'text' | 'money' | 'date' | 'timestamp' | 'integer' | 'boolean' | 'email' | 'phone' | 'state' | `ref:${string}`;
 export type Sensitivity = 'public' | 'internal' | 'contact' | 'financial' | 'private' | 'health';
@@ -465,6 +466,7 @@ ${s.unread.length ? `\n## Sentences not read yet\n\n${s.unread.map((u) => `- Lin
     'information/schema.prisma': toPrisma(s),
     'information/integrity.sql': integritySql(s),
   };
+  Object.assign(files, pipelineFiles(s, before, revision));
   if (ch.length) files[`information/migrations/revision-${revision}.sql`] = `-- Revision ${revision}: ${ch.length} change${ch.length === 1 ? '' : 's'} to the information schema. Nothing is dropped.\n\n${ch.map((c) => `-- ${c.kind}: ${c.what}${c.breaking ? ' (breaks existing records: migrated)' : ''}\n${c.sql}`).join('\n\n')}\n`;
   return files;
 }

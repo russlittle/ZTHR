@@ -54,6 +54,7 @@
     { "part": "Product analytics", "why": "Reports: use is counted as the spec sheet allows, never naming anyone without their consent" },
     { "part": "Metrics and tracing", "why": "Reports: every request is timed against the feedback budget" },
     { "part": "Report delivery", "why": "Reports: each goes to its audience on a schedule" },
-    { "part": "Improvement brief", "why": "Reports: what people do comes back to the intent as proposals a person decides on" }
+    { "part": "Improvement brief", "why": "Reports: what people do comes back to the intent as proposals a person decides on" },
+    { "part": "Data pipeline", "why": "The records are carried, never rebuilt: every schema revision is rehearsed, checked for loss and drift, and promoted with a ledger" }
   ]
 }

@@ -67,7 +67,8 @@
       "Feature explorer",
       "Query console",
       "Test data generator",
-      "UAT overrides"
+      "UAT overrides",
+      "Data pipeline"
     ],
     "Work and integrations": [
       "HTTP API and routing",

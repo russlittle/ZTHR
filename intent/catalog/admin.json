@@ -381,6 +381,13 @@
       "studentAdvocate": {
         "coverage": "none"
       }
+    },
+    {
+      "name": "Data pipeline",
+      "gives": "Every revision of the information planned, rehearsed on a copy with synthetic records, checked for integrity, loss and drift, promoted environment by environment with a ledger in each database, and watched every night",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
     }
   ],
   "rules": [

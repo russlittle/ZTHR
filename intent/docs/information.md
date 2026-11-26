@@ -92,3 +92,51 @@ flowchart TD
 ```
 
 The factory never drops data. Removing anything for good is a decision a person makes and writes themselves.
+
+## CI/CD for the data
+
+Code is rebuilt; data is carried. So a schema revision is never applied straight to a database. It goes through its own
+pipeline, written into every release from the signed schema.
+
+```mermaid
+flowchart LR
+  PL[Plan<br>classify each change] --> CK[Check<br>no drop, no rename in place]
+  CK --> RH[Rehearse on a copy<br>previous revision + synthetic records]
+  RH --> D[Development]
+  D --> T[Test]
+  T --> U[UAT]
+  U -->|a named person approves| PR[Production<br>backup first]
+  PR --> W[Watch nightly<br>integrity and drift]
+  W -.->|a failure| DEF[Defect, then a ratchet]
+```
+
+| Stage | What it proves |
+| --- | --- |
+| Plan | Every change is classified. A breaking change expands now (new column beside the old, values copied); contracting it is a later revision a person writes |
+| Check | The migration drops nothing, renames nothing in place, and fills a newly required field before enforcing it |
+| Rehearse | On a throwaway copy built from the previous revision and filled with synthetic records: every integrity rule holds, every kept column has the same fingerprint before and after, and the copy matches the signed schema |
+| Promote | Environment by environment. Each database keeps a ledger of the revisions applied to it, with each schema hash chained to the one before, so a revision can only follow the one it was planned from |
+| Watch | Every night, in every environment, integrity and drift are checked against the revision the ledger says is live |
+
+```mermaid
+erDiagram
+  ZTHR_SCHEMA_LEDGER {
+    int revision PK
+    string schema_hash
+    string prior_hash
+    timestamp applied_at
+    string applied_by
+    string environment
+  }
+```
+
+| File | What it is |
+| --- | --- |
+| `information/pipeline.yaml` | The plan for this revision: each change, its phase, and every stage with its checks and gate |
+| `information/ci/data-pipeline.yml` | The same as a GitHub Actions workflow: a Postgres copy for the rehearsal, then one protected job per environment |
+| `information/fixtures/seed.sql` | Synthetic records for the rehearsal, every id marked `syn-`, built to pass every integrity rule |
+| `information/preservation.sql` | Row counts and a fingerprint of every kept column, run before and after: the two must be identical |
+| `information/integrity-summary.sql` | One row per rule with how many records break it: every count must be 0 |
+| `information/drift.sql` | The live database against the signed schema: missing columns, the wrong kind of column, or one that allows empty values when it must not |
+| `information/ledger.sql` | Records this revision in the database's own ledger |
+| `information/rollback/revision-N.sql` | How to go back. Nothing was dropped, so going back never needs a restore |
