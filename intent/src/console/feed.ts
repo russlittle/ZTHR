@@ -57,6 +57,69 @@ export async function loadFeed(url = FEED_URL): Promise<Feed | null> {
 
 export const statusOf = (s: string): Status => (s === 'pass' ? 'pass' : s === 'fail' ? 'fail' : 'not measured');
 
+/**
+ * What zthr.ai's deploy recorded when it published the reference build: the commit whose copy the running app
+ * served, checked part by part against that build's own checksums. Written by .github/workflows/deploy.yml.
+ */
+export interface Delivery {
+  readonly schema: 'zthr-delivery/1';
+  readonly commit: string;
+  readonly verifiedAt: string;
+  readonly served: string;
+}
+
+export const DELIVERY_URL = '/reference/factory/delivery.json';
+
+export async function loadDelivery(url = DELIVERY_URL): Promise<Delivery | null> {
+  try {
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) return null;
+    const d = (await r.json()) as Partial<Delivery>;
+    return d.schema === 'zthr-delivery/1' && typeof d.commit === 'string' ? (d as Delivery) : null;
+  } catch {
+    return null;
+  }
+}
+
+export interface StageResult {
+  readonly id: string;
+  readonly status: Status;
+  readonly note: string;
+}
+
+/**
+ * Each delivery stage of the reference build, judged only from what was recorded. The reference pipeline stops at
+ * its first failure, so a build that ran its tests installed and typechecked. A stage the reference pipeline does
+ * not have yet is not measured, and says which step it lacks.
+ */
+export function referenceStages(f: Feed, d: Delivery | null): StageResult[] {
+  const r = (id: string) => f.readings.find((x) => x.id === id);
+  const held = (id: string): Status => {
+    const x = r(id);
+    if (!x || x.value === null || x.of === null) return 'not measured';
+    if (x.floor != null) return x.value >= x.floor ? 'pass' : 'fail';
+    return x.value === x.of ? 'pass' : 'fail';
+  };
+  const tests = r('tests');
+  const ran = !!tests && tests.value !== null;
+  const js = f.journeys.map((j) => statusOf(j.status));
+  const journeys: Status = !js.length || js.every((s) => s === 'not measured') ? 'not measured' : js.includes('fail') ? 'fail' : js.includes('not measured') ? 'not measured' : 'pass';
+  const parts = [held('tests'), held('gates'), held('mutation'), journeys];
+  const test: Status = parts.includes('fail') ? 'fail' : parts.includes('not measured') ? 'not measured' : 'pass';
+  const passing = js.filter((s) => s === 'pass').length;
+  const released: Status = !d ? 'not measured' : d.commit === f.commit ? 'pass' : 'not measured';
+  return [
+    { id: 'build', status: ran ? 'pass' : 'not measured', note: ran ? 'Dependencies installed from the lock file and types checked: the pipeline stops at the first failure, and this build went on to run its tests.' : 'This build did not report its tests, so how far it got is not recorded.' },
+    { id: 'test', status: test, note: `${tests?.value ?? '?'} of ${tests?.of ?? '?'} tests, ${r('gates')?.value ?? '?'} of ${r('gates')?.of ?? '?'} gates proven, mutation ${r('mutation')?.value ?? '?'}% against a floor of ${r('mutation')?.floor ?? '?'}%, ${passing} of ${js.length} journeys passing.` },
+    { id: 'data', status: 'not measured', note: 'The reference pipeline has no data rehearsal step yet.' },
+    { id: 'package', status: 'not measured', note: 'Cloud Build builds the image; signing it and recording its bill of materials are not in the reference pipeline yet.' },
+    { id: 'deploy', status: 'not measured', note: 'The reference pipeline deploys straight to traffic; it does not start a candidate revision first yet.' },
+    { id: 'canary', status: 'not measured', note: 'No canary step in the reference pipeline yet.' },
+    { id: 'release', status: released, note: !d ? 'zthr.ai has not recorded serving a reference build yet.' : d.commit === f.commit ? `Serving: the app answered with this build's own copy, checked part by part, ${d.verifiedAt}.` : `The app was last checked serving ${d.commit.slice(0, 7)}, not this build.` },
+    { id: 'operate', status: 'not measured', note: 'Service levels are not watched by the reference pipeline yet.' },
+  ];
+}
+
 /** One intent on the control surface: what it means, the journeys that measure it, and how each one stands. */
 export interface IntentRow {
   readonly id: string;

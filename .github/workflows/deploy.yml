@@ -46,6 +46,10 @@ jobs:
           mv site-static.entry.html docs/reference.html
           mv site-static.advocate.html docs/advocate.html
           rm -f docs/reference/advocate-preview.html
+          # The delivery record the shipping console reads: the running app served this build's own copy, and every
+          # part matched that build's checksums. Written only here, after the check, never by hand.
+          mkdir -p docs/reference/factory
+          python3 -c "import json,sys,datetime;json.dump({'schema':'zthr-delivery/1','commit':sys.argv[1],'verifiedAt':datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),'served':sys.argv[2]},open('docs/reference/factory/delivery.json','w'))" "$commit" "$APP"
           rm -f reference.tgz.part-* parts.txt parts.sha256 stamp.json
           echo "::notice::Publishing the reference site built from $commit."
 

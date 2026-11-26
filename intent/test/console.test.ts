@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { factoryIntent, statusOf, studioIntent, tally, type Feed } from '../src/console/feed.ts';
+import { factoryIntent, referenceStages, statusOf, studioIntent, tally, type Feed } from '../src/console/feed.ts';
 import { headline, journeyDetail, readings } from '../src/console/views.ts';
 
 const feed: Feed = {
@@ -89,4 +89,20 @@ test('planted: a broken or empty saved intent never reaches the platform', async
   const { studioFlow } = await import('../src/console/pipeline.ts');
   assert.equal(studioFlow('{nope', feed), null);
   assert.equal(studioFlow(JSON.stringify({ words: '' }), feed), null);
+});
+
+test('each delivery stage is judged only from what the build and the deploy recorded', () => {
+  const by = (f: Feed, d: Parameters<typeof referenceStages>[1]) => Object.fromEntries(referenceStages(f, d).map((x) => [x.id, x.status]));
+  const green: Feed = { ...feed, readings: [feed.readings[0]!, { id: 'gates', label: 'g', value: 1, of: 1, href: 'gates.html' }, { id: 'mutation', label: 'm', value: 76.1, of: 100, floor: 76, href: 'mutation.html' }], journeys: feed.journeys.map((j) => ({ ...j, status: 'pass' })) };
+  const served = { schema: 'zthr-delivery/1' as const, commit: green.commit, verifiedAt: '2026-11-26T17:00:00Z', served: 'https://app' };
+  const s = by(green, served);
+  assert.equal(s['build'], 'pass');
+  assert.equal(s['test'], 'pass');
+  assert.equal(s['release'], 'pass');
+  for (const id of ['data', 'package', 'deploy', 'canary', 'operate']) assert.equal(s[id], 'not measured', id);
+  assert.equal(by(green, { ...served, commit: 'other' })['release'], 'not measured', 'serving another commit is not this build released');
+  assert.equal(by(green, null)['release'], 'not measured');
+  assert.equal(by(feed, served)['test'], 'fail', 'a failing journey fails the test stage');
+  assert.equal(by({ ...green, readings: [{ ...green.readings[2]!, value: 70 }] }, served)['test'], 'fail', 'mutation under its floor fails it');
+  assert.equal(by({ ...green, readings: [] }, served)['build'], 'not measured', 'no tests reported, no claim about the build');
 });
