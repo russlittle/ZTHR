@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/console/console.css">
+<link rel="stylesheet" href="/console/bar.css">
+<title>Shipping · ZTHR</title>
+<meta name="description" content="Moving a certified build to the people it is for, stage by stage, with a person approving production.">
+</head>
+<body data-dept="shipping">
+<a class="skip" href="#main">Skip to content</a>
+<header class="zbar"></header>
+<div class="page-h"><div><h1>Shipping</h1><p>A certified build goes to people stage by stage: packaged and signed, deployed with no traffic, tried by a few, then released to everyone. Each stage has a gate, a person approves production, and going back is always one step.</p></div><p class="muted" id="stamp"></p></div>
+<main id="main">
+  <div id="ship-body"><section class="sheet"><p class="muted">Reading the factory&#39;s latest build…</p></section></div>
+</main>
+<div id="handoff-slot"></div>
+<aside class="drawer" id="drawer" hidden aria-labelledby="dr-title">
+  <div class="dr-head"><h2 id="dr-title">Detail</h2><button class="btn quiet" type="button" id="dr-close">Close</button></div>
+  <div id="dr-body" tabindex="0" role="region" aria-label="Detail"></div>
+</aside>
+<footer class="foot"><p>Every number here is the factory's own, written by the build that measured it; anything not measured is shown as not measured. Your own products are read from this browser, where the studio keeps them.</p></footer>
+<script src="/shipping/app.js"></script>
+</body>
+</html>

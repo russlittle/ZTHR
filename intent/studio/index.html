@@ -526,6 +526,10 @@ body[data-step="4"] .sheet { box-shadow: 0 0 0 3px var(--blue), 0 18px 40px -24p
 .snip { margin: 8px 0 0; padding: 8px 10px; border: 1px solid var(--rule); font: 12.5px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; max-height: 220px; overflow: auto; white-space: pre-wrap; }
 @media (max-width: 640px) { .drawer { top: auto; height: 78vh; width: 100vw; border-left: 0; border-top: 2px solid var(--ink); border-radius: 10px 10px 0 0; } }
 /* full width */
+/* Engineering: the same schematic, its specification views and the checklist; the words and questions stay in the studio. */
+body[data-dept=engineering] #col-words, body[data-dept=engineering] #redlines-panel, body[data-dept=engineering] .chain, body[data-dept=engineering] .hero-links { display: none; }
+body[data-dept=engineering] main.desk, body[data-dept=engineering].has-words main.desk { grid-template-columns: minmax(0, 1fr) minmax(0, 390px); grid-template-areas: "sheet rail"; }
+@media (max-width: 960px) { body[data-dept=engineering] main.desk, body[data-dept=engineering].has-words main.desk { grid-template-columns: minmax(0, 1fr); grid-template-areas: "rail" "sheet"; } }
 body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minmax(0, 1fr); grid-template-areas: "sheet" "words" "rail"; }
 
 .wide-toggle { margin-left: auto; }
@@ -600,6 +604,7 @@ body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minm
     <section class="panel release" id="release" aria-labelledby="h-release"></section>
   </section>
 </main>
+<div id="handoff-slot"></div>
 <section class="open-source" id="open-source" aria-labelledby="h-open">
   <h2 id="h-open">How it works, and the source</h2>
   <div class="os-grid">
@@ -614,7 +619,7 @@ body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minm
   <div id="dr-body" tabindex="0" role="region" aria-label="Detail"></div>
 </aside>
 <footer>
-  <p>What leaves this page: your words go to Claude only when you choose "Read with Claude", and to another model only if you paste them there yourself. Everything else (the checks, the schematic and the package) is worked out here, in your browser. Your work is saved to your own private space, which only you can read, or to this browser when that is not available. "Start a new intent" clears it.</p>
+  <p>What leaves this page: your words go to Claude only when you choose "Read with Claude", and to another model only if you paste them there yourself. Everything else (the checks, the schematic and the package) is worked out here, in your browser. Your work is saved to your own private space, which only you can read, or to this browser when that is not available. "Start a new intent" keeps this one in Product lines, whole, and opens a clean sheet.</p>
 </footer>
 <script src="app.js"></script>
 </body>

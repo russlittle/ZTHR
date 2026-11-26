@@ -9,7 +9,7 @@ export const STAGES = [
   { key: 'read', label: 'Read', doing: 'Two independent readings are compared.' },
   { key: 'questions', label: 'Questions', doing: 'A few quick answers settle what the readings and checks left open.' },
   { key: 'readback', label: 'Review', doing: 'Check the schematic and what the raters found, then sign it.' },
-  { key: 'signed', label: 'Signed', doing: 'You have signed the schematic as what you mean. Release it to issue the package.' },
+  { key: 'signed', label: 'Signed', doing: 'You have signed the schematic as what you mean. Engineering specifies it and releases the package.' },
   { key: 'released', label: 'Released', doing: 'The package is issued for the factory to build to.' },
 ] as const;
 export type Stage = (typeof STAGES)[number]['key'];

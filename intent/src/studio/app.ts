@@ -24,6 +24,9 @@ import { settle, type Options } from '../interfaces.ts';
 import { framework } from '../outcomes.ts';
 import { schemaOf } from '../schema.ts';
 import { scopeOf } from '../compliance.ts';
+import { handoff, paintLine, setFocus } from '../console/line.ts';
+import { studioFlow } from '../console/pipeline.ts';
+import { openProduct, stash } from '../console/products.ts';
 
 // ---------------------------------------------------------------- platform capabilities, each optional
 
@@ -83,7 +86,13 @@ interface State {
   provided?: { path: string; text: string } | null;
 }
 type View = 'map' | 'review' | 'hire' | 'outcomes' | 'information' | 'compliance' | 'operations' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
-const VIEWS: readonly { key: View; label: string; ico: string }[] = [
+/** The studio serves two departments from one state: the intent studio says what it must do, engineering specifies it. */
+const DEPT: 'intent' | 'engineering' = document.body.dataset['dept'] === 'engineering' ? 'engineering' : 'intent';
+const DEPT_VIEWS: Record<typeof DEPT, readonly View[]> = {
+  intent: ['map', 'review', 'hire', 'parts', 'structure'],
+  engineering: ['outcomes', 'information', 'compliance', 'operations', 'plan', 'build', 'preview'],
+};
+const ALL_VIEWS: readonly { key: View; label: string; ico: string }[] = [
   { key: 'map', label: 'Intent map', ico: 'end' },
   { key: 'review', label: 'Review', ico: 'scenario' },
   { key: 'hire', label: 'The hire', ico: 'doc' },
@@ -97,6 +106,9 @@ const VIEWS: readonly { key: View; label: string; ico: string }[] = [
   { key: 'preview', label: 'Release preview', ico: 'scenario' },
   { key: 'parts', label: 'Parts list', ico: 'statement' },
 ];
+const VIEWS = DEPT_VIEWS[DEPT].map((k) => ALL_VIEWS.find((v) => v.key === k)!);
+/** Which department shows a view, so a link to it from the other one goes there. */
+const homeOf = (v: View): typeof DEPT => (DEPT_VIEWS.engineering.includes(v) ? 'engineering' : 'intent');
 const empty = (): State => ({ v: 1, path: 'intent.md', words: '', readings: [], answers: {}, releases: [], showAll: false, signed: null, unsure: {}, asked: {}, skipped: [], journeys: { accepted: [], own: [] }, view: 'map', expanded: [], previewFile: 'schematic.md', planFilter: 'all', zoom: 0, wide: false, buildFilter: 'all', holder: { name: '', role: '' }, product: '', tune: {}, options: {} });
 let state: State = empty();
 let prepared: Prepared | null = null;
@@ -244,13 +256,67 @@ function render(fromAnswer = false) {
   lastGraph = graph(prepared);
   lastManifest = manifest(prepared);
   lastReview = review(prepared);
-  lastFiles = currentRelease(prepared, state.releases.length ? 'preview' : undefined).files;
+  lastRelease = currentRelease(prepared, state.releases.length ? 'preview' : undefined);
+  lastFiles = lastRelease.files;
+  if (!DEPT_VIEWS[DEPT].includes(state.view)) state.view = DEPT_VIEWS[DEPT][0]!;
   renderSteps(prepared);
   renderReadings(prepared);
   renderRedlines(prepared, fromAnswer);
   renderSheet(prepared);
   renderRelease(prepared);
   renderChain(prepared);
+  if (DEPT === 'engineering') renderEngineering(prepared);
+  setFocus(state.product || productTitle(prepared));
+  // The lamps need the whole flow worked out again, so they follow typing at a walk, not on every key.
+  clearTimeout(paintTimer);
+  paintTimer = setTimeout(() => paintLine(studioFlow(JSON.stringify(state), null)), 600);
+  renderHandoff(prepared);
+}
+
+const productTitle = (p: Prepared) => (p.model.title && p.model.title !== state.path ? p.model.title : 'Untitled intent');
+
+/** The one action that sends the work on: from the studio to engineering once signed, from engineering to the factory once released. */
+function renderHandoff(p: Prepared) {
+  const el = document.getElementById('handoff-slot');
+  if (!el) return;
+  if (DEPT === 'intent') {
+    const signed = isSigned(p);
+    el.innerHTML = state.words.trim() ? handoff('intent', signed, signed ? 'The schematic is signed. Engineering turns it into a complete specification: outcomes, data, compliance, operations, measures and tests.' : `Engineering can preview it now; it works from what you sign. ${p.questions.length ? `${p.questions.length} question${p.questions.length === 1 ? '' : 's'} still open.` : 'Sign it on the right when it says what you mean.'}`) : '';
+  } else {
+    const last = state.releases.at(-1);
+    el.innerHTML = handoff('engineering', !!last?.ready, last?.ready ? `Revision ${last.revision} is released. The factory builds to it.` : 'Release the package when the checklist holds; the factory builds only to a released revision.');
+  }
+}
+
+let lastRelease: ReturnType<typeof release> | null = null;
+let paintTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Engineering's checklist: every part of a complete specification, whether it holds, and the view that shows it. */
+function renderEngineering(p: Prepared) {
+  const el = document.getElementById('eng-panel');
+  if (!el || !lastManifest || !lastRelease) return;
+  const fw = framework(p, lastManifest);
+  const info = schemaOf(p);
+  const sc = scopeOf(p, info);
+  const gs = lastGraph?.nodes.filter((x) => x.lane === 'instruments').length ?? 0;
+  const measures = p.statements.filter((x) => x.slot === 'measures');
+  const unread = measures.filter((x) => !x.tolerance || /unread/.test(x.tolerance)).length;
+  const compliance = lastRelease.problems.filter((x) => /complian|card|sensitive|control/i.test(x));
+  const o = settle(state.options);
+  const signed = isSigned(p);
+  const row = (ok: boolean | null, title: string, text: string, view: View) => `<li class="ck ${ok === null ? 'ck-info' : ok ? 'ck-ok' : 'ck-open'}"><span class="ck-mark" aria-hidden="true">${ok === null ? '•' : ok ? '✓' : '!'}</span><div><strong>${title}</strong><span class="sr">${ok === null ? '' : ok ? ': holds' : ': open'}</span><p>${text}</p><button type="button" class="btn quiet" data-view="${view}">Open ${esc(ALL_VIEWS.find((v) => v.key === view)!.label.toLowerCase())}</button></div></li>`;
+  const missing = fw.outcomes.reduce((a, x) => a + x.missing.length, 0);
+  el.innerHTML = `<h2 id="h-eng">Engineering checklist</h2>
+<p class="lede">${signed ? 'Specifying the signed schematic.' : `<strong>Not signed yet.</strong> This is a preview of the unsigned schematic; <a href="/intent">sign it in the studio</a> before it is built.`}</p>
+<ol class="cklist">
+${row(missing === 0 && fw.outcomes.length > 0, 'Outcomes', fw.outcomes.length ? `${fw.outcomes.length} outcome${fw.outcomes.length === 1 ? '' : 's'}, each with how it is assessed, its criteria, a passing target and its evidence.${missing ? ` ${missing} item${missing === 1 ? '' : 's'} missing.` : ''}` : 'No outcome stated yet: say what will be true when it works.', 'outcomes')}
+${row(info.unread.length === 0, 'Information', `${info.entities.length} record${info.entities.length === 1 ? '' : 's'}, ${info.entities.reduce((a, e) => a + e.fields.length, 0)} fields and ${info.rules.length} integrity rules, signed with the schematic.${info.unread.length ? ` ${info.unread.length} sentence${info.unread.length === 1 ? '' : 's'} not read.` : ''}`, 'information')}
+${row(compliance.length === 0, 'Compliance', `${sc.inScope.length ? `In scope: ${esc(sc.inScope.map((x) => x.id.toUpperCase()).join(', '))}.` : 'No framework in scope.'}${sc.suggested.length ? ` Suggested: ${esc(sc.suggested.map((x) => x.id.toUpperCase()).join(', '))}.` : ''}${compliance.length ? ` ${compliance.length} problem${compliance.length === 1 ? '' : 's'}.` : ''}`, 'compliance')}
+${row(null, 'Operations', 'Service levels from the schematic, the delivery stages and their gates, alerts and the runbook.', 'operations')}
+${row(unread === 0 && gs > 0, 'Measures and tests', `${gs} gauge${gs === 1 ? '' : 's'} and ${measures.length} measure${measures.length === 1 ? '' : 's'}${unread ? `; ${unread} without a tolerance a machine can read` : ', each with a tolerance a machine can check'}.`, 'plan')}
+${row(lastManifest.gaps.length === 0, 'Spec sheet and build manifest', `${lastManifest.lines.length} lines. API ${o.api.reach}, sign-in ${o.connect.identity}, report a problem ${o.feedback}.${lastManifest.gaps.length ? ` ${lastManifest.gaps.length} balloon${lastManifest.gaps.length === 1 ? '' : 's'} nothing builds.` : ''}`, 'build')}
+${row(lastRelease.problems.length === 0 && p.questions.length === 0, 'The package', `${Object.keys(lastFiles).length} files.${lastRelease.problems.length ? ` ${lastRelease.problems.length} problem${lastRelease.problems.length === 1 ? '' : 's'} before it is ready.` : ' Ready to release when signed.'}`, 'preview')}
+</ol>`;
 }
 
 /** The chain at the top: what these words have become so far, each step a way into the view that shows it. */
@@ -733,6 +799,12 @@ function entityList(id: string): { title: string; html: string } {
 }
 
 function setView(v: View, focusTab = true) {
+  if (homeOf(v) !== DEPT) {
+    state.view = v;
+    scheduleSave();
+    location.href = homeOf(v) === 'engineering' ? '/engineering' : '/intent';
+    return;
+  }
   state.view = v;
   scheduleSave();
   render();
@@ -808,8 +880,9 @@ function renderRelease(p: Prepared) {
   const problems = [...new Set([...p.unread, ...draft.problems.filter((x) => !/must say why/.test(x)), ...(p.questions.length ? [`${p.questions.length} redline${p.questions.length === 1 ? '' : 's'} to clear`] : [])])];
   const ready = problems.length === 0;
   const next = (last?.revision ?? 0) + 1;
-  panel.innerHTML = `<h2 id="h-release"><span class="proc" data-step="5">5</span>Sign and release</h2>
-<p class="lede">The release is the package the factory builds to: the schematic, the gauges in the factory's own format, the control plan, working ranges and starting ratchets, pending tests, and the knowledge bundle.</p>
+  const eng = DEPT === 'engineering';
+  panel.innerHTML = `<h2 id="h-release"><span class="proc" data-step="5">${eng ? 6 : 5}</span>${eng ? 'Release the package' : 'Sign it'}</h2>
+<p class="lede">${eng ? 'The release is the package the factory builds to: the schematic, the specification, the gauges in the factory’s own format, the control plan, working ranges and starting ratchets, pending tests, and the knowledge bundle.' : 'Your signature says the schematic means what you mean. Engineering then specifies it in full and releases the package the factory builds to.'}</p>
 ${Object.keys(state.unsure).length ? `<p class="note">You were not sure about ${Object.keys(state.unsure).length} answer${Object.keys(state.unsure).length === 1 ? '' : 's'}; ${Object.keys(state.unsure).length === 1 ? 'it is' : 'they are'} released on the recommended answer and listed in Your answers so you can come back.</p>` : ''}
 ${ready ? '<p class="ok"><strong>Ready to release.</strong> Nothing that changes what gets built is open.</p>' : `<p class="todo"><strong>Not ready yet.</strong> You can still issue a draft revision to share or keep.</p><ol>${problems.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>`}
 ${lastReview ? `<div class="bom-mini"><p><strong>Review: ${lastReview.overall} overall.</strong> ${lastReview.panel.map((x) => `${esc(x.name)} ${x.grade}`).join(', ')}; ${lastReview.people.map((x) => `${esc(x.name)} ${x.grade}`).join(', ')}.</p><button class="btn" type="button" data-view="review">Open the review</button></div>` : ''}
@@ -818,9 +891,11 @@ ${(() => {
   return `<div class="bom-mini"><p><strong>It keeps ${r.records} records</strong> with ${r.fields} fields, ${r.yours} in your words, held by ${r.rules} integrity rules. They are signed with the schematic.${r.unread ? ` <strong class="red">${r.unread} sentence${r.unread === 1 ? '' : 's'} not read.</strong>` : ''}</p><button class="btn" type="button" data-view="information">Open the data sheets</button></div>`;
 })()}
 ${lastManifest ? `<div class="bom-mini"><p><strong>The factory will start from ${lastManifest.lines.length} parts:</strong> ${lastManifest.counts.stock + lastManifest.counts.modify} from the library, ${lastManifest.counts['make: catalogued']} catalogued parts to make, ${lastManifest.counts['make: new']} new for this intent.${lastManifest.gaps.length ? ` <strong class="red">${lastManifest.gaps.length} balloon${lastManifest.gaps.length === 1 ? '' : 's'} nothing builds.</strong>` : ''}</p><button class="btn" type="button" data-view="build">Preview the build</button></div>` : ''}
-${ready ? `<div class="sign"><label class="opt"><input type="checkbox" id="sign"${isSigned(p) ? ' checked' : ''}> <span><strong>I have checked the schematic and the build manifest. It says what I mean.</strong> Your signature holds for this exact schematic; change a word and it needs signing again.</span></label></div>` : ''}
-${last ? `<label for="reason"><strong>Why this revision?</strong> Required after the first.</label><input type="text" id="reason" autocomplete="off" placeholder="For example: staff confirmed as college counseling">` : ''}
-<div class="row"><button class="btn primary" type="button" id="issue"${ready && !isSigned(p) ? ' aria-describedby="sign-first"' : ''}>${ready ? `Release revision ${next}` : `Issue draft revision ${next}`}</button>${ready && !isSigned(p) ? '<span class="note" id="sign-first">Sign the schematic first to release it.</span>' : ''}</div>
+${!eng && ready ? `<div class="sign"><label class="opt"><input type="checkbox" id="sign"${isSigned(p) ? ' checked' : ''}> <span><strong>I have checked the schematic and the build manifest. It says what I mean.</strong> Your signature holds for this exact schematic; change a word and it needs signing again.</span></label></div>` : ''}
+${!eng && isSigned(p) ? `<p class="ok"><strong>Signed.</strong> <a href="/engineering">Engineering</a> specifies it and releases the package.</p>` : ''}
+${eng ? `<p class="${isSigned(p) ? 'ok' : 'todo'}">${isSigned(p) ? `<strong>Signed</strong>${state.signed?.by ? ` by ${esc(state.signed.by)}` : ''}, ${esc(new Date(state.signed!.at).toLocaleString())}.` : '<strong>Not signed.</strong> The person who holds the intent signs it in the <a href="/intent">intent studio</a>; until then only a draft can be issued.'}</p>` : ''}
+${eng && last ? `<label for="reason"><strong>Why this revision?</strong> Required after the first.</label><input type="text" id="reason" autocomplete="off" placeholder="For example: staff confirmed as college counseling">` : ''}
+${eng ? `<div class="row"><button class="btn primary" type="button" id="issue"${ready && !isSigned(p) ? ' aria-describedby="sign-first"' : ''}>${ready && isSigned(p) ? `Release revision ${next}` : `Issue draft revision ${next}`}</button>${ready && !isSigned(p) ? '<span class="note" id="sign-first">It needs the holder’s signature to be released.</span>' : ''}</div>` : ''}
 <p class="status" id="release-status" role="status"></p>
 ${last?.ready ? `<div class="next-steps"><strong>What happens next</strong><ol><li>Download the package and give it to the factory. Its journey cards go into the factory's proposals; nothing an agent writes can lock them.</li><li>A person signs the journeys in. From then on they judge every build, and a change to your intent cannot quietly change what they judge.</li><li>The factory designs from the build manifest, then loops: build, then test, cheapest check first. Types and unit tests, then scenarios, gates and ratchets, then the journeys walked in the state graph, all by rule; a model is opened only to make or repair what a check has named, and only once the cheaper checks before it pass. It goes round until every test and every journey passes.</li><li>Each phase is released only when its journeys pass. <a href="https://zthr.ai/mission">Mission control</a> shows the measure: journeys walked and passing.</li></ol></div>` : ''}
 ${state.releases.length ? `<h3>Revisions</h3><ul class="history">${state.releases
@@ -841,7 +916,7 @@ function issue() {
   }
   const blocking = !prepared.questions.length && !prepared.unread.length && !isSigned(prepared);
   if (blocking) {
-    say('release-status', 'Tick "I have checked the schematic" first. A release carries your signature.', true);
+    say('release-status', DEPT === 'engineering' ? 'The holder signs the schematic in the intent studio first. A release carries their signature.' : 'Tick "I have checked the schematic" first. A release carries your signature.', true);
     ($('sign') as HTMLInputElement | null)?.focus();
     return;
   }
@@ -1069,15 +1144,16 @@ function wire() {
     wordsOpenedByPerson = false;
   });
   $('start-new').addEventListener('click', () => {
-    if (!armed($('start-new'), 'Clear everything and start again?', 'Start a new intent')) {
-      say('words-status', 'Press again to clear your words, answers and revisions. Download any package you want to keep first.');
-      return;
+    if (state.words.trim()) {
+      // Nothing is lost: this product is kept whole in the library, ready to open again from Product lines.
+      scheduleSave();
+      stash();
     }
     state = empty();
     lastBalloons = new Set();
     packages.clear();
     setWords('');
-    say('words-status', 'Cleared. Start with a few rough lines.');
+    say('words-status', 'Started a new intent. The one before is kept in Product lines.');
     ($('words') as HTMLTextAreaElement).focus();
   });
   $('file').addEventListener('change', (e) => {
@@ -1521,6 +1597,16 @@ window.addEventListener('resize', () => {
 });
 
 function start() {
+  if (DEPT === 'engineering') {
+    const rail = document.getElementById('col-rail');
+    const eng = document.createElement('section');
+    eng.className = 'panel eng';
+    eng.id = 'eng-panel';
+    eng.setAttribute('aria-labelledby', 'h-eng');
+    rail?.prepend(eng);
+  }
+  const want = new URLSearchParams(location.search).get('product');
+  if (want) openProduct(want);
   try {
     const saved = localStorage.getItem(LOCAL);
     if (saved) state = { ...empty(), ...(JSON.parse(saved) as State) };
@@ -1529,7 +1615,17 @@ function start() {
   }
   ($('words') as HTMLTextAreaElement).value = state.words;
   wire();
+  // A product just started in a line arrives as a template with an empty first line to fill: open the words there.
+  const blank = state.words.indexOf('\n- \n');
+  if (blank >= 0) wordsOpenedByPerson = true;
   render();
+  if (blank >= 0) {
+    const w = $('words') as HTMLTextAreaElement;
+    ($('words-box') as HTMLDetailsElement).open = true;
+    w.focus();
+    w.setSelectionRange(blank + 3, blank + 3);
+    say('words-status', `Started ${state.product || 'this product'} from its line: the end in mind and the spec-sheet choices are filled in. Say what it should do, one line each.`);
+  }
   void capabilities();
   onAccess();
 }

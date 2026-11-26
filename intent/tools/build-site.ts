@@ -14,6 +14,7 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
+import { lineBar, type Dept } from '../src/console/line.ts';
 
 const HERE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const i = process.argv.indexOf('--out');
@@ -23,41 +24,47 @@ const OUT = resolve(HERE, i > 0 ? process.argv[i + 1]! : '../docs');
 const GATED = !process.argv.includes('--open');
 const gate = (html: string) => {
   if (!GATED) return html;
-  const out = html.replace('<html lang="en">', '<html lang="en" class="gated">').replace(/(<script src="\/(intent|mission|factory)\/app\.js"><\/script>)/, '<script src="/console/gate.js"></script>\n$1');
+  const out = html.replace('<html lang="en">', '<html lang="en" class="gated">').replace(/(<script src="\/(intent|mission|factory|lines|shipping|fleet)\/app\.js"><\/script>)/, '<script src="/console/gate.js"></script>\n$1');
   if (!out.includes('class="gated"') || !out.includes('/console/gate.js')) throw new Error('a gated page did not take the gate');
   return out;
 };
 
-const BAR = (current: 'intent' | 'factory' | 'mission') =>
-  `<header class="zbar"><a class="brand" href="/">ZTHR</a><nav aria-label="Surfaces">${(
-    [
-      ['intent', '/intent', 'Intent'],
-      ['factory', '/factory', 'Factory'],
-      ['mission', '/mission', 'Mission control'],
-    ] as const
-  )
-    .map(([k, href, label]) => `<a href="${href}"${k === current ? ' aria-current="page"' : ''}>${label}</a>`)
-    .join('')}<a href="/reference/factory">Evidence</a></nav></header>`;
+const withLine = (html: string, d: Dept) => {
+  const out = html.replace(/<header class="zbar">[\s\S]*?<\/header>/, lineBar(d));
+  if (!out.includes('class="zline"')) throw new Error(`the ${d} page did not take the line`);
+  return out;
+};
 
 async function bundle(entry: string, out: string) {
   await build({ entryPoints: [join(HERE, entry)], bundle: true, format: 'iife', target: 'es2022', minify: true, outfile: join(OUT, out), logLevel: 'warning', legalComments: 'none' });
 }
 
-for (const d of ['intent', 'factory', 'mission', 'console']) mkdirSync(join(OUT, d), { recursive: true });
+const PAGES = ['intent', 'engineering', 'mission', 'lines', 'factory', 'qa', 'shipping', 'fleet'] as const;
+for (const d of [...PAGES, 'console']) mkdirSync(join(OUT, d), { recursive: true });
 await bundle('src/studio/app.ts', 'intent/app.js');
 await bundle('src/console/mission.ts', 'mission/app.js');
 await bundle('src/console/factory.ts', 'factory/app.js');
 await bundle('src/gate.ts', 'console/gate.js');
+await bundle('src/console/lines.ts', 'lines/app.js');
+await bundle('src/console/shipping.ts', 'shipping/app.js');
+await bundle('src/console/fleet.ts', 'fleet/app.js');
 
 const studio = readFileSync(join(HERE, 'studio/index.html'), 'utf8');
 const page = studio
   .replace('<script src="app.js"></script>', '<script src="/intent/app.js"></script>')
   .replace('</head>', '<link rel="stylesheet" href="/console/bar.css">\n<link rel="icon" href="/favicon.svg" type="image/svg+xml">\n</head>')
-  .replace(/<body>\n?/, `<body>\n${BAR('intent')}\n`);
+  .replace(/<body>\n?/, `<body>\n<header class="zbar"></header>\n`);
 if (page === studio || !page.includes('/intent/app.js')) throw new Error('the studio page did not take the site paths');
-writeFileSync(join(OUT, 'intent/index.html'), gate(page));
-writeFileSync(join(OUT, 'mission/index.html'), gate(readFileSync(join(HERE, 'site/mission.html'), 'utf8')));
-writeFileSync(join(OUT, 'factory/index.html'), gate(readFileSync(join(HERE, 'site/factory.html'), 'utf8')));
+writeFileSync(join(OUT, 'intent/index.html'), gate(withLine(page, 'intent')));
+// Engineering is the studio's second department: the same schematic, opened on its specification.
+const eng = page
+  .replace('<body>', '<body data-dept="engineering">')
+  .replace('<title>Intent studio</title>', '<title>Engineering · ZTHR</title>')
+  .replace(/<h1>Intent studio<\/h1>\s*<p class="promise">[\s\S]*?<\/p>/, '<h1>Engineering</h1>\n    <p class="promise">The signed schematic, turned into a complete specification: the outcomes and how each is assessed, the information it keeps, the compliance it lives under, how it runs, every measure and test, and the package the factory builds to.</p>');
+if (!eng.includes('data-dept="engineering"') || !eng.includes('<h1>Engineering</h1>')) throw new Error('the engineering page did not take its department');
+writeFileSync(join(OUT, 'engineering/index.html'), gate(withLine(eng, 'engineering')));
+const sitePage = (d: Dept, file: string) => writeFileSync(join(OUT, `${d}/index.html`), gate(withLine(readFileSync(join(HERE, `site/${file}.html`), 'utf8'), d)));
+for (const d of ['mission', 'lines', 'factory', 'qa', 'shipping', 'fleet'] as const) sitePage(d, d);
 copyFileSync(join(HERE, 'site/console.css'), join(OUT, 'console/console.css'));
 copyFileSync(join(HERE, 'site/bar.css'), join(OUT, 'console/bar.css'));
-console.log(`built /intent, /factory and /mission into ${OUT}${GATED ? ', behind Google sign-in by invitation' : ', open'}`);
+console.log(`built ${PAGES.map((x) => `/${x}`).join(', ')} into ${OUT}${GATED ? ', behind Google sign-in by invitation' : ', open'}`);

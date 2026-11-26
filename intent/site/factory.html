@@ -10,27 +10,24 @@
 <link rel="stylesheet" href="/console/console.css">
 <link rel="stylesheet" href="/console/bar.css">
 <title>Factory · ZTHR</title>
-<meta name="description" content="The ZTHR factory's latest build: every journey and its verdict, every phase and its certificate, every gate and its proof.">
+<meta name="description" content="What the factory built in its latest build: the readings and every phase and feature.">
 </head>
-<body>
+<body data-dept="factory">
 <a class="skip" href="#main">Skip to content</a>
-<header class="zbar"><a class="brand" href="/">ZTHR</a><nav aria-label="Surfaces"><a href="/intent">Intent</a><a href="/factory" aria-current="page">Factory</a><a href="/mission">Mission control</a><a href="/reference/factory">Evidence</a></nav></header>
-<div class="page-h"><div><h1>Factory</h1><p>What the latest build measured. A journey passes only when a person's goal is reached; a gate counts only after planted defects make it fail; a ratchet only tightens.</p></div><p class="muted" id="stamp"></p></div>
+<header class="zbar"></header>
+<div class="page-h"><div><h1>Factory</h1><p>What the factory built to the released package, and what its latest build measured. The factory builds only to a released revision, and every change is checked before it is pushed.</p></div><p class="muted" id="stamp"></p></div>
 <main id="main">
-  <section class="sheet measure" id="measure" aria-live="polite" aria-label="The measure"><p class="muted">Reading the factory's latest build…</p></section>
   <div class="console" id="factory-body">
     <section class="sheet" aria-labelledby="h-read"><h2 id="h-read">Readings</h2><div id="readings"></div></section>
-    <section class="sheet" aria-labelledby="h-r"><h2 id="h-r">Ratchets</h2><div id="ratchets"></div><p class="small muted">A floor starts where the build measured it and only tightens. Resetting one is a person's signed act, recorded in the open.</p></section>
-    <section class="sheet span" aria-labelledby="h-j"><h2 id="h-j">Journeys</h2><div id="journeys" class="scroll"></div></section>
     <section class="sheet span" aria-labelledby="h-p"><h2 id="h-p">Phases and features</h2><div id="phases"></div></section>
-    <section class="sheet span" aria-labelledby="h-g"><h2 id="h-g">Gates</h2><div id="gates"></div></section>
   </div>
 </main>
+<div id="handoff-slot"></div>
 <aside class="drawer" id="drawer" hidden aria-labelledby="dr-title">
   <div class="dr-head"><h2 id="dr-title">Detail</h2><button class="btn quiet" type="button" id="dr-close">Close</button></div>
   <div id="dr-body" tabindex="0" role="region" aria-label="Detail"></div>
 </aside>
-<footer class="foot"><p>Read from the factory's own feed, written by the build from its evidence. <a href="/reference/factory/index.html">The evidence pages</a> hold every test, walk and trace behind these numbers.</p></footer>
+<footer class="foot"><p>Every number here is the factory's own, written by the build that measured it; anything not measured is shown as not measured. Your own products are read from this browser, where the studio keeps them.</p></footer>
 <script src="/factory/app.js"></script>
 </body>
 </html>

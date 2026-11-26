@@ -201,3 +201,52 @@ footer.foot { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14
 .pcard-btn:hover { box-shadow: inset 0 -4px 0 var(--blue); }
 .wu td, .wu th { font-size: 14px; }
 .wu { min-width: 720px; }
+
+/* Product lines */
+#lines-body, #ship-body, #fleet-body { display: grid; gap: 22px; margin: 18px max(4vw, 16px) 24px; }
+.lform { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 12px 18px; margin-top: 10px; }
+.lform label { display: grid; gap: 4px; font-weight: 600; font-size: 15px; }
+.lform .wide { grid-column: 1 / -1; }
+.lform input, .lform select, .lform textarea { font: 400 16px/1.4 var(--body); padding: 8px 10px; border: 1px solid var(--field); border-radius: 6px; background: var(--sheet); color: var(--ink); min-height: 44px; }
+.lform fieldset { border: 0; padding: 0; margin: 0; }
+.lform legend { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.chk { display: inline-flex !important; align-items: center; gap: 6px; font-weight: 400 !important; min-height: 36px; }
+.chk input { min-height: 0; width: 18px; height: 18px; }
+.form-err { color: var(--red, #b3261e); margin: 0; min-height: 1.2em; }
+.actions { display: flex; gap: 10px; }
+.btn.primary { background: var(--ink); border-color: var(--ink); color: var(--sheet); }
+.line-card h2 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.defaults { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 6px 0 12px; }
+.defaults li { border: 1px solid var(--field); border-radius: 999px; padding: 3px 12px; font-size: 14px; }
+.plist { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 8px; }
+.plist li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 0; border-top: 1px solid var(--rule, rgba(0,0,0,.12)); }
+.pname { font-weight: 700; min-width: 10rem; }
+.lamps { display: inline-flex; gap: 4px; }
+.start { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin: 6px 0 12px; }
+.start label { display: grid; gap: 4px; font-weight: 600; font-size: 15px; flex: 1 1 16rem; }
+.start input { font: 400 16px/1.4 var(--body); padding: 8px 10px; border: 1px solid var(--field); border-radius: 6px; min-height: 44px; background: var(--sheet); color: var(--ink); }
+.line-card details { margin-top: 8px; }
+.line-card summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+/* Mission control: waiting, and products along the line */
+.wait { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.wait li { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--rule, rgba(0,0,0,.12)); }
+.along td, .along th { text-align: center; }
+.along th[scope=row], .along td.small { text-align: left; }
+.along thead a { color: inherit; }
+.cell-lamp { display: inline-flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; border-radius: 6px; }
+.cell-lamp:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.sheet-link { margin: 0; font-weight: 600; }
+/* Shipping */
+.ship { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 10px; }
+.ship-st { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--rule, rgba(0,0,0,.12)); }
+.ship-st h3 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 18px; }
+.ship-st p { margin: 4px 0 0; }
+.ship-n { font: 700 15px/1 var(--letter, var(--body)); width: 28px; height: 28px; border: 2px solid var(--ink); border-radius: 50%; display: grid; place-items: center; }
+.slo { padding-left: 1.2em; }
+.ship-row { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.ship-row li { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; }
+.pcard { display: grid; gap: 6px; border: 1.5px solid var(--ink); padding: 12px 14px; }
+.pcard .ftitle { font-weight: 700; font-size: 20px; }
+.focus-note { margin: 12px max(4vw, 16px) 0; }
+.focus-note p { margin: 0; }

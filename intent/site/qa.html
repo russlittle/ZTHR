@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/console/console.css">
+<link rel="stylesheet" href="/console/bar.css">
+<title>QA · ZTHR</title>
+<meta name="description" content="Every journey walked as a person would, every gate proven able to fail, every ratchet held.">
+</head>
+<body data-dept="qa">
+<a class="skip" href="#main">Skip to content</a>
+<header class="zbar"></header>
+<div class="page-h"><div><h1>QA</h1><p>A journey passes only when a person&#39;s goal is reached, in every mode and channel it names, with nothing forbidden happening. A gate counts only after planted defects make it fail. A ratchet only tightens.</p></div><p class="muted" id="stamp"></p></div>
+<main id="main">
+  <section class="sheet measure" id="measure" aria-live="polite" aria-label="The measure"><p class="muted">Reading the factory&#39;s latest build…</p></section>
+  <div class="console" id="factory-body">
+    <section class="sheet span" aria-labelledby="h-j"><h2 id="h-j">Journeys</h2><div id="journeys" class="scroll"></div></section>
+    <section class="sheet span" aria-labelledby="h-g"><h2 id="h-g">Gates</h2><div id="gates"></div></section>
+    <section class="sheet" aria-labelledby="h-r"><h2 id="h-r">Ratchets</h2><div id="ratchets"></div><p class="small muted">A floor starts where the build measured it and only tightens. Resetting one is a person&#39;s signed act, recorded in the open.</p></section>
+  </div>
+</main>
+<div id="handoff-slot"></div>
+<aside class="drawer" id="drawer" hidden aria-labelledby="dr-title">
+  <div class="dr-head"><h2 id="dr-title">Detail</h2><button class="btn quiet" type="button" id="dr-close">Close</button></div>
+  <div id="dr-body" tabindex="0" role="region" aria-label="Detail"></div>
+</aside>
+<footer class="foot"><p>Every number here is the factory's own, written by the build that measured it; anything not measured is shown as not measured. Your own products are read from this browser, where the studio keeps them.</p></footer>
+<script src="/factory/app.js"></script>
+</body>
+</html>

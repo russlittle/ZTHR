@@ -81,6 +81,7 @@ npm run build -- --open   # the same, with no sign-in, for local checks or your 
 
 - [The release package, file by file](docs/formats.md)
 - [The information it keeps: schema from your sentences, patterns and Prisma](docs/information.md)
+- [The line, department by department, and the people who walked it](docs/personas.md)
 - [The factory, run by agents: roles, the agent API and its guide](docs/agents.md)
 - [Agent API: tool reference](docs/agents-tools.md)
 - [Report a problem, and triage](docs/feedback.md)

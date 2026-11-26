@@ -9,7 +9,7 @@ import { esc } from './views.ts';
 const WORD: Record<Light, string> = { pass: 'holds', fail: 'open or failing', 'not measured': 'not measured', waiting: 'waiting' };
 export const lamp = (l: Light, label = WORD[l]) => `<span class="lamp ${l === 'not measured' ? 'unk' : l}" role="img" aria-label="${esc(label)}"><span aria-hidden="true">${l === 'pass' ? '✓' : l === 'fail' ? '✕' : l === 'waiting' ? '…' : '?'}</span></span>`;
 
-function bar(m: Flow['measure']): string {
+export function bar(m: Flow['measure']): string {
   const n = m.total || 1;
   const seg = (v: number, c: string, t: string) => (v ? `<span class="seg ${c}" style="width:${(v / n) * 100}%" title="${v} ${t}"></span>` : '');
   return `<div class="mbar" role="img" aria-label="${m.pass} of ${m.total} journeys pass, ${m.fail} fail, ${m.unmeasured} not yet measured">${seg(m.pass, 'pass', 'pass')}${seg(m.fail, 'fail', 'fail')}${seg(m.unmeasured, 'unk', 'not yet measured')}</div>`;
@@ -33,7 +33,7 @@ export interface Lib {
 }
 
 /** Where each standard assembly is used, and for what: one part number, many intended uses. */
-function whereUsed(lib: Lib, flows: readonly Flow[]): string {
+export function whereUsed(lib: Lib, flows: readonly Flow[]): string {
   const uses = flows.flatMap((f) => f.uses);
   return `<div class="tbl-wrap"><table class="swim wu"><caption>Where used: each standard assembly, every product and intent that uses it, and what for. One part number serves every use it was designed for; a new use that does not fit is a new part.</caption><thead><tr><th scope="col">Standard assembly</th><th scope="col">Used by</th><th scope="col">Intended uses</th></tr></thead><tbody>${lib.assemblies
     .map((a) => {
@@ -55,7 +55,7 @@ const CLASS_ORDER = ['health', 'financial', 'private', 'contact'];
 const FW: Record<string, string> = { soc2: 'SOC 2', hipaa: 'HIPAA', ferpa: 'FERPA', pci: 'PCI DSS', glba: 'GLBA', 'nist-800-171': 'NIST 800-171', 'nist-800-53': 'NIST 800-53', 'section-508': 'Section 508' };
 
 /** Every app reports its sensitive data the same way, so the fleet is read, governed and gated as one. */
-function fleetSensitive(flows: readonly Flow[]): string {
+export function fleetSensitive(flows: readonly Flow[]): string {
   const reported = flows.filter((f) => f.sensitive);
   const total = (c: string) => reported.reduce((a, f) => a + (f.sensitive!.classes[c] ?? 0), 0);
   const rows = flows
@@ -64,7 +64,7 @@ function fleetSensitive(flows: readonly Flow[]): string {
   return `<p class="muted">Every app's release carries the same inventory of its sensitive fields, and one gate policy, so a central gateway decides reads, exports and queries by class the same way for all of them, and every decision is audited.</p><ul class="lib-stats">${CLASS_ORDER.map((c) => `<li><span class="n">${total(c)}</span> ${c} fields</li>`).join('')}<li><span class="n">${reported.length}</span> of ${flows.length} intents reporting</li></ul><div class="tbl-wrap" tabindex="0" role="region" aria-label="Sensitive data by intent"><table class="swim"><thead><tr><th scope="col">Intent</th>${CLASS_ORDER.map((c) => `<th scope="col">${c}</th>`).join('')}<th scope="col">Frameworks</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
-export function platform(flows: readonly Flow[], lib: Lib): string {
+export function platform(flows: readonly Flow[], lib: Lib, extra = ''): string {
   const total = flows.reduce((a, f) => ({ pass: a.pass + f.measure.pass, fail: a.fail + f.measure.fail, unmeasured: a.unmeasured + f.measure.unmeasured, total: a.total + f.measure.total }), { pass: 0, fail: 0, unmeasured: 0, total: 0 });
   const stageCount = (k: StageKey, l: Light) => flows.filter((f) => f.stages.find((s) => s.key === k)!.light === l).length;
   const station = (s: (typeof STAGES)[number], i: number) =>
@@ -85,11 +85,9 @@ export function platform(flows: readonly Flow[], lib: Lib): string {
     })
     .join('');
   const table = `<ul class="prod-list">${prods || '<li>No products yet. <a href="/intent">Write an intent in the studio</a>.</li>'}</ul>`;
-  return `<section class="sheet measure" aria-label="The measure across the platform"><div class="headline"><p class="eyebrowless">Across the platform</p><p class="big">${total.total && total.pass + total.fail === 0 ? `<span class="num">${total.total}</span> journeys waiting to be walked` : `<span class="num">${total.pass}</span> of <span class="num">${total.total}</span> journeys pass`}</p><p class="verdict v-${total.total && total.pass === total.total ? 'ok' : total.fail ? 'bad' : 'unk'}">${total.pass + total.fail === 0 ? 'Nothing walked yet: the measure fills in as the factory walks each journey' : total.fail ? `${total.fail} failing, ${total.unmeasured} not walked` : `${total.unmeasured} not walked yet`}</p>${bar(total)}</div></section>
-<section class="sheet" aria-labelledby="h-sys"><h2 id="h-sys">How the platform works</h2><p class="muted">Every intent goes through the same five stations the factory runs. Lamps show where each intent stands at each station: ✓ holds, ✕ open or failing, ? not measured, … waiting for an earlier station.</p>${flow}</section>
-<section class="sheet" aria-labelledby="h-swim"><h2 id="h-swim">Products</h2><p class="muted">A product, or part family, holds many intents. Each intent goes through one pass of the factory that makes its schematic, code, tests, evidence, documentation and training together, and it is validated only when its journeys pass.</p>${table}</section>
-<section class="sheet" aria-labelledby="h-sd"><h2 id="h-sd">Sensitive data across the fleet</h2>${fleetSensitive(flows)}</section>
-<section class="sheet" aria-labelledby="h-wu"><h2 id="h-wu">The library, where used</h2>${whereUsed(lib, flows)}</section>`;
+  return `${extra}<section class="sheet measure" aria-label="The measure across the platform"><div class="headline"><p class="eyebrowless">Across the platform</p><p class="big">${total.total && total.pass + total.fail === 0 ? `<span class="num">${total.total}</span> journeys waiting to be walked` : `<span class="num">${total.pass}</span> of <span class="num">${total.total}</span> journeys pass`}</p><p class="verdict v-${total.total && total.pass === total.total ? 'ok' : total.fail ? 'bad' : 'unk'}">${total.pass + total.fail === 0 ? 'Nothing walked yet: the measure fills in as the factory walks each journey' : total.fail ? `${total.fail} failing, ${total.unmeasured} not walked` : `${total.unmeasured} not walked yet`}</p>${bar(total)}</div></section>
+<section class="sheet" aria-labelledby="h-sys"><h2 id="h-sys">How the platform works</h2><p class="muted">Every intent goes through the same departments, from the intent studio to shipping. Lamps show where each intent stands at each: ✓ holds, ✕ open or failing, ? not measured, … waiting for an earlier department. Select a department for every intent's reading there.</p>${flow}</section>
+<section class="sheet" aria-labelledby="h-fl"><h2 id="h-fl">The fleet</h2><p><a href="/fleet">The fleet: what is in service, the library where used, and sensitive data across every app</a></p></section>`;
 }
 
 export function intent(f: Flow, station: StageKey, filter: string): string {
@@ -144,4 +142,28 @@ export function product(name: string, flows: readonly Flow[]): string {
     .join('');
   return `<section class="sheet measure" aria-label="The measure for the product"><div class="headline"><p class="eyebrowless">Product</p><p class="big">${esc(name)}</p><p class="verdict v-${m.total && m.pass === m.total ? 'ok' : m.fail ? 'bad' : 'unk'}">${m.pass + m.fail ? `${m.pass} of ${m.total} journeys pass across ${fs.length} intent${fs.length === 1 ? '' : 's'}` : `${m.total} journey${m.total === 1 ? '' : 's'} across ${fs.length} intent${fs.length === 1 ? '' : 's'}, waiting to be walked`}</p>${bar(m)}</div></section>
 <section class="sheet" aria-labelledby="h-pass"><h2 id="h-pass">One pass per intent</h2><p class="muted">Each intent is made into all of these together, in one pass of the factory, and the pass is not done until every one holds.</p><div class="tbl-wrap"><table class="swim"><thead><tr><th scope="col">Intent</th>${OUTPUTS.map((o) => `<th scope="col">${esc(o.label)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></section>`;
+}
+
+const DEPT_HREF: Record<StageKey, string> = { intent: '/intent', design: '/engineering', build: '/factory', qa: '/qa', release: '/shipping' };
+
+/** Every product along the line: one row each, a lamp at every department, each lamp a way into that department. */
+export function along(flows: readonly Flow[], lines: readonly { name: string; products: readonly string[] }[]): string {
+  const names = [...new Set(flows.map((f) => f.product))];
+  if (!names.length) return '<p>No products yet. <a href="/lines">Define a product line</a> and start one.</p>';
+  const lineOf = (n: string) => lines.find((l) => l.products.includes(n))?.name ?? (flows.some((f) => f.product === n && f.source !== 'studio') ? 'Student success (reference)' : 'not in a line');
+  const worst = (n: string, k: StageKey): Light => {
+    const ls = flows.filter((f) => f.product === n).map((f) => f.stages.find((x) => x.key === k)!.light);
+    return (['fail', 'not measured', 'waiting', 'pass'] as Light[]).find((l) => ls.includes(l)) ?? 'waiting';
+  };
+  return `<div class="tbl-wrap" tabindex="0" role="region" aria-label="Products along the line"><table class="swim along"><caption class="sr">Each product, and where it stands in each department</caption><thead><tr><th scope="col">Product</th><th scope="col">Line</th>${STAGES.map((st) => `<th scope="col"><a href="${DEPT_HREF[st.key]}">${esc(st.label)}</a></th>`).join('')}<th scope="col"><a href="/fleet">Fleet</a></th></tr></thead><tbody>${names
+    .map((n) => {
+      const rel = worst(n, 'release');
+      return `<tr><th scope="row"><button type="button" class="linklike" data-product="${esc(n)}">${esc(n)}</button></th><td class="small">${esc(lineOf(n))}</td>${STAGES.map((st) => { const l = worst(n, st.key); const href = st.key === 'intent' || st.key === 'design' ? `${DEPT_HREF[st.key]}?product=${encodeURIComponent(n)}` : DEPT_HREF[st.key]; return `<td><a class="cell-lamp" href="${esc(href)}" data-focus="${esc(n)}">${lamp(l, `${n}, ${st.label}: ${WORD[l]}`)}</a></td>`; }).join('')}<td>${lamp(rel === 'pass' ? 'pass' : 'waiting', `${n}, fleet: ${rel === 'pass' ? 'in service' : 'not in service yet'}`)}</td></tr>`;
+    })
+    .join('')}</tbody></table></div>`;
+}
+
+/** What waits on a person: only what this browser can know; the factory's own proposals are read with the agent API. */
+export function waiting(items: readonly { what: string; href: string; act: string }[]): string {
+  return items.length ? `<ul class="wait">${items.map((x) => `<li><span>${esc(x.what)}</span><a class="btn" href="${esc(x.href)}">${esc(x.act)}</a></li>`).join('')}</ul>` : '<p class="muted">Nothing here is waiting on you.</p>';
 }

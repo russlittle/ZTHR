@@ -23,11 +23,11 @@ export type StageKey = 'intent' | 'design' | 'build' | 'qa' | 'release';
 export type Light = Status | 'waiting';
 
 export const STAGES: readonly { key: StageKey; label: string; asks: string }[] = [
-  { key: 'intent', label: 'Intent', asks: 'What people mean, signed as the datum' },
-  { key: 'design', label: 'Design', asks: 'The build manifest: standard assemblies, parts to make, custom assemblies' },
-  { key: 'build', label: 'Build', asks: 'What the factory has made, feature by feature' },
+  { key: 'intent', label: 'Intent studio', asks: 'What people mean, signed as the datum' },
+  { key: 'design', label: 'Engineering', asks: 'The complete specification: outcomes, data, compliance, measures and tests, and the build manifest' },
+  { key: 'build', label: 'Factory', asks: 'What the factory has made, feature by feature' },
   { key: 'qa', label: 'QA', asks: 'Journeys walked, gates proven, attacks held' },
-  { key: 'release', label: 'Release', asks: 'Phases certified and shipped' },
+  { key: 'release', label: 'Shipping', asks: 'Phases certified and shipped to the fleet' },
 ];
 
 export interface Reading {
@@ -211,7 +211,8 @@ interface Saved {
   provided?: { path: string; text: string } | null;
 }
 
-export function studioFlow(raw: string | null, f: Feed | null): Flow | null {
+/** The studio's saved work, prepared exactly as the studio prepares it. Null when there is nothing written yet. */
+export function preparedFrom(raw: string | null): { s: Saved; p: ReturnType<typeof prepare> } | null {
   if (!raw) return null;
   let s: Saved;
   try {
@@ -221,6 +222,13 @@ export function studioFlow(raw: string | null, f: Feed | null): Flow | null {
   }
   if (!s.words?.trim()) return null;
   const p = prepare({ files: [{ path: s.path ?? 'intent.md', text: s.words }, ...(s.provided ? [s.provided] : [])], readings: s.readings ?? [], answers: s.answers ?? {}, ...(s.journeys ? { journeys: s.journeys } : {}), ...(s.options ? { options: s.options as never } : {}), people: { ...(s.holder?.name ? { holder: s.holder } : {}), tune: (s.tune ?? {}) as never } });
+  return { s, p };
+}
+
+export function studioFlow(raw: string | null, f: Feed | null): Flow | null {
+  const got = preparedFrom(raw);
+  if (!got) return null;
+  const { s, p } = got;
   const info = schemaOf(p);
   const sc = scopeOf(p, info);
   const inv = inventory(p, info, sc);
@@ -237,7 +245,7 @@ export function studioFlow(raw: string | null, f: Feed | null): Flow | null {
   const custom = m.lines.filter((l) => l.source === 'make: new');
   const toMake = m.counts['make: catalogued'];
   const title = p.model.title && p.model.title !== s.path ? p.model.title : 'Your intent';
-  const product = s.product?.trim() || 'Not yet in a product';
+  const product = s.product?.trim() || title;
   return {
     id: 'studio',
     sensitive,
@@ -260,7 +268,7 @@ export function studioFlow(raw: string | null, f: Feed | null): Flow | null {
     measure: { pass, fail, unmeasured: gs.length - pass - fail, total: gs.length },
     stages: [
       { key: 'intent', light: released ? 'pass' : q ? 'fail' : 'waiting', headline: released ? `Revision ${last!.revision} released` : q ? `${q} redline${q === 1 ? '' : 's'} open` : 'Ready to sign and release', readings: [{ label: 'Statements on the schematic', value: p.statements.length, of: p.statements.length, light: 'pass', href: '/intent' }, { label: 'Redlines settled', value: q ? 0 : 1, of: 1, light: q ? 'fail' : 'pass', note: q ? `${q} open` : 'none open' }, { label: 'Journeys that will judge it', value: gs.length, of: gs.length, light: gs.length ? 'pass' : 'fail' }] },
-      { key: 'design', light: m.gaps.length ? 'fail' : 'pass', headline: `${m.lines.length} lines: ${m.counts.stock + m.counts.modify} standard assemblies, ${toMake} parts to make, ${custom.length} custom`, readings: [{ label: 'Standard assemblies from the library', value: m.counts.stock + m.counts.modify, of: m.lines.length, light: 'pass' }, { label: 'Catalogued parts the library lacks', value: toMake, of: m.lines.length, light: 'waiting' }, { label: 'Custom assemblies, maintained by your team', value: custom.length, of: m.lines.length, light: 'waiting' }, { label: 'Balloons nothing builds', value: m.gaps.length, of: 0, light: m.gaps.length ? 'fail' : 'pass' }] },
+      { key: 'design', light: released ? 'pass' : s.signed && m.gaps.length ? 'fail' : 'waiting', headline: `${m.lines.length} lines: ${m.counts.stock + m.counts.modify} standard assemblies, ${toMake} parts to make, ${custom.length} custom`, readings: [{ label: 'Standard assemblies from the library', value: m.counts.stock + m.counts.modify, of: m.lines.length, light: 'pass' }, { label: 'Catalogued parts the library lacks', value: toMake, of: m.lines.length, light: 'waiting' }, { label: 'Custom assemblies, maintained by your team', value: custom.length, of: m.lines.length, light: 'waiting' }, { label: 'Balloons nothing builds', value: m.gaps.length, of: 0, light: m.gaps.length ? 'fail' : 'pass' }] },
       { key: 'build', light: 'waiting', headline: released ? 'Waiting for the factory to take the package' : 'Waiting for a release', readings: [{ label: 'Custom assemblies built', value: null, of: custom.length, light: 'waiting', note: 'the factory has not reported on this intent' }] },
       { key: 'qa', light: pass + fail ? (fail ? 'fail' : pass === gs.length ? 'pass' : 'not measured') : 'waiting', headline: pass + fail ? `${pass} of ${gs.length} journeys pass` : `${gs.length} journey${gs.length === 1 ? '' : 's'} waiting to be walked`, readings: [{ label: 'Journeys walked and passing', value: pass + fail ? pass : null, of: gs.length, light: pass + fail ? (fail ? 'fail' : 'pass') : 'waiting' }] },
       { key: 'release', light: 'waiting', headline: 'Not built yet', readings: [] },
