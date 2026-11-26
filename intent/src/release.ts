@@ -30,6 +30,7 @@ import { opsFiles } from './delivery.ts';
 import type { Ballooned } from './frame.ts';
 import { same } from './diff.ts';
 import { balloonKey, modelContext, type Prepared } from './pipeline.ts';
+import { brief } from './agents/brief.ts';
 import { readBack } from './readback.ts';
 import { startingRatchets, workingRanges } from './tolerance.ts';
 
@@ -271,6 +272,8 @@ export function release(p: Prepared, r: ReleaseInput): Release {
   problems.push(...comp.problems);
   // Delivery and operations: the neutral pipeline, the Google Cloud adapter, service levels, alerts and the runbook.
   Object.assign(files, opsFiles(p));
+  // What this revision asks the factory's agents to build, how it is judged, and what they may not touch.
+  files['AGENTS.md'] = brief(p, bom, g, r.revision);
   for (const u of information.unread) problems.push(`the information, line ${u.line} ("${u.text}"): ${u.why}`);
   for (const o of fw.outcomes) for (const miss of o.missing) problems.push(`outcome ${o.balloon} ("${o.outcome}") needs ${miss}`);
   for (const gap of bom.gaps) problems.push(`balloon ${gap.balloon}: ${gap.why}`);

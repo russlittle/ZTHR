@@ -12,6 +12,9 @@
  *   intent status --workspace dir               where it is in the process
  *   intent readback|questions --workspace dir   as above, from the workspace
  *   intent release --workspace dir [--reason t] issue the next revision, with its zip
+ *
+ * For the agents that run the factory, see src/agents/cli.ts:
+ *   intent agents serve|guide|tools|proposals|sign|decline|verify ...
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -22,8 +25,15 @@ import { STAGES, stageOf } from './progress.ts';
 import { questionsPage } from './form.ts';
 import { prepare } from './pipeline.ts';
 import { readBack } from './readback.ts';
+import { agentsCli } from './agents/cli.ts';
 
 const [cmd, ...rest] = process.argv.slice(2);
+if (cmd === 'agents') {
+  const code = agentsCli(rest);
+  // The server runs until its client closes standard input.
+  if (code < 0) await new Promise<void>((done) => process.stdin.on('end', done));
+  process.exit(Math.max(code, 0));
+}
 const files: { path: string; text: string }[] = [];
 const readings: unknown[] = [];
 let answers = {};

@@ -22,6 +22,7 @@ flowchart LR
 | --- | --- | --- |
 | `datum.json` | The signed schematic: title, revision, end in mind, title block, every statement with its balloon, slot, state, supplier, tolerance and mark | The factory, as the reference everything is judged against |
 | `schematic.md` | The same schematic, for people | People reviewing the release |
+| `AGENTS.md` | The brief for the factory's agents: what counts as done, what must never happen, the gauges, the build order, the spec-sheet choices, how it ships, and the paths no agent writes ([agents](agents.md)) | Every agent that builds, reviews or delivers this revision |
 | `notes.md` | Engineering notes (how, for now) and lettered variants with where they apply | The factory's design step |
 | `gauges/<id>.yaml` | One journey card per outcome and per journey the person added, in the factory's own card format | The factory, once a person signs the card into `control/journeys` |
 | `tests/journeys/<id>.ts` | A skeleton for each gauge that exports nothing, so the factory reports it unknown until it is built | The factory's journey runner |

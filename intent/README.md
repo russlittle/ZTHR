@@ -44,6 +44,7 @@ erDiagram
   RELEASE ||--o{ KNOWLEDGE : "knowledge/"
   RELEASE ||--|| MANIFEST : "manifest.json"
   RELEASE ||--|| BOM : "build-manifest.json"
+  RELEASE ||--|| BRIEF : "AGENTS.md"
   BOM ||--o{ PART : "from the library, or to make"
   PART }o--o{ STATEMENT : "builds"
   DATUM ||--o{ STATEMENT : "balloons"
@@ -61,7 +62,11 @@ The same input always gives the same bytes; the browser and the command line pro
 node src/cli.ts readback intent.md --reading a.json --reading b.json
 node src/cli.ts release  intent.md --rev 1 --to out/ --zip
 node src/cli.ts init intent.md --workspace ws        # keep the work between sittings
+node src/cli.ts agents serve --workspace ws --role builder --family anthropic --agent b1 --factory ../factory
 ```
+
+Agents run the factory through the agent API: one role per session, its limits held by the API, and every step only a
+person takes left as a proposal for them ([how](docs/agents.md)).
 
 ## Develop
 
@@ -76,6 +81,8 @@ npm run build -- --open   # the same, with no sign-in, for local checks or your 
 
 - [The release package, file by file](docs/formats.md)
 - [The information it keeps: schema from your sentences, patterns and Prisma](docs/information.md)
+- [The factory, run by agents: roles, the agent API and its guide](docs/agents.md)
+- [Agent API: tool reference](docs/agents-tools.md)
 - [Report a problem, and triage](docs/feedback.md)
 - [Compliance, decided on the schematic](docs/compliance.md)
 - [Delivery and operations](docs/operations.md)
