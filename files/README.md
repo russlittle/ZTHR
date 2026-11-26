@@ -18,6 +18,7 @@ flowchart TB
     DAV[WebDAV: files, uploads, trash, versions, locks]
     OCS[OCS: capabilities, sharing, people, app passwords]
     P[Pages: login flow, public links, status]
+    WEB[Web interface: browse, upload, share]
     V[Each person's view: own files plus shares, permission letters, quota]
   end
   subgraph Blocks["Standard blocks"]
@@ -37,7 +38,8 @@ flowchart TB
     B[(Cloud Storage\nbytes)]
     S[(Cloud Storage\nstate log and snapshots)]
   end
-  Clients --> R --> DAV & OCS & P
+  B2[Browser] --> R
+  Clients --> R --> DAV & OCS & P & WEB
   DAV & OCS & P --> V
   V --> T & O & U & L & G & DV
   DAV --> X
@@ -189,7 +191,8 @@ On Cloud Run each write adds an object upload and a log entry to the bucket; tho
 
 | Works | Not yet |
 | --- | --- |
-| Login flow v2, app passwords, revoke, remote wipe | The Nextcloud web interface (it is server-rendered PHP; Files has its own pages only for sign-in and links) |
+| Login flow v2, app passwords, revoke, remote wipe | The Nextcloud web interface itself (it is server-rendered PHP); Files has its own, simpler one |
+| A web interface: sign in, browse, upload, download, make folders, delete to the trash, share by link | Editing share passwords and expiry in the web interface (the apps do it) |
 | Files over WebDAV: list, read, ranges, write, folders, move, copy, delete | Thumbnails and previews (`has-preview` is false) |
 | Chunked upload v2, resumable, with quota up front | Bulk upload, and the older chunking v1 |
 | If-Match and If-None-Match: no silent overwrite | Downloading a whole folder as a ZIP |

@@ -7,8 +7,9 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { Files } from './app.ts';
 import { authenticate, davError, header, json, send, statusOf, type Reply, type Req } from './http.ts';
 import { ocs, ocsRoute } from './ocs.ts';
-import { home, link, loginFlow, status, wipe } from './pages.ts';
+import { link, loginFlow, status, wipe } from './pages.ts';
 import { davPath, webdav } from './webdav.ts';
+import { cookieAuth, web } from './web.ts';
 
 export interface ServeOptions {
   /** The address people use, when a proxy sits in front; otherwise it is read from the request. */
@@ -63,7 +64,8 @@ const signedIn = (files: Files, r: Req) => authenticate(files, r);
 async function route(files: Files, r: Req, origin: string): Promise<Reply> {
   const p = r.path;
   if (p === '/status.php') return status();
-  if (p === '/' || p === '/index.php') return home();
+  if (p === '/' || p === '/index.php') return { status: 303, headers: { location: '/apps/files' } };
+  if (p === '/login' || p === '/logout' || p.startsWith('/apps/files')) return web(files, r);
   if (p === '/.well-known/caldav' || p === '/.well-known/carddav') return { status: 301, headers: { location: '/remote.php/dav/' } };
   if (p === '/robots.txt') return { status: 200, headers: { 'content-type': 'text/plain' }, body: 'User-agent: *\nDisallow: /\n' };
   if (p.startsWith('/index.php/login/v2')) return loginFlow(files, r, p.slice('/index.php/login/v2'.length), origin);
@@ -86,7 +88,7 @@ async function route(files: Files, r: Req, origin: string): Promise<Reply> {
   const d = davPath(p);
   if (d) {
     if (r.method === 'OPTIONS' && !header(r, 'authorization')) return { status: 200, headers: { dav: '1, 3', allow: 'OPTIONS, PROPFIND' } };
-    if (!(await signedIn(files, r))) return davError(401, 'sign in with your login name and an app password');
+    if (!(await signedIn(files, r)) && !cookieAuth(files, r)) return davError(401, 'sign in with your login name and an app password');
     return webdav(files, r, d);
   }
   return json(404, { message: 'nothing here' });
