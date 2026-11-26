@@ -430,6 +430,31 @@ ${SERVICE_IDS.map((id) => { const sv = SERVICES[id]; const probes = (contract?.r
   // data sources
   write(join(SITE, 'factory', 'sources.html'), shell('sources', 'Data sources', `<p class="muted">Everything the Advocate reads that it does not own, with an ERD of what each returns, drawn from the same schemas the contract tests enforce. Each field shows its sensitivity class. <a href="../docs/data-sources.html">The data sources document</a>.</p>${sources().map((src) => ui.section(src.name, `<p class="small muted">${ui.esc(src.kind)} · ${ui.esc(src.how)} Lands in: ${ui.esc(src.lands)}.</p><pre class="mermaid">${ui.esc(erd(src.entities, { showClass: true }))}</pre>`)).join('')}`));
 
+  // The control surface's feed: what this build measured, as data, for zthr.ai's mission control. Every value is
+  // this run's own; anything this build did not measure is null, never a carried-over number.
+  const feed = {
+    schema: 'zthr-factory/1',
+    app: { name: 'Student Advocate', href: '/studentadvocate', evidence: '/reference/factory/index.html' },
+    commit: headCommit(),
+    builtAt: new Date().toISOString(),
+    readings: [
+      { id: 'tests', label: 'Tests passing', value: tests?.numPassedTests ?? null, of: tests?.numTotalTests ?? null, href: 'tests.html' },
+      { id: 'gates', label: 'Gates proven able to fail', value: proofs.filter((p) => p.valid).length, of: gates.length, href: 'gates.html' },
+      { id: 'redteam', label: 'Red-team attacks held', value: held ?? null, of: redteam?.results.length ?? null, href: 'redteam.html' },
+      { id: 'mutation', label: 'Mutation score', value: mutScore ? Number(mutScore.score.toFixed(1)) : null, of: 100, floor: ratchets.mutation?.floor ?? null, unit: '%', href: 'mutation.html' },
+      { id: 'browser', label: 'Browser stops with no problems', value: uiManifest ? uiManifest.stops.filter((x) => !x.problems.length).length : null, of: uiManifest?.stops.length ?? null, href: 'ui-walk.html' },
+      { id: 'controls', label: 'Controls clicked, to depth', value: deep ? deep.visits.filter((v) => !v.problems.length).length : null, of: deep?.controls ?? null, href: 'ui-walk.html#deep' },
+    ],
+    journeys: cards.map((c) => ({ id: c.id, persona: c.persona, goal: c.goal, phase: c.phase, modes: (c as unknown as { modes?: string[] }).modes ?? [], channels: (c as unknown as { channels?: string[] }).channels ?? [], status: journeyRuns.length ? jStatus(c.id) : 'not measured' })),
+    phases: phasesF.map((p) => {
+      const c = certs.find((x) => x.phase === p.n);
+      return { n: p.n, name: p.name, certified: c ? c.certified : null, certifiedAt: c?.commit ?? null, features: p.features.map((f) => ({ name: f.name, what: f.what, status: f.status, journeys: f.journeys })) };
+    }),
+    gates: gates.map((g) => ({ id: g.id, protects: g.protects, proof: proofs.find((x) => x.gate === g.id)?.valid === true ? 'valid' : proofs.some((x) => x.gate === g.id) ? 'invalid' : 'none' })),
+    ratchets: ratchetList,
+  };
+  writeFileSync(join(SITE, 'factory', 'factory.json'), `${JSON.stringify(feed, null, 1)}\n`);
+
   return PAGES.length;
 }
 
