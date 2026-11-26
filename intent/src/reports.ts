@@ -212,6 +212,22 @@ union all select 'not designed', path, cast(sessions as varchar) from report_jou
 union all select 'out of tolerance', cast(balloon as varchar), text from report_measures_live where not in_tolerance;`,
     },
   );
+  if (s.feedback !== 'off')
+    out.push({
+      id: 'feedback-tickets', title: 'Problems, ideas and questions people reported', scope: 'operations', audience: 'Product, support and engineering',
+      answers: 'What people report, from which feature, how fast it is triaged and resolved, and what is still waiting. Bugs become defects; ideas become proposals to the intent.',
+      chart: 'table', schedule: 'weekly', needs: 'ops',
+      sql: `select t.feature, t.kind, t.severity,
+  count(*) as reported,
+  count(*) filter (where t.status = 'new') as untriaged,
+  count(*) filter (where t.status in ('resolved', 'closed')) as resolved,
+  round(avg(extract(epoch from (t.triaged_at - t.created_at))) / 3600, 1) as hours_to_triage,
+  round(avg(extract(epoch from (t.resolved_at - t.created_at))) / 3600, 1) as hours_to_resolve
+from ticket t
+where t.created_at > now() - interval '28 days'
+group by 1, 2, 3
+order by untriaged desc, reported desc;`,
+    });
   return out;
 }
 
@@ -222,6 +238,8 @@ const LOOP = [
   { finding: 'A common walk no card covers', proposes: 'A new journey card, to control/proposals, signed in by a person' },
   { finding: 'Many people on small phones, in another language, or returning daily', proposes: 'Retune that person, which adds the small phone, another language or returning journeys' },
   { finding: 'A measure out of tolerance', proposes: 'A redline: change the design, or change the tolerance with a reason' },
+  { finding: 'A bug reported and confirmed', proposes: 'A defect with a failing test written from the ticket, then a ratchet once fixed' },
+  { finding: 'An idea many people report', proposes: 'A proposal to the person who holds the intent: a new outcome, journey or redline' },
   { finding: 'A forbidden outcome observed once', proposes: 'A stop: an alert now, a failing test before the next release, and a ratchet' },
 ];
 

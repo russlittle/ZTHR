@@ -76,6 +76,7 @@ npm run build -- --open   # the same, with no sign-in, for local checks or your 
 
 - [The release package, file by file](docs/formats.md)
 - [The information it keeps: schema from your sentences, patterns and Prisma](docs/information.md)
+- [Report a problem, and triage](docs/feedback.md)
 - [Compliance, decided on the schematic](docs/compliance.md)
 - [Delivery and operations](docs/operations.md)
 - [Connectors to the tools teams already use](docs/connectors.md)

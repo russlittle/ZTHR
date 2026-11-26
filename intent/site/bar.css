@@ -20,3 +20,29 @@ html.gated body > :not(.zbar):not(#zgate):not(script) { display: none !important
 .zgate-small { font-size: 14px; opacity: .8; }
 .zwho { margin-left: auto; display: flex; align-items: center; gap: 10px; font: 400 14px/1 var(--letter, system-ui); color: color-mix(in srgb, var(--sheet) 85%, transparent); }
 .zwho button { font: 600 14px/1 var(--letter, system-ui); background: transparent; color: var(--sheet); border: 1px solid color-mix(in srgb, var(--sheet) 50%, transparent); border-radius: 6px; min-height: 36px; padding: 0 12px; cursor: pointer; }
+
+/* Report a problem, and triage for admins. */
+.zfb-open { font: 600 14px/1 var(--letter, system-ui); background: transparent; color: var(--sheet); border: 1px solid color-mix(in srgb, var(--sheet) 50%, transparent); border-radius: 6px; min-height: 36px; padding: 0 12px; cursor: pointer; margin-left: auto; }
+.zfb-open + .zfb-open { margin-left: 8px; }
+.zfb-open:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.zbar .zfb-open ~ .zwho { margin-left: 12px; }
+.zfb { border: 1px solid var(--ink); border-radius: 6px; padding: 0; max-width: min(40rem, 94vw); width: 100%; color: var(--ink); background: var(--sheet); }
+.zfb::backdrop { background: rgb(0 0 0 / .45); }
+.zfb-form { padding: 18px 20px; display: grid; gap: 8px; font: 400 16px/1.5 var(--letter, system-ui); }
+.zfb-wide { max-width: none; }
+.zfb h2 { margin: 0 0 4px; font-size: 22px; }
+.zfb h3 { margin: 12px 0 0; font-size: 17px; }
+.zfb fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.zfb legend { font-weight: 600; margin-bottom: 4px; }
+.zfb input:not([type=radio]), .zfb textarea, .zfb select { font: inherit; padding: 6px 8px; border: 1px solid var(--ink); border-radius: 4px; background: var(--sheet); color: var(--ink); }
+.zfb-opt, .zfb-note, .zfb-when { font-size: 14px; opacity: .8; }
+.zfb-error { color: #b3261e; margin: 0; min-height: 1em; }
+.zfb-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.zfb-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.zfb-list li { border-top: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); padding-top: 8px; }
+.zfb-list p { margin: 4px 0; }
+.zfb-when { margin-left: 8px; }
+.zfb-status, .zfb-kind { font-size: 13px; border: 1px solid currentColor; border-radius: 10px; padding: 1px 8px; margin-left: 6px; }
+.zfb-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.zfb-row label { display: grid; gap: 2px; font-size: 14px; }
+.zfb-grow { flex: 1 1 14rem; }

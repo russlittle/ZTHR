@@ -129,7 +129,9 @@
       "Confidence walkthrough",
       "Compliance evidence",
       "Delivery pipeline",
-      "Service levels and alerts"
+      "Service levels and alerts",
+      "Triage board",
+      "Defect from ticket"
     ],
     "Content": [
       "Surface registry",
@@ -166,7 +168,8 @@
       "Accessibility conformance",
       "Progressive web features",
       "Audience profile",
-      "Density budget"
+      "Density budget",
+      "Report a problem"
     ],
     "Appearance": [
       "Light and dark modes",

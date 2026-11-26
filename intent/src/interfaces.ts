@@ -30,7 +30,12 @@ export interface Options {
   readonly compliance?: readonly string[];
   /** Where it runs. Google Cloud today; the pipeline and operations are written for others the same way. */
   readonly target?: 'gcp';
+  /** Report a problem: built into every environment, only the testing ones, or none. Switchable at runtime either way. */
+  readonly feedback?: FeedbackReach;
 }
+
+export type FeedbackReach = 'everywhere' | 'testing' | 'off';
+export const FEEDBACK_REACH: readonly FeedbackReach[] = ['everywhere', 'testing', 'off'];
 
 /** Where the query console runs. Out of production by default, so it cannot be used to take real data out. */
 export type QueryReach = 'off' | 'non-production' | 'everywhere';
@@ -44,6 +49,7 @@ export interface Settled {
   readonly usage: 'off' | 'counts' | 'consented';
   readonly compliance: readonly string[];
   readonly target: 'gcp';
+  readonly feedback: FeedbackReach;
 }
 
 /** A tool the catalogue holds for that kind of connection, or the fallback. Names from before the catalogue still work. */
@@ -70,6 +76,7 @@ export function settle(o: Options | undefined): Settled {
     usage: o?.usage === 'off' || o?.usage === 'consented' ? o.usage : 'counts',
     compliance: [...new Set(o?.compliance ?? [])].sort(),
     target: 'gcp',
+    feedback: o?.feedback === 'off' || o?.feedback === 'testing' ? o.feedback : 'everywhere',
   };
 }
 
@@ -416,12 +423,18 @@ function environments(s: Settled): string {
         'UAT overrides': where((e) => e === 'uat' || e === 'test' || e === 'development'),
         'What-if editing': where(() => true),
         'Confidence walkthrough': where((e) => e !== 'production'),
+        'Report a problem': where((e) => (s.feedback === 'everywhere' ? true : s.feedback === 'testing' ? e !== 'production' : false)),
+        'Triage board': where((e) => (s.feedback === 'everywhere' ? true : s.feedback === 'testing' ? e !== 'production' : false)),
+      },
+      runtimeSwitches: {
+        'Report a problem': 'A feature flag, feedback.enabled, per environment: switched off or on at any time, with no release. Off hides the button and refuses new tickets; existing tickets stay readable and manageable.',
       },
       guards: {
         'Query console': ['runs as the person signed in: same roles, row-level rules and field masking as the screens', 'read only', 'every query, its text and the rows it returned are in the audit chain', 'exports carry sensitivity classes and need the export scope', 'scheduled queries run as a named service client with only the scopes granted to it'],
         'Test data generator': ['every record is marked synthetic', 'production refuses a synthetic record'],
         'UAT overrides': ['every override is recorded with who made it and why', 'one step resets every override', 'the production build does not contain the code'],
         'Act as a user': ['the person acted as is told', 'every action is recorded under both people'],
+        'Report a problem': ['captures where the person was (feature, journey, screen, revision, trace), never what they had typed into the form they were on', 'what they write is private: masked in reports and the query console', 'a screenshot is attached only when the person chooses to, and is shown to them before it is sent'],
       },
     },
     null,

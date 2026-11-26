@@ -179,6 +179,7 @@ function specChange(o: Options, key: string, t: HTMLInputElement | HTMLSelectEle
     case 'tickets': return { ...o, connect: { ...o.connect, tickets: t.value as never } };
     case 'wiki': return { ...o, connect: { ...o.connect, wiki: t.value as never } };
     case 'feed': return { ...o, connect: { ...o.connect, feed: checked } };
+    case 'feedback': return { ...o, feedback: t.value as 'everywhere' | 'testing' | 'off' };
     case 'compliance': return { ...o, compliance: toggle(o.compliance, t.value) };
     case 'usage': return { ...o, usage: t.value as 'off' | 'counts' | 'consented' };
     case 'chat': return { ...o, connect: { ...o.connect, chat: t.value } };
@@ -304,6 +305,7 @@ function renderSteps(p: Prepared) {
   const s = stage(p);
   const i = STAGES.findIndex((x) => x.key === s);
   document.body.dataset['step'] = String(i + 1);
+  document.body.dataset['view'] = state.view;
   $('steps').innerHTML = `<div class="track" aria-hidden="true"><div class="fill" style="--to:${Math.round((i / (STAGES.length - 1)) * 100)}%"></div></div><ol>${STAGES.map(
     (x, k) => `<li class="${k < i ? 'done' : k === i ? 'now' : 'next'}"${k === i ? ' aria-current="step"' : ''}><button type="button" class="jump" data-jump="${k + 1}" aria-label="Step ${k + 1}, ${x.label}${k < i ? ', done' : k === i ? ', you are here' : ''}: go to it"><span class="dot" aria-hidden="true">${k < i ? '✓' : k + 1}</span><span class="name">${x.label}</span></button></li>`,
   ).join('')}</ol><p class="doing">Step ${i + 1} of ${STAGES.length}: ${esc(state.words.trim() ? STAGES[i]!.doing : 'Start with a few rough lines, or try the example.')}</p>`;

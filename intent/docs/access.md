@@ -54,6 +54,12 @@ and Cloud Shell.
 7. **Invite people.** `bash intent/tools/invite.sh add person@example.com "Their name"`. `pause` closes the door
    without deleting the record; `list` shows who is invited.
 
+8. **Reports and triage.** `bash intent/tools/invite.sh feedback on` turns on Report a problem for everyone invited;
+   `off` turns it off at once, with no release. `bash intent/tools/invite.sh admin person@example.com` lets an invited
+   person triage. Reporters see their own reports and where each stands; admins see all of them, set status and
+   severity, and leave a note the reporter sees. The rules refuse anything else: nobody files as someone else, nobody
+   rewrites what a person said, and nobody deletes a report.
+
 Until step 1 is done, the pages say sign-in is not set up and stay closed.
 
 ## Running your own copy

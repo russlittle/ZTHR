@@ -114,3 +114,22 @@ test('people sign in with Google unless the spec sheet says otherwise', () => {
   assert.deepEqual(c.chosen.map((x) => x.id), ['google']);
   assert.ok(build().m.lines.some((l) => l.part === 'Single sign-on' && l.why.some((w) => /Google/.test(w.text))));
 });
+
+test('report a problem: on by default, its records and parts follow the spec sheet, and it is switchable at runtime', async () => {
+  const { schemaOf } = await import('../src/schema.ts');
+  const on = build();
+  assert.ok(schemaOf(on.p).entities.some((e) => e.name === 'Ticket'), 'tickets are kept when it is on');
+  assert.ok(on.m.lines.some((l) => l.part === 'Triage board'));
+  const env = JSON.parse(on.r.files['admin/environments.json']!) as { tools: Record<string, Record<string, boolean>>; runtimeSwitches: Record<string, string> };
+  assert.equal(env.tools['Report a problem']!['production'], true);
+  assert.match(env.runtimeSwitches['Report a problem']!, /feedback\.enabled/);
+  const testing = build({ feedback: 'testing' });
+  const env2 = JSON.parse(testing.r.files['admin/environments.json']!) as { tools: Record<string, Record<string, boolean>> };
+  assert.equal(env2.tools['Report a problem']!['production'], false);
+  assert.equal(env2.tools['Report a problem']!['uat'], true);
+  const off = build({ feedback: 'off' });
+  assert.ok(!schemaOf(off.p).entities.some((e) => e.name === 'Ticket'), 'no tickets when it is off');
+  assert.ok(!off.m.lines.some((l) => l.part === 'Report a problem'));
+  const ticket = schemaOf(on.p).entities.find((e) => e.name === 'Ticket')!;
+  assert.equal(ticket.fields.find((f) => f.key === 'what_happened')!.sensitivity, 'private', 'what people write is private');
+});

@@ -14,6 +14,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect, signOut, type User } from 'firebase/auth';
 import { doc, getDoc, getFirestore, setDoc } from 'firebase/firestore/lite';
+import { startFeedback } from './feedback.ts';
 
 interface Workspace {
   get(): Promise<{ exists: boolean; data(): Record<string, unknown> | undefined }>;
@@ -99,9 +100,11 @@ async function start() {
       return;
     }
     let invited = false;
+    let isAdmin = false;
     try {
       const snap = await getDoc(doc(db, 'access', email));
       invited = snap.exists() && snap.data()['active'] === true;
+      isAdmin = invited && snap.data()?.['role'] === 'admin';
     } catch {
       invited = false;
     }
@@ -117,6 +120,8 @@ async function start() {
       },
       set: async (d) => setDoc(ref, { ...d, at: new Date().toISOString() }),
     });
+    // Report a problem and, for admins, triage: switched in config/feedback, enforced by the rules.
+    void startFeedback(db, { uid: user.uid, email }, isAdmin);
   });
 }
 

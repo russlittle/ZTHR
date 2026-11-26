@@ -73,7 +73,7 @@ export interface Schema {
 }
 
 interface PatternField { name: string; type: string; meaning: string; sensitivity: string; required?: boolean; states?: string[] }
-interface Pattern { id: string; name: string; what: string; always?: boolean; rule?: string; triggers?: [string, string][]; fields: PatternField[]; rules?: string[]; retention: string }
+interface Pattern { id: string; name: string; what: string; always?: boolean; sheet?: string; rule?: string; triggers?: [string, string][]; fields: PatternField[]; rules?: string[]; retention: string }
 export const PATTERNS = patternData as { name: string; what: string; patterns: Pattern[]; types: Record<string, string>; sensitivity: Record<Sensitivity, string> };
 
 const snake = (t: string) => t.toLowerCase().replace(/['’]s\b/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'item';
@@ -145,7 +145,9 @@ export function schemaOf(p: Prepared): Schema {
 
   // 1. Patterns the intent calls for, named in its own words.
   for (const pt of PATTERNS.patterns) {
-    let name: string | null = pt.always ? pt.name : null;
+    // A pattern the spec sheet switches on: report a problem brings its tickets.
+    if (pt.sheet === 'feedback' && p.options.feedback === 'off') continue;
+    let name: string | null = pt.always || (pt.sheet === 'feedback' && p.options.feedback !== 'off') ? pt.name : null;
     const hits = new Set<number>();
     for (const [re, as] of pt.triggers ?? []) {
       const r = new RegExp(re, 'i');

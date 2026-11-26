@@ -6,6 +6,9 @@ rules_version = '2';
 //                    Written by a person in the console or Cloud Shell; no browser may list or write them.
 //                    A signed-in person may read only their own, to learn whether they are invited.
 // workspaces/{uid}   an invited person's saved studio work, readable and writable by that person alone.
+// tickets/{id}       problems, ideas and questions invited people report. A reporter reads their own; an admin
+//                    (access/{email}.role == "admin") reads all and triages. Nobody deletes one.
+// config/feedback    { enabled: true | false }: the switch for reporting, set by a person, readable by the invited.
 service cloud.firestore {
   match /databases/{database}/documents {
     function verified() {
@@ -14,6 +17,44 @@ service cloud.firestore {
     function invited() {
       let path = /databases/$(database)/documents/access/$(request.auth.token.email.lower());
       return verified() && exists(path) && get(path).data.active == true;
+    }
+
+    function admin() {
+      return invited() && get(/databases/$(database)/documents/access/$(request.auth.token.email.lower())).data.get('role', '') == 'admin';
+    }
+    function reportingOn() {
+      return get(/databases/$(database)/documents/config/feedback).data.get('enabled', false) == true;
+    }
+    function text(v, max) {
+      return v is string && v.size() <= max;
+    }
+
+    match /config/feedback {
+      allow get: if invited();
+      allow list, create, update, delete: if false;
+    }
+
+    match /tickets/{id} {
+      allow create: if invited() && reportingOn()
+        && request.resource.data.keys().hasOnly(['reporter', 'email', 'kind', 'title', 'happened', 'expected', 'page', 'view', 'device', 'status', 'createdAt'])
+        && request.resource.data.reporter == request.auth.uid
+        && request.resource.data.email == request.auth.token.email.lower()
+        && request.resource.data.kind in ['bug', 'idea', 'question', 'praise']
+        && text(request.resource.data.title, 140) && request.resource.data.title.size() > 0
+        && text(request.resource.data.happened, 4000)
+        && text(request.resource.data.get('expected', ''), 2000)
+        && text(request.resource.data.page, 300) && text(request.resource.data.get('view', ''), 60) && text(request.resource.data.get('device', ''), 20)
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      allow get: if invited() && (resource.data.reporter == request.auth.uid || admin());
+      allow list: if admin() || (invited() && resource.data.reporter == request.auth.uid);
+      allow update: if admin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'severity', 'note', 'triagedAt', 'resolvedAt', 'triagedBy'])
+        && request.resource.data.status in ['new', 'triaged', 'in progress', 'waiting on reporter', 'resolved', 'closed', "won't fix", 'duplicate']
+        && request.resource.data.get('severity', 'not set') in ['blocks me', 'gets in the way', 'minor', 'not set']
+        && text(request.resource.data.get('note', ''), 2000)
+        && request.resource.data.get('triagedBy', request.auth.token.email.lower()) == request.auth.token.email.lower();
+      allow delete: if false;
     }
 
     match /access/{email} {

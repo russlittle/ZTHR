@@ -214,6 +214,7 @@ const CALLS: readonly { parts: readonly string[]; when: When }[] = [
     return hits.length ? { text: `People sign in with ${toolName(c.p.options.connect.identity)}, as the spec sheet sets`, balloons: hits.map((s) => s.balloon) } : null;
   } },
   { parts: ['Training modules'], when: sheet((c) => anyTraining(c.p.options), () => 'Spec sheet: training is published as a cmi5 course') },
+  { parts: ['Report a problem', 'Triage board', 'Defect from ticket', 'Feature flags', 'Notifications'], when: sheet((c) => c.p.options.feedback !== 'off', (c) => `Spec sheet: people can report a problem ${c.p.options.feedback === 'everywhere' ? 'in every environment' : 'in development, test and UAT'}, switchable at any time`) },
   { parts: ['Privacy: consent, export, erasure'], when: journey('take back', 'A journey takes permission back') },
   { parts: ['Is it me or is it down?'], when: journey('missing input', 'A journey is walked with an input missing or late') },
 ];

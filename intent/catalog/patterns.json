@@ -514,6 +514,201 @@
         }
       ],
       "retention": "as long as the record it is about"
+    },
+    {
+      "id": "ticket",
+      "name": "Ticket",
+      "sheet": "feedback",
+      "what": "A problem, idea or question someone reported from inside the app, with where they were when they reported it.",
+      "fields": [
+        {
+          "name": "reporter",
+          "type": "ref:Person",
+          "meaning": "Who reported it",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "kind",
+          "type": "state",
+          "meaning": "What sort of report it is",
+          "sensitivity": "internal",
+          "required": true,
+          "states": [
+            "bug",
+            "idea",
+            "question",
+            "praise"
+          ]
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "meaning": "A short line saying what it is about",
+          "sensitivity": "private",
+          "required": true
+        },
+        {
+          "name": "what happened",
+          "type": "text",
+          "meaning": "What happened, in the reporter's words; may contain anything, so it is treated as private",
+          "sensitivity": "private",
+          "required": true
+        },
+        {
+          "name": "what was expected",
+          "type": "text",
+          "meaning": "What they expected instead",
+          "sensitivity": "private"
+        },
+        {
+          "name": "severity",
+          "type": "state",
+          "meaning": "How badly it gets in the way, set at triage",
+          "sensitivity": "internal",
+          "states": [
+            "blocks me",
+            "gets in the way",
+            "minor",
+            "not set"
+          ]
+        },
+        {
+          "name": "status",
+          "type": "state",
+          "meaning": "Where it stands",
+          "sensitivity": "internal",
+          "required": true,
+          "states": [
+            "new",
+            "triaged",
+            "in progress",
+            "waiting on reporter",
+            "resolved",
+            "closed",
+            "won't fix",
+            "duplicate"
+          ]
+        },
+        {
+          "name": "feature",
+          "type": "text",
+          "meaning": "The feature it was reported from, captured automatically",
+          "sensitivity": "internal"
+        },
+        {
+          "name": "journey",
+          "type": "text",
+          "meaning": "The journey and step the reporter was on, captured automatically",
+          "sensitivity": "internal"
+        },
+        {
+          "name": "surface",
+          "type": "text",
+          "meaning": "The screen it was reported from",
+          "sensitivity": "internal"
+        },
+        {
+          "name": "revision",
+          "type": "text",
+          "meaning": "The release that was running",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "environment",
+          "type": "state",
+          "meaning": "Where it was reported",
+          "sensitivity": "internal",
+          "required": true,
+          "states": [
+            "development",
+            "test",
+            "uat",
+            "production"
+          ]
+        },
+        {
+          "name": "trace",
+          "type": "text",
+          "meaning": "The request trace, so support can follow exactly what the app did",
+          "sensitivity": "internal"
+        },
+        {
+          "name": "assignee",
+          "type": "ref:Person",
+          "meaning": "Who is working on it",
+          "sensitivity": "internal"
+        },
+        {
+          "name": "created at",
+          "type": "timestamp",
+          "meaning": "When it was reported",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "triaged at",
+          "type": "timestamp",
+          "meaning": "When someone first looked at it",
+          "sensitivity": "internal"
+        },
+        {
+          "name": "resolved at",
+          "type": "timestamp",
+          "meaning": "When it was resolved",
+          "sensitivity": "internal"
+        }
+      ],
+      "rules": [
+        "order:created at<triaged at",
+        "order:created at<resolved at"
+      ],
+      "retention": "2 years after it is closed"
+    },
+    {
+      "id": "ticket-reply",
+      "name": "Ticket reply",
+      "sheet": "feedback",
+      "what": "A reply on a ticket, from the reporter or the team; the reporter sees every reply meant for them.",
+      "fields": [
+        {
+          "name": "ticket",
+          "type": "ref:Ticket",
+          "meaning": "The ticket it replies to",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "author",
+          "type": "ref:Person",
+          "meaning": "Who wrote it",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "body",
+          "type": "text",
+          "meaning": "The reply; treated as private",
+          "sensitivity": "private",
+          "required": true
+        },
+        {
+          "name": "visible to reporter",
+          "type": "boolean",
+          "meaning": "Whether the reporter sees it, or it is a team note",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "written at",
+          "type": "timestamp",
+          "meaning": "When it was written",
+          "sensitivity": "internal",
+          "required": true
+        }
+      ],
+      "retention": "with its ticket"
     }
   ],
   "types": {

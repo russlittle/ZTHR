@@ -81,6 +81,7 @@ test('every report query runs, against tables shaped like the query console view
       'create table audit(occurred timestamp, kind varchar, feature varchar, reason varchar, actor varchar)',
       'create table measures(balloon int, text varchar, tolerance varchar, value varchar, in_tolerance boolean, floor varchar)',
       'create table costs(occurred timestamp, feature varchar, answered_by varchar, tokens int, cost double)',
+      'create table ticket(id varchar, feature varchar, kind varchar, severity varchar, status varchar, created_at timestamp, triaged_at timestamp, resolved_at timestamp)',
     ])
       await db.run(ddl);
     const body = (id: string) => f[`reports/${id}.sql`]!.split('\n').filter((l) => !l.startsWith('--')).join('\n').trim().replace(/;$/, '').replace(/\norder by[^\n]*$/, '');

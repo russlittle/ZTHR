@@ -423,6 +423,27 @@
       "studentAdvocate": {
         "coverage": "none"
       }
+    },
+    {
+      "name": "Report a problem",
+      "gives": "A button on every screen: say what happened and what you expected, as a bug, an idea, a question or praise. Where you were (feature, journey, screen, revision, trace) is captured for you; what you had typed elsewhere never is",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Triage board",
+      "gives": "Every ticket by status, severity and feature: triage, merge duplicates, assign, reply to the reporter, resolve, with time-to-triage and time-to-resolve watched",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Defect from ticket",
+      "gives": "A confirmed bug becomes a defect with a failing test written from it, and a ratchet once it is fixed, so it cannot come back",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
     }
   ],
   "rules": [
