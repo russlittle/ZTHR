@@ -20,6 +20,7 @@
     "build": "node tools/build-site.ts"
   },
   "devDependencies": {
+    "@duckdb/node-api": "^2.0.1-r.1",
     "@types/node": "^22.20.5",
     "esbuild": "^0.25.12",
     "typescript": "^5.9.3",

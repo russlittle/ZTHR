@@ -10,6 +10,7 @@ import type { Check, Fix, Review } from '../review.ts';
 import type { Tune } from '../pipeline.ts';
 import { describe, features, QUERY_REACH, type Reach, type Settled } from '../interfaces.ts';
 import { byKind, type Kind } from '../connectors.ts';
+import { USAGE, USAGE_WHAT } from '../reports.ts';
 import { BUILD_ORDER, MAINTAINER_LABEL, MAINTAINER_WHAT, SOURCE_LABEL, SOURCE_WHAT, type Line, type Manifest, type Source } from '../manifest.ts';
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -705,6 +706,7 @@ export function specSheet(m: Manifest, o: Settled): string {
 <div class="spec-row"><label for="opt-training-reach"><strong>Training</strong></label><div>${reach('training', o.training.reach, ['Written, held back', 'Published for every feature', 'Published for some'])}${o.training.reach === 'some' ? picks('training', o.training.features) : ''}<p class="muted small">${esc(d.training)}</p></div></div>
 <div class="spec-row"><span><strong>Docs</strong></span><div><p class="small">${esc(d.docs)}</p></div></div>
 <div class="spec-row"><label for="opt-query"><strong>Query console</strong></label><div>${sel('query', QUERY_REACH, o.admin.query, (v) => (v === 'non-production' ? 'Development, test and UAT only' : v === 'everywhere' ? 'Every environment, production too' : 'Left out of every build'))}<p class="muted small">${esc(d.admin)}</p></div></div>
+<div class="spec-row"><label for="opt-usage"><strong>Use tracking</strong></label><div>${sel('usage', USAGE, o.usage, (v) => (v === 'counts' ? 'Counted, naming no one' : v === 'consented' ? 'Followed over time, with consent' : 'Off'))}<p class="muted small">${esc(USAGE_WHAT[o.usage])} Feeds a report for every feature, operations every day, use as a whole, and a weekly brief on what to improve. No group under 10 is ever shown.</p></div></div>
 <div class="spec-row"><span><strong>Connections</strong></span><div class="spec-conn">${tool('tickets', 'tickets', 'Progress to', o.connect.tickets)}${tool('wiki', 'docs', 'Docs to', o.connect.wiki)}${tool('chat', 'chat', 'Notes to', o.connect.chat)}${box('feed', o.connect.feed, 'A data feed for systems already in place')}${o.connect.feed ? tool('feedTo', 'feed', 'Feed by', o.connect.feedTo, false) : ''}<p class="muted small">${esc(d.connect)} Each one is a stub: the package holds the exact requests it would send, and nothing is sent until it is set up where the factory runs. Credentials are never in the package.</p></div></div>
 <div class="spec-row"><label for="opt-identity"><strong>Sign-in</strong></label><div>${tool('identity', 'identity', '', o.connect.identity, false)}<p class="muted small">How people sign in to the app the factory builds. Roles and row-level rules come from the app, not from the sign-in provider.</p></div></div>
 </div>

@@ -40,6 +40,8 @@ flowchart LR
 | `training/<feature>.md` and `training/cmi5.xml` | A lesson for every feature from its journeys and measures; the cmi5 course lists only what is published | Learning systems that read cmi5 and xAPI |
 | `admin/environments.json` | Which admin tools are built into which environment; the query console is left out of production by default | The factory's build and deploy steps |
 | `admin/query.md` | The views each feature answers to the query console, and the guards on every query | Support and analysts |
+| `reports/catalogue.json`, `reports/<id>.sql`, `reports/README.md` | A report for every feature, for operations, for use as a whole, for journeys as walked, for the measures, and a weekly brief on what to improve: each a saved query with a chart, schedule and audience | The report builder, report delivery, and people |
+| `analytics/tracking-plan.json` | What use is recorded at the spec sheet's level, under which keys, what is never recorded, and for how long | Privacy review, and the app's analytics part |
 | `connections.json` | Where factory progress, docs and data feeds go: tool names and mappings, never credentials | The factory's release step |
 | `features.yaml` | Each outcome as a feature, with the journeys that prove it | The factory's feature registry |
 | `knowledge/` | One page per balloon, the end in mind, and an index, as an Open Knowledge Format bundle | Any agent working on the app, as its context |

@@ -188,7 +188,12 @@
       "Report builder",
       "Report templates",
       "Ticket sync",
-      "Wiki publishing"
+      "Wiki publishing",
+      "Feature reports",
+      "Operations reports",
+      "Journey analytics",
+      "Report delivery",
+      "Improvement brief"
     ]
   }
 }

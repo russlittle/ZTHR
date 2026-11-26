@@ -168,6 +168,7 @@ function specChange(o: Options, key: string, t: HTMLInputElement | HTMLSelectEle
     case 'tickets': return { ...o, connect: { ...o.connect, tickets: t.value as never } };
     case 'wiki': return { ...o, connect: { ...o.connect, wiki: t.value as never } };
     case 'feed': return { ...o, connect: { ...o.connect, feed: checked } };
+    case 'usage': return { ...o, usage: t.value as 'off' | 'counts' | 'consented' };
     case 'chat': return { ...o, connect: { ...o.connect, chat: t.value } };
     case 'feedTo': return { ...o, connect: { ...o.connect, feedTo: t.value } };
     case 'identity': return { ...o, connect: { ...o.connect, identity: t.value } };

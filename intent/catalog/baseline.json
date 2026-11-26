@@ -45,6 +45,15 @@
     { "part": "Test data generator", "why": "Admin suite: synthetic records for any feature and person, refused by production" },
     { "part": "UAT overrides", "why": "Admin suite: set up any case in UAT, recorded and reset in one step" },
     { "part": "What-if editing", "why": "Admin suite: change a field and watch what the app does with it, for this session only" },
-    { "part": "Confidence walkthrough", "why": "Admin suite: watch each feature's journeys run on test records, step by step" }
+    { "part": "Confidence walkthrough", "why": "Admin suite: watch each feature's journeys run on test records, step by step" },
+    { "part": "Report builder", "why": "Reports: anyone with access builds their own from the data dictionary, through the same access rules" },
+    { "part": "Report templates", "why": "Reports: ready-made ones to start from" },
+    { "part": "Feature reports", "why": "Reports: every feature reports its use and health, written from the datum" },
+    { "part": "Operations reports", "why": "Reports: the people who run it see availability, speed, errors, runs, access and cost every day" },
+    { "part": "Journey analytics", "why": "Reports: real walks are measured against the journey cards, as the spec sheet's use tracking allows" },
+    { "part": "Product analytics", "why": "Reports: use is counted as the spec sheet allows, never naming anyone without their consent" },
+    { "part": "Metrics and tracing", "why": "Reports: every request is timed against the feedback budget" },
+    { "part": "Report delivery", "why": "Reports: each goes to its audience on a schedule" },
+    { "part": "Improvement brief", "why": "Reports: what people do comes back to the intent as proposals a person decides on" }
   ]
 }

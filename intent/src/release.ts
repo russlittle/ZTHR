@@ -22,6 +22,7 @@ import { sha256 } from './hash.ts';
 import { chosenJourneys } from './journeys.ts';
 import { manifest, manifestFiles } from './manifest.ts';
 import { interfaceFiles } from './interfaces.ts';
+import { reportFiles } from './reports.ts';
 import type { Ballooned } from './frame.ts';
 import { same } from './diff.ts';
 import { balloonKey, modelContext, type Prepared } from './pipeline.ts';
@@ -248,6 +249,8 @@ export function release(p: Prepared, r: ReleaseInput): Release {
   Object.assign(files, manifestFiles(bom));
   // The interfaces the spec sheet asks for, and the ones it leaves defined and closed: API, events, docs, training, admin.
   Object.assign(files, interfaceFiles(p, bom, r.revision));
+  // Reports for every feature, for running it and for use as a whole, and the tracking plan that feeds them.
+  Object.assign(files, reportFiles(p, bom, p.options, g));
   for (const gap of bom.gaps) problems.push(`balloon ${gap.balloon}: ${gap.why}`);
 
   const hashes = Object.fromEntries(Object.entries(files).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, sha(v)]));

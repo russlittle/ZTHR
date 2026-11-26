@@ -24,6 +24,8 @@ export interface Options {
   readonly training?: { readonly reach?: Reach; readonly features?: readonly string[] };
   readonly connect?: { readonly tickets?: Tool; readonly wiki?: Tool; readonly chat?: Tool; readonly feed?: boolean; readonly feedTo?: Tool; readonly identity?: Tool };
   readonly admin?: { readonly query?: QueryReach };
+  /** How much use is recorded, for reports and product improvement. */
+  readonly usage?: 'off' | 'counts' | 'consented';
 }
 
 /** Where the query console runs. Out of production by default, so it cannot be used to take real data out. */
@@ -35,6 +37,7 @@ export interface Settled {
   readonly training: { readonly reach: Reach; readonly features: readonly string[] };
   readonly connect: { readonly tickets: Tool; readonly wiki: Tool; readonly chat: Tool; readonly feed: boolean; readonly feedTo: Tool; readonly identity: Tool };
   readonly admin: { readonly query: QueryReach };
+  readonly usage: 'off' | 'counts' | 'consented';
 }
 
 /** A tool the catalogue holds for that kind of connection, or the fallback. Names from before the catalogue still work. */
@@ -58,6 +61,7 @@ export function settle(o: Options | undefined): Settled {
       identity: known('identity', o?.connect?.identity, 'google'),
     },
     admin: { query: o?.admin?.query ?? 'non-production' },
+    usage: o?.usage === 'off' || o?.usage === 'consented' ? o.usage : 'counts',
   };
 }
 
@@ -449,6 +453,12 @@ ${fs.map((f) => `| \`${f.id.replace(/-/g, '_')}\` | The records behind: ${f.line
 | \`audit\` | Every change, and every read of sensitive data |
 | \`journeys\` | Every journey, the balloons it proves and its last walk |
 | \`evidence\` | What each release proved, claim by claim |
+| \`events\` | Journey starts, steps, completions, refusals and abandons, as the spec sheet's use tracking allows |
+| \`walks\` | Each visit's path through the app, matched to a journey card where one fits |
+| \`requests\` | Every request: feature, channel (screen or API), time taken and status |
+| \`runs\` | Every job, import and integration run, with what it changed and what it held back |
+| \`measures\` | Each measure on the schematic, its tolerance, its value now and its ratchet floor |
+| \`costs\` | Every question answered by code, by a recording or by a live model, with tokens and cost |
 
 ## Saved, exported and scheduled
 

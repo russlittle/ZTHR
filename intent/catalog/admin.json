@@ -346,6 +346,41 @@
       "studentAdvocate": {
         "coverage": "none"
       }
+    },
+    {
+      "name": "Feature reports",
+      "gives": "A report for every feature, written from the datum: who uses it, whether its journeys complete within budget, where people stop, refusals and errors, scheduled and delivered",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Operations reports",
+      "gives": "Availability, response times against the feedback budget, errors by feature, every run, who read what, and what model calls cost, every day",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Journey analytics",
+      "gives": "Real walks against the journey cards: starts, completions, where people leave, time and actions against budget, and common walks no card covers, never showing a group under the small-cell threshold",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Report delivery",
+      "gives": "Reports on a schedule to their audience by email, chat or the team's docs, each run recorded",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Improvement brief",
+      "gives": "One page a week for the person who holds the intent: what people leave, what is over budget, what nobody designed, who is not who the schematic expected, and the change each suggests",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
     }
   ],
   "rules": [
