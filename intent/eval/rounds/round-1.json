@@ -1,0 +1,484 @@
+{
+ "round": 1,
+ "build": "drawing-first layout, value chain, honest samples, glossary, hand-off, open-source section, mission control pipeline at three levels, team minimum and who maintains what",
+ "walk": "Same walk as round 0, plus mission control at platform, intent and item levels",
+ "fixed": [
+  "F1",
+  "F3",
+  "F4",
+  "F5",
+  "F6",
+  "F8",
+  "F9",
+  "F10",
+  "F11",
+  "F17",
+  "F18"
+ ],
+ "partly": [
+  "F2",
+  "F7",
+  "F12"
+ ],
+ "findings": {
+  "N1": {
+   "what": "Value chain boxes are uneven heights at 1440",
+   "axes": [
+    "craft"
+   ]
+  },
+  "N2": {
+   "what": "The example still opens on a question its own end in mind answers (which of two readings' reasons is right)",
+   "axes": [
+    "value",
+    "effort"
+   ]
+  },
+  "N3": {
+   "what": "The intent map fits at 67%; card text is legible but small",
+   "axes": [
+    "craft"
+   ]
+  },
+  "N4": {
+   "what": "The chain says one journey proves it, though fifteen more are suggested: it undersells the testing",
+   "axes": [
+    "value"
+   ]
+  },
+  "N5": {
+   "what": "No contributing guide",
+   "axes": [
+    "open"
+   ]
+  },
+  "M1": {
+   "what": "Drawing starts at 397 px on desktop (was 2,248) and 253 px on a phone (was 3,986)",
+   "axes": [
+    "value"
+   ],
+   "positive": true
+  },
+  "M2": {
+   "what": "Mission control shows intent in to software out across five stations, with a journey's trail from intent to release, and the library and team minimum every app inherits",
+   "axes": [
+    "clarity",
+    "depth"
+   ],
+   "positive": true
+  },
+  "M3": {
+   "what": "Every manifest line says who maintains it: the fleet, with updates pushed to every app, or the app's own team",
+   "axes": [
+    "clarity",
+    "open"
+   ],
+   "positive": true
+  }
+ },
+ "grades": {
+  "denise": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "B",
+    ""
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "B",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B-",
+    ""
+   ],
+   "voice": "I see what I get before I answer anything now, and the hire tab is how I talk to my provost."
+  },
+  "raj": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "A-",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B",
+    ""
+   ],
+   "voice": ""
+  },
+  "lena": {
+   "value": [
+    "C+",
+    ""
+   ],
+   "clarity": [
+    "B-",
+    ""
+   ],
+   "effort": [
+    "C+",
+    ""
+   ],
+   "trust": [
+    "B",
+    ""
+   ],
+   "depth": [
+    "B-",
+    ""
+   ],
+   "craft": [
+    "B-",
+    ""
+   ],
+   "open": [
+    "C+",
+    ""
+   ],
+   "voice": "On my phone I see the promise and the example button straight away. The questions are still a long scroll below the drawing."
+  },
+  "tom": {
+   "value": [
+    "B-",
+    ""
+   ],
+   "clarity": [
+    "B",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "A",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B",
+    ""
+   ],
+   "voice": "Formats documented, hashes, honest measure lines. The ask-a-question-it-already-knows on the example is the one wart left."
+  },
+  "aiko": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "B",
+    ""
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "A-",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B-",
+    ""
+   ],
+   "voice": ""
+  },
+  "grace": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "A",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B+",
+    ""
+   ],
+   "voice": ""
+  },
+  "marcus": {
+   "value": [
+    "B-",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "A-",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B",
+    ""
+   ],
+   "voice": ""
+  },
+  "priya": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "A",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B+",
+    ""
+   ],
+   "voice": "Sample readings are labelled as written by hand. Good. I still have to paste into two models myself on the public site."
+  },
+  "sam": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "B",
+    ""
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "B+",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B",
+    ""
+   ],
+   "voice": "Six numbers across the top tell me the story: my words became 62 parts, 39 of them new to the library. Mission control is the slide."
+  },
+  "jordan": {
+   "value": [
+    "B-",
+    ""
+   ],
+   "clarity": [
+    "B",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "A-",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B+",
+    ""
+   ],
+   "voice": "Licence, formats and extension docs are one click away. A contributing guide would close it."
+  },
+  "rosa": {
+   "value": [
+    "B-",
+    ""
+   ],
+   "clarity": [
+    "B",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "B+",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B-",
+    ""
+   ],
+   "voice": ""
+  },
+  "kenji": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "A",
+    ""
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B-",
+    ""
+   ],
+   "voice": ""
+  },
+  "keisha": {
+   "value": [
+    "C+",
+    ""
+   ],
+   "clarity": [
+    "C+",
+    ""
+   ],
+   "effort": [
+    "C",
+    ""
+   ],
+   "trust": [
+    "B-",
+    ""
+   ],
+   "depth": [
+    "C+",
+    ""
+   ],
+   "craft": [
+    "C+",
+    ""
+   ],
+   "open": [
+    "C",
+    ""
+   ],
+   "voice": "I get that it turns what you want into a plan. Still long for my phone."
+  }
+ }
+}

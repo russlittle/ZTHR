@@ -65,9 +65,10 @@ interface State {
   wide: boolean;
   buildFilter: Source | 'all';
 }
-type View = 'map' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
+type View = 'map' | 'hire' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
 const VIEWS: readonly { key: View; label: string; ico: string }[] = [
   { key: 'map', label: 'Intent map', ico: 'end' },
+  { key: 'hire', label: 'The hire', ico: 'doc' },
   { key: 'structure', label: 'Datum structure', ico: 'group' },
   { key: 'plan', label: 'Inspection plan', ico: 'gauge' },
   { key: 'build', label: 'Build manifest', ico: 'group' },
@@ -173,8 +174,24 @@ function isSigned(p: Prepared): boolean {
   return !!state.signed && !p.questions.length && !p.unread.length && state.signed.datum === datumHash(p);
 }
 
+let wordsOpenedByPerson = false;
+
 function render(fromAnswer = false) {
   prepared = compute();
+  const has = !!state.words.trim();
+  document.body.classList.toggle('has-words', has);
+  const box = document.getElementById('words-box') as HTMLDetailsElement | null;
+  if (box) {
+    if (!has) box.open = true;
+    else if (!wordsOpenedByPerson && box.open && document.activeElement?.id !== 'words') box.open = false;
+    const lines = state.words.split('\n').filter((l) => l.trim()).length;
+    $('words-meta').innerHTML = has ? `<span class="closed-only">${lines} line${lines === 1 ? '' : 's'} · Edit</span>` : '';
+  }
+  const rb = document.getElementById('readings-meta');
+  if (rb) {
+    const ok = state.readings.filter((r) => checkReading(r).ok).length;
+    rb.innerHTML = `<span class="closed-only">${ok ? `${ok} reading${ok === 1 ? '' : 's'}` : 'none yet: add one'}</span>`;
+  }
   lastGraph = graph(prepared);
   lastManifest = manifest(prepared);
   lastFiles = currentRelease(prepared, state.releases.length ? 'preview' : undefined).files;
@@ -183,6 +200,42 @@ function render(fromAnswer = false) {
   renderRedlines(prepared, fromAnswer);
   renderSheet(prepared);
   renderRelease(prepared);
+  renderChain(prepared);
+}
+
+/** The chain at the top: what these words have become so far, each step a way into the view that shows it. */
+function renderChain(p: Prepared) {
+  const el = $('chain');
+  if (!state.words.trim() || !lastGraph || !lastManifest) {
+    el.className = 'chain promise';
+    el.innerHTML = [
+      ['Your words', 'rough is fine'],
+      ['A numbered drawing', 'every statement traced to its source'],
+      ['A few questions', 'only the ones that change the build'],
+      ['A build manifest', 'what exists, and what gets made'],
+      ['Journeys that prove it', 'walked as a person would'],
+    ]
+      .map(([n, w]) => `<li><span class="link" role="presentation"><span class="n">${n}</span><span class="w">${w}</span></span></li>`)
+      .join('') + '<li><button type="button" class="link go" data-chain="example"><span class="n">See it on an example</span><span class="w">one click, nothing sent anywhere</span></button></li>';
+    return;
+  }
+  el.className = 'chain';
+  const lines = state.words.split('\n').filter((l) => l.trim()).length;
+  const checks = lastGraph.nodes.filter((n) => n.lane === 'instruments').length;
+  const m = lastManifest;
+  const made = m.counts['make: catalogued'] + m.counts['make: new'];
+  const journeys = lastGraph.nodes.filter((n) => n.kind === 'gauge').length;
+  const q = p.questions.length;
+  const suggested = suggestJourneys(p).filter((x) => !state.journeys.accepted.includes(x.id)).length;
+  const step = (n: string | number, w: string, go: string, cls = '') => `<li><button type="button" class="link ${cls}" data-chain="${go}"><span class="n">${n}</span><span class="w">${w}</span></button></li>`;
+  el.innerHTML = [
+    step(lines, `line${lines === 1 ? '' : 's'} in your words`, 'words'),
+    step(p.statements.length, 'numbered statements on the drawing', 'map'),
+    q ? step(q, `question${q === 1 ? '' : 's'} only you can settle`, 'redlines', 'red') : step('0', 'questions left: ready to sign', 'release'),
+    step(checks, 'checks that will hold it', 'plan'),
+    step(m.lines.length, `parts to build it: ${made} the library lacks today`, 'build'),
+    step(journeys, `${journeys === 1 ? 'journey proves' : 'journeys prove'} it works${suggested ? `; ${suggested} more suggested` : ''}`, 'plan'),
+  ].join('');
 }
 
 // ---------------------------------------------------------------- the stepper
@@ -192,7 +245,7 @@ function renderSteps(p: Prepared) {
   const i = STAGES.findIndex((x) => x.key === s);
   $('steps').innerHTML = `<div class="track" aria-hidden="true"><div class="fill" style="--to:${Math.round((i / (STAGES.length - 1)) * 100)}%"></div></div><ol>${STAGES.map(
     (x, k) => `<li class="${k < i ? 'done' : k === i ? 'now' : 'next'}"${k === i ? ' aria-current="step"' : ''}><span class="dot" aria-hidden="true">${k < i ? '✓' : k + 1}</span><span class="name">${x.label}</span>${k < i ? '<span class="sr"> (done)</span>' : ''}</li>`,
-  ).join('')}</ol><p class="doing">Step ${i + 1} of ${STAGES.length}: ${esc(STAGES[i]!.doing)}</p>`;
+  ).join('')}</ol><p class="doing">Step ${i + 1} of ${STAGES.length}: ${esc(state.words.trim() ? STAGES[i]!.doing : 'Start with a few rough lines, or try the example.')}</p>`;
 }
 
 // ---------------------------------------------------------------- readings
@@ -374,14 +427,14 @@ function renderSheet(p: Prepared) {
   const canvas = document.getElementById('canvas');
   const keep = canvas ? { left: canvas.scrollLeft, top: canvas.scrollTop } : null;
   const tabs = `<div class="tabs" role="tablist" aria-label="Views of the drawing">${VIEWS.map((v) => `<button type="button" role="tab" id="tab-${v.key}" aria-controls="view" aria-selected="${state.view === v.key}" tabindex="${state.view === v.key ? 0 : -1}" data-view="${v.key}">${icon(v.ico)}<span>${v.label}</span>${tabCount(p, v.key)}</button>`).join('')}</div>`;
-  sheet.innerHTML = `${zones}${head}${hireCard(p)}${tabs}<div class="view v-${state.view}" id="view" role="tabpanel" aria-labelledby="tab-${state.view}">${viewBody(p, parts)}</div>${titleBlock(p)}`;
+  sheet.innerHTML = `${zones}${head}${tabs}<div class="view v-${state.view}" id="view" role="tabpanel" aria-labelledby="tab-${state.view}">${viewBody(p, parts)}</div>${titleBlock(p)}`;
   document.body.classList.toggle('wide', state.wide);
   const svg = document.querySelector<SVGSVGElement>('#canvas svg');
   if (svg) {
     if (lastViewShown !== state.view) svg.classList.add('enter');
     const natural = Number(svg.getAttribute('width'));
     const room = (document.getElementById('canvas')?.clientWidth ?? natural) - 2;
-    const z = state.zoom === 0 ? Math.max(svg.classList.contains('vertical') ? 0.3 : 0.55, Math.min(1.25, room / natural)) : state.zoom;
+    const z = state.zoom === 0 ? Math.max(svg.classList.contains('vertical') ? 0.3 : 0.72, Math.min(1.25, room / natural)) : state.zoom;
     svg.style.width = `${natural * z}px`;
     const label = document.querySelector('[data-zoom="0"]');
     if (label) label.textContent = state.zoom === 0 ? `Fit ${Math.round(z * 100)}%` : `${Math.round(z * 100)}%`;
@@ -449,6 +502,8 @@ function viewBody(p: Prepared, parts: string): string {
     }
     case 'plan':
       return inspectionPlan(g, suggestJourneys(p), new Set(state.journeys.accepted), state.planFilter, people(p));
+    case 'hire':
+      return `<div class="view-bar"><p class="view-lede">The same drawing, in the terms a leader uses for any hire: the job, how you would know it is done well, and what would make it a good hire a year from now.</p></div>${hireCard(p)}`;
     case 'build':
       return buildView(lastManifest!, state.buildFilter, p.model.title && p.model.title !== state.path ? p.model.title : 'this intent', `${wide}<div class="zoom" role="group" aria-label="Zoom"><button type="button" class="btn quiet" data-zoom="-1" aria-label="Zoom out">−</button><button type="button" class="btn quiet" data-zoom="0" aria-label="Fit to width, or full size">Fit</button><button type="button" class="btn quiet" data-zoom="1" aria-label="Zoom in">+</button></div>`);
     case 'preview': {
@@ -508,6 +563,30 @@ function openDrawer(what: { kind: 'node' | 'entity' | 'line'; id: string }, focu
   d.hidden = false;
   document.body.classList.add('drawer-open');
   if (focus) $('dr-close').focus();
+}
+
+const GLOSSARY: readonly [string, string, string][] = [
+  ['Intent', 'What you mean the software to do, and why, in your own words, before anyone decides how.', 'The design intent behind a part.'],
+  ['The drawing', 'Your intent organised: the end in mind, the problem, the people, the outcomes, the measures and the rules, each numbered.', 'An engineering drawing: the controlled definition everything is made and inspected to.'],
+  ['Datum', 'The fixed reference everything is measured from. Here it is your intent: every check is taken against it.', 'A datum feature on a drawing.'],
+  ['Balloon', 'The number on each statement. It stays with the statement through every revision, so a test, a part or a change can point at it.', 'Balloon numbers on a drawing, used by the inspection report.'],
+  ['Redline', 'A question only you can settle: where readings disagree, a rule has a missing case, or a measure has no tolerance.', 'A checker’s red mark on a print.'],
+  ['Revision cloud', 'The red outline around anything with an open question.', 'The cloud drawn round a changed or questioned area.'],
+  ['Tolerance', 'How close is close enough for a measure. It becomes the starting floor the factory must hold.', 'The allowed variation on a dimension.'],
+  ['Gauge, or journey', 'A person’s goal walked as they would walk it, inside a budget of steps and time, with what must never happen.', 'A go/no-go gauge.'],
+  ['Ratchet', 'A measure that may only get better: once held, the floor never drops without a person signing for it.', 'A ratchet that turns one way only.'],
+  ['Control plan', 'Every critical or significant statement, and the controls it needs before it ships.', 'The control plan for special characteristics.'],
+  ['Build manifest', 'The bill of materials the factory starts from: each part from the library, extended, catalogued to make, or made new.', 'A bill of materials with make-or-buy codes.'],
+  ['Release', 'The signed drawing issued as a package, with a revision number and a reason, that the factory builds to.', 'Release of a drawing under document control.'],
+];
+
+function openGlossary() {
+  drawerFor = null;
+  $('dr-title').textContent = 'The words we use';
+  $('dr-body').innerHTML = `<p class="muted">The studio borrows the vocabulary of engineering drawings, because it has kept made things matching their intent for a century. Each term, in plain words, and the drafting term it comes from.</p><dl class="gloss">${GLOSSARY.map(([t, d, m]) => `<dt>${esc(t)}</dt><dd>${esc(d)}<br><span class="mfg">From: ${esc(m)}</span></dd>`).join('')}</dl>`;
+  $('drawer').hidden = false;
+  document.body.classList.add('drawer-open');
+  $('dr-close').focus();
 }
 
 function closeDrawerQuiet() {
@@ -589,7 +668,7 @@ function hireCard(p: Prepared): string {
 function titleBlock(p: Prepared): string {
   const last = state.releases.at(-1);
   const s = STAGES.find((x) => x.key === stage(p))!;
-  return `<div class="titleblock" aria-label="Title block"><div class="wide"><span class="k">Title</span>${esc(p.model.title && p.model.title !== state.path ? p.model.title : 'Untitled intent')}</div><div><span class="k">Next revision</span>${(last?.revision ?? 0) + 1}</div><div><span class="k">Status</span>${esc(s.label)}</div><div><span class="k">Balloons</span>${p.statements.length}</div><div><span class="k">Open redlines</span>${p.questions.length}</div><div class="wide"><span class="k">Signed</span>${isSigned(p) ? `by you, ${esc(new Date(state.signed!.at).toLocaleString())}` : 'not yet'}</div><div class="wide"><span class="k">Last package</span><span class="hash">${last ? esc(last.package.slice(0, 16)) : 'none yet'}</span></div></div>`;
+  return `<div class="titleblock" aria-label="Title block"><div class="wide"><span class="k">Title</span>${esc(p.model.title && p.model.title !== state.path ? p.model.title : 'Untitled intent')}</div><div><span class="k">Next revision</span>${(last?.revision ?? 0) + 1}</div><div><span class="k">Status</span>${esc(s.label)}</div><div><span class="k">Balloons</span>${p.statements.length}</div><div><span class="k">Open redlines</span>${state.words.trim() ? p.questions.length : 0}</div><div class="wide"><span class="k">Signed</span>${isSigned(p) ? `by you, ${esc(new Date(state.signed!.at).toLocaleString())}` : 'not yet'}</div><div class="wide"><span class="k">Last package</span><span class="hash">${last ? esc(last.package.slice(0, 16)) : 'none yet'}</span></div></div>`;
 }
 
 /**
@@ -646,6 +725,7 @@ ${ready ? `<div class="sign"><label class="opt"><input type="checkbox" id="sign"
 ${last ? `<label for="reason"><strong>Why this revision?</strong> Required after the first.</label><input type="text" id="reason" autocomplete="off" placeholder="For example: staff confirmed as college counseling">` : ''}
 <div class="row"><button class="btn primary" type="button" id="issue"${ready && !isSigned(p) ? ' aria-describedby="sign-first"' : ''}>${ready ? `Release revision ${next}` : `Issue draft revision ${next}`}</button>${ready && !isSigned(p) ? '<span class="note" id="sign-first">Sign the drawing first to release it.</span>' : ''}</div>
 <p class="status" id="release-status" role="status"></p>
+${last?.ready ? `<div class="next-steps"><strong>What happens next</strong><ol><li>Download the package and give it to the factory. Its journey cards go into the factory's proposals; nothing an agent writes can lock them.</li><li>A person signs the journeys in. From then on they judge every build, and a change to your intent cannot quietly change what they judge.</li><li>The factory designs from the build manifest, builds, and runs QA: every journey walked, every gate proven able to fail.</li><li>Each phase is released only when its journeys pass. <a href="https://zthr.ai/mission">Mission control</a> shows the measure: journeys walked and passing.</li></ol></div>` : ''}
 ${state.releases.length ? `<h3>Revisions</h3><ul class="history">${state.releases
     .slice()
     .reverse()
@@ -793,8 +873,8 @@ I want students to stop getting their power shut off. Make it feel calm, not sca
 - Use the student records already in place, until the new records system is live
 `;
 const EXAMPLE_READINGS = [
-  { family: 'gemini', problem: 'students get their power shut off after missing bills', why: 'stay housed and in school', outcomes: ['no shut-off from a missed due date'], people: [{ name: 'students', side: 'primary' }, { name: 'advisor', side: 'other' }], measures: [{ text: 'shut-offs avoided', tolerance: 'none in a term' }], constraints: ['never message during quiet hours'], nonGoals: ['paying bills for students'] },
-  { family: 'llama', problem: 'students getting their power shut off after missed bills', why: 'avoid late fees', outcomes: ['no shut-off from a missed due date', 'a warning when money will be short'], people: [{ name: 'students', side: 'primary' }], measures: [{ text: 'shut-offs avoided', tolerance: 'fewer than last term' }], constraints: ['never message during quiet hours'], nonGoals: ['paying bills for students'] },
+  { family: 'sample-a', problem: 'students get their power shut off after missing bills', why: 'stay housed and in school', outcomes: ['no shut-off from a missed due date'], people: [{ name: 'students', side: 'primary' }, { name: 'advisor', side: 'other' }], measures: [{ text: 'shut-offs avoided', tolerance: 'none in a term' }], constraints: ['never message during quiet hours'], nonGoals: ['paying bills for students'] },
+  { family: 'sample-b', problem: 'students getting their power shut off after missed bills', why: 'avoid late fees', outcomes: ['no shut-off from a missed due date', 'a warning when money will be short'], people: [{ name: 'students', side: 'primary' }], measures: [{ text: 'shut-offs avoided', tolerance: 'fewer than last term' }], constraints: ['never message during quiet hours'], nonGoals: ['paying bills for students'] },
 ];
 
 // ---------------------------------------------------------------- wiring
@@ -826,12 +906,38 @@ function wire() {
       render();
     }, 300);
   });
+  $('chain').addEventListener('click', (e) => {
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-chain]');
+    if (!t) return;
+    const go = t.dataset['chain']!;
+    if (go === 'example') $('example').click();
+    else if (go === 'words') {
+      const b = $('words-box') as HTMLDetailsElement;
+      b.open = true;
+      wordsOpenedByPerson = true;
+      $('words').focus();
+    } else if (go === 'redlines') {
+      $('redlines-panel').scrollIntoView?.({ block: 'start' });
+      $('redlines').querySelector<HTMLElement>('input, textarea')?.focus({ preventScroll: true });
+    } else if (go === 'release') {
+      $('release').scrollIntoView?.({ block: 'start' });
+    } else {
+      setView(go as View, false);
+      $('sheet').scrollIntoView?.({ block: 'start' });
+      document.getElementById(`tab-${go}`)?.focus({ preventScroll: true });
+    }
+  });
+  $('words-box').addEventListener('toggle', () => {
+    if (($('words-box') as HTMLDetailsElement).open && state.words.trim()) wordsOpenedByPerson = true;
+  });
+  $('glossary-open').addEventListener('click', () => openGlossary());
   $('example').addEventListener('click', () => {
     if (state.words.trim() && !confirmReplace()) return;
     state = { ...empty(), readings: EXAMPLE_READINGS };
     lastBalloons = new Set();
     setWords(EXAMPLE, 'bill-help.md');
-    say('words-status', 'Loaded an example, with sample readings from two model families, so you can see the redlines.');
+    say('words-status', 'Loaded an example. Its two readings, sample-a and sample-b, were written by hand for this example to stand in for two model families, so you can see agreement and redlines without calling a model.');
+    wordsOpenedByPerson = false;
   });
   $('start-new').addEventListener('click', () => {
     if (!armed($('start-new'), 'Clear everything and start again?', 'Start a new intent')) {
@@ -931,9 +1037,19 @@ function wire() {
     o.click();
   });
   const onPick = (e: Event) => {
-    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-not-quite], [data-node], [data-entity], [data-view], [data-file], [data-zoom], [data-journey], [data-add-first], [data-filter], [data-answer], [data-wide], [data-src]');
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-not-quite], [data-node], [data-entity], [data-view], [data-file], [data-zoom], [data-journey], [data-add-first], [data-filter], [data-answer], [data-wide], [data-src], [data-baseline]');
     if (!t || !prepared) return;
     const d = t.dataset;
+    if (d['baseline'] !== undefined && lastManifest) {
+      const m = lastManifest;
+      drawerFor = null;
+      $('dr-title').textContent = m.baseline.name;
+      $('dr-body').innerHTML = `<p>${esc(m.baseline.what)}</p><p class="muted small">A team sets its own minimum in <code>catalog/baseline.json</code>: one line per part, with why. Every app that team builds inherits it, and the fleet maintains it.</p><ul class="rel-list">${m.lines.filter((l) => l.floor).map((l) => `<li><button type="button" class="link-row" data-node="line:${l.find}"><span class="findref">${l.find}</span>${esc(l.part)}</button></li>`).join('')}</ul>`;
+      $('drawer').hidden = false;
+      document.body.classList.add('drawer-open');
+      $('dr-close').focus();
+      return;
+    }
     if (d['src']) {
       state.buildFilter = d['src'] as Source | 'all';
       scheduleSave();

@@ -1,15 +1,20 @@
 /**
- * Mission control: intents on the left, the factory on the right, and working software, journeys walked and
- * passing, as the measure between them.
+ * Mission control: the platform as one system, intent in and software out, at three levels. The platform shows every
+ * intent at every station and the library they draw on; an intent shows its five stations and what was measured at
+ * each; an item shows one journey's trail from intent to release.
  */
-import { factoryIntent, loadFeed, studioIntent, type Feed, type IntentRow, type Status } from './feed.ts';
-import { factoryPanel, headline, intentCard, journeyDetail, journeys } from './views.ts';
+import { loadFeed, type Feed } from './feed.ts';
+import { factoryFlow, library, studioFlow, type Flow, type StageKey } from './pipeline.ts';
+import { intent, platform, trail } from './missionViews.ts';
+import { esc } from './views.ts';
 import { drawer, $ } from './shell.ts';
 
 let feed: Feed | null = null;
-let rows: IntentRow[] = [];
-let selected = 'factory';
-let filter: Status | 'all' = 'all';
+let flows: Flow[] = [];
+let level: 'platform' | 'intent' = 'platform';
+let selected = '';
+let station: StageKey = 'qa';
+let filter = 'all';
 
 function studioRaw(): string | null {
   try {
@@ -19,45 +24,70 @@ function studioRaw(): string | null {
   }
 }
 
+function crumbs(): string {
+  const f = flows.find((x) => x.id === selected);
+  const parts = [`<li>${level === 'platform' ? '<span aria-current="page">Platform</span>' : '<button type="button" class="linklike" data-level="platform">Platform</button>'}</li>`];
+  if (level === 'intent' && f) parts.push(`<li><span aria-current="page">${esc(f.title)}</span></li>`);
+  return `<ol class="crumbs">${parts.join('')}</ol><div class="levels" role="group" aria-label="Level">${(['platform', 'intent'] as const).map((l) => `<button type="button" class="chip${level === l ? ' on' : ''}" aria-pressed="${level === l}" data-level="${l}"${l === 'intent' && !flows.length ? ' disabled' : ''}>${l === 'platform' ? 'The platform' : 'One intent'}</button>`).join('')}<span class="muted small">Select any journey for its trail through every station.</span></div>`;
+}
+
 function render() {
-  const row = rows.find((r) => r.id === selected) ?? rows[0] ?? null;
-  if (row) selected = row.id;
-  $('measure').innerHTML = headline(row, feed);
-  $('intents').innerHTML = `<ul class="ilist">${rows.map((r) => intentCard(r, r.id === selected)).join('')}</ul><a class="btn new" href="/intent">${rows.some((r) => r.source === 'studio') ? 'Open your intent in the studio' : 'Write an intent'}</a>`;
-  $('journeys').innerHTML = row ? journeys(row, filter) : '<p class="muted">Journeys appear here once there is an intent.</p>';
-  $('journeys-h').textContent = row ? `Journeys: ${row.title}` : 'Journeys';
-  $('factory').innerHTML = factoryPanel(feed);
+  $('crumbs').innerHTML = crumbs();
+  const f = flows.find((x) => x.id === selected) ?? flows[0];
+  if (level === 'intent' && f) {
+    selected = f.id;
+    $('body').innerHTML = `${flows.length > 1 ? `<div class="flow-pick" role="group" aria-label="Intent">${flows.map((x) => `<button type="button" class="chip${x.id === f.id ? ' on' : ''}" aria-pressed="${x.id === f.id}" data-flow="${esc(x.id)}">${esc(x.title)}</button>`).join('')}</div>` : ''}${intent(f, station, filter)}`;
+  } else {
+    level = 'platform';
+    $('body').innerHTML = platform(flows, library()) + (feed ? '' : `<section class="sheet"><p><strong>The factory has not published its feed yet.</strong> The next reference build writes it from its own evidence; until then the factory's row is missing here, and every reading is on <a href="/reference/factory/index.html">the evidence pages</a>.</p></section>`);
+  }
 }
 
 async function start() {
   document.documentElement.classList.add('js');
   feed = await loadFeed();
-  const studio = studioIntent(studioRaw(), feed);
-  rows = [...(feed ? [factoryIntent(feed)] : []), ...(studio ? [studio] : [])];
-  if (!feed && studio) selected = 'studio';
+  const studio = studioFlow(studioRaw(), feed);
+  flows = [...(feed ? [factoryFlow(feed)] : []), ...(studio ? [studio] : [])];
+  selected = flows[0]?.id ?? '';
+  const q = new URLSearchParams(location.search);
+  if (q.get('intent') && flows.some((x) => x.id === q.get('intent'))) {
+    selected = q.get('intent')!;
+    level = 'intent';
+  }
   render();
   document.body.addEventListener('click', (e) => {
-    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-intent], [data-filter], [data-journey]');
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-level], [data-flow], [data-stage], [data-stage-all], [data-filter], [data-item]');
     if (!t) return;
-    if (t.dataset['intent']) {
-      selected = t.dataset['intent'];
+    const d = t.dataset;
+    if (d['level']) level = d['level'] as typeof level;
+    else if (d['stageAll']) {
+      station = d['stageAll'] as StageKey;
+      level = 'intent';
       filter = 'all';
-      render();
-      document.querySelector<HTMLElement>(`[data-intent="${selected}"]`)?.focus();
-    } else if (t.dataset['filter']) {
-      filter = t.dataset['filter'] as Status | 'all';
-      render();
-      document.querySelector<HTMLElement>(`[data-filter="${filter}"]`)?.focus();
-    } else if (t.dataset['journey']) {
-      const row = rows.find((r) => r.id === selected);
-      const d = row && journeyDetail(row, t.dataset['journey']);
-      if (d) drawer.open(d.title, d.html, t);
+    } else if (d['flow'] !== undefined && d['stage'] === undefined) {
+      selected = d['flow'];
+      level = 'intent';
+      filter = 'all';
+    } else if (d['stage']) {
+      if (d['flow']) selected = d['flow'];
+      station = d['stage'] as StageKey;
+      level = 'intent';
+      filter = 'all';
+    } else if (d['filter']) filter = d['filter'];
+    else if (d['item']) {
+      const f = flows.find((x) => x.id === selected);
+      const r = f && trail(f, d['item']);
+      if (r) drawer.open(r.title, r.html, t);
+      return;
     }
+    render();
+    const again = document.querySelector<HTMLElement>(Object.entries(d).map(([k, v]) => `[data-${k.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)}="${v}"]`).join(''));
+    again?.focus();
   });
   window.addEventListener('storage', (e) => {
     if (e.key !== 'intent-studio:v1') return;
-    const studio = studioIntent(e.newValue, feed);
-    rows = [...rows.filter((r) => r.source !== 'studio'), ...(studio ? [studio] : [])];
+    const s = studioFlow(e.newValue, feed);
+    flows = [...flows.filter((x) => x.source !== 'studio'), ...(s ? [s] : [])];
     render();
   });
 }

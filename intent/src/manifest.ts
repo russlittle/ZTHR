@@ -13,6 +13,7 @@ import delightData from '../catalog/delight.json' with { type: 'json' };
 import adminData from '../catalog/admin.json' with { type: 'json' };
 import intentData from '../catalog/intent.json' with { type: 'json' };
 import groupsData from '../catalog/groups.json' with { type: 'json' };
+import baselineData from '../catalog/baseline.json' with { type: 'json' };
 import type { Ballooned } from './frame.ts';
 import { chosenJourneys } from './journeys.ts';
 import type { Prepared } from './pipeline.ts';
@@ -21,17 +22,28 @@ import { outcomeGauges } from './release.ts';
 /** Make or buy: where a part on the manifest will come from. */
 export type Source = 'stock' | 'modify' | 'make: catalogued' | 'make: new';
 export const SOURCE_LABEL: Record<Source, string> = {
-  stock: 'From the library',
-  modify: 'From the library, extended',
-  'make: catalogued': 'To make: a catalogued part',
-  'make: new': 'To make: new for this intent',
+  stock: 'Standard assembly, as is',
+  modify: 'Standard assembly, extended',
+  'make: catalogued': 'Catalogued part, to make',
+  'make: new': 'Custom assembly, new',
 };
 export const SOURCE_WHAT: Record<Source, string> = {
-  stock: 'Built, tested and held to a mutation floor in the part library. Used as it is.',
-  modify: 'A library block covers part of it; the factory extends that block, and the extension goes back into the library.',
-  'make: catalogued': 'Specified in the parts catalogue but not built yet. The factory makes it to the catalogue’s spec, and it joins the library for every app after.',
-  'make: new': 'Nothing in the library or the catalogue does this. The factory writes it for this intent, from the balloons below.',
+  stock: 'A standard assembly in the library: built, tested and held to a mutation floor. Used as it is.',
+  modify: 'A standard assembly covers part of it. The factory extends that assembly, and the extension is merged back into the library.',
+  'make: catalogued': 'On the standard parts list but not built yet. The factory makes it to the catalogue’s spec, once, and it joins the library for every app after.',
+  'make: new': 'Nothing in the library or the catalogue does this. The factory makes a custom assembly for this intent, from the balloons below, out of standard assemblies and parts.',
 };
+
+/** Who keeps a line working after it ships. */
+export type Maintainer = 'fleet' | 'local';
+export const MAINTAINER_LABEL: Record<Maintainer, string> = { fleet: 'The fleet', local: 'Your team' };
+export const MAINTAINER_WHAT: Record<Source, string> = {
+  stock: 'The fleet maintains it. Every fix and update to the assembly is pushed to every app that uses it.',
+  modify: 'The fleet maintains it once the extension is merged into the library; from then on every app that uses it gets each update.',
+  'make: catalogued': 'The fleet maintains it once it is made and in the library; every app that uses it after gets each update.',
+  'make: new': 'Your team maintains it: it exists only in this app, held by this intent’s journeys.',
+};
+export const BASELINE = baselineData as { name: string; what: string; parts: { part: string; why: string }[] };
 
 export interface Reason {
   readonly text: string;
@@ -51,9 +63,11 @@ export interface Line {
   readonly why: readonly Reason[];
   readonly balloons: readonly number[];
   readonly journeys: readonly string[];
-  /** For a feature made new: the find numbers of the parts it is assembled from. */
+  /** Who keeps it working after it ships. */
+  readonly maintainedBy: Maintainer;
+  /** For a custom assembly: the find numbers of the parts and assemblies it is made from. */
   readonly uses: readonly number[];
-  /** On every app's manifest, whatever the intent says. */
+  /** Inherited from the team's minimum starting point, whatever the intent says. */
   readonly floor: boolean;
 }
 
@@ -62,6 +76,8 @@ export interface Manifest {
   /** Balloons, and what builds each. A balloon nothing builds is a gap to close before the factory starts. */
   readonly trace: readonly { balloon: number; text: string; slot: string; by: readonly number[]; note: string | null }[];
   readonly counts: Record<Source, number>;
+  readonly maintained: Record<Maintainer, number>;
+  readonly baseline: { readonly name: string; readonly what: string; readonly count: number };
   readonly gaps: readonly { balloon: number; text: string; why: string }[];
 }
 
@@ -133,14 +149,7 @@ const always = (text: string): When => () => ({ text, balloons: [] });
  * What calls for each part. The floor is on every app's manifest: what the title block's defaults and the
  * factory's own evidence need. Everything else is called for by something on the drawing.
  */
-const CALLS: readonly { parts: readonly string[]; when: When; floor?: true }[] = [
-  // The floor: what every app the factory builds carries, because the title block and the evidence require it.
-  { parts: ['Locked datum', 'Intent completion from the state graph'], when: always('Every journey on the drawing is locked by hash and walked by the factory'), floor: true },
-  { parts: ['Audit log', 'Evidence, intents first', 'Error monitoring', 'Health and readiness', 'Logging'], when: always('The factory records what the app did, and reports intents first'), floor: true },
-  { parts: ['HTTP API and routing', 'Validation', 'Security headers and CSRF', 'Configuration and secrets', 'Data store and migrations', 'Data dictionary'], when: always('Every app answers requests, checks every input and keeps its records'), floor: true },
-  { parts: ['UI kit and accessibility', 'Accessibility conformance', 'Readability for the audience', 'Content registry', 'Surface registry'], when: always('Title block: WCAG 2.2 AA, plain words, every surface registered'), floor: true },
-  { parts: ['Light and dark modes', 'High contrast', 'Low vision mode', 'Layouts'], when: always('Title block: low vision and high contrast available, adapts from a 320-pixel phone to a desktop'), floor: true },
-  { parts: ['Reading comfort'], when: always('Title block: reduced motion when the system asks'), floor: true },
+const CALLS: readonly { parts: readonly string[]; when: When }[] = [
   // People and who may see what.
   { parts: ['Authentication', 'User accounts'], when: slot('people', 'People use it, so each signs in to their own') },
   { parts: ['Authorization', 'Roles and permissions (RBAC)', 'Row-level security controls', 'Permission explainer'], when: other('More than one kind of person uses it, and each may see only their part') },
@@ -197,7 +206,12 @@ export function manifest(p: Prepared): Manifest {
   const kinds = new Set(chosen.flatMap((j) => (j.from ? [j.from.kind] : [])));
   const ctx: Ctx = { p, st, kinds };
   const by = new Map<string, { why: Reason[]; floor: boolean }>();
-  for (const c of CALLS) {
+  // The team's minimum starting point comes first: every app inherits it, whatever the intent says.
+  const calls: { parts: readonly string[]; when: When; floor?: true }[] = [
+    ...BASELINE.parts.map((b) => ({ parts: [b.part], when: always(`${b.why} (inherited from the ${BASELINE.name})`), floor: true as const })),
+    ...CALLS,
+  ];
+  for (const c of calls) {
     const r = c.when(ctx);
     if (!r) continue;
     for (const name of c.parts) {
@@ -231,6 +245,7 @@ export function manifest(p: Prepared): Manifest {
       why: e.why,
       balloons,
       uses: [],
+      maintainedBy: 'fleet' as const,
       journeys: e.floor ? gaugeIds : chosen.filter((j) => j.from && j.from.balloons.some((b) => balloons.includes(b))).map((j) => j.card.id).concat(outcomeGauges(p).filter(() => balloons.length > 0).map((g) => g.id)).filter((v, i, a) => a.indexOf(v) === i),
       floor: e.floor,
     };
@@ -252,7 +267,8 @@ export function manifest(p: Prepared): Manifest {
     const gid = slug(o.text);
     const balloons = [...new Set([o.balloon, ...held.map((h) => h.balloon), ...kids.map((k) => k.balloon)])].sort((a, b) => a - b);
     return {
-      part: `Feature: ${o.text}`,
+      maintainedBy: 'local' as const,
+      part: `Custom assembly: ${o.text}`,
       group: 'This intent',
       gives: o.text,
       source: 'make: new' as const,
@@ -296,7 +312,9 @@ export function manifest(p: Prepared): Manifest {
   const gaps = trace.filter((t) => !t.by.length && !t.note).map((t) => ({ balloon: t.balloon, text: t.text, why: t.slot === 'people' ? 'nobody signs in as this person yet' : t.slot === 'prerequisites' ? 'no part supplies this input' : 'no part on the manifest builds it' }));
   const counts: Record<Source, number> = { stock: 0, modify: 0, 'make: catalogued': 0, 'make: new': 0 };
   for (const l of assembled) counts[l.source]++;
-  return { lines: assembled, trace, counts, gaps };
+  const maintained: Record<Maintainer, number> = { fleet: 0, local: 0 };
+  for (const l of assembled) maintained[l.maintainedBy]++;
+  return { lines: assembled, trace, counts, maintained, baseline: { name: BASELINE.name, what: BASELINE.what, count: assembled.filter((l) => l.floor).length }, gaps };
 }
 
 /** The manifest as the factory reads it, and as a person reads it, for the release package. */
@@ -304,24 +322,28 @@ export function manifestFiles(m: Manifest): Record<string, string> {
   const json = {
     schema: 'zthr-build-manifest/1',
     counts: m.counts,
-    lines: m.lines.map((l) => ({ find: l.find, part: l.part, group: l.group, source: l.source, from: l.from, library: l.library.map((b) => b.name), balloons: l.balloons, journeys: l.journeys, why: l.why.map((w) => w.text), floor: l.floor })),
+    maintained: m.maintained,
+    baseline: m.baseline,
+    lines: m.lines.map((l) => ({ find: l.find, part: l.part, group: l.group, source: l.source, maintainedBy: l.maintainedBy, inherited: l.floor, uses: l.uses, from: l.from, library: l.library.map((b) => b.name), balloons: l.balloons, journeys: l.journeys, why: l.why.map((w) => w.text), floor: l.floor })),
     gaps: m.gaps,
   };
-  const row = (l: Line) => `| ${l.find} | ${l.part.replace(/\|/g, '\\|')} | ${l.group} | ${SOURCE_LABEL[l.source]} | ${l.library.map((b) => b.name).join(', ') || '–'} | ${l.balloons.join(', ') || 'floor'} | ${l.journeys.length} |`;
+  const row = (l: Line) => `| ${l.find} | ${l.part.replace(/\|/g, '\\|')} | ${l.group} | ${SOURCE_LABEL[l.source]} | ${MAINTAINER_LABEL[l.maintainedBy]}${l.floor ? ' (inherited)' : ''} | ${l.library.map((b) => b.name).join(', ') || '–'} | ${l.balloons.join(', ') || 'team minimum'} | ${l.journeys.length} |`;
   const md = `# Build manifest
 
-What the factory starts from: ${m.lines.length} parts. ${m.counts.stock} from the library as they are, ${m.counts.modify} from the library extended, ${m.counts['make: catalogued']} catalogued parts to make, and ${m.counts['make: new']} made new for this intent.
+What the factory starts from: ${m.lines.length} lines. ${m.counts.stock} standard assemblies used as they are, ${m.counts.modify} standard assemblies extended, ${m.counts['make: catalogued']} catalogued parts to make, and ${m.counts['make: new']} custom assemblies made new for this intent.
+
+**Who maintains it:** the fleet maintains ${m.maintained.fleet}, and pushes every update to each app that uses them; this app's team maintains ${m.maintained.local}. ${m.baseline.count} lines are inherited from the ${m.baseline.name}.
 
 \`\`\`mermaid
-pie showData
-  "From the library" : ${m.counts.stock}
-  "From the library, extended" : ${m.counts.modify}
-  "To make: catalogued" : ${m.counts['make: catalogued']}
-  "To make: new" : ${m.counts['make: new']}
+pie showData title Where each line comes from
+  "Standard assembly, as is" : ${m.counts.stock}
+  "Standard assembly, extended" : ${m.counts.modify}
+  "Catalogued part, to make" : ${m.counts['make: catalogued']}
+  "Custom assembly, new" : ${m.counts['make: new']}
 \`\`\`
 
-| Find | Part | Group | Source | Library block | Balloons | Journeys |
-| --- | --- | --- | --- | --- | --- | --- |
+| Find | Line | Group | Source | Maintained by | Standard assembly | Balloons | Journeys |
+| --- | --- | --- | --- | --- | --- | --- | --- |
 ${m.lines.map(row).join('\n')}
 
 ${m.gaps.length ? `## Balloons nothing on the manifest builds\n\n${m.gaps.map((g) => `- ${g.balloon}: ${g.text} (${g.why})`).join('\n')}\n` : 'Every balloon on the drawing is built by a line on this manifest, or is left out or taken as given on purpose.\n'}`;

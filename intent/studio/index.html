@@ -43,13 +43,18 @@ button, input, textarea, select { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-header.top { padding: 20px max(4vw, 16px) 8px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; }
+header.top { padding: 20px max(4vw, 16px) 6px; }
+.hero { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 24px; }
+.hero .promise { flex: 1 1 520px; }
+.hero-links { display: flex; gap: 4px; flex-wrap: wrap; }
+.hero-links .btn { min-height: 40px; }
 header.top h1 { font: 600 30px/1.1 var(--letter); margin: 0; letter-spacing: .01em; }
-header.top p { margin: 0; color: var(--muted); max-width: 62ch; }
+header.top p { margin: 0; color: var(--muted); max-width: 78ch; }
 
 /* The stepper */
 .steps { padding: 4px max(4vw, 16px) 16px; }
 .steps ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); position: relative; }
+.steps { position: relative; }
 .steps .track { position: absolute; left: calc(100% / 12); right: calc(100% / 12); top: 15px; height: 2px; background: var(--rule); }
 .steps .fill { position: absolute; inset: 0 auto 0 0; width: var(--to, 0%); background: var(--blue); transition: width .6s ease-out; }
 .steps li { position: relative; display: grid; justify-items: center; gap: 4px; text-align: center; font-size: 14px; color: var(--muted); }
@@ -59,8 +64,45 @@ header.top p { margin: 0; color: var(--muted); max-width: 62ch; }
 .steps li.now .name { color: var(--ink); font-weight: 700; }
 .steps .doing { margin: 12px 0 0; font-weight: 600; text-align: center; }
 
-main.desk { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 24px; padding: 8px max(4vw, 16px) 48px; align-items: start; }
-@media (max-width: 960px) { main.desk { grid-template-columns: minmax(0, 1fr); } }
+main.desk { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); grid-template-areas: "words sheet" "rail sheet"; grid-template-rows: auto 1fr; gap: 0 24px; padding: 8px max(4vw, 16px) 48px; align-items: start; }
+.col-words { grid-area: words; } .sheet { grid-area: sheet; } .col-rail { grid-area: rail; }
+/* Once there are words, the drawing leads: it takes the wide column, and your words, the questions and the release sit beside it. */
+body.has-words main.desk { grid-template-columns: minmax(0, 1fr) minmax(0, 390px); grid-template-areas: "sheet words" "sheet rail"; }
+@media (max-width: 960px) { main.desk, body.has-words main.desk { grid-template-columns: minmax(0, 1fr); grid-template-areas: "words" "sheet" "rail"; } .sheet { margin-bottom: 18px; } }
+.words-box > summary, #readings-box > summary { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; cursor: pointer; list-style: none; }
+.words-box > summary::-webkit-details-marker, #readings-box > summary::-webkit-details-marker { display: none; }
+.words-box > summary h2, #readings-box > summary h2 { margin: 0; }
+.words-box:not([open]), #readings-box:not([open]) { padding-top: 12px; padding-bottom: 12px; }
+.words-meta { color: var(--blue); font-size: 14.5px; font-weight: 600; }
+.words-box[open] .words-meta .closed-only, #readings-box[open] .words-meta .closed-only { display: none; }
+.starters-h { flex-basis: 100%; margin: 4px 0 2px; font-size: 14px; color: var(--muted); }
+/* The chain: what your words become, step by step, each a way in. */
+.chain { list-style: none; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 0; margin: 14px 0 0; padding: 0; }
+.chain li { flex: 1 1 0; min-width: 0; }
+.chain li .link { flex: 1; }
+.chain li { display: flex; align-items: stretch; }
+.chain li + li::before { align-self: center; }
+.chain li + li::before { content: ""; flex: none; width: 14px; height: 2px; background: var(--ink); }
+.chain li + li::after { content: ""; position: absolute; }
+.chain .link { display: grid; gap: 0; align-content: start; text-align: left; min-height: 56px; padding: 8px 12px; border: 1.5px solid var(--ink); border-radius: 3px; background: var(--sheet); color: var(--ink); font: inherit; cursor: pointer; text-decoration: none; }
+.chain .link:hover { border-color: var(--blue); box-shadow: inset 0 -3px 0 var(--blue); }
+.chain .n { font: 700 24px/1.05 var(--letter); }
+.chain .w { font-size: 13.5px; color: var(--muted); }
+.chain .link.red { border-color: var(--red); } .chain .link.red .n { color: var(--red); }
+.chain .link.go { background: var(--blue); border-color: var(--blue); color: var(--on-blue); } .chain .link.go .w { color: var(--on-blue); }
+.chain.promise .n { font-size: 17px; }
+@media (max-width: 1100px) { .chain { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .chain li + li::before { display: none; } }
+@media (max-width: 700px) { .chain { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .chain li + li::before { display: none; } .chain .link { width: 100%; } }
+.open-source { margin: 0 max(4vw, 16px) 30px; padding: 20px 22px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; }
+.open-source h2 { margin: 0 0 8px; font: 600 22px var(--letter); }
+.os-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px 22px; }
+.os-grid h3 { margin: 8px 0 2px; font: 600 17px var(--letter); }
+.os-grid p { margin: 0; font-size: 15px; color: var(--muted); }
+.next-steps { margin: 14px 0 0; padding: 12px 14px; border: 1.5px solid var(--done); border-radius: 6px; }
+.next-steps ol { margin: 6px 0 0; padding-left: 20px; }
+.gloss dt { font: 600 16px var(--letter); margin-top: 10px; }
+.gloss dd { margin: 2px 0 0; font-size: 15px; }
+.gloss .mfg { color: var(--muted); font-size: 14px; }
 
 .panel { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 18px; margin-bottom: 18px; box-shadow: 0 1px 0 var(--board-2); }
 .panel h2 { font: 600 21px/1.2 var(--letter); margin: 0 0 4px; }
@@ -80,7 +122,7 @@ textarea.words { width: 100%; min-height: 220px; resize: vertical; border: 1px s
 .readings li { margin: 4px 0; }
 .readings .fam { font-weight: 700; }
 details summary { cursor: pointer; color: var(--blue); font-weight: 600; min-height: 44px; display: flex; align-items: center; }
-details textarea { width: 100%; min-height: 120px; border: 1px solid var(--field); border-radius: 8px; padding: 10px; background: transparent; font: 14px/1.45 ui-monospace, monospace; }
+details textarea:not(.words) { width: 100%; min-height: 120px; border: 1px solid var(--field); border-radius: 8px; padding: 10px; background: transparent; font: 14px/1.45 ui-monospace, monospace; }
 
 /* Redlines: the questions */
 .redlines { border-color: color-mix(in srgb, var(--red) 55%, var(--rule)); }
@@ -170,7 +212,7 @@ code, .hash { font: 13px ui-monospace, monospace; overflow-wrap: anywhere; }
 footer { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14px; max-width: 80ch; }
 @media (max-width: 600px) { .sheet { padding: 26px 18px 22px; } .steps .name { font-size: 12px; } header.top h1 { font-size: 26px; } }
 @media (max-width: 420px) { .steps li:not([aria-current]) .name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } .steps li[aria-current] .name { white-space: nowrap; } }
-@media print { body { background: #fff; } header.top, .steps, aside, .redlines, .release, footer { display: none; } main.desk { display: block; padding: 0; } .sheet { box-shadow: none; } }
+@media print { body { background: #fff; } header.top, .steps, .col-words, .col-rail, .open-source, footer { display: none; } main.desk { display: block; padding: 0; } .sheet { box-shadow: none; } }
 
 /* ---------- views of the drawing ---------- */
 .tabs { display: flex; flex-wrap: wrap; gap: 2px; margin: 18px 0 0; border-bottom: 2px solid var(--ink); }
@@ -208,7 +250,7 @@ footer { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14px; m
 .card.k-group > rect { fill: color-mix(in srgb, var(--ink) 4%, var(--sheet)); stroke-dasharray: 0; }
 .card.k-forbidden .kind-ico { color: var(--red); }
 .kind-ico { color: var(--blue); }
-.card-t { font-size: 13.5px; fill: var(--ink); }
+.card-t { font-size: 14.5px; fill: var(--ink); }
 .card-sub { font-size: 12px; fill: var(--muted); }
 .balloon-c { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.4; }
 .balloon-t { font: 700 12.5px var(--letter); fill: var(--ink); }
@@ -369,6 +411,15 @@ footer { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14px; m
 .findref:hover { border-color: var(--blue); color: var(--blue); }
 .trace td { text-align: left; }
 .gaprow td { background: color-mix(in srgb, var(--red) 8%, var(--sheet)); }
+
+.maint { margin-top: 14px; }
+.maint-h { margin: 0; }
+.seg.fleet, .sw.fleet { background: var(--ink); }
+.seg.local, .sw.local { background: var(--blue); }
+.sw.fleet, .sw.local { display: inline-block; width: 14px; height: 14px; border-radius: 2px; vertical-align: -2px; margin-right: 6px; }
+.maint-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14.5px; }
+.mt { font: 600 13.5px var(--letter); } .mt.local { color: var(--blue); }
+.linklike { background: none; border: 0; padding: 0; color: var(--blue); text-decoration: underline; font: inherit; cursor: pointer; }
 /* the drawer */
 .drawer { position: fixed; z-index: 40; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); background: var(--sheet); border-left: 2px solid var(--ink); box-shadow: -18px 0 40px -24px rgba(0,0,0,.5); display: flex; flex-direction: column; animation: slide .22s ease; }
 @keyframes slide { from { transform: translateX(30px); opacity: 0; } }
@@ -389,8 +440,8 @@ footer { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14px; m
 .snip { margin: 8px 0 0; padding: 8px 10px; border: 1px solid var(--rule); font: 12.5px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; max-height: 220px; overflow: auto; white-space: pre-wrap; }
 @media (max-width: 640px) { .drawer { top: auto; height: 78vh; width: 100vw; border-left: 0; border-top: 2px solid var(--ink); border-radius: 10px 10px 0 0; } }
 /* full width */
-body.wide main.desk { grid-template-columns: minmax(0, 1fr); }
-body.wide main.desk > aside { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minmax(0, 1fr); grid-template-areas: "sheet" "words" "rail"; }
+
 .wide-toggle { margin-left: auto; }
 @media (max-width: 700px) { .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; } .tabs [role=tab] { flex: none; } .view-bar { align-items: stretch; } .ins-row { grid-template-columns: 20px minmax(0, 1fr) 40px; } .ins-bar { display: none; } .sug { flex-direction: column; } .sug-btn { align-self: stretch; } }
 @media (prefers-reduced-motion: reduce) { .enter .edge, .enter .card, .drawer { animation: none; stroke-dashoffset: 0; } .edge, .card > rect { transition: none; } }
@@ -399,52 +450,58 @@ body.wide main.desk > aside { display: grid; grid-template-columns: repeat(auto-
 </head>
 <body>
 <header class="top">
-  <h1>Intent studio</h1>
-  <p>Say what you want in your own words. Answer a few redlines. Release a drawing any factory can build to.</p>
+  <div class="hero">
+    <h1>Intent studio</h1>
+    <p class="promise">Say what you want in your own words. The studio turns it into a numbered drawing, asks only the few questions that change what gets built, and releases a package a software factory builds to, with the journeys that will prove it works.</p>
+    <p class="hero-links"><button class="btn quiet" type="button" id="glossary-open">The words we use</button><a class="btn quiet" href="#open-source">How it works, and the source</a></p>
+  </div>
+  <ol class="chain" id="chain" aria-label="What your words become"></ol>
 </header>
 <nav class="steps" id="steps" aria-label="Where this intent is"></nav>
-<main class="desk">
-  <aside>
-    <section class="panel" aria-labelledby="h-words">
-      <h2 id="h-words">Your words</h2>
+<main class="desk" id="desk">
+  <section class="col-words" id="col-words" aria-label="Your words and readings">
+    <details class="panel words-box" id="words-box" open>
+      <summary><h2 id="h-words">Your words</h2><span class="words-meta" id="words-meta"></span></summary>
       <p class="lede">Rough is fine: a few lines, a pasted spec, or a page. Metaphors are welcome.</p>
       <label class="sr" for="words">Describe what you want</label>
       <textarea id="words" class="words" spellcheck="true" placeholder="For example: I want students to stop getting their power shut off. Make it feel calm, not scary."></textarea>
       <div class="row">
-        <button class="btn" id="example" type="button">Try an example</button>
+        <button class="btn primary" id="example" type="button">Try an example</button>
         <button class="btn mic" id="mic" type="button" aria-pressed="false" hidden>Speak</button>
         <label class="btn" for="file">Open a file</label>
         <button class="btn quiet" id="start-new" type="button">Start a new intent</button>
         <input class="sr" type="file" id="file" accept=".md,.markdown,.txt,.html,.htm,.feature">
       </div>
-      <div class="starters" role="group" aria-label="Start from a question">
+      <div class="starters" role="group" aria-labelledby="starters-h">
+        <p class="starters-h" id="starters-h">No model needed: answer these four, and each answer goes straight onto the drawing as yours.</p>
         <button class="btn quiet" type="button" data-starter="The job I am hiring this for:">What job are you hiring it for?</button>
         <button class="btn quiet" type="button" data-starter="I would know it is doing a good job when:">How would you know it is doing a good job?</button>
         <button class="btn quiet" type="button" data-starter="At the end of the year it was a good hire if:">At year end, what makes it a good hire?</button>
         <button class="btn quiet" type="button" data-starter="It is for:">Who is it for?</button>
       </div>
-      <div class="drop" id="drop">Or drop a Markdown, Gherkin or HTML file here, a Claude artifact included.</div>
+      <div class="drop" id="drop">Or drop a file: Markdown, Spec Kit, Kiro, OpenSpec, Gherkin or an HTML page, a Claude artifact included.</div>
       <p class="status" id="words-status" role="status"></p>
-    </section>
-    <section class="panel" aria-labelledby="h-read">
-      <h2 id="h-read">Readings</h2>
-      <p class="lede">Two model families read your words independently. Where they differ, you get a redline, not a guess.</p>
+    </details>
+    <details class="panel" id="readings-box">
+      <summary><h2 id="h-read">Readings</h2><span class="words-meta" id="readings-meta"></span></summary>
+      <p class="lede">Two model families read your words independently. Where they agree, it goes on the drawing for you to confirm; where they differ, you get a redline, not a guess.</p>
       <ul class="readings" id="readings"></ul>
       <div class="row">
         <button class="btn primary" id="read-claude" type="button" hidden>Read with Claude</button>
       </div>
       <details>
         <summary>Add a reading from another model</summary>
-        <p class="note">Copy the request, ask another model (Gemini, Llama, any you trust), and paste its answer here.</p>
+        <p class="note">Copy the request, ask another model (Gemini, Llama, any you trust), and paste its answer here. Only the request leaves this page, and only when you paste it somewhere.</p>
         <div class="row"><button class="btn" id="copy-prompt" type="button">Copy the request</button></div>
         <label class="sr" for="paste-reading">Paste the other model's answer</label>
         <textarea id="paste-reading" placeholder='{"family": "gemini", ...}'></textarea>
         <div class="row"><button class="btn" id="add-reading" type="button">Add this reading</button></div>
       </details>
       <p class="status" id="read-status" role="status"></p>
-    </section>
-  </aside>
-  <div>
+    </details>
+  </section>
+  <article class="sheet" id="sheet" aria-labelledby="sheet-title"></article>
+  <section class="col-rail" id="col-rail" aria-label="Questions and release">
     <section class="panel redlines" id="redlines-panel" aria-labelledby="h-redlines">
       <h2 id="h-redlines">Redlines: questions to settle</h2>
       <p class="count" id="redlines-count"></p>
@@ -454,13 +511,21 @@ body.wide main.desk > aside { display: grid; grid-template-columns: repeat(auto-
       <form id="redlines"></form>
       <details class="answers" id="answers" hidden></details>
     </section>
-    <article class="sheet" id="sheet" aria-labelledby="sheet-title"></article>
-    <section class="panel release" id="release" aria-labelledby="h-release" style="margin-top:18px"></section>
-  </div>
+    <section class="panel release" id="release" aria-labelledby="h-release"></section>
+  </section>
 </main>
+<section class="open-source" id="open-source" aria-labelledby="h-open">
+  <h2 id="h-open">How it works, and the source</h2>
+  <div class="os-grid">
+    <div><h3>Deterministic first</h3><p>Everything on the drawing except a reading is worked out by rule in this page: intake, the checks for gaps and overlaps, the design lexicon, derived rules, tolerances, journeys, the build manifest and the package. The same words always give the same bytes. Models only read, and a single reading is never taken as fact.</p></div>
+    <div><h3>Open formats</h3><p>The package is plain files: <code>datum.json</code>, journey gauges in the factory's card format, <code>control-plan.yaml</code>, <code>ratchets.json</code>, <code>build-manifest.json</code> and a knowledge bundle. <a href="https://github.com/russlittle/ZTHR/blob/main/intent/docs/formats.md">The formats, field by field</a>.</p></div>
+    <div><h3>Extend it</h3><p>The lexicon, the roles, the parts catalogue and the rules that choose parts are data and short rule tables, each tested. <a href="https://github.com/russlittle/ZTHR/blob/main/intent/docs/extending.md">How to add a word, a role, a part or a rule</a>.</p></div>
+    <div><h3>Apache 2.0</h3><p>The studio, the command line and the engine are one open package. <a href="https://github.com/russlittle/ZTHR/tree/main/intent">Read the source</a>, run it locally (<code>node src/cli.ts readback intent.md</code>), or <a href="https://github.com/russlittle/ZTHR/blob/main/intent/CONTRIBUTING.md">contribute</a>.</p></div>
+  </div>
+</section>
 <aside class="drawer" id="drawer" hidden aria-labelledby="dr-title">
   <div class="dr-head"><h3 id="dr-title">Detail</h3><button class="btn quiet" type="button" id="dr-close">Close</button></div>
-  <div id="dr-body"></div>
+  <div id="dr-body" tabindex="0" role="region" aria-label="Detail"></div>
 </aside>
 <footer>
   <p>What leaves this page: your words go to Claude only when you choose "Read with Claude", and to another model only if you paste them there yourself. Everything else (the checks, the drawing and the package) is worked out here, in your browser. Your work is saved to your own private space, which only you can read, or to this browser when that is not available. "Start a new intent" clears it.</p>

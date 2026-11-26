@@ -105,3 +105,14 @@ test('ratchet: a tolerance answer sets the measure it is about, and never become
   assert.equal(m?.tolerance, 'two in a term');
   assert.ok(!after.statements.some((s) => s.slot === 'measures' && s.text === 'two in a term'));
 });
+
+test('a difference your own words already settle is never asked: the reading that matches your end in mind wins', () => {
+  const text = '# Bill help\n\n## The end in mind\n\nStudents stay housed and in school.\n\n## What I want\n\n- Remind students before bills are due\n';
+  const a = { family: 'one', problem: 'students lose power after missed bills', why: 'stay housed and in school', outcomes: ['no shut-off'], people: [{ name: 'students', side: 'primary' }], measures: [], constraints: [], nonGoals: [] };
+  const b = { ...a, family: 'two', why: 'avoid late fees' };
+  const p = prepare({ files: [{ path: 'b.md', text }], readings: [a, b] });
+  assert.ok(!p.questions.some((q) => q.origin === 'diff' && q.choices?.includes('avoid late fees')), 'not asked');
+  assert.ok(p.statements.some((s) => s.slot === 'why' && s.text === 'stay housed and in school'));
+  const asked = prepare({ files: [{ path: 'b.md', text: text.replace('Students stay housed and in school.', 'Nobody falls behind.') }], readings: [a, b] });
+  assert.ok(asked.questions.some((q) => q.origin === 'diff' && q.choices?.includes('avoid late fees')), 'still asked when your words do not settle it');
+});

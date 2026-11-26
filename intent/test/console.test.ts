@@ -62,3 +62,31 @@ test('planted: hostile text from a feed is escaped', () => {
   const bad = { ...feed, journeys: [{ ...feed.journeys[0]!, goal: '<img src=x onerror=alert(1)>' }] };
   assert.doesNotMatch(journeyDetail(factoryIntent(bad), 'a')!.html, /<img/);
 });
+
+test('the platform: every intent gets five stations, and each item a trail through all five', async () => {
+  const { factoryFlow, studioFlow, STAGES } = await import('../src/console/pipeline.ts');
+  const f = factoryFlow(feed);
+  assert.deepEqual(f.stages.map((s) => s.key), STAGES.map((s) => s.key));
+  for (const i of f.items) assert.deepEqual(Object.keys(i.trail).sort(), STAGES.map((s) => s.key).sort());
+  const fx = (n: string) => readFileSync(new URL(`fixtures/${n}`, import.meta.url), 'utf8');
+  const s = studioFlow(JSON.stringify({ path: 'rough.md', words: fx('rough.md'), readings: [JSON.parse(fx('reading-a.json')), JSON.parse(fx('reading-b.json'))], answers: {} }), feed)!;
+  assert.equal(s.stages.find((x) => x.key === 'build')!.light, 'waiting', 'nothing is built until the factory says so');
+  assert.ok(s.stages.find((x) => x.key === 'design')!.headline.includes('custom'), 'design reports the build manifest');
+});
+
+test('the measure is said honestly: nothing walked is waiting, not zero passing', async () => {
+  const { factoryFlow } = await import('../src/console/pipeline.ts');
+  const { measureLine } = await import('../src/console/missionViews.ts');
+  const none = factoryFlow({ ...feed, journeys: feed.journeys.map((j) => ({ ...j, status: 'not measured' })) });
+  assert.match(measureLine(none).big, /waiting to be walked/);
+  assert.doesNotMatch(measureLine(none).big, /0 of/);
+  const all = factoryFlow({ ...feed, journeys: feed.journeys.map((j) => ({ ...j, status: 'pass' })) });
+  assert.equal(measureLine(all).verdict, 'Working software');
+  assert.match(measureLine(factoryFlow(feed)).verdict, /Not working yet/);
+});
+
+test('planted: a broken or empty saved intent never reaches the platform', async () => {
+  const { studioFlow } = await import('../src/console/pipeline.ts');
+  assert.equal(studioFlow('{nope', feed), null);
+  assert.equal(studioFlow(JSON.stringify({ words: '' }), feed), null);
+});

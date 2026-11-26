@@ -141,3 +141,57 @@ footer.foot { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14
 @media (prefers-reduced-motion: reduce) { .drawer { animation: none; } }
 .scroll { max-height: 72vh; overflow: auto; padding-right: 6px; }
 .scroll .phase-h { position: sticky; top: 0; background: var(--sheet); z-index: 1; }
+
+/* mission control: levels, the system, stations */
+.crumb-bar { margin: 8px max(4vw, 16px) 0; display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; justify-content: space-between; }
+.crumbs { list-style: none; display: flex; gap: 6px; margin: 0; padding: 0; font: 600 16px var(--letter); }
+.crumbs li + li::before { content: "›"; margin-right: 6px; color: var(--muted); }
+.levels { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.linklike { background: none; border: 0; padding: 0; color: var(--blue); text-decoration: underline; font: inherit; cursor: pointer; }
+#body > .sheet { margin: 18px max(4vw, 16px) 0; }
+#body > .sheet h2 { margin: 0 0 6px; font-size: 22px; }
+.flow-pick { margin: 14px max(4vw, 16px) 0; display: flex; gap: 6px; flex-wrap: wrap; }
+.sysflow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "in st out" "loops loops loops" "lib lib lib"; gap: 12px 14px; align-items: center; margin-top: 12px; }
+.io { font: 700 18px var(--letter); margin: 0; }
+.io.in { grid-area: in; } .io.out { grid-area: out; color: var(--done); }
+.sysflow > .stations { grid-area: st; }
+.stations { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px; }
+.station { position: relative; display: flex; }
+.station + .station::before { content: ""; position: absolute; left: -20px; top: 50%; width: 18px; height: 2px; background: var(--ink); }
+.station + .station::after { content: ""; position: absolute; left: -7px; top: calc(50% - 5px); border: 6px solid transparent; border-left: 7px solid var(--ink); border-right: 0; }
+.st-card { display: grid; grid-template-rows: auto auto 1fr auto auto; align-content: start; gap: 4px; width: 100%; height: 100%; text-align: left; padding: 12px; border: 2px solid var(--ink); border-radius: 3px; background: var(--sheet); color: var(--ink); font: inherit; cursor: pointer; }
+.st-card:hover { box-shadow: inset 0 -4px 0 var(--blue); }
+.st-card.on { box-shadow: inset 0 -5px 0 var(--blue); background: color-mix(in srgb, var(--blue) 7%, var(--sheet)); }
+.st-n { font: 700 13px var(--letter); color: var(--muted); }
+.st-name { font: 600 20px/1.1 var(--letter); display: flex; align-items: center; gap: 2px; }
+.st-asks { font-size: 13.5px; color: var(--muted); line-height: 1.35; }
+.st-lamps { display: flex; gap: 2px; flex-wrap: wrap; margin-top: 4px; }
+.st-sum { font-size: 13px; color: var(--muted); }
+.loops { grid-area: loops; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.loop { margin: 0; font-size: 14.5px; color: var(--muted); }
+.loop span { font-size: 18px; color: var(--blue); }
+.libbox { grid-area: lib; border: 1.5px dashed var(--ink); border-radius: 3px; padding: 12px 14px; }
+.lib-h { margin: 0 0 6px; }
+.lib-stats { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 26px; margin: 0; padding: 0; }
+.lib-stats .n { font: 700 22px var(--letter); margin-right: 4px; }
+.asm { columns: 3 220px; margin: 8px 0 0; padding-left: 18px; font-size: 14.5px; }
+@media (max-width: 900px) { .sysflow { grid-template-columns: minmax(0, 1fr); grid-template-areas: "in" "st" "out" "loops" "lib"; } .stations { grid-template-columns: minmax(0, 1fr); gap: 18px; } .station + .station::before { left: 24px; top: -16px; width: 2px; height: 14px; } .station + .station::after { left: 19px; top: -7px; border: 6px solid transparent; border-top: 7px solid var(--ink); border-bottom: 0; } }
+.tbl-wrap { overflow: auto; }
+.swim { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 860px; }
+.swim caption { text-align: left; color: var(--muted); padding: 0 0 8px; }
+.swim th, .swim td { border-bottom: 1px solid var(--rule); padding: 8px; vertical-align: top; text-align: left; }
+.swim thead th { font: 600 15px var(--letter); border-bottom: 2px solid var(--ink); }
+.swim .link-row { display: grid; text-align: left; background: none; border: 0; padding: 0; color: var(--ink); font: inherit; cursor: pointer; }
+.ftitle { font: 600 17px var(--letter); text-decoration: underline; text-decoration-color: var(--rule); }
+.cell-btn { display: flex; gap: 2px; align-items: flex-start; text-align: left; width: 100%; background: none; border: 0; padding: 4px; border-radius: 4px; color: var(--ink); font: inherit; cursor: pointer; }
+.cell-btn:hover { background: color-mix(in srgb, var(--blue) 8%, transparent); }
+.cell-t { font-size: 13.5px; }
+.measure-cell { min-width: 170px; } .measure-cell .mbar { margin-bottom: 4px; }
+.stations.line { margin-bottom: 18px; }
+.st-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 24px; }
+@media (max-width: 900px) { .st-grid { grid-template-columns: minmax(0, 1fr); } }
+.lamp.waiting { border: 1.5px solid var(--field); color: var(--muted); }
+.trail { list-style: none; margin: 10px 0; padding: 0; }
+.trail li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 4px; padding: 8px 0 8px; position: relative; }
+.trail li + li::before { content: ""; position: absolute; left: 10px; top: -8px; height: 14px; width: 2px; background: var(--rule); }
+.trail p { margin: 2px 0 0; color: var(--muted); font-size: 15px; }

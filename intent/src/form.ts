@@ -24,7 +24,7 @@ export function field(q: Question, n: number | string, nested = false): string {
   const id = `q${String(n).replace(/\W/g, '-')}`;
   const a = q.answer ?? { kind: 'text' as const };
   const name = esc(q.id);
-  const hint = `<p class="hint" id="${id}-hint">It decides ${esc(q.protects)}.</p>${nested ? '' : `<details class="why"><summary>Why this is asked</summary><p>${WHY[q.origin]}${q.sourceOrigin ? ` It comes from line ${q.sourceOrigin.line} of ${esc(q.sourceOrigin.path)}.` : ''}</p></details>`}`;
+  const hint = `<p class="hint" id="${id}-hint">What it changes: ${esc(q.protects)}.</p>${nested ? '' : `<details class="why"><summary>Why this is asked</summary><p>${WHY[q.origin]}${q.sourceOrigin ? ` It comes from line ${q.sourceOrigin.line} of ${esc(q.sourceOrigin.path)}.` : ''}</p></details>`}`;
   const other = (type: 'radio' | 'checkbox') =>
     `<div class="opt other"><input type="${type}" id="${id}-o" name="${name}" value="__other__"><label for="${id}-o">Other</label><input type="text" class="other-text" aria-label="Other, in your words" data-for="${id}-o"></div>`;
   const branch = (opt: string, k: number) =>

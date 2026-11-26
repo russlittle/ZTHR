@@ -12,10 +12,9 @@ import { chosenJourneys, type Suggestion } from './journeys.ts';
 import { outcomeGauges, type Gauge } from './release.ts';
 import { rangeOf, workingRanges, type Range } from './tolerance.ts';
 
-export type Lane = 'why' | 'problem' | 'people' | 'outcome' | 'checks' | 'instruments';
+export type Lane = 'why' | 'people' | 'outcome' | 'checks' | 'instruments';
 export const LANES: readonly { key: Lane; label: string; question: string }[] = [
-  { key: 'why', label: 'To what end', question: 'Why does this exist?' },
-  { key: 'problem', label: 'The problem', question: 'What goes wrong today?' },
+  { key: 'why', label: 'Why', question: 'The end in mind, and what goes wrong today' },
   { key: 'people', label: 'Who', question: 'Who is it for, and who else it reaches' },
   { key: 'outcome', label: 'When it works', question: 'What will be true?' },
   { key: 'checks', label: 'Held to', question: 'Measures, rules and limits' },
@@ -66,7 +65,7 @@ export interface Graph {
 
 const LANE_OF: Record<Slot, Lane> = {
   why: 'why',
-  problem: 'problem',
+  problem: 'why',
   people: 'people',
   outcome: 'outcome',
   measures: 'checks',

@@ -7,7 +7,7 @@
 import type { OwnJourney } from './journeys.ts';
 import { sha256 } from './hash.ts';
 import { derive } from './derive.ts';
-import { diffReadings, words } from './diff.ts';
+import { diffReadings, same, words } from './diff.ts';
 import { checkReading, SLOTS, type Ballooned, type Question, type Reading, type Statement, type TitleBlock } from './frame.ts';
 import { checkPairings } from './gaps.ts';
 import { intake } from './intake/index.ts';
@@ -208,8 +208,17 @@ export function prepare(input: Input): Prepared {
   const offered = said_ ?? model.end ?? undefined;
   const offeredProblem = said_;
 
+  // What the person already said settles a difference between readings: where one reading matches their own end
+  // in mind, it wins, and they are never asked a question their words answer.
+  const byOwnWords: Record<string, Given> = {};
+  if (model.end)
+    for (const q of questions) {
+      if (q.origin !== 'diff' || !q.choices?.length) continue;
+      const hit = q.choices.find((c) => model.end!.toLowerCase().includes(c.toLowerCase()) || same(c, model.end!, 0.6));
+      if (hit) byOwnWords[q.id] = { pick: hit };
+    }
   // Answers the person has already given are applied before anything is asked again.
-  const answers = input.answers ?? {};
+  const answers: Record<string, Given> = { ...byOwnWords, ...(input.answers ?? {}) };
   const answered = new Set(Object.keys(answers));
   const said = (id: string): string[] => {
     const a = answers[id];

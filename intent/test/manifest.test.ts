@@ -51,11 +51,21 @@ test('the same drawing gives the same manifest, and the release carries it', () 
 test('planted: a part the catalogue does not hold can never reach a manifest', async () => {
   const src = readFileSync(new URL('../src/manifest.ts', import.meta.url), 'utf8');
   const names = [...src.matchAll(/parts: \[([^\]]+)\]/g)].flatMap((m) => [...m[1]!.matchAll(/'([^']+)'/g)].map((x) => x[1]!));
+  const baseline = JSON.parse(readFileSync(new URL('../catalog/baseline.json', import.meta.url), 'utf8')) as { parts: { part: string }[] };
+  names.push(...baseline.parts.map((p) => p.part));
   const m = manifest(prepare({ files, readings }));
   assert.ok(names.length > 40);
   // Every name the rules call for is checked against the catalogue as the manifest is made; one that is not
   // there throws rather than appearing as a line nobody can build.
   assert.ok(m.lines.every((l) => l.source === 'make: new' || names.includes(l.part)));
+});
+
+test('who maintains it: custom assemblies are the team’s, everything else the fleet’s, and the team minimum is inherited', () => {
+  const m = manifest(prepare({ files, readings }));
+  for (const l of m.lines) assert.equal(l.maintainedBy, l.source === 'make: new' ? 'local' : 'fleet', l.part);
+  assert.equal(m.maintained.fleet + m.maintained.local, m.lines.length);
+  const baseline = JSON.parse(readFileSync(new URL('../catalog/baseline.json', import.meta.url), 'utf8')) as { parts: { part: string }[] };
+  for (const b of baseline.parts) assert.ok(m.lines.some((l) => l.part === b.part && l.floor), `${b.part} is inherited`);
 });
 
 test('planted: an outcome no part builds still appears, as a feature to make, never silently dropped', () => {
