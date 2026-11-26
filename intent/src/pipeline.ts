@@ -4,6 +4,7 @@
  * accepts is a reading that matches the schema, and two readings from different families are needed for
  * the rough parts to count as read.
  */
+import { settle as settleSheet, type Options, type Settled } from './interfaces.ts';
 import type { OwnJourney } from './journeys.ts';
 import { sha256 } from './hash.ts';
 import { derive } from './derive.ts';
@@ -43,6 +44,8 @@ export interface Prepared {
   /** Journeys the person chose to add: suggestions by id, and their own. */
   readonly journeys: { readonly accepted: readonly string[]; readonly own: readonly OwnJourney[] };
   readonly people: People;
+  /** The factory spec sheet, every choice filled in. */
+  readonly options: Settled;
 }
 
 /** A balloon key that survives rewording of case and punctuation, so numbers stay put across revisions. */
@@ -136,6 +139,8 @@ export interface Input {
   readonly journeys?: { readonly accepted?: readonly string[]; readonly own?: readonly OwnJourney[] };
   /** Who holds the intent, and how each person who will use it has been tuned. */
   readonly people?: People;
+  /** The factory spec sheet: which interfaces are switched on. */
+  readonly options?: Options;
 }
 
 /** How one person who will use the software is tuned: what they need for a journey to count as walked by them. */
@@ -339,7 +344,7 @@ export function prepare(input: Input): Prepared {
 
   const untied = model.context.filter((t) => !hits.some((h) => t.includes(h.words)));
   const finalModel = end === model.end ? model : { ...model, end };
-  return { model: finalModel, title: resolveClashes(titleBlock(hits.map((h) => ({ term: h.term.term, choices: h.term.choices }))), asks, clashChoice), statements: assignBalloons(statements, input.prior), questions: shaped(remaining), unread, untied, instruments: { design: lexicon.version, roles: roles.version ?? 'unversioned' }, journeys: { accepted: [...(input.journeys?.accepted ?? [])].sort(), own: input.journeys?.own ?? [] }, people: input.people ?? {} };
+  return { model: finalModel, title: resolveClashes(titleBlock(hits.map((h) => ({ term: h.term.term, choices: h.term.choices }))), asks, clashChoice), statements: assignBalloons(statements, input.prior), questions: shaped(remaining), unread, untied, instruments: { design: lexicon.version, roles: roles.version ?? 'unversioned' }, journeys: { accepted: [...(input.journeys?.accepted ?? [])].sort(), own: input.journeys?.own ?? [] }, people: input.people ?? {}, options: settleSheet(input.options) };
 }
 
 /**

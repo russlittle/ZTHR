@@ -21,6 +21,7 @@
 import { sha256 } from './hash.ts';
 import { chosenJourneys } from './journeys.ts';
 import { manifest, manifestFiles } from './manifest.ts';
+import { interfaceFiles } from './interfaces.ts';
 import type { Ballooned } from './frame.ts';
 import { same } from './diff.ts';
 import { balloonKey, modelContext, type Prepared } from './pipeline.ts';
@@ -205,6 +206,7 @@ export function release(p: Prepared, r: ReleaseInput): Release {
     end: p.model.end,
     heldBy: p.people.holder ?? null,
     people: p.people.tune ?? {},
+    specSheet: p.options,
     titleBlock: p.title,
     statements: p.statements,
     notes: p.model.notes,
@@ -244,6 +246,8 @@ export function release(p: Prepared, r: ReleaseInput): Release {
   // The bill of materials the factory starts from, exactly as the person previewed it before signing.
   const bom = manifest(p);
   Object.assign(files, manifestFiles(bom));
+  // The interfaces the spec sheet asks for, and the ones it leaves defined and closed: API, events, docs, training, admin.
+  Object.assign(files, interfaceFiles(p, bom, r.revision));
   for (const gap of bom.gaps) problems.push(`balloon ${gap.balloon}: ${gap.why}`);
 
   const hashes = Object.fromEntries(Object.entries(files).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, sha(v)]));

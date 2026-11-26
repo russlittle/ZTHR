@@ -269,6 +269,83 @@
       "studentAdvocate": {
         "coverage": "none"
       }
+    },
+    {
+      "name": "API contracts",
+      "gives": "An OpenAPI contract for every feature, written from the datum, secured by the same roles and row-level rules as the screens, and closed until the spec sheet switches it on",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Event catalogue",
+      "gives": "An AsyncAPI 3.1 contract for what each feature emits, as CloudEvents envelopes delivered by signed webhooks",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Agent tools (MCP)",
+      "gives": "Each switched-on API operation offered as a tool over the Model Context Protocol, acting for one person with that person's access",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Training modules",
+      "gives": "A lesson for every feature, built from its journeys and measures, published as a cmi5 course that reports through xAPI",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Ticket sync",
+      "gives": "Factory progress written to Jira, Asana, GitHub Issues or Linear: one ticket per feature, moved as each station finishes",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Wiki publishing",
+      "gives": "The user guide and technical reference published to Confluence, Notion or a Git wiki on every release, replaced whole so they never drift",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Feature explorer",
+      "gives": "Open any feature and see everything about it: its assemblies and parts, its data, who may do what, its audit trail, its history and how it changed over time, its journeys and its evidence, with the record inspector's controls at every level",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Query console",
+      "gives": "Query the application in SQL: every feature answers as a set of views, through the same roles, row-level rules and field masking as the screens. Queries are saved, exported and scheduled; the console is switched on per environment and left out of production by default",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Test data generator",
+      "gives": "Realistic synthetic records from the data dictionary, for any feature and any person on the schematic, each marked synthetic and refused by production",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "UAT overrides",
+      "gives": "In UAT, edit or override any record, clock or outside answer to set up the case you want to try, with every override recorded and reset in one step; not present in production",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
+    },
+    {
+      "name": "Confidence walkthrough",
+      "gives": "Pick a feature and watch it work: its journeys walked on your test records, each step tied to the balloon it proves, with why the app decided what it did",
+      "studentAdvocate": {
+        "coverage": "none"
+      }
     }
   ],
   "rules": [

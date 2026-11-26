@@ -15,11 +15,12 @@ import { release } from '../release.ts';
 import { zip } from '../zip.ts';
 import { graph, type Graph } from '../graph.ts';
 import { suggestJourneys, type OwnJourney } from '../journeys.ts';
-import { buildView, reviewView, type TrailStep, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
+import { buildView, specSheet, reviewView, type TrailStep, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
 import { manifest, type Manifest, type Source } from '../manifest.ts';
 import { review, type Review } from '../review.ts';
 import type { Tune } from '../pipeline.ts';
 import { sha256 } from '../hash.ts';
+import { settle, type Options } from '../interfaces.ts';
 
 // ---------------------------------------------------------------- platform capabilities, each optional
 
@@ -39,7 +40,7 @@ interface Issued {
   readonly datum: { revision: number; statements: Ballooned[] };
   readonly balloons: Record<string, number>;
   /** What it was built from, so the same bytes can be rebuilt on any later visit. */
-  readonly inputs?: { path: string; words: string; readings: unknown[]; answers: Record<string, Given>; journeys?: { accepted: string[]; own: OwnJourney[] } };
+  readonly inputs?: { path: string; words: string; readings: unknown[]; answers: Record<string, Given>; journeys?: { accepted: string[]; own: OwnJourney[] }; options?: Options; people?: { holder?: { name: string; role: string }; tune?: Record<string, Tune> } };
 }
 interface State {
   v: 1;
@@ -56,6 +57,8 @@ interface State {
   product: string;
   /** How each person who will use it is tuned. */
   tune: Record<string, Tune>;
+  /** The factory spec sheet: which interfaces are switched on. */
+  options: Options;
   /** Answers the person took on the suggestion without being sure: carried as assumptions to revisit. */
   unsure: Record<string, true>;
   /** The question each answer was given to, so an answer can be shown and changed later. */
@@ -83,7 +86,7 @@ const VIEWS: readonly { key: View; label: string; ico: string }[] = [
   { key: 'preview', label: 'Release preview', ico: 'scenario' },
   { key: 'parts', label: 'Parts list', ico: 'statement' },
 ];
-const empty = (): State => ({ v: 1, path: 'intent.md', words: '', readings: [], answers: {}, releases: [], showAll: false, signed: null, unsure: {}, asked: {}, skipped: [], journeys: { accepted: [], own: [] }, view: 'map', expanded: [], previewFile: 'schematic.md', planFilter: 'all', zoom: 0, wide: false, buildFilter: 'all', holder: { name: '', role: '' }, product: '', tune: {} });
+const empty = (): State => ({ v: 1, path: 'intent.md', words: '', readings: [], answers: {}, releases: [], showAll: false, signed: null, unsure: {}, asked: {}, skipped: [], journeys: { accepted: [], own: [] }, view: 'map', expanded: [], previewFile: 'schematic.md', planFilter: 'all', zoom: 0, wide: false, buildFilter: 'all', holder: { name: '', role: '' }, product: '', tune: {}, options: {} });
 let state: State = empty();
 let prepared: Prepared | null = null;
 let lastBalloons = new Set<number>();
@@ -145,8 +148,28 @@ function compute(): Prepared {
     answers: state.answers,
     journeys: state.journeys,
     people: { ...(state.holder.name || state.holder.role ? { holder: state.holder } : {}), tune: state.tune },
+    options: state.options,
     ...(last ? { prior: last.balloons } : {}),
   });
+}
+
+/** One change on the spec sheet, as a new options object. */
+function specChange(o: Options, key: string, t: HTMLInputElement | HTMLSelectElement): Options {
+  const checked = (t as HTMLInputElement).checked;
+  const toggle = (list: readonly string[] | undefined, v: string) => (checked ? [...new Set([...(list ?? []), v])] : (list ?? []).filter((x) => x !== v));
+  switch (key) {
+    case 'api-reach': return { ...o, api: { ...o.api, reach: t.value as 'off' | 'all' | 'some' } };
+    case 'api-feature': return { ...o, api: { ...o.api, features: toggle(o.api?.features, t.value) } };
+    case 'api-events': return { ...o, api: { ...o.api, events: checked } };
+    case 'api-agents': return { ...o, api: { ...o.api, agents: checked } };
+    case 'training-reach': return { ...o, training: { ...o.training, reach: t.value as 'off' | 'all' | 'some' } };
+    case 'training-feature': return { ...o, training: { ...o.training, features: toggle(o.training?.features, t.value) } };
+    case 'query': return { ...o, admin: { query: t.value as 'off' | 'non-production' | 'everywhere' } };
+    case 'tickets': return { ...o, connect: { ...o.connect, tickets: t.value as never } };
+    case 'wiki': return { ...o, connect: { ...o.connect, wiki: t.value as never } };
+    case 'feed': return { ...o, connect: { ...o.connect, feed: checked } };
+    default: return o;
+  }
 }
 
 const built = new WeakMap<Prepared, Map<string, ReturnType<typeof release>>>();
@@ -537,7 +560,7 @@ function viewBody(p: Prepared, parts: string): string {
     case 'hire':
       return `<div class="view-bar"><p class="view-lede">The same schematic, in the terms a leader uses for any hire: the job, how you would know it is done well, and what would make it a good hire a year from now.</p></div>${hireCard(p)}`;
     case 'build':
-      return buildView(lastManifest!, state.buildFilter, p.model.title && p.model.title !== state.path ? p.model.title : 'this intent', `${wide}<div class="zoom" role="group" aria-label="Zoom"><button type="button" class="btn quiet" data-zoom="-1" aria-label="Zoom out">−</button><button type="button" class="btn quiet" data-zoom="0" aria-label="Fit to width, or full size">Fit</button><button type="button" class="btn quiet" data-zoom="1" aria-label="Zoom in">+</button></div>`);
+      return specSheet(lastManifest!, settle(state.options)) + buildView(lastManifest!, state.buildFilter, p.model.title && p.model.title !== state.path ? p.model.title : 'this intent', `${wide}<div class="zoom" role="group" aria-label="Zoom"><button type="button" class="btn quiet" data-zoom="-1" aria-label="Zoom out">−</button><button type="button" class="btn quiet" data-zoom="0" aria-label="Fit to width, or full size">Fit</button><button type="button" class="btn quiet" data-zoom="1" aria-label="Zoom in">+</button></div>`);
     case 'preview': {
       const prior = priorFiles();
       const open = lastFiles[state.previewFile] !== undefined ? state.previewFile : 'schematic.md';
@@ -783,7 +806,7 @@ function issue() {
   }
   const r = currentRelease(prepared, reason || undefined);
   const m = JSON.parse(r.files['manifest.json']!) as { package: string; ready: boolean; revision: number };
-  state.releases.push({ revision: m.revision, reason: reason || null, package: m.package, ready: m.ready && isSigned(prepared), datum: JSON.parse(r.files['datum.json']!), balloons: JSON.parse(r.files['balloons.json']!), inputs: { path: state.path, words: state.words, readings: JSON.parse(JSON.stringify(state.readings)), answers: JSON.parse(JSON.stringify(state.answers)), journeys: JSON.parse(JSON.stringify(state.journeys)) } });
+  state.releases.push({ revision: m.revision, reason: reason || null, package: m.package, ready: m.ready && isSigned(prepared), datum: JSON.parse(r.files['datum.json']!), balloons: JSON.parse(r.files['balloons.json']!), inputs: { path: state.path, words: state.words, readings: JSON.parse(JSON.stringify(state.readings)), answers: JSON.parse(JSON.stringify(state.answers)), journeys: JSON.parse(JSON.stringify(state.journeys)), options: JSON.parse(JSON.stringify(state.options)), people: JSON.parse(JSON.stringify({ ...(state.holder.name || state.holder.role ? { holder: state.holder } : {}), tune: state.tune })) } });
   packages.set(m.revision, r.files);
   scheduleSave();
   render();
@@ -799,7 +822,7 @@ function rebuild(rev: number): Readonly<Record<string, string>> | null {
   const r = state.releases[k];
   if (!r?.inputs) return null;
   const before = state.releases[k - 1];
-  const p = prepare({ files: [{ path: r.inputs.path, text: r.inputs.words }], readings: r.inputs.readings, answers: r.inputs.answers, ...(r.inputs.journeys ? { journeys: r.inputs.journeys } : {}), ...(before ? { prior: before.balloons } : {}) });
+  const p = prepare({ files: [{ path: r.inputs.path, text: r.inputs.words }], readings: r.inputs.readings, answers: r.inputs.answers, ...(r.inputs.journeys ? { journeys: r.inputs.journeys } : {}), ...(r.inputs.options ? { options: r.inputs.options } : {}), ...(r.inputs.people ? { people: r.inputs.people } : {}), ...(before ? { prior: before.balloons } : {}) });
   const out = release(p, { revision: rev, ...(before ? { prior: { revision: before.revision, datum: before.datum }, reason: r.reason ?? '' } : {}) });
   if (JSON.parse(out.files['manifest.json']!).package !== r.package) return null;
   packages.set(rev, out.files);
@@ -1197,6 +1220,7 @@ function wire() {
     } else if (t.id === 'holder-name') state.holder = { ...state.holder, name: t.value.trim() };
     else if (t.id === 'holder-role') state.holder = { ...state.holder, role: t.value.trim() };
     else if (t.id === 'product-name') state.product = t.value.trim();
+    else if (t.dataset['opt']) state.options = specChange(state.options, t.dataset['opt'], t);
     else return;
     scheduleSave();
     const id = t.id;

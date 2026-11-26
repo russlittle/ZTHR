@@ -18,6 +18,7 @@ import type { Ballooned } from './frame.ts';
 import { chosenJourneys } from './journeys.ts';
 import type { Prepared } from './pipeline.ts';
 import { outcomeGauges } from './release.ts';
+import { anyApi, anyTraining, apiOn, featureId } from './interfaces.ts';
 
 /** Make or buy: where a part on the manifest will come from. */
 export type Source = 'stock' | 'modify' | 'make: catalogued' | 'make: new';
@@ -144,6 +145,8 @@ const other = (text: string): When => (c) => {
   return hits.length ? { text, balloons: hits.map((s) => s.balloon) } : null;
 };
 const always = (text: string): When => () => ({ text, balloons: [] });
+const sheet = (on: (c: Ctx) => boolean, text: (c: Ctx) => string): When => (c) => (on(c) ? { text: text(c), balloons: [] } : null);
+const reachText = (c: Ctx, what: string) => (c.p.options.api.reach === 'all' ? `${what} for every feature` : `${what} for ${c.p.options.api.features.length} feature${c.p.options.api.features.length === 1 ? '' : 's'}`);
 
 /**
  * What calls for each part. The floor is on every app's manifest: what the title block's defaults and the
@@ -196,6 +199,14 @@ const CALLS: readonly { parts: readonly string[]; when: When }[] = [
   { parts: ['Teaching empty states', 'Contextual help'], when: journey('first time', 'A journey is walked by someone new') },
   { parts: ['Pick up where you left off', 'Smart defaults'], when: journey('returning', 'A journey is walked by someone who does this often') },
   { parts: ['Permission explainer'], when: journey('refusal', 'Refusal journeys need a plain reason for every no') },
+  // The factory spec sheet: what is switched on beyond the screens.
+  { parts: ['API keys and tokens', 'Rate limiting and abuse protection', 'Roles and permissions (RBAC)', 'Row-level security controls', 'Tamper-evident audit chain'], when: sheet((c) => anyApi(c.p.options), (c) => `Spec sheet: the API is switched on ${reachText(c, '').trim()}, held to the same roles, row-level rules and audit as the screens`) },
+  { parts: ['Event catalogue', 'Webhooks'], when: sheet((c) => anyApi(c.p.options) && c.p.options.api.events, () => 'Spec sheet: switched-on features send events') },
+  { parts: ['Agent tools (MCP)', 'Model guard'], when: sheet((c) => anyApi(c.p.options) && c.p.options.api.agents, () => 'Spec sheet: agents may use the switched-on features, each acting for one person') },
+  { parts: ['Event catalogue', 'Webhooks', 'Scheduled exports', 'Warehouse sync'], when: sheet((c) => c.p.options.connect.feed, () => 'Spec sheet: systems already in place take a feed of data') },
+  { parts: ['Ticket sync', 'Outbound HTTP'], when: sheet((c) => c.p.options.connect.tickets !== 'none', (c) => `Spec sheet: factory progress goes to ${c.p.options.connect.tickets}`) },
+  { parts: ['Wiki publishing', 'Outbound HTTP'], when: sheet((c) => c.p.options.connect.wiki !== 'none', (c) => `Spec sheet: the docs are published to ${c.p.options.connect.wiki}`) },
+  { parts: ['Training modules'], when: sheet((c) => anyTraining(c.p.options), () => 'Spec sheet: training is published as a cmi5 course') },
   { parts: ['Privacy: consent, export, erasure'], when: journey('take back', 'A journey takes permission back') },
   { parts: ['Is it me or is it down?'], when: journey('missing input', 'A journey is walked with an input missing or late') },
 ];
@@ -216,9 +227,10 @@ export function manifest(p: Prepared): Manifest {
     if (!r) continue;
     for (const name of c.parts) {
       if (!PARTS.has(name)) throw new Error(`the manifest calls for "${name}", which is not in the catalogue`);
-      const e = by.get(name) ?? { why: [], floor: true };
+      const e = by.get(name) ?? { why: [], floor: false };
       if (!e.why.some((w) => w.text === r.text)) e.why.push(r);
-      e.floor = e.floor && !!c.floor;
+      // Inherited from the team minimum stays inherited, even when the intent also calls for it.
+      e.floor = e.floor || !!c.floor;
       by.set(name, e);
     }
   }
@@ -275,6 +287,7 @@ export function manifest(p: Prepared): Manifest {
       from: null,
       library: [],
       why: [
+        ...(apiOn(ctx.p.options, featureId(o.text)) ? [{ text: 'Spec sheet: its API is switched on', balloons: [] as number[] }] : []),
         { text: o.slot === 'outcome' ? 'An outcome on the schematic; no library or catalogue part does it' : 'You asked for it in your own words; no library or catalogue part does it', balloons: [o.balloon] },
         ...(held.length ? [{ text: 'Held to these measures and rules', balloons: held.map((h) => h.balloon) }] : []),
         ...(kids.length ? [{ text: 'With what follows from it', balloons: kids.map((k) => k.balloon) }] : []),

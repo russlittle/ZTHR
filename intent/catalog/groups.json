@@ -63,7 +63,11 @@
       "Bulk edit with preview",
       "Configuration and secrets",
       "Data dictionary",
-      "Prisma schema and ERD"
+      "Prisma schema and ERD",
+      "Feature explorer",
+      "Query console",
+      "Test data generator",
+      "UAT overrides"
     ],
     "Work and integrations": [
       "HTTP API and routing",
@@ -89,7 +93,10 @@
       "File upload and storage",
       "Approvals and workflow",
       "Chat",
-      "Model guard"
+      "Model guard",
+      "API contracts",
+      "Event catalogue",
+      "Agent tools (MCP)"
     ],
     "Trust and evidence": [
       "Audit log",
@@ -115,7 +122,8 @@
       "Red team",
       "Nightly scanner",
       "Review panel",
-      "Preference signals"
+      "Preference signals",
+      "Confidence walkthrough"
     ],
     "Content": [
       "Surface registry",
@@ -127,7 +135,8 @@
       "Explain this screen",
       "Knowledge bundle",
       "Chat context engine",
-      "Readability for the audience"
+      "Readability for the audience",
+      "Training modules"
     ],
     "Experience": [
       "UI kit and accessibility",
@@ -177,7 +186,9 @@
       "Scheduled exports",
       "Warehouse sync",
       "Report builder",
-      "Report templates"
+      "Report templates",
+      "Ticket sync",
+      "Wiki publishing"
     ]
   }
 }

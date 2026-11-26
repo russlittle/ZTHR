@@ -370,6 +370,17 @@ footer { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14px; m
 .srcb.make-new .sw, .seg.make-new { background: var(--blue); }
 .mbar.big { display: flex; height: 26px; border: 1.5px solid var(--ink); border-radius: 2px; overflow: hidden; margin: 8px 0 12px; }
 .mbar.big .seg { display: block; height: 100%; }
+.spec-sheet { border: 1px solid var(--rule); border-radius: 3px; padding: 14px 16px; margin: 8px 0 18px; }
+.spec-sheet h3 { margin: 0 0 4px; }
+.spec-grid { display: grid; gap: 0; margin-top: 10px; }
+.spec-row { display: grid; grid-template-columns: 9.5rem 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--rule); align-items: start; }
+.spec-row select { max-width: 100%; }
+.spec-row p { margin: 6px 0 0; }
+.opt-picks { border: 0; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.opt-check { display: block; margin-top: 6px; }
+.spec-conn { display: grid; gap: 6px; }
+.spec-conn label select { margin-left: 6px; }
+@media (max-width: 600px) { .spec-row { grid-template-columns: 1fr; gap: 4px; } }
 .bom-sum { border: 1px solid var(--rule); border-radius: 3px; padding: 14px 16px; margin: 8px 0 18px; }
 .bom-big { margin: 0; font: 600 26px/1.15 var(--letter); }
 .src-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }

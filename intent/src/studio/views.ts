@@ -8,6 +8,7 @@ import { instruments, LANES, neighbours, uncovered, type Graph, type Lane, type 
 import type { Suggestion } from '../journeys.ts';
 import type { Check, Fix, Review } from '../review.ts';
 import type { Tune } from '../pipeline.ts';
+import { describe, features, QUERY_REACH, TICKET_TOOLS, WIKI_TOOLS, type Reach, type Settled } from '../interfaces.ts';
 import { BUILD_ORDER, MAINTAINER_LABEL, MAINTAINER_WHAT, SOURCE_LABEL, SOURCE_WHAT, type Line, type Manifest, type Source } from '../manifest.ts';
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -680,6 +681,26 @@ ${m.gaps.length ? `<div class="gaps"><h4>On the schematic, but nothing on the ma
 <section aria-labelledby="h-route"><h3 id="h-route">How the factory will build</h3><p class="muted small">Foundations are laid top to bottom, in the order the factory lays them; this intent's features are on the right, each assembled from the parts it is joined to. Hover or select a feature to trace its parts.</p><div class="canvas" id="canvas" tabindex="-1">${routing(m)}</div></section>
 <section aria-labelledby="h-bom"><h3 id="h-bom">Bill of materials</h3>${bom}</section>
 <section aria-labelledby="h-trace"><h3 id="h-trace">The schematic, balloon by balloon</h3>${trace}</section>`;
+}
+
+/** The factory spec sheet: what the build carries beyond the screens. Defined always; switched on here. */
+export function specSheet(m: Manifest, o: Settled): string {
+  const fs = features(m);
+  const d = describe(o, fs.length);
+  const reach = (key: 'api' | 'training', r: Reach, labels: [string, string, string]) =>
+    `<select id="opt-${key}-reach" data-opt="${key}-reach">${(['off', 'all', 'some'] as const).map((v, i) => `<option value="${v}"${r === v ? ' selected' : ''}>${labels[i]}</option>`).join('')}</select>`;
+  const picks = (key: 'api' | 'training', on: readonly string[]) =>
+    `<fieldset class="opt-picks"><legend class="sr">Features</legend>${fs.map((f) => `<label><input type="checkbox" id="opt-${key}-f-${esc(f.id)}" data-opt="${key}-feature" value="${esc(f.id)}"${on.includes(f.id) ? ' checked' : ''}> ${esc(f.line.gives)}</label>`).join('') || '<p class="muted small">No features on the schematic yet.</p>'}</fieldset>`;
+  const sel = (id: string, list: readonly string[], cur: string, label: (v: string) => string) => `<select id="opt-${id}" data-opt="${id}">${list.map((v) => `<option value="${esc(v)}"${cur === v ? ' selected' : ''}>${esc(label(v))}</option>`).join('')}</select>`;
+  const box = (id: string, on: boolean, text: string) => `<label class="opt-check"><input type="checkbox" id="opt-${id}" data-opt="${id}"${on ? ' checked' : ''}> ${text}</label>`;
+  return `<section class="spec-sheet" aria-labelledby="h-spec"><h3 id="h-spec">Factory spec sheet</h3><p class="muted small">Every feature is built with its API, events, training and docs defined from the same datum as its code. Here you choose what is switched on. Anything that opens the app to the outside starts off.</p>
+<div class="spec-grid">
+<div class="spec-row"><label for="opt-api-reach"><strong>API</strong></label><div>${reach('api', o.api.reach, ['Defined, closed', 'On for every feature', 'On for some features'])}${o.api.reach === 'some' ? picks('api', o.api.features) : ''}${box('api-events', o.api.events, 'Send events (AsyncAPI, CloudEvents)')}${box('api-agents', o.api.agents, 'Offer agent tools (MCP)')}<p class="muted small">${esc(d.api)} Same roles, row-level rules and audit as the screens.</p></div></div>
+<div class="spec-row"><label for="opt-training-reach"><strong>Training</strong></label><div>${reach('training', o.training.reach, ['Written, held back', 'Published for every feature', 'Published for some'])}${o.training.reach === 'some' ? picks('training', o.training.features) : ''}<p class="muted small">${esc(d.training)}</p></div></div>
+<div class="spec-row"><span><strong>Docs</strong></span><div><p class="small">${esc(d.docs)}</p></div></div>
+<div class="spec-row"><label for="opt-query"><strong>Query console</strong></label><div>${sel('query', QUERY_REACH, o.admin.query, (v) => (v === 'non-production' ? 'Development, test and UAT only' : v === 'everywhere' ? 'Every environment, production too' : 'Left out of every build'))}<p class="muted small">${esc(d.admin)}</p></div></div>
+<div class="spec-row"><span><strong>Connections</strong></span><div class="spec-conn"><label>Progress to ${sel('tickets', TICKET_TOOLS, o.connect.tickets, (v) => (v === 'none' ? 'nowhere' : v))}</label><label>Docs to ${sel('wiki', WIKI_TOOLS, o.connect.wiki, (v) => (v === 'none' ? 'nowhere' : v))}</label>${box('feed', o.connect.feed, 'A data feed for systems already in place')}<p class="muted small">Named connections only: credentials are set where the factory runs, never in the package.</p></div></div>
+</div></section>`;
 }
 
 export function lineDetail(m: Manifest, find: number): { title: string; html: string } | null {
