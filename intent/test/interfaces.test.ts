@@ -82,12 +82,35 @@ test('the admin suite is in the team minimum on every manifest', () => {
 });
 
 test('connections are named, never credentials, and the same spec sheet gives the same bytes', () => {
-  const o = { connect: { tickets: 'Jira' as const, wiki: 'Confluence' as const, feed: true } };
+  const o = { connect: { tickets: 'Jira', wiki: 'Confluence', chat: 'slack', feed: true, feedTo: 'bigquery' } };
   const a = build(o).r;
-  const c = JSON.parse(a.files['connections.json']!) as { tickets: { tool: string }; wiki: { tool: string }; feed: unknown };
-  assert.equal(c.tickets.tool, 'Jira');
-  assert.equal(c.wiki.tool, 'Confluence');
-  assert.ok(c.feed);
-  assert.doesNotMatch(a.files['connections.json']!, /(token|secret|password)"\s*:/i);
+  const c = JSON.parse(a.files['connections.json']!) as { chosen: { id: string }[] };
+  assert.deepEqual(c.chosen.map((x) => x.id), ['jira', 'confluence', 'slack', 'bigquery', 'google']);
+  for (const id of ['jira', 'confluence', 'slack', 'bigquery', 'google']) assert.ok(a.files[`connections/outbox/${id}.json`], `${id} has an outbox`);
   assert.deepEqual(a.files, build(o).r.files);
+});
+
+test('every connector stub writes requests it never sends, with every credential a named placeholder', async () => {
+  const { CONNECTORS, outbox } = await import('../src/connectors.ts');
+  const { m, p } = build();
+  const plan = { title: p.model.title, revision: 1, end: p.model.end, features: features(m).map((f) => ({ id: f.id, gives: f.line.gives, balloons: f.line.balloons, journeys: f.line.journeys })), docs: { 'docs/users/README.md': '# Guide\n\nHello.' } };
+  assert.ok(CONNECTORS.length >= 20);
+  for (const x of CONNECTORS) {
+    const box = JSON.parse(outbox(x, plan)) as { sent: boolean; requests: { url: string; headers: Record<string, string> }[] };
+    assert.equal(box.sent, false);
+    assert.ok(box.requests.length > 0, `${x.id} plans at least one request`);
+    for (const r of box.requests) {
+      assert.match(r.url, /^(https:\/\/|\{\{(config|secret)\.)/, `${x.id} speaks HTTPS, or to an address set where it runs`);
+      for (const [k, v] of Object.entries(r.headers)) if (/^authorization$/i.test(k)) assert.match(v, /\{\{secret\.[A-Z_]+\}\}/, `${x.id} carries no credential, only the name of one`);
+    }
+    for (const n of x.secrets) assert.match(n, /^[A-Z][A-Z0-9_]+$/);
+    assert.ok(x.reference.startsWith('https://'), `${x.id} points at the vendor's reference`);
+  }
+});
+
+test('people sign in with Google unless the spec sheet says otherwise', () => {
+  const { r } = build();
+  const c = JSON.parse(r.files['connections.json']!) as { chosen: { id: string }[] };
+  assert.deepEqual(c.chosen.map((x) => x.id), ['google']);
+  assert.ok(build().m.lines.some((l) => l.part === 'Single sign-on' && l.why.some((w) => /Google/.test(w.text))));
 });

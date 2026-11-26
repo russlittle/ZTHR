@@ -8,7 +8,8 @@ import { instruments, LANES, neighbours, uncovered, type Graph, type Lane, type 
 import type { Suggestion } from '../journeys.ts';
 import type { Check, Fix, Review } from '../review.ts';
 import type { Tune } from '../pipeline.ts';
-import { describe, features, QUERY_REACH, TICKET_TOOLS, WIKI_TOOLS, type Reach, type Settled } from '../interfaces.ts';
+import { describe, features, QUERY_REACH, type Reach, type Settled } from '../interfaces.ts';
+import { byKind, type Kind } from '../connectors.ts';
 import { BUILD_ORDER, MAINTAINER_LABEL, MAINTAINER_WHAT, SOURCE_LABEL, SOURCE_WHAT, type Line, type Manifest, type Source } from '../manifest.ts';
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -692,6 +693,11 @@ export function specSheet(m: Manifest, o: Settled): string {
   const picks = (key: 'api' | 'training', on: readonly string[]) =>
     `<fieldset class="opt-picks"><legend class="sr">Features</legend>${fs.map((f) => `<label><input type="checkbox" id="opt-${key}-f-${esc(f.id)}" data-opt="${key}-feature" value="${esc(f.id)}"${on.includes(f.id) ? ' checked' : ''}> ${esc(f.line.gives)}</label>`).join('') || '<p class="muted small">No features on the schematic yet.</p>'}</fieldset>`;
   const sel = (id: string, list: readonly string[], cur: string, label: (v: string) => string) => `<select id="opt-${id}" data-opt="${id}">${list.map((v) => `<option value="${esc(v)}"${cur === v ? ' selected' : ''}>${esc(label(v))}</option>`).join('')}</select>`;
+  const tool = (id: string, kind: Kind, label: string, cur: string, none = true) => {
+    const list = [...(none ? [{ id: 'none', name: 'nowhere' }] : []), ...byKind(kind).map((x) => ({ id: x.id, name: x.name }))];
+    const select = `<select id="opt-${id}" data-opt="${id}">${list.map((x) => `<option value="${esc(x.id)}"${cur === x.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select>`;
+    return label ? `<label>${label} ${select}</label>` : select;
+  };
   const box = (id: string, on: boolean, text: string) => `<label class="opt-check"><input type="checkbox" id="opt-${id}" data-opt="${id}"${on ? ' checked' : ''}> ${text}</label>`;
   return `<section class="spec-sheet" aria-labelledby="h-spec"><h3 id="h-spec">Factory spec sheet</h3><p class="muted small">Every feature is built with its API, events, training and docs defined from the same datum as its code. Here you choose what is switched on. Anything that opens the app to the outside starts off.</p>
 <div class="spec-grid">
@@ -699,7 +705,9 @@ export function specSheet(m: Manifest, o: Settled): string {
 <div class="spec-row"><label for="opt-training-reach"><strong>Training</strong></label><div>${reach('training', o.training.reach, ['Written, held back', 'Published for every feature', 'Published for some'])}${o.training.reach === 'some' ? picks('training', o.training.features) : ''}<p class="muted small">${esc(d.training)}</p></div></div>
 <div class="spec-row"><span><strong>Docs</strong></span><div><p class="small">${esc(d.docs)}</p></div></div>
 <div class="spec-row"><label for="opt-query"><strong>Query console</strong></label><div>${sel('query', QUERY_REACH, o.admin.query, (v) => (v === 'non-production' ? 'Development, test and UAT only' : v === 'everywhere' ? 'Every environment, production too' : 'Left out of every build'))}<p class="muted small">${esc(d.admin)}</p></div></div>
-<div class="spec-row"><span><strong>Connections</strong></span><div class="spec-conn"><label>Progress to ${sel('tickets', TICKET_TOOLS, o.connect.tickets, (v) => (v === 'none' ? 'nowhere' : v))}</label><label>Docs to ${sel('wiki', WIKI_TOOLS, o.connect.wiki, (v) => (v === 'none' ? 'nowhere' : v))}</label>${box('feed', o.connect.feed, 'A data feed for systems already in place')}<p class="muted small">Named connections only: credentials are set where the factory runs, never in the package.</p></div></div>
+<div class="spec-row"><span><strong>Connections</strong></span><div class="spec-conn">${tool('tickets', 'tickets', 'Progress to', o.connect.tickets)}${tool('wiki', 'docs', 'Docs to', o.connect.wiki)}${tool('chat', 'chat', 'Notes to', o.connect.chat)}${box('feed', o.connect.feed, 'A data feed for systems already in place')}${o.connect.feed ? tool('feedTo', 'feed', 'Feed by', o.connect.feedTo, false) : ''}<p class="muted small">${esc(d.connect)} Each one is a stub: the package holds the exact requests it would send, and nothing is sent until it is set up where the factory runs. Credentials are never in the package.</p></div></div>
+<div class="spec-row"><label for="opt-identity"><strong>Sign-in</strong></label><div>${tool('identity', 'identity', '', o.connect.identity, false)}<p class="muted small">How people sign in to the app the factory builds. Roles and row-level rules come from the app, not from the sign-in provider.</p></div></div>
+</div>
 </div></section>`;
 }
 

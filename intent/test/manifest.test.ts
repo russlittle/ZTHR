@@ -15,7 +15,7 @@ test('the manifest is a bill of materials: every line traced, sourced and number
   assert.deepEqual(m.lines.map((l) => l.find), m.lines.map((_, i) => i + 1));
   for (const l of m.lines) {
     assert.ok(l.why.length, `${l.part} says why it is there`);
-    assert.ok(l.floor || l.balloons.length, `${l.part} is on the floor or traced to a balloon`);
+    assert.ok(l.floor || l.balloons.length || l.why.some((w) => w.text.startsWith('Spec sheet:')), `${l.part} is on the floor, traced to a balloon, or set on the spec sheet`);
     if (l.source === 'stock' || l.source === 'modify') assert.ok(l.library.length, `${l.part} names the library block it comes from`);
     if (l.source === 'make: new') assert.ok(l.uses.every((f) => m.lines[f - 1]!.source !== 'make: new'), 'a feature is assembled from parts');
   }

@@ -19,6 +19,8 @@ import { chosenJourneys } from './journeys.ts';
 import type { Prepared } from './pipeline.ts';
 import { outcomeGauges } from './release.ts';
 import { anyApi, anyTraining, apiOn, featureId } from './interfaces.ts';
+import { connector } from './connectors.ts';
+const toolName = (id: string) => connector(id)?.name ?? id;
 
 /** Make or buy: where a part on the manifest will come from. */
 export type Source = 'stock' | 'modify' | 'make: catalogued' | 'make: new';
@@ -204,8 +206,13 @@ const CALLS: readonly { parts: readonly string[]; when: When }[] = [
   { parts: ['Event catalogue', 'Webhooks'], when: sheet((c) => anyApi(c.p.options) && c.p.options.api.events, () => 'Spec sheet: switched-on features send events') },
   { parts: ['Agent tools (MCP)', 'Model guard'], when: sheet((c) => anyApi(c.p.options) && c.p.options.api.agents, () => 'Spec sheet: agents may use the switched-on features, each acting for one person') },
   { parts: ['Event catalogue', 'Webhooks', 'Scheduled exports', 'Warehouse sync'], when: sheet((c) => c.p.options.connect.feed, () => 'Spec sheet: systems already in place take a feed of data') },
-  { parts: ['Ticket sync', 'Outbound HTTP'], when: sheet((c) => c.p.options.connect.tickets !== 'none', (c) => `Spec sheet: factory progress goes to ${c.p.options.connect.tickets}`) },
-  { parts: ['Wiki publishing', 'Outbound HTTP'], when: sheet((c) => c.p.options.connect.wiki !== 'none', (c) => `Spec sheet: the docs are published to ${c.p.options.connect.wiki}`) },
+  { parts: ['Ticket sync', 'Outbound HTTP'], when: sheet((c) => c.p.options.connect.tickets !== 'none', (c) => `Spec sheet: factory progress goes to ${toolName(c.p.options.connect.tickets)}`) },
+  { parts: ['Wiki publishing', 'Outbound HTTP'], when: sheet((c) => c.p.options.connect.wiki !== 'none', (c) => `Spec sheet: the docs are published to ${toolName(c.p.options.connect.wiki)}`) },
+  { parts: ['Outbound HTTP'], when: sheet((c) => c.p.options.connect.chat !== 'none', (c) => `Spec sheet: a note goes to ${toolName(c.p.options.connect.chat)} as each station finishes`) },
+  { parts: ['Single sign-on'], when: (c) => {
+    const hits = c.st.filter((s) => s.slot === 'people');
+    return hits.length ? { text: `People sign in with ${toolName(c.p.options.connect.identity)}, as the spec sheet sets`, balloons: hits.map((s) => s.balloon) } : null;
+  } },
   { parts: ['Training modules'], when: sheet((c) => anyTraining(c.p.options), () => 'Spec sheet: training is published as a cmi5 course') },
   { parts: ['Privacy: consent, export, erasure'], when: journey('take back', 'A journey takes permission back') },
   { parts: ['Is it me or is it down?'], when: journey('missing input', 'A journey is walked with an input missing or late') },

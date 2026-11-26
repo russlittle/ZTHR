@@ -6,3 +6,17 @@
 .zbar nav a:hover { color: var(--sheet); background: color-mix(in srgb, var(--sheet) 12%, transparent); }
 .zbar nav a[aria-current=page] { color: var(--ink); background: var(--sheet); }
 .zbar a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* The door: until an invited person signs in, only the bar and the sign-in panel show. */
+html.gated body > :not(.zbar):not(#zgate):not(script) { display: none !important; }
+#zgate { display: grid; place-items: start center; padding: 12vh max(4vw, 16px) 8vh; }
+.zgate-card { max-width: 34rem; font: 400 17px/1.55 var(--letter, system-ui); color: var(--ink); }
+.zgate-card h1 { font: 700 28px/1.2 var(--letter, system-ui); margin: 0 0 10px; }
+.zgate-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0; }
+.zgate-go, .zgate-quiet { font: 600 16px/1 var(--letter, system-ui); min-height: 44px; padding: 0 18px; border-radius: 6px; cursor: pointer; }
+.zgate-go { background: var(--ink); color: var(--sheet); border: 1px solid var(--ink); }
+.zgate-quiet { background: transparent; color: var(--ink); border: 1px solid currentColor; }
+.zgate-go:focus-visible, .zgate-quiet:focus-visible, .zwho button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.zgate-small { font-size: 14px; opacity: .8; }
+.zwho { margin-left: auto; display: flex; align-items: center; gap: 10px; font: 400 14px/1 var(--letter, system-ui); color: color-mix(in srgb, var(--sheet) 85%, transparent); }
+.zwho button { font: 600 14px/1 var(--letter, system-ui); background: transparent; color: var(--sheet); border: 1px solid color-mix(in srgb, var(--sheet) 50%, transparent); border-radius: 6px; min-height: 36px; padding: 0 12px; cursor: pointer; }

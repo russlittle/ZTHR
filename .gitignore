@@ -1,6 +1,7 @@
 node_modules/
 evidence-out/
 .site-check/
+.site-check-open/
 # Built from intent/ by the deploy workflow, never committed
 /docs/intent/
 /docs/factory/

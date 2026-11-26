@@ -70,7 +70,12 @@ Node 22.18 or later.
 ```
 npm ci
 npm run verify     # types, tests, secret scan, and a build of all three surfaces
-npm run build      # writes docs/intent, docs/factory, docs/mission
+npm run build      # writes docs/intent, docs/factory, docs/mission, behind Google sign-in by invitation
+npm run build -- --open   # the same, with no sign-in, for local checks or your own copy
 ```
+
+- [The release package, file by file](docs/formats.md)
+- [Connectors to the tools teams already use](docs/connectors.md)
+- [Who can use the tools on zthr.ai, and how to invite people](docs/access.md)
 
 Apache 2.0.

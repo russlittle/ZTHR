@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// ZTHR on zthr.ai: by invitation only. These rules, not the page, hold the line.
+//
+// access/{email}     one document per invited Google account, { active: true, name, invitedBy, at }.
+//                    Written by a person in the console or Cloud Shell; no browser may list or write them.
+//                    A signed-in person may read only their own, to learn whether they are invited.
+// workspaces/{uid}   an invited person's saved studio work, readable and writable by that person alone.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function verified() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function invited() {
+      let path = /databases/$(database)/documents/access/$(request.auth.token.email.lower());
+      return verified() && exists(path) && get(path).data.active == true;
+    }
+
+    match /access/{email} {
+      allow get: if verified() && email == request.auth.token.email.lower();
+      allow list, create, update, delete: if false;
+    }
+
+    match /workspaces/{uid} {
+      allow get: if invited() && request.auth.uid == uid;
+      allow create, update: if invited() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['v', 'json', 'at'])
+        && request.resource.data.json is string
+        && request.resource.data.json.size() < 900000;
+      allow list, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

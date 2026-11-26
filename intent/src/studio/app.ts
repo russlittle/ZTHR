@@ -168,6 +168,9 @@ function specChange(o: Options, key: string, t: HTMLInputElement | HTMLSelectEle
     case 'tickets': return { ...o, connect: { ...o.connect, tickets: t.value as never } };
     case 'wiki': return { ...o, connect: { ...o.connect, wiki: t.value as never } };
     case 'feed': return { ...o, connect: { ...o.connect, feed: checked } };
+    case 'chat': return { ...o, connect: { ...o.connect, chat: t.value } };
+    case 'feedTo': return { ...o, connect: { ...o.connect, feedTo: t.value } };
+    case 'identity': return { ...o, connect: { ...o.connect, identity: t.value } };
     default: return o;
   }
 }
@@ -1372,6 +1375,29 @@ function confirmReplace(): boolean {
   return false;
 }
 
+/** Keep the work in a private space: the artifact's own store, or, on zthr.ai, the invited person's workspace. */
+async function attach(r: NonNullable<typeof remote>) {
+  remote = r;
+  const snap = await remote.get();
+  const saved = snap.exists ? (snap.data()?.['json'] as string | undefined) : undefined;
+  if (saved && !state.words.trim()) {
+    state = { ...empty(), ...(JSON.parse(saved) as State) };
+    ($('words') as HTMLTextAreaElement).value = state.words;
+    lastBalloons = new Set();
+    say('words-status', 'Picked up where you left off.');
+  } else if (state.words.trim()) void flush();
+}
+function onAccess() {
+  const a = (window as { zthrAccess?: { workspace: NonNullable<typeof remote> } }).zthrAccess;
+  if (!a) return;
+  void attach(a.workspace)
+    .then(() => render())
+    .catch(() => {
+      remote = null;
+    });
+}
+window.addEventListener('zthr:access', onAccess);
+
 async function capabilities() {
   const [db, user, s, d, dl] = await Promise.all([claudeUse('db'), claudeUse('user'), claudeUse('sample'), claudeUse('dictation'), claudeUse('downloads')]);
   if (typeof s === 'function') {
@@ -1400,17 +1426,7 @@ async function capabilities() {
   if (db && user) {
     try {
       const id = await (user as { id(): Promise<string | null> }).id();
-      if (id) {
-        remote = (db as { collection(p: string): { doc(k: string): typeof remote } }).collection(`data/users/${id}`).doc('studio');
-        const snap = await remote!.get();
-        const saved = snap.exists ? (snap.data()?.['json'] as string | undefined) : undefined;
-        if (saved && !state.words.trim()) {
-          state = { ...empty(), ...(JSON.parse(saved) as State) };
-          ($('words') as HTMLTextAreaElement).value = state.words;
-          lastBalloons = new Set();
-          say('words-status', 'Picked up where you left off.');
-        }
-      }
+      if (id) await attach((db as { collection(p: string): { doc(k: string): NonNullable<typeof remote> } }).collection(`data/users/${id}`).doc('studio'));
     } catch {
       remote = null;
     }
@@ -1436,6 +1452,7 @@ function start() {
   wire();
   render();
   void capabilities();
+  onAccess();
 }
 
 start();

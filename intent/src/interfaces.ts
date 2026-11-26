@@ -10,20 +10,19 @@
  *
  * Every file here is worked out by rule from the datum and the manifest, so the same inputs give the same bytes.
  */
+import { byKind, catalogue, chosen, outbox, type Plan } from './connectors.ts';
 import type { Line, Manifest } from './manifest.ts';
 import type { Prepared } from './pipeline.ts';
 
 /** How far an interface reaches: not at all, every feature, or the features named. */
 export type Reach = 'off' | 'all' | 'some';
-export type TicketTool = 'none' | 'Jira' | 'Asana' | 'GitHub Issues' | 'Linear';
-export type WikiTool = 'none' | 'Confluence' | 'Notion' | 'GitHub wiki';
-export const TICKET_TOOLS: readonly TicketTool[] = ['none', 'Jira', 'Asana', 'GitHub Issues', 'Linear'];
-export const WIKI_TOOLS: readonly WikiTool[] = ['none', 'Confluence', 'Notion', 'GitHub wiki'];
+/** A connector id from the catalogue, or none. */
+export type Tool = string;
 
 export interface Options {
   readonly api?: { readonly reach?: Reach; readonly features?: readonly string[]; readonly events?: boolean; readonly agents?: boolean };
   readonly training?: { readonly reach?: Reach; readonly features?: readonly string[] };
-  readonly connect?: { readonly tickets?: TicketTool; readonly wiki?: WikiTool; readonly feed?: boolean };
+  readonly connect?: { readonly tickets?: Tool; readonly wiki?: Tool; readonly chat?: Tool; readonly feed?: boolean; readonly feedTo?: Tool; readonly identity?: Tool };
   readonly admin?: { readonly query?: QueryReach };
 }
 
@@ -34,8 +33,15 @@ export const QUERY_REACH: readonly QueryReach[] = ['non-production', 'everywhere
 export interface Settled {
   readonly api: { readonly reach: Reach; readonly features: readonly string[]; readonly events: boolean; readonly agents: boolean };
   readonly training: { readonly reach: Reach; readonly features: readonly string[] };
-  readonly connect: { readonly tickets: TicketTool; readonly wiki: WikiTool; readonly feed: boolean };
+  readonly connect: { readonly tickets: Tool; readonly wiki: Tool; readonly chat: Tool; readonly feed: boolean; readonly feedTo: Tool; readonly identity: Tool };
   readonly admin: { readonly query: QueryReach };
+}
+
+/** A tool the catalogue holds for that kind of connection, or the fallback. Names from before the catalogue still work. */
+function known(kind: 'tickets' | 'docs' | 'chat' | 'feed' | 'identity', v: string | undefined, fallback = 'none'): Tool {
+  if (!v || v === 'none') return fallback;
+  const hit = byKind(kind).find((x) => x.id === v || x.name.toLowerCase() === v.toLowerCase());
+  return hit ? hit.id : fallback;
 }
 
 /** The spec sheet with every choice filled in. Off is the default for anything that opens the app to the outside. */
@@ -43,10 +49,20 @@ export function settle(o: Options | undefined): Settled {
   return {
     api: { reach: o?.api?.reach ?? 'off', features: [...(o?.api?.features ?? [])].sort(), events: !!o?.api?.events, agents: !!o?.api?.agents },
     training: { reach: o?.training?.reach ?? 'off', features: [...(o?.training?.features ?? [])].sort() },
-    connect: { tickets: o?.connect?.tickets ?? 'none', wiki: o?.connect?.wiki ?? 'none', feed: !!o?.connect?.feed },
+    connect: {
+      tickets: known('tickets', o?.connect?.tickets),
+      wiki: known('docs', o?.connect?.wiki),
+      chat: known('chat', o?.connect?.chat),
+      feed: !!o?.connect?.feed,
+      feedTo: known('feed', o?.connect?.feedTo, 'webhooks'),
+      identity: known('identity', o?.connect?.identity, 'google'),
+    },
     admin: { query: o?.admin?.query ?? 'non-production' },
   };
 }
+
+const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+const nameOf = (id: string) => byKind('tickets').concat(byKind('docs'), byKind('chat'), byKind('feed'), byKind('identity')).find((x) => x.id === id)?.name ?? id;
 
 /** The stable id of a feature: its outcome or request, as a slug. */
 export const featureId = (text: string): string => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'item';
@@ -72,7 +88,7 @@ export function describe(s: Settled, total: number): { api: string; training: st
     training: anyTraining(s) ? `Published for ${n(s.training)} of ${total} feature${total === 1 ? '' : 's'} as a cmi5 course. The rest are written and held back.` : `Written for all ${total} feature${total === 1 ? '' : 's'} and held back. Switch it on to publish a cmi5 course.`,
     docs: 'Always: a guide for each person who uses it, and a reference for the people who run and change it.',
     admin: `The admin suite comes with every app. The query console runs ${s.admin.query === 'off' ? 'nowhere: it is left out of every build' : s.admin.query === 'non-production' ? 'in development, test and UAT, and is left out of the production build' : 'everywhere, production included, through the same access rules, masking and audit as the screens'}. Test records and UAT overrides are never in production.`,
-    connect: [s.connect.tickets !== 'none' ? `progress to ${s.connect.tickets}` : '', s.connect.wiki !== 'none' ? `docs to ${s.connect.wiki}` : '', s.connect.feed ? 'a data feed for systems already in place' : ''].filter(Boolean).join(', ') || 'None. The package and the events contract are there when you want them.',
+    connect: `${cap([s.connect.tickets !== 'none' ? `progress to ${nameOf(s.connect.tickets)}` : '', s.connect.wiki !== 'none' ? `docs to ${nameOf(s.connect.wiki)}` : '', s.connect.chat !== 'none' ? `notes to ${nameOf(s.connect.chat)}` : '', s.connect.feed ? `a data feed by ${nameOf(s.connect.feedTo)}` : ''].filter(Boolean).join(', ') || 'Nothing sent anywhere')}. People sign in to the app with ${nameOf(s.connect.identity)}.`,
   };
 }
 
@@ -354,21 +370,12 @@ Change the intent, not the code. A new revision of the schematic gives a new man
 // ---------------------------------------------------------------- connections to the tools a team already uses
 
 function connections(p: Prepared, s: Settled): string {
-  const stations = [
-    { station: 'intent', when: 'the schematic is signed', ticket: 'To do' },
-    { station: 'design', when: 'the build manifest is released', ticket: 'Selected' },
-    { station: 'build', when: 'the factory starts the build loop', ticket: 'In progress' },
-    { station: 'qa', when: 'every gate and journey runs', ticket: 'In review' },
-    { station: 'release', when: 'the release is proved and shipped', ticket: 'Done' },
-  ];
   return `${JSON.stringify(
     {
-      schema: 'zthr-connections/1',
-      note: 'Named connections only. Credentials are never in the package; each is set where the factory runs, with the least access the connection needs.',
-      tickets: s.connect.tickets === 'none' ? null : { tool: s.connect.tickets, oneTicketPer: 'feature', fields: ['title', 'balloons', 'journeys', 'status', 'evidence link'], transitions: stations.map((x) => ({ on: x.when, station: x.station, status: x.ticket })) },
-      wiki: s.connect.wiki === 'none' ? null : { tool: s.connect.wiki, publishes: ['docs/users', 'docs/technical', 'api/access.md', 'build-manifest.md'], on: 'every release', pages: 'replaced whole from the package, so the wiki never drifts from the release' },
-      feed: s.connect.feed ? { format: 'CloudEvents 1.0 over signed webhooks', contract: 'api/asyncapi.yaml', also: ['scheduled exports as CSV or Parquet', 'warehouse sync'], scope: 'each subscriber is granted named read scopes, like any API client' } : null,
-      factoryEvents: { format: 'CloudEvents 1.0', source: `urn:zthr:factory:${featureId(p.model.title)}`, types: stations.map((x) => `ai.zthr.factory.${x.station}`) },
+      schema: 'zthr-connections/2',
+      note: 'Named connections only. Credentials are never in the package; each is set where the factory runs, with the least access the connection needs. What each would send is in connections/outbox, sent by nobody until it is set up.',
+      chosen: chosen(s).map((x) => ({ id: x.id, name: x.name, kind: x.kind, api: x.api, access: x.access, config: x.config, secrets: x.secrets, outbox: `connections/outbox/${x.id}.json` })),
+      factoryEvents: { format: 'CloudEvents 1.0', source: `urn:zthr:factory:${featureId(p.model.title)}`, types: ['intent', 'design', 'build', 'qa', 'release'].map((x) => `ai.zthr.factory.${x}`) },
     },
     null,
     1,
@@ -474,5 +481,15 @@ export function interfaceFiles(p: Prepared, m: Manifest, revision: number): Reco
     ...Object.fromEntries(fs.map((f) => [`training/${f.id}.md`, lesson(p, f)])),
   };
   if (s.api.agents) out['api/agent-tools.json'] = mcp(p, m, s);
+  // What each chosen connector would send, written down and sent by nobody.
+  const plan: Plan = {
+    title: p.model.title,
+    revision,
+    end: p.model.end,
+    features: fs.map((f) => ({ id: f.id, gives: f.line.gives, balloons: f.line.balloons, journeys: f.line.journeys })),
+    docs: Object.fromEntries(Object.entries(out).filter(([k]) => k.startsWith('docs/'))),
+  };
+  out['connections/catalogue.json'] = catalogue();
+  for (const x of chosen(s)) out[`connections/outbox/${x.id}.json`] = outbox(x, plan);
   return out;
 }
