@@ -370,6 +370,23 @@ footer { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14px; m
 .srcb.make-new .sw, .seg.make-new { background: var(--blue); }
 .mbar.big { display: flex; height: 26px; border: 1.5px solid var(--ink); border-radius: 2px; overflow: hidden; margin: 8px 0 12px; }
 .mbar.big .seg { display: block; height: 100%; }
+.info-stats { display: flex; flex-wrap: wrap; gap: 6px 22px; list-style: none; padding: 0; margin: 4px 0 14px; }
+.info-erd .ent.local rect:not(.ent-head) { stroke-dasharray: 5 3; }
+.info-erd .ent-attr.yours { font-weight: 700; }
+.info-erd .ent-type { font-size: 11px; fill: currentColor; opacity: .65; }
+.info-erd .ent.focus rect { stroke-width: 2.5; }
+.sheet-card { border: 1px solid var(--rule); border-radius: 3px; padding: 10px 14px; margin: 0 0 14px; scroll-margin-top: 80px; }
+.sheet-card.focus { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+.sheet-card header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sheet-card h4 { margin: 2px 0; }
+.sheet-card .matrix-wrap { max-height: none; }
+.ds th, .ds td { text-align: left; vertical-align: top; }
+.ds tr.yours th code { font-weight: 700; }
+.your-words { margin: 8px 0; padding: 4px 12px; border-left: 3px solid var(--ink); }
+.your-words p { margin: 4px 0; }
+.sens { display: inline-block; padding: 1px 7px; border-radius: 10px; border: 1px solid var(--rule); font-size: 13px; }
+.sens-financial, .sens-private, .sens-health { border-color: currentColor; font-weight: 700; }
+.shapes { margin: 6px 0 10px; padding-left: 1.2em; }
 .oc { border: 1px solid var(--rule); border-radius: 3px; padding: 10px 14px; margin: 0 0 14px; }
 .oc-open { border-left: 4px solid var(--red, #b3261e); border-radius: 0; }
 .oc h4 { margin: 2px 0 8px; display: flex; gap: 8px; align-items: center; }
@@ -527,7 +544,7 @@ body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minm
         <button class="btn mic" id="mic" type="button" aria-pressed="false" hidden>Speak</button>
         <label class="btn" for="file">Open a file</label>
         <button class="btn quiet" id="start-new" type="button">Start a new intent</button>
-        <input class="sr" type="file" id="file" accept=".md,.markdown,.txt,.html,.htm,.feature">
+        <input class="sr" type="file" id="file" accept=".md,.markdown,.txt,.html,.htm,.feature,.prisma">
       </div>
       <div class="starters" role="group" aria-labelledby="starters-h">
         <p class="starters-h" id="starters-h">No model needed: answer these four, and each answer goes straight onto the schematic as yours.</p>

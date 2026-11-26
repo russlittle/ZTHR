@@ -8,6 +8,7 @@
  * A grade is the share of a rater's checks that hold, as a letter; every check says why and where to fix it.
  */
 import { framework } from './outcomes.ts';
+import { schemaOf } from './schema.ts';
 import type { Ballooned } from './frame.ts';
 import { chosenJourneys, neededKinds, suggestJourneys } from './journeys.ts';
 import { manifest } from './manifest.ts';
@@ -15,7 +16,7 @@ import type { Prepared } from './pipeline.ts';
 import { outcomeGauges, type Gauge } from './release.ts';
 
 /** Where a finding is fixed: a balloon, a question, a view, or your words. */
-export type Fix = { kind: 'balloon'; balloon: number } | { kind: 'question'; id: string } | { kind: 'view'; view: 'plan' | 'build' | 'map' | 'hire' | 'outcomes' } | { kind: 'words'; add: string };
+export type Fix = { kind: 'balloon'; balloon: number } | { kind: 'question'; id: string } | { kind: 'view'; view: 'plan' | 'build' | 'map' | 'hire' | 'outcomes' | 'information' } | { kind: 'words'; add: string };
 
 export interface Check {
   readonly id: string;
@@ -139,6 +140,9 @@ export function review(p: Prepared): Review {
     return x ? { kind: 'question', id: x.id } : undefined;
   };
   const fw = framework(p, m);
+  const info = schemaOf(p);
+  const yours = info.entities.reduce((a, e) => a + e.fields.filter((f) => f.from === 'your words' || f.from === 'provided').length, 0);
+  const exposed = info.entities.flatMap((e) => e.fields.filter((f) => ['financial', 'private', 'health'].includes(f.sensitivity)).map((f) => `${e.name}.${f.name}`));
   const unset = fw.outcomes.filter((o) => !o.complete);
   const unmastered = fw.platform.filter((x) => x.highest !== 'M');
   const c = (id: string, holds: boolean, yes: string, no: string, why: string, fix?: Fix): Check => ({ id, holds, text: holds ? yes : no, why, ...(fix && !holds ? { fix } : {}) });
@@ -168,6 +172,8 @@ export function review(p: Prepared): Review {
         c('proved', custom.every((l) => l.journeys.length > 0), 'Every custom assembly is proved by a journey', `${custom.filter((l) => !l.journeys.length).length} custom assembl${custom.filter((l) => !l.journeys.length).length === 1 ? 'y has' : 'ies have'} no journey`, 'Custom code is the riskiest code; only a journey proves it.', { kind: 'view', view: 'build' }),
         c('reuse', library >= custom.length, `${library} standard assemblies carry ${custom.length} custom ones`, `More custom assemblies (${custom.length}) than standard ones from the library (${library})`, 'The more that comes from the library, the more the fleet maintains for you.', { kind: 'view', view: 'build' }),
         c('inputs', !st.some((s) => s.slot === 'prerequisites') || has('Ingest connectors') || has('Is it me or is it down?'), 'Every input it depends on has a part to bring it in', 'An input it depends on has no part to bring it in', 'A missing input is the commonest failure in production.', { kind: 'view', view: 'build' }),
+        c('information', !info.unread.length, `The information it keeps is read: ${info.entities.length} records, ${info.rules.length} integrity rules`, `${info.unread.length} sentence${info.unread.length === 1 ? '' : 's'} about the information to read or settle`, 'The records are the one part that cannot be rebuilt; nothing about them is guessed.', { kind: 'view', view: 'information' }),
+        c('described', yours > 0, `${yours} field${yours === 1 ? '' : 's'} described in your words or provided by your team`, 'The records come from patterns alone: nothing describes what your team actually keeps', 'Patterns are a start; the fields that matter to the work come from the people who do it.', { kind: 'words', add: '## The information\n\n- A ' }),
         c('decided', !p.questions.length, 'Nothing open that changes the build', `${p.questions.length} question${p.questions.length === 1 ? '' : 's'} still change the build`, 'The factory should never guess what you meant.', p.questions[0] ? { kind: 'question', id: p.questions[0].id } : undefined),
       ],
       grade: '',
@@ -207,6 +213,7 @@ export function review(p: Prepared): Review {
         c('staff', !staff || (has('Row-level security controls') && has('Tamper-evident audit chain')), staff ? 'Staff access is controlled per record and every read recorded' : 'No one sees another person’s records', 'Staff see records with no per-record control or read audit', 'Someone else reading a person’s records is the highest-risk path.', { kind: 'view', view: 'build' }),
         c('consent', !contacts || st.some((s) => /consent|agreed/i.test(s.text)), contacts ? 'People are contacted only with consent' : 'Nobody is contacted', 'People are contacted with no consent on the schematic', 'Unwanted messages are a privacy harm and a legal one.'),
         c('money', !money || has('Independent second implementation'), money ? 'Every amount is calculated twice, independently' : 'No money is involved', 'Money is involved but amounts are calculated once', 'An amount wrong once is wrong for everyone.', { kind: 'view', view: 'build' }),
+        c('sensitive', true, exposed.length ? `${exposed.length} sensitive field${exposed.length === 1 ? ' is' : 's are'} marked, and shown only to those allowed: ${exposed.slice(0, 3).join(', ')}${exposed.length > 3 ? '…' : ''}` : 'No field is marked financial, private or health', 'Every field carries its sensitivity from the data sheet.', 'Sensitivity on each field is what masking, exports and reports obey.', { kind: 'view', view: 'information' }),
         c('controls', marked.length === 0 || has('Locked datum'), `${marked.length} marked statement${marked.length === 1 ? '' : 's'} reach a control`, 'A marked statement reaches no control', 'Critical and significant characteristics need a control before they ship.'),
         c('tried', !nevers.length || refused.length > 0, 'At least one forbidden outcome is attacked by a journey', 'No journey tries what must never happen', 'A control nobody tries to break is a hope.', { kind: 'view', view: 'plan' }),
       ],

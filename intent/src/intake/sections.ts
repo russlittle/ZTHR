@@ -2,7 +2,7 @@
  * Sections any markdown form may carry beside its own structure: the end in mind, engineering notes, and
  * variants. Recognised by their headings, never inferred.
  */
-import type { Labelled, Note, Variant } from '../model.ts';
+import type { InfoLine, Labelled, Note, Variant } from '../model.ts';
 import { heading, listItem, outsideFences, plain } from './text.ts';
 
 const END = /^(the )?end in mind$|^purpose$|^goal$|^north star$|^to what end$|^(at the end of the year,? )?(it was )?a good hire( if)?$/i;
@@ -23,12 +23,15 @@ const LABELS: readonly { re: RegExp; slot: Labelled['slot'] | 'end' }[] = [
 ];
 const NOTES = /^(engineering |process |implementation |architecture )?notes$/i;
 const VARIANTS = /^variants$/i;
+/** The information it keeps, in the person's own sentences: the schema's source. */
+const INFO = /^(the )?(information|data|records)( it keeps)?$|^what it keeps$|^what it remembers$/i;
 
 export interface Sections {
   readonly end: string | null;
   readonly notes: Note[];
   readonly variants: Variant[];
   readonly labelled: Labelled[];
+  readonly information: InfoLine[];
 }
 
 function note(text: string, origin: { path: string; line: number }): Note {
@@ -54,12 +57,13 @@ export function isLabelled(line: string): boolean {
 
 export function sections(path: string, text: string): Sections {
   const lines = outsideFences(text.split('\n'));
-  let where: 'end' | 'notes' | 'variants' | null = null;
+  let where: 'end' | 'notes' | 'variants' | 'info' | null = null;
   let level = 0;
   let end: string[] = [];
   const notes: Note[] = [];
   const variants: Variant[] = [];
   const labelled: Labelled[] = [];
+  const information: InfoLine[] = [];
   lines.forEach((line, i) => {
     const origin = { path, line: i + 1 };
     const h = heading(line);
@@ -67,6 +71,7 @@ export function sections(path: string, text: string): Sections {
       if (END.test(h.text)) [where, level] = ['end', h.level];
       else if (NOTES.test(h.text)) [where, level] = ['notes', h.level];
       else if (VARIANTS.test(h.text)) [where, level] = ['variants', h.level];
+      else if (INFO.test(h.text)) [where, level] = ['info', h.level];
       else if (h.level <= level) where = null;
       return;
     }
@@ -84,6 +89,7 @@ export function sections(path: string, text: string): Sections {
     if (where === 'end' && plain(line)) end.push(plain(item ?? line));
     else if (where === 'notes' && item) notes.push(note(item, origin));
     else if (where === 'variants' && item) variants.push(variant(item, origin, variants.length + 1));
+    else if (where === 'info' && plain(item ?? line)) information.push({ text: plain(item ?? line), origin });
   });
-  return { end: end.length ? end.join(' ') : null, notes, variants, labelled };
+  return { end: end.length ? end.join(' ') : null, notes, variants, labelled, information };
 }

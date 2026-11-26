@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@duckdb/node-api": "^2.0.1-r.1",
+    "@prisma/prisma-schema-wasm": "^8.1.0-2.59be4fda12412a79eeb9c2ae727b6aa723593323",
     "@types/node": "^22.20.5",
     "esbuild": "^0.25.12",
     "typescript": "^5.9.3",

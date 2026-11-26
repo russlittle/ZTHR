@@ -12,6 +12,7 @@ import { describe, features, QUERY_REACH, type Reach, type Settled } from '../in
 import { byKind, type Kind } from '../connectors.ts';
 import { USAGE, USAGE_WHAT } from '../reports.ts';
 import { LEVEL_NAME, LEVEL_WHAT, type Framework, type Level } from '../outcomes.ts';
+import { PATTERNS, type Schema } from '../schema.ts';
 import { BUILD_ORDER, MAINTAINER_LABEL, MAINTAINER_WHAT, SOURCE_LABEL, SOURCE_WHAT, type Line, type Manifest, type Source } from '../manifest.ts';
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -714,6 +715,97 @@ export function specSheet(m: Manifest, o: Settled): string {
 </div></section>`;
 }
 
+/** The information it keeps, at a glance: for the value chain, the release panel and mission control. */
+export function informationRollup(s: Schema): { records: number; fields: number; yours: number; fleet: number; rules: number; unread: number } {
+  return {
+    records: s.entities.length,
+    fields: s.entities.reduce((a, e) => a + e.fields.length, 0),
+    yours: s.entities.reduce((a, e) => a + e.fields.filter((f) => f.from === 'your words').length, 0),
+    fleet: s.entities.filter((e) => e.maintainedBy === 'fleet').length,
+    rules: s.rules.length,
+    unread: s.unread.length,
+  };
+}
+
+/** An entity relationship diagram of what it keeps: every field, references leaving from the field that holds them. */
+function informationErd(s: Schema, focus: string | null): string {
+  const W = 236;
+  const STEP = 340;
+  const ROW = 19;
+  const HEAD = 30;
+  const cols = Math.min(3, Math.max(1, Math.ceil(Math.sqrt(s.entities.length))));
+  // Most-referenced first, so what everything points to sits top left.
+  const refs = (k: string) => s.relations.filter((r) => r.to === k).length;
+  const order = [...s.entities].sort((a, b) => refs(b.key) - refs(a.key) || s.entities.indexOf(a) - s.entities.indexOf(b));
+  const hOf = (n: number) => HEAD + 10 + n * ROW;
+  const rowsN = Math.ceil(order.length / cols);
+  const rowH = [...Array(rowsN).keys()].map((r) => Math.max(...order.slice(r * cols, r * cols + cols).map((e) => hOf(e.fields.length))));
+  const top = (r: number) => 24 + rowH.slice(0, r).reduce((a, h) => a + h + 64, 0);
+  const pos = new Map(order.map((e, i) => [e.key, { x: 48 + (i % cols) * STEP, y: top(Math.floor(i / cols)), c: i % cols, h: hOf(e.fields.length) }]));
+  const width = 48 + (cols - 1) * STEP + W + 48;
+  const height = top(rowsN - 1) + rowH[rowsN - 1]! + 24;
+  const near = focus ? new Set([focus, ...s.relations.filter((r) => r.from === focus || r.to === focus).flatMap((r) => [r.from, r.to])]) : null;
+  const lines = s.relations
+    .map((r, i) => {
+      const A = pos.get(r.from)!;
+      const B = pos.get(r.to)!;
+      const e = s.entities.find((x) => x.key === r.from)!;
+      const fy = A.y + HEAD + 14 + e.fields.findIndex((f) => f.key === r.field) * ROW - 4;
+      const by = B.y + HEAD / 2;
+      const off = (i % 5) * 6;
+      let d: string;
+      if (B.c > A.c) {
+        const gx = A.x + W + (STEP - W) / 2 - 12 + off;
+        d = `M${A.x + W} ${fy} H${gx} V${by} H${B.x}`;
+      } else if (B.c < A.c) {
+        const gx = A.x - (STEP - W) / 2 + 12 - off;
+        d = `M${A.x} ${fy} H${gx} V${by} H${B.x + W}`;
+      } else {
+        const gx = A.x - 22 - off;
+        d = `M${A.x} ${fy} H${gx} V${by} H${B.x}`;
+      }
+      const on = near ? (r.from === focus || r.to === focus) : false;
+      return `<path class="rel${on ? ' on' : near ? ' dim' : ''}" d="${d}" marker-start="url(#in-many)" marker-end="url(#in-one)"><title>${esc(`${e.name}.${r.field} → ${s.entities.find((x) => x.key === r.to)!.name}`)}</title></path>`;
+    })
+    .join('');
+  const boxes = order
+    .map((e) => {
+      const { x, y, h } = pos.get(e.key)!;
+      const cls = ['ent', e.maintainedBy, near && !near.has(e.key) ? 'dim' : '', focus === e.key ? 'focus' : ''].filter(Boolean).join(' ');
+      return `<g class="${cls}" data-record="${esc(e.key)}" tabindex="0" role="button" aria-label="${esc(`${e.name}: ${e.fields.length} fields, ${e.maintainedBy === 'fleet' ? 'a fleet pattern' : 'yours'}. Open its data sheet.`)}"><rect x="${x}" y="${y}" width="${W}" height="${h}" rx="3"/><rect class="ent-head" x="${x}" y="${y}" width="${W}" height="${HEAD}" rx="3"/><text class="ent-name" x="${x + 12}" y="${y + 20}">${esc(e.name)}</text><text class="ent-count" x="${x + W - 12}" y="${y + 20}" text-anchor="end">${e.maintainedBy === 'fleet' ? 'fleet' : 'yours'}</text>${e.fields
+        .map((f, i) => `<text class="ent-attr${f.from === 'your words' ? ' yours' : ''}" x="${x + 12}" y="${y + HEAD + 18 + i * ROW}">${f.key === 'id' ? '🔑 ' : f.type.startsWith('ref:') ? '→ ' : ''}${esc(f.name)}</text><text class="ent-type" x="${x + W - 12}" y="${y + HEAD + 18 + i * ROW}" text-anchor="end">${esc(f.type.startsWith('ref:') ? (s.entities.find((x) => x.key === s.relations.find((y) => y.from === e.key && y.field === f.key)?.to)?.name ?? f.type.slice(4)).toLowerCase() : f.type)}</text>`)
+        .join('')}</g>`;
+    })
+    .join('');
+  const one = '<path d="M9 2v12M13 2v12" stroke="currentColor" fill="none" stroke-width="1.4"/>';
+  const many = '<path d="M2 8 16 2M2 8H16M2 8 16 14" stroke="currentColor" fill="none" stroke-width="1.4"/>';
+  const mk = (id: string, path: string) => `<marker id="${id}" viewBox="0 0 16 16" refX="16" refY="8" markerWidth="16" markerHeight="16" orient="auto-start-reverse" markerUnits="userSpaceOnUse">${path}</marker>`;
+  return `<svg class="erd info-erd" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="group" aria-label="What it keeps: ${s.entities.length} records and how they refer to each other. Each record opens its data sheet."><defs>${mk('in-one', one)}${mk('in-many', many)}</defs><g class="rels">${lines}</g>${boxes}</svg>`;
+}
+
+/** The information it keeps, in full: the diagram, a data sheet per record, the person's sentences and the rules. */
+export function informationView(s: Schema, focus: string | null, controls = ''): string {
+  const r = informationRollup(s);
+  const sens = (x: string) => `<span class="sens sens-${x}" title="${esc(PATTERNS.sensitivity[x as keyof typeof PATTERNS.sensitivity] ?? x)}">${esc(x)}</span>`;
+  const lede = `<div class="view-bar"><p class="view-lede">What the software keeps is the one part of it that cannot be rebuilt, so it is signed with the schematic. Screens, the API, reports and docs are generated from it and can be regenerated; these records cannot. Describe them in your own sentences under <strong>The information</strong>; common records come from the fleet's patterns, named in your words.</p>${controls}</div>`;
+  const stats = `<ul class="info-stats"><li><strong>${r.records}</strong> records</li><li><strong>${r.fields}</strong> fields, <strong>${r.yours}</strong> from your words</li><li><strong>${r.fleet}</strong> fleet patterns, <strong>${r.records - r.fleet}</strong> yours</li><li><strong>${r.rules}</strong> integrity rules</li>${r.unread ? `<li class="red"><strong>${r.unread}</strong> sentence${r.unread === 1 ? '' : 's'} not read</li>` : ''}<li>schema <code>${esc(s.hash.slice(0, 12))}</code></li></ul>`;
+  const sheets = s.entities
+    .map((e) => {
+      const rules = s.rules.filter((x) => x.entity === e.key);
+      const used = s.relations.filter((x) => x.to === e.key);
+      return `<article class="sheet-card${focus === e.key ? ' focus' : ''}" id="rec-${esc(e.key)}" aria-labelledby="rh-${esc(e.key)}"><header><h4 id="rh-${esc(e.key)}">${esc(e.name)}</h4><span class="mt ${e.maintainedBy === 'fleet' ? 'fleet' : 'local'}">${e.maintainedBy === 'fleet' ? `Fleet pattern: ${esc(e.pattern ?? '')}` : 'Yours'}</span></header><p class="muted">${esc(e.what)} Kept ${esc(e.retention)}.${e.balloons.length ? ` Called for by ${e.balloons.map((b) => `<button type="button" class="mini-balloon" data-node="b${b}" aria-label="Balloon ${b}">${b}</button>`).join(' ')}.` : ''}${used.length ? ` Referred to by ${used.map((u) => `<button type="button" class="linklike" data-record="${esc(u.from)}">${esc(s.entities.find((x) => x.key === u.from)!.name)}</button>`).join(', ')}.` : ''}</p>
+${e.words.length ? `<blockquote class="your-words">${e.words.map((w) => `<p>${esc(w.text)} <span class="muted small">line ${w.line}</span></p>`).join('')}</blockquote>` : ''}
+<div class="matrix-wrap" tabindex="0" role="region" aria-label="${esc(`${e.name} fields`)}"><table class="matrix ds"><caption class="sr">${esc(e.name)}: its fields</caption><thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Means</th><th scope="col">Sensitivity</th><th scope="col">Required</th><th scope="col">From</th></tr></thead><tbody>${e.fields
+        .map((f) => `<tr class="${f.from === 'your words' ? 'yours' : ''}"><th scope="row"><code>${esc(f.key)}</code></th><td>${f.type.startsWith('ref:') ? `<button type="button" class="linklike" data-record="${esc(s.relations.find((x) => x.from === e.key && x.field === f.key)?.to ?? '')}">→ ${esc(s.entities.find((x) => x.key === s.relations.find((y) => y.from === e.key && y.field === f.key)?.to)?.name ?? f.type.slice(4))}</button>` : esc(f.type)}${f.states ? `<span class="muted small po-id">${esc(f.states.join(', '))}</span>` : ''}</td><td>${esc(f.meaning)}</td><td>${sens(f.sensitivity)}</td><td>${f.required ? 'yes' : ''}</td><td>${f.from === 'your words' ? `your words, line ${f.line}` : esc(f.from)}</td></tr>`)
+        .join('')}</tbody></table></div>
+${rules.length ? `<details class="rules"><summary>${rules.length} integrity rule${rules.length === 1 ? '' : 's'}</summary><ul>${rules.map((x) => `<li>${esc(x.text)}</li>`).join('')}</ul></details>` : ''}</article>`;
+    })
+    .join('');
+  const shapes = ['A bill has an amount, a due date and who it is for.', 'A reminder belongs to one bill.', 'A student can have many bills.', 'A bill can be open, paid or overdue.', 'The amount is private.', 'Keep bills for 7 years.'];
+  const words = `<section aria-labelledby="h-iw"><h3 id="h-iw">In your words</h3>${s.unread.length ? `<div class="gaps"><h4>To read or settle (${s.unread.length})</h4><ul>${s.unread.map((u) => `<li>Line ${u.line}: “${esc(u.text)}”. ${esc(u.why)}</li>`).join('')}</ul></div>` : ''}<p class="muted small">Write each record as a plain sentence under a heading <strong>The information</strong>. These shapes are read; anything else is shown back here, never guessed at:</p><ul class="shapes">${shapes.map((x) => `<li><code>${esc(x)}</code></li>`).join('')}</ul><button type="button" class="btn quiet" data-add-words="${esc('## The information\n\n- A ')}">Add a sentence about the information</button></section>`;
+  return `${lede}${stats}<section aria-labelledby="h-erd"><h3 id="h-erd">How the records relate</h3><div class="canvas" id="canvas" tabindex="-1">${informationErd(s, focus)}</div></section>${words}<section aria-labelledby="h-sheets"><h3 id="h-sheets">Data sheets</h3>${sheets}</section>`;
+}
+
 /** The outcome framework: every outcome with how it is assessed, and the platform outcomes mapped across the features. */
 export function outcomesView(fw: Framework, questions: readonly { id: string }[]): string {
   const done = fw.outcomes.filter((o) => o.complete).length;
@@ -766,7 +858,7 @@ export function lineDetail(m: Manifest, find: number): { title: string; html: st
 
 const fixAttrs = (f?: Fix) =>
   !f ? '' : f.kind === 'balloon' ? `data-node="b${f.balloon}"` : f.kind === 'question' ? `data-answer="${esc(f.id)}"` : f.kind === 'view' ? `data-view="${f.view}"` : `data-add-words="${esc(f.add)}"`;
-const fixLabel = (f?: Fix) => (!f ? '' : f.kind === 'balloon' ? 'Show it' : f.kind === 'question' ? 'Answer it' : f.kind === 'view' ? (f.view === 'plan' ? 'Add journeys' : f.view === 'build' ? 'See the manifest' : f.view === 'outcomes' ? 'See the outcomes' : 'Open it') : 'Add it to your words');
+const fixLabel = (f?: Fix) => (!f ? '' : f.kind === 'balloon' ? 'Show it' : f.kind === 'question' ? 'Answer it' : f.kind === 'view' ? (f.view === 'plan' ? 'Add journeys' : f.view === 'build' ? 'See the manifest' : f.view === 'outcomes' ? 'See the outcomes' : f.view === 'information' ? 'Open the data sheets' : 'Open it') : 'Add it to your words');
 const checkRow = (c: Check) => `<li class="ck ${c.holds ? 'ok' : 'no'}"><span class="ck-m" aria-hidden="true">${c.holds ? '✓' : '✕'}</span><div><span class="ck-t">${esc(c.text)}</span>${c.holds ? '' : `<span class="ck-why">${esc(c.why)}</span>`}</div>${!c.holds && c.fix ? `<button type="button" class="btn quiet ck-fix" ${fixAttrs(c.fix)}>${fixLabel(c.fix)}</button>` : ''}</li>`;
 const gradeCls = (g: string) => (g.startsWith('A') ? 'ga' : g.startsWith('B') ? 'gb' : g.startsWith('C') ? 'gc' : 'gd');
 

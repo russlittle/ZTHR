@@ -1,0 +1,539 @@
+{
+  "name": "Information patterns",
+  "what": "The records business applications keep, again and again: people, organisations, obligations, payments, messages, consent, cases, appointments, documents, flags. Each is defined once, with its standard fields, states and integrity rules, maintained by the fleet, and named in the words of whoever writes the intent.",
+  "patterns": [
+    {
+      "id": "person",
+      "name": "Person",
+      "always": true,
+      "what": "Someone who uses it or is served by it. Roles come from the people on the schematic.",
+      "fields": [
+        {
+          "name": "display name",
+          "type": "text",
+          "meaning": "What the person is called on screen",
+          "sensitivity": "contact",
+          "required": true
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "meaning": "Where to reach them by email",
+          "sensitivity": "contact"
+        },
+        {
+          "name": "role",
+          "type": "state",
+          "meaning": "Which of the people on the schematic they are",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "created at",
+          "type": "timestamp",
+          "meaning": "When the record was made",
+          "sensitivity": "internal",
+          "required": true
+        }
+      ],
+      "rules": [
+        "unique:email"
+      ],
+      "retention": "while the account is open, then 1 year"
+    },
+    {
+      "id": "organization",
+      "name": "Organization",
+      "triggers": [
+        [
+          "\\b(college|university|campus)\\b|\\b(?:the|our|their|a|each) school\\b",
+          "Organization"
+        ],
+        [
+          "\\b(office|department|team|clinic|branch)\\b",
+          "Office"
+        ]
+      ],
+      "what": "Where people belong. Access is often scoped by it.",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "meaning": "What it is called",
+          "sensitivity": "public",
+          "required": true
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "meaning": "What sort of place it is",
+          "sensitivity": "public"
+        }
+      ],
+      "retention": "kept"
+    },
+    {
+      "id": "obligation",
+      "name": "Obligation",
+      "triggers": [
+        [
+          "\\bbills?\\b",
+          "Bill"
+        ],
+        [
+          "\\binvoices?\\b",
+          "Invoice"
+        ],
+        [
+          "\\bfees?\\b",
+          "Fee"
+        ],
+        [
+          "\\b(balance|charges?)\\b",
+          "Charge"
+        ]
+      ],
+      "what": "Something someone owes, by a date.",
+      "fields": [
+        {
+          "name": "owner",
+          "type": "ref:Person",
+          "meaning": "Who owes it",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "amount",
+          "type": "money",
+          "meaning": "How much is owed",
+          "sensitivity": "financial",
+          "required": true
+        },
+        {
+          "name": "due on",
+          "type": "date",
+          "meaning": "When it must be paid by",
+          "sensitivity": "financial",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "state",
+          "meaning": "Where it stands",
+          "sensitivity": "internal",
+          "required": true,
+          "states": [
+            "open",
+            "paid",
+            "overdue",
+            "cancelled"
+          ]
+        }
+      ],
+      "rules": [
+        "nonnegative:amount"
+      ],
+      "retention": "7 years"
+    },
+    {
+      "id": "payment",
+      "name": "Payment",
+      "triggers": [
+        [
+          "\\b(paid|payments?|pays?)\\b",
+          "Payment"
+        ]
+      ],
+      "what": "Money paid towards what is owed.",
+      "fields": [
+        {
+          "name": "for",
+          "type": "ref:Obligation",
+          "meaning": "What it pays",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "amount",
+          "type": "money",
+          "meaning": "How much was paid",
+          "sensitivity": "financial",
+          "required": true
+        },
+        {
+          "name": "paid at",
+          "type": "timestamp",
+          "meaning": "When it was paid",
+          "sensitivity": "financial",
+          "required": true
+        }
+      ],
+      "rules": [
+        "positive:amount"
+      ],
+      "retention": "7 years"
+    },
+    {
+      "id": "message",
+      "name": "Message",
+      "triggers": [
+        [
+          "\\bremind",
+          "Reminder"
+        ],
+        [
+          "\\b(notif|alert)",
+          "Notification"
+        ],
+        [
+          "\\b(message|text|sms)",
+          "Message"
+        ]
+      ],
+      "what": "Something sent to a person, on a channel, for a purpose.",
+      "fields": [
+        {
+          "name": "to",
+          "type": "ref:Person",
+          "meaning": "Who it is sent to",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "channel",
+          "type": "state",
+          "meaning": "How it is sent",
+          "sensitivity": "internal",
+          "required": true,
+          "states": [
+            "text",
+            "email",
+            "push",
+            "in app"
+          ]
+        },
+        {
+          "name": "send at",
+          "type": "timestamp",
+          "meaning": "When it is due to go",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "state",
+          "meaning": "Where it stands",
+          "sensitivity": "internal",
+          "required": true,
+          "states": [
+            "scheduled",
+            "sent",
+            "delivered",
+            "failed",
+            "stopped"
+          ]
+        }
+      ],
+      "rules": [
+        "consent:to"
+      ],
+      "retention": "1 year"
+    },
+    {
+      "id": "consent",
+      "name": "Consent",
+      "rule": "contacts-people",
+      "triggers": [
+        [
+          "\\b(consent|agree|opt[- ]in|permission)\\b",
+          "Consent"
+        ]
+      ],
+      "what": "A person's agreement to something, which they can take back.",
+      "fields": [
+        {
+          "name": "person",
+          "type": "ref:Person",
+          "meaning": "Who agreed",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "purpose",
+          "type": "text",
+          "meaning": "What they agreed to",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "given at",
+          "type": "timestamp",
+          "meaning": "When they agreed",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "withdrawn at",
+          "type": "timestamp",
+          "meaning": "When they took it back, if they did",
+          "sensitivity": "internal"
+        }
+      ],
+      "rules": [
+        "order:given at<withdrawn at"
+      ],
+      "retention": "as long as the record it covers, then 1 year"
+    },
+    {
+      "id": "grant",
+      "name": "Access grant",
+      "rule": "staff-view",
+      "what": "Who may see whose records, and why. Every read of someone else's record is checked against one.",
+      "fields": [
+        {
+          "name": "grantee",
+          "type": "ref:Person",
+          "meaning": "Who may see",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "subject",
+          "type": "ref:Person",
+          "meaning": "Whose records they may see",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "scope",
+          "type": "text",
+          "meaning": "Which records, and why",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "expires at",
+          "type": "timestamp",
+          "meaning": "When it lapses",
+          "sensitivity": "internal"
+        }
+      ],
+      "rules": [
+        "distinct:grantee,subject"
+      ],
+      "retention": "kept with the audit record"
+    },
+    {
+      "id": "flag",
+      "name": "Flag",
+      "triggers": [
+        [
+          "\\b(struggling|at risk|flag|concern|early alert)",
+          "Flag"
+        ]
+      ],
+      "what": "A rule noticing that someone may need help. It always says which rule and why.",
+      "fields": [
+        {
+          "name": "about",
+          "type": "ref:Person",
+          "meaning": "Who it is about",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "rule",
+          "type": "text",
+          "meaning": "The rule that raised it",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "meaning": "Why, in plain words",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "raised at",
+          "type": "timestamp",
+          "meaning": "When it was raised",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "cleared at",
+          "type": "timestamp",
+          "meaning": "When it was cleared",
+          "sensitivity": "internal"
+        }
+      ],
+      "rules": [
+        "order:raised at<cleared at"
+      ],
+      "retention": "2 years"
+    },
+    {
+      "id": "case",
+      "name": "Case",
+      "triggers": [
+        [
+          "\\b(requests?|cases?|tickets?|referrals?|applications?)\\b",
+          "Request"
+        ]
+      ],
+      "what": "Something asked for, worked on and closed.",
+      "fields": [
+        {
+          "name": "for",
+          "type": "ref:Person",
+          "meaning": "Who it is for",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "state",
+          "meaning": "Where it stands",
+          "sensitivity": "internal",
+          "required": true,
+          "states": [
+            "new",
+            "in progress",
+            "waiting",
+            "closed"
+          ]
+        },
+        {
+          "name": "opened at",
+          "type": "timestamp",
+          "meaning": "When it was opened",
+          "sensitivity": "internal",
+          "required": true
+        }
+      ],
+      "retention": "3 years"
+    },
+    {
+      "id": "appointment",
+      "name": "Appointment",
+      "triggers": [
+        [
+          "\\b(appointments?|bookings?|meetings?)\\b",
+          "Appointment"
+        ]
+      ],
+      "what": "A time two or more people meet.",
+      "fields": [
+        {
+          "name": "with",
+          "type": "ref:Person",
+          "meaning": "Who it is with",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "starts at",
+          "type": "timestamp",
+          "meaning": "When it starts",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "ends at",
+          "type": "timestamp",
+          "meaning": "When it ends",
+          "sensitivity": "internal",
+          "required": true
+        }
+      ],
+      "rules": [
+        "order:starts at<ends at"
+      ],
+      "retention": "2 years"
+    },
+    {
+      "id": "document",
+      "name": "Document",
+      "triggers": [
+        [
+          "\\b(uploads?|documents?|files?|scans?|attachments?)\\b",
+          "Document"
+        ]
+      ],
+      "what": "A file someone brings, with what it is and who may see it.",
+      "fields": [
+        {
+          "name": "owner",
+          "type": "ref:Person",
+          "meaning": "Whose it is",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "meaning": "What sort of document",
+          "sensitivity": "internal"
+        },
+        {
+          "name": "added at",
+          "type": "timestamp",
+          "meaning": "When it was added",
+          "sensitivity": "internal",
+          "required": true
+        }
+      ],
+      "retention": "as long as the record it supports"
+    },
+    {
+      "id": "note",
+      "name": "Note",
+      "triggers": [
+        [
+          "\\b(notes?|comments?)\\b",
+          "Note"
+        ]
+      ],
+      "what": "Something written about a record, by someone, at a time.",
+      "fields": [
+        {
+          "name": "author",
+          "type": "ref:Person",
+          "meaning": "Who wrote it",
+          "sensitivity": "internal",
+          "required": true
+        },
+        {
+          "name": "written at",
+          "type": "timestamp",
+          "meaning": "When it was written",
+          "sensitivity": "internal",
+          "required": true
+        }
+      ],
+      "retention": "as long as the record it is about"
+    }
+  ],
+  "types": {
+    "id": "A key that names nothing about the record",
+    "text": "Words",
+    "money": "An amount of money, to the cent",
+    "date": "A calendar date",
+    "timestamp": "A moment, with its time zone",
+    "integer": "A whole number",
+    "boolean": "Yes or no",
+    "email": "An email address",
+    "phone": "A phone number",
+    "state": "One of a fixed list"
+  },
+  "sensitivity": {
+    "public": "Anyone may see it",
+    "internal": "People who use the app and may see the record",
+    "contact": "How to reach a person: shown only to those who need to reach them",
+    "financial": "Money a person owes or has: shown only to them and those they allow",
+    "private": "Only the person, and those they name",
+    "health": "Health information: never in reports below the small-cell threshold, never in exports without its scope"
+  }
+}

@@ -69,6 +69,12 @@ export interface Labelled {
   readonly origin: Origin;
 }
 
+/** A sentence about the information it keeps, in the person's words: "A bill has an amount and a due date." */
+export interface InfoLine {
+  readonly text: string;
+  readonly origin: Origin;
+}
+
 export interface IntentModel {
   /** The end the whole product serves, when the source states it. */
   readonly end: string | null;
@@ -76,6 +82,10 @@ export interface IntentModel {
   readonly variants: readonly Variant[];
   /** Lines the person labelled with their slot. */
   readonly labelled: readonly Labelled[];
+  /** What it keeps, in the person's own sentences. */
+  readonly information: readonly InfoLine[];
+  /** Records a team already has, brought in as a Prisma schema: kept as provided. */
+  readonly provided?: readonly import('./prisma.ts').ProvidedEntity[];
   readonly title: string;
   readonly sources: readonly Source[];
   readonly requirements: readonly Requirement[];

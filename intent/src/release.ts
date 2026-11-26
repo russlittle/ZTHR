@@ -24,6 +24,7 @@ import { manifest, manifestFiles } from './manifest.ts';
 import { interfaceFiles } from './interfaces.ts';
 import { reportFiles } from './reports.ts';
 import { framework, frameworkFiles } from './outcomes.ts';
+import { changes, schemaFiles, schemaOf, type Schema } from './schema.ts';
 import type { Ballooned } from './frame.ts';
 import { same } from './diff.ts';
 import { balloonKey, modelContext, type Prepared } from './pipeline.ts';
@@ -187,7 +188,7 @@ export interface Release {
 export interface ReleaseInput {
   readonly revision: number;
   /** The previous revision's datum.json, for the change notice. */
-  readonly prior?: { readonly revision: number; readonly datum: { readonly statements: readonly Ballooned[] } };
+  readonly prior?: { readonly revision: number; readonly datum: { readonly statements: readonly Ballooned[]; readonly information?: Schema | null } };
   /** Why this revision exists. Required whenever there is a previous one: a record that names no reason is refused. */
   readonly reason?: string;
   /** Which intents this revision serves; defaults to the end in mind. */
@@ -202,6 +203,8 @@ export function release(p: Prepared, r: ReleaseInput): Release {
   const g = gauges(p);
   problems.push(...gaugeProblems(g));
 
+  // The information it keeps is part of what is signed: the one part of the system that cannot be rebuilt.
+  const information = schemaOf(p);
   const datum = {
     title: p.model.title,
     revision: r.revision,
@@ -211,6 +214,7 @@ export function release(p: Prepared, r: ReleaseInput): Release {
     specSheet: p.options,
     titleBlock: p.title,
     statements: p.statements,
+    information,
     notes: p.model.notes,
     variants: p.model.variants,
     openQuestions: p.questions.map((q) => ({ id: q.id, text: q.text, protects: q.protects })),
@@ -242,7 +246,10 @@ export function release(p: Prepared, r: ReleaseInput): Release {
         lines.push(`- **[${b}] changed**: ${was.text !== s.text ? `"${was.text}" to "${s.text}"` : s.text}${was.state !== s.state ? ` (${was.state} to ${s.state})` : ''}${was.tolerance !== s.tolerance ? ` (tolerance ${was.tolerance ?? 'none'} to ${s.tolerance ?? 'none'})` : ''}`);
     }
     for (const [b, s] of before) if (!after.has(b)) lines.push(`- **[${b}] removed**: ${s.text}`);
-    files['change-notice.md'] = `# Change notice: revision ${r.prior.revision} to ${r.revision}\n\n**Why:** ${r.reason ?? ''}\n\n**Serves:** ${r.effectivity ?? p.model.end ?? 'the end in mind, not yet stated'}\n\n${lines.join('\n') || '_No statement changed._'}\n`;
+    files['change-notice.md'] = `# Change notice: revision ${r.prior.revision} to ${r.revision}\n\n**Why:** ${r.reason ?? ''}\n\n**Serves:** ${r.effectivity ?? p.model.end ?? 'the end in mind, not yet stated'}\n\n${lines.join('\n') || '_No statement changed._'}\n${(() => {
+      const ch = changes(r.prior.datum.information ?? null, information, r.revision);
+      return ch.length ? `\n## The information it keeps\n\n${ch.map((c) => `- **${c.kind}**: ${c.what}${c.breaking ? ' (existing records migrated; nothing dropped)' : ''}`).join('\n')}\n` : '';
+    })()}`;
   }
 
   // The bill of materials the factory starts from, exactly as the person previewed it before signing.
@@ -255,6 +262,8 @@ export function release(p: Prepared, r: ReleaseInput): Release {
   // The outcome framework, set before anything is built: assessments, criteria, targets and evidence for every outcome.
   const fw = framework(p, bom);
   Object.assign(files, frameworkFiles(fw));
+  Object.assign(files, schemaFiles(information, r.prior?.datum.information ?? null, r.revision));
+  for (const u of information.unread) problems.push(`the information, line ${u.line} ("${u.text}"): ${u.why}`);
   for (const o of fw.outcomes) for (const miss of o.missing) problems.push(`outcome ${o.balloon} ("${o.outcome}") needs ${miss}`);
   for (const gap of bom.gaps) problems.push(`balloon ${gap.balloon}: ${gap.why}`);
 

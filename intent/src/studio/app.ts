@@ -15,13 +15,14 @@ import { release } from '../release.ts';
 import { zip } from '../zip.ts';
 import { graph, type Graph } from '../graph.ts';
 import { suggestJourneys, type OwnJourney } from '../journeys.ts';
-import { buildView, specSheet, outcomesView, reviewView, type TrailStep, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
+import { buildView, specSheet, outcomesView, informationView, informationRollup, reviewView, type TrailStep, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
 import { manifest, type Manifest, type Source } from '../manifest.ts';
 import { review, type Review } from '../review.ts';
 import type { Tune } from '../pipeline.ts';
 import { sha256 } from '../hash.ts';
 import { settle, type Options } from '../interfaces.ts';
 import { framework } from '../outcomes.ts';
+import { schemaOf } from '../schema.ts';
 
 // ---------------------------------------------------------------- platform capabilities, each optional
 
@@ -41,7 +42,7 @@ interface Issued {
   readonly datum: { revision: number; statements: Ballooned[] };
   readonly balloons: Record<string, number>;
   /** What it was built from, so the same bytes can be rebuilt on any later visit. */
-  readonly inputs?: { path: string; words: string; readings: unknown[]; answers: Record<string, Given>; journeys?: { accepted: string[]; own: OwnJourney[] }; options?: Options; people?: { holder?: { name: string; role: string }; tune?: Record<string, Tune> } };
+  readonly inputs?: { path: string; words: string; readings: unknown[]; answers: Record<string, Given>; journeys?: { accepted: string[]; own: OwnJourney[] }; options?: Options; provided?: { path: string; text: string }; people?: { holder?: { name: string; role: string }; tune?: Record<string, Tune> } };
 }
 interface State {
   v: 1;
@@ -75,13 +76,18 @@ interface State {
   zoom: number;
   wide: boolean;
   buildFilter: Source | 'all';
+  /** The record open on the Information view. */
+  record?: string | null;
+  /** A schema the team already has, brought in as a Prisma file: kept as provided. */
+  provided?: { path: string; text: string } | null;
 }
-type View = 'map' | 'review' | 'hire' | 'outcomes' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
+type View = 'map' | 'review' | 'hire' | 'outcomes' | 'information' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
 const VIEWS: readonly { key: View; label: string; ico: string }[] = [
   { key: 'map', label: 'Intent map', ico: 'end' },
   { key: 'review', label: 'Review', ico: 'scenario' },
   { key: 'hire', label: 'The hire', ico: 'doc' },
   { key: 'outcomes', label: 'Outcomes', ico: 'gauge' },
+  { key: 'information', label: 'Information', ico: 'group' },
   { key: 'structure', label: 'Datum structure', ico: 'group' },
   { key: 'plan', label: 'Inspection plan', ico: 'gauge' },
   { key: 'build', label: 'Build manifest', ico: 'group' },
@@ -145,7 +151,7 @@ async function flush() {
 function compute(): Prepared {
   const last = state.releases.at(-1);
   return prepare({
-    files: [{ path: state.path, text: state.words }],
+    files: [{ path: state.path, text: state.words }, ...(state.provided ? [state.provided] : [])],
     readings: state.readings,
     answers: state.answers,
     journeys: state.journeys,
@@ -270,6 +276,10 @@ function renderChain(p: Prepared) {
   el.innerHTML = [
     step(lines, `line${lines === 1 ? '' : 's'} in your words`, 'words'),
     step(p.statements.length, 'numbered statements on the schematic', 'map'),
+    (() => {
+      const r = informationRollup(schemaOf(p));
+      return step(r.records, `records it keeps, ${r.yours} field${r.yours === 1 ? '' : 's'} in your words${r.unread ? `; ${r.unread} sentence${r.unread === 1 ? '' : 's'} not read` : ''}`, 'information', r.unread ? 'red' : '');
+    })(),
     q ? step(q, `question${q === 1 ? '' : 's'} only you can settle`, 'redlines', 'red') : step('0', 'questions left: ready to sign', 'release'),
     step(checks, 'tests and checks that will hold it', 'plan'),
     step(m.lines.length, `parts to build it: ${made} the library lacks today`, 'build'),
@@ -519,7 +529,7 @@ function trailOf(p: Prepared): TrailStep[] {
 
 function tabCount(p: Prepared, v: View): string {
   if (!lastGraph) return '';
-  const n = v === 'map' ? lastGraph.nodes.length : v === 'plan' ? lastGraph.nodes.filter((x) => x.lane === 'instruments').length : v === 'preview' ? Object.keys(lastFiles).length : v === 'build' ? (lastManifest?.lines.length ?? 0) : v === 'review' ? 0 : v === 'outcomes' ? p.statements.filter((x) => x.slot === 'outcome').length : v === 'parts' ? p.statements.length : 0;
+  const n = v === 'map' ? lastGraph.nodes.length : v === 'plan' ? lastGraph.nodes.filter((x) => x.lane === 'instruments').length : v === 'preview' ? Object.keys(lastFiles).length : v === 'build' ? (lastManifest?.lines.length ?? 0) : v === 'review' ? 0 : v === 'outcomes' ? p.statements.filter((x) => x.slot === 'outcome').length : v === 'information' ? schemaOf(p).entities.length : v === 'parts' ? p.statements.length : 0;
   return n ? `<span class="tab-n">${n}</span>` : '';
 }
 
@@ -565,6 +575,8 @@ function viewBody(p: Prepared, parts: string): string {
       return reviewView(lastReview!, state.holder, state.tune, trailOf(p), state.product);
     case 'hire':
       return `<div class="view-bar"><p class="view-lede">The same schematic, in the terms a leader uses for any hire: the job, how you would know it is done well, and what would make it a good hire a year from now.</p></div>${hireCard(p)}`;
+    case 'information':
+      return informationView(schemaOf(p), state.record ?? null, state.provided ? `<p class="provided-bar">Kept as provided: <code>${esc(state.provided.path)}</code> <button type="button" class="btn quiet" data-provided-remove>Remove it</button></p>` : `<p class="provided-bar"><label class="btn quiet" for="file">Bring in a Prisma schema your team already has</label></p>`);
     case 'outcomes':
       return outcomesView(framework(p, lastManifest!), p.questions);
     case 'build':
@@ -784,6 +796,10 @@ function renderRelease(p: Prepared) {
 ${Object.keys(state.unsure).length ? `<p class="note">You were not sure about ${Object.keys(state.unsure).length} answer${Object.keys(state.unsure).length === 1 ? '' : 's'}; ${Object.keys(state.unsure).length === 1 ? 'it is' : 'they are'} released on the recommended answer and listed in Your answers so you can come back.</p>` : ''}
 ${ready ? '<p class="ok"><strong>Ready to release.</strong> Nothing that changes what gets built is open.</p>' : `<p class="todo"><strong>Not ready yet.</strong> You can still issue a draft revision to share or keep.</p><ol>${problems.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>`}
 ${lastReview ? `<div class="bom-mini"><p><strong>Review: ${lastReview.overall} overall.</strong> ${lastReview.panel.map((x) => `${esc(x.name)} ${x.grade}`).join(', ')}; ${lastReview.people.map((x) => `${esc(x.name)} ${x.grade}`).join(', ')}.</p><button class="btn" type="button" data-view="review">Open the review</button></div>` : ''}
+${(() => {
+  const r = informationRollup(schemaOf(p));
+  return `<div class="bom-mini"><p><strong>It keeps ${r.records} records</strong> with ${r.fields} fields, ${r.yours} in your words, held by ${r.rules} integrity rules. They are signed with the schematic.${r.unread ? ` <strong class="red">${r.unread} sentence${r.unread === 1 ? '' : 's'} not read.</strong>` : ''}</p><button class="btn" type="button" data-view="information">Open the data sheets</button></div>`;
+})()}
 ${lastManifest ? `<div class="bom-mini"><p><strong>The factory will start from ${lastManifest.lines.length} parts:</strong> ${lastManifest.counts.stock + lastManifest.counts.modify} from the library, ${lastManifest.counts['make: catalogued']} catalogued parts to make, ${lastManifest.counts['make: new']} new for this intent.${lastManifest.gaps.length ? ` <strong class="red">${lastManifest.gaps.length} balloon${lastManifest.gaps.length === 1 ? '' : 's'} nothing builds.</strong>` : ''}</p><button class="btn" type="button" data-view="build">Preview the build</button></div>` : ''}
 ${ready ? `<div class="sign"><label class="opt"><input type="checkbox" id="sign"${isSigned(p) ? ' checked' : ''}> <span><strong>I have checked the schematic and the build manifest. It says what I mean.</strong> Your signature holds for this exact schematic; change a word and it needs signing again.</span></label></div>` : ''}
 ${last ? `<label for="reason"><strong>Why this revision?</strong> Required after the first.</label><input type="text" id="reason" autocomplete="off" placeholder="For example: staff confirmed as college counseling">` : ''}
@@ -814,7 +830,7 @@ function issue() {
   }
   const r = currentRelease(prepared, reason || undefined);
   const m = JSON.parse(r.files['manifest.json']!) as { package: string; ready: boolean; revision: number };
-  state.releases.push({ revision: m.revision, reason: reason || null, package: m.package, ready: m.ready && isSigned(prepared), datum: JSON.parse(r.files['datum.json']!), balloons: JSON.parse(r.files['balloons.json']!), inputs: { path: state.path, words: state.words, readings: JSON.parse(JSON.stringify(state.readings)), answers: JSON.parse(JSON.stringify(state.answers)), journeys: JSON.parse(JSON.stringify(state.journeys)), options: JSON.parse(JSON.stringify(state.options)), people: JSON.parse(JSON.stringify({ ...(state.holder.name || state.holder.role ? { holder: state.holder } : {}), tune: state.tune })) } });
+  state.releases.push({ revision: m.revision, reason: reason || null, package: m.package, ready: m.ready && isSigned(prepared), datum: JSON.parse(r.files['datum.json']!), balloons: JSON.parse(r.files['balloons.json']!), inputs: { path: state.path, words: state.words, readings: JSON.parse(JSON.stringify(state.readings)), answers: JSON.parse(JSON.stringify(state.answers)), journeys: JSON.parse(JSON.stringify(state.journeys)), options: JSON.parse(JSON.stringify(state.options)), ...(state.provided ? { provided: state.provided } : {}), people: JSON.parse(JSON.stringify({ ...(state.holder.name || state.holder.role ? { holder: state.holder } : {}), tune: state.tune })) } });
   packages.set(m.revision, r.files);
   scheduleSave();
   render();
@@ -830,7 +846,7 @@ function rebuild(rev: number): Readonly<Record<string, string>> | null {
   const r = state.releases[k];
   if (!r?.inputs) return null;
   const before = state.releases[k - 1];
-  const p = prepare({ files: [{ path: r.inputs.path, text: r.inputs.words }], readings: r.inputs.readings, answers: r.inputs.answers, ...(r.inputs.journeys ? { journeys: r.inputs.journeys } : {}), ...(r.inputs.options ? { options: r.inputs.options } : {}), ...(r.inputs.people ? { people: r.inputs.people } : {}), ...(before ? { prior: before.balloons } : {}) });
+  const p = prepare({ files: [{ path: r.inputs.path, text: r.inputs.words }, ...(r.inputs.provided ? [r.inputs.provided] : [])], readings: r.inputs.readings, answers: r.inputs.answers, ...(r.inputs.journeys ? { journeys: r.inputs.journeys } : {}), ...(r.inputs.options ? { options: r.inputs.options } : {}), ...(r.inputs.people ? { people: r.inputs.people } : {}), ...(before ? { prior: before.balloons } : {}) });
   const out = release(p, { revision: rev, ...(before ? { prior: { revision: before.revision, datum: before.datum }, reason: r.reason ?? '' } : {}) });
   if (JSON.parse(out.files['manifest.json']!).package !== r.package) return null;
   packages.set(rev, out.files);
@@ -932,6 +948,15 @@ I want students to stop getting their power shut off. Make it feel calm, not sca
 - When a bill is paid then reminders stop
 - Staff should see who is struggling
 
+## The information
+
+- A bill has an amount, a due date, a provider and who it is for.
+- A bill can be open, paid or overdue.
+- A reminder belongs to one bill.
+- A student has a preferred language and a phone.
+- The amount is private to the student and their advisor.
+- Keep bills for 7 years.
+
 ## Engineering notes
 
 - Use the student records already in place, until the new records system is live
@@ -953,6 +978,14 @@ function setWords(text: string, path = 'intent.md') {
 
 async function openFile(f: File) {
   const raw = await f.text();
+  if (/\.prisma$/i.test(f.name)) {
+    state.provided = { path: f.name, text: raw };
+    state.view = 'information';
+    scheduleSave();
+    render();
+    say('words-status', `Brought in ${f.name}: what your team already keeps. It is on the Information view, kept as provided.`);
+    return;
+  }
   const html = isHtml(f.name, raw);
   setWords(html ? htmlToMarkdown(raw) : raw, html ? f.name.replace(/\.x?html?$/i, '.md') : f.name);
   say('words-status', html ? `Read ${f.name} as a page and turned it into text you can edit.` : `Read ${f.name}.`);
@@ -1116,9 +1149,27 @@ function wire() {
     o.click();
   });
   const onPick = (e: Event) => {
-    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-not-quite], [data-node], [data-entity], [data-view], [data-file], [data-zoom], [data-journey], [data-add-first], [data-filter], [data-answer], [data-wide], [data-src], [data-baseline], [data-add-words]');
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-not-quite], [data-node], [data-entity], [data-view], [data-file], [data-zoom], [data-journey], [data-add-first], [data-filter], [data-answer], [data-wide], [data-src], [data-baseline], [data-add-words], [data-record], [data-provided-remove]');
     if (!t || !prepared) return;
     const d = t.dataset;
+    if (d['providedRemove'] !== undefined) {
+      state.provided = null;
+      scheduleSave();
+      render();
+      return;
+    }
+    if (d['record'] !== undefined) {
+      state.record = state.record === d['record'] && t.closest('svg') ? null : d['record'];
+      scheduleSave();
+      render();
+      const card = document.getElementById(`rec-${d['record']}`);
+      if (state.record && card) {
+        card.scrollIntoView?.({ block: 'start' });
+        card.querySelector<HTMLElement>('h4')?.setAttribute('tabindex', '-1');
+        card.querySelector<HTMLElement>('h4')?.focus({ preventScroll: true });
+      }
+      return;
+    }
     if (d['addWords'] !== undefined) {
       closeDrawerQuiet();
       const box = $('words-box') as HTMLDetailsElement;
@@ -1241,7 +1292,7 @@ function wire() {
   $('drawer').addEventListener('click', onPick);
   $('sheet').addEventListener('keydown', (e) => {
     const t = e.target as HTMLElement;
-    if ((e.key === 'Enter' || e.key === ' ') && t.matches('[data-node][role=button], [data-entity][role=button]')) {
+    if ((e.key === 'Enter' || e.key === ' ') && t.matches('[data-node][role=button], [data-entity][role=button], [data-record][role=button]')) {
       e.preventDefault();
       onPick(e);
     }
