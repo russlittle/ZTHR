@@ -15,7 +15,7 @@ interface Entry {
   gives: string;
   studentAdvocate?: Coverage;
 }
-type Kind = 'common' | 'delighter' | 'visual' | 'admin' | 'intent';
+type Kind = 'common' | 'delighter' | 'visual' | 'admin' | 'intent' | 'housekeeping';
 
 const read = <T,>(f: string): T => JSON.parse(readFileSync(new URL(`../catalog/${f}`, import.meta.url), 'utf8')) as T;
 const library = read<{ blocks: { name: string; purpose: string; tests: number }[] }>('catalog.json');
@@ -23,6 +23,7 @@ const common = read<{ blocks: Entry[] }>('top50.json');
 const delight = read<{ delighters: Entry[]; visual: Entry[]; visualTests: string[] }>('delight.json');
 const admin = read<{ blocks: Entry[]; rules: string[]; reportTemplates?: { operational: string[]; business: string[] } }>('admin.json');
 const intent = read<{ parts: Entry[] }>('intent.json');
+const housekeeping = read<{ parts: (Entry & { without: string })[] }>('housekeeping.json');
 const { foundations, groups } = read<{ foundations: Record<string, string>; groups: Record<string, string[]> }>('groups.json');
 
 const all = new Map<string, Entry & { kind: Kind }>();
@@ -35,6 +36,7 @@ delight.delighters.forEach(add('delighter'));
 delight.visual.forEach(add('visual'));
 admin.blocks.forEach(add('admin'));
 intent.parts.forEach(add('intent'));
+housekeeping.parts.forEach(add('housekeeping'));
 
 // Every block has exactly one home, and every name in a group is a real block.
 const placed = new Map<string, string>();
@@ -53,7 +55,7 @@ if (problems.length) {
   process.exit(1);
 }
 
-const kindLabel: Record<Kind, string> = { common: '', delighter: ' *(delighter)*', visual: '', admin: '', intent: '' };
+const kindLabel: Record<Kind, string> = { common: '', delighter: ' *(delighter)*', visual: '', admin: '', intent: '', housekeeping: ' *(housekeeping)*' };
 const mark = (c?: Coverage): string => (c?.coverage === 'yes' ? ' ✓' : c?.coverage === 'partial' ? ' ◐' : '');
 const counts = Object.fromEntries(Object.entries(groups).map(([g, n]) => [g, n.length]));
 

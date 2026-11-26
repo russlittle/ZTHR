@@ -13,7 +13,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test \"test/**/*.test.ts\"",
+    "test": "node --test \"test/**/*.test.ts\" \"blocks/**/*.test.ts\"",
     "gates": "node tools/gates.ts",
     "verify": "npm run typecheck && npm test && npm run secrets && npm run build -- --out ../.site-check && npm run build -- --out ../.site-check-open --open",
     "secrets": "node tools/secret-scan.ts",

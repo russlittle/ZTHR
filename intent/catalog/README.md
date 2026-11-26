@@ -1,19 +1,19 @@
 # Parts catalog
 
-150 parts to build, grouped by the shared foundation each one leans on, on top of the 15 parts already in the library. ✓ means a library part covers it today; ◐ means one covers part of it. Every part carries a manifest, purpose notes, tests and planted-defect proofs, and every part is in exactly one group.
+217 parts to build, grouped by the shared foundation each one leans on, on top of the 23 parts already in the library. ✓ means a library part covers it today; ◐ means one covers part of it. Every part carries a manifest, purpose notes, tests and planted-defect proofs, and every part is in exactly one group.
 
 ```mermaid
 flowchart TB
     G0["Intent: 15"]
-    G1["Identity and access: 15"]
-    G2["Data: 18"]
-    G3["Work and integrations: 24"]
-    G4["Trust and evidence: 24"]
-    G5["Content: 10"]
-    G6["Experience: 22"]
+    G1["Identity and access: 21"]
+    G2["Data: 33"]
+    G3["Work and integrations: 37"]
+    G4["Trust and evidence: 40"]
+    G5["Content: 13"]
+    G6["Experience: 28"]
     G7["Appearance: 10"]
-    G8["Data movement and reporting: 12"]
-    LIB["Library: 15 parts"] --> G1 & G2 & G3 & G4
+    G8["Data movement and reporting: 20"]
+    LIB["Library: 23 parts"] --> G1 & G2 & G3 & G4
     G0 -. "measures every part against the datum" .-> G1 & G2 & G3 & G4 & G5 & G6 & G7 & G8
     G5 --> G6 & G7
     G1 -. "who may" .-> G2 & G3 & G4 & G5 & G6
@@ -25,14 +25,14 @@ flowchart TB
 | Group | Parts | The one thing every part in it shares |
 | --- | --- | --- |
 | Intent | 15 | Every part is measured against one locked datum |
-| Identity and access | 15 | One permission evaluator decides who may do what, everywhere |
-| Data | 18 | One data declaration says what every field means, how sensitive it is and where it came from |
-| Work and integrations | 24 | Every outward action goes through one door and is recorded as a run |
-| Trust and evidence | 24 | One hash-chained event stream records everything that happens |
-| Content | 10 | Every surface and every piece of text has one controlled home, generated from the code |
-| Experience | 22 | One component kit, so every delighter works on every surface |
+| Identity and access | 21 | One permission evaluator decides who may do what, everywhere |
+| Data | 33 | One data declaration says what every field means, how sensitive it is and where it came from |
+| Work and integrations | 37 | Every outward action goes through one door and is recorded as a run |
+| Trust and evidence | 40 | One hash-chained event stream records everything that happens |
+| Content | 13 | Every surface and every piece of text has one controlled home, generated from the code |
+| Experience | 28 | One component kit, so every delighter works on every surface |
 | Appearance | 10 | One set of design tokens behind every visual choice |
-| Data movement and reporting | 12 | Every load, export and report goes through the data dictionary, so meaning, sensitivity and permissions travel with the data |
+| Data movement and reporting | 20 | Every load, export and report goes through the data dictionary, so meaning, sensitivity and permissions travel with the data |
 
 ## Intent
 
@@ -73,6 +73,12 @@ One permission evaluator decides who may do what, everywhere.
 - **Security headers and CSRF**: Safe defaults for browsers and forms
 - **Password hashing and crypto** ◐: Hashing, tokens, signing, encryption at rest
 - **Rate limiting and abuse protection**: Per-user and global limits, lockouts
+- **Data gate**: One gate policy for the fleet: a central gateway allows or refuses reads, exports and queries by data class, and records why
+- **Account lifecycle** *(housekeeping)*: Invite, activate, deactivate, reactivate and offboard, with every grant removed on the way out; inactive accounts flagged and disabled after a set time
+- **Session expiry warning** *(housekeeping)*: A warning before a session ends with a way to stay signed in; work in progress kept if it does end
+- **Secret rotation** *(housekeeping)*: Every secret has an owner and a rotation date; rotation runs without downtime, and a secret past its date alerts
+- **Break-glass access** *(housekeeping)*: Emergency access that is time-boxed, needs a written reason, alerts on use, and is reviewed afterwards
+- **Terms and consent versions** *(housekeeping)*: Which version of the terms and of each consent each person accepted, and when; they are asked again, plainly, when it changes
 
 ## Data
 
@@ -96,6 +102,21 @@ One data declaration says what every field means, how sensitive it is and where 
 - **Configuration and secrets** ◐: Typed settings, secrets by name, refuse to start when unsafe
 - **Data dictionary** ◐: Every model and field with its meaning, type, sensitivity class, owner, source, allowed values, examples, and every surface and report that uses it, generated from the Prisma schema
 - **Prisma schema and ERD** ◐: The Prisma schema is the one data declaration; entity diagrams, the data dictionary, migrations and sensitivity classes are all generated from it
+- **Feature explorer**: Open any feature and see everything about it: its assemblies and parts, its data, who may do what, its audit trail, its history and how it changed over time, its journeys and its evidence, with the record inspector's controls at every level
+- **Query console**: Query the application in SQL: every feature answers as a set of views, through the same roles, row-level rules and field masking as the screens. Queries are saved, exported and scheduled; the console is switched on per environment and left out of production by default
+- **Test data generator**: Realistic synthetic records from the data dictionary, for any feature and any person on the schematic, each marked synthetic and refused by production
+- **UAT overrides**: In UAT, edit or override any record, clock or outside answer to set up the case you want to try, with every override recorded and reset in one step; not present in production
+- **Data pipeline**: Every revision of the information planned, rehearsed on a copy with synthetic records, checked for integrity, loss and drift, promoted environment by environment with a ledger in each database, and watched every night
+- **Sensitive data inventory**: Every sensitive field, in the same form in every app: its class, the frameworks it falls under, who may read it, where it may flow, how long it is kept
+- **Lists: paging, sorting and filters** ◐ *(housekeeping)*: Every list pages, sorts and filters on the server with a stable order and an opaque cursor; each person's last sort and filters are kept
+- **Edit conflicts** ◐ *(housekeeping)*: Every record carries a version; saving a stale copy is stopped, fields that do not clash merge, and the person sees exactly what clashed
+- **Trash and restore** ◐ *(housekeeping)*: Delete moves a record and everything that depends on it to a trash with a retention window; restore puts all of it back; purging is a separate, recorded act
+- **Reference data** *(housekeeping)*: Code lists (categories, terms, states, reasons) as versioned data with effective dates, edited in admin with a preview, never written into the code
+- **Data retention sweeper** ◐ *(housekeeping)*: Each record kind's retention period, from the data sheets, enforced by a nightly job that archives or purges and records what it did and why
+- **Backfills** *(housekeeping)*: A change that must fill existing records runs as a resumable, checkpointed job with a dry run, progress, and a count that must reconcile before it is done
+- **Backup restore drills** *(housekeeping)*: Backups restored to a scratch environment on a schedule and checked against record counts and every integrity rule
+- **Money and rounding** ✓ *(housekeeping)*: Amounts held as whole minor units with their currency, one rounding rule per currency, and splits that always add back to the total
+- **Names, addresses and phone numbers** *(housekeeping)*: Names as people give them (preferred and legal, any script, any length), and addresses and phone numbers validated and formatted to international standards
 
 ## Work and integrations
 
@@ -125,6 +146,19 @@ Every outward action goes through one door and is recorded as a run.
 - **Approvals and workflow** ◐: Multi-step approvals, state machines, holds
 - **Chat** ◐: A conversation that routes deterministically first and uses a model only inside the guard, with next steps on every reply
 - **Model guard** ◐: Input schema, field allowlist, scrub and classification before every model call; strict output schema, record check and templates after
+- **API contracts**: An OpenAPI contract for every feature, written from the datum, secured by the same roles and row-level rules as the screens, and closed until the spec sheet switches it on
+- **Event catalogue**: An AsyncAPI 3.1 contract for what each feature emits, as CloudEvents envelopes delivered by signed webhooks
+- **Agent tools (MCP)**: Each switched-on API operation offered as a tool over the Model Context Protocol, acting for one person with that person's access
+- **Timeouts, retries and circuit breakers** ✓ *(housekeeping)*: Every outward call has a timeout, a bounded number of retries with backoff and jitter, and a breaker that fails fast while a service is down and recovers on its own
+- **Idempotent requests** ◐ *(housekeeping)*: Every create and every outward action carries an idempotency key; a repeat returns the first result, and the same key with different content is refused
+- **Dead letters and replay** *(housekeeping)*: A job that keeps failing goes to a dead-letter queue with its last error; after a fix an admin replays it, once, and the replay is recorded
+- **Cron watchdog** ◐ *(housekeeping)*: Every scheduled job checks in; a missed, overlong or overlapping run alerts, and a lease stops two copies running at once
+- **Long tasks with progress** *(housekeeping)*: Anything longer than a few seconds runs as a job with progress, cancel and a notice when it is done, surviving a refresh
+- **Graceful shutdown** *(housekeeping)*: On a deploy or scale-in the service stops taking work, finishes what is in flight within a deadline, then exits
+- **Bounces and unsubscribes** *(housekeeping)*: Bounce, complaint and unsubscribe handling with suppression lists, one-click unsubscribe, and signed sending domains
+- **Notification preferences and digests** *(housekeeping)*: Each person chooses channel, frequency and quiet hours for each kind of message; low-urgency messages batch into a digest
+- **API versioning and deprecation** *(housekeeping)*: Versioned routes, deprecation and sunset headers with dates, and use of old versions reported before anything is removed
+- **Upload safety** *(housekeeping)*: Uploads checked for type, size and malware before use, stored outside the web root and served with safe headers
 
 ## Trust and evidence
 
@@ -154,6 +188,22 @@ One hash-chained event stream records everything that happens.
 - **Nightly scanner**: garak against the deployed endpoint every night, results recorded as pass, fail or unknown
 - **Review panel** ◐: Model families reviewing each change against the locked datum it touches, unknown on a partial view, scored by unique validated findings
 - **Preference signals**: People's preference between versions of a surface and their delight after a task, reported beside intent completion
+- **Confidence walkthrough**: Pick a feature and watch it work: its journeys walked on your test records, each step tied to the balloon it proves, with why the app decided what it did
+- **Compliance evidence**: Each in-scope framework's controls mapped to evidence the factory produces on every release, collected once and serving every control that needs it, written as OSCAL for assessors
+- **Delivery pipeline**: Build, test, rehearse the data, package with signed provenance, deploy without traffic, canary, release, with a gate between each
+- **Service levels and alerts**: Objectives from the schematic (feedback budget, availability, each outcome's target), error-budget alerts, and a runbook entry for every alert
+- **Triage board**: Every ticket by status, severity and feature: triage, merge duplicates, assign, reply to the reporter, resolve, with time-to-triage and time-to-resolve watched
+- **Defect from ticket**: A confirmed bug becomes a defect with a failing test written from it, and a ratchet once it is fixed, so it cannot come back
+- **Dependency upkeep** *(housekeeping)*: Dependencies updated on a schedule by the factory, security advisories first, each update through every check before it merges
+- **Expiry watch** ◐ *(housekeeping)*: Certificates, domains, keys, tokens, contracts and security contacts with their expiry dates, alerting well before each one
+- **Cost meter and budgets** *(housekeeping)*: Spend per service and per feature, against budgets, with an alert before each ceiling and a hard stop where one is set
+- **Configuration drift check** *(housekeeping)*: Each environment's live configuration compared with what was declared and signed; drift alerts and is shown in the admin console
+- **Status page** *(housekeeping)*: The status of each part of the service, incidents and their updates, fed by the service-level alerts rather than typed by hand
+- **Incidents and postmortems** *(housekeeping)*: Every alert links its runbook; every incident gets a timeline, a cause, and a defect, a test and a ratchet so it cannot happen the same way again
+- **Load and soak checks** *(housekeeping)*: The load the schematic expects run against each release candidate for long enough to find leaks, with the latency budget as the gate
+- **Security scanning** *(housekeeping)*: Static analysis, dependency, container and secret scanning on every change, and a dynamic scan of each release candidate
+- **Log retention and redaction** *(housekeeping)*: Logs kept for as long as policy says, sensitive fields redacted where they are written, and every line findable by its request
+- **Housekeeping console** *(housekeeping)*: One admin page listing every housekeeping job (sweeps, drills, rotations, expiries, watchdogs, upkeep), when each last ran, what it did, and what is due
 
 ## Content
 
@@ -169,6 +219,9 @@ Every surface and every piece of text has one controlled home, generated from th
 - **Knowledge bundle**: Everything the system knows about itself generated into one Open Knowledge Format bundle in git, with read-back states as trust
 - **Chat context engine**: Context assembled from fresh concepts the user's role may read, looked up deterministically first, with every factual sentence cited
 - **Readability for the audience** ✓: Every text checked against the audience's reading level for the reading setting chosen
+- **Training modules**: A lesson for every feature, built from its journeys and measures, published as a cmi5 course that reports through xAPI
+- **What's new** *(housekeeping)*: Release notes in plain words, written from the change notice and shown once to the people each change affects
+- **Public pages: metadata and sitemap** *(housekeeping)*: Titles, descriptions, social cards, a sitemap and robots rules for every public page
 
 ## Experience
 
@@ -196,6 +249,12 @@ One component kit, so every delighter works on every surface.
 - **Progressive web features**: Modern browser features where they exist (install as an app, offline, push, share, view transitions, popovers, container queries), each detected before use, on a base that works on any phone without them
 - **Audience profile**: Reading level, languages, devices, assistive technology and conditions of use, confirmed in the read-back and setting every default
 - **Density budget**: One primary action per surface, ordered headings, short lines, and no more choices than the density allows
+- **Report a problem**: A button on every screen: say what happened and what you expected, as a bug, an idea, a question or praise. Where you were (feature, journey, screen, revision, trace) is captured for you; what you had typed elsewhere never is
+- **Friendly error pages** *(housekeeping)*: Not found, not allowed, something broke, and offline pages that say what happened and what to do next, with a reference to quote
+- **Loading, empty and error states** *(housekeeping)*: Every view designed for loading, empty, partly loaded and failed, so nothing is ever a blank screen or a spinner forever
+- **First run** *(housekeeping)*: A first-run path that gets a new person to their first success, skippable, and never shown again once done
+- **Maintenance mode and notices** *(housekeeping)*: A planned-work banner ahead of time, read-only mode during maintenance, and a clear page while down
+- **Print and save as PDF** *(housekeeping)*: Every record and report prints cleanly and saves as an accessible PDF
 
 ## Appearance
 
@@ -228,6 +287,14 @@ Every load, export and report goes through the data dictionary, so meaning, sens
 - **Warehouse sync**: Keep BigQuery in step with the application's data for analysis, with sensitivity classes carried across
 - **Report builder** ◐: Build reports in the app by choosing fields from the data dictionary: filters, groupings, measures and charts, saved, shared and scheduled
 - **Report templates**: Ready-made reports to start from, each with a generated walkthrough showing how it was built
+- **Ticket sync**: Factory progress written to Jira, Asana, GitHub Issues or Linear: one ticket per feature, moved as each station finishes
+- **Wiki publishing**: The user guide and technical reference published to Confluence, Notion or a Git wiki on every release, replaced whole so they never drift
+- **Feature reports**: A report for every feature, written from the datum: who uses it, whether its journeys complete within budget, where people stop, refusals and errors, scheduled and delivered
+- **Operations reports**: Availability, response times against the feedback budget, errors by feature, every run, who read what, and what model calls cost, every day
+- **Journey analytics**: Real walks against the journey cards: starts, completions, where people leave, time and actions against budget, and common walks no card covers, never showing a group under the small-cell threshold
+- **Report delivery**: Reports on a schedule to their audience by email, chat or the team's docs, each run recorded
+- **Improvement brief**: One page a week for the person who holds the intent: what people leave, what is over budget, what nobody designed, who is not who the schematic expected, and the change each suggests
+- **Leaving with your data** *(housekeeping)*: Everything an organisation keeps, exported on request in open formats with the schema and a data dictionary
 
 ## Report templates
 
@@ -311,3 +378,11 @@ Business:
 - **twin-service**: Clock, scenarios, health and OpenAPI for synthetic services (10 tests)
 - **twins**: Twins of outside services (SMS, mail, calendars) with calibration dates (8 tests)
 - **ui**: Accessible, themed page parts shared by the app and the factory console (18 tests)
+- **resilience**: Timeouts with abort, bounded full-jitter retries, and a circuit breaker that half-opens on its own (4 tests)
+- **idempotency**: One result per idempotency key: repeats replay it, different content is refused, concurrent repeats wait (4 tests)
+- **money**: Whole minor units per currency, half-even rounding, and splits that always add back to the total (4 tests)
+- **conflicts**: Versioned saves with a three-way merge of fields that do not clash, and the exact fields that do (5 tests)
+- **paging**: Stable keyset paging with opaque cursors, and only declared sorts and filters (3 tests)
+- **retention**: Trash with dependents, restore of all of it, and a retention sweep plan with reasons (3 tests)
+- **watchdog**: Missed, overlong, failed and overlapping scheduled runs, and a lease so one copy runs at a time (3 tests)
+- **expiry**: Everything with an expiry date, and the alert each needs today (2 tests)

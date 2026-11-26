@@ -1,0 +1,434 @@
+{
+ "method": "Housekeeping and the recurring pain of app work, catalogued once so the factory starts from them and the AI designs only what is different. Each part says what it gives and what goes wrong without it. The universal ones are in the team minimum; the rest are called for by what the schematic says.",
+ "parts": [
+  {
+   "name": "Lists: paging, sorting and filters",
+   "gives": "Every list pages, sorts and filters on the server with a stable order and an opaque cursor; each person's last sort and filters are kept",
+   "without": "Lists that load everything, reorder on refresh, or lose the filter on the way back",
+   "group": "Data",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "partial",
+    "from": "paging: the housekeeping block"
+   }
+  },
+  {
+   "name": "Edit conflicts",
+   "gives": "Every record carries a version; saving a stale copy is stopped, fields that do not clash merge, and the person sees exactly what clashed",
+   "without": "Last write silently wins, and a colleague's change disappears",
+   "group": "Data",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "partial",
+    "from": "conflicts: the housekeeping block"
+   }
+  },
+  {
+   "name": "Trash and restore",
+   "gives": "Delete moves a record and everything that depends on it to a trash with a retention window; restore puts all of it back; purging is a separate, recorded act",
+   "without": "Deleted by mistake with no way back, or deletions that leave broken references",
+   "group": "Data",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "partial",
+    "from": "retention: the housekeeping block"
+   }
+  },
+  {
+   "name": "Reference data",
+   "gives": "Code lists (categories, terms, states, reasons) as versioned data with effective dates, edited in admin with a preview, never written into the code",
+   "without": "Adding one option to a list needs a release",
+   "group": "Data",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Data retention sweeper",
+   "gives": "Each record kind's retention period, from the data sheets, enforced by a nightly job that archives or purges and records what it did and why",
+   "without": "Data kept forever by default, and a compliance finding",
+   "group": "Data",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "partial",
+    "from": "retention: the housekeeping block"
+   }
+  },
+  {
+   "name": "Backfills",
+   "gives": "A change that must fill existing records runs as a resumable, checkpointed job with a dry run, progress, and a count that must reconcile before it is done",
+   "without": "A migration that times out halfway and leaves records in two shapes",
+   "group": "Data",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Backup restore drills",
+   "gives": "Backups restored to a scratch environment on a schedule and checked against record counts and every integrity rule",
+   "without": "Backups nobody ever restored, found unusable on the worst day",
+   "group": "Data",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Money and rounding",
+   "gives": "Amounts held as whole minor units with their currency, one rounding rule per currency, and splits that always add back to the total",
+   "without": "Floating-point cents, totals off by a penny, and rounding that differs by screen",
+   "group": "Data",
+   "minimum": false,
+   "studentAdvocate": {
+    "coverage": "yes",
+    "from": "money: the housekeeping block"
+   }
+  },
+  {
+   "name": "Names, addresses and phone numbers",
+   "gives": "Names as people give them (preferred and legal, any script, any length), and addresses and phone numbers validated and formatted to international standards",
+   "without": "Forms that reject real names, mangle addresses and refuse numbers from abroad",
+   "group": "Data",
+   "minimum": false,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Timeouts, retries and circuit breakers",
+   "gives": "Every outward call has a timeout, a bounded number of retries with backoff and jitter, and a breaker that fails fast while a service is down and recovers on its own",
+   "without": "One slow service hangs every request, and retries pile on until it falls over",
+   "group": "Work and integrations",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "yes",
+    "from": "resilience: the housekeeping block"
+   }
+  },
+  {
+   "name": "Idempotent requests",
+   "gives": "Every create and every outward action carries an idempotency key; a repeat returns the first result, and the same key with different content is refused",
+   "without": "Double clicks and retries make two payments, two records and two emails",
+   "group": "Work and integrations",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "partial",
+    "from": "idempotency: the housekeeping block"
+   }
+  },
+  {
+   "name": "Dead letters and replay",
+   "gives": "A job that keeps failing goes to a dead-letter queue with its last error; after a fix an admin replays it, once, and the replay is recorded",
+   "without": "Failed jobs vanish, or retry forever",
+   "group": "Work and integrations",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Cron watchdog",
+   "gives": "Every scheduled job checks in; a missed, overlong or overlapping run alerts, and a lease stops two copies running at once",
+   "without": "The nightly job stopped three weeks ago and nobody knew",
+   "group": "Work and integrations",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "partial",
+    "from": "watchdog: the housekeeping block"
+   }
+  },
+  {
+   "name": "Long tasks with progress",
+   "gives": "Anything longer than a few seconds runs as a job with progress, cancel and a notice when it is done, surviving a refresh",
+   "without": "Spinners that time out, and work lost when the page reloads",
+   "group": "Work and integrations",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Graceful shutdown",
+   "gives": "On a deploy or scale-in the service stops taking work, finishes what is in flight within a deadline, then exits",
+   "without": "Requests cut off mid-write on every deploy",
+   "group": "Work and integrations",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Bounces and unsubscribes",
+   "gives": "Bounce, complaint and unsubscribe handling with suppression lists, one-click unsubscribe, and signed sending domains",
+   "without": "Messages to dead addresses, mail in spam folders, and messages to people who asked to stop",
+   "group": "Work and integrations",
+   "minimum": false,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Notification preferences and digests",
+   "gives": "Each person chooses channel, frequency and quiet hours for each kind of message; low-urgency messages batch into a digest",
+   "without": "So many messages that people turn all of them off",
+   "group": "Work and integrations",
+   "minimum": false,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "API versioning and deprecation",
+   "gives": "Versioned routes, deprecation and sunset headers with dates, and use of old versions reported before anything is removed",
+   "without": "A client broken without warning",
+   "group": "Work and integrations",
+   "minimum": false,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Upload safety",
+   "gives": "Uploads checked for type, size and malware before use, stored outside the web root and served with safe headers",
+   "without": "A file upload as a way in",
+   "group": "Work and integrations",
+   "minimum": false,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Account lifecycle",
+   "gives": "Invite, activate, deactivate, reactivate and offboard, with every grant removed on the way out; inactive accounts flagged and disabled after a set time",
+   "without": "Accounts of people long gone, still working",
+   "group": "Identity and access",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Session expiry warning",
+   "gives": "A warning before a session ends with a way to stay signed in; work in progress kept if it does end",
+   "without": "A long form lost to a silent timeout",
+   "group": "Identity and access",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Secret rotation",
+   "gives": "Every secret has an owner and a rotation date; rotation runs without downtime, and a secret past its date alerts",
+   "without": "Keys from years ago that nobody dares rotate",
+   "group": "Identity and access",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Break-glass access",
+   "gives": "Emergency access that is time-boxed, needs a written reason, alerts on use, and is reviewed afterwards",
+   "without": "Shared admin passwords kept for emergencies",
+   "group": "Identity and access",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Terms and consent versions",
+   "gives": "Which version of the terms and of each consent each person accepted, and when; they are asked again, plainly, when it changes",
+   "without": "Not knowing what someone agreed to, or when",
+   "group": "Identity and access",
+   "minimum": false,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Dependency upkeep",
+   "gives": "Dependencies updated on a schedule by the factory, security advisories first, each update through every check before it merges",
+   "without": "Two years of upgrades at once, under pressure",
+   "group": "Trust and evidence",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Expiry watch",
+   "gives": "Certificates, domains, keys, tokens, contracts and security contacts with their expiry dates, alerting well before each one",
+   "without": "The certificate expired on a Saturday",
+   "group": "Trust and evidence",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "partial",
+    "from": "expiry: the housekeeping block"
+   }
+  },
+  {
+   "name": "Cost meter and budgets",
+   "gives": "Spend per service and per feature, against budgets, with an alert before each ceiling and a hard stop where one is set",
+   "without": "A surprise bill",
+   "group": "Trust and evidence",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Configuration drift check",
+   "gives": "Each environment's live configuration compared with what was declared and signed; drift alerts and is shown in the admin console",
+   "without": "Works in test, fails in production, and nobody can say why",
+   "group": "Trust and evidence",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Status page",
+   "gives": "The status of each part of the service, incidents and their updates, fed by the service-level alerts rather than typed by hand",
+   "without": "Support flooded during an outage, and people guessing",
+   "group": "Trust and evidence",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Incidents and postmortems",
+   "gives": "Every alert links its runbook; every incident gets a timeline, a cause, and a defect, a test and a ratchet so it cannot happen the same way again",
+   "without": "The same outage, again",
+   "group": "Trust and evidence",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Load and soak checks",
+   "gives": "The load the schematic expects run against each release candidate for long enough to find leaks, with the latency budget as the gate",
+   "without": "Fine with ten people, down with a thousand",
+   "group": "Trust and evidence",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Security scanning",
+   "gives": "Static analysis, dependency, container and secret scanning on every change, and a dynamic scan of each release candidate",
+   "without": "Known holes shipped",
+   "group": "Trust and evidence",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Log retention and redaction",
+   "gives": "Logs kept for as long as policy says, sensitive fields redacted where they are written, and every line findable by its request",
+   "without": "Personal data in logs, kept forever",
+   "group": "Trust and evidence",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Housekeeping console",
+   "gives": "One admin page listing every housekeeping job (sweeps, drills, rotations, expiries, watchdogs, upkeep), when each last ran, what it did, and what is due",
+   "without": "Housekeeping that silently stopped",
+   "group": "Trust and evidence",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Friendly error pages",
+   "gives": "Not found, not allowed, something broke, and offline pages that say what happened and what to do next, with a reference to quote",
+   "without": "Raw errors, or a blank page",
+   "group": "Experience",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Loading, empty and error states",
+   "gives": "Every view designed for loading, empty, partly loaded and failed, so nothing is ever a blank screen or a spinner forever",
+   "without": "Blank screens, and spinners that never stop",
+   "group": "Experience",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "First run",
+   "gives": "A first-run path that gets a new person to their first success, skippable, and never shown again once done",
+   "without": "People who never find the one thing they came for",
+   "group": "Experience",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Maintenance mode and notices",
+   "gives": "A planned-work banner ahead of time, read-only mode during maintenance, and a clear page while down",
+   "without": "People caught mid-task by a planned outage",
+   "group": "Experience",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Print and save as PDF",
+   "gives": "Every record and report prints cleanly and saves as an accessible PDF",
+   "without": "Screenshots as the only way to keep a copy",
+   "group": "Experience",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "What's new",
+   "gives": "Release notes in plain words, written from the change notice and shown once to the people each change affects",
+   "without": "Changes that surprise the people who rely on them",
+   "group": "Content",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Public pages: metadata and sitemap",
+   "gives": "Titles, descriptions, social cards, a sitemap and robots rules for every public page",
+   "without": "Invisible to search, and ugly when shared",
+   "group": "Content",
+   "minimum": false,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  },
+  {
+   "name": "Leaving with your data",
+   "gives": "Everything an organisation keeps, exported on request in open formats with the schema and a data dictionary",
+   "without": "Locked in, with no way out",
+   "group": "Data movement and reporting",
+   "minimum": true,
+   "studentAdvocate": {
+    "coverage": "none"
+   }
+  }
+ ]
+}

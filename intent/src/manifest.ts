@@ -12,6 +12,7 @@ import commonData from '../catalog/top50.json' with { type: 'json' };
 import delightData from '../catalog/delight.json' with { type: 'json' };
 import adminData from '../catalog/admin.json' with { type: 'json' };
 import intentData from '../catalog/intent.json' with { type: 'json' };
+import housekeepingData from '../catalog/housekeeping.json' with { type: 'json' };
 import groupsData from '../catalog/groups.json' with { type: 'json' };
 import baselineData from '../catalog/baseline.json' with { type: 'json' };
 import type { Ballooned } from './frame.ts';
@@ -103,6 +104,7 @@ const PARTS = (() => {
     ...(delightData as { delighters: E[]; visual: E[] }).visual,
     ...(adminData as { blocks: E[] }).blocks,
     ...(intentData as { parts: E[] }).parts,
+    ...(housekeepingData as { parts: E[] }).parts,
   ];
   return new Map<string, Part>(all.map((e) => [e.name, { name: e.name, gives: e.gives, group: groupOf.get(e.name) ?? 'Other', coverage: e.studentAdvocate?.coverage ?? 'none', from: e.studentAdvocate?.from ?? null }]));
 })();
@@ -216,6 +218,15 @@ const CALLS: readonly { parts: readonly string[]; when: When }[] = [
   { parts: ['Training modules'], when: sheet((c) => anyTraining(c.p.options), () => 'Spec sheet: training is published as a cmi5 course') },
   { parts: ['Report a problem', 'Triage board', 'Defect from ticket', 'Feature flags', 'Notifications'], when: sheet((c) => c.p.options.feedback !== 'off', (c) => `Spec sheet: people can report a problem ${c.p.options.feedback === 'everywhere' ? 'in every environment' : 'in development, test and UAT'}, switchable at any time`) },
   { parts: ['Privacy: consent, export, erasure'], when: journey('take back', 'A journey takes permission back') },
+  // Housekeeping that only some apps need, called for by what the schematic says.
+  { parts: ['Money and rounding'], when: rule('money', 'Money is involved: whole minor units, one rounding rule, splits that add back to the total') },
+  { parts: ['Money and rounding'], when: said(/\b(bill|fee|price|cost|balance|amount|dollars?|\$\d)/i, 'Amounts of money appear on screen and in records') },
+  { parts: ['Names, addresses and phone numbers', 'Terms and consent versions'], when: slot('people', 'People give their names and contact details, and agree to terms') },
+  { parts: ['Bounces and unsubscribes', 'Notification preferences and digests'], when: rule('contacts-people', 'It contacts people, who choose how often and can always stop it') },
+  { parts: ['Notification preferences and digests'], when: said(/\b(remind|notify|alert|message|text|email)/i, 'It sends messages, so each person chooses how and how often') },
+  { parts: ['API versioning and deprecation'], when: sheet((c) => anyApi(c.p.options), () => 'Spec sheet: the API is open, so its versions are kept and retired on notice') },
+  { parts: ['Upload safety'], when: said(/\b(upload|document|scan|photo|attach|file)\b/i, 'People bring files, which are checked before they are used') },
+  { parts: ['Public pages: metadata and sitemap'], when: said(/\b(public|website|landing page|anyone can see|search engines?)\b/i, 'Some pages are public') },
   { parts: ['Is it me or is it down?'], when: journey('missing input', 'A journey is walked with an input missing or late') },
 ];
 

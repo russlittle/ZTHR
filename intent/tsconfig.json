@@ -14,5 +14,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "exclude": ["tools/check-factory.ts"], "include": ["src", "test", "tools"]
+  "exclude": ["tools/check-factory.ts"], "include": ["src", "test", "tools", "blocks"]
 }
