@@ -20,6 +20,7 @@
  */
 import { sha256 } from './hash.ts';
 import { chosenJourneys } from './journeys.ts';
+import { manifest, manifestFiles } from './manifest.ts';
 import type { Ballooned } from './frame.ts';
 import { same } from './diff.ts';
 import { balloonKey, modelContext, type Prepared } from './pipeline.ts';
@@ -238,8 +239,13 @@ export function release(p: Prepared, r: ReleaseInput): Release {
     files['change-notice.md'] = `# Change notice: revision ${r.prior.revision} to ${r.revision}\n\n**Why:** ${r.reason ?? ''}\n\n**Serves:** ${r.effectivity ?? p.model.end ?? 'the end in mind, not yet stated'}\n\n${lines.join('\n') || '_No statement changed._'}\n`;
   }
 
+  // The bill of materials the factory starts from, exactly as the person previewed it before signing.
+  const bom = manifest(p);
+  Object.assign(files, manifestFiles(bom));
+  for (const gap of bom.gaps) problems.push(`balloon ${gap.balloon}: ${gap.why}`);
+
   const hashes = Object.fromEntries(Object.entries(files).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, sha(v)]));
-  const manifest = {
+  const record = {
     title: p.model.title,
     revision: r.revision,
     effectivity: r.effectivity ?? p.model.end ?? null,
@@ -250,6 +256,6 @@ export function release(p: Prepared, r: ReleaseInput): Release {
     files: hashes,
     package: sha(JSON.stringify(hashes)),
   };
-  files['manifest.json'] = `${JSON.stringify(manifest, null, 2)}\n`;
+  files['manifest.json'] = `${JSON.stringify(record, null, 2)}\n`;
   return { files, problems };
 }

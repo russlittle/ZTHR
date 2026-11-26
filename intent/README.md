@@ -43,10 +43,15 @@ erDiagram
   RELEASE ||--o{ TEST : "tests/"
   RELEASE ||--o{ KNOWLEDGE : "knowledge/"
   RELEASE ||--|| MANIFEST : "manifest.json"
+  RELEASE ||--|| BOM : "build-manifest.json"
+  BOM ||--o{ PART : "from the library, or to make"
+  PART }o--o{ STATEMENT : "builds"
   DATUM ||--o{ STATEMENT : "balloons"
   STATEMENT ||--o{ GAUGE : "walked by"
   STATEMENT ||--o| RATCHET : "floored by"
 ```
+
+Before signing, the studio shows the build manifest: the bill of materials the factory starts from, each part marked from the library, extended, catalogued to make, or made new, and traced to the balloons that call for it. The release carries it exactly as previewed.
 
 The same input always gives the same bytes; the browser and the command line produce the same package hash.
 

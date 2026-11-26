@@ -15,7 +15,8 @@ import { release } from '../release.ts';
 import { zip } from '../zip.ts';
 import { graph, type Graph } from '../graph.ts';
 import { suggestJourneys, type OwnJourney } from '../journeys.ts';
-import { datumStructure, detail, entities, inspectionPlan, intentMap, releasePreview, icon } from './views.ts';
+import { buildView, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
+import { manifest, type Manifest, type Source } from '../manifest.ts';
 import { sha256 } from '../hash.ts';
 
 // ---------------------------------------------------------------- platform capabilities, each optional
@@ -62,16 +63,18 @@ interface State {
   planFilter: string;
   zoom: number;
   wide: boolean;
+  buildFilter: Source | 'all';
 }
-type View = 'map' | 'structure' | 'plan' | 'preview' | 'parts';
+type View = 'map' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
 const VIEWS: readonly { key: View; label: string; ico: string }[] = [
   { key: 'map', label: 'Intent map', ico: 'end' },
   { key: 'structure', label: 'Datum structure', ico: 'group' },
   { key: 'plan', label: 'Inspection plan', ico: 'gauge' },
+  { key: 'build', label: 'Build manifest', ico: 'group' },
   { key: 'preview', label: 'Release preview', ico: 'scenario' },
   { key: 'parts', label: 'Parts list', ico: 'statement' },
 ];
-const empty = (): State => ({ v: 1, path: 'intent.md', words: '', readings: [], answers: {}, releases: [], showAll: false, signed: null, unsure: {}, asked: {}, skipped: [], journeys: { accepted: [], own: [] }, view: 'map', expanded: [], previewFile: 'drawing.md', planFilter: 'all', zoom: 0, wide: false });
+const empty = (): State => ({ v: 1, path: 'intent.md', words: '', readings: [], answers: {}, releases: [], showAll: false, signed: null, unsure: {}, asked: {}, skipped: [], journeys: { accepted: [], own: [] }, view: 'map', expanded: [], previewFile: 'drawing.md', planFilter: 'all', zoom: 0, wide: false, buildFilter: 'all' });
 let state: State = empty();
 let prepared: Prepared | null = null;
 let lastBalloons = new Set<number>();
@@ -173,6 +176,7 @@ function isSigned(p: Prepared): boolean {
 function render(fromAnswer = false) {
   prepared = compute();
   lastGraph = graph(prepared);
+  lastManifest = manifest(prepared);
   lastFiles = currentRelease(prepared, state.releases.length ? 'preview' : undefined).files;
   renderSteps(prepared);
   renderReadings(prepared);
@@ -394,15 +398,16 @@ function renderSheet(p: Prepared) {
 // ---------------------------------------------------------------- the views
 
 let lastGraph: Graph | null = null;
+let lastManifest: Manifest | null = null;
 let lastViewShown: View | null = null;
 const narrow = () => typeof window !== 'undefined' && window.innerWidth < 700;
 let wasNarrow = narrow();
 let lastFiles: Readonly<Record<string, string>> = {};
-let drawerFor: { kind: 'node' | 'entity'; id: string } | null = null;
+let drawerFor: { kind: 'node' | 'entity' | 'line'; id: string } | null = null;
 
 function tabCount(p: Prepared, v: View): string {
   if (!lastGraph) return '';
-  const n = v === 'map' ? lastGraph.nodes.length : v === 'plan' ? lastGraph.nodes.filter((x) => x.lane === 'instruments').length : v === 'preview' ? Object.keys(lastFiles).length : v === 'parts' ? p.statements.length : 0;
+  const n = v === 'map' ? lastGraph.nodes.length : v === 'plan' ? lastGraph.nodes.filter((x) => x.lane === 'instruments').length : v === 'preview' ? Object.keys(lastFiles).length : v === 'build' ? (lastManifest?.lines.length ?? 0) : v === 'parts' ? p.statements.length : 0;
   return n ? `<span class="tab-n">${n}</span>` : '';
 }
 
@@ -444,6 +449,8 @@ function viewBody(p: Prepared, parts: string): string {
     }
     case 'plan':
       return inspectionPlan(g, suggestJourneys(p), new Set(state.journeys.accepted), state.planFilter, people(p));
+    case 'build':
+      return buildView(lastManifest!, state.buildFilter, p.model.title && p.model.title !== state.path ? p.model.title : 'this intent', `${wide}<div class="zoom" role="group" aria-label="Zoom"><button type="button" class="btn quiet" data-zoom="-1" aria-label="Zoom out">−</button><button type="button" class="btn quiet" data-zoom="0" aria-label="Fit to width, or full size">Fit</button><button type="button" class="btn quiet" data-zoom="1" aria-label="Zoom in">+</button></div>`);
     case 'preview': {
       const prior = priorFiles();
       const open = lastFiles[state.previewFile] !== undefined ? state.previewFile : 'drawing.md';
@@ -471,12 +478,19 @@ function highlight(id: string | null) {
   svg.querySelectorAll<SVGElement>('[data-node], [data-entity]').forEach((e) => e.classList.toggle('near', near.has(e.dataset['node'] ?? e.dataset['entity'] ?? '')));
 }
 
-function openDrawer(what: { kind: 'node' | 'entity'; id: string }, focus = true) {
+function openDrawer(what: { kind: 'node' | 'entity' | 'line'; id: string }, focus = true) {
   if (!lastGraph || !prepared) return;
   const d = $('drawer');
   let title = '';
   let html = '';
-  if (what.kind === 'node') {
+  if (what.kind === 'line') {
+    const r = lastManifest && lineDetail(lastManifest, Number(what.id));
+    if (!r) {
+      closeDrawer();
+      return;
+    }
+    ({ title, html } = r);
+  } else if (what.kind === 'node') {
     const r = detail(lastGraph, what.id, lastFiles);
     if (!r) {
       closeDrawer();
@@ -507,7 +521,7 @@ function closeDrawer() {
   drawerFor = null;
   $('drawer').hidden = true;
   document.body.classList.remove('drawer-open');
-  if (was) document.querySelector<HTMLElement>(`[data-node="${cssEsc(was.id)}"], [data-entity="${cssEsc(was.id)}"]`)?.focus();
+  if (was) document.querySelector<HTMLElement>(`[data-node="${cssEsc(was.kind === 'line' ? `line:${was.id}` : was.id)}"], [data-entity="${cssEsc(was.id)}"]`)?.focus();
 }
 
 function entityList(id: string): { title: string; html: string } {
@@ -627,7 +641,8 @@ function renderRelease(p: Prepared) {
 <p class="lede">The release is the package the factory builds to: the drawing, the gauges in the factory's own format, the control plan, working ranges and starting ratchets, pending tests, and the knowledge bundle.</p>
 ${Object.keys(state.unsure).length ? `<p class="note">You were not sure about ${Object.keys(state.unsure).length} answer${Object.keys(state.unsure).length === 1 ? '' : 's'}; ${Object.keys(state.unsure).length === 1 ? 'it is' : 'they are'} released on the recommended answer and listed in Your answers so you can come back.</p>` : ''}
 ${ready ? '<p class="ok"><strong>Ready to release.</strong> Nothing that changes what gets built is open.</p>' : `<p class="todo"><strong>Not ready yet.</strong> You can still issue a draft revision to share or keep.</p><ol>${problems.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>`}
-${ready ? `<div class="sign"><label class="opt"><input type="checkbox" id="sign"${isSigned(p) ? ' checked' : ''}> <span><strong>I have checked the drawing. It says what I mean.</strong> Your signature holds for this exact drawing; change a word and it needs signing again.</span></label></div>` : ''}
+${lastManifest ? `<div class="bom-mini"><p><strong>The factory will start from ${lastManifest.lines.length} parts:</strong> ${lastManifest.counts.stock + lastManifest.counts.modify} from the library, ${lastManifest.counts['make: catalogued']} catalogued parts to make, ${lastManifest.counts['make: new']} new for this intent.${lastManifest.gaps.length ? ` <strong class="red">${lastManifest.gaps.length} balloon${lastManifest.gaps.length === 1 ? '' : 's'} nothing builds.</strong>` : ''}</p><button class="btn" type="button" data-view="build">Preview the build</button></div>` : ''}
+${ready ? `<div class="sign"><label class="opt"><input type="checkbox" id="sign"${isSigned(p) ? ' checked' : ''}> <span><strong>I have checked the drawing and the build manifest. It says what I mean.</strong> Your signature holds for this exact drawing; change a word and it needs signing again.</span></label></div>` : ''}
 ${last ? `<label for="reason"><strong>Why this revision?</strong> Required after the first.</label><input type="text" id="reason" autocomplete="off" placeholder="For example: staff confirmed as college counseling">` : ''}
 <div class="row"><button class="btn primary" type="button" id="issue"${ready && !isSigned(p) ? ' aria-describedby="sign-first"' : ''}>${ready ? `Release revision ${next}` : `Issue draft revision ${next}`}</button>${ready && !isSigned(p) ? '<span class="note" id="sign-first">Sign the drawing first to release it.</span>' : ''}</div>
 <p class="status" id="release-status" role="status"></p>
@@ -916,9 +931,16 @@ function wire() {
     o.click();
   });
   const onPick = (e: Event) => {
-    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-not-quite], [data-node], [data-entity], [data-view], [data-file], [data-zoom], [data-journey], [data-add-first], [data-filter], [data-answer], [data-wide]');
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-not-quite], [data-node], [data-entity], [data-view], [data-file], [data-zoom], [data-journey], [data-add-first], [data-filter], [data-answer], [data-wide], [data-src]');
     if (!t || !prepared) return;
     const d = t.dataset;
+    if (d['src']) {
+      state.buildFilter = d['src'] as Source | 'all';
+      scheduleSave();
+      render();
+      document.querySelector<HTMLElement>(`[data-src="${cssEsc(d['src'])}"]`)?.focus();
+      return;
+    }
     if (d['wide'] !== undefined) {
       state.wide = !state.wide;
       scheduleSave();
@@ -938,7 +960,8 @@ function wire() {
         document.querySelector<HTMLElement>(`[data-node="${cssEsc(d['node'])}"]`)?.focus();
         return;
       }
-      openDrawer({ kind: 'node', id: d['node'] });
+      if (d['node'].startsWith('line:')) openDrawer({ kind: 'line', id: d['node'].slice(5) });
+      else openDrawer({ kind: 'node', id: d['node'] });
     } else if (d['entity']) openDrawer({ kind: 'entity', id: d['entity'] });
     else if (d['file'] !== undefined) {
       const f = d['file'];
@@ -985,6 +1008,9 @@ function wire() {
     }
   };
   $('sheet').addEventListener('click', onPick);
+  $('release').addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-view]')) onPick(e);
+  });
   $('drawer').addEventListener('click', onPick);
   $('sheet').addEventListener('keydown', (e) => {
     const t = e.target as HTMLElement;
