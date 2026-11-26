@@ -433,3 +433,66 @@ describe('pass 5: each rule a mutation run showed unstated', () => {
     expect(F.parseCsv('a,b,c\n1,2\n')).toEqual([{ a: '1', b: '2', c: '' }]);
   });
 });
+
+describe('pass 6: the finder\'s word lists and patterns, each as the module loads', () => {
+  it('a suite, floor or building names an address line only at the start of name2', () => {
+    const n = (name2: string) => F.facilityName({ name1: 'Armada Recovery', name2, city: 'Dayton' });
+    expect(n('Hope Building Center')).toBe('Hope Building Center');
+    expect(n('Building 4')).toBe('Armada Recovery');
+  });
+
+  it('an office: up to three words, then an optional kind of office, then "Office"', () => {
+    const n = (name2: string) => F.facilityName({ name1: 'Hope Center', name2, city: 'Dayton' });
+    // Two words before "Office", with no kind of office named.
+    expect(n('Dayton North Office')).toBe('Hope Center (Dayton North Office)');
+    // Three words, then a kind of office, then a space before "Office".
+    expect(n('Greene County Xenia Regional Office')).toBe('Hope Center (Greene County Xenia Regional Office)');
+    // Four words before "Office" is a name of its own.
+    expect(n('Miami Valley Child Development Office')).toBe('Miami Valley Child Development Office');
+  });
+
+  it('HUD\'s language codes, each in words', () => {
+    const expected: [string, string][] = [
+      ['ARA', 'Arabic'], ['ASL', 'American Sign Language'], ['CHI', 'Chinese'], ['CRE', 'Haitian Creole'], ['FAR', 'Farsi'], ['FRE', 'French'],
+      ['GER', 'German'], ['HIN', 'Hindi'], ['HMO', 'Hmong'], ['ITA', 'Italian'], ['JPN', 'Japanese'], ['KHM', 'Khmer'], ['KOR', 'Korean'],
+      ['NEP', 'Nepali'], ['POL', 'Polish'], ['POR', 'Portuguese'], ['RUS', 'Russian'], ['SOM', 'Somali'], ['SPA', 'Spanish'], ['SWA', 'Swahili'],
+      ['TGL', 'Tagalog'], ['UKR', 'Ukrainian'], ['URD', 'Urdu'], ['VIE', 'Vietnamese'],
+    ];
+    expect(expected.map(([code]) => [code, F.languages(code)])).toEqual(expected);
+  });
+
+  it('"feeble-minded", "feeble minded" and "feebleminded" are each an outdated term, held for a person', () => {
+    const p = (name: string, phone: string) => ({ attributes: { PROPERTY_NAME_TEXT: name, STD_ZIP5: '45402', PROPERTY_ON_SITE_PHONE_NUMBER: phone } });
+    const f = F.fromHudMultifamily([p('FEEBLE-MINDED HOME', '9375550101'), p('FEEBLE MINDED HOME', '9375550102'), p('FEEBLEMINDED HOME', '9375550103'), p('OAK HOMES', '9375550104')], area);
+    expect(f.entries.map((e) => e.name)).toEqual(['Oak Homes']);
+    const why = 'its registered name uses an outdated term for disability; a person decides how to list it';
+    expect(f.skipped).toEqual([
+      { source: F.HUD_MF_PAGE, name: 'Feeble-Minded Home', why },
+      { source: F.HUD_MF_PAGE, name: 'Feeble Minded Home', why },
+      { source: F.HUD_MF_PAGE, name: 'Feebleminded Home', why },
+    ]);
+  });
+
+  it('the HRSA sites file and the IMLS survey file are read from where each publishes them', () => {
+    expect(F.HRSA).toBe('https://data.hrsa.gov/DataDownload/DD_Files/Health_Center_Service_Delivery_and_LookAlike_Sites.csv');
+    expect(F.IMLS_PLS).toBe('https://www.imls.gov/sites/default/files/2026-06/pls_fy2024_csv.zip');
+  });
+
+  it('the IRS list: each NTEE major group that does a barrier\'s work, read only from the start of the code', () => {
+    const codes: [string, string | undefined][] = [
+      ['K31', 'food'], ['L41', 'housing'], ['F30', 'mental-health'], ['E32', 'health'], ['I70', 'safety'], ['P43', 'safety'],
+      ['I80', 'legal'], ['R60', 'legal'], ['J30', 'career'], ['P30', 'childcare'], ['P33', 'childcare'], ['P80', 'caregiving'],
+      ['P81', 'caregiving'], ['P20', 'money'], ['O50', 'belonging'], ['N50', 'wellbeing'], ['B60', 'academic'], ['B82', 'academic'],
+      ['B90', 'academic'], ['B50', undefined],
+      // A group's letters after the start of the code say nothing.
+      ['A3K', undefined], ['A3L', undefined], ['A3J', undefined], ['A3P', undefined], ['A3O', undefined], ['A3I7', undefined],
+      ['A3P43', undefined], ['A3I8', undefined], ['A3R6', undefined], ['A3P3', undefined], ['A3P33', undefined], ['A3P8', undefined],
+      ['A3P81', undefined], ['A3B6', undefined], ['A3B82', undefined], ['A3B9', undefined],
+    ];
+    const rows = codes.map(([ntee], i) => ({ EIN: String(i), NAME: `ORG ${ntee}`, STREET: '1 MAIN ST', CITY: 'DAYTON', STATE: 'OH', ZIP: '45402', NTEE_CD: ntee }));
+    const leads = F.leadsFromIrs(rows, area);
+    const barrierOf = new Map(leads.map((l) => [l.ntee, l.barrier]));
+    expect(codes.map(([ntee]) => [ntee, barrierOf.get(ntee)])).toEqual(codes);
+    expect(leads).toHaveLength(19);
+  });
+});
