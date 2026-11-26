@@ -30,6 +30,20 @@ flowchart LR
 
 ## Duties kept apart
 
+<!-- fact:agents.roles -->7<!-- /fact --> roles, <!-- fact:agents.tools -->35<!-- /fact --> tools, and <!-- fact:agents.personOnly -->7<!-- /fact --> acts only a person takes, which have no tool at all. Each role and how many tools it sees:
+
+<!-- gen:roles -->
+| Role | Does | Tools |
+| --- | --- | --- |
+| reader | Reads the person's rough intent into the reading schema, independently of every other reader. | 8 |
+| steward | Keeps the intent moving: ranks the questions, drafts answers for the person to confirm, issues revisions, proposes journeys. | 13 |
+| builder | Builds to the released package: opens changes, runs the required checks, proposes journeys, takes defects. | 15 |
+| reviewer | Reviews changes from other families, and says what it checked as well as what it found. | 14 |
+| operator | Moves an admitted revision through delivery stage by stage, watches service levels, rolls back. | 12 |
+| triager | Sorts what people report: status, severity, duplicates, defects for builders and ideas for the person who holds the intent. | 11 |
+| pipeline | The build service's own identity: records what each delivery stage proved, with the build that proved it. | 8 |
+<!-- /gen -->
+
 Each role is defined by what it may not do, and the API enforces every limit. A test in `test/agents.test.ts` proves
 each one. When a session starts, whoever starts it fixes the role, the model family and the agent's name; the agent
 cannot change them. A role is never shown the tools it may not call.
@@ -168,6 +182,19 @@ Each of these is evidence the intent and the work disagree about something nobod
 question worth a person's time.
 
 ## Spending as little as possible
+
+The seats, from `catalog/models.json`:
+
+<!-- gen:models -->
+| Seat | Models, cheapest that fits first |
+| --- | --- |
+| steward | hydrogen (google) |
+| reader | deepseek-flash (deepseek), ollama-llama (llama), hydrogen (google) |
+| builder | ollama-qwen (qwen), deepseek-flash (deepseek) |
+| reviewer | deepseek-flash (deepseek), ollama-llama (llama), ollama-qwen (qwen), hydrogen (google) |
+| operator | deepseek-flash (deepseek) |
+| triager | deepseek-flash (deepseek) |
+<!-- /gen -->
 
 The fixture judges the work, not the model: the checks, gauges, ratchets and walks. So each seat runs the cheapest
 model that can do its job.

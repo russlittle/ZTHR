@@ -15,6 +15,23 @@ flowchart LR
   O -.->|incident| DEF[Defect, test, ratchet]
 ```
 
+Each stage proves something and has a gate (generated from `src/delivery.ts`):
+
+<!-- gen:stages -->
+| Stage | What it proves | Gate |
+| --- | --- | --- |
+| Build | dependencies install from the lock file; types check; no secret-shaped value in the source or its history | every check passes |
+| Test | every test passes; mutation scores hold their floors; every ratchet holds or tightens; every journey passes on the twins | every gate in the control plan passes |
+| Rehearse the data | the schema revision migrates a copy with nothing lost; every integrity rule holds; no drift from the signed schema | the data pipeline rehearsal passes |
+| Package and sign | the image is built by the build service, with signed provenance; a bill of materials is recorded; no critical or high vulnerability in the image | the image is signed and clean |
+| Deploy without traffic | only a signed image can run; the new revision starts and is healthy; journeys pass against it, before anyone is sent to it | smoke journeys pass on the candidate |
+| Canary | a small share of people use it; service levels hold: no fast burn of any error budget | a named person approves in production; the error budget is not burning |
+| Release | everyone is moved to it; the previous revision stays ready to take traffic back in one step | service levels hold for the watch window |
+| Operate | service levels watched continuously; integrity and drift checked nightly; every alert has a runbook; every incident becomes a defect, a test and a ratchet | an alert opens an incident |
+<!-- /gen -->
+
+On Google Cloud they run as:
+
 | Stage | Proves | On Google Cloud |
 | --- | --- | --- |
 | Build | Dependencies from the lock file, types, no secret-shaped values | Cloud Build |

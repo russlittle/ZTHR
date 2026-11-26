@@ -30,6 +30,23 @@ of evidence serves every control, in every framework, that needs it: the access 
 | platform | Inherited from the cloud provider's own attestations |
 | organization | Policies, training, people and vendors: supplied by the organization |
 
+<!-- fact:frameworks.count -->8<!-- /fact --> frameworks, with <!-- fact:frameworks.controls -->116<!-- /fact --> controls mapped to evidence:
+
+<!-- gen:frameworks -->
+| Framework | Controls mapped |
+| --- | --- |
+| SOC 2 | 24 |
+| HIPAA Security Rule | 16 |
+| FERPA | 7 |
+| PCI DSS | 10 |
+| GLBA Safeguards Rule | 12 |
+| NIST SP 800-171 (CMMC Level 2) | 19 |
+| NIST SP 800-53 (FedRAMP Moderate) | 23 |
+| Section 508 (WCAG 2.2 AA) | 5 |
+<!-- /gen -->
+
+The versions the controls follow:
+
 | Framework | Version the controls follow |
 | --- | --- |
 | SOC 2 | Trust Services Criteria (2017, points of focus revised 2022) |

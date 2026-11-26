@@ -14,7 +14,8 @@ import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
-import { lineBar, type Dept } from '../src/console/line.ts';
+import { DEPARTMENTS, lineBar, type Dept } from '../src/console/line.ts';
+import { sitePages } from './docs.ts';
 
 const HERE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const i = process.argv.indexOf('--out');
@@ -65,6 +66,30 @@ if (!eng.includes('data-dept="engineering"') || !eng.includes('<h1>Engineering</
 writeFileSync(join(OUT, 'engineering/index.html'), gate(withLine(eng, 'engineering')));
 const sitePage = (d: Dept, file: string) => writeFileSync(join(OUT, `${d}/index.html`), gate(withLine(readFileSync(join(HERE, `site/${file}.html`), 'utf8'), d)));
 for (const d of ['mission', 'lines', 'factory', 'qa', 'shipping', 'fleet'] as const) sitePage(d, d);
+// How it works: the line's docs as pages, generated from the same sources as docs/line/*.md, with the depth ladder.
+const head = readFileSync(join(HERE, 'site/factory.html'), 'utf8').split('<title>')[0]!.replace('<link rel="stylesheet" href="/console/bar.css">', '<link rel="stylesheet" href="/console/bar.css">\n<link rel="stylesheet" href="/console/docs.css">');
+const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+for (const p of sitePages()) {
+  const dir = p.doc === 'index' ? 'line' : `line/${p.doc}`;
+  mkdirSync(join(OUT, dir), { recursive: true });
+  const open = p.dept ? DEPARTMENTS.find((d) => d.key === p.dept)! : null;
+  const html = `${head}<title>${esc(p.doc === 'index' ? 'How the line works' : `How it works: ${p.title}`)} · ZTHR</title>
+<meta name="description" content="${esc(p.lede)}">
+</head>
+<body data-docs="${p.doc}">
+<a class="skip" href="#main">Skip to content</a>
+${lineBar(p.dept, true)}
+<div class="page-h"><div><p class="crumbs"><a href="/line/">How it works</a>${p.doc === 'index' ? '' : ` / ${esc(p.title)}`}</p><h1>${esc(p.title)}</h1><p>${esc(p.lede)}</p>${open ? `<p><a class="btn" href="${open.href}">Open ${esc(open.label)}</a></p>` : ''}</div></div>
+<main id="main" class="docs">
+${p.body}
+</main>
+<footer class="foot"><p>Generated from <a href="https://github.com/russlittle/ZTHR/tree/main/intent/docs/src/line">the docs' sources</a> by <code>tools/docs.ts</code>: every figure, table and diagram here is computed from the code, and a test fails when any of it is stale. The same pages, as markdown: <a href="https://github.com/russlittle/ZTHR/tree/main/intent/docs/line">docs/line</a>.</p></footer>
+</body>
+</html>
+`;
+  writeFileSync(join(OUT, dir, 'index.html'), html);
+}
+copyFileSync(join(HERE, 'site/docs.css'), join(OUT, 'console/docs.css'));
 copyFileSync(join(HERE, 'site/console.css'), join(OUT, 'console/console.css'));
 copyFileSync(join(HERE, 'site/bar.css'), join(OUT, 'console/bar.css'));
-console.log(`built ${PAGES.map((x) => `/${x}`).join(', ')} into ${OUT}${GATED ? ', behind Google sign-in by invitation' : ', open'}`);
+console.log(`built ${PAGES.map((x) => `/${x}`).join(', ')} and /line into ${OUT}${GATED ? ', behind Google sign-in by invitation' : ', open'}`);

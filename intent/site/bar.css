@@ -26,6 +26,8 @@
 .zl-product:hover { background: color-mix(in srgb, var(--sheet) 12%, transparent); }
 .zl-ev { flex: none; color: color-mix(in srgb, var(--sheet) 78%, transparent); font: 600 14px/1 var(--letter); text-decoration: none; padding: 8px 4px; }
 .zl-ev:hover { color: var(--sheet); text-decoration: underline; }
+.zl-docs { flex: none; color: color-mix(in srgb, var(--sheet) 82%, transparent); font: 600 14px/1 var(--letter); text-decoration: underline; text-underline-offset: 3px; padding: 8px 4px; }
+.zl-docs:hover, .zl-docs[aria-current=page] { color: var(--sheet); }
 .zbar .sr, .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 1180px) { .zbar nav .zline a[aria-current=page] ~ * { } .zl-name { font-size: 13.5px; } }
 

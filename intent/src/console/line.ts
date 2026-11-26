@@ -32,10 +32,10 @@ export const dept = (k: Dept) => DEPARTMENTS.find((d) => d.key === k)!;
 export const nextDept = (k: Dept): Department | null => DEPARTMENTS[DEPARTMENTS.findIndex((d) => d.key === k) + 1] ?? null;
 
 /** The bar, as static HTML: the line in order, the current department marked, lamps filled in by the page's script. */
-export function lineBar(current: Dept): string {
+export function lineBar(current: Dept | null, docs = false): string {
   return `<header class="zbar"><a class="brand" href="/">ZTHR</a><nav aria-label="Departments"><ol class="zline">${DEPARTMENTS.map(
     (d, i) => `<li><a href="${d.href}"${d.key === current ? ' aria-current="page"' : ''} data-dept="${d.key}"><span class="zl-n" aria-hidden="true">${i + 1}</span><span class="zl-name">${d.label}</span><span class="zl-lamp" data-lamp="${d.key}" aria-hidden="true"></span></a></li>`,
-  ).join('')}</ol></nav><a class="zl-product" id="zl-product" href="/lines" hidden></a></header>`;
+  ).join('')}</ol></nav><a class="zl-product" id="zl-product" href="/lines" hidden></a><a class="zl-docs" href="/line/${!docs && current ? `${current}/` : ''}"${docs && !current ? ' aria-current="page"' : ''}>How it works</a></header>`;
 }
 
 /** The one action that hands the work to the next department. */

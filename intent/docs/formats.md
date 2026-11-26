@@ -18,6 +18,45 @@ flowchart LR
   M[manifest.json] -. hashes .-> D & G & C & T & R & B & K & J & S & I & SS
 ```
 
+For the worked example, a released revision is <!-- fact:example.files -->115<!-- /fact --> files:
+
+<!-- gen:package -->
+| In the package | Files |
+| --- | --- |
+| `admin/` | 2 |
+| `AGENTS.md` | 1 |
+| `analytics/` | 1 |
+| `api/` | 3 |
+| `balloons.json` | 1 |
+| `build-manifest.json` | 1 |
+| `build-manifest.md` | 1 |
+| `compliance/` | 6 |
+| `connections.json` | 1 |
+| `connections/` | 2 |
+| `context.md` | 1 |
+| `control-plan.yaml` | 1 |
+| `datum.json` | 1 |
+| `delivery/` | 5 |
+| `docs/` | 5 |
+| `features.yaml` | 1 |
+| `gauges/` | 1 |
+| `information/` | 12 |
+| `knowledge/` | 32 |
+| `manifest.json` | 1 |
+| `notes.md` | 1 |
+| `ops/` | 5 |
+| `outcomes/` | 3 |
+| `ratchets.json` | 1 |
+| `reports/` | 17 |
+| `schematic.md` | 1 |
+| `spec-sheet.json` | 1 |
+| `tests/` | 2 |
+| `tolerances.json` | 1 |
+| `training/` | 4 |
+<!-- /gen -->
+
+File by file:
+
 | File | What it holds | Who reads it |
 | --- | --- | --- |
 | `datum.json` | The signed schematic: title, revision, end in mind, title block, every statement with its balloon, slot, state, supplier, tolerance and mark | The factory, as the reference everything is judged against |

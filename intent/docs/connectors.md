@@ -16,6 +16,8 @@ flowchart LR
   S --> T[Jira, Slack, Confluence, BigQuery...]
 ```
 
+<!-- fact:connectors.count -->20<!-- /fact --> connectors of <!-- fact:connectors.kinds -->5<!-- /fact --> kinds:
+
 | Kind | Connectors | What it sends |
 | --- | --- | --- |
 | Tickets | Jira, Asana, Linear, GitHub Issues, Azure Boards | One ticket per feature at intent; moved as design, build, QA and release finish |

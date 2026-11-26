@@ -10,6 +10,9 @@
  */
 import type { Options } from '../interfaces.ts';
 
+/** The spec-sheet choices a line hands every product started in it. */
+export const LINE_CHOICES = ['compliance', 'identity', 'tickets', 'chat', 'feedback', 'api', 'usage'] as const;
+
 export interface Line {
   readonly id: string;
   readonly name: string;
