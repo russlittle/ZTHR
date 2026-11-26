@@ -12,6 +12,7 @@ import { Leases, memoryLeases } from '../../intent/blocks/leases/index.ts';
 import type { ObjectStore } from '../../intent/blocks/objects/index.ts';
 import { sweep as plan, type Item, type Policy } from '../../intent/blocks/retention/index.ts';
 import { Exists, MissingParent, NotFound, Tree, steps, type Node } from '../../intent/blocks/tree/index.ts';
+import { checkName as safeName } from '../../intent/blocks/uploadsafe/index.ts';
 import { NEXTCLOUD_RULES, Uploads } from '../../intent/blocks/uploads/index.ts';
 import type { Person, State, Trashed, Version } from './state.ts';
 
@@ -275,6 +276,12 @@ export class Files {
 
   // ---------------------------------------------------------------- changes
 
+  /** The last step of a path a write would create, checked against the upload-safety policy before anything is kept. */
+  private safe(path: string): void {
+    const last = steps(path).pop();
+    if (last) safeName(last);
+  }
+
   private need(w: Where, bit: number, what: string) {
     if (!(w.perms & bit)) throw new Denied(`you may not ${what} here`);
   }
@@ -296,6 +303,7 @@ export class Files {
   async commitFile(user: string, path: string, blob: { key: string; size: number; checksums: readonly string[] }, o: { mtime?: number; checksum?: string[]; ifMatch?: string | null; ifNoneMatch?: string | null; tokens?: readonly string[]; mime?: string } = {}): Promise<{ node: Node; created: boolean }> {
     const { w, node: before } = await this.resolve(user, path);
     try {
+      this.safe(path);
       if (before?.kind === 'folder') throw new Exists(path);
       if (o.ifNoneMatch === '*' && before) throw new PreconditionFailed('the file exists');
       if (o.ifMatch && (!before || (o.ifMatch !== '*' && o.ifMatch.replace(/"/g, '') !== before.etag))) throw new PreconditionFailed('the file changed since you last read it');
@@ -316,6 +324,7 @@ export class Files {
   }
 
   async mkdir(user: string, path: string): Promise<Node> {
+    this.safe(path);
     const w = await this.where(user, path);
     this.need(await this.parentWhere(user, path), CREATE, 'add folders');
     return this.tree.mkdir(w.owner, w.path);
@@ -343,6 +352,7 @@ export class Files {
   }
 
   async move(user: string, from: string, to: string, overwrite: boolean, tokens: readonly string[] = []): Promise<{ node: Node; created: boolean }> {
+    this.safe(to);
     const a = await this.resolve(user, from);
     if (!a.node) throw new NotFound(from);
     const b = await this.resolve(user, to);
@@ -367,6 +377,7 @@ export class Files {
   }
 
   async copy(user: string, from: string, to: string, overwrite: boolean): Promise<{ node: Node; created: boolean }> {
+    this.safe(to);
     const a = await this.resolve(user, from);
     if (!a.node) throw new NotFound(from);
     this.need(a.w, READ, 'read this');

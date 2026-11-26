@@ -304,3 +304,25 @@ test('the nightly sweep purges the trash after its days, and old versions after 
     await s.close();
   }
 });
+
+test('names the apps cannot hold are refused before anything is kept, and failed sign-ins slow down', async () => {
+  const s = await start();
+  const ana = s.as('ana', PASS);
+  try {
+    const part = await ana('/remote.php/dav/files/ana/report.docx.part', { method: 'PUT', body: 'x' });
+    assert.equal(part.status, 400);
+    assert.match(await part.text(), /unfinished uploads/);
+    assert.equal((await ana('/remote.php/dav/files/ana/CON', { method: 'MKCOL' })).status, 400);
+    await ana('/remote.php/dav/files/ana/ok.txt', { method: 'PUT', body: 'x' });
+    assert.equal((await ana('/remote.php/dav/files/ana/ok.txt', { method: 'MOVE', headers: { destination: `${s.base}/remote.php/dav/files/ana/.htaccess` } })).status, 400);
+    assert.equal((await ana('/remote.php/dav/files/ana/ok.txt')).status, 200, 'the refused move left the file where it was');
+    const wrong = s.as('ana', 'not the password');
+    for (let i = 0; i < 10; i++) assert.equal((await wrong('/remote.php/dav/files/ana/', { method: 'PROPFIND', headers: { depth: '0' } })).status, 401);
+    const limited = await wrong('/remote.php/dav/files/ana/', { method: 'PROPFIND', headers: { depth: '0' } });
+    assert.equal(limited.status, 429);
+    assert.ok(Number(limited.headers.get('retry-after')) > 0, 'the client is told how long to wait');
+    assert.equal((await ana('/remote.php/dav/files/ana/', { method: 'PROPFIND', headers: { depth: '0' } })).status, 429, 'the address waits, even with the right password');
+  } finally {
+    await s.close();
+  }
+});

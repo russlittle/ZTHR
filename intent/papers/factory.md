@@ -161,7 +161,7 @@ stateDiagram-v2
 
 ## 5. Files, in the factory
 
-Files is built on ten library blocks and a protocol layer. The eight blocks a file server needs were built before its delta, each tested alone (12 tests for the tree, 10 for the object store, 8 each for uploads, grants and the DAV core, 6 each for leases and devices, 4 for the oracle). Its own layer is WebDAV, OCS sharing and the sign-in pages, and is tested end to end against a server in process: 19 tests covering the login flow, sync properties, conditional writes, versions, the trash, chunked uploads with quota, sharing, public links, device revocation and wipe, administration, restarts, the nightly sweep, Cloud Storage against a stand-in, and the oracle script.
+Files is built on twelve library blocks and a protocol layer. The eight blocks a file server needs were built before its delta, each tested alone (12 tests for the tree, 10 for the object store, 8 each for uploads, grants and the DAV core, 6 each for leases and devices, 4 each for the oracle, rate limits and upload safety). Its own layer is WebDAV, OCS sharing and the sign-in pages, and is tested end to end against a server in process: 20 tests covering the login flow, sync properties, conditional writes, versions, the trash, chunked uploads with quota, sharing, public links, device revocation and wipe, refused names and sign-in throttling, administration, restarts, the nightly sweep, Cloud Storage against a stand-in, and the oracle script.
 
 ## 6. Evaluating it
 

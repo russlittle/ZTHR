@@ -130,9 +130,9 @@ flowchart TB
 
 ## 4. Files, engineered
 
-The Files intent produces a manifest of 135 lines: 6 standard assemblies used as they are, 36 extended, 82 catalogued parts still to make, and 11 custom assemblies. The catalogued parts include the team minimum every product inherits (error monitoring, backups, status, delivery pipeline) and those the intent calls for: file upload and storage, upload safety, authorization, API keys and tokens, folders and paths, locks and leases.
+The Files intent produces a manifest of 135 lines: 6 standard assemblies used as they are, 37 extended, 81 catalogued parts still to make, and 11 custom assemblies. Beyond the team minimum every product inherits (error monitoring, backups, status, a delivery pipeline), the intent calls for file upload and storage, upload safety, authorization, API keys and tokens, folders and paths, and locks and leases.
 
-Before the factory ran, the library lacked the assemblies a file server is made of, so eight blocks were built and catalogued first: the namespace tree, the object store, resumable uploads, leases, grants, device sessions, the DAV core and the differential oracle. With them, file upload and storage, authentication, authorization, API keys and tokens, HTTP routing and API contracts moved from catalogued to standard-extended; folders and paths, and locks and leases, entered the catalogue already covered; and each of the eleven custom assemblies lists the blocks it joins.
+Before the factory ran, the library lacked the assemblies a file server is made of, so eight blocks were built and catalogued first: the namespace tree, the object store, resumable uploads, leases, grants, device sessions, the DAV core and the differential oracle. With them, and two more for rate limits and upload safety, file upload and storage, upload safety, authentication, authorization, API keys and tokens, HTTP routing and API contracts moved from catalogued to standard-extended; folders and paths, and locks and leases, entered the catalogue already covered; and each of the eleven custom assemblies lists the blocks it joins.
 
 Its service levels come from its schematic: 99.5% availability from the team minimum, and a latency objective from the feedback it asks for. The small-files outcome (25,000 files within ten minutes) is held by a journey, measured on every build.
 

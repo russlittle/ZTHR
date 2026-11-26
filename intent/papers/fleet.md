@@ -103,7 +103,7 @@ stateDiagram-v2
 
 ## 4. Files, in the fleet
 
-Files draws on ten library blocks. A fix to any of them (the tree's etag propagation, the object store's checksums, the uploads' expiry, the grants' throttling) is made once in the library, and reaches Files and every later product that uses the same block, each through its own line. Its service levels come from its package, and its nightly sweep (the trash after its days, old versions after theirs, idle uploads, expired links) is planned by the retention block and recorded as a run.
+Files draws on twelve library blocks. A fix to any of them (the tree's etag propagation, the object store's checksums, the uploads' expiry, the grants' throttling) is made once in the library, and reaches Files and every later product that uses the same block, each through its own line. Its service levels come from its package, and its nightly sweep (the trash after its days, old versions after theirs, idle uploads, expired links) is planned by the retention block and recorded as a run.
 
 A second product in its line (calendars and contacts) would share the device sessions, grants and DAV core with Files. An incident in sign-in found in either would become a test in the devices block, protecting both.
 

@@ -332,6 +332,20 @@
       ],
       "tests": 4,
       "home": "intent/blocks/oracle"
+    },
+    {
+      "name": "ratelimit",
+      "purpose": "Token buckets per key that say how long to wait, and failure counts that slow only mistakes, with bounded memory",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/ratelimit"
+    },
+    {
+      "name": "uploadsafe",
+      "purpose": "Names a client could not hold refused before any bytes are kept, size limits, and the real type read from the first bytes",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/uploadsafe"
     }
   ]
 }

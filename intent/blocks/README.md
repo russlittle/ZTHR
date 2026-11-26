@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->16<!-- /fact --> blocks, <!-- fact:blocks.tests -->87<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->18<!-- /fact --> blocks, <!-- fact:blocks.tests -->95<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -25,6 +25,8 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [devices](devices/index.ts) | A browser sign-in flow that hands a new app its own hashed password once; revoke one device, or wipe it remotely | 6 |
 | [dav](dav/index.ts) | The DAV core: a namespace-aware XML reader that refuses DTDs, the multistatus writer, and the WebDAV headers | 8 |
 | [oracle](oracle/index.ts) | Differential checks: the same requests to the reference and the candidate, answers normalised and compared, or recorded once | 4 |
+| [ratelimit](ratelimit/index.ts) | Token buckets per key that say how long to wait, and failure counts that slow only mistakes, with bounded memory | 4 |
+| [uploadsafe](uploadsafe/index.ts) | Names a client could not hold refused before any bytes are kept, size limits, and the real type read from the first bytes | 4 |
 <!-- /gen -->
 
 ```mermaid

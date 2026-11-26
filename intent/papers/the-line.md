@@ -200,8 +200,8 @@ Eleven rough lines (the apps sync unchanged; 25,000 small files sync in minutes;
 ```mermaid
 pie showData title "Where the 135 lines of the Files manifest come from"
   "Standard, used as is" : 6
-  "Standard, extended" : 36
-  "Catalogued, to make" : 82
+  "Standard, extended" : 37
+  "Catalogued, to make" : 81
   "Custom to Files" : 11
 ```
 

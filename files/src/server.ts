@@ -45,6 +45,7 @@ export function handler(files: Files, o: ServeOptions = {}) {
     } catch (e) {
       const s = statusOf(e);
       out = path.startsWith('/remote.php') ? davError(s.status, s.message) : json(s.status, { message: s.message });
+      if (s.retryAfter) out.headers = { ...(out.headers ?? {}), 'retry-after': String(s.retryAfter) };
       if (s.status >= 500) o.log?.({ severity: 'ERROR', message: e instanceof Error ? e.stack : String(e) });
     }
     if (out.status === 401 && !out.headers?.['www-authenticate']) out.headers = { ...(out.headers ?? {}), 'www-authenticate': 'Basic realm="Files", charset="UTF-8"' };

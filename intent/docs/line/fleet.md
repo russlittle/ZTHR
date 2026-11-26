@@ -49,7 +49,7 @@ Every app can reach the tools people already use, through 20 connectors of 5 kin
 
 ### Housekeeping blocks
 
-The fleet maintains the code most apps get wrong, as tested blocks every product starts from (87 tests between them):
+The fleet maintains the code most apps get wrong, as tested blocks every product starts from (95 tests between them):
 
 | Block | What it holds | Tests |
 | --- | --- | --- |
@@ -69,13 +69,15 @@ The fleet maintains the code most apps get wrong, as tested blocks every product
 | [devices](../../blocks/devices/index.ts) | A browser sign-in flow that hands a new app its own hashed password once; revoke one device, or wipe it remotely | 6 |
 | [dav](../../blocks/dav/index.ts) | The DAV core: a namespace-aware XML reader that refuses DTDs, the multistatus writer, and the WebDAV headers | 8 |
 | [oracle](../../blocks/oracle/index.ts) | Differential checks: the same requests to the reference and the candidate, answers normalised and compared, or recorded once | 4 |
+| [ratelimit](../../blocks/ratelimit/index.ts) | Token buckets per key that say how long to wait, and failure counts that slow only mistakes, with bounded memory | 4 |
+| [uploadsafe](../../blocks/uploadsafe/index.ts) | Names a client could not hold refused before any bytes are kept, size limits, and the real type read from the first bytes | 4 |
 
 ```mermaid
 xychart-beta
   title "Library blocks built in this repository, by the tests each carries; every product that uses one inherits them."
-  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "conflicts", "resilience", "idempotency", "money", "oracle", "paging", "retention", "watchdog", "expiry"]
+  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "conflicts", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "paging", "retention", "watchdog", "expiry"]
   y-axis "tests" 0 --> 50
-  bar [12, 10, 8, 8, 8, 6, 6, 5, 4, 4, 4, 4, 3, 3, 3, 2]
+  bar [12, 10, 8, 8, 8, 6, 6, 5, 4, 4, 4, 4, 4, 4, 3, 3, 3, 2]
 ```
 
 ## Architect

@@ -196,7 +196,8 @@
       "group": "Work and integrations",
       "minimum": false,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "uploadsafe: the housekeeping block"
       }
     },
     {

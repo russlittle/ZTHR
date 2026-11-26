@@ -30,6 +30,8 @@ flowchart TB
     X[dav]
     RT[retention]
     RS[resilience]
+    RL[ratelimit]
+    US[uploadsafe]
   end
   subgraph Store["Google Cloud"]
     B[(Cloud Storage\nbytes)]
@@ -43,6 +45,8 @@ flowchart TB
   O --> B
   T & G & DV & U --> S
   O -. retries .-> RS
+  R --> RL
+  V --> US
 ```
 
 | Block | What it does in Files |
@@ -56,6 +60,8 @@ flowchart TB
 | dav | The XML reader (no DTDs, so no external entities) and the multistatus writer |
 | retention | Plans what the trash and old versions give up each night |
 | resilience | Timeouts and jittered retries on every call to Cloud Storage |
+| ratelimit | Wrong passwords slow an address down, with a Retry-After the apps can wait on |
+| uploadsafe | Names the apps cannot hold (.part, .htaccess, Windows-reserved names) refused before any bytes are kept |
 | oracle | Checks Files against a real Nextcloud, request by request |
 
 ## What it keeps

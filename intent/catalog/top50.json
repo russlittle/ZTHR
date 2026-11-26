@@ -280,7 +280,7 @@
       ],
       "studentAdvocate": {
         "coverage": "partial",
-        "from": "grants: wrong link passwords throttled per link"
+        "from": "ratelimit and grants: token buckets and failure counts per key, and wrong link passwords throttled per link"
       }
     },
     {

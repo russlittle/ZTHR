@@ -11,6 +11,8 @@ import { BadXml } from '../../intent/blocks/dav/index.ts';
 import { Refused, Throttled } from '../../intent/blocks/grants/index.ts';
 import { Held } from '../../intent/blocks/leases/index.ts';
 import { Missing, TooLarge } from '../../intent/blocks/objects/index.ts';
+import { Failures, Limited } from '../../intent/blocks/ratelimit/index.ts';
+import { Unsafe } from '../../intent/blocks/uploadsafe/index.ts';
 import { Exists, IntoItself, InvalidName, MissingParent, NotFound } from '../../intent/blocks/tree/index.ts';
 import { BadChunk, NoSession, OverQuota, WrongLength } from '../../intent/blocks/uploads/index.ts';
 import { Denied, Insufficient, PreconditionFailed, type Files } from './app.ts';
@@ -64,23 +66,14 @@ export async function fields(r: Req): Promise<Record<string, string>> {
   return out;
 }
 
-const failures = new Map<string, number[]>();
-const WINDOW = 60_000;
-const LIMIT = 10;
-
-export class Throttle extends Error {
-  constructor() {
-    super('too many failed sign-ins from this address; wait a minute');
-  }
-}
+/** Wrong passwords from one address: ten a minute, then it waits. A success clears the count. */
+const signIns = new Failures(10, 60_000, { what: 'too many failed sign-ins from this address' });
 
 /** Signs the request in from its Basic credentials; returns false when it carries none. */
 export async function authenticate(files: Files, r: Req): Promise<boolean> {
   const h = header(r, 'authorization');
   if (!h?.startsWith('Basic ')) return false;
-  const now = Date.now();
-  const recent = (failures.get(r.ip) ?? []).filter((t) => now - t < WINDOW);
-  if (recent.length >= LIMIT) throw new Throttle();
+  signIns.check(r.ip);
   const raw = Buffer.from(h.slice(6), 'base64').toString('utf8');
   const i = raw.indexOf(':');
   if (i < 0) throw new NotSignedIn();
@@ -88,19 +81,20 @@ export async function authenticate(files: Files, r: Req): Promise<boolean> {
     const s = await files.signIn(decodeURIComponent(raw.slice(0, i)), raw.slice(i + 1));
     r.person = s.person;
     if (s.device !== undefined) r.device = s.device;
-    failures.delete(r.ip);
+    signIns.succeed(r.ip);
     return true;
   } catch (e) {
-    failures.set(r.ip, [...recent, now]);
+    signIns.fail(r.ip);
     throw e;
   }
 }
 
 /** The status a block error means to a client. */
-export function statusOf(e: unknown): { status: number; message: string } {
+export function statusOf(e: unknown): { status: number; message: string; retryAfter?: number } {
   const m = e instanceof Error ? e.message : String(e);
   if (e instanceof NotSignedIn) return { status: 401, message: m };
-  if (e instanceof Throttle || e instanceof Throttled) return { status: 429, message: m };
+  if (e instanceof Limited || e instanceof Throttled) return { status: 429, message: m, retryAfter: Math.ceil(e.retryAfterMs / 1000) };
+  if (e instanceof Unsafe) return { status: 400, message: m };
   if (e instanceof Denied) return { status: e.status, message: m };
   if (e instanceof NotFound || e instanceof Missing || e instanceof NoSession) return { status: 404, message: m };
   if (e instanceof MissingParent) return { status: 409, message: m };
