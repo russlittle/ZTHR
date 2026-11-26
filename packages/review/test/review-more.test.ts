@@ -1,7 +1,7 @@
 // Verifies docs/blocks/review.md
 import { describe, expect, it } from 'vitest';
 import { ModelUnavailable, TwinModelClient, type ModelClient } from '@zthr/models';
-import { parseReview, promptFor, reviewPanel, reviewSeat, type Seat } from '../src/index.js';
+import { boundInput, datumIntent, parseReview, promptFor, reviewPanel, reviewSeat, type Seat } from '../src/index.js';
 
 const input = { diff: 'DIFF', intent: 'INTENT', context: 'CTX', repoFiles: { 'a.ts': 'A', 'b.ts': 'B' } };
 const seat = (family: string, text: string, role: Seat['role'] = 'unaided'): Seat => ({ role, family, model: 'm', client: new TwinModelClient(() => text) });
@@ -67,5 +67,38 @@ describe('the panel', () => {
     const r = await reviewPanel([seat('a', ok), seat('b', ok), seat('c', '{"verdict":"fail","findings":[{"severity":"blocker","summary":"x"}]}'), seat('d', '{"verdict":"fail"}', 'in-place')], input);
     expect(r.verdict.status).toBe('fail');
     expect(r.findings).toEqual([{ severity: 'blocker', summary: 'x', seat: 'unaided', family: 'c' }]);
+  });
+});
+
+describe('the intent is the datum, and a partial view is unknown', () => {
+  it('the author\'s description reaches only the context-aided seat, labelled as a claim to test', () => {
+    const withClaim = { ...input, claim: 'AUTHOR SAYS FINE' };
+    expect(promptFor('context-aided', withClaim)).toBe("Intent:\nINTENT\n\nContext:\nCTX\n\nThe author's description of the change, a claim to test, not evidence:\nAUTHOR SAYS FINE\n\nDiff:\nDIFF");
+    for (const role of ['unaided', 'independent', 'in-place'] as const) expect(promptFor(role, withClaim)).not.toContain('AUTHOR SAYS');
+  });
+  it('a seat shown part of the change is unknown and is never asked', async () => {
+    let asked = false;
+    const client: ModelClient = { provider: 'x', complete: async () => ((asked = true), { text: '{"verdict":"pass"}', model: 'm', provider: 'x', usage: { inputTokens: 0, outputTokens: 0, cachedTokens: 0 } }) };
+    const r = await reviewSeat({ role: 'unaided', family: 'f', model: 'm', client }, { ...input, omitted: ['3 of 43 changed files'] });
+    expect(r.verdict).toMatchObject({ status: 'unknown', reason: 'saw only part of the change; not shown: 3 of 43 changed files' });
+    expect(asked).toBe(false);
+  });
+  it('a panel with anything omitted is unknown, never a pass', async () => {
+    const seats = [seat('a', '{"verdict":"pass"}', 'context-aided'), seat('b', '{"verdict":"pass"}', 'unaided'), seat('c', '{"verdict":"pass"}', 'independent')];
+    expect((await reviewPanel(seats, { ...input, omitted: ['the diff past 10 of 20 characters'] })).verdict.status).toBe('unknown');
+    expect((await reviewPanel(seats, { ...input, omitted: [] })).verdict.status).toBe('pass');
+  });
+  it('bounding names everything it leaves out, and leaves a change that fits untouched', () => {
+    const fits = boundInput('abc', { 'a.ts': 'A' }, { diffChars: 10, fileChars: 10, files: 5 });
+    expect(fits).toEqual({ diff: 'abc', repoFiles: { 'a.ts': 'A' }, omitted: [] });
+    const big = boundInput('x'.repeat(12), { 'a.ts': 'y'.repeat(7), 'b.ts': 'B', 'c.ts': 'C' }, { diffChars: 10, fileChars: 5, files: 2 });
+    expect(big.diff).toBe('x'.repeat(10));
+    expect(big.repoFiles).toEqual({ 'a.ts': 'yyyyy', 'b.ts': 'B' });
+    expect(big.omitted).toEqual(['the diff past 10 of 12 characters', '1 of 3 changed files', 'a.ts past 5 of 7 characters']);
+    expect(boundInput('x'.repeat(10), {}, { diffChars: 10, fileChars: 5, files: 2 }).omitted).toEqual([]);
+    expect(boundInput('', { 'a.ts': 'y'.repeat(5), 'b.ts': 'z' }, { diffChars: 10, fileChars: 5, files: 2 }).omitted).toEqual([]);
+  });
+  it('the datum lists every locked goal with what must never happen', () => {
+    expect(datumIntent([{ id: 'j1', goal: 'G1', forbidden: ['f1', 'f2'] }, { id: 'j2', goal: 'G2' }, { id: 'j3', goal: 'G3', forbidden: [] }])).toBe('j1: G1\n  Never: f1; f2\nj2: G2\nj3: G3');
   });
 });
