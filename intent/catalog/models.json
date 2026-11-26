@@ -1,0 +1,91 @@
+{
+  "schema": "zthr-model-plan/1",
+  "checked": "2026-11-26",
+  "why": "The fixture judges the work, not the model, so every seat gets the cheapest model that can do its job. Prices are list prices per million tokens, as published when checked; the meter uses them to stop spending at the ceiling.",
+  "models": {
+    "hydrogen": {
+      "provider": "vertex",
+      "model": "google/gemini-4-hydrogen",
+      "region": "global",
+      "family": "google",
+      "price": {
+        "in": 1.5,
+        "cachedIn": 0.075,
+        "out": 7.5
+      },
+      "for": "planning and orchestration; the paid fallback seat for a second family when Ollama is off. It costs about five times DeepSeek Flash, so it plans and the cheap seats execute"
+    },
+    "deepseek-flash": {
+      "provider": "vertex",
+      "model": "deepseek-ai/deepseek-v4.1-flash-maas",
+      "region": "global",
+      "family": "deepseek",
+      "price": {
+        "in": 0.3,
+        "cachedIn": 0.03,
+        "out": 1.2
+      },
+      "for": "every review-type call, readings, triage and operation"
+    },
+    "ollama-qwen": {
+      "provider": "ollama",
+      "model": "qwen3-coder",
+      "family": "qwen",
+      "price": {
+        "in": 0,
+        "cachedIn": 0,
+        "out": 0
+      },
+      "for": "building, on your own machine or a spot GPU: no per-token cost"
+    },
+    "ollama-llama": {
+      "provider": "ollama",
+      "model": "llama3.3",
+      "family": "llama",
+      "price": {
+        "in": 0,
+        "cachedIn": 0,
+        "out": 0
+      },
+      "for": "the second review family, and the second reading"
+    }
+  },
+  "seats": {
+    "steward": [
+      "hydrogen"
+    ],
+    "reader": [
+      "deepseek-flash",
+      "ollama-llama",
+      "hydrogen"
+    ],
+    "builder": [
+      "ollama-qwen",
+      "deepseek-flash"
+    ],
+    "reviewer": [
+      "deepseek-flash",
+      "ollama-llama",
+      "ollama-qwen",
+      "hydrogen"
+    ],
+    "operator": [
+      "deepseek-flash"
+    ],
+    "triager": [
+      "deepseek-flash"
+    ],
+    "pipeline": []
+  },
+  "limits": {
+    "maxOutputTokens": {
+      "steward": 4000,
+      "reader": 2000,
+      "builder": 8000,
+      "reviewer": 1500,
+      "operator": 800,
+      "triager": 800
+    },
+    "maxTurns": 12
+  }
+}

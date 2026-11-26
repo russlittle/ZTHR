@@ -37,9 +37,9 @@ cannot change them. A role is never shown the tools it may not call.
 | Role | Does | May not |
 | --- | --- | --- |
 | Reader | Reads the rough intent into the reading schema | See another reading; read twice, or for another family; answer the person's questions |
-| Steward | Ranks questions, drafts answers, issues revisions, proposes journeys | Answer for the person; sign anything; issue a later revision without a reason |
-| Builder | Builds to the package, opens changes, runs checks, takes defects | Admit its own change; report a check result; touch a locked, person or generated path; change a proven check without re-proving it |
-| Reviewer | Reviews other families' changes | Review its own family's work; pass without saying what it checked; block without a finding |
+| Steward | Ranks questions, drafts answers, clarifies cases, issues revisions, proposes journeys | Answer for the person; sign anything; issue a later revision without a reason; issue a Class I clarification, or any without the person's delegation |
+| Builder | Builds to the package, diagnoses cases, opens changes, runs checks, takes defects | Admit its own change; report a check result; touch a locked, person or generated path; change a proven check without re-proving it; blame the intent without naming balloons and another family agreeing |
+| Reviewer | Reviews other families' changes, confirms or disputes diagnoses | Review its own family's work; pass without saying what it checked; block without a finding; confirm its own family's diagnosis |
 | Operator | Moves admitted changes through delivery, watches, rolls back | Skip a stage; release to everyone without a person's approval; record a stage result; touch credentials or IAM |
 | Triager | Sorts reports, marks duplicates, turns bugs into defects and ideas into proposals | Change what a reporter wrote; resolve without evidence; change the intent |
 | Pipeline | The build service's identity, recording what each stage proved | Request, approve or roll back a stage |
@@ -103,6 +103,136 @@ checkout and records what each process returned, so a passing result is never an
 run them if the checkout isn't on the change's commit or has uncommitted work. It also reads the paths from the
 commit itself, not from the change's list. If the commit touches a path the change didn't declare, the change is
 refused, so leaving a locked path off the list doesn't get it past its tier.
+
+## Correcting without asking
+
+Most failures don't need a person: a check fails, a review blocks, a stage fails, or someone reports a bug. Each one
+opens a case on its own, and the case goes round until it closes or can honestly go no further.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Diagnose: a failure opens a case
+  Diagnose --> Fix: bug
+  Diagnose --> Confirm: intent, infeasible or factory
+  Confirm --> Fix: another family disputes it
+  Confirm --> Clarify: intent, confirmed
+  Confirm --> Person: infeasible, confirmed
+  Confirm --> Upstream: factory, confirmed
+  Clarify --> Fix: Class II, issued by the factory
+  Clarify --> Person: Class I, or no delegation
+  Person --> Fix: signed, revision issued
+  Fix --> Fix: another attempt
+  Fix --> Person: not converging, out of attempts or over budget
+  Fix --> [*]: the fixing change is admitted
+  Upstream --> [*]: the factory's own intent is revised the same way
+```
+
+The builder diagnoses, and anything other than a bug has to be confirmed by a reviewer from another family. Blaming
+the spec is the easy way out of a hard fix, so the diagnosis must name the balloons it turns on.
+
+A clarification is written as examples (given, when, then) and engineering notes. The API drafts the next revision
+and compares it with the signed one, balloon by balloon, the way engineering change control does:
+
+| Class II: the factory issues it | Class I: the person decides |
+| --- | --- |
+| Examples and notes added, as the factory's own assumptions | A balloon removed or reworded |
+| A tolerance tightened | A tolerance loosened, or one that can't be compared |
+| A mark added or raised | A mark lost or lowered |
+| Information added without touching existing records | A change existing records feel |
+| | A new outcome, constraint or other scope |
+| | The end in mind, the spec sheet, or anything confirmed changed |
+
+What the factory adds is marked `assumed` and attributed to `factory-clarifications.md`, never to the person. A Class
+II revision is issued only under a standing delegation the person signs once
+(`intent agents delegate --class-ii on --attempts 5`). Without it, even Class II is asked for.
+
+A case goes to the person in three situations:
+
+- the attempts run out;
+- three attempts in a row fail on as much as or more than before;
+- it costs more than the per-case ceiling.
+
+Each of these is evidence the intent and the work disagree about something nobody has written down. That's the one
+question worth a person's time.
+
+## Spending as little as possible
+
+The fixture judges the work, not the model: the checks, gauges, ratchets and walks. So each seat runs the cheapest
+model that can do its job.
+
+| Seat | Model | Where | Per million tokens, in / out |
+| --- | --- | --- | --- |
+| Steward: planning and orchestration | Gemini 4 Hydrogen | Vertex, global | $1.50 ($0.075 cached) / $7.50 |
+| Readers | DeepSeek V4.1 Flash, then Llama | Vertex global; Ollama | $0.30 / $1.20; nothing |
+| Builder | Qwen3 Coder, through any MCP coding agent | Ollama | nothing |
+| Reviewers | DeepSeek V4.1 Flash, then Llama, then Qwen | Vertex global; Ollama | $0.30 / $1.20; nothing |
+| Operator, triager | DeepSeek V4.1 Flash | Vertex global | $0.30 / $1.20 |
+| Pipeline | none: it's the build service | Cloud Build | build minutes |
+
+Prices are list prices as published when checked (`catalog/models.json`, 2026-11-26). Hydrogen is also the paid
+fallback for a second family when the Ollama machine is off.
+
+Every shortcut here works because a model is only asked what a machine can't answer:
+
+- **An empty agenda wakes nobody.** The supervisor calls a model only for a seat with work waiting.
+- **Machines before models.** A reviewer is shown a change only once every required check has passed and no other
+  family has blocked it.
+- **Cheapest check first, stop at the first failure.** Typecheck, signatures and dependencies take seconds; the walks
+  take minutes and run last. Correction attempts are judged by what still fails.
+- **Content-addressed checks.** A check that passed on an identical git tree isn't run again, for any change.
+- **One family at a time.** Once two families pass a change it's admitted, and the third seat sleeps.
+- **A packet, not the repository.** A review is one call: the capped diff, its paths and the balloons.
+- **The same prefix every call.** The system prompt is the role's guide, byte for byte, so the provider caches it,
+  at a tenth of the price on Hydrogen and DeepSeek.
+- **Short wakes.** Output is capped per seat, temperature is 0, tool results are cut at 8 KB, and a wake ends when
+  its agenda is done.
+- **A ceiling that stops, not warns.** At the daily ceiling (default $1) the agenda pauses and nothing more is called.
+  A case over its own ceiling (default $0.25) goes to the person.
+
+A review packet of about 13,000 tokens in and at most 1,500 out costs under a cent on DeepSeek Flash. A whole panel
+costs one to two cents.
+
+```sh
+intent agents budget   --workspace work/bills --by you@example.com --daily 2 --case 0.5
+intent agents delegate --workspace work/bills --by you@example.com --class-ii on --attempts 5
+GOOGLE_CLOUD_PROJECT=your-project intent agents drive --workspace work/bills --factory ../factory --rounds 5
+```
+
+`drive` wakes each seat with work on its plan's model, through the OpenAI-compatible endpoints Vertex and Ollama
+both serve. It uses a short-lived token from `gcloud auth print-access-token` that is never stored. The builder seat
+needs a coding agent that edits files. Set `ZTHR_BUILDER_CMD` to one that speaks MCP and points at the local Ollama
+model, with the agent API attached as above.
+
+### The factory's own review panel
+
+`intent/factory/review-on-vertex.patch` changes the reference factory's review panel in four ways:
+
+- the panel moves to Vertex: gpt-oss-20b (about $0.07 / $0.30) first, then DeepSeek V4.1 Flash, then Qwen3 Coder,
+  with DeepSeek Flash in place after merge;
+- seats are asked one at a time, and the panel stops at the first failure;
+- each seat is sent a 40 KB diff with three lines of context and at most 12 changed files of 8 KB each, down from
+  120 KB and 40 files of 20 KB;
+- each seat can have its own endpoint, so a free local Ollama seat can stand in for any of them.
+
+Its tests and all 28 gates pass. `control/review.yaml` is a change to the AI that a listed person signs, so apply it
+yourself, in a commit GitHub verifies:
+
+```sh
+# In Cloud Shell
+gcloud services enable aiplatform.googleapis.com
+# In the console, enable DeepSeek V4.1 Flash, gpt-oss 20B and Qwen3 Coder in Model Garden (each accepts terms once).
+cd ZTHR && git fetch origin && git checkout reference-implementation
+git show origin/intent-surface:intent/factory/review-on-vertex.patch | git apply
+GOOGLE_CLOUD_PROJECT=$(gcloud config get-value project) npx tsx tools/review.ts --base HEAD~1   # one panel, a cent or two
+git commit -S -am "Review panel on Vertex, cheapest first, stopping at the first failure"
+```
+
+Two build-minute savings are yours to choose. Both are changes to `cloudbuild.yaml`, which re-proves its gates:
+
+- **Pushes on `E2_STANDARD_2`.** It costs $0.006 a minute against $0.0156 on `E2_HIGHCPU_8`. Change `CI_MACHINE` and
+  `control/ci-rates.json` with it.
+- **Skip a nightly with nothing new.** Have the nightly stop at its first step when the commit equals last night's.
+  A full nightly can take up to six hours on `E2_HIGHCPU_8`, about $5.60, to re-walk code it already walked.
 
 ## What is kept
 

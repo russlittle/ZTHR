@@ -31,6 +31,7 @@ export const DUTIES: readonly Duty[] = [
       { what: 'answering a question as the person: a drafted answer is a proposal until the person signs it', provenBy: T },
       { what: 'signing the schematic, a gauge or a journey', provenBy: T },
       { what: 'issuing a revision after the first without saying why', provenBy: T },
+      { what: 'issuing a clarification that changes what the person signed (Class I), or any without their standing delegation', provenBy: T },
     ],
   },
   {
@@ -41,6 +42,7 @@ export const DUTIES: readonly Duty[] = [
       { what: 'reporting a check result: the API runs the check and records what the process returned', provenBy: T },
       { what: 'touching a locked, person or generated path', provenBy: T },
       { what: 'changing a proven check without re-proving it against its planted defects', provenBy: T },
+      { what: 'blaming the intent or the factory for a failure without naming the balloons and another family agreeing', provenBy: T },
     ],
   },
   {
@@ -50,6 +52,7 @@ export const DUTIES: readonly Duty[] = [
       { what: 'reviewing a change its own family wrote, or one it wrote', provenBy: T },
       { what: 'passing a change without saying what it checked, or blocking one without a finding', provenBy: T },
       { what: 'changing what it reviews', provenBy: T },
+      { what: 'confirming a diagnosis its own family made', provenBy: T },
     ],
   },
   {
@@ -116,16 +119,17 @@ export function tierOf(path: string, tiers: readonly Tier[] = TIERS): Tier {
 
 /** The factory's required checks (control/required-checks.yaml), and the npm script that runs each. */
 export const REQUIRED_CHECKS: readonly { readonly check: string; readonly step: string }[] = [
+  // Cheapest first: a change that fails in seconds never pays for minutes of walking.
   { check: 'typecheck', step: 'typecheck' },
+  { check: 'changes only a person makes are signed by that person', step: 'person-signed' },
+  { check: 'production dependencies audited', step: 'dependencies' },
+  { check: 'docs derived and fresh', step: 'docs' },
   { check: 'unit and integration tests', step: 'test' },
   { check: 'proven gates', step: 'gates' },
   { check: 'locked journeys', step: 'journeys' },
-  { check: 'docs derived and fresh', step: 'docs' },
   { check: 'exhaustive button walk', step: 'explore' },
   { check: 'exhaustive page walk', step: 'crawl' },
   { check: 'browser walk', step: 'walk' },
-  { check: 'changes only a person makes are signed by that person', step: 'person-signed' },
-  { check: 'production dependencies audited', step: 'dependencies' },
 ];
 
 /** Independence: two reviews, from two families, neither the author's. Three families in all touch every change. */

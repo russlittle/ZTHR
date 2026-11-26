@@ -84,7 +84,7 @@ export function verifyLog(l: Ledger): { ok: true; lines: number } | { ok: false;
 
 // ------------------------------------------------------------------ proposals and signatures
 
-export type ProposalKind = 'answer' | 'journey' | 'intent' | 'production' | 'ratchet-reset';
+export type ProposalKind = 'answer' | 'journey' | 'intent' | 'production' | 'ratchet-reset' | 'clarification';
 
 export interface Proposal {
   readonly id: string;
@@ -142,6 +142,8 @@ export interface Change {
   readonly at: string;
   /** Proven paths touched: the gate must be re-proved against its planted defects before the change counts. */
   readonly reprove: readonly string[];
+  /** The correction case this change answers, when it is a fix. */
+  readonly case?: string;
 }
 
 export const changes = (l: Ledger): Change[] =>
@@ -167,6 +169,9 @@ export interface CheckRun {
   readonly exit: number | null;
   /** The last lines the check printed, so a failure says why without anyone retyping it. */
   readonly tail: string;
+  /** The tree the check ran on. An identical tree that passed before is not run again. */
+  readonly tree?: string;
+  readonly reused?: boolean;
   readonly by: Session;
   readonly at: string;
 }

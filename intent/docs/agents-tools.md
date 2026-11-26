@@ -21,6 +21,7 @@ Generated from the registry the API serves (`src/agents/tools.ts`). A role sees 
 | `checks_run` | act | build |  |  | ✓ |  |  |  |  |
 | `defects` | read | build |  |  | ✓ |  |  |  |  |
 | `review_queue` | read | review |  |  |  | ✓ |  |  |  |
+| `review_packet` | read | review |  |  |  | ✓ |  |  |  |
 | `review_submit` | act | review |  |  |  | ✓ |  |  |  |
 | `admission` | read | review | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `deploy_plan` | read | deliver |  |  |  |  | ✓ |  | ✓ |
@@ -33,6 +34,11 @@ Generated from the registry the API serves (`src/agents/tools.ts`). A role sees 
 | `ticket_triage` | act | operate |  |  |  |  |  | ✓ |  |
 | `ticket_defect` | act | operate |  |  |  |  |  | ✓ |  |
 | `ticket_idea` | propose | operate |  |  |  |  |  | ✓ |  |
+| `agenda` | read | any | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `cases` | read | any | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `case_diagnose` | act | build |  |  | ✓ |  |  |  |  |
+| `case_confirm` | act | review |  |  |  | ✓ |  |  |  |
+| `clarify` | act | intent |  | ✓ |  |  |  |  |  |
 
 ## `guide`
 
@@ -169,19 +175,21 @@ Open a change for review: the commit it is, the paths it touches and the revisio
 | --- | --- | --- | --- |
 | `title` | string | yes | What it does, in a line. |
 | `commit` | string | yes | The full or short git sha. |
+| `case` | string |  | The correction case this change fixes, if it is a fix. |
 | `base` | string |  | The commit the work starts from; the commit’s parent if left out. |
 | `paths` | array | yes | Every path the commit touches. The API checks this against the commit itself. |
 
 ## `checks_run`
 
-Run required checks on the change's commit in the factory checkout. The API runs them and records what each process returned; nobody reports a result. The checkout must be on the change's commit with nothing uncommitted.
+Run required checks on the change's commit in the factory checkout. The API runs them, cheapest first, stops at the first failure, and records what each process returned; nobody reports a result. A check that passed on the identical tree before is not run again. A failure opens a correction case, or counts as another attempt on the change's case.
 
 **Then:** Fix what failed in a new commit and open a new change; when all pass, wait for reviews.
 
 | Input | Type | Required | Meaning |
 | --- | --- | --- | --- |
 | `change` | string | yes | The change id. |
-| `check` | string: typecheck, test, gates, journeys, docs, explore, crawl, walk, person-signed, dependencies |  | One check; all of them if left out. |
+| `check` | string: typecheck, person-signed, dependencies, docs, test, gates, journeys, explore, crawl, walk |  | One check; all of them if left out. |
+| `all` | boolean |  | Run every check even after one fails (default: stop at the first failure). |
 
 ## `defects`
 
@@ -193,11 +201,22 @@ _No input._
 
 ## `review_queue`
 
-Changes you may review: written by another family, not yet reviewed by yours, with their paths and check results.
+Changes you may review: written by another family, not yet reviewed by yours, every required check passed, and not blocked by another family. Nothing reaches a model that a machine can still reject.
 
 **Then:** Review the commit itself, against the schematic and the gauges, then call review_submit.
 
 _No input._
+
+## `review_packet`
+
+Everything one review needs and nothing else: the diff of the change (capped), its paths and tiers, and the balloons it builds to. One short call instead of reading the repository.
+
+**Then:** Judge the diff against the balloons and the gauges, then call review_submit.
+
+| Input | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `change` | string | yes | The change id. |
+| `maxBytes` | integer |  | Cap on the diff (default 40000). |
 
 ## `review_submit`
 
@@ -332,3 +351,58 @@ Carry an idea from a report to the person who holds the intent, as a proposed ch
 | --- | --- | --- | --- |
 | `ticket` | string | yes | The ticket id. |
 | `change` | string | yes | What would change in the intent, in their terms. |
+
+## `agenda`
+
+What is waiting on your role now, most urgent first, and whether spending is paused. A supervisor wakes an agent only when its agenda is not empty, so an idle seat costs nothing.
+
+**Then:** Do the first item. Call agenda again when it is done.
+
+_No input._
+
+## `cases`
+
+Correction cases: every failure the factory saw, its diagnosis, who it waits on, its attempts and whether it is converging.
+
+**Then:** Take the cases waiting on your role.
+
+| Input | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `open` | boolean |  | Only cases not closed (default true). |
+
+## `case_diagnose`
+
+Say what caused a failure. bug: the work misses a datum that is clear. intent: the datum is unclear or silent where the work needs it. infeasible: the intent cannot be met as signed. factory: the factory itself is wrong. Anything but a bug names the balloons and is confirmed by a reviewer of another family.
+
+**Then:** For a bug, fix it test first and open a change with this case. Otherwise wait for confirmation.
+
+| Input | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `case` | string | yes | The case id. |
+| `cause` | string: bug, intent, infeasible, factory | yes |  |
+| `balloons` | array |  | The balloons the failure turns on. |
+| `evidence` | string | yes | What in the failure shows it: the check output, the finding, the gauge. |
+
+## `case_confirm`
+
+Agree or disagree with a diagnosis that blames the intent or the factory. You must be of another family than the agent that diagnosed it. Disagreeing sends it back as a bug.
+
+**Then:** Call agenda.
+
+| Input | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `case` | string | yes | The case id. |
+| `agree` | boolean | yes |  |
+| `why` | string | yes | What you read in the datum that decides it. |
+
+## `clarify`
+
+Clarify the intent for a confirmed case, with examples and engineering notes only. The API drafts the next revision and compares it with the signed one. Class II (nothing signed is removed, reworded, loosened or re-marked, and no scope is added) is issued at once under the person’s delegation, and the builder goes again. Class I goes to the person with the draft and the reasons.
+
+**Then:** If it was issued, the case waits on the builder. If it was escalated, carry on with other work.
+
+| Input | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `case` | string | yes | The case id. |
+| `examples` | array |  |  |
+| `notes` | array |  | Engineering notes: how, for now. They never change what it must do. |

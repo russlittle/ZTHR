@@ -157,6 +157,13 @@ export interface People {
   readonly tune?: Readonly<Record<string, Tune>>;
 }
 
+/** Where the factory writes clarifications it made on its own: read as its assumptions, never as the person's words. */
+export const CLARIFICATIONS = 'factory-clarifications.md';
+const fromFactory = (s: Statement): Statement =>
+  s.supplied.kind === 'person' && s.supplied.origin?.path === CLARIFICATIONS
+    ? { ...s, state: 'assumed', supplied: { kind: 'derived', rule: `clarified by the factory (${CLARIFICATIONS}, line ${s.supplied.origin.line})` } }
+    : s;
+
 export function prepare(input: Input): Prepared {
   const model = intake(input.files);
   const lexicon = input.lexicon ?? loadLexicon();
@@ -344,7 +351,7 @@ export function prepare(input: Input): Prepared {
 
   const untied = model.context.filter((t) => !hits.some((h) => t.includes(h.words)));
   const finalModel = end === model.end ? model : { ...model, end };
-  return { model: finalModel, title: resolveClashes(titleBlock(hits.map((h) => ({ term: h.term.term, choices: h.term.choices }))), asks, clashChoice), statements: assignBalloons(statements, input.prior), questions: shaped(remaining), unread, untied, instruments: { design: lexicon.version, roles: roles.version ?? 'unversioned' }, journeys: { accepted: [...(input.journeys?.accepted ?? [])].sort(), own: input.journeys?.own ?? [] }, people: input.people ?? {}, options: settleSheet(input.options) };
+  return { model: finalModel, title: resolveClashes(titleBlock(hits.map((h) => ({ term: h.term.term, choices: h.term.choices }))), asks, clashChoice), statements: assignBalloons(statements.map(fromFactory), input.prior), questions: shaped(remaining), unread, untied, instruments: { design: lexicon.version, roles: roles.version ?? 'unversioned' }, journeys: { accepted: [...(input.journeys?.accepted ?? [])].sort(), own: input.journeys?.own ?? [] }, people: input.people ?? {}, options: settleSheet(input.options) };
 }
 
 /**

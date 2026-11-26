@@ -8,15 +8,21 @@
  *   intent agents sign|decline <proposal> --workspace d --by email [--note text]               a person decides
  *   intent agents call <tool> --json '{...}' --workspace d --role r --family f --agent name     one call, for scripts and the pipeline
  *   intent agents verify --workspace d                                                        whether the log's chain holds
+ *   intent agents delegate --workspace d --by email --class-ii on|off [--attempts n]           what the factory may revise without asking
+ *   intent agents budget --workspace d --by email --daily usd [--case usd]                    where spending stops
+ *   intent agents agenda --workspace d                                                        what waits on every role
+ *   intent agents drive --workspace d [--factory checkout] [--rounds n]                       wake the seats with work, on the cheap plan
  *
  * sign and decline are a person's commands. The server has no tool that reaches them, and they refuse anyone not
  * listed in agents/people.json, which only a person edits.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { writeDelegation } from './correct.ts';
 import { join } from 'node:path';
 import { DUTIES, type Role } from './duties.ts';
 import { guide } from './guide.ts';
 import { append, decisionOn, ledgerOf, proposals, signers, verifyLog, type Signature } from './ledger.ts';
+import { supervise } from './driver.ts';
 import { serve } from './mcp.ts';
 import { applySigned, call, toolDefinitions } from './tools.ts';
 
@@ -91,6 +97,47 @@ export function agentsCli(args: readonly string[]): number {
     const note = flag('note');
     append(l, 'signatures.jsonl', { proposal: p.id, decision: cmd === 'sign' ? 'signed' : 'declined', by, at: l.now(), ...(note ? { note } : {}) } satisfies Signature);
     console.log(`${p.id} ${cmd === 'sign' ? `signed: ${applySigned(ws, p)}` : 'declined'}`);
+    return 0;
+  }
+  if (cmd === 'delegate' || cmd === 'budget') {
+    const by = flag('by');
+    if (!by || !signers(l).includes(by)) {
+      console.error(`${by ?? 'nobody'} is not listed in ${join(ws, 'agents', 'people.json')} as someone who may sign`);
+      return 1;
+    }
+    if (cmd === 'delegate') {
+      const on = flag('class-ii');
+      if (on !== 'on' && on !== 'off') {
+        console.error('--class-ii on|off');
+        return 2;
+      }
+      writeDelegation(l, { classII: on === 'on', attempts: Number(flag('attempts') ?? 5), by, at: l.now() });
+      console.log(`the factory ${on === 'on' ? 'may' : 'may not'} issue Class II revisions on its own; ${flag('attempts') ?? 5} attempts a case before it asks`);
+    } else {
+      const daily = Number(flag('daily'));
+      if (!(daily > 0)) {
+        console.error('--daily must be dollars a day, more than 0');
+        return 2;
+      }
+      writeFileSync(join(l.dir, 'budget.json'), `${JSON.stringify({ dailyUSD: daily, caseUSD: Number(flag('case') ?? daily / 4), by, at: l.now() }, null, 2)}\n`);
+      console.log(`spending stops at $${daily} a day and $${flag('case') ?? daily / 4} a case`);
+    }
+    return 0;
+  }
+  if (cmd === 'drive') {
+    const factory = flag('factory');
+    void supervise({ workspace: ws, ...(factory ? { factory } : {}), rounds: Number(flag('rounds') ?? 5), log: (x) => console.log(x) }).then((r) => {
+      console.log(`stopped after ${r.rounds} round(s): ${r.why}; spent $${r.usd.toFixed(4)}`);
+      process.exit(0);
+    });
+    return -1;
+  }
+  if (cmd === 'agenda') {
+    for (const r of roles) {
+      const a = call({ workspace: ws, ledger: l, session: { role: r, family: 'supervisor', agent: 'supervisor' } }, 'agenda', {});
+      const v = a.ok ? (a.value as { items: { do: string }[]; paused: boolean }) : { items: [], paused: false };
+      console.log(`${r}: ${v.paused ? 'paused, budget reached' : v.items.length ? v.items.map((x) => x.do).join('; ') : 'nothing'}`);
+    }
     return 0;
   }
   if (cmd === 'verify') {

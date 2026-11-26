@@ -11,22 +11,25 @@
  * Every call, allowed or refused, is logged in a hash chain. A refusal says why and what to do instead.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { scan } from '../../tools/secret-scan.ts';
 import { objectives, STAGES } from '../delivery.ts';
 import { checkReading } from '../frame.ts';
 import { sha256 } from '../hash.ts';
-import type { Given } from '../pipeline.ts';
+import { CLARIFICATIONS, type Given } from '../pipeline.ts';
+import { release } from '../release.ts';
 import { readingPrompt } from '../prompt.ts';
 import { STAGES as INTENT_STAGES, stageOf } from '../progress.ts';
 import { ranked, readBack } from '../readback.ts';
 import { review } from '../review.ts';
 import { history, issue, load } from '../workspace.ts';
 import { REQUIRED_CHECKS, REVIEW_FAMILIES, TIERS, tierOf, UNWRITABLE, type Role, type Tier } from './duties.ts';
+import { caseOf, cases, classify, closeFixed, delegation, event, failure, type Cause, type DatumLike } from './correct.ts';
+import { budgetState } from './cost.ts';
 import {
-  append, changeOf, changes, decisionOn, fileTicket, log, openChange, propose, proposals, readLines, tickets,
+  append, changeOf, changes, decisionOn, fileTicket, ledgerOf, log, openChange, propose, proposals, readLines, tickets,
   type CheckRun, type DeployRecord, type Ledger, type ReviewRecord, type Session, type TicketEvent,
 } from './ledger.ts';
 
@@ -376,7 +379,7 @@ export const TOOLS: readonly Tool[] = [
     phase: 'build',
     description: 'Open a change for review: the commit it is, the paths it touches and the revision it builds to. Refused if it touches a path no agent may write. Changes are immutable; to amend, open a new one on the new commit.',
     next: 'Call checks_run for each required check, then wait for reviews.',
-    input: obj({ title: text('What it does, in a line.', 200), commit: text('The full or short git sha.', 40), base: text('The commit the work starts from; the commit’s parent if left out.', 40), paths: texts('Every path the commit touches. The API checks this against the commit itself.', 500) }, ['title', 'commit', 'paths']),
+    input: obj({ title: text('What it does, in a line.', 200), commit: text('The full or short git sha.', 40), case: text('The correction case this change fixes, if it is a fix.', 40), base: text('The commit the work starts from; the commit’s parent if left out.', 40), paths: texts('Every path the commit touches. The API checks this against the commit itself.', 500) }, ['title', 'commit', 'paths']),
     handle: (c, i) => {
       if (!/^[0-9a-f]{7,40}$/.test(String(i['commit'])) || (i['base'] !== undefined && !/^[0-9a-f]{7,40}$/.test(String(i['base'])))) return refuse('commit and base must be git shas', 'Give the sha of the commit to review.');
       const last = released(c) ?? refuse('nothing has been released to build to', 'Wait for the steward to issue a revision.');
@@ -386,7 +389,11 @@ export const TOOLS: readonly Tool[] = [
       const bad = paths.map((p) => ({ p, t: tierOf(p, tiers) })).filter((x) => UNWRITABLE.has(x.t.tier));
       if (bad.length) return refuse(`no agent writes ${bad.map((x) => `${x.p} (${x.t.tier})`).join(', ')}`, 'Take those paths out of the commit. To change a goal, call journey_propose; generated files come from their tools.');
       const reprove = paths.filter((p) => tierOf(p, tiers).tier === 'proven');
-      const ch = openChange(c.ledger, { title: String(i['title']), commit: String(i['commit']), ...(i['base'] ? { base: String(i['base']) } : {}), paths, revision: last.revision, author: c.session, reprove });
+      if (i['case'] !== undefined) {
+        const k = caseOf(c.ledger, String(i['case'])) ?? refuse(`no case ${String(i['case'])}`, 'Call cases.');
+        if (k.waiting !== 'builder: fix') return refuse(`case ${k.id} is waiting on ${k.waiting}, not a fix`, k.waiting === 'builder: diagnose' ? 'Diagnose it first with case_diagnose.' : 'Leave it to the role it waits on.');
+      }
+      const ch = openChange(c.ledger, { title: String(i['title']), commit: String(i['commit']), ...(i['base'] ? { base: String(i['base']) } : {}), ...(i['case'] ? { case: String(i['case']) } : {}), paths, revision: last.revision, author: c.session, reprove });
       return { change: ch.id, requiredChecks: REQUIRED_CHECKS.map((x) => x.check), reprove, reviews: `${REVIEW_FAMILIES} passing, from families other than ${c.session.family}` };
     },
   },
@@ -395,9 +402,9 @@ export const TOOLS: readonly Tool[] = [
     kind: 'act',
     roles: ['builder'],
     phase: 'build',
-    description: "Run required checks on the change's commit in the factory checkout. The API runs them and records what each process returned; nobody reports a result. The checkout must be on the change's commit with nothing uncommitted.",
+    description: "Run required checks on the change's commit in the factory checkout. The API runs them, cheapest first, stops at the first failure, and records what each process returned; nobody reports a result. A check that passed on the identical tree before is not run again. A failure opens a correction case, or counts as another attempt on the change's case.",
     next: 'Fix what failed in a new commit and open a new change; when all pass, wait for reviews.',
-    input: obj({ change: text('The change id.', 40), check: { type: 'string', enum: REQUIRED_CHECKS.map((x) => x.step), description: 'One check; all of them if left out.' } }, ['change']),
+    input: obj({ change: text('The change id.', 40), check: { type: 'string', enum: REQUIRED_CHECKS.map((x) => x.step), description: 'One check; all of them if left out.' }, all: { type: 'boolean', description: 'Run every check even after one fails (default: stop at the first failure).' } }, ['change']),
     handle: (c, i) => {
       const ch = changeOf(c.ledger, String(i['change'])) ?? refuse(`no change ${String(i['change'])}`, 'Call status for the open changes.');
       if (!c.factory) return refuse('no factory checkout is attached to this session', 'Start the session with --factory pointing at a checkout of the factory.');
@@ -414,14 +421,24 @@ export const TOOLS: readonly Tool[] = [
       const undeclared = actual.filter((p) => !ch.paths.includes(p));
       if (undeclared.length) return refuse(`the commit touches paths the change does not declare: ${undeclared.join(', ')}`, 'Open a new change that lists every path, so each is checked against its tier.');
       const run = c.run ?? ((step: string, cwd: string) => { const r = spawnSync('npm', ['run', step], { cwd, encoding: 'utf8', timeout: 30 * 60_000 }); return { exit: r.status, out: `${r.stdout}\n${r.stderr}` }; });
+      // Content-addressed: a check that passed on this exact tree before is not run again, whichever change it was for.
+      const tree = spawnSync('git', ['rev-parse', `${commit}^{tree}`], { cwd: c.factory, encoding: 'utf8' }).stdout.trim();
+      const before = readLines<CheckRun>(c.ledger, 'checks.jsonl');
       const which = REQUIRED_CHECKS.filter((x) => !i['check'] || x.step === i['check']);
-      const results = which.map((rc) => {
-        const r = run(rc.step, c.factory!);
-        const row: CheckRun = { change: ch.id, check: rc.check, step: rc.step, ok: r.exit === 0, exit: r.exit, tail: r.out.trim().split('\n').slice(-15).join('\n'), by: c.session, at: c.ledger.now() };
+      const results: { check: string; ok: boolean; reused?: boolean; tail?: string }[] = [];
+      // Cheapest first, and stop at the first failure unless asked for all: a fix is judged by what still fails.
+      for (const rc of which) {
+        const prior = tree ? before.find((r) => r.tree === tree && r.step === rc.step && r.ok) : undefined;
+        const r = prior ? { exit: 0, out: prior.tail } : run(rc.step, c.factory!);
+        const row: CheckRun = { change: ch.id, check: rc.check, step: rc.step, ok: r.exit === 0, exit: r.exit, tail: r.out.trim().split('\n').slice(-15).join('\n'), ...(tree ? { tree } : {}), ...(prior ? { reused: true } : {}), by: c.session, at: c.ledger.now() };
         append(c.ledger, 'checks.jsonl', row);
-        return { check: rc.check, ok: row.ok, ...(row.ok ? {} : { tail: row.tail }) };
-      });
-      return { results, admission: admission(c.ledger, ch.id) };
+        results.push({ check: rc.check, ok: row.ok, ...(prior ? { reused: true } : {}), ...(row.ok ? {} : { tail: row.tail }) });
+        if (!row.ok && i['all'] !== true) break;
+      }
+      const failed = results.filter((x) => !x.ok);
+      const kase = failed.length ? failure(c.ledger, { kind: 'check', ref: failed.map((x) => x.check).join(', '), change: ch.id }, `checks failed on ${ch.id}: ${failed.map((x) => x.check).join(', ')}`, failed.length + (which.length - results.length), ch.revision, ch.case, c.session) : null;
+      closeFixed(c.ledger, (id) => admission(c.ledger, id).admitted);
+      return { results, admission: admission(c.ledger, ch.id), ...(kase ? { case: kase } : {}) };
     },
   },
   {
@@ -441,7 +458,7 @@ export const TOOLS: readonly Tool[] = [
     kind: 'read',
     roles: ['reviewer'],
     phase: 'review',
-    description: 'Changes you may review: written by another family, not yet reviewed by yours, with their paths and check results.',
+    description: 'Changes you may review: written by another family, not yet reviewed by yours, every required check passed, and not blocked by another family. Nothing reaches a model that a machine can still reject.',
     next: 'Review the commit itself, against the schematic and the gauges, then call review_submit.',
     input: NONE,
     handle: (c) => {
@@ -449,7 +466,34 @@ export const TOOLS: readonly Tool[] = [
       return {
         changes: changes(c.ledger)
           .filter((ch) => ch.author.family !== c.session.family && !mine.includes(ch.id))
+          // A model reads a change only once the machines are satisfied, and only while no other family has blocked it.
+          .filter((ch) => { const a = admission(c.ledger, ch.id); return !a.admitted && !a.missing.some((m) => m.startsWith('check not run')) && !a.blocking.length; })
           .map((ch) => ({ id: ch.id, title: ch.title, commit: ch.commit, paths: ch.paths, reprove: ch.reprove, ...admission(c.ledger, ch.id) })),
+      };
+    },
+  },
+  {
+    name: 'review_packet',
+    kind: 'read',
+    roles: ['reviewer'],
+    phase: 'review',
+    description: 'Everything one review needs and nothing else: the diff of the change (capped), its paths and tiers, and the balloons it builds to. One short call instead of reading the repository.',
+    next: 'Judge the diff against the balloons and the gauges, then call review_submit.',
+    input: obj({ change: text('The change id.', 40), maxBytes: { type: 'integer', minimum: 1000, description: 'Cap on the diff (default 40000).' } }, ['change']),
+    handle: (c, i) => {
+      const ch = changeOf(c.ledger, String(i['change'])) ?? refuse(`no change ${String(i['change'])}`, 'Call review_queue.');
+      if (!c.factory) return refuse('no factory checkout is attached to this session', 'Start the session with --factory.');
+      const args = ch.base ? ['diff', '--unified=3', ch.base, ch.commit] : ['show', '--format=', '--unified=3', ch.commit];
+      const diff = spawnSync('git', args, { cwd: c.factory, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }).stdout;
+      const cap = Number(i['maxBytes'] ?? 40_000);
+      const p = prepared(c);
+      const tiers = factoryTiers(c);
+      return {
+        change: ch.id,
+        title: ch.title,
+        paths: ch.paths.map((x) => ({ path: x, tier: tierOf(x, tiers).tier })),
+        balloons: p.statements.filter((x) => x.slot === 'outcome' || x.slot === 'constraints' || x.slot === 'measures').map((x) => `[${x.balloon}] ${x.text}${x.tolerance ? ` (${x.tolerance})` : ''}${x.mark ? ` ${x.mark}` : ''}`),
+        diff: diff.length > cap ? `${diff.slice(0, cap)}\n… ${diff.length - cap} more bytes; review the paths above for what is cut` : diff,
       };
     },
   },
@@ -479,7 +523,10 @@ export const TOOLS: readonly Tool[] = [
       if (i['verdict'] === 'pass' && !checked.length) return refuse('a pass that says nothing about what was checked is not a review', 'List what you verified.');
       if (i['verdict'] === 'block' && !findings.some((f) => f.severity === 'blocking')) return refuse('a block needs a blocking finding', 'Name it, or pass with the findings as major or minor.');
       append(c.ledger, 'reviews.jsonl', { change: ch.id, verdict: i['verdict'] as 'pass' | 'block', checked, findings, by: c.session, at: c.ledger.now() } satisfies ReviewRecord);
-      return { recorded: true, admission: admission(c.ledger, ch.id) };
+      const blocking = findings.filter((f) => f.severity === 'blocking');
+      const kase = i['verdict'] === 'block' ? failure(c.ledger, { kind: 'review', ref: c.session.family, change: ch.id }, `blocked by ${c.session.family}: ${blocking.map((f) => f.what).join('; ')}`, blocking.length, ch.revision, ch.case, c.session) : null;
+      closeFixed(c.ledger, (id) => admission(c.ledger, id).admitted);
+      return { recorded: true, admission: admission(c.ledger, ch.id), ...(kase ? { case: kase } : {}) };
     },
   },
   {
@@ -566,8 +613,10 @@ export const TOOLS: readonly Tool[] = [
     handle: (c, i) => {
       const id = String(i['change']);
       if (deliveryOf(c.ledger, id).waiting !== i['stage']) return refuse(`${String(i['stage'])} was not requested for ${id}`, 'Record only what was requested.');
-      append(c.ledger, 'deploy.jsonl', { change: id, revision: changeOf(c.ledger, id)!.revision, stage: String(i['stage']), kind: 'result', ok: Boolean(i['ok']), build: String(i['build']), detail: String(i['detail'] ?? ''), by: c.session, at: c.ledger.now() } satisfies DeployRecord);
-      return { recorded: true, delivery: deliveryOf(c.ledger, id) };
+      const ch = changeOf(c.ledger, id)!;
+      append(c.ledger, 'deploy.jsonl', { change: id, revision: ch.revision, stage: String(i['stage']), kind: 'result', ok: Boolean(i['ok']), build: String(i['build']), detail: String(i['detail'] ?? ''), by: c.session, at: c.ledger.now() } satisfies DeployRecord);
+      const kase = i['ok'] ? null : failure(c.ledger, { kind: 'stage', ref: String(i['stage']), change: id }, `${String(i['stage'])} failed for ${id}: ${String(i['detail'] ?? '')}`.slice(0, 500), 1, ch.revision, ch.case, c.session);
+      return { recorded: true, delivery: deliveryOf(c.ledger, id), ...(kase ? { case: kase } : {}) };
     },
   },
   {
@@ -633,7 +682,9 @@ export const TOOLS: readonly Tool[] = [
       const t = tickets(c.ledger).find((x) => x.id === i['ticket']) ?? refuse(`no ticket ${String(i['ticket'])}`, 'Call tickets_list.');
       if (t.filed.kind !== 'bug') return refuse(`this report is a ${t.filed.kind}, not a bug`, t.filed.kind === 'idea' ? 'Call ticket_idea.' : 'Reply with a note instead.');
       append(c.ledger, 'tickets.jsonl', { ticket: t.id, event: 'defect', at: c.ledger.now(), by: c.session.agent, test: String(i['test']), expectation: String(i['expectation']) } as TicketEvent);
-      return { defect: String(i['test']), for: 'builders' };
+      const kase = failure(c.ledger, { kind: 'ticket', ref: t.id }, `${t.filed.title}: write "${String(i['test'])}" first`, 1, released(c)?.revision ?? 0, undefined, c.session);
+      event(c.ledger, { case: kase, event: 'diagnosed', by: c.session, cause: 'bug', evidence: String(i['expectation']) });
+      return { defect: String(i['test']), for: 'builders', case: kase };
     },
   },
   {
@@ -651,7 +702,175 @@ export const TOOLS: readonly Tool[] = [
       return { proposal: p.id, waitsFor: 'the person who holds the intent' };
     },
   },
+
+  // ---------------------------------------------------------------- correction: the loop that does not ask
+  {
+    name: 'agenda',
+    kind: 'read',
+    roles: 'all',
+    phase: 'any',
+    description: 'What is waiting on your role now, most urgent first, and whether spending is paused. A supervisor wakes an agent only when its agenda is not empty, so an idle seat costs nothing.',
+    next: 'Do the first item. Call agenda again when it is done.',
+    input: NONE,
+    handle: (c) => agendaFor(c),
+  },
+  {
+    name: 'cases',
+    kind: 'read',
+    roles: 'all',
+    phase: 'any',
+    description: 'Correction cases: every failure the factory saw, its diagnosis, who it waits on, its attempts and whether it is converging.',
+    next: 'Take the cases waiting on your role.',
+    input: obj({ open: { type: 'boolean', description: 'Only cases not closed (default true).' } }),
+    handle: (c, i) => ({ cases: cases(c.ledger).filter((k) => i['open'] === false || k.status !== 'closed').map((k) => ({ id: k.id, summary: k.opened.summary, source: k.opened.source, cause: k.cause, waiting: k.waiting, status: k.status, attempts: k.attempts, trend: k.trend, clarifications: k.clarifications, last: k.events.at(-1)!.why ?? k.events.at(-1)!.summary ?? null })) }),
+  },
+  {
+    name: 'case_diagnose',
+    kind: 'act',
+    roles: ['builder'],
+    phase: 'build',
+    description: 'Say what caused a failure. bug: the work misses a datum that is clear. intent: the datum is unclear or silent where the work needs it. infeasible: the intent cannot be met as signed. factory: the factory itself is wrong. Anything but a bug names the balloons and is confirmed by a reviewer of another family.',
+    next: 'For a bug, fix it test first and open a change with this case. Otherwise wait for confirmation.',
+    input: obj({ case: text('The case id.', 40), cause: { type: 'string', enum: ['bug', 'intent', 'infeasible', 'factory'] }, balloons: { type: 'array', items: { type: 'integer', minimum: 1 }, maxItems: 20, description: 'The balloons the failure turns on.' }, evidence: text('What in the failure shows it: the check output, the finding, the gauge.', 3000) }, ['case', 'cause', 'evidence']),
+    handle: (c, i) => {
+      const k = caseOf(c.ledger, String(i['case'])) ?? refuse(`no case ${String(i['case'])}`, 'Call cases.');
+      if (k.waiting !== 'builder: diagnose') return refuse(`case ${k.id} is waiting on ${k.waiting}`, 'Diagnose only cases waiting on a diagnosis.');
+      const cause = i['cause'] as Cause;
+      const balloons = (i['balloons'] as number[] | undefined) ?? [];
+      if (cause !== 'bug' && !balloons.length) return refuse(`a diagnosis of ${cause} names the balloons it turns on`, 'Cite the balloon numbers from the schematic, or diagnose a bug.');
+      const known = new Set(prepared(c).statements.map((x) => x.balloon));
+      const unknown = balloons.filter((b) => !known.has(b));
+      if (unknown.length) return refuse(`no balloon ${unknown.join(', ')} on the schematic`, 'Call schematic for the numbers.');
+      event(c.ledger, { case: k.id, event: 'diagnosed', by: c.session, cause, balloons, evidence: String(i['evidence']) });
+      return { case: k.id, waiting: caseOf(c.ledger, k.id)!.waiting };
+    },
+  },
+  {
+    name: 'case_confirm',
+    kind: 'act',
+    roles: ['reviewer'],
+    phase: 'review',
+    description: 'Agree or disagree with a diagnosis that blames the intent or the factory. You must be of another family than the agent that diagnosed it. Disagreeing sends it back as a bug.',
+    next: 'Call agenda.',
+    input: obj({ case: text('The case id.', 40), agree: { type: 'boolean' }, why: text('What you read in the datum that decides it.', 2000) }, ['case', 'agree', 'why']),
+    handle: (c, i) => {
+      const k = caseOf(c.ledger, String(i['case'])) ?? refuse(`no case ${String(i['case'])}`, 'Call cases.');
+      if (k.waiting !== 'reviewer: confirm') return refuse(`case ${k.id} is waiting on ${k.waiting}`, 'Confirm only cases waiting on confirmation.');
+      if (k.diagnosedBy && (k.diagnosedBy.family === c.session.family || k.diagnosedBy.agent === c.session.agent)) return refuse(`${c.session.family} diagnosed this case`, 'A reviewer of another family confirms it.');
+      if (i['agree'] !== true) {
+        event(c.ledger, { case: k.id, event: 'disputed', by: c.session, why: String(i['why']) });
+        return { case: k.id, waiting: 'builder: fix' };
+      }
+      event(c.ledger, { case: k.id, event: 'confirmed', by: c.session, why: String(i['why']) });
+      if (k.cause === 'factory') {
+        append(c.ledger, 'upstream.jsonl', { case: k.id, at: c.ledger.now(), summary: k.opened.summary, evidence: k.events.find((e) => e.event === 'diagnosed')?.evidence ?? '' });
+        event(c.ledger, { case: k.id, event: 'upstream', by: c.session, why: 'reported into the factory’s own intent, which is revised the same way' });
+      }
+      if (k.cause === 'infeasible') {
+        const p = propose(c.ledger, c.session, 'intent', `Cannot be met as signed: ${k.opened.summary ?? k.id}`.slice(0, 120), String(i['why']), { case: k.id, balloons: k.events.find((e) => e.event === 'diagnosed')?.balloons ?? [] });
+        event(c.ledger, { case: k.id, event: 'escalated', by: c.session, proposal: p.id, why: 'two families agree the intent cannot be met as signed' });
+      }
+      return { case: k.id, waiting: caseOf(c.ledger, k.id)!.waiting };
+    },
+  },
+  {
+    name: 'clarify',
+    kind: 'act',
+    roles: ['steward'],
+    phase: 'intent',
+    description: 'Clarify the intent for a confirmed case, with examples and engineering notes only. The API drafts the next revision and compares it with the signed one. Class II (nothing signed is removed, reworded, loosened or re-marked, and no scope is added) is issued at once under the person’s delegation, and the builder goes again. Class I goes to the person with the draft and the reasons.',
+    next: 'If it was issued, the case waits on the builder. If it was escalated, carry on with other work.',
+    input: obj(
+      {
+        case: text('The case id.', 40),
+        examples: { type: 'array', maxItems: 10, items: obj({ given: text('The situation.', 500), when: text('What happens.', 500), then: text('What must follow.', 500) }, ['when', 'then']) },
+        notes: texts('Engineering notes: how, for now. They never change what it must do.', 10),
+      },
+      ['case'],
+    ),
+    handle: (c, i) => {
+      const k = caseOf(c.ledger, String(i['case'])) ?? refuse(`no case ${String(i['case'])}`, 'Call cases.');
+      if (k.waiting !== 'steward: clarify') return refuse(`case ${k.id} is waiting on ${k.waiting}`, 'Clarify only confirmed intent cases.');
+      const ex = (i['examples'] as { given?: string; when: string; then: string }[] | undefined) ?? [];
+      const notes = (i['notes'] as string[] | undefined) ?? [];
+      if (!ex.length && !notes.length) return refuse('a clarification says something', 'Give at least one example or note.');
+      const md = `${ex.length ? `\n## Examples\n\n${ex.map((e) => `- ${e.given ? `Given ${e.given}, when` : 'When'} ${e.when}, then ${e.then}`).join('\n')}\n` : ''}${notes.length ? `\n## Engineering notes\n\n${notes.map((n) => `- ${n}`).join('\n')}\n` : ''}`;
+      const last = released(c) ?? refuse('nothing has been released to clarify', 'Issue the first revision first.');
+      const before = readJson<DatumLike>(join(releaseDir(c, last.revision), 'datum.json'));
+      const path = join(c.workspace, 'sources', CLARIFICATIONS);
+      const was = existsSync(path) ? readFileSync(path, 'utf8') : null;
+      writeFileSync(path, `${was ?? ''}${md}`);
+      const restore = () => (was === null ? rmSync(path) : writeFileSync(path, was));
+      let verdict: ReturnType<typeof classify>;
+      try {
+        const draft = release(prepared(c), { revision: last.revision + 1, prior: { revision: last.revision, datum: before as never }, reason: `clarification for ${k.id}` });
+        verdict = classify(before, JSON.parse(draft.files['datum.json']!) as DatumLike, last.revision + 1);
+      } catch (e) {
+        restore();
+        throw e;
+      }
+      const d = delegation(c.ledger);
+      if (verdict.klass === 'II' && d.classII) {
+        const r = issue({ dir: c.workspace }, `Class II clarification for case ${k.id}: ${verdict.made.join('; ') || 'examples and notes'}`);
+        event(c.ledger, { case: k.id, event: 'clarified', by: c.session, revision: r.revision, why: verdict.made.join('; ') });
+        return { class: 'II', issued: r.revision, made: verdict.made, waiting: 'builder: fix' };
+      }
+      restore();
+      const p = propose(c.ledger, c.session, 'clarification', `Clarify for case ${k.id}`, verdict.klass === 'I' ? `Class I: ${verdict.reasons.join('; ')}` : 'Class II, but no standing delegation lets the factory issue it', { case: k.id, append: md, class: verdict.klass, reasons: verdict.reasons, made: verdict.made });
+      event(c.ledger, { case: k.id, event: 'escalated', by: c.session, proposal: p.id, why: verdict.klass === 'I' ? `Class I: ${verdict.reasons.join('; ')}` : 'no delegation for Class II' });
+      return { class: verdict.klass, escalated: p.id, reasons: verdict.reasons };
+    },
+  },
 ];
+
+
+/** What waits on the session's role, most urgent first. Empty means: do not wake this agent. */
+function agendaFor(c: Context) {
+  const l = c.ledger;
+  const role = c.session.role;
+  const spend = budgetState(l);
+  const items: { do: string; tool: string; ref?: string }[] = [];
+  const ks = cases(l).filter((k) => k.status === 'open');
+  const add = (x: { do: string; tool: string; ref?: string }) => items.push(x);
+  if (role === 'reader') {
+    const mine = existsSync(join(c.workspace, 'readings', `${c.session.family}.json`));
+    const n = readdirSync(join(c.workspace, 'readings')).filter((f) => f.endsWith('.json')).length;
+    if (!mine && n < 2) add({ do: 'read the intent', tool: 'reading_context' });
+  }
+  if (role === 'steward') {
+    for (const k of ks.filter((x) => x.waiting === 'steward: clarify')) add({ do: `clarify for ${k.opened.summary ?? k.id}`, tool: 'clarify', ref: k.id });
+    const p = prepared(c);
+    const asked = new Set(proposals(l).filter((x) => x.kind === 'answer' && !decisionOn(l, x.id)).map((x) => String(x.body['question'])));
+    const open = p.questions.filter((q) => !asked.has(q.id)).length;
+    if (open && !p.unread.length) add({ do: `${open} open question(s): draft what the sources settle`, tool: 'questions' });
+    const last = released(c);
+    if (!p.unread.length && (!last || (!p.questions.length && !last.ready))) add({ do: last ? 'issue the next revision' : 'issue the first revision', tool: 'release_issue' });
+  }
+  if (role === 'builder') {
+    for (const k of ks.filter((x) => x.waiting === 'builder: diagnose')) add({ do: `diagnose: ${k.opened.summary}`, tool: 'case_diagnose', ref: k.id });
+    for (const k of ks.filter((x) => x.waiting === 'builder: fix')) add({ do: `fix, test first: ${k.opened.summary}`, tool: 'change_open', ref: k.id });
+    const last = released(c);
+    if (last && !changes(l).some((ch) => ch.revision === last.revision)) add({ do: `build revision ${last.revision}`, tool: 'build_plan' });
+  }
+  if (role === 'reviewer') {
+    for (const k of ks.filter((x) => x.waiting === 'reviewer: confirm' && x.diagnosedBy?.family !== c.session.family)) add({ do: `confirm or dispute: ${k.cause} on ${k.opened.summary}`, tool: 'case_confirm', ref: k.id });
+    const q = (TOOLS.find((t) => t.name === 'review_queue')!.handle(c, {}) as { changes: { id: string; title: string }[] }).changes;
+    for (const ch of q) add({ do: `review ${ch.title}`, tool: 'review_submit', ref: ch.id });
+  }
+  if (role === 'operator') {
+    for (const ch of changes(l).filter((x) => admission(l, x.id).admitted)) {
+      const d = deliveryOf(l, ch.id);
+      if (d.waiting || d.reached === 'operate') continue;
+      const next = STAGE_IDS[d.reached ? STAGE_IDS.indexOf(d.reached) + 1 : 0]!;
+      if (next === 'release' && !productionApproval(l, ch.id)) {
+        if (!proposals(l).some((p) => p.kind === 'production' && p.body['change'] === ch.id && !decisionOn(l, p.id))) add({ do: `ask a person to approve ${ch.title} in production`, tool: 'production_request', ref: ch.id });
+      } else add({ do: `request ${next} for ${ch.title}`, tool: 'deploy_advance', ref: ch.id });
+    }
+  }
+  if (role === 'triager') for (const t of tickets(l).filter((x) => x.status === 'new')) add({ do: `triage: ${t.filed.title}`, tool: 'ticket_triage', ref: t.id });
+  if (role === 'pipeline') for (const ch of changes(l)) { const d = deliveryOf(l, ch.id); if (d.waiting) add({ do: `run ${d.waiting} for ${ch.title}`, tool: 'stage_record', ref: ch.id }); }
+  return { role, paused: spend.paused, spend, items: spend.paused ? [] : items, waitingOnAPerson: proposals(l).filter((x) => !decisionOn(l, x.id)).length };
+}
 
 // ------------------------------------------------------------------ dispatch
 
@@ -734,6 +953,13 @@ export function applySigned(workspace: string, proposal: { kind: string; body: R
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, `${String(proposal.body['id'])}.json`), `${JSON.stringify(proposal.body, null, 2)}\n`);
     return 'signed; lock it into control/journeys in the factory with npm run lock, in a commit GitHub verifies';
+  }
+  if (proposal.kind === 'clarification') {
+    const path = join(workspace, 'sources', CLARIFICATIONS);
+    writeFileSync(path, `${existsSync(path) ? readFileSync(path, 'utf8') : ''}${String(proposal.body['append'])}`);
+    const r = issue({ dir: workspace }, `Clarification for case ${String(proposal.body['case'])}, signed by a person`);
+    event(ledgerOf(workspace), { case: String(proposal.body['case']), event: 'clarified', by: 'the factory', revision: r.revision, why: 'signed by a person' });
+    return `issued as revision ${r.revision}; the builder goes again`;
   }
   return 'signed';
 }

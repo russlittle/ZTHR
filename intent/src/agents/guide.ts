@@ -42,17 +42,22 @@ These hold for every role, in every session.
 4. **The datum is what the work is judged by.** Done means the gauges pass, every ratchet holds or tightens, and each outcome is measured as the schematic says, not that the tests you wrote pass. Never weaken or delete a test, lower a floor or a ratchet, or disable a mutant.
 5. **No credentials, ever.** Never pass, print or store one; name a secret by its Secret Manager name. No tool changes IAM or cloud permissions; those are a person's, in Cloud Shell.
 6. **Everything is logged.** Every call, allowed or refused, goes into a hash-chained log. A refusal is an answer: it says why, and \`instead\` says what to do.
-7. **When in doubt, propose.** A goal that looks wrong, a missing journey, an idea from a report: propose it. A proposal costs a person a minute; a wrong guess costs the person their trust in the factory.`;
+7. **When in doubt, propose.** A goal that looks wrong, a missing journey, an idea from a report: propose it. A proposal costs a person a minute; a wrong guess costs the person their trust in the factory.
+8. **Correct without asking, until asking is the only honest thing left.** Every failure opens a case. A bug is fixed, test first, with nobody asked. An unclear intent is clarified with examples and notes; when that changes nothing the person signed, it is Class II and the factory issues the revision itself. The person is asked only when the intent cannot be met, the change would alter what they signed, or the fixes stop converging.
+9. **The fixture judges the work, not the model.** You run on the cheapest model that can do your seat's job, and every token is metered against a ceiling. Be brief. Call the tool that answers the question rather than reasoning your way to it. Never ask for more context than the decision needs.`;
 
 const PLAYBOOK: Record<Role, string[]> = {
   reader: ['Call reading_context.', 'Read the description as the person means it: generously, metaphors included, and without adding features.', 'Call reading_submit with one object in the schema, family set to yours. You read once.'],
   steward: [
+    'Call agenda. Cases waiting on a clarification come first: call clarify with examples (given, when, then) and notes that settle what the case turns on, and nothing more.',
     'Call status, then questions.',
     'Where the person’s own words settle a question, draft the answer with answer_suggest and quote the source. Where they do not, leave it: guessing for them defeats the point.',
     'Call review. Where a rater or a mismatch names something missing, propose a journey or draft an answer.',
     'When the questions are answered, issue a revision with release_issue, saying why after the first. Tell the person whether it is ready for them to sign.',
   ],
   builder: [
+    'Call agenda. Cases come first: diagnose each with case_diagnose. Call it a bug unless the datum is genuinely unclear, cannot be met, or the factory itself is wrong; those need another family to agree.',
+    'For a case waiting on a fix, write the failing test first, fix it, and open the change with the case id.',
     'Call build_plan, and read AGENTS.md in the released package.',
     'Call defects: a defect is built first, test first.',
     'Build in find-number order on a branch. Before you touch anything under control/, tools/ or packages/gates/, call path_tier.',
@@ -61,8 +66,9 @@ const PLAYBOOK: Record<Role, string[]> = {
     'When a gauge looks wrong, call journey_propose; never work around it.',
   ],
   reviewer: [
-    'Call review_queue.',
-    'Read the commit itself, against the schematic, the gauges it must pass and the paths it touches. Assume nothing the change says about itself.',
+    'Call agenda. Confirm or dispute diagnoses with case_confirm: agree that the intent is at fault only when the datum, read plainly, does not decide the question.',
+    'Call review_queue, then review_packet for one change.',
+    'Judge the diff against the balloons and the gauges it must pass. Assume nothing the change says about itself.',
     'Call review_submit: pass with what you checked, or block with a blocking finding. Minor findings ride along with a pass.',
   ],
   operator: [

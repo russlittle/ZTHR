@@ -1,0 +1,189 @@
+diff --git a/control/review.yaml b/control/review.yaml
+index 6fc738b..d9f5d61 100644
+--- a/control/review.yaml
++++ b/control/review.yaml
+@@ -1,16 +1,27 @@
+ # Review panel (Pattern 21). At least three model families before commit, a fourth in place after merge.
+-# Model names are OpenRouter identifiers; change them here as families improve. Changing this file is a
+-# change to the AI and needs a listed person's sign-off.
++# The fixture judges the work, not the model: each seat runs the cheapest model of its family, and seats are asked
++# in this order, one at a time, stopping at the first that fails. Seats with a base call Vertex's OpenAI-compatible
++# endpoint with a short-lived gcloud token; ${PROJECT} is GOOGLE_CLOUD_PROJECT. Prices per million tokens, in / out,
++# as listed when checked (2026-11-26). Changing this file is a change to the AI and needs a listed person's sign-off.
++sequential: true
+ seats:
+-  - role: context-aided
+-    family: anthropic
+-    model: anthropic/claude-sonnet-4.5
+-  - role: unaided
+-    family: google
+-    model: google/gemini-2.5-pro
+-  - role: independent
+-    family: open-weights
+-    model: qwen/qwen3-coder
+-  - role: in-place
++  - role: unaided            # gpt-oss-20b, about $0.07 / $0.30: the cheapest seat goes first and fails most changes that fail
+     family: openai
+-    model: openai/gpt-5
++    model: openai/gpt-oss-20b-maas
++    base: https://us-central1-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/us-central1/endpoints/openapi
++    auth: gcloud
++  - role: context-aided      # DeepSeek V4.1 Flash, about $0.30 / $1.20
++    family: deepseek
++    model: deepseek-ai/deepseek-v4.1-flash-maas
++    base: https://aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/global/endpoints/openapi
++    auth: gcloud
++  - role: independent        # Qwen3 Coder on Vertex; swap for a local Ollama seat (base http://localhost:11434/v1, auth none) to pay nothing
++    family: qwen
++    model: qwen/qwen3-coder-480b-a35b-instruct-maas
++    base: https://us-south1-aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/us-south1/endpoints/openapi
++    auth: gcloud
++  - role: in-place           # after merge; DeepSeek Flash again, the family the review work runs on
++    family: deepseek
++    model: deepseek-ai/deepseek-v4.1-flash-maas
++    base: https://aiplatform.googleapis.com/v1/projects/${PROJECT}/locations/global/endpoints/openapi
++    auth: gcloud
+diff --git a/packages/models/src/index.ts b/packages/models/src/index.ts
+index f65305f..a0f0151 100644
+--- a/packages/models/src/index.ts
++++ b/packages/models/src/index.ts
+@@ -42,6 +42,8 @@ export class OpenRouterClient implements ModelClient {
+   constructor(
+     private readonly apiKey: string | undefined = process.env.REVIEW_API_KEY ?? process.env.OPENROUTER_API_KEY,
+     private readonly baseUrl = process.env.REVIEW_BASE_URL || 'https://openrouter.ai/api/v1',
++    /** Fields only some providers take: OpenRouter reports usage when asked; Vertex and Ollama report it anyway. */
++    private readonly extra: Record<string, unknown> = { usage: { include: true } },
+   ) {}
+ 
+   async complete(req: CompletionRequest): Promise<CompletionResult> {
+@@ -54,7 +56,7 @@ export class OpenRouterClient implements ModelClient {
+         messages: req.messages,
+         max_tokens: req.maxTokens ?? 800,
+         temperature: req.temperature ?? 0.2,
+-        usage: { include: true },
++        ...this.extra,
+       }),
+     });
+     if (!res.ok) throw new ModelUnavailable(`model provider ${res.status}: ${(await res.text()).slice(0, 200)}`);
+diff --git a/packages/review/src/index.ts b/packages/review/src/index.ts
+index 8995c89..5ab9400 100644
+--- a/packages/review/src/index.ts
++++ b/packages/review/src/index.ts
+@@ -94,11 +94,27 @@ export async function reviewSeat(seat: Seat, input: ReviewInput): Promise<{ verd
+   }
+ }
+ 
+-/** The panel requires at least three distinct families before commit. */
+-export async function reviewPanel(seats: Seat[], input: ReviewInput): Promise<{ verdict: Verdict; findings: Finding[] }> {
++/**
++ * The panel requires at least three distinct families before commit. Sequential, in the order the seats are listed
++ * (cheapest first), stops at the first seat that fails: a change one family has failed is not admitted whatever the
++ * others say, so asking them is spend with no information in it. Seats not asked are unknown, which never admits.
++ */
++export async function reviewPanel(seats: Seat[], input: ReviewInput, opts: { sequential?: boolean } = {}): Promise<{ verdict: Verdict; findings: Finding[] }> {
+   const pre = seats.filter((s) => s.role !== 'in-place');
+   const families = new Set(pre.map((s) => s.family));
+   if (families.size < 3) return { verdict: fail('review-panel', `only ${families.size} model families before commit; three are required`), findings: [] };
+-  const results = await Promise.all(pre.map((s) => reviewSeat(s, input)));
++  if (!opts.sequential) {
++    const results = await Promise.all(pre.map((s) => reviewSeat(s, input)));
++    return { verdict: combine('review-panel', results.map((r) => r.verdict)), findings: results.flatMap((r) => r.findings) };
++  }
++  const results: { verdict: Verdict; findings: Finding[] }[] = [];
++  for (const s of pre) {
++    const r = await reviewSeat(s, input);
++    results.push(r);
++    if (r.verdict.status === 'fail') {
++      for (const rest of pre.slice(results.length)) results.push({ verdict: unknown(`review:${rest.role}:${rest.family}`, 'not asked: an earlier seat failed the change'), findings: [] });
++      break;
++    }
++  }
+   return { verdict: combine('review-panel', results.map((r) => r.verdict)), findings: results.flatMap((r) => r.findings) };
+ }
+diff --git a/packages/review/test/review-more.test.ts b/packages/review/test/review-more.test.ts
+index 978a5f5..ec51330 100644
+--- a/packages/review/test/review-more.test.ts
++++ b/packages/review/test/review-more.test.ts
+@@ -69,3 +69,25 @@ describe('the panel', () => {
+     expect(r.findings).toEqual([{ severity: 'blocker', summary: 'x', seat: 'unaided', family: 'c' }]);
+   });
+ });
++
++describe('a sequential panel stops paying once a seat fails', () => {
++  it('asks the seats in order and leaves the rest unknown after a failure', async () => {
++    const { reviewPanel } = await import('../src/index.js');
++    const { TwinModelClient } = await import('@zthr/models');
++    const asked: string[] = [];
++    const seat = (family: string, verdict: 'pass' | 'fail') => ({
++      role: 'unaided' as const,
++      family,
++      model: family,
++      client: new TwinModelClient((req) => {
++        asked.push(req.model);
++        return JSON.stringify({ verdict, findings: verdict === 'fail' ? [{ severity: 'blocker', summary: 'wrong' }] : [] });
++      }),
++    });
++    const r = await reviewPanel([seat('a', 'fail'), seat('b', 'pass'), seat('c', 'pass')], { diff: 'd', intent: 'i' }, { sequential: true });
++    expect(asked).toEqual(['a']);
++    expect(r.verdict.status).toBe('fail');
++    const all = await reviewPanel([seat('a', 'pass'), seat('b', 'pass'), seat('c', 'pass')], { diff: 'd', intent: 'i' }, { sequential: true });
++    expect(all.verdict.status).toBe('pass');
++  });
++});
+diff --git a/tools/review.ts b/tools/review.ts
+index c37dfc3..ff9c022 100644
+--- a/tools/review.ts
++++ b/tools/review.ts
+@@ -1,4 +1,4 @@
+-import { execSync } from 'node:child_process';
++import { execFileSync, execSync } from 'node:child_process';
+ import { readFileSync } from 'node:fs';
+ import { parse } from 'yaml';
+ import { EvidenceStore } from '@zthr/evidence';
+@@ -11,15 +11,27 @@ import { CONTROL, OUT, arg } from './lib.js';
+  * unknown and the change is not admitted; the job says so plainly.
+  */
+ const base = arg('base') ?? 'HEAD~1';
+-const diff = execSync(`git diff ${base} -- . ':(exclude)package-lock.json'`, { encoding: 'utf8', maxBuffer: 50_000_000 }).slice(0, 120_000);
++// What each seat is sent is the cost: the diff with three lines of context, capped, and only the changed files.
++const DIFF_CAP = 40_000;
++const FILE_CAP = 8_000;
++const diff = execSync(`git diff --unified=3 ${base} -- . ':(exclude)package-lock.json'`, { encoding: 'utf8', maxBuffer: 50_000_000 }).slice(0, DIFF_CAP);
+ const intent = execSync('git log -1 --pretty=%B', { encoding: 'utf8' });
+ const changed = execSync(`git diff --name-only ${base}`, { encoding: 'utf8' }).split('\n').filter((f) => f.endsWith('.ts') || f.endsWith('.yaml'));
+-const repoFiles = Object.fromEntries(changed.slice(0, 40).map((f) => { try { return [f, readFileSync(f, 'utf8').slice(0, 20_000)]; } catch { return [f, '(deleted)']; } }));
++const repoFiles = Object.fromEntries(changed.slice(0, 12).map((f) => { try { return [f, readFileSync(f, 'utf8').slice(0, FILE_CAP)]; } catch { return [f, '(deleted)']; } }));
+ const ev = new EvidenceStore(`${OUT}/evidence.db`);
+-const client = new MeteredModel(new OpenRouterClient(), ev);
+-const cfg = parse(readFileSync(`${CONTROL}/review.yaml`, 'utf8')) as { seats: { role: SeatRole; family: string; model: string }[] };
+-const seats: Seat[] = cfg.seats.map((s) => ({ ...s, client }));
+-const pre = await reviewPanel(seats, { diff, intent, repoFiles, context: 'ZTHR reference implementation: Student Advocate. See CLEANROOM.md and the PRD.' });
++type SeatCfg = { role: SeatRole; family: string; model: string; base?: string; auth?: 'gcloud' | 'none' };
++const cfg = parse(readFileSync(`${CONTROL}/review.yaml`, 'utf8')) as { seats: SeatCfg[]; sequential?: boolean };
++// A seat with a base calls that OpenAI-compatible endpoint: Vertex with a short-lived token from gcloud (never stored),
++// or a local Ollama with none. A seat without one uses REVIEW_BASE_URL, as before.
++let token: string | undefined;
++const vertexToken = () => (token ??= process.env.VERTEX_TOKEN || execFileSync('gcloud', ['auth', 'print-access-token'], { encoding: 'utf8' }).trim());
++const clientFor = (s: SeatCfg) =>
++  new MeteredModel(
++    s.base ? new OpenRouterClient(s.auth === 'none' ? 'none' : vertexToken(), s.base.replace('${PROJECT}', process.env.GOOGLE_CLOUD_PROJECT ?? ''), {}) : new OpenRouterClient(),
++    ev,
++  );
++const seats: Seat[] = cfg.seats.map((s) => ({ role: s.role, family: s.family, model: s.model, client: clientFor(s) }));
++const pre = await reviewPanel(seats, { diff, intent, repoFiles, context: 'ZTHR reference implementation: Student Advocate. See CLEANROOM.md and the PRD.' }, { sequential: cfg.sequential ?? true });
+ const inPlace = seats.filter((s) => s.role === 'in-place');
+ const post = await Promise.all(inPlace.map((s) => reviewSeat(s, { diff, intent, repoFiles })));
+ ev.append('review', 'panel', { status: pre.verdict.status, reason: pre.verdict.reason, findings: pre.findings.length, inPlace: post.map((p) => p.verdict.status) });
+diff --git a/writeups/the-case.md b/writeups/the-case.md
+index f90bd01..f00ca3c 100644
+--- a/writeups/the-case.md
++++ b/writeups/the-case.md
+@@ -15,7 +15,7 @@ factory that built it means for anyone who builds software.
+ | **Built by** | AI agents, inside a factory of gates, locked intent and exhaustive walks. No person wrote the code. A change that loosens what the factory holds the code to (locked intent, ratchets, who may sign) passes only in a commit GitHub verified as the author's own. |
+ | **Elapsed time** | <!--fact:build_days-->23<!--/fact--> days by the commit history, from an empty repository to a deployed application with <!--fact:phases-->six<!--/fact--> phases of features, a community resource guide of <!--fact:guide_entries-->268<!--/fact--> checked entries (<!--fact:found_entries-->200<!--/fact--> found by agents in <!--fact:found_systems-->six<!--/fact--> systems of record kept by <!--fact:found_agencies-->four<!--/fact--> federal agencies) published as open data, <!--fact:campus_services-->five<!--/fact--> synthetic campus services, <!--fact:blocks-->fifteen<!--/fact--> reusable blocks and full documentation. |
+ | **Direction** | The author's prompts, from the idea to the deployed application; no code by hand. |
+-| **Size** | About <!--fact:ts_lines-->30,300<!--/fact--> lines of TypeScript and <!--fact:doc_lines-->5,100<!--/fact--> lines of documentation, with every collection the app keeps drawn as an ERD. |
++| **Size** | About <!--fact:ts_lines-->30,400<!--/fact--> lines of TypeScript and <!--fact:doc_lines-->5,100<!--/fact--> lines of documentation, with every collection the app keeps drawn as an ERD. |
+ | **Evidence** | <!--fact:tests_run-->2,053<!--/fact--> tests run; <!--fact:gates-->28<!--/fact--> gates, each proven to fail on every defect planted for it; <!--fact:journeys-->47<!--/fact--> locked user journeys; <!--fact:redteam_held-->110 of 110<!--/fact--> red-team attacks held; <!--fact:walk_claim-->every button walked for every student<!--/fact-->, and <!--fact:controls_clicked-->886<!--/fact--> controls clicked in a real browser down to <!--fact:deep_screens-->seven<!--/fact--> screens deep for <!--fact:deep_students-->five<!--/fact--> students; <!--fact:browser_stops-->454<!--/fact--> browser stops passing every WCAG 2.2 A and AA rule that can be checked automatically; generated input and failing services that never break it; a planted-marker trace of <!--fact:trace_fields-->21<!--/fact--> of the <!--fact:sensitive_fields-->87<!--/fact--> personal, sensitive and secret fields, with no leaks. |
+ | **Cost to run** | No model spend in the product. Each change is checked in minutes of build time; the exhaustive walks run overnight. The public demo runs on one small server, so a visitor's session holds from start to finish. |
+ | **Open** | Every test, gate, walk, decision and line of source is public. |
