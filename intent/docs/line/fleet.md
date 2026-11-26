@@ -49,7 +49,7 @@ Every app can reach the tools people already use, through 20 connectors of 5 kin
 
 ### Housekeeping blocks
 
-The fleet maintains the code most apps get wrong, as tested blocks every product starts from (28 tests between them):
+The fleet maintains the code most apps get wrong, as tested blocks every product starts from (87 tests between them):
 
 | Block | What it holds | Tests |
 | --- | --- | --- |
@@ -61,6 +61,14 @@ The fleet maintains the code most apps get wrong, as tested blocks every product
 | [retention](../../blocks/retention/index.ts) | Trash with dependents, restore of all of it, and a retention sweep plan with reasons | 3 |
 | [watchdog](../../blocks/watchdog/index.ts) | Missed, overlong, failed and overlapping scheduled runs, and a lease so one copy runs at a time | 3 |
 | [expiry](../../blocks/expiry/index.ts) | Everything with an expiry date, and the alert each needs today | 2 |
+| [tree](../../blocks/tree/index.ts) | Folders and files with stable ids, where a change re-tags every ancestor and keeps folder sizes, so sync skips unchanged subtrees | 12 |
+| [objects](../../blocks/objects/index.ts) | Bytes streamed once with checksums computed on the way, byte ranges, and parts joined in the store; memory and disk stores | 10 |
+| [uploads](../../blocks/uploads/index.ts) | Resumable chunked uploads: any order, repeats replace, quota checked up front, joined in a tree of compose calls, idle sessions swept | 8 |
+| [leases](../../blocks/leases/index.ts) | Exclusive holds with owners, tokens and time limits that end on their own, covering everything below a folder when deep | 6 |
+| [grants](../../blocks/grants/index.ts) | Permissions to people, groups and links, never more than the giver has; link passwords hashed and throttled; expiries | 8 |
+| [devices](../../blocks/devices/index.ts) | A browser sign-in flow that hands a new app its own hashed password once; revoke one device, or wipe it remotely | 6 |
+| [dav](../../blocks/dav/index.ts) | The DAV core: a namespace-aware XML reader that refuses DTDs, the multistatus writer, and the WebDAV headers | 8 |
+| [oracle](../../blocks/oracle/index.ts) | Differential checks: the same requests to the reference and the candidate, answers normalised and compared, or recorded once | 4 |
 
 ## Architect
 

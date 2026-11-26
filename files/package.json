@@ -1,0 +1,14 @@
+{
+  "name": "zthr-files",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "A Nextcloud-compatible file server for Cloud Run and Cloud Storage, built by the ZTHR factory on its standard blocks.",
+  "type": "module",
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "start": "node src/main.ts",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "node --test \"test/**/*.test.ts\""
+  }
+}

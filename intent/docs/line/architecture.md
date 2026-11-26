@@ -37,7 +37,7 @@ There is one rulebook, and everyone uses the same copy. The customer's words go 
 | `src/intake` | Reads every form (plain markdown, Spec Kit, Kiro, OpenSpec, Gherkin, HTML and Prisma) into one canonical model |
 | `src/pipeline.ts` | Prepares: readings merged, statements ballooned, gaps checked, questions ranked |
 | `src/lexicon.ts`, `src/derive.ts` | The design lexicon (8 terms) and derivation rules (6) |
-| `src/manifest.ts` | The build manifest from 217 catalogued parts and the library |
+| `src/manifest.ts` | The build manifest from 219 catalogued parts and the library |
 | `src/schema.ts`, `src/prisma.ts`, `src/datapipeline.ts` | The information, its DDL and migrations, provided Prisma, and data CI/CD |
 | `src/outcomes.ts` | The outcome framework, with platform outcomes mapped introduced, refined or mastered |
 | `src/compliance.ts` | Scope, controls, the sensitive-data inventory, the gate policy and the OSCAL component |
@@ -117,7 +117,7 @@ erDiagram
 
 ### Testing the system itself
 
-196 tests cover the engine, the agent API, the generated SQL (run in DuckDB), the information pipeline (run on PostgreSQL), the compliance set (validated against NIST's schema), the Rego policy, the Prisma output and the blocks. Every page of the site is walked in a real browser and checked against WCAG 2.2 A and AA, and these docs are regenerated and compared on every run.
+255 tests cover the engine, the agent API, the generated SQL (run in DuckDB), the information pipeline (run on PostgreSQL), the compliance set (validated against NIST's schema), the Rego policy, the Prisma output and the blocks. Every page of the site is walked in a real browser and checked against WCAG 2.2 A and AA, and these docs are regenerated and compared on every run.
 
 ## Architect
 

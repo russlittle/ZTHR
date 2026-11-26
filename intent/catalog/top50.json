@@ -12,7 +12,8 @@
         "@auth/core"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "devices: an app password per device from a browser sign-in flow, revocable and remotely wiped"
       }
     },
     {
@@ -24,7 +25,8 @@
         "accesscontrol"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "grants: permission sets to people, groups and links, never more than the giver has, unioned up the tree"
       }
     },
     {
@@ -68,7 +70,8 @@
         "koa"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "dav: the WebDAV methods, multistatus answers and headers, over a safe XML reader"
       }
     },
     {
@@ -169,7 +172,8 @@
         "busboy"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "objects and uploads: bytes streamed with checksums and byte ranges, and resumable chunked uploads joined in the store"
       }
     },
     {
@@ -275,7 +279,8 @@
         "rate-limiter-flexible"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "grants: wrong link passwords throttled per link"
       }
     },
     {
@@ -515,7 +520,8 @@
         "@unkey/api"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "devices: per-device credentials kept only as hashes, revoked one at a time"
       }
     },
     {

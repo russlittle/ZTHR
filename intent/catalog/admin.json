@@ -274,7 +274,8 @@
       "name": "API contracts",
       "gives": "An OpenAPI contract for every feature, written from the datum, secured by the same roles and row-level rules as the screens, and closed until the spec sheet switches it on",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "oracle: every answer checked against the system being replaced, as built"
       }
     },
     {

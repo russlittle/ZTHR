@@ -1,0 +1,29 @@
+name: Files
+
+on:
+  pull_request:
+    paths: ['files/**', 'intent/blocks/**', '.github/workflows/files-ci.yml']
+  push:
+    branches: [main]
+    paths: ['files/**', 'intent/blocks/**']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Types (the tool's TypeScript, no install for the server itself)
+        working-directory: intent
+        run: npm ci && npx tsc --noEmit -p ../files
+      - name: The protocol, the blocks under it, and Cloud Storage against a stand-in
+        working-directory: files
+        run: node --test "test/**/*.test.ts"
+      - name: The small-files journey, measured
+        working-directory: files
+        run: node tools/load.ts 25000 disk | tee -a "$GITHUB_STEP_SUMMARY"

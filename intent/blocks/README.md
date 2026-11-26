@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->8<!-- /fact --> blocks, <!-- fact:blocks.tests -->28<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->16<!-- /fact --> blocks, <!-- fact:blocks.tests -->87<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -17,6 +17,14 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [retention](retention/index.ts) | Trash with dependents, restore of all of it, and a retention sweep plan with reasons | 3 |
 | [watchdog](watchdog/index.ts) | Missed, overlong, failed and overlapping scheduled runs, and a lease so one copy runs at a time | 3 |
 | [expiry](expiry/index.ts) | Everything with an expiry date, and the alert each needs today | 2 |
+| [tree](tree/index.ts) | Folders and files with stable ids, where a change re-tags every ancestor and keeps folder sizes, so sync skips unchanged subtrees | 12 |
+| [objects](objects/index.ts) | Bytes streamed once with checksums computed on the way, byte ranges, and parts joined in the store; memory and disk stores | 10 |
+| [uploads](uploads/index.ts) | Resumable chunked uploads: any order, repeats replace, quota checked up front, joined in a tree of compose calls, idle sessions swept | 8 |
+| [leases](leases/index.ts) | Exclusive holds with owners, tokens and time limits that end on their own, covering everything below a folder when deep | 6 |
+| [grants](grants/index.ts) | Permissions to people, groups and links, never more than the giver has; link passwords hashed and throttled; expiries | 8 |
+| [devices](devices/index.ts) | A browser sign-in flow that hands a new app its own hashed password once; revoke one device, or wipe it remotely | 6 |
+| [dav](dav/index.ts) | The DAV core: a namespace-aware XML reader that refuses DTDs, the multistatus writer, and the WebDAV headers | 8 |
+| [oracle](oracle/index.ts) | Differential checks: the same requests to the reference and the candidate, answers normalised and compared, or recorded once | 4 |
 <!-- /gen -->
 
 ```mermaid

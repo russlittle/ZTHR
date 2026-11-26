@@ -1,0 +1,14 @@
+# Builds and pushes the Files image. Run by hand from Cloud Shell (see deploy/README.md); no trigger points here.
+steps:
+  - id: test
+    name: node:22-slim
+    entrypoint: bash
+    args: ['-c', 'cd files && node --test "test/**/*.test.ts"']
+  - id: image
+    name: gcr.io/cloud-builders/docker
+    args: ['build', '-f', 'files/Dockerfile', '-t', '${_IMAGE}', '.']
+images: ['${_IMAGE}']
+substitutions:
+  _IMAGE: us-central1-docker.pkg.dev/${PROJECT_ID}/zthr/files:latest
+options:
+  machineType: E2_MEDIUM

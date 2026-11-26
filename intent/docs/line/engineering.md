@@ -44,14 +44,14 @@ The customer signed what they want. The drafting office now draws it properly: e
 
 ### Starting from what exists
 
-The catalogue holds 217 parts in 9 groups. 93 are a team minimum every product inherits, including 34 housekeeping parts: paging, edit conflicts, retries, idempotency, retention, expiry and the rest. 8 of them ship as tested code. The library holds 23 blocks. The information is drafted from 14 patterns common to business applications. Compliance draws on 8 frameworks with 116 controls mapped to evidence. Platform outcomes come from a list of 8, each mapped as introduced, refined or mastered.
+The catalogue holds 219 parts in 9 groups. 93 are a team minimum every product inherits, including 34 housekeeping parts: paging, edit conflicts, retries, idempotency, retention, expiry and the rest. 16 of them ship as tested code. The library holds 31 blocks. The information is drafted from 14 patterns common to business applications. Compliance draws on 8 frameworks with 116 controls mapped to evidence. Platform outcomes come from a list of 8, each mapped as introduced, refined or mastered.
 
 | Group | Parts |
 | --- | --- |
 | Intent | 15 |
 | Identity and access | 21 |
-| Data | 33 |
-| Work and integrations | 37 |
+| Data | 34 |
+| Work and integrations | 38 |
 | Trust and evidence | 40 |
 | Content | 13 |
 | Experience | 28 |

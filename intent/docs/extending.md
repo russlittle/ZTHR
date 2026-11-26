@@ -1,7 +1,7 @@
 # Extending Intent
 
 Everything that decides what goes on a schematic, or into a build, is data or a short rule table with tests. Change
-one, run `npm run verify`, and the studio, the command line and every release use it. Today that is <!-- fact:lexicon.terms -->8<!-- /fact --> feel words, <!-- fact:derive.rules -->6<!-- /fact --> derived rules, and <!-- fact:catalog.parts -->217<!-- /fact --> parts in <!-- fact:catalog.groups -->9<!-- /fact --> groups, of which <!-- fact:catalog.minimum -->93<!-- /fact --> are the team minimum.
+one, run `npm run verify`, and the studio, the command line and every release use it. Today that is <!-- fact:lexicon.terms -->8<!-- /fact --> feel words, <!-- fact:derive.rules -->6<!-- /fact --> derived rules, and <!-- fact:catalog.parts -->219<!-- /fact --> parts in <!-- fact:catalog.groups -->9<!-- /fact --> groups, of which <!-- fact:catalog.minimum -->93<!-- /fact --> are the team minimum.
 
 ```mermaid
 flowchart TB
