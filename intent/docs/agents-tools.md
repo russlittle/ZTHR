@@ -167,9 +167,9 @@ The authorship tier of each path, and whether your role may write it. Ask before
 
 ## `change_open`
 
-Open a change for review: the commit it is, the paths it touches and the revision it builds to. Refused if it touches a path no agent may write. Changes are immutable; to amend, open a new one on the new commit.
+Open a change, before it is pushed. The API first runs the existing typecheck and tests on the base, so a failure already there becomes a case against the base and is never blamed on this change; then on the commit itself. A red commit is refused: nothing red is pushed, opened or reviewed. Also refused if the commit touches a path no agent may write, or one it does not declare. Changes are immutable; to amend, open a new one on the new commit.
 
-**Then:** Call checks_run for each required check, then wait for reviews.
+**Then:** Push the commit, then call checks_run for the rest of the required checks.
 
 | Input | Type | Required | Meaning |
 | --- | --- | --- | --- |

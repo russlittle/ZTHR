@@ -61,8 +61,8 @@ const PLAYBOOK: Record<Role, string[]> = {
     'Call build_plan, and read AGENTS.md in the released package.',
     'Call defects: a defect is built first, test first.',
     'Build in find-number order on a branch. Before you touch anything under control/, tools/ or packages/gates/, call path_tier.',
-    'Commit, then call change_open with the commit and every path it touches.',
-    'Call checks_run with the factory checkout on that commit. Fix failures in a new commit and open a new change.',
+    'Commit, then call change_open with the commit and every path it touches, before you push. It runs the existing typecheck and tests on the base first, then on your commit. A base that already fails becomes its own case; fix that first. A red commit is refused: fix it and commit again.',
+    'Push only what change_open accepted; the pre-push hook refuses anything else. Then call checks_run for the rest of the required checks. Fix failures in a new commit and open a new change.',
     'When a gauge looks wrong, call journey_propose; never work around it.',
   ],
   reviewer: [

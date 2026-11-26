@@ -147,6 +147,52 @@ const productionApproval = (l: Ledger, change: string) =>
     .map((p) => ({ p, d: decisionOn(l, p.id) }))
     .find((x) => x.d?.decision === 'signed');
 
+
+/** The checks a builder runs locally before anything is pushed: seconds, against build minutes and a reviewer woken for nothing. */
+export const PREPUSH = ['typecheck', 'test'] as const;
+
+const git = (c: Context, ...args: string[]) => spawnSync('git', args, { cwd: c.factory!, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+
+/** What a commit touches, read from git: since its base, or the commit alone. Null when git cannot say. */
+function pathsOf(c: Context, commit: string, base?: string): string[] | null {
+  const d = base ? git(c, 'diff', '--name-only', base, commit) : git(c, 'diff-tree', '--root', '-r', '--name-only', '--no-commit-id', commit);
+  return d.status === 0 ? d.stdout.split('\n').filter(Boolean) : null;
+}
+
+type StepResult = { check: string; step: string; ok: boolean; reused?: boolean; tail?: string };
+
+/**
+ * Run checks on one commit in the factory checkout: cheapest first, stopping at the first failure unless asked for
+ * all, and never running again what already passed on an identical tree. The checkout is moved to the commit and
+ * put back afterwards; it must be clean, so nothing but the commit is ever what was checked.
+ */
+function runOn(c: Context, sha: string, steps: readonly string[], recordAs: string, all = false): StepResult[] {
+  const run = c.run ?? ((step: string, cwd: string) => { const r = spawnSync('npm', ['run', step], { cwd, encoding: 'utf8', timeout: 30 * 60_000 }); return { exit: r.status, out: `${r.stdout}\n${r.stderr}` }; });
+  const tree = git(c, 'rev-parse', `${sha}^{tree}`).stdout.trim();
+  const before = readLines<CheckRun>(c.ledger, 'checks.jsonl');
+  const head = git(c, 'rev-parse', 'HEAD').stdout.trim();
+  const branch = git(c, 'symbolic-ref', '-q', '--short', 'HEAD').stdout.trim();
+  let moved = false;
+  const results: StepResult[] = [];
+  try {
+    for (const rc of REQUIRED_CHECKS.filter((x) => steps.includes(x.step))) {
+      const prior = tree ? before.find((r) => r.tree === tree && r.step === rc.step && r.ok) : undefined;
+      if (!prior && !moved && !head.startsWith(sha)) {
+        git(c, 'checkout', '-q', '--detach', sha);
+        moved = true;
+      }
+      const r = prior ? { exit: 0, out: prior.tail } : run(rc.step, c.factory!);
+      const row: CheckRun = { change: recordAs, check: rc.check, step: rc.step, ok: r.exit === 0, exit: r.exit, tail: r.out.trim().split('\n').slice(-15).join('\n'), ...(tree ? { tree } : {}), ...(prior ? { reused: true } : {}), by: c.session, at: c.ledger.now() };
+      append(c.ledger, 'checks.jsonl', row);
+      results.push({ check: rc.check, step: rc.step, ok: row.ok, ...(prior ? { reused: true } : {}), ...(row.ok ? {} : { tail: row.tail }) });
+      if (!row.ok && !all) break;
+    }
+  } finally {
+    if (moved) git(c, 'checkout', '-q', branch || head);
+  }
+  return results;
+}
+
 // ------------------------------------------------------------------ the tools
 
 export const TOOLS: readonly Tool[] = [
@@ -377,8 +423,8 @@ export const TOOLS: readonly Tool[] = [
     kind: 'act',
     roles: ['builder'],
     phase: 'build',
-    description: 'Open a change for review: the commit it is, the paths it touches and the revision it builds to. Refused if it touches a path no agent may write. Changes are immutable; to amend, open a new one on the new commit.',
-    next: 'Call checks_run for each required check, then wait for reviews.',
+    description: 'Open a change, before it is pushed. The API first runs the existing typecheck and tests on the base, so a failure already there becomes a case against the base and is never blamed on this change; then on the commit itself. A red commit is refused: nothing red is pushed, opened or reviewed. Also refused if the commit touches a path no agent may write, or one it does not declare. Changes are immutable; to amend, open a new one on the new commit.',
+    next: 'Push the commit, then call checks_run for the rest of the required checks.',
     input: obj({ title: text('What it does, in a line.', 200), commit: text('The full or short git sha.', 40), case: text('The correction case this change fixes, if it is a fix.', 40), base: text('The commit the work starts from; the commit’s parent if left out.', 40), paths: texts('Every path the commit touches. The API checks this against the commit itself.', 500) }, ['title', 'commit', 'paths']),
     handle: (c, i) => {
       if (!/^[0-9a-f]{7,40}$/.test(String(i['commit'])) || (i['base'] !== undefined && !/^[0-9a-f]{7,40}$/.test(String(i['base'])))) return refuse('commit and base must be git shas', 'Give the sha of the commit to review.');
@@ -393,8 +439,33 @@ export const TOOLS: readonly Tool[] = [
         const k = caseOf(c.ledger, String(i['case'])) ?? refuse(`no case ${String(i['case'])}`, 'Call cases.');
         if (k.waiting !== 'builder: fix') return refuse(`case ${k.id} is waiting on ${k.waiting}, not a fix`, k.waiting === 'builder: diagnose' ? 'Diagnose it first with case_diagnose.' : 'Leave it to the role it waits on.');
       }
-      const ch = openChange(c.ledger, { title: String(i['title']), commit: String(i['commit']), ...(i['base'] ? { base: String(i['base']) } : {}), ...(i['case'] ? { case: String(i['case']) } : {}), paths, revision: last.revision, author: c.session, reprove });
-      return { change: ch.id, requiredChecks: REQUIRED_CHECKS.map((x) => x.check), reprove, reviews: `${REVIEW_FAMILIES} passing, from families other than ${c.session.family}` };
+      if (!c.factory) return refuse('no factory checkout is attached to this session', 'Start the session with --factory pointing at a checkout of the factory: a change is tested before it is opened.');
+      const commit = String(i['commit']);
+      if (git(c, 'cat-file', '-e', `${commit}^{commit}`).status !== 0) return refuse(`no commit ${commit} in the factory checkout`, 'Commit the work in the checkout, then open the change.');
+      if (git(c, 'status', '--porcelain').stdout.trim()) return refuse('the checkout has uncommitted work', 'Commit or stash it: what is tested is the commit and nothing else.');
+      const actual = pathsOf(c, commit, i['base'] as string | undefined) ?? refuse(`cannot read what ${commit} changes`, 'Give a base the checkout has.');
+      const undeclared = actual.filter((p) => !paths.includes(p));
+      if (undeclared.length) return refuse(`the commit touches paths the change does not declare: ${undeclared.join(', ')}`, 'List every path, so each is checked against its tier.');
+      // The base first: a test that already fails is a case against the base, not this change's fault.
+      const base = (i['base'] as string | undefined) ?? (git(c, 'rev-parse', '-q', '--verify', `${commit}^`).stdout.trim() || null);
+      const fixingBase = i['case'] !== undefined && caseOf(c.ledger, String(i['case']))?.opened.source?.ref === `base ${base}`;
+      if (base && !fixingBase) {
+        const red = runOn(c, base, PREPUSH, `base:${base.slice(0, 12)}`).filter((x) => !x.ok);
+        if (red.length) {
+          const open = cases(c.ledger).find((k) => k.status !== 'closed' && k.opened.source?.ref === `base ${base}`);
+          const kase = open?.id ?? failure(c.ledger, { kind: 'check', ref: `base ${base}` }, `the base ${base.slice(0, 12)} already fails: ${red.map((x) => x.check).join(', ')}`, red.length, last.revision, undefined, c.session);
+          return refuse(`the base ${base.slice(0, 12)} already fails ${red.map((x) => x.check).join(', ')}, before this change; case ${kase} is open for it`, `Fix the base first: diagnose case ${kase} and open its fix with case ${kase}. Your change waits on a green base.`);
+        }
+      }
+      // Then this commit, before it is pushed or anyone is asked to look at it.
+      const mine = runOn(c, commit, PREPUSH, `pending:${commit.slice(0, 12)}`);
+      const failed = mine.filter((x) => !x.ok);
+      if (failed.length) {
+        if (i['case'] !== undefined) failure(c.ledger, { kind: 'check', ref: failed.map((x) => x.check).join(', ') }, `fix attempt ${commit.slice(0, 12)} fails ${failed.map((x) => x.check).join(', ')} before it is pushed`, failed.length + (PREPUSH.length - mine.length), last.revision, String(i['case']), c.session);
+        return refuse(`${commit.slice(0, 12)} fails ${failed.map((x) => x.check).join(', ')}: ${failed[0]!.tail ?? ''}`.slice(0, 1500), 'Fix it and commit again. Nothing red is pushed, opened or reviewed.');
+      }
+      const ch = openChange(c.ledger, { title: String(i['title']), commit, ...(i['base'] ? { base: String(i['base']) } : {}), ...(i['case'] ? { case: String(i['case']) } : {}), paths, revision: last.revision, author: c.session, reprove });
+      return { change: ch.id, base: base ? 'green' : 'no base: the first commit', tested: mine.map((x) => `${x.check}${x.reused ? ' (already passed on this tree)' : ''}`), push: 'ready: typecheck and tests pass on this commit', requiredChecks: REQUIRED_CHECKS.map((x) => x.check), reprove, reviews: `${REVIEW_FAMILIES} passing, from families other than ${c.session.family}` };
     },
   },
   {
@@ -413,28 +484,11 @@ export const TOOLS: readonly Tool[] = [
       if (!head.startsWith(commit)) return refuse(`the checkout is on ${head.slice(0, 12)}, not ${commit}`, `Check out ${commit} in the factory checkout first.`);
       if (spawnSync('git', ['status', '--porcelain'], { cwd: c.factory, encoding: 'utf8' }).stdout.trim()) return refuse('the checkout has uncommitted work', 'Checks run on the commit under review and nothing else: commit or stash it.');
       // The paths are read from the commit itself, not taken from the change: a declared list could leave a locked path out.
-      const diff = ch.base
-        ? spawnSync('git', ['diff', '--name-only', ch.base, commit], { cwd: c.factory, encoding: 'utf8' })
-        : spawnSync('git', ['diff-tree', '--root', '-r', '--name-only', '--no-commit-id', commit], { cwd: c.factory, encoding: 'utf8' });
-      if (diff.status !== 0) return refuse(`cannot read what ${commit} changes${ch.base ? ` since ${ch.base}` : ''}`, 'Open the change with a base the checkout has.');
-      const actual = diff.stdout.split('\n').filter(Boolean);
+      const actual = pathsOf(c, commit, ch.base) ?? refuse(`cannot read what ${commit} changes${ch.base ? ` since ${ch.base}` : ''}`, 'Open the change with a base the checkout has.');
       const undeclared = actual.filter((p) => !ch.paths.includes(p));
       if (undeclared.length) return refuse(`the commit touches paths the change does not declare: ${undeclared.join(', ')}`, 'Open a new change that lists every path, so each is checked against its tier.');
-      const run = c.run ?? ((step: string, cwd: string) => { const r = spawnSync('npm', ['run', step], { cwd, encoding: 'utf8', timeout: 30 * 60_000 }); return { exit: r.status, out: `${r.stdout}\n${r.stderr}` }; });
-      // Content-addressed: a check that passed on this exact tree before is not run again, whichever change it was for.
-      const tree = spawnSync('git', ['rev-parse', `${commit}^{tree}`], { cwd: c.factory, encoding: 'utf8' }).stdout.trim();
-      const before = readLines<CheckRun>(c.ledger, 'checks.jsonl');
-      const which = REQUIRED_CHECKS.filter((x) => !i['check'] || x.step === i['check']);
-      const results: { check: string; ok: boolean; reused?: boolean; tail?: string }[] = [];
-      // Cheapest first, and stop at the first failure unless asked for all: a fix is judged by what still fails.
-      for (const rc of which) {
-        const prior = tree ? before.find((r) => r.tree === tree && r.step === rc.step && r.ok) : undefined;
-        const r = prior ? { exit: 0, out: prior.tail } : run(rc.step, c.factory!);
-        const row: CheckRun = { change: ch.id, check: rc.check, step: rc.step, ok: r.exit === 0, exit: r.exit, tail: r.out.trim().split('\n').slice(-15).join('\n'), ...(tree ? { tree } : {}), ...(prior ? { reused: true } : {}), by: c.session, at: c.ledger.now() };
-        append(c.ledger, 'checks.jsonl', row);
-        results.push({ check: rc.check, ok: row.ok, ...(prior ? { reused: true } : {}), ...(row.ok ? {} : { tail: row.tail }) });
-        if (!row.ok && i['all'] !== true) break;
-      }
+      const which = REQUIRED_CHECKS.filter((x) => !i['check'] || x.step === i['check']).map((x) => x.step);
+      const results = runOn(c, commit, which, ch.id, i['all'] === true);
       const failed = results.filter((x) => !x.ok);
       const kase = failed.length ? failure(c.ledger, { kind: 'check', ref: failed.map((x) => x.check).join(', '), change: ch.id }, `checks failed on ${ch.id}: ${failed.map((x) => x.check).join(', ')}`, failed.length + (which.length - results.length), ch.revision, ch.case, c.session) : null;
       closeFixed(c.ledger, (id) => admission(c.ledger, id).admitted);
@@ -935,6 +989,16 @@ export function call(c: Context, name: string, input: Record<string, unknown> = 
     done('error', (e as Error).message);
     return { ok: false, refused: false, why: (e as Error).message };
   }
+}
+
+/**
+ * For git's pre-push hook: every commit being pushed must have passed the pre-push checks on its exact tree, as the
+ * API recorded them. Returns what is missing; empty means the push may go. The hook is a convenience: the gate that
+ * holds is admission, which no push can pass without every check run by the API.
+ */
+export function prepushGaps(l: Ledger, trees: readonly { sha: string; tree: string }[]): string[] {
+  const runs = readLines<CheckRun>(l, 'checks.jsonl');
+  return trees.flatMap(({ sha, tree }) => PREPUSH.filter((step) => !runs.some((r) => r.tree === tree && r.step === step && r.ok)).map((step) => `${sha.slice(0, 12)}: ${step} has not passed on this tree`));
 }
 
 /** The input schemas in the shape model tool-use APIs take, for agents that do not speak MCP. */

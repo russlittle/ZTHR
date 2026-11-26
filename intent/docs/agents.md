@@ -80,8 +80,12 @@ sequenceDiagram
   participant O as Operator
   participant PL as Pipeline
   participant H as A person
-  B->>API: change_open(commit, paths)
-  API-->>B: refused if a path is locked, person or generated
+  B->>API: change_open(commit, paths), before any push
+  API->>F: typecheck and tests on the base
+  API-->>B: base already red: a case against the base, fix that first
+  API->>F: typecheck and tests on the commit
+  API-->>B: refused if red, or a path is locked, person, generated or undeclared
+  B->>F: git push (the pre-push hook checks the API saw it pass)
   B->>API: checks_run(change)
   API->>F: npm run <check>, on that commit, clean tree
   F-->>API: exit code and output
@@ -97,6 +101,14 @@ sequenceDiagram
   PL->>API: stage_record(release)
   Note over O,PL: deploy_rollback is always allowed and restarts delivery
 ```
+
+Before a builder pushes anything, `change_open` runs the existing typecheck and tests twice. It runs them first on
+the base, so a test that already fails becomes its own case against the base and is never blamed on the new work,
+and the loop doesn't chase it. Then it runs them on the commit, so nothing red is pushed: a push starts the build,
+and a red one wastes its minutes and wakes a reviewer for nothing. Both runs take seconds and are reused on an
+identical tree. `intent agents hook` installs a pre-push hook in the factory checkout that refuses a commit the API
+hasn't seen pass. The hook is a convenience a determined agent could skip with `--no-verify`. What actually holds
+is admission: no change is admitted without every check run by the API.
 
 The checks are the factory's required checks (`control/required-checks.yaml`). The API runs them in the factory
 checkout and records what each process returned, so a passing result is never an agent's word for it. It refuses to

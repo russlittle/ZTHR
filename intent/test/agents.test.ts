@@ -158,9 +158,16 @@ test('a builder may not touch a locked, person or generated path, and a proven o
   refusedWith(call(b, 'change_open', { title: 'x', commit: 'abcdef1', paths: ['src/a.ts', 'control/journeys/x.yaml'] }), /no agent writes control\/journeys\/x\.yaml \(locked\)/);
   refusedWith(call(b, 'change_open', { title: 'x', commit: 'abcdef1', paths: ['control/ratchets.json'] }), /\(person\)/);
   refusedWith(call(b, 'change_open', { title: 'x', commit: 'abcdef1', paths: ['docs/testing/gates.md'] }), /\(generated\)/);
-  const r = call(b, 'change_open', { title: 'x', commit: 'abcdef1', paths: ['tools/gates.ts'] });
-  assert.ok(r.ok);
-  assert.deepEqual((v(r) as { reprove: string[] }).reprove, ['tools/gates.ts']);
+  refusedWith(call(b, 'change_open', { title: 'x', commit: 'abcdef1', paths: ['tools/gates.ts'] }), /no factory checkout/);
+  const f = factory();
+  mkdirSync(join(f.dir, 'tools'), { recursive: true });
+  writeFileSync(join(f.dir, 'tools', 'gates.ts'), 'export {};\n');
+  f.git('add', '.');
+  f.git('commit', '-qm', 'gate');
+  const gated = f.git('rev-parse', 'HEAD');
+  const r = call(w.as('builder', 'anthropic', 'b', { factory: f.dir, run: () => ({ exit: 0, out: '' }) }), 'change_open', { title: 'x', commit: gated, paths: ['tools/gates.ts'] });
+  assert.ok(r.ok, JSON.stringify(r));
+  assert.deepEqual((r as { value: { reprove: string[] } }).value.reprove, ['tools/gates.ts']);
   const t = v(call(b, 'path_tier', { paths: ['control/lock.json', 'apps/x.ts'] })) as { paths: { writable: boolean }[] };
   assert.deepEqual(t.paths.map((x) => x.writable), [false, true]);
 });
@@ -168,15 +175,13 @@ test('a builder may not touch a locked, person or generated path, and a proven o
 test('checks run on the change’s own commit, by the API; nobody reports a result', () => {
   const w = released();
   const f = factory();
-  const open = (ctx: Context) => (v(call(ctx, 'change_open', { title: 'x', commit: f.head, paths: ['apps/a.ts'] })) as { change: string }).change;
-  const bare = w.as('builder', 'anthropic');
-  const change = open(bare);
-  refusedWith(call(bare, 'checks_run', { change }), /no factory checkout/);
   const other = w.as('builder', 'anthropic', 'b', { factory: f.dir, run: () => ({ exit: 0, out: '' }) });
-  const wrong = (v(call(other, 'change_open', { title: 'x', commit: 'abcdef1234', paths: ['apps/a.ts'] })) as { change: string }).change;
-  refusedWith(call(other, 'checks_run', { change: wrong }), /not abcdef1234/);
+  const change = (v(call(other, 'change_open', { title: 'x', commit: f.head, paths: ['apps/a.ts'] })) as { change: string }).change;
+  refusedWith(call(w.as('builder', 'anthropic'), 'checks_run', { change }), /no factory checkout/);
+  refusedWith(call(other, 'change_open', { title: 'x', commit: 'abcdef1234', paths: ['apps/a.ts'] }), /no commit abcdef1234/);
   writeFileSync(join(f.dir, 'dirty.txt'), 'x');
   refusedWith(call(other, 'checks_run', { change }), /uncommitted/);
+  refusedWith(call(other, 'change_open', { title: 'x', commit: f.head, paths: ['apps/a.ts'] }), /uncommitted/);
   spawnSync('rm', [join(f.dir, 'dirty.txt')]);
   mkdirSync(join(f.dir, 'control', 'journeys'), { recursive: true });
   writeFileSync(join(f.dir, 'control', 'journeys', 'easier.yaml'), 'goal: anything\n');
@@ -184,8 +189,7 @@ test('checks run on the change’s own commit, by the API; nobody reports a resu
   f.git('add', '.');
   f.git('commit', '-qm', 'quietly loosen a goal');
   const sly = f.git('rev-parse', 'HEAD');
-  const hidden = v(call(other, 'change_open', { title: 'x', commit: sly, base: f.head, paths: ['apps/a.ts'] })) as { change: string };
-  refusedWith(call(other, 'checks_run', { change: hidden.change }), /does not declare: control\/journeys\/easier\.yaml/);
+  refusedWith(call(other, 'change_open', { title: 'x', commit: sly, base: f.head, paths: ['apps/a.ts'] }), /does not declare: control\/journeys\/easier\.yaml/);
   f.git('reset', '-q', '--hard', f.head);
   const failing = w.as('builder', 'anthropic', 'b', { factory: f.dir, run: (step) => ({ exit: step === 'walk' ? 1 : 0, out: step === 'walk' ? 'journey bills-on-time: over budget' : '' }) });
   const r = v(call(failing, 'checks_run', { change })) as { results: { ok: boolean; tail?: string }[]; admission: { blocking: string[] } };
@@ -467,12 +471,12 @@ test('cheap first: identical trees are not checked twice, and no model reviews w
   const r = v(call(x.b, 'checks_run', { change: b2.change })) as { results: { reused?: boolean }[] };
   assert.equal(x.calls.length, ran, 'nothing ran the second time');
   assert.ok(r.results.every((y) => y.reused));
-  x.setFailing(['typecheck']);
+  x.setFailing(['walk']);
   const sha = x.commit(9);
   const red = v(call(x.b, 'change_open', { title: 'red', commit: sha, base: x.f.head, paths: ['apps/a.ts'] })) as { change: string };
   call(x.b, 'checks_run', { change: red.change });
   const queue = (v(call(x.as('reviewer', 'deepseek'), 'review_queue')) as { changes: { id: string }[] }).changes.map((c) => c.id);
-  assert.ok(!queue.includes(red.change), 'a red change never reaches a reviewer');
+  assert.ok(!queue.includes(red.change), 'a change with a failing check never reaches a reviewer');
   assert.ok(queue.includes(a.change));
 });
 
@@ -529,4 +533,31 @@ test('the supervisor wakes only seats with work, on the plan’s models, and met
   const stopped = await supervise({ workspace: w.ws, rounds: 3, fetch: f, env: { project: 'p', token: () => 'tok' } });
   assert.equal(stopped.why, 'budget reached');
   assert.equal(sent.length, before, 'past the ceiling, no model is called');
+});
+
+import { prepushGaps } from '../src/agents/tools.ts';
+
+test('the builder runs the existing tests on the base, then on its commit, before anything is pushed', () => {
+  const x = loop();
+  x.setFailing(['test']);
+  const sha = x.commit(1);
+  refusedWith(call(x.b, 'change_open', { title: 'new work', commit: sha, base: x.f.head, paths: ['apps/a.ts'] }), /the base .* already fails unit and integration tests, before this change; case k-/);
+  const baseCase = cases(x.ledger).find((k) => k.opened.source?.ref === `base ${x.f.head}`)!;
+  assert.ok(baseCase, 'a red base is a case against the base');
+  refusedWith(call(x.b, 'change_open', { title: 'new work', commit: sha, base: x.f.head, paths: ['apps/a.ts'] }), new RegExp(baseCase.id));
+  assert.equal(cases(x.ledger).filter((k) => k.opened.source?.ref === `base ${x.f.head}`).length, 1, 'asking again does not open a second case');
+  assert.ok(x.calls.filter((c) => c === 'test').length >= 1);
+  call(x.b, 'case_diagnose', { case: baseCase.id, cause: 'bug', evidence: 'the test fails on the base' });
+  x.setFailing([]);
+  const fix = call(x.b, 'change_open', { title: 'fix the base', commit: sha, base: x.f.head, case: baseCase.id, paths: ['apps/a.ts'] });
+  assert.ok(fix.ok, 'the fix for the base is not held up by the base it fixes');
+
+  x.setFailing(['typecheck']);
+  const red = x.commit(2);
+  const before = readLines(x.ledger, 'checks.jsonl').length;
+  refusedWith(call(x.b, 'change_open', { title: 'red', commit: red, base: sha, paths: ['apps/a.ts'] }), /fails typecheck/);
+  assert.ok(readLines(x.ledger, 'checks.jsonl').length > before);
+  const tree = (s: string) => x.f.git('rev-parse', `${s}^{tree}`);
+  assert.deepEqual(prepushGaps(x.ledger, [{ sha, tree: tree(sha) }]), [], 'a commit the API saw pass may be pushed');
+  assert.match(prepushGaps(x.ledger, [{ sha: red, tree: tree(red) }]).join(), /typecheck has not passed/, 'a red one may not');
 });

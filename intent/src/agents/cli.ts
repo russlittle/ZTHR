@@ -12,10 +12,13 @@
  *   intent agents budget --workspace d --by email --daily usd [--case usd]                    where spending stops
  *   intent agents agenda --workspace d                                                        what waits on every role
  *   intent agents drive --workspace d [--factory checkout] [--rounds n]                       wake the seats with work, on the cheap plan
+ *   intent agents hook --workspace d --factory checkout                                       install the pre-push hook in the checkout
+ *   intent agents prepush --workspace d                                                       the hook: refuse a push the API has not seen pass
  *
  * sign and decline are a person's commands. The server has no tool that reaches them, and they refuse anyone not
  * listed in agents/people.json, which only a person edits.
  */
+import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { writeDelegation } from './correct.ts';
 import { join } from 'node:path';
@@ -24,7 +27,7 @@ import { guide } from './guide.ts';
 import { append, decisionOn, ledgerOf, proposals, signers, verifyLog, type Signature } from './ledger.ts';
 import { supervise } from './driver.ts';
 import { serve } from './mcp.ts';
-import { applySigned, call, toolDefinitions } from './tools.ts';
+import { applySigned, call, prepushGaps, toolDefinitions } from './tools.ts';
 
 export function agentsCli(args: readonly string[]): number {
   const [cmd, ...rest] = args;
@@ -131,6 +134,29 @@ export function agentsCli(args: readonly string[]): number {
       process.exit(0);
     });
     return -1;
+  }
+  if (cmd === 'hook') {
+    const factory = flag('factory');
+    if (!factory) {
+      console.error('--factory is required');
+      return 2;
+    }
+    const hook = join(factory, '.git', 'hooks', 'pre-push');
+    writeFileSync(hook, `#!/bin/sh\n# Installed by intent agents hook: a push goes only when typecheck and tests passed on each commit's exact tree.\nexec node ${JSON.stringify(new URL('../cli.ts', import.meta.url).pathname)} agents prepush --workspace ${JSON.stringify(ws)}\n`, { mode: 0o755 });
+    console.log(`pre-push hook installed in ${factory}`);
+    return 0;
+  }
+  if (cmd === 'prepush') {
+    // git sends: <local ref> <local sha> <remote ref> <remote sha>, one line per ref.
+    const input = readFileSync(0, 'utf8');
+    const shas = input.split('\n').filter(Boolean).map((x) => x.split(' ')[1]!).filter((x) => !/^0+$/.test(x));
+    const trees = shas.map((sha) => ({ sha, tree: spawnSync('git', ['rev-parse', `${sha}^{tree}`], { encoding: 'utf8' }).stdout.trim() }));
+    const gaps = prepushGaps(l, trees);
+    if (gaps.length) {
+      console.error(`push refused: run change_open on the commit first, so the API tests it\n${gaps.join('\n')}`);
+      return 1;
+    }
+    return 0;
   }
   if (cmd === 'agenda') {
     for (const r of roles) {
