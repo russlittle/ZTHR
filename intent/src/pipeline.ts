@@ -42,6 +42,7 @@ export interface Prepared {
   readonly instruments: { readonly design: string; readonly roles: string };
   /** Journeys the person chose to add: suggestions by id, and their own. */
   readonly journeys: { readonly accepted: readonly string[]; readonly own: readonly OwnJourney[] };
+  readonly people: People;
 }
 
 /** A balloon key that survives rewording of case and punctuation, so numbers stay put across revisions. */
@@ -133,6 +134,22 @@ export interface Input {
   readonly roles?: Roles;
   /** Journeys the person added from the suggestions, and their own. */
   readonly journeys?: { readonly accepted?: readonly string[]; readonly own?: readonly OwnJourney[] };
+  /** Who holds the intent, and how each person who will use it has been tuned. */
+  readonly people?: People;
+}
+
+/** How one person who will use the software is tuned: what they need for a journey to count as walked by them. */
+export interface Tune {
+  readonly device?: 'phone' | 'laptop' | 'either';
+  readonly language?: string;
+  readonly assistive?: 'none' | 'screen reader' | 'low vision';
+  readonly often?: 'once' | 'weekly' | 'daily';
+}
+
+export interface People {
+  /** The person whose intent this is, as distinct from the people who will use what is built. */
+  readonly holder?: { readonly name: string; readonly role: string };
+  readonly tune?: Readonly<Record<string, Tune>>;
 }
 
 export function prepare(input: Input): Prepared {
@@ -322,7 +339,7 @@ export function prepare(input: Input): Prepared {
 
   const untied = model.context.filter((t) => !hits.some((h) => t.includes(h.words)));
   const finalModel = end === model.end ? model : { ...model, end };
-  return { model: finalModel, title: resolveClashes(titleBlock(hits.map((h) => ({ term: h.term.term, choices: h.term.choices }))), asks, clashChoice), statements: assignBalloons(statements, input.prior), questions: shaped(remaining), unread, untied, instruments: { design: lexicon.version, roles: roles.version ?? 'unversioned' }, journeys: { accepted: [...(input.journeys?.accepted ?? [])].sort(), own: input.journeys?.own ?? [] } };
+  return { model: finalModel, title: resolveClashes(titleBlock(hits.map((h) => ({ term: h.term.term, choices: h.term.choices }))), asks, clashChoice), statements: assignBalloons(statements, input.prior), questions: shaped(remaining), unread, untied, instruments: { design: lexicon.version, roles: roles.version ?? 'unversioned' }, journeys: { accepted: [...(input.journeys?.accepted ?? [])].sort(), own: input.journeys?.own ?? [] }, people: input.people ?? {} };
 }
 
 /**

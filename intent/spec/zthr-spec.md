@@ -364,17 +364,17 @@ flowchart LR
 
 ### User Story 15 - Intent described the way engineering describes a part (Priority: P1)
 
-The disciplines that move drawings and specifications of physical parts between designers, shops and inspectors are decades old and proven. Intent takes their structure directly, and the factory's agents use it natively, because the vocabulary (balloons, special characteristics, control plans, failure modes, first-article inspection) is already well understood.
+The disciplines that move schematics and specifications of physical parts between designers, shops and inspectors are decades old and proven. Intent takes their structure directly, and the factory's agents use it natively, because the vocabulary (balloons, special characteristics, control plans, failure modes, first-article inspection) is already well understood.
 
 | Engineering practice | In the intent |
 | --- | --- |
 | Every feature toleranced | Every statement carries its allowed variation; what is not controlled is listed as free, so the factory knows where it may choose |
 | Datum reference frame from function in the assembly | The datum chosen from how the software fits the person's situation: the problem and why slots |
 | Define the part, not the method; notes for the processes that follow (heat treat, finish) | The intent names no technology; the how is held as engineering notes with their reasons, practical now or ideal, revisable without touching the datum |
-| Tabulated drawings with lettered variants, each authoritative for its own line | Variants of one intent in production at once, each with its differences, notes, lockfile and effectivity |
+| Tabulated schematics with lettered variants, each authoritative for its own line | Variants of one intent in production at once, each with its differences, notes, lockfile and effectivity |
 | Title block and general notes, overridden locally | One title block of application-wide defaults (the audience profile among them), inherited by every statement, overridden only explicitly |
 | Special characteristics, critical and significant, carried with the same identity onto every control document | Statements marked critical or significant; each mark must reach a control (a gate, a journey, a red-team corpus, a production monitor), or the build fails |
-| Ballooned drawing and first-article inspection | Every statement numbered; the evidence answers balloon by balloon; the first build is inspected against every balloon, later builds against the control plan |
+| Ballooned schematic and first-article inspection | Every statement numbered; the evidence answers balloon by balloon; the first build is inspected against every balloon, later builds against the control plan |
 | Semantic product information, not text notes | Every statement tied to an entity, action, surface or measure; an untied note is flagged as a broken thread |
 | Tolerance stack-up and allocation | Application-level budgets (time, size, cost) allocated across parts, each part declaring its share, the stack checked before release |
 | Functional gauging | Journeys, which check the software fits what it mates with |
@@ -392,7 +392,7 @@ The disciplines that move drawings and specifications of physical parts between 
 
 **The end in mind.** Every intent package opens with the end the whole product serves: the change in people's lives it exists to make. Every feature's frame links up to it, so each feature can say to what end it is built. The end is given as context to every model call and every agent that works on the package, because "build this feature" without "to what end" loses the critical context.
 
-**Engineering notes.** A drawing defines the part and then carries notes for the processes that follow it: heat treat, surface finish, plating. Those notes do not define the part; they say what happens to it once it is made. The how of software is held the same way. Architecture available today, hosting, the database in use, a migration path from the current system: each is a note with its reason, distinct from the intent, revisable without changing the datum, and marked as the practical choice now or the ideal.
+**Engineering notes.** A schematic defines the part and then carries notes for the processes that follow it: heat treat, surface finish, plating. Those notes do not define the part; they say what happens to it once it is made. The how of software is held the same way. Architecture available today, hosting, the database in use, a migration path from the current system: each is a note with its reason, distinct from the intent, revisable without changing the datum, and marked as the practical choice now or the ideal.
 
 **Variants.** Engineering runs variants of one part in production at the same time, each print authoritative for its own line. One intent package can carry variants the same way: a shared datum, and for each variant the statements that differ, its own notes, its own lockfile and its own effectivity (which applications, tenants or markets it applies to). Each variant is authoritative for its scope, and each passes the shared journeys plus its own.
 
@@ -416,12 +416,12 @@ flowchart TB
 
 ### User Story 17 - The release: the datum issued to the factory (Priority: P1)
 
-When the read-back is signed, the datum is released to the factory the way a drawing is released to a shop: one package, revision-numbered, hashed, and complete enough to build to and inspect against. Revisions are numbered, because letters belong to variants. The person always sees where the intent is in the process: rough intent, read, questions, read-back, signed, released.
+When the read-back is signed, the datum is released to the factory the way a schematic is released to a shop: one package, revision-numbered, hashed, and complete enough to build to and inspect against. Revisions are numbered, because letters belong to variants. The person always sees where the intent is in the process: rough intent, read, questions, read-back, signed, released.
 
 | In the release | What it is |
 | --- | --- |
 | `datum.json` | Every statement by balloon, with its state, source, mark and tolerance |
-| `drawing.md` | The read-back: the print a person signs |
+| `schematic.md` | The read-back: the print a person signs |
 | `notes.md` | Engineering notes: how, for now |
 | `control-plan.yaml` | Every critical or significant balloon and the controls it needs |
 | `gauges/` | Journey cards in the factory's own format, proposed for a person to sign into its locked set |
@@ -573,10 +573,10 @@ When the read-back is signed, the datum is released to the factory the way a dra
 - **FR-076**: Every gauge MUST be issued with a skeleton that names each forbidden outcome and exports nothing, so it is reported unknown until built.
 - **FR-077**: The person MUST always be shown which step the intent is at, and the workspace MUST keep sources, readings, answers and every revision between sittings.
 - **FR-078**: A line the person labels with its slot (the hiring questions: the job it is hired for, how one would know it is doing a good job, what at the end of the year makes it a good hire; and who it is for, why, when it works) MUST be taken as theirs, in that slot, with its line, and MUST NOT need a reading. The studio MUST offer these questions as starters and show the frame as the hire, crediting Christensen.
-- **FR-079**: The drawing MUST be shown as drawings, each drawn from one graph of the intent so every line is a real relation in the package: an intent map laid out as a FAST diagram (why to the left, how to the right; top to bottom on a phone) from the end in mind to the instruments that check it; the datum structure as an entity diagram with this intent's counts; an inspection plan with each kind of check, where it lives in the package, how many there are, and a coverage matrix that marks every needed check that is missing. Every box MUST open its detail: source, state, tolerance and working range, relations both ways, open questions, and the file that holds it. A revision cloud MUST ring anything with an open question.
+- **FR-079**: The schematic MUST be shown as schematics, each drawn from one graph of the intent so every line is a real relation in the package: an intent map laid out as a FAST diagram (why to the left, how to the right; top to bottom on a phone) from the end in mind to the instruments that check it; the datum structure as an entity diagram with this intent's counts; an inspection plan with each kind of check, where it lives in the package, how many there are, and a coverage matrix that marks every needed check that is missing. Every box MUST open its detail: source, state, tolerance and working range, relations both ways, open questions, and the file that holds it. A revision cloud MUST ring anything with an open question.
 - **FR-080**: Before release the person MUST be able to see every file the package will carry, exactly as the factory will read it, with what changed since the last revision marked.
 - **FR-081**: Journeys MUST be suggested by rule from the datum, each naming the balloons it comes from and the reason to walk it: the other side of every activity, a refusal for everything that must never happen, taking back what was given, first-time and returning people, every channel, low vision, another language, a small phone, and every input missing or late. A suggestion MUST be in the package only once the person adds it, and the person MUST be able to write their own. Every journey MUST be a card the factory accepts.
-- **FR-082**: Before the person signs, the studio MUST show the build manifest the factory will start from: every part as a bill of materials in build order, each marked from the library, from the library extended, a catalogued part to make, or made new for this intent; why each is there, traced to the balloons that call for it; the library block, tests and mutation floor behind it; and the journeys that prove it. Each feature made new MUST show the parts it is assembled from. The drawing MUST be shown balloon by balloon against the manifest, and a balloon nothing builds MUST stop the release. The release MUST carry the manifest exactly as previewed.
+- **FR-082**: Before the person signs, the studio MUST show the build manifest the factory will start from: every part as a bill of materials in build order, each marked from the library, from the library extended, a catalogued part to make, or made new for this intent; why each is there, traced to the balloons that call for it; the library block, tests and mutation floor behind it; and the journeys that prove it. Each feature made new MUST show the parts it is assembled from. The schematic MUST be shown balloon by balloon against the manifest, and a balloon nothing builds MUST stop the release. The release MUST carry the manifest exactly as previewed.
 
 ### Key Entities
 

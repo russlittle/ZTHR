@@ -1,10 +1,10 @@
 /**
  * The build manifest: the bill of materials the factory starts from. Every line is a part, with where it comes from
- * (make or buy, in a manufacturing engineer's terms), why the drawing calls for it, which balloons it builds, and the
+ * (make or buy, in a manufacturing engineer's terms), why the schematic calls for it, which balloons it builds, and the
  * journeys that will prove it. Parts come from the part library: the built blocks, and the catalogue of parts every
  * app needs. What neither holds is made new for this intent, and shown as such, before the factory is asked to build.
  *
- * Every line is worked out by rule from the datum, so the same drawing always gives the same manifest, and a part
+ * Every line is worked out by rule from the datum, so the same schematic always gives the same manifest, and a part
  * nobody can trace to a balloon or a default is never on it.
  */
 import catalogData from '../catalog/catalog.json' with { type: 'json' };
@@ -108,7 +108,7 @@ const PARTS = (() => {
 export const BUILD_ORDER = ['Trust and evidence', 'Identity and access', 'Data', 'Work and integrations', 'Content', 'Experience', 'Appearance', 'Data movement and reporting', 'Intent', 'This intent'] as const;
 
 /** The library blocks a catalogue line names in its coverage note ("store and runtime: …"). */
-function blocksIn(from: string | null): string[] {
+export function blocksIn(from: string | null): string[] {
   if (!from) return [];
   const head = from.split(':')[0]!;
   return LIB.map((b) => b.name).filter((n) => new RegExp(`(^|[ ,]|and )${n.replace('-', '\\-')}($|[ ,])`).test(head));
@@ -147,7 +147,7 @@ const always = (text: string): When => () => ({ text, balloons: [] });
 
 /**
  * What calls for each part. The floor is on every app's manifest: what the title block's defaults and the
- * factory's own evidence need. Everything else is called for by something on the drawing.
+ * factory's own evidence need. Everything else is called for by something on the schematic.
  */
 const CALLS: readonly { parts: readonly string[]; when: When }[] = [
   // People and who may see what.
@@ -275,7 +275,7 @@ export function manifest(p: Prepared): Manifest {
       from: null,
       library: [],
       why: [
-        { text: o.slot === 'outcome' ? 'An outcome on the drawing; no library or catalogue part does it' : 'You asked for it in your own words; no library or catalogue part does it', balloons: [o.balloon] },
+        { text: o.slot === 'outcome' ? 'An outcome on the schematic; no library or catalogue part does it' : 'You asked for it in your own words; no library or catalogue part does it', balloons: [o.balloon] },
         ...(held.length ? [{ text: 'Held to these measures and rules', balloons: held.map((h) => h.balloon) }] : []),
         ...(kids.length ? [{ text: 'With what follows from it', balloons: kids.map((k) => k.balloon) }] : []),
       ],
@@ -299,7 +299,7 @@ export function manifest(p: Prepared): Manifest {
     l.source === 'make: new' ? { ...l, uses: lines.filter((x) => x.source !== 'make: new' && !x.floor && x.balloons.some((b) => l.balloons.includes(b))).map((x) => x.find) } : l,
   );
 
-  // The drawing, balloon by balloon, against what builds it.
+  // The schematic, balloon by balloon, against what builds it.
   const note = (s: Ballooned): string | null =>
     s.slot === 'nonGoals' ? 'Left out on purpose: nothing builds it, and a journey checks it stays out' : s.slot === 'assumptions' ? 'Taken as given: nothing builds it; it is checked when it stops being true' : s.slot === 'why' || s.slot === 'problem' ? 'Served by every part; measured through the outcomes' : null;
   const builders = (s: Ballooned) => assembled.filter((l) => l.balloons.includes(s.balloon)).map((l) => l.find);
@@ -346,6 +346,6 @@ pie showData title Where each line comes from
 | --- | --- | --- | --- | --- | --- | --- | --- |
 ${m.lines.map(row).join('\n')}
 
-${m.gaps.length ? `## Balloons nothing on the manifest builds\n\n${m.gaps.map((g) => `- ${g.balloon}: ${g.text} (${g.why})`).join('\n')}\n` : 'Every balloon on the drawing is built by a line on this manifest, or is left out or taken as given on purpose.\n'}`;
+${m.gaps.length ? `## Balloons nothing on the manifest builds\n\n${m.gaps.map((g) => `- ${g.balloon}: ${g.text} (${g.why})`).join('\n')}\n` : 'Every balloon on the schematic is built by a line on this manifest, or is left out or taken as given on purpose.\n'}`;
   return { 'build-manifest.json': `${JSON.stringify(json, null, 1)}\n`, 'build-manifest.md': md };
 }

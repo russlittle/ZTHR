@@ -1,5 +1,5 @@
 /**
- * The control surface, drawn as the studio's drawings are: one sheet per concern, lamps for verdicts with a symbol
+ * The control surface, drawn as the studio's schematics are: one sheet per concern, lamps for verdicts with a symbol
  * as well as a colour, and every count a link to the evidence that makes it.
  */
 import { EVIDENCE, tally, type Feed, type IntentRow, type Reading, type Status } from './feed.ts';

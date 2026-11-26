@@ -1,11 +1,13 @@
 /**
- * The drawings. Every view is drawn from the one graph of the intent, so each box and line is a real relation in
+ * The schematics. Every view is drawn from the one graph of the intent, so each box and line is a real relation in
  * the package. The intent map is a FAST diagram: why to the left, how to the right. A revision cloud, the red
  * scalloped outline a checker draws on a print, rings anything that still has an open question.
  */
 import type { Ballooned } from '../frame.ts';
 import { instruments, LANES, neighbours, uncovered, type Graph, type Lane, type Node } from '../graph.ts';
 import type { Suggestion } from '../journeys.ts';
+import type { Check, Fix, Review } from '../review.ts';
+import type { Tune } from '../pipeline.ts';
 import { BUILD_ORDER, MAINTAINER_LABEL, MAINTAINER_WHAT, SOURCE_LABEL, SOURCE_WHAT, type Line, type Manifest, type Source } from '../manifest.ts';
 
 export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -331,7 +333,7 @@ export function entities(g: Graph, c: Counts): Entity[] {
   const n = (k: Node['kind']) => g.nodes.filter((x) => x.kind === k).length;
   const statements = g.nodes.filter((x) => x.statement).length;
   return [
-    { id: 'intent', name: 'Intent', count: 1, attrs: ['title', 'revision', 'status'], c: 0, r: 0, what: 'The whole drawing: one title, one revision at a time, released as one package.' },
+    { id: 'intent', name: 'Intent', count: 1, attrs: ['title', 'revision', 'status'], c: 0, r: 0, what: 'The whole schematic: one title, one revision at a time, released as one package.' },
     { id: 'end', name: 'End in mind', count: g.nodes.find((x) => x.id === 'end')?.label === 'Not stated yet' ? 0 : 1, attrs: ['text', 'source line'], c: 0, r: 1, what: 'What everything serves. It leads the package and every model call.' },
     { id: 'note', name: 'Engineering note', count: c.notes + c.variants, attrs: ['text', 'stance', 'variant letter'], c: 0, r: 2, what: 'How it is to be made for now, and lettered variants. Never what it must do.' },
     { id: 'revision', name: 'Revision', count: c.revisions, attrs: ['number', 'reason', 'package hash'], c: 0, r: 3, what: 'Each release, with why it was made. A change notice lists what changed, balloon by balloon.' },
@@ -467,7 +469,7 @@ export function inspectionPlan(g: Graph, suggestions: readonly Suggestion[], acc
   const shown = suggestions.filter((s) => filter === 'all' || s.kind === filter || (filter === 'first' && s.priority === 'first'));
   const firstLeft = suggestions.filter((s) => s.priority === 'first' && !accepted.has(s.id)).length;
   const sug = `<section class="suggest" aria-labelledby="h-suggest"><div class="suggest-head"><h3 id="h-suggest">Journeys to add <span class="count-pill">${accepted.size} of ${suggestions.length} added</span></h3>${firstLeft ? `<button type="button" class="btn primary" data-add-first>Add the ${firstLeft} to walk first</button>` : ''}</div>
-<p class="lede">One journey per outcome is the least a release carries. Software is tested well by many: every kind of person, every way in, and every attempt at what must never happen. Each suggestion is worked out by rule from your drawing and names the balloons it comes from.</p>
+<p class="lede">One journey per outcome is the least a release carries. Software is tested well by many: every kind of person, every way in, and every attempt at what must never happen. Each suggestion is worked out by rule from your schematic and names the balloons it comes from.</p>
 <div class="filters" role="group" aria-label="Show">${['all', 'first', ...kinds].map((k) => `<button type="button" class="chip${filter === k ? ' on' : ''}" aria-pressed="${filter === k}" data-filter="${esc(k)}">${esc(k === 'all' ? `All ${suggestions.length}` : k === 'first' ? 'Walk first' : k)}</button>`).join('')}</div>
 <ul class="sug-list">${shown
     .map((s) => {
@@ -484,7 +486,7 @@ ${sug}</div>`;
 // ---------------------------------------------------------------- the release preview
 
 const KIND_OF_FILE = (f: string) =>
-  f.startsWith('gauges/') ? ['gauge', 'journey card'] : f.startsWith('tests/') ? ['scenario', 'test'] : f === 'ratchets.json' || f === 'tolerances.json' ? ['ratchet', 'ranges'] : f === 'control-plan.yaml' ? ['control', 'controls'] : f.startsWith('knowledge/') ? ['group', 'knowledge'] : ['doc', 'drawing'];
+  f.startsWith('gauges/') ? ['gauge', 'journey card'] : f.startsWith('tests/') ? ['scenario', 'test'] : f === 'ratchets.json' || f === 'tolerances.json' ? ['ratchet', 'ranges'] : f === 'control-plan.yaml' ? ['control', 'controls'] : f.startsWith('knowledge/') ? ['group', 'knowledge'] : ['doc', 'schematic'];
 
 export function releasePreview(files: Readonly<Record<string, string>>, prior: Readonly<Record<string, string>> | null, open: string, priorRev: number | null): string {
   const paths = Object.keys(files).sort((a, b) => (a.includes('/') === b.includes('/') ? a.localeCompare(b) : a.includes('/') ? 1 : -1));
@@ -654,21 +656,21 @@ function routing(m: Manifest): string {
   return `<svg class="map route" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="group" aria-label="How the factory will build: foundations top to bottom in the order they are laid, this intent's features on the right. Each part opens its detail.">${head}${bands}<g class="edges">${edges}</g>${fcards}</svg>`;
 }
 
-export function buildView(m: Manifest, filter: Source | 'all', drawingTitle: string, controls = ''): string {
+export function buildView(m: Manifest, filter: Source | 'all', schematicTitle: string, controls = ''): string {
   const n = m.lines.length;
   const seg = (s: Source) => (m.counts[s] ? `<span class="seg ${SRC_CLASS[s]}" style="width:${(m.counts[s] / n) * 100}%" title="${m.counts[s]} ${esc(SOURCE_LABEL[s])}"></span>` : '');
   const order: Source[] = ['stock', 'modify', 'make: catalogued', 'make: new'];
   const made = m.counts['make: catalogued'] + m.counts['make: new'];
   const summary = `<div class="bom-sum"><p class="bom-big">The factory starts from <strong>${n}</strong> lines</p><div class="mbar big" role="img" aria-label="${order.map((s) => `${m.counts[s]} ${SOURCE_LABEL[s]}`).join(', ')}">${order.map(seg).join('')}</div>
 <ul class="src-legend">${order.map((s) => `<li><button type="button" class="srcf${filter === s ? ' on' : ''}" data-src="${esc(s)}" aria-pressed="${filter === s}">${sourceBadge(s)}<strong>${m.counts[s]}</strong></button><span class="muted">${esc(SOURCE_WHAT[s])}</span></li>`).join('')}</ul>
-<p class="gapfill"><strong>Filled in, because the library does not have them now: ${made}.</strong> ${m.counts['make: catalogued']} catalogued part${m.counts['make: catalogued'] === 1 ? '' : 's'} the factory makes once and adds to the library, and ${m.counts['make: new']} custom assembl${m.counts['make: new'] === 1 ? 'y' : 'ies'} made new for ${esc(drawingTitle)}.</p>
+<p class="gapfill"><strong>Filled in, because the library does not have them now: ${made}.</strong> ${m.counts['make: catalogued']} catalogued part${m.counts['make: catalogued'] === 1 ? '' : 's'} the factory makes once and adds to the library, and ${m.counts['make: new']} custom assembl${m.counts['make: new'] === 1 ? 'y' : 'ies'} made new for ${esc(schematicTitle)}.</p>
 <div class="maint"><p class="maint-h"><strong>Who maintains it after it ships</strong></p><div class="mbar big" role="img" aria-label="${m.maintained.fleet} maintained by the fleet, ${m.maintained.local} by your team"><span class="seg fleet" style="width:${(m.maintained.fleet / n) * 100}%"></span><span class="seg local" style="width:${(m.maintained.local / n) * 100}%"></span></div><ul class="maint-legend"><li><span class="sw fleet" aria-hidden="true"></span><strong>${m.maintained.fleet}</strong> by the fleet: standard assemblies and parts. A fix made once is pushed to every app that uses them. ${m.baseline.count} of these are the <button type="button" class="linklike" data-baseline>${esc(m.baseline.name)}</button>, inherited by every app this team builds.</li><li><span class="sw local" aria-hidden="true"></span><strong>${m.maintained.local}</strong> by your team: the custom assemblies that exist only in this app, held by its journeys.</li></ul></div>
-${m.gaps.length ? `<div class="gaps"><h4>On the drawing, but nothing on the manifest builds it (${m.gaps.length})</h4><ul>${m.gaps.map((g) => `<li><button type="button" class="link-row" data-node="b${g.balloon}"><span class="mini-balloon">${g.balloon}</span>${esc(g.text)}</button>: ${esc(g.why)}</li>`).join('')}</ul></div>` : '<p class="ok-line">Every balloon on the drawing is built by a line on this manifest, or is left out or taken as given on purpose.</p>'}</div>`;
+${m.gaps.length ? `<div class="gaps"><h4>On the schematic, but nothing on the manifest builds it (${m.gaps.length})</h4><ul>${m.gaps.map((g) => `<li><button type="button" class="link-row" data-node="b${g.balloon}"><span class="mini-balloon">${g.balloon}</span>${esc(g.text)}</button>: ${esc(g.why)}</li>`).join('')}</ul></div>` : '<p class="ok-line">Every balloon on the schematic is built by a line on this manifest, or is left out or taken as given on purpose.</p>'}</div>`;
   const shown = m.lines.filter((l) => filter === 'all' || l.source === filter);
   const bom = `<div class="matrix-wrap"><table class="matrix bom"><caption>The bill of materials, in build order. ${filter === 'all' ? '' : `Showing ${esc(SOURCE_LABEL[filter])} only. <button type="button" class="btn quiet" data-src="all">Show all</button>`}</caption><thead><tr><th scope="col">Find</th><th scope="col">Part</th><th scope="col">Source</th><th scope="col">Maintained by</th><th scope="col">Standard assembly</th><th scope="col">Called for by</th><th scope="col">Journeys</th></tr></thead><tbody>${shown
     .map((l) => `<tr class="${SRC_CLASS[l.source]}"><td class="find">${l.find}</td><th scope="row"><button type="button" class="link-row" data-node="line:${l.find}">${esc(l.part.replace(/^Custom assembly: /, ''))}</button><span class="bom-gives">${l.source === 'make: new' ? `Assembled from ${l.uses.length ? l.uses.map((u) => `<button type="button" class="findref" data-node="line:${u}">${u}</button>`).join(' ') : 'new code only'}` : esc(l.gives)}</span></th><td>${sourceBadge(l.source)}</td><td><span class="mt ${l.maintainedBy}">${esc(MAINTAINER_LABEL[l.maintainedBy])}</span>${l.floor ? '<span class="muted small"> inherited</span>' : ''}</td><td>${l.library.length ? l.library.map((b) => `<span class="lib">${esc(b.name)}</span><span class="muted small"> ${b.tests} tests${b.mutationFloor !== null ? `, floor ${b.mutationFloor}%` : ''}</span>`).join('<br>') : '<span class="muted">none yet</span>'}</td><td>${l.balloons.length ? l.balloons.map((b) => `<button type="button" class="mini-balloon" data-node="b${b}" aria-label="Balloon ${b}">${b}</button>`).join(' ') : '<span class="muted small">team minimum</span>'}</td><td class="num">${l.journeys.length}</td></tr>`)
     .join('')}</tbody></table></div>`;
-  const trace = `<div class="matrix-wrap"><table class="matrix trace"><caption>The drawing against the manifest: each balloon and the lines that build it.</caption><thead><tr><th scope="col">Balloon</th><th scope="col">Statement</th><th scope="col">Built by</th></tr></thead><tbody>${m.trace
+  const trace = `<div class="matrix-wrap"><table class="matrix trace"><caption>The schematic against the manifest: each balloon and the lines that build it.</caption><thead><tr><th scope="col">Balloon</th><th scope="col">Statement</th><th scope="col">Built by</th></tr></thead><tbody>${m.trace
     .map((t) => {
       const gap = !t.by.length && !t.note;
       return `<tr${gap ? ' class="gaprow"' : ''}><td><button type="button" class="mini-balloon" data-node="b${t.balloon}">${t.balloon}</button></td><td>${esc(t.text)}</td><td>${t.by.length ? t.by.map((f) => `<button type="button" class="findref" data-node="line:${f}" title="${esc(m.lines[f - 1]!.part)}">${f}</button>`).join(' ') : t.note ? `<span class="muted small">${esc(t.note)}</span>` : '<strong class="red">nothing builds it</strong>'}</td></tr>`;
@@ -677,7 +679,7 @@ ${m.gaps.length ? `<div class="gaps"><h4>On the drawing, but nothing on the mani
   return `<div class="view-bar"><p class="view-lede">What the factory will start from, and why. Read it before you release: every line is a standard assembly from the library, a catalogued part the factory makes, or a custom assembly new for this intent; every one is traced to the balloons that call for it, and says who maintains it after it ships.</p>${controls}</div>${summary}
 <section aria-labelledby="h-route"><h3 id="h-route">How the factory will build</h3><p class="muted small">Foundations are laid top to bottom, in the order the factory lays them; this intent's features are on the right, each assembled from the parts it is joined to. Hover or select a feature to trace its parts.</p><div class="canvas" id="canvas" tabindex="-1">${routing(m)}</div></section>
 <section aria-labelledby="h-bom"><h3 id="h-bom">Bill of materials</h3>${bom}</section>
-<section aria-labelledby="h-trace"><h3 id="h-trace">The drawing, balloon by balloon</h3>${trace}</section>`;
+<section aria-labelledby="h-trace"><h3 id="h-trace">The schematic, balloon by balloon</h3>${trace}</section>`;
 }
 
 export function lineDetail(m: Manifest, find: number): { title: string; html: string } | null {
@@ -697,4 +699,37 @@ export function lineDetail(m: Manifest, find: number): { title: string; html: st
   const used = usedBy.length ? `<h4>Used in (${usedBy.length})</h4><ul class="rel-list">${usedBy.map((u) => `<li><button type="button" class="link-row" data-node="line:${u.find}"><span class="findref">${u.find}</span>${esc(u.part)}</button></li>`).join('')}</ul>` : '';
   const js = l.journeys.length ? `<h4>Journeys that prove it</h4><ul class="rel-list">${l.journeys.slice(0, 12).map((j) => `<li><button type="button" class="chip file" data-file="gauges/${esc(j)}.yaml">${esc(j)}</button></li>`).join('')}${l.journeys.length > 12 ? `<li class="muted small">and ${l.journeys.length - 12} more</li>` : ''}</ul>` : '';
   return { title: `Find ${l.find}`, html: `<p class="dr-text">${esc(l.part)}</p>${l.source === 'make: new' ? '' : `<p class="muted">${esc(l.gives)}</p>`}<dl class="dr-rows">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>${why}${uses}${used}${js}` };
+}
+
+// ---------------------------------------------------------------- the review
+
+
+const fixAttrs = (f?: Fix) =>
+  !f ? '' : f.kind === 'balloon' ? `data-node="b${f.balloon}"` : f.kind === 'question' ? `data-answer="${esc(f.id)}"` : f.kind === 'view' ? `data-view="${f.view}"` : `data-add-words="${esc(f.add)}"`;
+const fixLabel = (f?: Fix) => (!f ? '' : f.kind === 'balloon' ? 'Show it' : f.kind === 'question' ? 'Answer it' : f.kind === 'view' ? (f.view === 'plan' ? 'Add journeys' : f.view === 'build' ? 'See the manifest' : 'Open it') : 'Add it to your words');
+const checkRow = (c: Check) => `<li class="ck ${c.holds ? 'ok' : 'no'}"><span class="ck-m" aria-hidden="true">${c.holds ? '✓' : '✕'}</span><div><span class="ck-t">${esc(c.text)}</span>${c.holds ? '' : `<span class="ck-why">${esc(c.why)}</span>`}</div>${!c.holds && c.fix ? `<button type="button" class="btn quiet ck-fix" ${fixAttrs(c.fix)}>${fixLabel(c.fix)}</button>` : ''}</li>`;
+const gradeCls = (g: string) => (g.startsWith('A') ? 'ga' : g.startsWith('B') ? 'gb' : g.startsWith('C') ? 'gc' : 'gd');
+
+export interface TrailStep {
+  readonly who: string;
+  readonly what: string;
+  readonly when?: string;
+}
+
+export function reviewView(r: Review, holder: { name: string; role: string }, tune: Readonly<Record<string, Tune>>, trail: readonly TrailStep[], product: string): string {
+  const tuneSel = (who: string, key: keyof Tune, opts: readonly string[], label: string) => {
+    const v = tune[who]?.[key] ?? '';
+    const id = `tune-${who.replace(/[^a-z0-9]+/gi, '-')}-${key}`;
+    return `<label class="tune-f" for="${id}"><span>${label}</span><select id="${id}" data-tune="${esc(who)}" data-key="${key}"><option value="">not said</option>${opts.map((o) => `<option${o === v ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`;
+  };
+  const who = `<section class="rv-who" aria-labelledby="h-who"><h3 id="h-who">Whose intent this is</h3><p class="muted small">The person who holds the intent is not always someone who will use it. A director holds the intent; students and staff use what is built.</p><div class="who-grid"><label for="holder-name"><span>Held by</span><input id="holder-name" type="text" value="${esc(holder.name)}" placeholder="Your name" autocomplete="name"></label><label for="holder-role"><span>Their role</span><input id="holder-role" type="text" value="${esc(holder.role)}" placeholder="For example: Director of Student Success"></label><label for="product-name"><span>Product it belongs to</span><input id="product-name" type="text" value="${esc(product)}" placeholder="The product, or part family"></label></div><h4>Who has shaped it, and when</h4><ol class="trail-log">${trail.map((t) => `<li><strong>${esc(t.who)}</strong> ${esc(t.what)}${t.when ? ` <span class="muted small">${esc(t.when)}</span>` : ''}</li>`).join('')}</ol></section>`;
+  const people = `<section aria-labelledby="h-ppl"><h3 id="h-ppl">The people it is for</h3><p class="muted small">Each person on the schematic, checked against the journeys that will judge it. Tune each to how they will really use it: the journeys they need move to the top of the inspection plan, and the checks below follow.</p><div class="ppl">${r.people
+    .map(
+      (p) => `<article class="pcard"><header><span class="grade ${gradeCls(p.grade)}" aria-label="Grade ${p.grade}">${p.grade}</span><div><h4>${esc(p.name)}</h4><p class="muted small">${p.side === 'primary' ? 'Who it is for' : 'On the other side'}${p.balloon ? ` · <button type="button" class="mini-balloon" data-node="b${p.balloon}" aria-label="Balloon ${p.balloon}">${p.balloon}</button>` : ''} · walks ${p.journeys.length} journey${p.journeys.length === 1 ? '' : 's'}</p></div></header>${p.side === 'primary' ? `<div class="tune">${tuneSel(p.name, 'device', ['phone', 'laptop', 'either'], 'Mostly on')}${tuneSel(p.name, 'language', ['English', 'Spanish', 'another language'], 'Language')}${tuneSel(p.name, 'assistive', ['none', 'screen reader', 'low vision'], 'Assistive technology')}${tuneSel(p.name, 'often', ['once', 'weekly', 'daily'], 'How often')}</div>` : ''}<ul class="cks">${p.checks.map(checkRow).join('')}</ul></article>`,
+    )
+    .join('')}</div>${r.mismatches.length ? `<div class="gaps"><h4>People and journeys that do not match (${r.mismatches.length})</h4><ul>${r.mismatches.map((m) => `<li>${esc(m.text)} ${m.fix ? `<button type="button" class="btn quiet" ${fixAttrs(m.fix)}>${fixLabel(m.fix)}</button>` : ''}</li>`).join('')}</ul></div>` : '<p class="ok-line">Every person on the schematic walks a journey, and every journey is walked by someone on it.</p>'}</section>`;
+  const panel = `<section aria-labelledby="h-panel"><h3 id="h-panel">The review panel</h3><p class="muted small">Five raters, each a short list of checks worked out by rule. No model is opened to find what a rule can show.</p><div class="panel-grid">${r.panel
+    .map((x) => `<article class="rcard"><header><span class="grade ${gradeCls(x.grade)}" aria-label="Grade ${x.grade}">${x.grade}</span><div><h4>${esc(x.name)}</h4><p class="muted small">${esc(x.asks)}</p></div></header><ul class="cks">${x.checks.map(checkRow).join('')}</ul></article>`)
+    .join('')}</div></section>`;
+  return `<div class="view-bar"><p class="view-lede">The raters read the schematic before you sign it: the people it is for, then product, engineering, QA, design and access, and security and privacy. Every finding says where it is fixed. Overall: <strong class="grade-inline ${gradeCls(r.overall)}">${r.overall}</strong>.</p></div>${who}${people}${panel}`;
 }

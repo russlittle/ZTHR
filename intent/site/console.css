@@ -195,3 +195,9 @@ footer.foot { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14
 .trail li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 4px; padding: 8px 0 8px; position: relative; }
 .trail li + li::before { content: ""; position: absolute; left: 10px; top: -8px; height: 14px; width: 2px; background: var(--rule); }
 .trail p { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
+
+.prod-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.pcard-btn { display: grid; gap: 6px; width: 100%; text-align: left; padding: 14px; border: 2px solid var(--ink); border-radius: 3px; background: var(--sheet); color: var(--ink); font: inherit; cursor: pointer; }
+.pcard-btn:hover { box-shadow: inset 0 -4px 0 var(--blue); }
+.wu td, .wu th { font-size: 14px; }
+.wu { min-width: 720px; }

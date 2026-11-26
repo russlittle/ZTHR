@@ -10,8 +10,8 @@
 <style>
 /*
 VOICE: a calm, exact engineering office. Plain words, nothing shouted.
-IDEA: a drawing on a drafting table. Your words go in; a released drawing comes out.
-PICTURE: the drawing sheet itself: border zones, balloons, revision block, title block.
+IDEA: a schematic on a drafting table. Your words go in; a released schematic comes out.
+PICTURE: the schematic sheet itself: border zones, balloons, revision block, title block.
 COLOUR and TYPE: sage drafting board, white sheet, ink, blueprint blue for actions, red pencil only for redlines.
 LAYOUT: intake rail beside the sheet on wide screens; one column, sheet after the redlines, on a phone.
 */
@@ -66,7 +66,7 @@ header.top p { margin: 0; color: var(--muted); max-width: 78ch; }
 
 main.desk { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); grid-template-areas: "words sheet" "rail sheet"; grid-template-rows: auto 1fr; gap: 0 24px; padding: 8px max(4vw, 16px) 48px; align-items: start; }
 .col-words { grid-area: words; } .sheet { grid-area: sheet; } .col-rail { grid-area: rail; }
-/* Once there are words, the drawing leads: it takes the wide column, and your words, the questions and the release sit beside it. */
+/* Once there are words, the schematic leads: it takes the wide column, and your words, the questions and the release sit beside it. */
 body.has-words main.desk { grid-template-columns: minmax(0, 1fr) minmax(0, 390px); grid-template-areas: "sheet words" "sheet rail"; }
 @media (max-width: 960px) { main.desk, body.has-words main.desk { grid-template-columns: minmax(0, 1fr); grid-template-areas: "words" "sheet" "rail"; } .sheet { margin-bottom: 18px; } }
 .words-box > summary, #readings-box > summary { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; cursor: pointer; list-style: none; }
@@ -166,7 +166,7 @@ details textarea:not(.words) { width: 100%; min-height: 120px; border: 1px solid
 .held { color: var(--muted); font-size: 15px; }
 .clear { color: var(--done); font-weight: 600; }
 
-/* The drawing sheet: the picture */
+/* The schematic sheet: the picture */
 .sheet { background: var(--sheet); border: 2px solid var(--ink); border-radius: 2px; position: relative; padding: 34px 34px 28px; box-shadow: 0 18px 40px -24px rgba(0,0,0,.45), 0 2px 0 var(--board-2); }
 .sheet::before { content: ""; position: absolute; inset: 10px; border: 1px solid var(--ink); pointer-events: none; }
 .zones { position: absolute; font: 500 12px var(--letter); color: var(--muted); display: flex; justify-content: space-around; pointer-events: none; }
@@ -214,7 +214,7 @@ footer { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14px; m
 @media (max-width: 420px) { .steps li:not([aria-current]) .name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; } .steps li[aria-current] .name { white-space: nowrap; } }
 @media print { body { background: #fff; } header.top, .steps, .col-words, .col-rail, .open-source, footer { display: none; } main.desk { display: block; padding: 0; } .sheet { box-shadow: none; } }
 
-/* ---------- views of the drawing ---------- */
+/* ---------- views of the schematic ---------- */
 .tabs { display: flex; flex-wrap: wrap; gap: 2px; margin: 18px 0 0; border-bottom: 2px solid var(--ink); }
 .tabs [role=tab] { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 8px 14px; border: 1px solid transparent; border-bottom: 0; border-radius: 4px 4px 0 0; background: transparent; color: var(--muted); font: 600 15.5px/1 var(--letter); cursor: pointer; margin-bottom: -2px; }
 .tabs [role=tab][aria-selected=true] { color: var(--ink); background: var(--sheet); border-color: var(--ink); border-bottom: 2px solid var(--sheet); }
@@ -420,6 +420,39 @@ footer { padding: 0 max(4vw, 16px) 40px; color: var(--muted); font-size: 14px; m
 .maint-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14.5px; }
 .mt { font: 600 13.5px var(--letter); } .mt.local { color: var(--blue); }
 .linklike { background: none; border: 0; padding: 0; color: var(--blue); text-decoration: underline; font: inherit; cursor: pointer; }
+
+/* Which process is which: each section carries its step, and the one you are on is lit. */
+.proc { display: inline-grid; place-items: center; min-width: 26px; height: 26px; margin-right: 8px; border: 1.5px solid currentColor; border-radius: 13px; font: 700 13px var(--letter); vertical-align: 3px; color: var(--muted); }
+body[data-step="1"] .proc[data-step="1"], body[data-step="2"] .proc[data-step="2"], body[data-step="3"] .proc[data-step="3"], body[data-step="4"] .proc[data-step="4"], body[data-step="5"] .proc[data-step="5"], body[data-step="6"] .proc[data-step="6"] { background: var(--blue); border-color: var(--blue); color: var(--on-blue); }
+body[data-step="1"] #words-box, body[data-step="2"] #readings-box, body[data-step="3"] #redlines-panel, body[data-step="5"] #release, body[data-step="6"] #release { box-shadow: 0 0 0 3px var(--blue); }
+body[data-step="4"] .sheet { box-shadow: 0 0 0 3px var(--blue), 0 18px 40px -24px rgba(0,0,0,.45); }
+.here { font: 600 12.5px var(--letter); color: var(--blue); margin-left: 6px; }
+.steps button.jump { all: unset; cursor: pointer; display: contents; }
+.steps li:has(button.jump:focus-visible) .dot { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* the review */
+.grade { display: inline-grid; place-items: center; min-width: 46px; height: 46px; padding: 0 6px; border-radius: 4px; font: 700 22px var(--letter); color: var(--on-blue); flex: none; }
+.grade.ga { background: var(--done); } .grade.gb { background: var(--blue); } .grade.gc { background: #8a5a00; } .grade.gd { background: var(--red); }
+.grade-inline { padding: 1px 8px; border-radius: 4px; color: var(--on-blue); }
+.grade-inline.ga { background: var(--done); } .grade-inline.gb { background: var(--blue); } .grade-inline.gc { background: #8a5a00; } .grade-inline.gd { background: var(--red); }
+.rv-who { border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; margin: 10px 0 18px; }
+.rv-who h3, .ppl + * h3 { margin: 0 0 4px; }
+.who-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 8px 0; }
+.who-grid label, .tune-f { display: grid; gap: 2px; font-size: 14px; color: var(--muted); }
+.who-grid input, .tune-f select { min-height: 40px; border: 1px solid var(--field); border-radius: 6px; padding: 6px 8px; font: inherit; color: var(--ink); background: var(--sheet); }
+.trail-log { margin: 4px 0 0; padding-left: 20px; font-size: 15px; }
+.trail-log li { padding: 2px 0; }
+.ppl, .panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin: 8px 0 16px; }
+.pcard, .rcard { border: 1.5px solid var(--ink); border-radius: 4px; padding: 12px; background: var(--sheet); }
+.pcard header, .rcard header { display: flex; gap: 12px; align-items: flex-start; }
+.pcard h4, .rcard h4 { margin: 0; font: 600 18px var(--letter); }
+.pcard header p, .rcard header p { margin: 2px 0 0; }
+.tune { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; margin: 10px 0 4px; }
+.cks { list-style: none; margin: 10px 0 0; padding: 0; }
+.ck { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 6px; padding: 5px 0; border-top: 1px dashed var(--rule); align-items: start; font-size: 14.5px; }
+.ck-m { font-weight: 700; } .ck.ok .ck-m { color: var(--done); } .ck.no .ck-m { color: var(--red); }
+.ck-why { display: block; color: var(--muted); font-size: 13.5px; }
+.ck-fix { min-height: 32px; padding: 2px 8px; font-size: 13.5px; }
+.loop-note { margin: 10px 0 0; font-size: 14.5px; }
 /* the drawer */
 .drawer { position: fixed; z-index: 40; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); background: var(--sheet); border-left: 2px solid var(--ink); box-shadow: -18px 0 40px -24px rgba(0,0,0,.5); display: flex; flex-direction: column; animation: slide .22s ease; }
 @keyframes slide { from { transform: translateX(30px); opacity: 0; } }
@@ -452,7 +485,7 @@ body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minm
 <header class="top">
   <div class="hero">
     <h1>Intent studio</h1>
-    <p class="promise">Say what you want in your own words. The studio turns it into a numbered drawing, asks only the few questions that change what gets built, and releases a package a software factory builds to, with the journeys that will prove it works.</p>
+    <p class="promise">Say what you want in your own words. The studio turns it into a numbered schematic, asks only the few questions that change what gets built, and releases a package a software factory builds to, with the journeys that will prove it works.</p>
     <p class="hero-links"><button class="btn quiet" type="button" id="glossary-open">The words we use</button><a class="btn quiet" href="#open-source">How it works, and the source</a></p>
   </div>
   <ol class="chain" id="chain" aria-label="What your words become"></ol>
@@ -461,7 +494,7 @@ body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minm
 <main class="desk" id="desk">
   <section class="col-words" id="col-words" aria-label="Your words and readings">
     <details class="panel words-box" id="words-box" open>
-      <summary><h2 id="h-words">Your words</h2><span class="words-meta" id="words-meta"></span></summary>
+      <summary><h2 id="h-words"><span class="proc" data-step="1">1</span>Your words</h2><span class="words-meta" id="words-meta"></span></summary>
       <p class="lede">Rough is fine: a few lines, a pasted spec, or a page. Metaphors are welcome.</p>
       <label class="sr" for="words">Describe what you want</label>
       <textarea id="words" class="words" spellcheck="true" placeholder="For example: I want students to stop getting their power shut off. Make it feel calm, not scary."></textarea>
@@ -473,7 +506,7 @@ body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minm
         <input class="sr" type="file" id="file" accept=".md,.markdown,.txt,.html,.htm,.feature">
       </div>
       <div class="starters" role="group" aria-labelledby="starters-h">
-        <p class="starters-h" id="starters-h">No model needed: answer these four, and each answer goes straight onto the drawing as yours.</p>
+        <p class="starters-h" id="starters-h">No model needed: answer these four, and each answer goes straight onto the schematic as yours.</p>
         <button class="btn quiet" type="button" data-starter="The job I am hiring this for:">What job are you hiring it for?</button>
         <button class="btn quiet" type="button" data-starter="I would know it is doing a good job when:">How would you know it is doing a good job?</button>
         <button class="btn quiet" type="button" data-starter="At the end of the year it was a good hire if:">At year end, what makes it a good hire?</button>
@@ -483,8 +516,8 @@ body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minm
       <p class="status" id="words-status" role="status"></p>
     </details>
     <details class="panel" id="readings-box">
-      <summary><h2 id="h-read">Readings</h2><span class="words-meta" id="readings-meta"></span></summary>
-      <p class="lede">Two model families read your words independently. Where they agree, it goes on the drawing for you to confirm; where they differ, you get a redline, not a guess.</p>
+      <summary><h2 id="h-read"><span class="proc" data-step="2">2</span>Readings</h2><span class="words-meta" id="readings-meta"></span></summary>
+      <p class="lede">Two model families read your words independently. Where they agree, it goes on the schematic for you to confirm; where they differ, you get a redline, not a guess.</p>
       <ul class="readings" id="readings"></ul>
       <div class="row">
         <button class="btn primary" id="read-claude" type="button" hidden>Read with Claude</button>
@@ -503,7 +536,7 @@ body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minm
   <article class="sheet" id="sheet" aria-labelledby="sheet-title"></article>
   <section class="col-rail" id="col-rail" aria-label="Questions and release">
     <section class="panel redlines" id="redlines-panel" aria-labelledby="h-redlines">
-      <h2 id="h-redlines">Redlines: questions to settle</h2>
+      <h2 id="h-redlines"><span class="proc" data-step="3">3</span>Redlines: questions to settle</h2>
       <p class="count" id="redlines-count"></p>
       <p class="lede" id="redlines-lede">Each one changes what gets built. Tap an answer; "Other" is always there.</p>
       <p class="note kbd">Keys 1 to 9 choose an option in the question you are on.</p>
@@ -517,7 +550,7 @@ body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minm
 <section class="open-source" id="open-source" aria-labelledby="h-open">
   <h2 id="h-open">How it works, and the source</h2>
   <div class="os-grid">
-    <div><h3>Deterministic first</h3><p>Everything on the drawing except a reading is worked out by rule in this page: intake, the checks for gaps and overlaps, the design lexicon, derived rules, tolerances, journeys, the build manifest and the package. The same words always give the same bytes. Models only read, and a single reading is never taken as fact.</p></div>
+    <div><h3>Deterministic first</h3><p>Everything on the schematic except a reading is worked out by rule in this page: intake, the checks for gaps and overlaps, the design lexicon, derived rules, tolerances, journeys, the build manifest and the package. The same words always give the same bytes. Models only read, and a single reading is never taken as fact.</p></div>
     <div><h3>Open formats</h3><p>The package is plain files: <code>datum.json</code>, journey gauges in the factory's card format, <code>control-plan.yaml</code>, <code>ratchets.json</code>, <code>build-manifest.json</code> and a knowledge bundle. <a href="https://github.com/russlittle/ZTHR/blob/main/intent/docs/formats.md">The formats, field by field</a>.</p></div>
     <div><h3>Extend it</h3><p>The lexicon, the roles, the parts catalogue and the rules that choose parts are data and short rule tables, each tested. <a href="https://github.com/russlittle/ZTHR/blob/main/intent/docs/extending.md">How to add a word, a role, a part or a rule</a>.</p></div>
     <div><h3>Apache 2.0</h3><p>The studio, the command line and the engine are one open package. <a href="https://github.com/russlittle/ZTHR/tree/main/intent">Read the source</a>, run it locally (<code>node src/cli.ts readback intent.md</code>), or <a href="https://github.com/russlittle/ZTHR/blob/main/intent/CONTRIBUTING.md">contribute</a>.</p></div>
@@ -528,7 +561,7 @@ body.wide main.desk, body.wide.has-words main.desk { grid-template-columns: minm
   <div id="dr-body" tabindex="0" role="region" aria-label="Detail"></div>
 </aside>
 <footer>
-  <p>What leaves this page: your words go to Claude only when you choose "Read with Claude", and to another model only if you paste them there yourself. Everything else (the checks, the drawing and the package) is worked out here, in your browser. Your work is saved to your own private space, which only you can read, or to this browser when that is not available. "Start a new intent" clears it.</p>
+  <p>What leaves this page: your words go to Claude only when you choose "Read with Claude", and to another model only if you paste them there yourself. Everything else (the checks, the schematic and the package) is worked out here, in your browser. Your work is saved to your own private space, which only you can read, or to this browser when that is not available. "Start a new intent" clears it.</p>
 </footer>
 <script src="app.js"></script>
 </body>

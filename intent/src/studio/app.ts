@@ -1,6 +1,6 @@
 /**
  * The intent studio: the whole front door in one page. The person writes, speaks or drops their intent; Claude
- * and any other model read it; every difference and gap is a redline answered in a tap; the drawing fills in
+ * and any other model read it; every difference and gap is a redline answered in a tap; the schematic fills in
  * as they go; a revision is released as the package the factory builds to. The engine is the same one the
  * command line runs, so a release made here and one made there are the same bytes.
  */
@@ -15,8 +15,10 @@ import { release } from '../release.ts';
 import { zip } from '../zip.ts';
 import { graph, type Graph } from '../graph.ts';
 import { suggestJourneys, type OwnJourney } from '../journeys.ts';
-import { buildView, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
+import { buildView, reviewView, type TrailStep, datumStructure, detail, entities, inspectionPlan, intentMap, lineDetail, releasePreview, icon } from './views.ts';
 import { manifest, type Manifest, type Source } from '../manifest.ts';
+import { review, type Review } from '../review.ts';
+import type { Tune } from '../pipeline.ts';
 import { sha256 } from '../hash.ts';
 
 // ---------------------------------------------------------------- platform capabilities, each optional
@@ -48,7 +50,12 @@ interface State {
   releases: Issued[];
   showAll: boolean;
   /** The person's signature on one exact datum: change a word and it lapses. */
-  signed: { datum: string; at: string } | null;
+  signed: { datum: string; at: string; by?: string } | null;
+  /** Who holds the intent, and the product (part family) it belongs to. */
+  holder: { name: string; role: string };
+  product: string;
+  /** How each person who will use it is tuned. */
+  tune: Record<string, Tune>;
   /** Answers the person took on the suggestion without being sure: carried as assumptions to revisit. */
   unsure: Record<string, true>;
   /** The question each answer was given to, so an answer can be shown and changed later. */
@@ -65,9 +72,10 @@ interface State {
   wide: boolean;
   buildFilter: Source | 'all';
 }
-type View = 'map' | 'hire' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
+type View = 'map' | 'review' | 'hire' | 'structure' | 'plan' | 'build' | 'preview' | 'parts';
 const VIEWS: readonly { key: View; label: string; ico: string }[] = [
   { key: 'map', label: 'Intent map', ico: 'end' },
+  { key: 'review', label: 'Review', ico: 'scenario' },
   { key: 'hire', label: 'The hire', ico: 'doc' },
   { key: 'structure', label: 'Datum structure', ico: 'group' },
   { key: 'plan', label: 'Inspection plan', ico: 'gauge' },
@@ -75,7 +83,7 @@ const VIEWS: readonly { key: View; label: string; ico: string }[] = [
   { key: 'preview', label: 'Release preview', ico: 'scenario' },
   { key: 'parts', label: 'Parts list', ico: 'statement' },
 ];
-const empty = (): State => ({ v: 1, path: 'intent.md', words: '', readings: [], answers: {}, releases: [], showAll: false, signed: null, unsure: {}, asked: {}, skipped: [], journeys: { accepted: [], own: [] }, view: 'map', expanded: [], previewFile: 'drawing.md', planFilter: 'all', zoom: 0, wide: false, buildFilter: 'all' });
+const empty = (): State => ({ v: 1, path: 'intent.md', words: '', readings: [], answers: {}, releases: [], showAll: false, signed: null, unsure: {}, asked: {}, skipped: [], journeys: { accepted: [], own: [] }, view: 'map', expanded: [], previewFile: 'schematic.md', planFilter: 'all', zoom: 0, wide: false, buildFilter: 'all', holder: { name: '', role: '' }, product: '', tune: {} });
 let state: State = empty();
 let prepared: Prepared | null = null;
 let lastBalloons = new Set<number>();
@@ -136,6 +144,7 @@ function compute(): Prepared {
     readings: state.readings,
     answers: state.answers,
     journeys: state.journeys,
+    people: { ...(state.holder.name || state.holder.role ? { holder: state.holder } : {}), tune: state.tune },
     ...(last ? { prior: last.balloons } : {}),
   });
 }
@@ -194,6 +203,7 @@ function render(fromAnswer = false) {
   }
   lastGraph = graph(prepared);
   lastManifest = manifest(prepared);
+  lastReview = review(prepared);
   lastFiles = currentRelease(prepared, state.releases.length ? 'preview' : undefined).files;
   renderSteps(prepared);
   renderReadings(prepared);
@@ -210,7 +220,7 @@ function renderChain(p: Prepared) {
     el.className = 'chain promise';
     el.innerHTML = [
       ['Your words', 'rough is fine'],
-      ['A numbered drawing', 'every statement traced to its source'],
+      ['A numbered schematic', 'every statement traced to its source'],
       ['A few questions', 'only the ones that change the build'],
       ['A build manifest', 'what exists, and what gets made'],
       ['Journeys that prove it', 'walked as a person would'],
@@ -230,9 +240,9 @@ function renderChain(p: Prepared) {
   const step = (n: string | number, w: string, go: string, cls = '') => `<li><button type="button" class="link ${cls}" data-chain="${go}"><span class="n">${n}</span><span class="w">${w}</span></button></li>`;
   el.innerHTML = [
     step(lines, `line${lines === 1 ? '' : 's'} in your words`, 'words'),
-    step(p.statements.length, 'numbered statements on the drawing', 'map'),
+    step(p.statements.length, 'numbered statements on the schematic', 'map'),
     q ? step(q, `question${q === 1 ? '' : 's'} only you can settle`, 'redlines', 'red') : step('0', 'questions left: ready to sign', 'release'),
-    step(checks, 'checks that will hold it', 'plan'),
+    step(checks, 'tests and checks that will hold it', 'plan'),
     step(m.lines.length, `parts to build it: ${made} the library lacks today`, 'build'),
     step(journeys, `${journeys === 1 ? 'journey proves' : 'journeys prove'} it works${suggested ? `; ${suggested} more suggested` : ''}`, 'plan'),
   ].join('');
@@ -243,8 +253,9 @@ function renderChain(p: Prepared) {
 function renderSteps(p: Prepared) {
   const s = stage(p);
   const i = STAGES.findIndex((x) => x.key === s);
+  document.body.dataset['step'] = String(i + 1);
   $('steps').innerHTML = `<div class="track" aria-hidden="true"><div class="fill" style="--to:${Math.round((i / (STAGES.length - 1)) * 100)}%"></div></div><ol>${STAGES.map(
-    (x, k) => `<li class="${k < i ? 'done' : k === i ? 'now' : 'next'}"${k === i ? ' aria-current="step"' : ''}><span class="dot" aria-hidden="true">${k < i ? '✓' : k + 1}</span><span class="name">${x.label}</span>${k < i ? '<span class="sr"> (done)</span>' : ''}</li>`,
+    (x, k) => `<li class="${k < i ? 'done' : k === i ? 'now' : 'next'}"${k === i ? ' aria-current="step"' : ''}><button type="button" class="jump" data-jump="${k + 1}" aria-label="Step ${k + 1}, ${x.label}${k < i ? ', done' : k === i ? ', you are here' : ''}: go to it"><span class="dot" aria-hidden="true">${k < i ? '✓' : k + 1}</span><span class="name">${x.label}</span></button></li>`,
   ).join('')}</ol><p class="doing">Step ${i + 1} of ${STAGES.length}: ${esc(state.words.trim() ? STAGES[i]!.doing : 'Start with a few rough lines, or try the example.')}</p>`;
 }
 
@@ -281,7 +292,7 @@ function renderRedlines(p: Prepared, fromAnswer: boolean) {
   const total = settled + p.questions.length;
   $('h-redlines').textContent = ask.length ? 'Redlines: questions to settle' : 'No redlines left';
   $('redlines-count').innerHTML = total ? `<span>${settled} settled, ${p.questions.length} to go</span><span class="meter" aria-hidden="true"><span style="width:${Math.round((settled / total) * 100)}%"></span></span>` : '';
-  $('redlines-lede').textContent = ask.length ? 'Each one changes what gets built. Tap an answer; "Other" is always there.' : 'Everything that would change what gets built is settled. Check the drawing, then release it.';
+  $('redlines-lede').textContent = ask.length ? 'Each one changes what gets built. Tap an answer; "Other" is always there.' : 'Everything that would change what gets built is settled. Check the schematic, then release it.';
   // In the studio nothing is pre-chosen: a recommended option is marked, and one tap takes it.
   form.innerHTML =
     ask
@@ -301,7 +312,7 @@ function renderRedlines(p: Prepared, fromAnswer: boolean) {
   renderAnswers();
   if (fromAnswer && !ask.length) {
     const sign = document.getElementById('sign');
-    say('redlines-status', 'All settled. Check the drawing, then sign it below.');
+    say('redlines-status', 'All settled. Check the schematic, then sign it below.');
     sign?.focus();
     return;
   }
@@ -357,7 +368,7 @@ function gather(fs: Element): { id: string; given: Given | null } | null {
   return { id: named.name, given: Object.keys(given).length ? given : null };
 }
 
-// ---------------------------------------------------------------- the drawing
+// ---------------------------------------------------------------- the schematic
 
 const HEAD: Record<Slot, string> = {
   problem: 'The problem',
@@ -406,9 +417,9 @@ function renderSheet(p: Prepared) {
         .map((r) => `<tr><td>${r.revision}</td><td>${esc(r.reason ?? 'First release')}</td><td>${r.ready ? 'released' : 'draft'}</td></tr>`)
         .join('')
     : '<tr><td colspan="3">Not released yet</td></tr>';
-  const head = `<div class="sheet-head"><div><h2 id="sheet-title">${esc(p.model.title && p.model.title !== state.path ? p.model.title : 'Untitled intent')}</h2>${p.model.end ? `<p class="end"><strong>To what end:</strong> ${esc(p.model.end)}</p>` : ''}</div><div class="revblock"><table><thead><tr><th>Rev</th><th>Why</th><th>Status</th></tr></thead><tbody>${revs}</tbody></table></div></div>`;
+  const head = `<div class="sheet-head"><div><h2 id="sheet-title"><span class="proc" data-step="4">4</span>${esc(p.model.title && p.model.title !== state.path ? p.model.title : 'Untitled intent')}</h2>${p.model.end ? `<p class="end"><strong>To what end:</strong> ${esc(p.model.end)}</p>` : ''}</div><div class="revblock"><table><thead><tr><th>Rev</th><th>Why</th><th>Status</th></tr></thead><tbody>${revs}</tbody></table></div></div>`;
   if (!state.words.trim()) {
-    sheet.innerHTML = `${zones}${head}<p class="empty">The drawing fills in here as you write: every statement numbered, with where it came from. Start with a few rough lines, or try the example.</p>${titleBlock(p)}`;
+    sheet.innerHTML = `${zones}${head}<p class="empty">The schematic fills in here as you write: every statement numbered, with where it came from. Start with a few rough lines, or try the example.</p>${titleBlock(p)}`;
     return;
   }
   const feel = p.statements.filter((s) => s.supplied.kind === 'lexicon' && s.slot === 'constraints');
@@ -426,7 +437,7 @@ function renderSheet(p: Prepared) {
   const parts = `${sections.join('')}${notes}${variants}${defaults}`;
   const canvas = document.getElementById('canvas');
   const keep = canvas ? { left: canvas.scrollLeft, top: canvas.scrollTop } : null;
-  const tabs = `<div class="tabs" role="tablist" aria-label="Views of the drawing">${VIEWS.map((v) => `<button type="button" role="tab" id="tab-${v.key}" aria-controls="view" aria-selected="${state.view === v.key}" tabindex="${state.view === v.key ? 0 : -1}" data-view="${v.key}">${icon(v.ico)}<span>${v.label}</span>${tabCount(p, v.key)}</button>`).join('')}</div>`;
+  const tabs = `<div class="tabs" role="tablist" aria-label="Views of the schematic">${VIEWS.map((v) => `<button type="button" role="tab" id="tab-${v.key}" aria-controls="view" aria-selected="${state.view === v.key}" tabindex="${state.view === v.key ? 0 : -1}" data-view="${v.key}">${icon(v.ico)}<span>${v.label}</span>${tabCount(p, v.key)}</button>`).join('')}</div>`;
   sheet.innerHTML = `${zones}${head}${tabs}<div class="view v-${state.view}" id="view" role="tabpanel" aria-labelledby="tab-${state.view}">${viewBody(p, parts)}</div>${titleBlock(p)}`;
   document.body.classList.toggle('wide', state.wide);
   const svg = document.querySelector<SVGSVGElement>('#canvas svg');
@@ -452,15 +463,34 @@ function renderSheet(p: Prepared) {
 
 let lastGraph: Graph | null = null;
 let lastManifest: Manifest | null = null;
+let lastReview: Review | null = null;
 let lastViewShown: View | null = null;
 const narrow = () => typeof window !== 'undefined' && window.innerWidth < 700;
 let wasNarrow = narrow();
 let lastFiles: Readonly<Record<string, string>> = {};
 let drawerFor: { kind: 'node' | 'entity' | 'line'; id: string } | null = null;
 
+/** Who has shaped this intent, and when: the holder's words, each reading, the answers, the signature, each release. */
+function trailOf(p: Prepared): TrailStep[] {
+  const holder = state.holder.name || 'The person who holds it';
+  const lines = state.words.split('\n').filter((l) => l.trim()).length;
+  const fams = state.readings.filter((r) => checkReading(r).ok).map((r) => (r as { family: string }).family);
+  const out: TrailStep[] = [{ who: holder, what: `wrote the intent in their own words: ${lines} line${lines === 1 ? '' : 's'}${state.holder.role ? `, as ${state.holder.role}` : ''}` }];
+  if (fams.length) out.push({ who: fams.join(' and '), what: `read it independently${fams.some((f) => f.startsWith('sample-')) ? ' (hand-written samples for the example)' : ''}; where they agreed it went on the schematic for confirming, where they differed it became a question` });
+  out.push({ who: 'The rules', what: `added ${p.statements.filter((s) => s.supplied.kind === 'derived' || s.supplied.kind === 'lexicon').length} statements from your words, each showing which words it came from` });
+  const answered = Object.keys(state.answers).length;
+  if (answered) out.push({ who: holder, what: `settled ${answered} question${answered === 1 ? '' : 's'}${Object.keys(state.unsure).length ? `, ${Object.keys(state.unsure).length} on the recommended answer for now` : ''}` });
+  const tuned = Object.keys(state.tune).filter((k) => Object.values(state.tune[k] ?? {}).some(Boolean));
+  if (tuned.length) out.push({ who: holder, what: `tuned ${tuned.join(' and ')} to how they will really use it` });
+  if (state.journeys.accepted.length || state.journeys.own.length) out.push({ who: holder, what: `added ${state.journeys.accepted.length + state.journeys.own.length} journeys to the inspection plan` });
+  if (state.signed) out.push({ who: state.signed.by || holder, what: 'signed the schematic as what they mean', when: new Date(state.signed.at).toLocaleString() });
+  for (const r of state.releases) out.push({ who: state.signed?.by || holder, what: `released revision ${r.revision}${r.reason ? `: ${r.reason}` : ''}${r.ready ? '' : ' as a draft'}` });
+  return out;
+}
+
 function tabCount(p: Prepared, v: View): string {
   if (!lastGraph) return '';
-  const n = v === 'map' ? lastGraph.nodes.length : v === 'plan' ? lastGraph.nodes.filter((x) => x.lane === 'instruments').length : v === 'preview' ? Object.keys(lastFiles).length : v === 'build' ? (lastManifest?.lines.length ?? 0) : v === 'parts' ? p.statements.length : 0;
+  const n = v === 'map' ? lastGraph.nodes.length : v === 'plan' ? lastGraph.nodes.filter((x) => x.lane === 'instruments').length : v === 'preview' ? Object.keys(lastFiles).length : v === 'build' ? (lastManifest?.lines.length ?? 0) : v === 'review' ? 0 : v === 'parts' ? p.statements.length : 0;
   return n ? `<span class="tab-n">${n}</span>` : '';
 }
 
@@ -502,13 +532,15 @@ function viewBody(p: Prepared, parts: string): string {
     }
     case 'plan':
       return inspectionPlan(g, suggestJourneys(p), new Set(state.journeys.accepted), state.planFilter, people(p));
+    case 'review':
+      return reviewView(lastReview!, state.holder, state.tune, trailOf(p), state.product);
     case 'hire':
-      return `<div class="view-bar"><p class="view-lede">The same drawing, in the terms a leader uses for any hire: the job, how you would know it is done well, and what would make it a good hire a year from now.</p></div>${hireCard(p)}`;
+      return `<div class="view-bar"><p class="view-lede">The same schematic, in the terms a leader uses for any hire: the job, how you would know it is done well, and what would make it a good hire a year from now.</p></div>${hireCard(p)}`;
     case 'build':
       return buildView(lastManifest!, state.buildFilter, p.model.title && p.model.title !== state.path ? p.model.title : 'this intent', `${wide}<div class="zoom" role="group" aria-label="Zoom"><button type="button" class="btn quiet" data-zoom="-1" aria-label="Zoom out">−</button><button type="button" class="btn quiet" data-zoom="0" aria-label="Fit to width, or full size">Fit</button><button type="button" class="btn quiet" data-zoom="1" aria-label="Zoom in">+</button></div>`);
     case 'preview': {
       const prior = priorFiles();
-      const open = lastFiles[state.previewFile] !== undefined ? state.previewFile : 'drawing.md';
+      const open = lastFiles[state.previewFile] !== undefined ? state.previewFile : 'schematic.md';
       return `<div class="view-bar"><p class="view-lede">Every file the release will carry, exactly as the factory will read it. ${prior ? `Changes since revision ${prior.rev} are marked.` : 'Nothing is issued until you release it.'}</p>${wide}</div>${releasePreview(lastFiles, prior?.files ?? null, open, prior?.rev ?? null)}`;
     }
     default:
@@ -567,9 +599,9 @@ function openDrawer(what: { kind: 'node' | 'entity' | 'line'; id: string }, focu
 
 const GLOSSARY: readonly [string, string, string][] = [
   ['Intent', 'What you mean the software to do, and why, in your own words, before anyone decides how.', 'The design intent behind a part.'],
-  ['The drawing', 'Your intent organised: the end in mind, the problem, the people, the outcomes, the measures and the rules, each numbered.', 'An engineering drawing: the controlled definition everything is made and inspected to.'],
-  ['Datum', 'The fixed reference everything is measured from. Here it is your intent: every check is taken against it.', 'A datum feature on a drawing.'],
-  ['Balloon', 'The number on each statement. It stays with the statement through every revision, so a test, a part or a change can point at it.', 'Balloon numbers on a drawing, used by the inspection report.'],
+  ['The schematic', 'Your intent organised, like a spec but laid out to be read at a glance: the end in mind, the problem, the people, the outcomes, the measures and the rules, each numbered.', 'An engineering drawing or schematic: the controlled definition everything is made and inspected to.'],
+  ['Datum', 'The fixed reference everything is measured from. Here it is your intent: every check is taken against it.', 'A datum feature on an engineering drawing.'],
+  ['Balloon', 'The number on each statement. It stays with the statement through every revision, so a test, a part or a change can point at it.', 'Balloon numbers on an engineering drawing, used by the inspection report.'],
   ['Redline', 'A question only you can settle: where readings disagree, a rule has a missing case, or a measure has no tolerance.', 'A checker’s red mark on a print.'],
   ['Revision cloud', 'The red outline around anything with an open question.', 'The cloud drawn round a changed or questioned area.'],
   ['Tolerance', 'How close is close enough for a measure. It becomes the starting floor the factory must hold.', 'The allowed variation on a dimension.'],
@@ -577,13 +609,13 @@ const GLOSSARY: readonly [string, string, string][] = [
   ['Ratchet', 'A measure that may only get better: once held, the floor never drops without a person signing for it.', 'A ratchet that turns one way only.'],
   ['Control plan', 'Every critical or significant statement, and the controls it needs before it ships.', 'The control plan for special characteristics.'],
   ['Build manifest', 'The bill of materials the factory starts from: each part from the library, extended, catalogued to make, or made new.', 'A bill of materials with make-or-buy codes.'],
-  ['Release', 'The signed drawing issued as a package, with a revision number and a reason, that the factory builds to.', 'Release of a drawing under document control.'],
+  ['Release', 'The signed schematic issued as a package, with a revision number and a reason, that the factory builds to.', 'Release of a drawing under document control.'],
 ];
 
 function openGlossary() {
   drawerFor = null;
   $('dr-title').textContent = 'The words we use';
-  $('dr-body').innerHTML = `<p class="muted">The studio borrows the vocabulary of engineering drawings, because it has kept made things matching their intent for a century. Each term, in plain words, and the drafting term it comes from.</p><dl class="gloss">${GLOSSARY.map(([t, d, m]) => `<dt>${esc(t)}</dt><dd>${esc(d)}<br><span class="mfg">From: ${esc(m)}</span></dd>`).join('')}</dl>`;
+  $('dr-body').innerHTML = `<p class="muted">The studio borrows the vocabulary of engineering drawings and schematics, because it has kept made things matching their intent for a century. Each term, in plain words, and the drafting term it comes from.</p><dl class="gloss">${GLOSSARY.map(([t, d, m]) => `<dt>${esc(t)}</dt><dd>${esc(d)}<br><span class="mfg">From: ${esc(m)}</span></dd>`).join('')}</dl>`;
   $('drawer').hidden = false;
   document.body.classList.add('drawer-open');
   $('dr-close').focus();
@@ -657,7 +689,7 @@ function hireCard(p: Prepared): string {
   const good = of('measures');
   const year = p.model.end ? [p.model.end] : of('why').map((s) => s.text);
   const list = (xs: string[], gap: string) =>
-    xs.length ? `<ul>${xs.slice(0, 3).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>${xs.length > 3 ? `<p class="more">and ${xs.length - 3} more on the drawing</p>` : ''}` : `<p class="gap">${gap}</p>`;
+    xs.length ? `<ul>${xs.slice(0, 3).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>${xs.length > 3 ? `<p class="more">and ${xs.length - 3} more on the schematic</p>` : ''}` : `<p class="gap">${gap}</p>`;
   return `<section class="hire" aria-labelledby="h-hire"><h3 id="h-hire">If this were a hire</h3><div class="hire-grid">
 <div><h4>The job it is hired for</h4>${list(job.map((s) => s.text), 'Not said yet: what goes wrong today, and what will be true when it is fixed?')}</div>
 <div><h4>How you would know it is doing a good job</h4>${list(good.map((s) => `${s.text}${s.tolerance && s.tolerance !== 'exactly as stated' ? `, held to ${s.tolerance}` : ''}`), 'Not said yet: what would you check, and how close is close enough?')}</div>
@@ -672,7 +704,7 @@ function titleBlock(p: Prepared): string {
 }
 
 /**
- * Correcting the drawing goes back to the datum: the person's own words. A statement from a line of theirs
+ * Correcting the schematic goes back to the datum: the person's own words. A statement from a line of theirs
  * opens that line; one read or derived from a word opens where the word is; anything else gets a new line.
  */
 function notQuite(balloon: number) {
@@ -687,7 +719,7 @@ function notQuite(balloon: number) {
       ? `Balloon ${balloon} follows by rule from your words, so change the words it follows from, or add a line that says otherwise.`
       : s.supplied.kind === 'parse'
         ? `Both readings took this from your words. Add a line that says what you mean instead.`
-        : `Edit your words: the drawing follows them.`;
+        : `Edit your words: the schematic follows them.`;
   if (line >= 0) {
     const start = lines.slice(0, line).join('\n').length + (line ? 1 : 0);
     w.focus();
@@ -697,7 +729,7 @@ function notQuite(balloon: number) {
     w.focus();
     w.setSelectionRange(w.value.length, w.value.length);
   }
-  say('words-status', `${why} The drawing updates as you type.`);
+  say('words-status', `${why} The schematic updates as you type.`);
 }
 
 // ---------------------------------------------------------------- release
@@ -716,16 +748,17 @@ function renderRelease(p: Prepared) {
   const problems = [...new Set([...p.unread, ...draft.problems.filter((x) => !/must say why/.test(x)), ...(p.questions.length ? [`${p.questions.length} redline${p.questions.length === 1 ? '' : 's'} to clear`] : [])])];
   const ready = problems.length === 0;
   const next = (last?.revision ?? 0) + 1;
-  panel.innerHTML = `<h2 id="h-release">Release</h2>
-<p class="lede">The release is the package the factory builds to: the drawing, the gauges in the factory's own format, the control plan, working ranges and starting ratchets, pending tests, and the knowledge bundle.</p>
+  panel.innerHTML = `<h2 id="h-release"><span class="proc" data-step="5">5</span>Sign and release</h2>
+<p class="lede">The release is the package the factory builds to: the schematic, the gauges in the factory's own format, the control plan, working ranges and starting ratchets, pending tests, and the knowledge bundle.</p>
 ${Object.keys(state.unsure).length ? `<p class="note">You were not sure about ${Object.keys(state.unsure).length} answer${Object.keys(state.unsure).length === 1 ? '' : 's'}; ${Object.keys(state.unsure).length === 1 ? 'it is' : 'they are'} released on the recommended answer and listed in Your answers so you can come back.</p>` : ''}
 ${ready ? '<p class="ok"><strong>Ready to release.</strong> Nothing that changes what gets built is open.</p>' : `<p class="todo"><strong>Not ready yet.</strong> You can still issue a draft revision to share or keep.</p><ol>${problems.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>`}
+${lastReview ? `<div class="bom-mini"><p><strong>Review: ${lastReview.overall} overall.</strong> ${lastReview.panel.map((x) => `${esc(x.name)} ${x.grade}`).join(', ')}; ${lastReview.people.map((x) => `${esc(x.name)} ${x.grade}`).join(', ')}.</p><button class="btn" type="button" data-view="review">Open the review</button></div>` : ''}
 ${lastManifest ? `<div class="bom-mini"><p><strong>The factory will start from ${lastManifest.lines.length} parts:</strong> ${lastManifest.counts.stock + lastManifest.counts.modify} from the library, ${lastManifest.counts['make: catalogued']} catalogued parts to make, ${lastManifest.counts['make: new']} new for this intent.${lastManifest.gaps.length ? ` <strong class="red">${lastManifest.gaps.length} balloon${lastManifest.gaps.length === 1 ? '' : 's'} nothing builds.</strong>` : ''}</p><button class="btn" type="button" data-view="build">Preview the build</button></div>` : ''}
-${ready ? `<div class="sign"><label class="opt"><input type="checkbox" id="sign"${isSigned(p) ? ' checked' : ''}> <span><strong>I have checked the drawing and the build manifest. It says what I mean.</strong> Your signature holds for this exact drawing; change a word and it needs signing again.</span></label></div>` : ''}
+${ready ? `<div class="sign"><label class="opt"><input type="checkbox" id="sign"${isSigned(p) ? ' checked' : ''}> <span><strong>I have checked the schematic and the build manifest. It says what I mean.</strong> Your signature holds for this exact schematic; change a word and it needs signing again.</span></label></div>` : ''}
 ${last ? `<label for="reason"><strong>Why this revision?</strong> Required after the first.</label><input type="text" id="reason" autocomplete="off" placeholder="For example: staff confirmed as college counseling">` : ''}
-<div class="row"><button class="btn primary" type="button" id="issue"${ready && !isSigned(p) ? ' aria-describedby="sign-first"' : ''}>${ready ? `Release revision ${next}` : `Issue draft revision ${next}`}</button>${ready && !isSigned(p) ? '<span class="note" id="sign-first">Sign the drawing first to release it.</span>' : ''}</div>
+<div class="row"><button class="btn primary" type="button" id="issue"${ready && !isSigned(p) ? ' aria-describedby="sign-first"' : ''}>${ready ? `Release revision ${next}` : `Issue draft revision ${next}`}</button>${ready && !isSigned(p) ? '<span class="note" id="sign-first">Sign the schematic first to release it.</span>' : ''}</div>
 <p class="status" id="release-status" role="status"></p>
-${last?.ready ? `<div class="next-steps"><strong>What happens next</strong><ol><li>Download the package and give it to the factory. Its journey cards go into the factory's proposals; nothing an agent writes can lock them.</li><li>A person signs the journeys in. From then on they judge every build, and a change to your intent cannot quietly change what they judge.</li><li>The factory designs from the build manifest, builds, and runs QA: every journey walked, every gate proven able to fail.</li><li>Each phase is released only when its journeys pass. <a href="https://zthr.ai/mission">Mission control</a> shows the measure: journeys walked and passing.</li></ol></div>` : ''}
+${last?.ready ? `<div class="next-steps"><strong>What happens next</strong><ol><li>Download the package and give it to the factory. Its journey cards go into the factory's proposals; nothing an agent writes can lock them.</li><li>A person signs the journeys in. From then on they judge every build, and a change to your intent cannot quietly change what they judge.</li><li>The factory designs from the build manifest, then loops: build, then test, cheapest check first. Types and unit tests, then scenarios, gates and ratchets, then the journeys walked in the state graph, all by rule; a model is opened only to make or repair what a check has named, and only once the cheaper checks before it pass. It goes round until every test and every journey passes.</li><li>Each phase is released only when its journeys pass. <a href="https://zthr.ai/mission">Mission control</a> shows the measure: journeys walked and passing.</li></ol></div>` : ''}
 ${state.releases.length ? `<h3>Revisions</h3><ul class="history">${state.releases
     .slice()
     .reverse()
@@ -744,7 +777,7 @@ function issue() {
   }
   const blocking = !prepared.questions.length && !prepared.unread.length && !isSigned(prepared);
   if (blocking) {
-    say('release-status', 'Tick "I have checked the drawing" first. A release carries your signature.', true);
+    say('release-status', 'Tick "I have checked the schematic" first. A release carries your signature.', true);
     ($('sign') as HTMLInputElement | null)?.focus();
     return;
   }
@@ -853,7 +886,7 @@ let listening = false;
 
 // ---------------------------------------------------------------- the example
 
-const EXAMPLE = `# Bill help
+const EXAMPLE = `# Student bill reminders
 
 ## The end in mind
 
@@ -906,6 +939,19 @@ function wire() {
       render();
     }, 300);
   });
+  $('steps').addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-jump]');
+    if (!b) return;
+    const n = Number(b.dataset['jump']);
+    const target = n === 1 ? 'words-box' : n === 2 ? 'readings-box' : n === 3 ? 'redlines-panel' : n === 4 ? 'sheet' : 'release';
+    const el = $(target);
+    if (el instanceof HTMLDetailsElement) {
+      el.open = true;
+      wordsOpenedByPerson = true;
+    }
+    if (n === 4) setView('review', false);
+    $(target).scrollIntoView?.({ block: 'start' });
+  });
   $('chain').addEventListener('click', (e) => {
     const t = (e.target as HTMLElement).closest<HTMLElement>('[data-chain]');
     if (!t) return;
@@ -935,7 +981,9 @@ function wire() {
     if (state.words.trim() && !confirmReplace()) return;
     state = { ...empty(), readings: EXAMPLE_READINGS };
     lastBalloons = new Set();
-    setWords(EXAMPLE, 'bill-help.md');
+    state.holder = { name: 'Denise Harper (an example)', role: 'Director of Student Success' };
+    state.product = 'Student success';
+    setWords(EXAMPLE, 'student-bill-reminders.md');
     say('words-status', 'Loaded an example. Its two readings, sample-a and sample-b, were written by hand for this example to stand in for two model families, so you can see agreement and redlines without calling a model.');
     wordsOpenedByPerson = false;
   });
@@ -1037,9 +1085,22 @@ function wire() {
     o.click();
   });
   const onPick = (e: Event) => {
-    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-not-quite], [data-node], [data-entity], [data-view], [data-file], [data-zoom], [data-journey], [data-add-first], [data-filter], [data-answer], [data-wide], [data-src], [data-baseline]');
+    const t = (e.target as HTMLElement).closest<HTMLElement>('[data-not-quite], [data-node], [data-entity], [data-view], [data-file], [data-zoom], [data-journey], [data-add-first], [data-filter], [data-answer], [data-wide], [data-src], [data-baseline], [data-add-words]');
     if (!t || !prepared) return;
     const d = t.dataset;
+    if (d['addWords'] !== undefined) {
+      closeDrawerQuiet();
+      const box = $('words-box') as HTMLDetailsElement;
+      box.open = true;
+      wordsOpenedByPerson = true;
+      const w = $('words') as HTMLTextAreaElement;
+      w.value = `${w.value.replace(/\s*$/, '')}\n${d['addWords']}`;
+      w.focus();
+      w.setSelectionRange(w.value.length, w.value.length);
+      box.scrollIntoView?.({ block: 'start' });
+      say('words-status', 'Added to your words. Finish the line; the schematic updates as you type.');
+      return;
+    }
     if (d['baseline'] !== undefined && lastManifest) {
       const m = lastManifest;
       drawerFor = null;
@@ -1081,7 +1142,7 @@ function wire() {
     } else if (d['entity']) openDrawer({ kind: 'entity', id: d['entity'] });
     else if (d['file'] !== undefined) {
       const f = d['file'];
-      const real = lastFiles[f] !== undefined ? f : Object.keys(lastFiles).sort().find((x) => x.startsWith(f)) ?? 'drawing.md';
+      const real = lastFiles[f] !== undefined ? f : Object.keys(lastFiles).sort().find((x) => x.startsWith(f)) ?? 'schematic.md';
       state.previewFile = real;
       closeDrawerQuiet();
       setView('preview', false);
@@ -1124,6 +1185,24 @@ function wire() {
     }
   };
   $('sheet').addEventListener('click', onPick);
+  $('sheet').addEventListener('change', (e) => {
+    const t = e.target as HTMLInputElement | HTMLSelectElement;
+    if (t.dataset['tune']) {
+      const who = t.dataset['tune'];
+      const key = t.dataset['key'] as keyof Tune;
+      const cur: Record<string, string> = { ...(state.tune[who] as Record<string, string> | undefined) };
+      if (t.value) cur[key] = t.value;
+      else delete cur[key];
+      state.tune = { ...state.tune, [who]: cur as Tune };
+    } else if (t.id === 'holder-name') state.holder = { ...state.holder, name: t.value.trim() };
+    else if (t.id === 'holder-role') state.holder = { ...state.holder, role: t.value.trim() };
+    else if (t.id === 'product-name') state.product = t.value.trim();
+    else return;
+    scheduleSave();
+    const id = t.id;
+    render();
+    document.getElementById(id)?.focus();
+  });
   $('release').addEventListener('click', (e) => {
     if ((e.target as HTMLElement).closest('[data-view]')) onPick(e);
   });
@@ -1218,7 +1297,7 @@ function wire() {
     const t = e.target as HTMLElement;
     if (t.id === 'issue') issue();
     if (t.id === 'sign' && prepared) {
-      state.signed = (t as HTMLInputElement).checked ? { datum: datumHash(prepared), at: new Date().toISOString() } : null;
+      state.signed = (t as HTMLInputElement).checked ? { datum: datumHash(prepared), at: new Date().toISOString(), ...(state.holder.name ? { by: state.holder.name } : {}) } : null;
       scheduleSave();
       render();
       $('sign').focus();

@@ -59,7 +59,7 @@ test('the release is the same bytes every time, every file is hashed in the mani
   const m = JSON.parse(a.files['manifest.json']!);
   assert.deepEqual(Object.keys(m.files).sort(), Object.keys(a.files).filter((f) => f !== 'manifest.json').sort());
   assert.equal(m.ready, false);
-  for (const f of ['datum.json', 'drawing.md', 'notes.md', 'control-plan.yaml', 'features.yaml', 'context.md', 'tolerances.json', 'ratchets.json', 'tests/scenarios.test.ts', 'balloons.json', 'knowledge/index.md']) assert.ok(a.files[f], `${f} is in the release`);
+  for (const f of ['datum.json', 'schematic.md', 'notes.md', 'control-plan.yaml', 'features.yaml', 'context.md', 'tolerances.json', 'ratchets.json', 'tests/scenarios.test.ts', 'balloons.json', 'knowledge/index.md']) assert.ok(a.files[f], `${f} is in the release`);
   assert.match(a.files['tests/scenarios.test.ts']!, /it\.todo\("\[\d+\] when a bill is paid, then reminders stop"\)/);
   const sk = Object.entries(a.files).find(([k]) => k.startsWith('tests/journeys/'))![1];
   assert.ok(!/^export /m.test(sk), 'a gauge skeleton exports nothing, so the factory reports it unknown, never passed');

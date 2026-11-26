@@ -1,8 +1,8 @@
 /**
- * The release: the datum issued as a package a factory can build to, the way a drawing is released to a shop.
+ * The release: the datum issued as a package a factory can build to, the way a schematic is released to a shop.
  *
  *   datum.json         every statement by balloon, with its state, source, mark and tolerance
- *   drawing.md         the read-back: the print a person signs
+ *   schematic.md         the read-back: the print a person signs
  *   notes.md           engineering notes: how it is to be made for now, never what it must do
  *   control-plan.yaml  every critical or significant balloon and the controls it needs
  *   gauges/*.yaml      journey cards in the factory's format, proposed for a person to sign
@@ -203,6 +203,8 @@ export function release(p: Prepared, r: ReleaseInput): Release {
     title: p.model.title,
     revision: r.revision,
     end: p.model.end,
+    heldBy: p.people.holder ?? null,
+    people: p.people.tune ?? {},
     titleBlock: p.title,
     statements: p.statements,
     notes: p.model.notes,
@@ -211,7 +213,7 @@ export function release(p: Prepared, r: ReleaseInput): Release {
   };
   const files: Record<string, string> = {
     'datum.json': `${JSON.stringify(datum, null, 2)}\n`,
-    'drawing.md': readBack(p),
+    'schematic.md': readBack(p),
     'notes.md': `# Engineering notes\n\nHow it is to be made for now. These never change what it must do.\n\n${p.model.notes.map((n) => `- ${n.text} _(${n.stance === 'ideal' ? 'the ideal' : 'the practical choice now'}${n.reason ? `; because ${n.reason}` : ''})_`).join('\n') || '_None._'}\n`,
     'control-plan.yaml': controlPlan(p.statements),
     'features.yaml': `# Proposed features, each with the gauges that prove it. Status starts as not measured.\n${yaml({ features: g.map((x) => ({ name: x.goal, what: x.goal, status: 'not measured', screens: [], journeys: [x.id] })) })}\n`,

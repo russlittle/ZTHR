@@ -32,12 +32,12 @@ test('every outcome is made new, assembled from the parts that build its balloon
   }
 });
 
-test('the drawing and the manifest match: every balloon is built, or left out or taken as given on purpose', () => {
+test('the schematic and the manifest match: every balloon is built, or left out or taken as given on purpose', () => {
   const m = manifest(prepare({ files, readings }));
   for (const t of m.trace) assert.ok(t.by.length || t.note || m.gaps.some((g) => g.balloon === t.balloon), `balloon ${t.balloon} is accounted for`);
 });
 
-test('the same drawing gives the same manifest, and the release carries it', () => {
+test('the same schematic gives the same manifest, and the release carries it', () => {
   const a = manifest(prepare({ files, readings }));
   const b = manifest(prepare({ files, readings }));
   assert.deepEqual(a, b);

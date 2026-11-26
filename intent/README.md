@@ -5,14 +5,14 @@ Capture what people mean, read it back to them, and release it as the datum a fa
 A person writes rough intent in their own words. Two independent readings by different model families, a design
 lexicon and decision-table checks turn it into an intent frame: the end in mind, the problem, the people, the
 outcomes, the measures and their tolerances, the rules. Every difference and gap becomes a redline the person
-answers in a tap. The signed drawing is released as a package the factory consumes: journey gauges in the factory's
+answers in a tap. The signed schematic is released as a package the factory consumes: journey gauges in the factory's
 own card format, a control plan, working ranges and starting ratchets, pending tests, and a knowledge bundle.
 
 ```mermaid
 flowchart LR
   W[Rough words] --> R[Two readings<br/>and rule checks]
   R --> Q[Redlines<br/>answered in a tap]
-  Q --> D[The drawing<br/>signed]
+  Q --> D[The schematic<br/>signed]
   D --> P[Release package]
   P --> F[Factory]
   F --> M[Mission control:<br/>journeys walked and passing]
@@ -23,7 +23,7 @@ flowchart LR
 
 | Surface | What it is |
 | --- | --- |
-| [/intent](https://zthr.ai/intent) | The studio: from rough words to a released drawing, with the intent map, datum structure, inspection plan and release preview |
+| [/intent](https://zthr.ai/intent) | The studio: from rough words to a released schematic, with the intent map, datum structure, inspection plan and release preview |
 | [/factory](https://zthr.ai/factory) | The factory console: the latest build's readings, journeys, phases, gates and ratchets |
 | [/mission](https://zthr.ai/mission) | Mission control: intents on the left, the factory on the right, working software the measure |
 

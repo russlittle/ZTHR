@@ -3,7 +3,7 @@
  * on), one intent (its five stations, each opening what was measured there), and one item (a journey's trail from
  * intent to release). Lamps carry a symbol as well as a colour; every count links to the evidence behind it.
  */
-import { STAGES, type Flow, type Item, type Light, type Stage, type StageKey } from './pipeline.ts';
+import { OUTPUTS, STAGES, type Flow, type Item, type Light, type Stage, type StageKey, type Use } from './pipeline.ts';
 import { esc } from './views.ts';
 
 const WORD: Record<Light, string> = { pass: 'holds', fail: 'open or failing', 'not measured': 'not measured', waiting: 'waiting' };
@@ -18,13 +18,40 @@ function bar(m: Flow['measure']): string {
 /** The measure, said honestly: nothing measured is not the same as nothing passing. */
 export function measureLine(f: Flow): { big: string; verdict: string; cls: string } {
   const m = f.measure;
-  if (!m.total) return { big: 'No journeys yet', verdict: 'Add an outcome to the drawing: each becomes a journey', cls: 'unk' };
+  if (!m.total) return { big: 'No journeys yet', verdict: 'Add an outcome to the schematic: each becomes a journey', cls: 'unk' };
   if (m.pass + m.fail === 0) return { big: `${m.total} journey${m.total === 1 ? '' : 's'} waiting to be walked`, verdict: f.source === 'studio' ? 'Not built yet: release the intent and hand the package to the factory' : 'Not measured in this build', cls: 'unk' };
   if (m.pass === m.total) return { big: `All ${m.total} journeys pass`, verdict: 'Working software', cls: 'ok' };
   return { big: `${m.pass} of ${m.total} journeys pass`, verdict: m.fail ? `Not working yet: ${m.fail} fail${m.unmeasured ? `, ${m.unmeasured} not walked` : ''}` : `Partly proven: ${m.unmeasured} not walked`, cls: m.fail ? 'bad' : 'unk' };
 }
 
-export function platform(flows: readonly Flow[], lib: { assemblies: readonly { name: string; tests: number; mutationFloor?: number }[]; parts: number; groups: number; minimum: number; minimumName: string }): string {
+export interface Lib {
+  readonly assemblies: readonly { name: string; tests: number; mutationFloor?: number }[];
+  readonly parts: number;
+  readonly groups: number;
+  readonly minimum: number;
+  readonly minimumName: string;
+}
+
+/** Where each standard assembly is used, and for what: one part number, many intended uses. */
+function whereUsed(lib: Lib, flows: readonly Flow[]): string {
+  const uses = flows.flatMap((f) => f.uses);
+  return `<div class="tbl-wrap"><table class="swim wu"><caption>Where used: each standard assembly, every product and intent that uses it, and what for. One part number serves every use it was designed for; a new use that does not fit is a new part.</caption><thead><tr><th scope="col">Standard assembly</th><th scope="col">Used by</th><th scope="col">Intended uses</th></tr></thead><tbody>${lib.assemblies
+    .map((a) => {
+      const us = uses.filter((u) => u.assembly === a.name);
+      const by = [...new Set(us.map((u) => `${u.product}`))];
+      const kinds = [...new Set(us.map((u) => u.use.split(':')[0]!))];
+      return `<tr><th scope="row"><code>${esc(a.name)}</code><span class="muted small"> ${a.tests} tests${a.mutationFloor ? `, floor ${a.mutationFloor}%` : ''}</span></th><td>${by.length ? by.map(esc).join(', ') : '<span class="muted">not used yet</span>'}</td><td>${kinds.length ? `${kinds.length} use${kinds.length === 1 ? '' : 's'}: ${kinds.slice(0, 6).map(esc).join('; ')}${kinds.length > 6 ? `; and ${kinds.length - 6} more` : ''}` : ''}</td></tr>`;
+    })
+    .join('')}</tbody></table></div>`;
+}
+
+export function products(flows: readonly Flow[]): { name: string; flows: Flow[] }[] {
+  const by = new Map<string, Flow[]>();
+  for (const f of flows) by.set(f.product, [...(by.get(f.product) ?? []), f]);
+  return [...by.entries()].map(([name, fs]) => ({ name, flows: fs }));
+}
+
+export function platform(flows: readonly Flow[], lib: Lib): string {
   const total = flows.reduce((a, f) => ({ pass: a.pass + f.measure.pass, fail: a.fail + f.measure.fail, unmeasured: a.unmeasured + f.measure.unmeasured, total: a.total + f.measure.total }), { pass: 0, fail: 0, unmeasured: 0, total: 0 });
   const stageCount = (k: StageKey, l: Light) => flows.filter((f) => f.stages.find((s) => s.key === k)!.light === l).length;
   const station = (s: (typeof STAGES)[number], i: number) =>
@@ -37,16 +64,18 @@ export function platform(flows: readonly Flow[], lib: { assemblies: readonly { n
 <div class="loops"><p class="loop ratchet"><span aria-hidden="true">↺</span> QA to build: every defect found becomes a ratchet, so it can never come back</p><p class="loop fleet"><span aria-hidden="true">↻</span> Release to the library: a fix to a standard assembly is pushed to every app that uses it</p></div>
 <div class="libbox"><p class="lib-h"><strong>The library every intent draws on in design</strong>, maintained by the fleet</p><ul class="lib-stats"><li><span class="n">${lib.assemblies.length}</span> standard assemblies, ${tests} tests between them</li><li><span class="n">${lib.parts}</span> catalogued parts in ${lib.groups} groups</li><li><span class="n">${lib.minimum}</span> in the ${esc(lib.minimumName)}, inherited by every app</li></ul><details><summary>The standard assemblies</summary><ul class="asm">${lib.assemblies.map((a) => `<li><code>${esc(a.name)}</code> <span class="muted">${a.tests} tests${a.mutationFloor ? `, mutation floor ${a.mutationFloor}%` : ''}</span></li>`).join('')}</ul></details></div>
 </div>`;
-  const rows = flows
-    .map((f) => {
-      const ml = measureLine(f);
-      return `<tr><th scope="row"><button type="button" class="link-row" data-flow="${esc(f.id)}"><span class="src-tag">${f.source === 'factory' ? 'in the factory' : 'in your studio'}</span><span class="ftitle">${esc(f.title)}</span></button></th>${f.stages.map((s) => `<td><button type="button" class="cell-btn" data-flow="${esc(f.id)}" data-stage="${s.key}" aria-label="${esc(`${f.title}, ${s.key}: ${s.headline}`)}">${lamp(s.light)}<span class="cell-t">${esc(s.headline)}</span></button></td>`).join('')}<td class="measure-cell">${bar(f.measure)}<span class="small">${esc(ml.big)}</span></td></tr>`;
+  const prods = products(flows)
+    .map((pr) => {
+      const m = pr.flows.reduce((a, f) => ({ pass: a.pass + f.measure.pass, fail: a.fail + f.measure.fail, unmeasured: a.unmeasured + f.measure.unmeasured, total: a.total + f.measure.total }), { pass: 0, fail: 0, unmeasured: 0, total: 0 });
+      const validated = pr.flows.filter((f) => f.outputs.validated.light === 'pass').length;
+      return `<li><button type="button" class="pcard-btn" data-product="${esc(pr.name)}"><span class="src-tag">product</span><span class="ftitle">${esc(pr.name)}</span><span class="small">${pr.flows.length} intent${pr.flows.length === 1 ? '' : 's'} · ${validated} validated · held by ${esc([...new Set(pr.flows.map((f) => f.holder ?? 'not recorded'))].join(', '))}</span>${bar(m)}<span class="small muted">${m.pass + m.fail ? `${m.pass} of ${m.total} journeys pass` : `${m.total} journeys waiting to be walked`}</span></button></li>`;
     })
     .join('');
-  const table = `<div class="tbl-wrap"><table class="swim"><caption>Every intent, every stage. Select a row to open it, or a cell to open that stage.</caption><thead><tr><th scope="col"><span class="sr">Intent</span></th>${STAGES.map((s) => `<th scope="col">${esc(s.label)}</th>`).join('')}<th scope="col">The measure</th></tr></thead><tbody>${rows || `<tr><td colspan="7">No intents yet. <a href="/intent">Write one in the studio</a>.</td></tr>`}</tbody></table></div>`;
+  const table = `<ul class="prod-list">${prods || '<li>No products yet. <a href="/intent">Write an intent in the studio</a>.</li>'}</ul>`;
   return `<section class="sheet measure" aria-label="The measure across the platform"><div class="headline"><p class="eyebrowless">Across the platform</p><p class="big">${total.total && total.pass + total.fail === 0 ? `<span class="num">${total.total}</span> journeys waiting to be walked` : `<span class="num">${total.pass}</span> of <span class="num">${total.total}</span> journeys pass`}</p><p class="verdict v-${total.total && total.pass === total.total ? 'ok' : total.fail ? 'bad' : 'unk'}">${total.pass + total.fail === 0 ? 'Nothing walked yet: the measure fills in as the factory walks each journey' : total.fail ? `${total.fail} failing, ${total.unmeasured} not walked` : `${total.unmeasured} not walked yet`}</p>${bar(total)}</div></section>
 <section class="sheet" aria-labelledby="h-sys"><h2 id="h-sys">How the platform works</h2><p class="muted">Every intent goes through the same five stations the factory runs. Lamps show where each intent stands at each station: ✓ holds, ✕ open or failing, ? not measured, … waiting for an earlier station.</p>${flow}</section>
-<section class="sheet" aria-labelledby="h-swim"><h2 id="h-swim">Intents through the stations</h2>${table}</section>`;
+<section class="sheet" aria-labelledby="h-swim"><h2 id="h-swim">Products</h2><p class="muted">A product, or part family, holds many intents. Each intent goes through one pass of the factory that makes its schematic, code, tests, evidence, documentation and training together, and it is validated only when its journeys pass.</p>${table}</section>
+<section class="sheet" aria-labelledby="h-wu"><h2 id="h-wu">The library, where used</h2>${whereUsed(lib, flows)}</section>`;
 }
 
 export function intent(f: Flow, station: StageKey, filter: string): string {
@@ -91,4 +120,14 @@ export function trail(f: Flow, id: string): { title: string; html: string } | nu
     title: 'One journey, through every station',
     html: `<p class="dr-text">${esc(i.label)}</p>${i.persona ? `<p class="muted">As ${esc(i.persona)}${i.phase !== null ? `, phase ${i.phase}` : ''} · <code>${esc(i.id)}</code></p>` : ''}<ol class="trail">${STAGES.map((s) => `<li class="t-${i.trail[s.key].light === 'not measured' ? 'unk' : i.trail[s.key].light}">${lamp(i.trail[s.key].light)}<div><strong>${esc(s.label)}</strong><p>${esc(i.trail[s.key].text)}</p></div></li>`).join('')}</ol>${f.source === 'factory' ? '<p><a href="/reference/factory/intent.html">Every journey in the evidence</a></p>' : '<p><a href="/intent">Open it in the studio</a></p>'}`,
   };
+}
+
+export function product(name: string, flows: readonly Flow[]): string {
+  const fs = flows.filter((f) => f.product === name);
+  const m = fs.reduce((a, f) => ({ pass: a.pass + f.measure.pass, fail: a.fail + f.measure.fail, unmeasured: a.unmeasured + f.measure.unmeasured, total: a.total + f.measure.total }), { pass: 0, fail: 0, unmeasured: 0, total: 0 });
+  const rows = fs
+    .map((f) => `<tr><th scope="row"><button type="button" class="link-row" data-flow="${esc(f.id)}"><span class="ftitle">${esc(f.title)}</span><span class="small muted">${f.people.length} people · ${f.measure.total} journeys</span></button></th>${OUTPUTS.map((o) => `<td><button type="button" class="cell-btn" data-flow="${esc(f.id)}" data-stage="${o.key === 'spec' ? 'intent' : o.key === 'code' ? 'build' : o.key === 'tests' || o.key === 'evidence' ? 'qa' : 'release'}" aria-label="${esc(`${f.title}, ${o.label}: ${f.outputs[o.key].text}`)}">${lamp(f.outputs[o.key].light)}<span class="cell-t">${esc(f.outputs[o.key].text)}</span></button></td>`).join('')}</tr>`)
+    .join('');
+  return `<section class="sheet measure" aria-label="The measure for the product"><div class="headline"><p class="eyebrowless">Product</p><p class="big">${esc(name)}</p><p class="verdict v-${m.total && m.pass === m.total ? 'ok' : m.fail ? 'bad' : 'unk'}">${m.pass + m.fail ? `${m.pass} of ${m.total} journeys pass across ${fs.length} intent${fs.length === 1 ? '' : 's'}` : `${m.total} journey${m.total === 1 ? '' : 's'} across ${fs.length} intent${fs.length === 1 ? '' : 's'}, waiting to be walked`}</p>${bar(m)}</div></section>
+<section class="sheet" aria-labelledby="h-pass"><h2 id="h-pass">One pass per intent</h2><p class="muted">Each intent is made into all of these together, in one pass of the factory, and the pass is not done until every one holds.</p><div class="tbl-wrap"><table class="swim"><thead><tr><th scope="col">Intent</th>${OUTPUTS.map((o) => `<th scope="col">${esc(o.label)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></section>`;
 }

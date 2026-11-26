@@ -1,6 +1,6 @@
 /**
  * The intent as a graph: every statement, every instrument that will check it, and how they connect. The
- * drawings in the studio (the intent map, the datum structure, the inspection plan) are all views of this one
+ * schematics in the studio (the intent map, the datum structure, the inspection plan) are all views of this one
  * graph, so a line on a picture is always a real relation in the package, never decoration.
  *
  * The intent map is laid out as a FAST diagram (value engineering's function analysis): read left to right it

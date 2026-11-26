@@ -1,6 +1,6 @@
 # Contributing to ZTHR Intent
 
-Thank you. The most useful contributions are the ones that make a drawing say more exactly what someone meant:
+Thank you. The most useful contributions are the ones that make a schematic say more exactly what someone meant:
 a feel word the lexicon misreads, a role your field has, a part every app needs, a rule that called for the wrong
 part, or a journey that should have been suggested and was not.
 

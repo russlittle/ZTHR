@@ -8,8 +8,8 @@ export const STAGES = [
   { key: 'rough', label: 'Rough intent', doing: 'Your words are in.' },
   { key: 'read', label: 'Read', doing: 'Two independent readings are compared.' },
   { key: 'questions', label: 'Questions', doing: 'A few quick answers settle what the readings and checks left open.' },
-  { key: 'readback', label: 'Read-back', doing: 'Check the drawing: what will be built, statement by statement.' },
-  { key: 'signed', label: 'Signed', doing: 'You have signed the drawing as what you mean. Release it to issue the package.' },
+  { key: 'readback', label: 'Review', doing: 'Check the schematic and what the raters found, then sign it.' },
+  { key: 'signed', label: 'Signed', doing: 'You have signed the schematic as what you mean. Release it to issue the package.' },
   { key: 'released', label: 'Released', doing: 'The package is issued for the factory to build to.' },
 ] as const;
 export type Stage = (typeof STAGES)[number]['key'];
@@ -22,7 +22,7 @@ export function stageOf(p: Prepared, released = false, signed = false): Stage {
   return 'readback';
 }
 
-/** A text line for the drawing. */
+/** A text line for the schematic. */
 export function progressLine(stage: Stage): string {
   const i = STAGES.findIndex((s) => s.key === stage);
   return `Step ${i + 1} of ${STAGES.length}: ${STAGES[i]!.label}. ${STAGES[i]!.doing}\n\n${STAGES.map((s, k) => (k < i ? `~~${s.label}~~` : k === i ? `**${s.label}**` : s.label)).join(' → ')}`;

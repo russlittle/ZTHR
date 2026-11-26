@@ -37,12 +37,13 @@ export function suggestJourneys(p: Prepared): Suggestion[] {
   const st = p.statements;
   const out: Suggestion[] = [];
   if (!base.length) return out;
+  const needed = neededKinds(p);
   const first = base[0]!;
   const forbidden = first.forbidden.length ? first.forbidden : ['the person is shown anything that is not theirs'];
   const add = (kind: JourneyKind, why: string, balloons: number[], card: Partial<Gauge> & { goal: string; persona: string }, idHint: string) => {
     const id = slug(`${kind}-${idHint}`);
     if (out.some((x) => x.id === id || (x.kind === kind && x.kind === 'refusal' && same(x.card.goal, card.goal, 0.8))) || base.some((g) => g.id === id)) return;
-    out.push({ id, kind, why, balloons, priority: kind === 'refusal' || kind === 'other side' || kind === 'take back' ? 'first' : 'next', card: { id, phase: 2, forbidden, budget: first.budget, requirements: first.requirements, modes: ['standard'], channels: ['app'], ...(first.delight ? { delight: first.delight } : {}), ...card } });
+    out.push({ id, kind, why: needed.has(kind) ? `${why} The people it is for are tuned to need it.` : why, balloons, priority: kind === 'refusal' || kind === 'other side' || kind === 'take back' || needed.has(kind) ? 'first' : 'next', card: { id, phase: 2, forbidden, budget: first.budget, requirements: first.requirements, modes: ['standard'], channels: ['app'], ...(first.delight ? { delight: first.delight } : {}), ...card } });
   };
   const outcomes = st.filter((s) => s.slot === 'outcome');
 
@@ -92,4 +93,17 @@ export function chosenJourneys(p: Prepared): { card: Gauge; from: Suggestion | n
     .filter((j) => j.goal.trim().length >= 10)
     .map((j) => ({ card: { ...(base[0] ?? { phase: 1, forbidden: ['the person is shown anything that is not theirs'], budget: { actions: 5, ms: 10_000 }, requirements: [], modes: ['standard'], channels: ['app'] }), id: slug(`own-${j.goal}`), persona: j.persona.trim() || 'person', goal: j.goal.trim(), phase: 2 } as Gauge, from: null }));
   return [...picked, ...own];
+}
+
+/** The journey kinds the tuned people need: a phone, another language, assistive technology, first or frequent use. */
+export function neededKinds(p: Prepared): Set<JourneyKind> {
+  const need = new Set<JourneyKind>();
+  for (const t of Object.values(p.people.tune ?? {})) {
+    if (t.device === 'phone') need.add('small phone');
+    if (t.language && !/^english$/i.test(t.language.trim())) need.add('another language');
+    if (t.assistive && t.assistive !== 'none') need.add('low vision');
+    if (t.often === 'once') need.add('first time');
+    if (t.often === 'daily') need.add('returning');
+  }
+  return need;
 }

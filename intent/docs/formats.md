@@ -1,7 +1,7 @@
 # The release package, file by file
 
 A release is a folder (or a deterministic zip) of plain files. Nothing in it needs this studio to read. The same
-drawing, answers and journeys always give the same bytes, and `manifest.json` hashes every file, so a factory can
+schematic, answers and journeys always give the same bytes, and `manifest.json` hashes every file, so a factory can
 check it received exactly what was signed.
 
 ```mermaid
@@ -18,8 +18,8 @@ flowchart LR
 
 | File | What it holds | Who reads it |
 | --- | --- | --- |
-| `datum.json` | The signed drawing: title, revision, end in mind, title block, every statement with its balloon, slot, state, supplier, tolerance and mark | The factory, as the reference everything is judged against |
-| `drawing.md` | The same drawing, for people | People reviewing the release |
+| `datum.json` | The signed schematic: title, revision, end in mind, title block, every statement with its balloon, slot, state, supplier, tolerance and mark | The factory, as the reference everything is judged against |
+| `schematic.md` | The same schematic, for people | People reviewing the release |
 | `notes.md` | Engineering notes (how, for now) and lettered variants with where they apply | The factory's design step |
 | `gauges/<id>.yaml` | One journey card per outcome and per journey the person added, in the factory's own card format | The factory, once a person signs the card into `control/journeys` |
 | `tests/journeys/<id>.ts` | A skeleton for each gauge that exports nothing, so the factory reports it unknown until it is built | The factory's journey runner |

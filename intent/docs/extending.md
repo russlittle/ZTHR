@@ -1,6 +1,6 @@
 # Extending Intent
 
-Everything that decides what goes on a drawing, or into a build, is data or a short rule table with tests. Change
+Everything that decides what goes on a schematic, or into a build, is data or a short rule table with tests. Change
 one, run `npm run verify`, and the studio, the command line and every release use it.
 
 ```mermaid
@@ -8,7 +8,7 @@ flowchart TB
   W[Your words] --> L[lexicon/design.json<br/>feel words]
   W --> RO[lexicon/roles.json<br/>who else, and on what terms]
   W --> DR[src/derive.ts<br/>derived rules]
-  L & RO & DR --> D[The drawing]
+  L & RO & DR --> D[The schematic]
   D --> MR[src/manifest.ts CALLS<br/>what calls for which part]
   MR --> CAT[catalog/*.json<br/>150 parts, 9 groups]
   MR --> BL[catalog/baseline.json<br/>the team minimum]
@@ -48,7 +48,7 @@ them, so a fix reaches every app. A part named here must be in the catalogue; th
 
 ## Change what calls for a part
 
-`src/manifest.ts` has one table, `CALLS`: each row names the parts and the condition on the drawing that calls for
+`src/manifest.ts` has one table, `CALLS`: each row names the parts and the condition on the schematic that calls for
 them (a slot, a derived rule, a feel word, a phrase, or a journey the person added), with the reason the manifest
 shows. Every part named is checked against the catalogue when a manifest is made. Test: `test/manifest.test.ts`.
 
