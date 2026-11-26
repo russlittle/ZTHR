@@ -70,6 +70,13 @@ const WORD: Record<Light, string> = { pass: 'holds', fail: 'open or failing', 'n
 /** Fill the bar's lamps for the product in focus. */
 export function paintLine(flow: Flow | null): void {
   const chip = document.getElementById('zl-product');
+  // On a narrow screen the line scrolls: keep the department you are in, and its neighbours, in view.
+  const here = document.querySelector<HTMLElement>('.zline a[aria-current=page]');
+  const nav = here?.closest('nav');
+  if (here && nav && nav.scrollWidth > nav.clientWidth) {
+    const left = here.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
+    nav.scrollLeft = Math.max(0, left - (nav.clientWidth - here.offsetWidth) / 2);
+  }
   for (const d of DEPARTMENTS) {
     const el = document.querySelector<HTMLElement>(`[data-lamp="${d.key}"]`);
     const a = document.querySelector<HTMLElement>(`a[data-dept="${d.key}"]`);

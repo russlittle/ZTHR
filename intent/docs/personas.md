@@ -79,6 +79,8 @@ Before, a product line could not be defined at all, and shipping existed only in
 - Shipping repeated eight stages, each not measured, for the reference product. They are now one row of lamps.
 - The factory and QA showed the reference product's build with nothing saying so while another product was in focus. Each now says first where the product in focus stands, and that the readings below are the reference product's.
 - Signing and releasing were one panel in the studio. Signing stays with the person who holds the intent, in the studio. Releasing moved to engineering, which shows whether the schematic is signed and by whom.
+- On a phone, the line opened at its start on every page, so the department you were in was off screen. It now opens on the department you are in.
+- Engineering's checklist did not show the housekeeping each product inherits. It now counts it, and says how much starts from tested blocks.
 - Starting a new intent cleared the old one. Now the old one is kept whole and can be opened again from product lines.
 
 ## What is still open

@@ -6,7 +6,7 @@
 .zbar nav a:hover { color: var(--sheet); background: color-mix(in srgb, var(--sheet) 12%, transparent); }
 .zbar nav a[aria-current=page] { color: var(--ink); background: var(--sheet); }
 .zbar a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-.zbar nav { flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+.zbar nav { flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: thin; scroll-padding-inline: 24px; }
 .zline { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; counter-reset: none; }
 .zline li { flex: none; position: relative; }
 .zline li + li::before { content: ""; position: absolute; left: -2px; top: 50%; width: 2px; height: 12px; margin-top: -6px; background: color-mix(in srgb, var(--sheet) 25%, transparent); }

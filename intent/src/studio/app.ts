@@ -25,6 +25,9 @@ import { framework } from '../outcomes.ts';
 import { schemaOf } from '../schema.ts';
 import { scopeOf } from '../compliance.ts';
 import { handoff, paintLine, setFocus } from '../console/line.ts';
+import housekeepingData from '../../catalog/housekeeping.json' with { type: 'json' };
+
+const HOUSEKEEPING = new Set((housekeepingData as { parts: { name: string }[] }).parts.map((x) => x.name));
 import { studioFlow } from '../console/pipeline.ts';
 import { openProduct, stash } from '../console/products.ts';
 
@@ -315,6 +318,11 @@ ${row(compliance.length === 0, 'Compliance', `${sc.inScope.length ? `In scope: $
 ${row(null, 'Operations', 'Service levels from the schematic, the delivery stages and their gates, alerts and the runbook.', 'operations')}
 ${row(unread === 0 && gs > 0, 'Measures and tests', `${gs} gauge${gs === 1 ? '' : 's'} and ${measures.length} measure${measures.length === 1 ? '' : 's'}${unread ? `; ${unread} without a tolerance a machine can read` : ', each with a tolerance a machine can check'}.`, 'plan')}
 ${row(lastManifest.gaps.length === 0, 'Spec sheet and build manifest', `${lastManifest.lines.length} lines. API ${o.api.reach}, sign-in ${o.connect.identity}, report a problem ${o.feedback}.${lastManifest.gaps.length ? ` ${lastManifest.gaps.length} balloon${lastManifest.gaps.length === 1 ? '' : 's'} nothing builds.` : ''}`, 'build')}
+${(() => {
+  const hk = lastManifest.lines.filter((l) => HOUSEKEEPING.has(l.part));
+  const coded = hk.filter((l) => l.library.length > 0);
+  return row(null, 'Housekeeping', `${hk.length} housekeeping part${hk.length === 1 ? '' : 's'} on the manifest (paging, conflicts, retries, retention, expiries and the rest), ${coded.length} started from tested blocks. The factory designs only what is different.`, 'build');
+})()}
 ${row(lastRelease.problems.length === 0 && p.questions.length === 0, 'The package', `${Object.keys(lastFiles).length} files.${lastRelease.problems.length ? ` ${lastRelease.problems.length} problem${lastRelease.problems.length === 1 ? '' : 's'} before it is ready.` : ' Ready to release when signed.'}`, 'preview')}
 </ol>`;
 }
