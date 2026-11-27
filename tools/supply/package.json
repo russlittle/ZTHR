@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "Supply-chain evidence tools: Node built-ins only, no dependencies."
+}

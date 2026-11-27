@@ -1,0 +1,91 @@
+name: Supply chain
+
+# Supply-chain evidence for every change: a CycloneDX SBOM of each npm project, a licence check of every production
+# dependency, a proof that the Files app's shipped artefact rebuilds to the same bytes and matches the image built
+# from the same commit, and, on push, GitHub artifact attestations (Sigstore-signed, SLSA provenance and SBOM) over
+# the artefact and the SBOMs. Every third-party action is pinned by commit; the tag each commit was released as is
+# beside it.
+on:
+  push:
+    branches: [intent-surface]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supply-chain-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write      # the OIDC token Sigstore's signing certificate is issued against
+      attestations: write  # to store the attestations with the repository
+    defaults:
+      run:
+        shell: bash  # named explicitly so every step runs with -e -o pipefail and a failure piped into tee still fails
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: The supply-chain tools' own tests
+        run: node --test tools/supply/*.test.ts
+
+      - name: SBOMs, one per npm project
+        run: node tools/supply/sbom.ts --out supply-out | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Every production dependency's licence is on the allow list
+        run: |
+          status=0
+          node tools/supply/licences.ts > supply-out/licences.txt 2>&1 || status=$?
+          cat supply-out/licences.txt
+          { echo '```'; cat supply-out/licences.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      - name: The Files artefact rebuilds to the same bytes
+        run: node tools/supply/repro.ts --out supply-out | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: The image built from this commit holds exactly the artefact
+        run: |
+          set -euo pipefail
+          docker build -q -f files/Dockerfile -t zthr-files:supply-check .
+          cid=$(docker create zthr-files:supply-check)
+          mkdir -p image-app
+          docker cp "$cid:/app" - | tar -x -C image-app
+          docker rm "$cid" > /dev/null
+          node tools/supply/repro.ts --compare image-app/app | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Digests of everything produced
+        working-directory: supply-out
+        run: find . -maxdepth 1 -type f ! -name SHA256SUMS -printf '%P\n' | LC_ALL=C sort | xargs sha256sum -- | tee SHA256SUMS
+
+      - name: Provenance for the artefact and the SBOMs
+        if: github.event_name == 'push'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            supply-out/files-app.tar.gz
+            supply-out/sbom-*.cdx.json
+
+      - name: The Files SBOM, bound to the artefact
+        if: github.event_name == 'push'
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-path: supply-out/files-app.tar.gz
+          sbom-path: supply-out/sbom-files.cdx.json
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: supply-chain
+          path: supply-out/
+          if-no-files-found: error
