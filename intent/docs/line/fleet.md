@@ -49,7 +49,7 @@ Every app can reach the tools people already use, through 20 connectors of 5 kin
 
 ### Housekeeping blocks
 
-The fleet maintains the code most apps get wrong, as tested blocks every product starts from (196 tests between them):
+The fleet maintains the code most apps get wrong, as tested blocks every product starts from (223 tests between them):
 
 | Block | What it holds | Tests |
 | --- | --- | --- |
@@ -104,13 +104,24 @@ The fleet maintains the code most apps get wrong, as tested blocks every product
 | [booking](../../blocks/booking/index.ts) | Free time inside each person's local hours, find-a-time across zones ranked for everyone's day, and holds and bookings that cannot double-book, with buffers and expiry | 3 |
 | [contact](../../blocks/contact/index.ts) | Names kept as written with a name to use and a sort key, addresses formatted and postcodes checked by country, and phone numbers normalised to E.164 | 3 |
 | [analytics](../../blocks/analytics/index.ts) | Consent-gated product analytics with pseudonymous ids and allow-listed properties, forgetting, ordered funnels within a time limit, common journeys, and small-count suppression | 2 |
+| [payments](../../blocks/payments/index.ts) | Payments behind a provider interface with a tested twin (declines, confirmation, idempotency, partial refunds), integer money, and billing: trials, renewals, prorated plan changes, retries and cancel at period end | 3 |
+| [pdf](../../blocks/pdf/index.ts) | PDF 1.7 written directly: headings, wrapped paragraphs, tables with repeated headers, page numbers, escaped WinAnsi text and a correct cross-reference table (checked with qpdf) | 2 |
+| [docparse](../../blocks/docparse/index.ts) | Text from .docx (headings, lists) and cells from .xlsx (shared and inline strings), read through a zip reader that refuses bombs, unsafe paths and damaged archives | 3 |
+| [imagemeta](../../blocks/imagemeta/index.ts) | Image kind from the bytes, size for PNG, JPEG, GIF and WebP, EXIF orientation, refusal of decompression bombs, and stripping of EXIF, GPS and comments with the colour profile kept | 3 |
+| [geo](../../blocks/geo/index.ts) | Great-circle distance, bounding boxes across the antimeridian, nearest places, service areas with holes, geohash, and coarsening a position to an area | 2 |
+| [sitemap](../../blocks/sitemap/index.ts) | Head tags for public pages (canonical, Open Graph, Twitter, JSON-LD) escaped, a check for missing, long and duplicate titles, sitemaps with an index past 50,000 URLs, and robots.txt | 2 |
+| [apiver](../../blocks/apiver/index.ts) | Date-based API versions with per-change transforms back to a pinned version, Deprecation and Sunset headers, refusal after sunset, and a list of callers still on old versions | 2 |
+| [drafts](../../blocks/drafts/index.ts) | Autosaved drafts per person and record, spaced snapshots to restore, a conflict report when the record changed since, a list to pick up from, and sweeping | 2 |
+| [palette](../../blocks/palette/index.ts) | A command palette with fuzzy matching, keywords, permission filtering, recent commands first, shortcut conflict detection and a shortcuts sheet | 3 |
+| [testdata](../../blocks/testdata/index.ts) | Seeded, repeatable fake data in ranges reserved for fiction (example domains, 555-01xx numbers, published test cards), factories with overrides, and a guard against real-looking values | 3 |
+| [privacy](../../blocks/privacy/index.ts) | A registry of personal-data sources; one-archive exports with a manifest and readable summary; erasure that reports removed, kept and why, and is complete only when every source succeeded | 2 |
 
 ```mermaid
 xychart-beta
   title "Library blocks built in this repository, by the tests each carries; every product that uses one inherits them."
-  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "conflicts", "jobs", "accounts", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "tabular", "time", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "reports", "search", "i18n", "booking", "contact", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter", "analytics"]
+  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "conflicts", "jobs", "accounts", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "tabular", "time", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "reports", "search", "i18n", "booking", "contact", "payments", "docparse", "imagemeta", "palette", "testdata", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter", "analytics", "pdf", "geo", "sitemap", "apiver", "drafts", "privacy"]
   y-axis "tests" 0 --> 50
-  bar [12, 10, 8, 8, 8, 6, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+  bar [12, 10, 8, 8, 8, 6, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 ```
 
 ## Architect

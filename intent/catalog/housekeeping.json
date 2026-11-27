@@ -194,7 +194,8 @@
       "group": "Work and integrations",
       "minimum": false,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "apiver: versions, transforms, sunset"
       }
     },
     {
@@ -417,7 +418,8 @@
       "group": "Experience",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "pdf: documents and tables to PDF"
       }
     },
     {
@@ -437,7 +439,8 @@
       "group": "Content",
       "minimum": false,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "sitemap: head tags, sitemaps, robots"
       }
     },
     {
@@ -447,7 +450,8 @@
       "group": "Data movement and reporting",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "privacy: export archive with manifest"
       }
     },
     {

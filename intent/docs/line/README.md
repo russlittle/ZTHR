@@ -91,26 +91,26 @@ Every department turns its work into **fixtures**: things the next product does 
 | Product lines | spec-sheet defaults a line hands every product in it | 7 | 7 |
 | Intent studio | intake forms, design-lexicon terms and derivation rules | 21 | 28 |
 | Engineering | catalogued parts, information patterns, compliance controls and platform outcomes | 357 | 385 |
-| Factory | library blocks, agent tools and required checks | 111 | 496 |
-| QA | gauges generated from every intent, and the review families | 4 | 500 |
-| Shipping | delivery stages, each with its gate, and the service levels the example is held to | 10 | 510 |
-| Fleet | connectors and the sensitive-data classes every app is governed by | 24 | 534 |
+| Factory | library blocks, agent tools and required checks | 122 | 507 |
+| QA | gauges generated from every intent, and the review families | 4 | 511 |
+| Shipping | delivery stages, each with its gate, and the service levels the example is held to | 10 | 521 |
+| Fleet | connectors and the sensitive-data classes every app is governed by | 24 | 545 |
 
 ```mermaid
 xychart-beta
   title "Fixtures every later product inherits, in all, as each department joins the line."
   x-axis ["Mission control", "Product lines", "Intent studio", "Engineering", "Factory", "QA", "Shipping", "Fleet"]
   y-axis "fixtures" 0 --> 550
-  bar [0, 7, 28, 385, 496, 500, 510, 534]
+  bar [0, 7, 28, 385, 507, 511, 521, 545]
 ```
 
-The effect shows in a single product. For the worked example (five rough lines about bill reminders), 98% of its 131 manifest lines are already specified by the catalogue or the library before anyone designs anything, and 84 of those are already built. 3 are new. As the library grows, lines move from *still to make* to *used as is*.
+The effect shows in a single product. For the worked example (five rough lines about bill reminders), 98% of its 131 manifest lines are already specified by the catalogue or the library before anyone designs anything, and 88 of those are already built. 3 are new. As the library grows, lines move from *still to make* to *used as is*.
 
 | Where a line of the example’s manifest comes from | Lines |
 | --- | --- |
-| Standard assembly, used as is | 51 |
+| Standard assembly, used as is | 55 |
 | Standard assembly, extended | 33 |
-| Catalogued part, still to make | 44 |
+| Catalogued part, still to make | 40 |
 | Custom, designed new | 3 |
 
 Each department also makes the others cheaper:

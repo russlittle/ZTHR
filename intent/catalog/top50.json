@@ -219,7 +219,8 @@
         "@paypal/checkout-server-sdk"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "payments: provider interface and twin; no real provider adapter tested yet"
       }
     },
     {
@@ -231,7 +232,8 @@
         "chargebee"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "payments: billing logic tested against the twin; needs a real provider adapter"
       }
     },
     {
@@ -448,7 +450,8 @@
         "@react-pdf/renderer"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "pdf: generated PDF checked with qpdf"
       }
     },
     {
@@ -621,7 +624,8 @@
         "@turf/turf"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "geo: distance, areas, geohash; no tiles or geocoding service"
       }
     },
     {
@@ -633,7 +637,8 @@
         "jimp"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "imagemeta: kind, size, orientation, stripping; no resizing"
       }
     },
     {
@@ -660,7 +665,8 @@
         "tesseract.js"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "docparse: docx and xlsx"
       }
     },
     {

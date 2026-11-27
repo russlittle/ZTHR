@@ -345,7 +345,8 @@
       "name": "Test data generator",
       "gives": "Realistic synthetic records from the data dictionary, for any feature and any person on the schematic, each marked synthetic and refused by production",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "testdata: seeded fakes in fiction ranges"
       }
     },
     {

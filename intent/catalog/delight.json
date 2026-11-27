@@ -11,7 +11,11 @@
     },
     {
       "name": "Command palette",
-      "gives": "One keystroke to search and run any action in the app"
+      "gives": "One keystroke to search and run any action in the app",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "palette: fuzzy, permissioned, shortcuts"
+      }
     },
     {
       "name": "Ask your data",
@@ -27,7 +31,11 @@
     },
     {
       "name": "Never lose work",
-      "gives": "Drafts save as you type, on every form, across devices"
+      "gives": "Drafts save as you type, on every form, across devices",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "drafts: autosave and conflicts"
+      }
     },
     {
       "name": "Works offline",
@@ -79,11 +87,19 @@
     },
     {
       "name": "Your whole record",
-      "gives": "Download or delete everything about you in one click"
+      "gives": "Download or delete everything about you in one click",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "privacy: every registered source"
+      }
     },
     {
       "name": "Pick up where you left off",
-      "gives": "Recent items and the exact place you stopped, on any device"
+      "gives": "Recent items and the exact place you stopped, on any device",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "drafts: mine, newest first"
+      }
     },
     {
       "name": "Smart defaults",
