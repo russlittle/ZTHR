@@ -95,7 +95,8 @@
       "group": "Data",
       "minimum": false,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "contact: names, addresses, E.164"
       }
     },
     {

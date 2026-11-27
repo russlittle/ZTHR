@@ -258,7 +258,8 @@
         "fuse.js"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "search: BM25, facets, snippets"
       }
     },
     {
@@ -324,7 +325,8 @@
         "react-intl"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "i18n: catalogues, plurals, formatting"
       }
     },
     {
@@ -337,7 +339,8 @@
         "luxon"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "time: zones, DST, recurrence"
       }
     },
     {
@@ -417,7 +420,8 @@
         "csv-stringify"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "reports: grouped reports and CSV"
       }
     },
     {
@@ -430,7 +434,8 @@
         "xlsx"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "tabular: mapping, row checks, quarantine"
       }
     },
     {
@@ -456,7 +461,8 @@
         "mixpanel"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "analytics: consent-gated events and funnels"
       }
     },
     {
@@ -601,8 +607,8 @@
         "googleapis"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "twins: calendar twin only"
+        "coverage": "yes",
+        "from": "booking: holds, confirmations, buffers"
       }
     },
     {

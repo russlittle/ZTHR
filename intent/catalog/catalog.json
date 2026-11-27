@@ -524,6 +524,67 @@
       "requires": [],
       "tests": 2,
       "home": "intent/blocks/costmeter"
+    },
+    {
+      "name": "tabular",
+      "purpose": "CSV to RFC 4180 with formula defusing, column mapping suggestions, imports that quarantine bad rows with reasons, rule-based dedupe and merge, and export to CSV, JSON lines and .xlsx",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/tabular"
+    },
+    {
+      "name": "reports",
+      "purpose": "Grouped reports with count, sum, average, min, max and distinct, filters, totals, small-group suppression, pivots, parameterised templates and scheduled delivery with a log",
+      "requires": [
+        "tabular",
+        "jobs"
+      ],
+      "tests": 3,
+      "home": "intent/blocks/reports"
+    },
+    {
+      "name": "search",
+      "purpose": "BM25 full-text search with field weights, accent folding and stemming, prefix while typing, phrases, facets and filters, escaped snippets, and a visibility check on every hit",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/search"
+    },
+    {
+      "name": "i18n",
+      "purpose": "Message catalogues with each language's plural rules, fallback chains with a missing report, Accept-Language negotiation, text direction, Intl formatting, and a completeness check",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/i18n"
+    },
+    {
+      "name": "time",
+      "purpose": "Wall time to instant across daylight-saving changes, RRULE recurrence in wall time (daily, weekly, monthly by day or weekday, yearly, until, count, exceptions), and working days",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/time"
+    },
+    {
+      "name": "booking",
+      "purpose": "Free time inside each person's local hours, find-a-time across zones ranked for everyone's day, and holds and bookings that cannot double-book, with buffers and expiry",
+      "requires": [
+        "time"
+      ],
+      "tests": 3,
+      "home": "intent/blocks/booking"
+    },
+    {
+      "name": "contact",
+      "purpose": "Names kept as written with a name to use and a sort key, addresses formatted and postcodes checked by country, and phone numbers normalised to E.164",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/contact"
+    },
+    {
+      "name": "analytics",
+      "purpose": "Consent-gated product analytics with pseudonymous ids and allow-listed properties, forgetting, ordered funnels within a time limit, common journeys, and small-count suppression",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/analytics"
     }
   ]
 }

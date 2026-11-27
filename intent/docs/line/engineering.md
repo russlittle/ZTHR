@@ -44,7 +44,7 @@ The customer signed what they want. The drafting office now draws it properly: e
 
 ### Starting from what exists
 
-The catalogue holds 219 parts in 9 groups. 93 are a team minimum every product inherits, including 34 housekeeping parts: paging, edit conflicts, retries, idempotency, retention, expiry and the rest. 43 of them ship as tested code. The library holds 58 blocks. The information is drafted from 14 patterns common to business applications. Compliance draws on 8 frameworks with 116 controls mapped to evidence. Platform outcomes come from a list of 8, each mapped as introduced, refined or mastered.
+The catalogue holds 219 parts in 9 groups. 93 are a team minimum every product inherits, including 34 housekeeping parts: paging, edit conflicts, retries, idempotency, retention, expiry and the rest. 51 of them ship as tested code. The library holds 66 blocks. The information is drafted from 14 patterns common to business applications. Compliance draws on 8 frameworks with 116 controls mapped to evidence. Platform outcomes come from a list of 8, each mapped as introduced, refined or mastered.
 
 | Group | Parts |
 | --- | --- |
@@ -67,7 +67,7 @@ xychart-beta
   title "Files, the first product through the whole line: where each of its 135 manifest lines comes from."
   x-axis ["Standard, as is", "Standard, extended", "Catalogued, to make", "Custom to Files"]
   y-axis "lines" 0 --> 50
-  bar [39, 37, 48, 11]
+  bar [46, 37, 41, 11]
 ```
 
 ### The package

@@ -209,35 +209,40 @@
       "name": "Mapping studio",
       "gives": "Map incoming columns to fields, with suggestions from the data dictionary, saved and reused for every later load from the same source",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "tabular: mapping suggestions; no studio screen yet"
       }
     },
     {
       "name": "Quarantine and repair",
       "gives": "Rows that fail validation are held with the reason, fixed in place or rejected, and never silently dropped",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "tabular: quarantined rows with row numbers and reasons"
       }
     },
     {
       "name": "Deduplicate and merge",
       "gives": "Find likely duplicates across loads, merge them with a preview, and keep the history of every merge",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "tabular: dedupe with merge rules and provenance"
       }
     },
     {
       "name": "Export formats",
       "gives": "Export any permitted data as CSV, Excel, JSON or Parquet, with sensitive fields handled by their class",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "tabular: CSV, JSON lines, .xlsx"
       }
     },
     {
       "name": "Scheduled exports",
       "gives": "Exports that run on a schedule to Cloud Storage or by email, each recorded as a run",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "reports: Delivery on a cron schedule"
       }
     },
     {
@@ -259,7 +264,8 @@
       "name": "Report templates",
       "gives": "Ready-made reports to start from, each with a generated walkthrough showing how it was built",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "reports: parameterised templates"
       }
     },
     {
@@ -374,14 +380,16 @@
       "name": "Journey analytics",
       "gives": "Real walks against the journey cards: starts, completions, where people leave, time and actions against budget, and common walks no card covers, never showing a group under the small-cell threshold",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "analytics: journeys"
       }
     },
     {
       "name": "Report delivery",
       "gives": "Reports on a schedule to their audience by email, chat or the team's docs, each run recorded",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "reports: Delivery with a log"
       }
     },
     {

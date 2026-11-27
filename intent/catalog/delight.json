@@ -51,7 +51,11 @@
     },
     {
       "name": "Find a time",
-      "gives": "One click finds a slot that works for everyone, from their calendars"
+      "gives": "One click finds a slot that works for everyone, from their calendars",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "booking: findTime across zones"
+      }
     },
     {
       "name": "Reminders that stop",
@@ -107,7 +111,11 @@
     },
     {
       "name": "Your language",
-      "gives": "Switch language instantly, with every screen translated and checked"
+      "gives": "Switch language instantly, with every screen translated and checked",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "i18n: negotiation and fallbacks"
+      }
     },
     {
       "name": "Progress you can feel",
