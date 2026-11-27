@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { BadQuery, page, type ListSpec } from './index.ts';
+import { BadQuery, ListPrefs, page, type ListSpec } from './index.ts';
 
 type Bill = { id: string; name: string; due: string; amount: number };
 const spec: ListSpec<Bill> = { sortable: ['due', 'amount', 'name'], filterable: { amount: ['gte', 'lt'], name: ['contains'] }, idField: 'id', maxPage: 2 };
@@ -39,4 +39,14 @@ test('filters apply, and only what the list declares is allowed', () => {
   assert.throws(() => page(spec, rows, { sort: { field: 'amount', dir: 'asc' }, after: p.next! }), /another sort/);
   assert.equal(page(spec, rows, { limit: 50 }).rows.length, 2, 'never more than the largest page');
   assert.throws(() => page(spec, rows, { limit: 0 }), BadQuery);
+});
+
+test('each person gets their last sort and filters back; a view the list no longer allows is dropped', () => {
+  const prefs = new ListPrefs();
+  prefs.remember('ana', 'bills', { sort: { field: 'amount', dir: 'desc' }, filters: [{ field: 'amount', op: 'gte', value: 50 }], after: 'x' });
+  assert.deepEqual(prefs.recall('ana', 'bills', spec), { sort: { field: 'amount', dir: 'desc' }, filters: [{ field: 'amount', op: 'gte', value: 50 }] }, 'the cursor is not kept');
+  assert.equal(prefs.recall('ben', 'bills', spec), undefined);
+  const narrower: ListSpec<Bill> = { ...spec, sortable: ['due'] };
+  assert.equal(prefs.recall('ana', 'bills', narrower), undefined);
+  assert.equal(prefs.recall('ana', 'bills', spec), undefined, 'and it is forgotten');
 });

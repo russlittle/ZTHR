@@ -49,7 +49,7 @@ Every app can reach the tools people already use, through 20 connectors of 5 kin
 
 ### Housekeeping blocks
 
-The fleet maintains the code most apps get wrong, as tested blocks every product starts from (256 tests between them):
+The fleet maintains the code most apps get wrong, as tested blocks every product starts from (266 tests between them):
 
 | Block | What it holds | Tests |
 | --- | --- | --- |
@@ -126,13 +126,17 @@ The fleet maintains the code most apps get wrong, as tested blocks every product
 | [cmi5](../../blocks/cmi5/index.ts) | cmi5 training modules: launch URLs, the defined xAPI statements with cmi5 context, the session rules, mastery scores and moveOn | 2 |
 | [pwa](../../blocks/pwa/index.ts) | A checked web app manifest, a service worker built from a caching plan with an offline page, and an offline queue that replays in order and sets aside what the server refuses | 3 |
 | [ux](../../blocks/ux/index.ts) | Snooze to times people mean, previewed bulk edits, signed shared views, learned defaults, magic paste, honest progress, reading comfort CSS, why am I seeing this, and is it me or is it down | 6 |
+| [migrations](../../blocks/migrations/index.ts) | Ordered, checksummed data migrations applied once each under a lock, with verify steps, dry runs, and refusal when an applied migration was edited, removed or arrives out of order | 3 |
+| [mcp](../../blocks/mcp/index.ts) | Agent tools over the Model Context Protocol: a JSON-RPC 2.0 handler with initialize, tools/list and tools/call, schema-checked arguments, per-person permissions, read-only hints and a call log | 2 |
+| [query](../../blocks/query/index.ts) | A read-only query console: a small query language parsed and checked against declared collections, capped results, masked sensitive fields, no filtering on hidden values, and a log of every query | 2 |
+| [uat](../../blocks/uat/index.ts) | Test-environment overrides of flags, clock and role for one tester, time-limited with a reason, shown on a banner, recorded, and refused in production | 2 |
 
 ```mermaid
 xychart-beta
   title "Library blocks built in this repository, by the tests each carries; every product that uses one inherits them."
-  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "ux", "conflicts", "jobs", "accounts", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "tabular", "time", "upkeep", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "reports", "search", "i18n", "booking", "contact", "payments", "docparse", "imagemeta", "palette", "testdata", "surfaces", "backups", "loadsoak", "datagate", "pwa", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter", "analytics", "pdf", "geo", "sitemap", "apiver", "drafts", "privacy", "pipeline", "sync", "feedback", "cmi5"]
+  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "ux", "conflicts", "jobs", "accounts", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "tabular", "time", "upkeep", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "reports", "search", "i18n", "booking", "contact", "payments", "docparse", "imagemeta", "palette", "testdata", "surfaces", "backups", "loadsoak", "datagate", "pwa", "migrations", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter", "analytics", "pdf", "geo", "sitemap", "apiver", "drafts", "privacy", "pipeline", "sync", "feedback", "cmi5", "mcp", "query", "uat"]
   y-axis "tests" 0 --> 50
-  bar [12, 10, 8, 8, 8, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+  bar [12, 10, 8, 8, 8, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 ```
 
 ## Architect

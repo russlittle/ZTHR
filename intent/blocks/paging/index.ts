@@ -1,7 +1,8 @@
 /**
  * Lists: paging, sorting and filters. A list has a stable order (the chosen sort, then the id, so ties never
  * shuffle), pages by an opaque cursor that holds the last row's sort values (so new rows never shift a page), and
- * accepts only the filters and sorts its declaration allows.
+ * accepts only the filters and sorts its declaration allows. Each person's last sort and filters for each list
+ * are kept and come back when they return; a kept view that no longer passes the declaration is dropped, not used.
  */
 
 export interface ListSpec<T> {
@@ -80,4 +81,28 @@ export function page<T extends Record<string, unknown>>(spec: ListSpec<T>, rows:
   const out = list.slice(0, limit);
   const last = out.at(-1);
   return { rows: out, next: list.length > limit && last ? enc({ s: last[sf], i: last[id], f: sf, d: dir }) : null };
+}
+
+/** Each person's last sort and filters per list, so a list comes back the way they left it. */
+export class ListPrefs {
+  private readonly kept = new Map<string, Pick<Query, 'sort' | 'filters'>>();
+  remember(who: string, list: string, q: Query): void {
+    this.kept.set(`${who}\n${list}`, { ...(q.sort ? { sort: q.sort } : {}), ...(q.filters ? { filters: q.filters } : {}) });
+  }
+  /** The kept view, if it still passes the list's declaration; otherwise it is forgotten. */
+  recall<T>(who: string, list: string, spec: ListSpec<T>): Pick<Query, 'sort' | 'filters'> | undefined {
+    const k = `${who}\n${list}`;
+    const q = this.kept.get(k);
+    if (!q) return undefined;
+    try {
+      check(spec, q);
+      return q;
+    } catch {
+      this.kept.delete(k);
+      return undefined;
+    }
+  }
+  forget(who: string, list: string): void {
+    this.kept.delete(`${who}\n${list}`);
+  }
 }

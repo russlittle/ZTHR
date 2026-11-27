@@ -746,6 +746,34 @@
       ],
       "tests": 6,
       "home": "intent/blocks/ux"
+    },
+    {
+      "name": "migrations",
+      "purpose": "Ordered, checksummed data migrations applied once each under a lock, with verify steps, dry runs, and refusal when an applied migration was edited, removed or arrives out of order",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/migrations"
+    },
+    {
+      "name": "mcp",
+      "purpose": "Agent tools over the Model Context Protocol: a JSON-RPC 2.0 handler with initialize, tools/list and tools/call, schema-checked arguments, per-person permissions, read-only hints and a call log",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/mcp"
+    },
+    {
+      "name": "query",
+      "purpose": "A read-only query console: a small query language parsed and checked against declared collections, capped results, masked sensitive fields, no filtering on hidden values, and a log of every query",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/query"
+    },
+    {
+      "name": "uat",
+      "purpose": "Test-environment overrides of flags, clock and role for one tester, time-limited with a reason, shown on a banner, recorded, and refused in production",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/uat"
     }
   ]
 }

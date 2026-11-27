@@ -37,8 +37,8 @@
       "name": "Error monitoring",
       "gives": "Errors grouped with the request, the build and the feature they belong to, linked to the feature registry",
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "observe: grouping and the first-seen alert"
+        "coverage": "yes",
+        "from": "observe: grouping and first-seen; slo: alerts and incidents; feedback: reports joined by last error"
       }
     },
     {
@@ -93,8 +93,8 @@
       "name": "Configuration and secrets inventory",
       "gives": "Every setting and secret by name, where it is used and when it was last rotated, never the values",
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "config: the inventory, never a value"
+        "coverage": "yes",
+        "from": "config: the inventory, never a value; upkeep: expiry"
       }
     },
     {
@@ -261,8 +261,8 @@
       "name": "Report builder",
       "gives": "Build reports in the app by choosing fields from the data dictionary: filters, groupings, measures and charts, saved, shared and scheduled",
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "privacy: small-cell suppression"
+        "coverage": "yes",
+        "from": "reports: specs, measures, pivots and templates; privacy: small-cell suppression"
       }
     },
     {
@@ -309,7 +309,8 @@
       "name": "Agent tools (MCP)",
       "gives": "Each switched-on API operation offered as a tool over the Model Context Protocol, acting for one person with that person's access",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "mcp: tools with schemas and permissions"
       }
     },
     {
@@ -347,7 +348,8 @@
       "name": "Query console",
       "gives": "Query the application in SQL: every feature answers as a set of views, through the same roles, row-level rules and field masking as the screens. Queries are saved, exported and scheduled; the console is switched on per environment and left out of production by default",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "query: read-only language, masking, audit"
       }
     },
     {
@@ -362,7 +364,8 @@
       "name": "UAT overrides",
       "gives": "In UAT, edit or override any record, clock or outside answer to set up the case you want to try, with every override recorded and reset in one step; not present in production",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "uat: flag, clock and role overrides"
       }
     },
     {

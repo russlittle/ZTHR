@@ -8,8 +8,8 @@
       "group": "Data",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "paging: the housekeeping block"
+        "coverage": "yes",
+        "from": "paging: stable cursors, declared sorts and filters, and each person's last view kept"
       }
     },
     {
@@ -19,8 +19,8 @@
       "group": "Data",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "conflicts: the housekeeping block"
+        "coverage": "yes",
+        "from": "conflicts: versions and three-way field merge"
       }
     },
     {
@@ -30,8 +30,8 @@
       "group": "Data",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "retention: the housekeeping block"
+        "coverage": "yes",
+        "from": "retention: trash with dependents and restore"
       }
     },
     {
@@ -52,8 +52,8 @@
       "group": "Data",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "retention: the housekeeping block"
+        "coverage": "yes",
+        "from": "retention: sweep plan with reasons"
       }
     },
     {
@@ -118,8 +118,8 @@
       "group": "Work and integrations",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "idempotency: the housekeeping block"
+        "coverage": "yes",
+        "from": "idempotency: one result per key"
       }
     },
     {
@@ -140,8 +140,8 @@
       "group": "Work and integrations",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "watchdog: the housekeeping block"
+        "coverage": "yes",
+        "from": "watchdog: missed, long and overlapping runs, and a lease"
       }
     },
     {
@@ -239,8 +239,8 @@
       "group": "Identity and access",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "config and crypto: rotation dates, overdue alerts, and a key ring that rotates without downtime"
+        "coverage": "yes",
+        "from": "config, crypto, apikeys and webhooks: rotation dates, key rings and overlapping secrets; upkeep: expiry warnings"
       }
     },
     {
@@ -414,8 +414,8 @@
       "group": "Experience",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "health: windows, notice and read-only rule"
+        "coverage": "yes",
+        "from": "health: windows, notices and read-only mode; surfaces: the down page"
       }
     },
     {
@@ -469,8 +469,8 @@
       "group": "Data",
       "minimum": false,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "tree: the housekeeping block"
+        "coverage": "yes",
+        "from": "tree: stable ids, ancestor etags and sizes"
       }
     },
     {
@@ -480,8 +480,8 @@
       "group": "Work and integrations",
       "minimum": false,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "leases: the housekeeping block"
+        "coverage": "yes",
+        "from": "leases: expiring holds, covering subtrees"
       }
     }
   ]

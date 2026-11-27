@@ -56,8 +56,8 @@
         "sequelize"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "store: owner-scoped document store and data classification; no migrations"
+        "coverage": "yes",
+        "from": "migrations: ordered, checksummed, locked; store: the document store"
       }
     },
     {
