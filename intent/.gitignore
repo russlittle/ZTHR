@@ -1,5 +1,5 @@
 node_modules
 .stryker-tmp
-reports
+/reports
 .zthr-spec
 studio/app.js
