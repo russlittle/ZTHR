@@ -666,6 +666,48 @@
       ],
       "tests": 2,
       "home": "intent/blocks/privacy"
+    },
+    {
+      "name": "surfaces",
+      "purpose": "A registry of every screen with its purpose, audience, help and words for loading, empty and error states, checked; contextual help, what's new once per person, a first-run checklist, and friendly error pages",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/surfaces"
+    },
+    {
+      "name": "upkeep",
+      "purpose": "Dependency verdicts from advisories and current versions, expiry warnings for certificates, domains, tokens and keys, and SARIF findings with stable fingerprints, triaged into new, open, accepted and fixed",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/upkeep"
+    },
+    {
+      "name": "backups",
+      "purpose": "Backups with per-collection row counts and order-free hashes, restore drills into scratch timed against a target, and grandfather-father-son retention that says why each backup is kept",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/backups"
+    },
+    {
+      "name": "loadsoak",
+      "purpose": "Open-model load runs at a fixed arrival rate with percentile and error-rate limits, and soak verdicts that find a steady climb by fitting a line, ignoring noise",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/loadsoak"
+    },
+    {
+      "name": "datagate",
+      "purpose": "A classified inventory of every field with findings for gaps, a gate that allows, masks or denies each field per destination with the deciding rule, and evidence of every decision",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/datagate"
+    },
+    {
+      "name": "pipeline",
+      "purpose": "The delivery pipeline as stages and events: where each change is, what it waits for, what is stuck, and lead time, deployment frequency, change failure rate and time to restore",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/pipeline"
     }
   ]
 }

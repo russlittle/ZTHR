@@ -74,7 +74,8 @@
       "group": "Data",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "backups: drill with digests and a time target"
       }
     },
     {
@@ -271,7 +272,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "upkeep: review with advisories"
       }
     },
     {
@@ -281,8 +283,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "expiry: the housekeeping block"
+        "coverage": "yes",
+        "from": "upkeep: expiry with warning days"
       }
     },
     {
@@ -336,7 +338,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "loadsoak: load and soak"
       }
     },
     {
@@ -346,7 +349,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "upkeep: SARIF triage; scanners themselves are outside tools"
       }
     },
     {
@@ -377,7 +381,8 @@
       "group": "Experience",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "surfaces: errorPage"
       }
     },
     {
@@ -387,7 +392,8 @@
       "group": "Experience",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "surfaces: every screen must declare all three"
       }
     },
     {
@@ -397,7 +403,8 @@
       "group": "Experience",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "surfaces: first-run checklist"
       }
     },
     {
@@ -429,7 +436,8 @@
       "group": "Content",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "surfaces: news shown once per person"
       }
     },
     {

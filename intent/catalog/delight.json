@@ -55,7 +55,11 @@
     },
     {
       "name": "Explain this screen",
-      "gives": "Help grounded in the generated docs for the screen you're on"
+      "gives": "Help grounded in the generated docs for the screen you're on",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "surfaces: explain"
+      }
     },
     {
       "name": "Find a time",
@@ -115,7 +119,11 @@
     },
     {
       "name": "Teaching empty states",
-      "gives": "First run shows sample data and the next step, never a blank page"
+      "gives": "First run shows sample data and the next step, never a blank page",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "surfaces: empty state with an action"
+      }
     },
     {
       "name": "Speak instead of type",

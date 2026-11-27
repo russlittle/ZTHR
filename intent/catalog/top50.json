@@ -678,7 +678,8 @@
         "@aws-sdk/client-backup"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "backups: retention with reasons"
       }
     }
   ]

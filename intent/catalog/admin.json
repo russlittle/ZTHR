@@ -117,7 +117,8 @@
       "name": "Where is my change",
       "gives": "Find a change by commit, pull request or ticket and watch it move through the pipeline: reviews, checks, mutation testing, build, each environment and the post-commit review, each stage linked to its evidence",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "pipeline: where"
       }
     },
     {
@@ -156,7 +157,8 @@
       "name": "Surface registry",
       "gives": "Every screen, panel, dialog, email and admin tool is registered with its feature, its help and the content it shows; a surface that isn't registered fails the build",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "surfaces: checked registry"
       }
     },
     {
@@ -171,7 +173,8 @@
       "name": "Contextual help",
       "gives": "An i icon at the top right of every surface opens help for that surface, generated from its code, its feature and its walks on every build, so nobody maintains help text",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "surfaces: help per screen"
       }
     },
     {
@@ -411,28 +414,32 @@
       "name": "Compliance evidence",
       "gives": "Each in-scope framework's controls mapped to evidence the factory produces on every release, collected once and serving every control that needs it, written as OSCAL for assessors",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "datagate: evidence of data decisions; other controls not yet collected"
       }
     },
     {
       "name": "Sensitive data inventory",
       "gives": "Every sensitive field, in the same form in every app: its class, the frameworks it falls under, who may read it, where it may flow, how long it is kept",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "datagate: inventory with findings"
       }
     },
     {
       "name": "Data gate",
       "gives": "One gate policy for the fleet: a central gateway allows or refuses reads, exports and queries by data class, and records why",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "datagate: per-field verdicts by destination"
       }
     },
     {
       "name": "Delivery pipeline",
       "gives": "Build, test, rehearse the data, package with signed provenance, deploy without traffic, canary, release, with a gate between each",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "pipeline: stages, events and flow measures"
       }
     },
     {
