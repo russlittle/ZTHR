@@ -19,7 +19,11 @@
     },
     {
       "name": "Ask your data",
-      "gives": "Plain-language questions over your own records, answered with the records shown"
+      "gives": "Plain-language questions over your own records, answered with the records shown",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "ask: checked report specs, suppression and plain descriptions; tested against a twin model, a real model is needed in production"
+      }
     },
     {
       "name": "Magic paste",
@@ -31,7 +35,11 @@
     },
     {
       "name": "Import from anywhere",
-      "gives": "Drop a spreadsheet; columns are matched and every row's problem is shown"
+      "gives": "Drop a spreadsheet; columns are matched and every row's problem is shown",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "importer: CSV/TSV/xlsx/docx/JSON/JSONL/vCard/iCal/paste detected, columns matched, bad rows quarantined with where and why"
+      }
     },
     {
       "name": "Never lose work",
@@ -155,7 +163,11 @@
     },
     {
       "name": "Speak instead of type",
-      "gives": "Voice input on any field"
+      "gives": "Voice input on any field",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "speech: commands, dictation, numbers and dates; browser adapter tested only against a fake"
+      }
     },
     {
       "name": "Reading comfort",

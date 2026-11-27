@@ -35,8 +35,8 @@ export class Consent {
   }
 
   publish(v: DocVersion): void {
-    const last = this.latest(v.doc);
-    if (last && v.version <= last.version) throw new Error(`${v.doc} is already at version ${last.version}`);
+    const last = Math.max(-Infinity, ...this.versions.filter((x) => x.doc === v.doc).map((x) => x.version));
+    if (v.version <= last) throw new Error(`${v.doc} is already at version ${last}`);
     this.versions.push(v);
   }
 

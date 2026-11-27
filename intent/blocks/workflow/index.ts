@@ -2,7 +2,8 @@
  * Workflows as declared state machines. Each transition names who may take it and what must be true first; an
  * approval step needs a number of distinct approvers (never the person who asked), and a rejection says why. Steps
  * can carry a deadline that escalates when missed. The definition is checked when it is loaded: every state is
- * reachable, every non-final state has a way out, so a record can never be stranded.
+ * reachable, every non-final state has a way out, and no loop of states is closed off from every final state, so a
+ * record can never be stranded.
  */
 
 export interface Transition {
@@ -39,9 +40,22 @@ export function check(d: Definition): string[] {
   const seen = new Set([d.start]);
   const todo = [d.start];
   while (todo.length) for (const n of next(todo.pop()!)) if (!seen.has(n)) seen.add(n), todo.push(n);
+  const deadEnd = (s: string) => !d.final.includes(s) && next(s).length === 0;
+  // From s, can a record get to a final state (or to a dead end, which is reported on its own)?
+  const getsOut = (s: string) => {
+    const been = new Set([s]);
+    const stack = [s];
+    while (stack.length) {
+      const x = stack.pop()!;
+      if (d.final.includes(x) || deadEnd(x)) return true;
+      for (const n of next(x)) if (!been.has(n)) been.add(n), stack.push(n);
+    }
+    return false;
+  };
   for (const s of [...states].sort()) {
     if (!seen.has(s)) out.push(`${s} cannot be reached from ${d.start}`);
-    if (!d.final.includes(s) && next(s).length === 0) out.push(`${s} has no way out and is not final`);
+    if (deadEnd(s)) out.push(`${s} has no way out and is not final`);
+    else if (!getsOut(s)) out.push(`${s} can never reach a final state`);
   }
   return out;
 }

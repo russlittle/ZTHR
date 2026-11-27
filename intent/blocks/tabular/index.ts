@@ -75,6 +75,10 @@ export interface Field {
   readonly parse?: (raw: string) => unknown;
 }
 
+/** Sets a key as plain data, so a column or field called `__proto__` never changes an object's prototype. */
+const put = (o: Record<string, unknown>, k: string, v: unknown) => Object.defineProperty(o, k, { value: v, enumerable: true, writable: true, configurable: true });
+const own = <V>(o: Readonly<Record<string, V>>, k: string): V | undefined => (Object.hasOwn(o, k) ? o[k] : undefined);
+
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 /** For each header, the field it most likely is (exact, alias, then contained), or undefined. */
@@ -93,7 +97,7 @@ export function suggestMapping(headers: readonly string[], fields: readonly Fiel
   for (const h of headers) {
     const f = pick(h);
     if (f) taken.add(f);
-    out[h] = f;
+    put(out, h, f);
   }
   return out;
 }
@@ -107,26 +111,26 @@ export interface Quarantined {
 export function importRows(table: readonly (readonly string[])[], fields: readonly Field[], mapping: Readonly<Record<string, string | undefined>>): { good: Record<string, unknown>[]; quarantine: Quarantined[]; unmapped: string[] } {
   const [headers, ...rows] = table;
   if (!headers) return { good: [], quarantine: [], unmapped: [] };
-  const missingCols = fields.filter((f) => f.required && !Object.values(mapping).includes(f.name)).map((f) => f.label);
+  const missingCols = fields.filter((f) => f.required && !headers.some((h) => own(mapping, h) === f.name)).map((f) => f.label);
   if (missingCols.length) throw new Error(`no column is mapped to ${missingCols.join(', ')}`);
   const good: Record<string, unknown>[] = [];
   const quarantine: Quarantined[] = [];
   rows.forEach((cells, i) => {
     if (cells.every((c) => c.trim() === '')) return;
     const raw: Record<string, string> = {};
-    headers.forEach((h, j) => (raw[h] = cells[j] ?? ''));
+    headers.forEach((h, j) => put(raw, h, cells[j] ?? ''));
     const rec: Record<string, unknown> = {};
     const problems: string[] = [];
     if (cells.length !== headers.length) problems.push(`has ${cells.length} cells, the header has ${headers.length}`);
     for (const f of fields) {
-      const h = headers.find((x) => mapping[x] === f.name);
-      const v = h === undefined ? '' : (raw[h] ?? '').trim();
+      const h = headers.find((x) => own(mapping, x) === f.name);
+      const v = h === undefined ? '' : (own(raw, h) ?? '').trim();
       if (v === '') {
         if (f.required) problems.push(`${f.label} is empty`);
         continue;
       }
       try {
-        rec[f.name] = f.parse ? f.parse(v) : v;
+        put(rec, f.name, f.parse ? f.parse(v) : v);
       } catch (e) {
         problems.push(`${f.label}: ${e instanceof Error ? e.message : String(e)}`);
       }
@@ -134,17 +138,22 @@ export function importRows(table: readonly (readonly string[])[], fields: readon
     if (problems.length) quarantine.push({ row: i + 2, raw, problems });
     else good.push(rec);
   });
-  return { good, quarantine, unmapped: headers.filter((h) => !mapping[h]) };
+  return { good, quarantine, unmapped: headers.filter((h) => !own(mapping, h)) };
 }
 
 export type MergeRule = 'first' | 'last' | 'longest' | 'nonEmpty' | ((values: unknown[]) => unknown);
 
-/** Groups by a key and merges each group by per-field rules; reports which source rows each merged row came from. */
+/**
+ * Groups by a key and merges each group by per-field rules; reports which source rows each merged row came from.
+ * `nonEmpty` (the default) and `longest` pick among values that are not empty, and keep the first value when all are.
+ */
 export function dedupe<T extends Record<string, unknown>>(rows: readonly T[], key: (r: T) => string, rules: Readonly<Partial<Record<keyof T & string, MergeRule>>> = {} as Readonly<Partial<Record<keyof T & string, MergeRule>>>): { rows: T[]; merged: { key: string; from: number[] }[] } {
   const groups = new Map<string, number[]>();
   rows.forEach((r, i) => {
     const k = key(r);
-    groups.set(k, [...(groups.get(k) ?? []), i]);
+    const g = groups.get(k);
+    if (g) g.push(i);
+    else groups.set(k, [i]);
   });
   const out: T[] = [];
   const merged: { key: string; from: number[] }[] = [];
@@ -154,10 +163,11 @@ export function dedupe<T extends Record<string, unknown>>(rows: readonly T[], ke
     const fieldsSeen = [...new Set(members.flatMap((m) => Object.keys(m)))];
     const rec: Record<string, unknown> = {};
     for (const f of fieldsSeen) {
-      const vals = members.map((m) => m[f]);
-      const rule = rules[f as keyof T & string] ?? 'nonEmpty';
+      const vals = members.map((m) => own(m, f));
+      const rule = own(rules as Readonly<Record<string, MergeRule | undefined>>, f) ?? 'nonEmpty';
       const present = vals.filter((v) => v !== undefined && v !== null && v !== '');
-      rec[f] = typeof rule === 'function' ? rule(vals) : rule === 'first' ? vals[0] : rule === 'last' ? vals.at(-1) : rule === 'longest' ? [...present].sort((a, b) => String(b).length - String(a).length)[0] : present[0];
+      const picked = typeof rule === 'function' ? rule(vals) : rule === 'first' ? vals[0] : rule === 'last' ? vals.at(-1) : rule === 'longest' ? [...present].sort((a, b) => String(b).length - String(a).length)[0] : present[0];
+      put(rec, f, typeof rule !== 'function' && present.length === 0 && (rule === 'nonEmpty' || rule === 'longest') ? vals.find((v) => v !== undefined) : picked);
     }
     out.push(rec as T);
   }
@@ -212,11 +222,25 @@ export function zip(files: readonly { name: string; data: string | Uint8Array }[
   return Buffer.concat([...parts, cd, end]);
 }
 
-const xesc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
+/** XML-escapes, and drops what XML 1.0 cannot carry at all: control characters, U+FFFE, U+FFFF, lone surrogates. */
+const xesc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '');
+
+/** A name Excel accepts for a sheet: none of \ / ? * : [ ], no apostrophe at either end, 1 to 31 UTF-16 units. */
+const sheetName = (s: string) => {
+  let n = '';
+  for (const ch of s.replace(/[\\/?*:[\]]/g, ' ').replace(/^['\s]+|['\s]+$/g, '')) {
+    if (n.length + ch.length > 31) break;
+    n += ch;
+  }
+  return n.replace(/['\s]+$/, '') || 'Sheet1';
+};
 
 const colName = (i: number): string => (i < 26 ? String.fromCharCode(65 + i) : colName(Math.floor(i / 26) - 1) + String.fromCharCode(65 + (i % 26)));
 
-/** An .xlsx workbook with one sheet; numbers stay numbers, everything else is inline text, the first row is bold. */
+/**
+ * An .xlsx workbook with one sheet; numbers and booleans stay as they are, null and undefined are blank cells,
+ * everything else is inline text, and the first row is bold.
+ */
 export function toXlsx(rows: readonly (readonly unknown[])[], sheet = 'Sheet1'): Buffer {
   const body = rows
     .map((r, ri) => `<row r="${ri + 1}">${r.map((v, ci) => {
@@ -224,7 +248,8 @@ export function toXlsx(rows: readonly (readonly unknown[])[], sheet = 'Sheet1'):
       const s = ri === 0 ? ' s="1"' : '';
       if (typeof v === 'number' && Number.isFinite(v)) return `<c r="${ref}"${s}><v>${v}</v></c>`;
       if (typeof v === 'boolean') return `<c r="${ref}" t="b"${s}><v>${v ? 1 : 0}</v></c>`;
-      const text = v === null || v === undefined ? '' : v instanceof Date ? v.toISOString() : String(v);
+      if (v === null || v === undefined) return '';
+      const text = v instanceof Date ? v.toISOString() : String(v);
       return `<c r="${ref}" t="inlineStr"${s}><is><t xml:space="preserve">${xesc(text)}</t></is></c>`;
     }).join('')}</row>`)
     .join('');
@@ -232,7 +257,7 @@ export function toXlsx(rows: readonly (readonly unknown[])[], sheet = 'Sheet1'):
   return zip([
     { name: '[Content_Types].xml', data: `${x}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>` },
     { name: '_rels/.rels', data: `${x}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
-    { name: 'xl/workbook.xml', data: `${x}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xesc(sheet.slice(0, 31))}" sheetId="1" r:id="rId1"/></sheets></workbook>` },
+    { name: 'xl/workbook.xml', data: `${x}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xesc(sheetName(sheet))}" sheetId="1" r:id="rId1"/></sheets></workbook>` },
     { name: 'xl/_rels/workbook.xml.rels', data: `${x}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
     { name: 'xl/styles.xml', data: `${x}<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` },
     { name: 'xl/worksheets/sheet1.xml', data: `${x}<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${body}</sheetData></worksheet>` },

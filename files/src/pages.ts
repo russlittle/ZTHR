@@ -3,14 +3,14 @@
  * new app opens (login flow v2), remote wipe, and public links. Every page is plain HTML with no script, so it
  * works in any browser and in the apps' embedded views.
  */
-import { createHmac } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { NotSignedIn } from '../../intent/blocks/devices/index.ts';
 import { encodePath, httpDate } from '../../intent/blocks/dav/index.ts';
 import { Refused, Throttled, type Grant } from '../../intent/blocks/grants/index.ts';
 import { parseRange } from '../../intent/blocks/objects/index.ts';
 import type { Node } from '../../intent/blocks/tree/index.ts';
 import type { Files } from './app.ts';
-import { esc, fields, header, html, json, statusOf, type Reply, type Req } from './http.ts';
+import { esc, fields, header, html, json, signInAs, statusOf, type Reply, type Req } from './http.ts';
 import { mimeOf } from './mime.ts';
 import { VERSION } from './ocs.ts';
 
@@ -51,7 +51,7 @@ export async function loginFlow(files: Files, r: Req, rest: string, origin: stri
       if (r.method === 'POST') {
         const f = await fields(r);
         try {
-          const s = await files.signIn(f['user'] ?? '', f['password'] ?? '');
+          const s = await signInAs(files, r, f['user'] ?? '', f['password'] ?? '');
           if (s.device !== undefined) throw new NotSignedIn();
           await files.devices.approve(token, s.person.id);
           return html(200, page('App connected', `<h1>App connected</h1><p>The app is now signed in to your files as <strong>${esc(s.person.display)}</strong>. You can close this window.</p>`));
@@ -87,6 +87,7 @@ export async function wipe(files: Files, r: Req, rest: string): Promise<Reply> {
 // ---------------------------------------------------------------- public links
 
 const cookieName = (token: string) => `link_${token}`;
+const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
 /** A link opened with its password once is remembered for this browser session, by a value only the server can make. */
 function linkCookie(files: Files, g: Grant): string {
@@ -97,11 +98,14 @@ async function openLink(files: Files, r: Req, token: string): Promise<{ g: Grant
   const g = await files.grants.byToken(token);
   if (!g) return html(404, page('Link not found', '<h1>This link does not work</h1><p>It may have expired, or the person who shared it may have taken it back.</p>'));
   const node = await files.tree.get(g.resource);
-  if (!node) return html(404, page('Link not found', '<h1>This link does not work</h1><p>What it pointed to is gone.</p>'));
+  // A link stops working when what it points to is gone, or its owner is removed or disabled.
+  if (!node || !files.person(node.owner)) return html(404, page('Link not found', '<h1>This link does not work</h1><p>What it pointed to is gone.</p>'));
   if (g.passwordHash) {
     const cookie = (header(r, 'cookie') ?? '').split(/;\s*/).find((c) => c.startsWith(`${cookieName(token)}=`))?.split('=')[1];
     const basic = header(r, 'authorization')?.startsWith('Basic ') ? Buffer.from(header(r, 'authorization')!.slice(6), 'base64').toString().split(':').slice(1).join(':') : undefined;
-    if (cookie !== linkCookie(files, g)) {
+    if (!cookie || !same(cookie, linkCookie(files, g))) {
+      // Opening the page without a password is not a wrong password: it shows the form and counts nothing.
+      if (basic === undefined) return passwordPage(token, '');
       try {
         await files.grants.open(token, basic);
       } catch (e) {
@@ -120,6 +124,8 @@ export async function link(files: Files, r: Req, token: string, rest: string): P
     const pw = (await fields(r))['password'] ?? '';
     try {
       const g = await files.grants.open(token, pw);
+      const n = await files.tree.get(g.resource);
+      if (!n || !files.person(n.owner)) return html(404, page('Link not found', '<h1>This link does not work</h1><p>What it pointed to is gone.</p>'));
       return { status: 303, headers: { location: `/s/${token}`, 'set-cookie': `${cookieName(token)}=${linkCookie(files, g)}; Path=/s/${token}; HttpOnly; Secure; SameSite=Lax` } };
     } catch (e) {
       if (e instanceof Throttled) return passwordPage(token, 'Too many wrong passwords. Wait a minute and try again.');

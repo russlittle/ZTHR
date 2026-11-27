@@ -64,3 +64,51 @@ test('xlsx is a valid zip with the sheet inside, numbers kept as numbers and tex
   assert.match(sheet, /A &amp; B &lt;co&gt;/);
   assert.equal(zip([]).length, 22);
 });
+
+const unzip = (x: Buffer) => {
+  const entries: Record<string, string> = {};
+  let p = 0;
+  while (x.readUInt32LE(p) === 0x04034b50) {
+    const size = x.readUInt32LE(p + 18);
+    const nlen = x.readUInt16LE(p + 26);
+    entries[x.subarray(p + 30, p + 30 + nlen).toString()] = inflateRawSync(x.subarray(p + 30 + nlen, p + 30 + nlen + size)).toString();
+    p += 30 + nlen + size;
+  }
+  return entries;
+};
+
+test('xlsx text never carries characters XML forbids, and the sheet name is one Excel accepts', () => {
+  const e = unzip(toXlsx([['x￾y￿z']], "'Q3/Q4: sales? [draft]*\\'"));
+  assert.match(e['xl/worksheets/sheet1.xml']!, /<t xml:space="preserve">xyz<\/t>/);
+  const name = /<sheet name="([^"]*)"/.exec(e['xl/workbook.xml']!)![1]!;
+  assert.doesNotMatch(name, /[\\/?*:[\]]|^'|'$/);
+  assert.equal(name, 'Q3 Q4  sales   draft');
+  assert.equal(/<sheet name="([^"]*)"/.exec(unzip(toXlsx([['a']], '///'))['xl/workbook.xml']!)![1], 'Sheet1', 'a name with nothing left falls back');
+  assert.equal(/<sheet name="([^"]*)"/.exec(unzip(toXlsx([['a']], `${'a'.repeat(30)}😀`))['xl/workbook.xml']!)![1], 'a'.repeat(30), 'cutting to 31 never splits a character');
+});
+
+test('dedupe leaves a row with no duplicate as it was, empty strings included', () => {
+  const rows = [{ email: 'a@x', phone: '' }, { email: 'b@x', phone: '' }, { email: 'b@x', phone: '' }];
+  assert.deepEqual(dedupe(rows, (r) => r.email).rows, [{ email: 'a@x', phone: '' }, { email: 'b@x', phone: '' }]);
+  assert.deepEqual(dedupe(rows, (r) => r.email, { phone: 'longest' }).rows[0], { email: 'a@x', phone: '' });
+});
+
+test('keys named like object properties stay plain data in imports and merges', () => {
+  const rows = [JSON.parse('{"id":"1","__proto__":{"admin":true}}') as Record<string, unknown>, JSON.parse('{"id":"1","__proto__":{"admin":true}}') as Record<string, unknown>];
+  const merged = dedupe(rows, (r) => String(r.id)).rows[0]!;
+  assert.equal(merged.admin, undefined, 'no inherited admin flag');
+  assert.deepEqual(Object.keys(merged), ['id', '__proto__']);
+  const t = parseCsv('email,constructor,__proto__\na@x.org,yes,no\n');
+  const r = importRows(t, [{ name: 'email', label: 'Email', required: true }], { email: 'email' });
+  assert.deepEqual(r.unmapped, ['constructor', '__proto__']);
+  assert.equal(r.good.length, 1);
+  const bad = importRows(parseCsv('email,__proto__\n,x\n'), [{ name: 'email', label: 'Email', required: true }], { email: 'email' });
+  assert.deepEqual(Object.entries(bad.quarantine[0]!.raw), [['email', ''], ['__proto__', 'x']]);
+  assert.deepEqual(Object.entries(suggestMapping(['__proto__', 'constructor'], [{ name: 'email', label: 'Email' }])), [['__proto__', undefined], ['constructor', undefined]]);
+});
+
+test('an empty value in xlsx is a blank cell, not a cell holding empty text', () => {
+  const sheet = unzip(toXlsx([['a', null, undefined, 'd']]))['xl/worksheets/sheet1.xml']!;
+  assert.doesNotMatch(sheet, /r="B1"|r="C1"/);
+  assert.match(sheet, /r="D1"/);
+});

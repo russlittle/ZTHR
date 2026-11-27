@@ -45,3 +45,23 @@ test('negotiation, chains, direction and Intl formatting', () => {
   assert.equal(fmt.relative('en', new Date('2026-11-23T00:00:00Z'), new Date('2026-11-26T00:00:00Z')), '3 days ago');
   assert.equal(fmt.date('en-GB', new Date('2026-11-26T03:00:00Z'), 'America/Los_Angeles'), '25 Nov 2026');
 });
+
+test('direction follows the script, not only the language', () => {
+  assert.equal(direction('ckb'), 'rtl', 'Central Kurdish is written in Arabic script');
+  assert.equal(direction('az-Arab'), 'rtl');
+  assert.equal(direction('sd-Deva'), 'ltr', 'Sindhi in Devanagari runs left to right');
+  assert.equal(direction('syr'), 'rtl');
+  assert.equal(direction('not a locale!'), 'ltr');
+});
+
+test('keys and values are looked up as own properties only', () => {
+  assert.throws(() => i.t('en', 'constructor'), /no message/);
+  assert.throws(() => i.t('en', 'toString', { count: 1 }), /no message/);
+  const j = new I18n({ en: { hi: 'Hi {constructor}' } }, 'en');
+  assert.throws(() => j.t('en', 'hi'), /needs \{constructor\}/);
+});
+
+test('negotiation prefers the plain language over a sibling region', () => {
+  assert.equal(negotiate('en-US', ['en-GB', 'en'], 'fr'), 'en');
+  assert.equal(negotiate('pt-BR', ['pt-PT', 'pt-BR'], 'en'), 'pt-BR');
+});

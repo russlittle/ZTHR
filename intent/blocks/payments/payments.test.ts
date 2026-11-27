@@ -63,3 +63,84 @@ test('a failed renewal is retried on schedule, recovers, or ends uncollectible a
   assert.equal(b.invoices[1]!.state, 'uncollectible');
   assert.equal(s.state, 'cancelled');
 });
+
+/** A provider whose next charge goes through but the answer is lost, like a timeout after the card was charged. */
+class LostAnswer extends TwinProvider {
+  lose = false;
+  readonly keysSeen: string[] = [];
+  override async charge(customer: string, method: string, amount: ReturnType<typeof money>, key: string) {
+    this.keysSeen.push(key);
+    const c = await super.charge(customer, method, amount, key);
+    if (this.lose) {
+      this.lose = false;
+      throw new Error('socket hang up');
+    }
+    return c;
+  }
+}
+
+test('a renewal whose answer is lost is retried with the same key: never free, never charged twice', async () => {
+  let t = 0;
+  const p = new LostAnswer();
+  const b = new Billing(p, [{ id: 'pro', price: money(3000, 'USD'), periodDays: 30 }], { now: () => t });
+  const s = await b.subscribe('cy', 'pro', M.ok);
+  t = 30 * DAY;
+  p.lose = true;
+  await b.tick().catch(() => {});
+  assert.notEqual(s.state, 'active', 'not active on an unknown outcome');
+  await b.tick();
+  assert.equal(s.state, 'active');
+  assert.equal(b.invoices[1]!.state, 'paid');
+  assert.equal(p.keysSeen[1], p.keysSeen[2], 'the retry reuses the key');
+  assert.equal([...p.charges.values()].filter((c) => c.state === 'succeeded').length, 2, 'one charge per period');
+});
+
+test('a past-due subscription retries its own invoice, not another one of the same customer', async () => {
+  let t = 0;
+  const b = new Billing(new TwinProvider(), [{ id: 'pro', price: money(3000, 'USD'), periodDays: 30 }], { now: () => t, retryDays: [1, 3] });
+  const a = await b.subscribe('dee', 'pro', M.ok);
+  t = 10 * DAY;
+  const other = await b.subscribe('dee', 'pro', M.ok);
+  a.method = M.insufficient;
+  other.method = M.insufficient;
+  t = 30 * DAY;
+  await b.tick();
+  const own = b.invoices.at(-1)!;
+  t = 40 * DAY;
+  await b.tick();
+  assert.deepEqual([a.state, other.state], ['past_due', 'past_due']);
+  a.method = M.ok;
+  t = 41 * DAY;
+  await b.tick();
+  assert.equal(own.state, 'paid', 'the renewal of a was paid with a’s card');
+  assert.equal(a.state, 'active');
+  assert.equal(b.invoices.at(-1)!.state, 'open', 'the other subscription’s invoice is still owed');
+});
+
+test('a plan change whose payment fails is undone rather than given away', async () => {
+  let t = 0;
+  const b = new Billing(new TwinProvider(), [{ id: 'pro', price: money(3000, 'USD'), periodDays: 30 }, { id: 'max', price: money(9000, 'USD'), periodDays: 30 }], { now: () => t });
+  const s = await b.subscribe('fay', 'pro', M.ok);
+  s.method = M.declined;
+  t = 15 * DAY;
+  await assert.rejects(b.change(s.id, 'max'), /did not go through/);
+  assert.equal(s.plan, 'pro');
+  assert.equal(b.invoices.at(-1)!.state, 'void');
+});
+
+test('a cancelled subscription cannot change plan, and a downgrade credit is used on the next invoice', async () => {
+  let t = 0;
+  const b = new Billing(new TwinProvider(), [{ id: 'pro', price: money(3000, 'USD'), periodDays: 30 }, { id: 'basic', price: money(1000, 'USD'), periodDays: 30 }], { now: () => t });
+  const s = await b.subscribe('eve', 'pro', M.ok);
+  t = 15 * DAY;
+  const down = await b.change(s.id, 'basic');
+  assert.equal(down.total, -1000, 'half of 3000 back, half of 1000 owed');
+  t = 30 * DAY;
+  await b.tick();
+  const renewal = b.invoices.at(-1)!;
+  assert.deepEqual(renewal.lines.map((l) => l.amount), [1000, -1000]);
+  assert.equal(renewal.total, 0);
+  b.cancel(s.id, false);
+  await assert.rejects(b.change(s.id, 'pro'), /cancelled/);
+  await assert.rejects(b.change(99, 'pro'), /no subscription/);
+});

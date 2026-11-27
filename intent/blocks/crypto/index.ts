@@ -20,8 +20,8 @@ export interface KeyRing {
 }
 
 const keyOf = (ring: KeyRing, id: string) => {
-  const k = ring.keys[id];
-  if (!k) throw new Unopenable(`key ${id} is not in the ring`);
+  const k = Object.hasOwn(ring.keys, id) ? ring.keys[id] : undefined;
+  if (typeof k !== 'string' || !k) throw new Unopenable(`key ${id} is not in the ring`);
   const b = Buffer.from(k, 'base64');
   if (b.length !== 32) throw new Unopenable(`key ${id} is not 32 bytes`);
   return b;
@@ -42,11 +42,16 @@ export function seal(ring: KeyRing, plaintext: string, context = ''): string {
 }
 
 export function open(ring: KeyRing, sealed: string, context = ''): string {
-  const [v, id, iv, body, tag] = sealed.split('.');
-  if (v !== 'v1' || !id || !iv || body === undefined || !tag) throw new Unopenable('not a sealed value');
-  const d = createDecipheriv('aes-256-gcm', keyOf(ring, id), Buffer.from(iv, 'base64url'));
+  const parts = sealed.split('.');
+  const [v, id, iv, body, tag] = parts;
+  if (parts.length !== 5 || v !== 'v1' || !id || !iv || body === undefined || !tag) throw new Unopenable('not a sealed value');
+  const ivBytes = Buffer.from(iv, 'base64url');
+  const tagBytes = Buffer.from(tag, 'base64url');
+  // A short GCM tag is accepted by the cipher and checks only that many bytes, so the lengths are fixed here.
+  if (ivBytes.length !== 12 || tagBytes.length !== 16) throw new Unopenable('not a sealed value');
+  const d = createDecipheriv('aes-256-gcm', keyOf(ring, id), ivBytes, { authTagLength: 16 });
   d.setAAD(Buffer.from(context));
-  d.setAuthTag(Buffer.from(tag, 'base64url'));
+  d.setAuthTag(tagBytes);
   try {
     return Buffer.concat([d.update(Buffer.from(body, 'base64url')), d.final()]).toString('utf8');
   } catch {
@@ -75,8 +80,9 @@ export function sign(secret: string, purpose: string, data: Record<string, unkno
 }
 
 export function verify(secret: string | readonly string[], purpose: string, token: string, now = Date.now()): Record<string, unknown> {
-  const [body, mac] = token.split('.');
-  if (!body || !mac) throw new BadToken('that token is not in the expected form');
+  const parts = token.split('.');
+  const [body, mac] = parts;
+  if (parts.length !== 2 || !body || !mac) throw new BadToken('that token is not in the expected form');
   const secrets = typeof secret === 'string' ? [secret] : secret;
   const good = secrets.some((s) => equal(createHmac('sha256', s).update(body).digest('base64url'), mac));
   if (!good) throw new BadToken('that token was not issued here, or was changed');

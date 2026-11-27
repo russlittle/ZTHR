@@ -62,3 +62,28 @@ test('the callback checks state, exchanges the code with the PKCE verifier, and 
   await assert.rejects(callback(P, keys, s, new URLSearchParams({ state: s.state, error: 'access_denied' }), { fetch: f, now }), SignInFailed);
   await assert.rejects(callback(P, keys, s, new URLSearchParams({ state: s.state, code: 'abc' }), { fetch: f, now: now + 11 * 60_000 }), /too long/);
 });
+
+test('an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)', async () => {
+  const keys = new Keys(P.jwksUri, keysFetch);
+  const { exp: _exp, ...noExp } = base;
+  const { iat: _iat, ...noIat } = base;
+  await assert.rejects(verifyIdToken(jwt(noExp), P, keys, { nonce: 'n1', now }), SignInFailed);
+  await assert.rejects(verifyIdToken(jwt(noIat), P, keys, { nonce: 'n1', now }), SignInFailed);
+  await assert.rejects(verifyIdToken(jwt({ ...base, exp: String(base.exp) }), P, keys, { nonce: 'n1', now }), SignInFailed);
+});
+
+test('an azp naming another party is refused even with a single audience', async () => {
+  const keys = new Keys(P.jwksUri, keysFetch);
+  await assert.rejects(verifyIdToken(jwt({ ...base, azp: 'other-app' }), P, keys, { nonce: 'n1', now }), /authorised party/);
+});
+
+test('the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256', async () => {
+  const keys = new Keys(P.jwksUri, keysFetch);
+  const rsaUnderEs = (() => {
+    const h = Buffer.from(JSON.stringify({ alg: 'ES256', kid: 'k1' })).toString('base64url');
+    const b = Buffer.from(JSON.stringify(base)).toString('base64url');
+    return `${h}.${b}.${signWith('sha256', Buffer.from(`${h}.${b}`), rsa.privateKey).toString('base64url')}`;
+  })();
+  await assert.rejects(verifyIdToken(rsaUnderEs, P, keys, { nonce: 'n1', now }), SignInFailed);
+  await assert.rejects(verifyIdToken(jwt(base, { alg: 'RS256', kid: 'k2' }), P, keys, { nonce: 'n1', now }), SignInFailed);
+});

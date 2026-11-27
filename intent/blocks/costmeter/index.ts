@@ -54,6 +54,7 @@ export class Meter {
   record(u: Use): void {
     if (!this.rates.has(u.meter)) throw new Error(`no rate for ${u.meter}`);
     if (!(u.units >= 0)) throw new Error('usage cannot be negative');
+    if (!Number.isFinite(u.units)) throw new Error('usage must be a finite number');
     this.uses.push(u);
     const month = u.at.slice(0, 7);
     for (const b of this.budgets) {
@@ -69,15 +70,18 @@ export class Meter {
     }
   }
 
-  /** Cents for a month, optionally for one feature or tenant, after free units. */
+  /** Cents for a month, optionally for one feature or tenant, after free units: the sum of the bill's lines. */
   spent(month: string, scope: { feature?: string; tenant?: string } = {}): number {
-    return this.bill(month, scope).reduce((s, l) => s + l.cents, 0);
+    return Math.round(this.bill(month, scope).reduce((s, l) => s + Math.round(l.cents * 100), 0)) / 100;
   }
 
-  /** The bill, one line per meter, feature and tenant. Free units are shared across the whole month. */
+  /**
+   * The bill, one line per meter, feature and tenant. Free units are shared across the whole month. Each line is
+   * added up in micro-cents and rounded once, half up, to hundredths of a cent.
+   */
   bill(month: string, scope: { feature?: string; tenant?: string } = {}): { meter: string; feature: string; tenant: string; units: number; cents: number }[] {
     const inMonth = this.uses.filter((u) => u.at.startsWith(month));
-    const out = new Map<string, { meter: string; feature: string; tenant: string; units: number; cents: number }>();
+    const out = new Map<string, { meter: string; feature: string; tenant: string; units: number; micro: number }>();
     const freeLeft = new Map<string, number>();
     for (const u of [...inMonth].sort((a, b) => a.at.localeCompare(b.at))) {
       const r = this.rates.get(u.meter)!;
@@ -87,12 +91,12 @@ export class Meter {
       if (scope.feature && u.feature !== scope.feature) continue;
       if (scope.tenant && u.tenant !== scope.tenant) continue;
       const k = `${u.meter}\n${u.feature}\n${u.tenant}`;
-      const line = out.get(k) ?? { meter: u.meter, feature: u.feature, tenant: u.tenant, units: 0, cents: 0 };
+      const line = out.get(k) ?? { meter: u.meter, feature: u.feature, tenant: u.tenant, units: 0, micro: 0 };
       line.units += u.units;
-      line.cents += ((u.units - free) * r.microCentsPerUnit) / 1e6;
+      line.micro += (u.units - free) * r.microCentsPerUnit;
       out.set(k, line);
     }
-    return [...out.values()].map((l) => ({ ...l, cents: Math.round(l.cents * 100) / 100 })).sort((a, b) => b.cents - a.cents);
+    return [...out.values()].map(({ micro, ...l }) => ({ ...l, cents: Math.round(micro / 1e4) / 100 })).sort((a, b) => b.cents - a.cents);
   }
 
   /** Straight-line forecast for the month from the pace so far. */

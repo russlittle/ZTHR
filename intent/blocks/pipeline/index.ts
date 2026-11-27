@@ -2,8 +2,8 @@
  * The delivery pipeline as data, so anyone can ask "where is my change?". A pipeline is a list of stages (review,
  * checks, staging, production); each change records events as it moves (entered, passed, failed, waiting on a
  * person). From the events the model answers where each change is, how long it has been there, what it is waiting
- * for, and the flow measures the industry uses: lead time, deployment frequency, change failure rate and time to
- * restore.
+ * for, and the flow measures the industry uses: lead time, deployment frequency, change failure rate (deploys that
+ * production rolled back before the change shipped again) and time to restore (deploy to rollback).
  */
 
 export interface Stage {
@@ -86,11 +86,14 @@ export class Pipeline {
       const start = this.events.find((e) => e.change === d.change && e.stage === first && e.kind === 'entered');
       return start ? (Date.parse(d.at) - Date.parse(start.at)) / 3_600_000 : NaN;
     }).filter((x) => !Number.isNaN(x));
-    const failed = deploys.filter((d) => this.events.some((e) => e.change === d.change && e.kind === 'rolledBack'));
-    const restore = failed.map((d) => {
-      const rb = this.events.find((e) => e.change === d.change && e.kind === 'rolledBack')!;
-      return (Date.parse(rb.at) - Date.parse(d.at)) / 3_600_000;
-    });
+    // A deploy failed if production rolled it back before the same change was deployed again.
+    const rollbackOf = (d: Event) => {
+      const later = this.events.filter((e) => e.change === d.change && e.stage === prod && e.at >= d.at && e !== d);
+      const next = later.filter((e) => e.kind === 'passed').map((e) => e.at).sort()[0];
+      return later.filter((e) => e.kind === 'rolledBack' && (next === undefined || e.at < next)).sort((a, b) => a.at.localeCompare(b.at))[0];
+    };
+    const failed = deploys.map((d) => ({ d, rb: rollbackOf(d) })).filter((x) => x.rb);
+    const restore = failed.map(({ d, rb }) => (Date.parse(rb!.at) - Date.parse(d.at)) / 3_600_000);
     const days = (Date.parse(to) - Date.parse(from)) / 86_400_000;
     return { deploys: deploys.length, perDay: Math.round((deploys.length / days) * 100) / 100, leadTimeHoursMedian: median(lead), changeFailureRate: deploys.length ? failed.length / deploys.length : null, restoreHoursMedian: median(restore) };
   }

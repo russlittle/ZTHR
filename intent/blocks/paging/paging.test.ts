@@ -50,3 +50,23 @@ test('each person gets their last sort and filters back; a view the list no long
   assert.equal(prefs.recall('ana', 'bills', narrower), undefined);
   assert.equal(prefs.recall('ana', 'bills', spec), undefined, 'and it is forgotten');
 });
+
+test('a field name inherited from Object.prototype is refused as a bad query, not a crash', () => {
+  for (const field of ['constructor', 'toString', '__proto__']) assert.throws(() => page(spec, rows, { filters: [{ field, op: 'eq', value: 1 }] }), BadQuery, field);
+});
+
+test('rows with a missing and a null sort value page once each, in a stable order', () => {
+  type R = { id: string; due: string | null | undefined; name: string; amount: number };
+  const s: ListSpec<R> = { sortable: ['due'], filterable: {}, idField: 'id', maxPage: 1 };
+  const list: R[] = [{ id: 'a', due: null, name: '', amount: 0 }, { id: 'b', due: undefined, name: '', amount: 0 }, { id: 'c', due: '2026-01-01', name: '', amount: 0 }, { id: 'd', due: null, name: '', amount: 0 }, { id: 'e', due: undefined, name: '', amount: 0 }];
+  for (const dir of ['asc', 'desc'] as const) {
+    const seen: string[] = [];
+    let after: string | null = null;
+    do {
+      const p: { rows: R[]; next: string | null } = page(s, list, { sort: { field: 'due', dir }, ...(after ? { after } : {}) });
+      seen.push(...p.rows.map((r) => r.id));
+      after = p.next;
+    } while (after && seen.length < 10);
+    assert.deepEqual([...seen].sort(), ['a', 'b', 'c', 'd', 'e'], `${dir}: ${seen.join()}`);
+  }
+});

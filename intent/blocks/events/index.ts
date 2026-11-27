@@ -41,6 +41,7 @@ export class Catalogue {
     return [...this.types.values()].sort((a, b) => a.type.localeCompare(b.type));
   }
   make(source: string, type: string, data: Record<string, unknown>, o: { subject?: string; now?: Date } = {}): CloudEvent {
+    if (!source) throw new Error('an event needs a source (CloudEvents 1.0: a non-empty URI-reference)');
     const t = this.types.get(type);
     if (!t) throw new Error(`${type} is not in the event catalogue`);
     const problems = Object.entries(t.fields).filter(([k, kind]) => typeof data[k] !== kind || data[k] === null).map(([k, kind]) => `${k} must be a ${kind}`);
@@ -72,12 +73,16 @@ export class Hub {
     return seq;
   }
 
-  /** Subscribes, first replaying anything after `after` still in the buffer. Returns the unsubscribe function. */
+  /**
+   * Subscribes, first replaying anything after `after` still in the buffer. Returns the unsubscribe function, and
+   * `missed` when events after `after` can no longer be replayed (or `after` is not an id this hub issued).
+   */
   subscribe(match: (e: CloudEvent) => boolean, fn: (e: CloudEvent, seq: number) => void, after?: number): { stop: () => void; missed: boolean } {
     let missed = false;
     if (after !== undefined) {
       const first = this.buffer[0]?.seq ?? this.seq + 1;
-      missed = after + 1 < first && after < this.seq;
+      // An id above any this hub has issued comes from before a restart: nothing here can vouch for the gap.
+      missed = (after + 1 < first && after < this.seq) || after > this.seq;
       for (const b of this.buffer) if (b.seq > after && match(b.e)) fn(b.e, b.seq);
     }
     const s = { match, fn };
@@ -93,18 +98,37 @@ export class Presence {
   private readonly seen = new Map<string, Map<string, { at: number; doing?: string }>>();
   private readonly ttlMs: number;
   private readonly now: () => number;
+  private swept = 0;
   constructor(ttlMs = 30_000, now: () => number = Date.now) {
     this.ttlMs = ttlMs;
     this.now = now;
+    this.swept = now();
+  }
+  /** Places with someone still counted as present. */
+  get size(): number {
+    return this.seen.size;
+  }
+  /** Drops everyone who went quiet, and places left empty, at most once per time-to-live, so memory stays bounded. */
+  private sweep(): void {
+    const t = this.now();
+    if (t - this.swept < this.ttlMs) return;
+    this.swept = t;
+    for (const [where, m] of this.seen) {
+      for (const [who, v] of m) if (t - v.at > this.ttlMs) m.delete(who);
+      if (!m.size) this.seen.delete(where);
+    }
   }
   /** Called by each open screen every few seconds. */
   beat(who: string, where: string, doing?: string): void {
+    this.sweep();
     const m = this.seen.get(where) ?? new Map();
     m.set(who, { at: this.now(), ...(doing ? { doing } : {}) });
     this.seen.set(where, m);
   }
   leave(who: string, where: string): void {
-    this.seen.get(where)?.delete(who);
+    const m = this.seen.get(where);
+    m?.delete(who);
+    if (m && !m.size) this.seen.delete(where);
   }
   here(where: string, except?: string): { who: string; doing?: string }[] {
     const m = this.seen.get(where);
@@ -114,6 +138,7 @@ export class Presence {
       if (this.now() - v.at > this.ttlMs) m.delete(who);
       else if (who !== except) out.push({ who, ...(v.doing ? { doing: v.doing } : {}) });
     }
+    if (!m.size) this.seen.delete(where);
     return out.sort((a, b) => a.who.localeCompare(b.who));
   }
 }

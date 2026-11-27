@@ -44,3 +44,23 @@ test('offline changes replay in order, stop while still offline, and set aside w
   q.drop(q.needsYou()[0]!.key);
   assert.equal(q.items.length, 0);
 });
+
+test('activating a version deletes every other version’s caches, even one whose name ends the same way', async () => {
+  const src = worker({ version: 'v2', precache: ['/app.js'], offline: '/offline.html', routes: [{ match: '^/assets/', strategy: 'cacheFirst' }, { match: '^/img/', strategy: 'staleWhileRevalidate', cache: 'images' }] });
+  const names = new Set(['pre-v12', 'rt-v12', 'pre-v2', 'rt-v2', 'images', 'pre-v1']);
+  const handlers: Record<string, (e: { waitUntil: (p: Promise<unknown>) => void }) => void> = {};
+  const self = { addEventListener: (k: string, f: (e: { waitUntil: (p: Promise<unknown>) => void }) => void) => void (handlers[k] = f), clients: { claim: async () => {} }, skipWaiting: async () => {} };
+  const caches = { keys: async () => [...names], delete: async (k: string) => names.delete(k) };
+  new Function('self', 'caches', 'location', src)(self, caches, { origin: 'https://x' });
+  let done!: Promise<unknown>;
+  handlers.activate!({ waitUntil: (p) => void (done = p) });
+  await done;
+  assert.deepEqual([...names].sort(), ['images', 'pre-v2', 'rt-v2']);
+});
+
+test('idempotency keys are unique across queues, so two devices offline at the same moment never share one', () => {
+  const at = () => new Date('2026-11-26T00:00:00Z');
+  const a = new OfflineQueue(at).add('POST', '/api/folders', { name: 'A' });
+  const b = new OfflineQueue(at).add('POST', '/api/folders', { name: 'B' });
+  assert.notEqual(a.key, b.key);
+});

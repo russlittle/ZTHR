@@ -37,3 +37,19 @@ test('erasure reports what was removed, what was kept and why, and is complete o
   assert.equal(again.sources.at(-1)!.error, 'index locked');
   assert.throws(() => p.register(tableSource('files', '', [], 'x')), /already registered/);
 });
+
+test('every source gets its own file in the archive, and none can overwrite the manifest or the summary', async () => {
+  const p = new Privacy(() => new Date('2026-11-26T12:00:00Z'));
+  p.register(tableSource('manifest', 'Shipping manifests', [{ who: 'ana', box: 1 }], 'who'));
+  p.register(tableSource('chat logs', 'Chat logs', [{ who: 'ana', said: 'hi' }], 'who'));
+  p.register(tableSource('chat-logs', 'Chat logs (old)', [{ who: 'ana', said: 'yo' }], 'who'));
+  p.register(tableSource('Readme', 'Readme notes', [{ who: 'ana', n: 1 }], 'who'));
+  const { archive, manifest } = await p.export('ana');
+  const z = unzip(archive);
+  const files = manifest.sources.map((s) => s.file);
+  assert.equal(new Set(files.map((f) => f.toLowerCase())).size, 4, files.join());
+  for (const f of files) assert.ok(!['manifest.json', 'readme.txt'].includes(f.toLowerCase()), f);
+  assert.equal(z.size, 6);
+  assert.deepEqual(JSON.parse(z.get('manifest.json')!.toString()).person, 'ana');
+  assert.deepEqual(JSON.parse(z.get(files[2]!)!.toString()), [{ who: 'ana', said: 'yo' }]);
+});

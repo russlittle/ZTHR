@@ -90,37 +90,53 @@ export function pdf(blocks: readonly Block[], o: PdfOptions): Buffer {
       }
       y -= 6;
     } else {
-      const cols = Math.max(...b.table.map((r) => r.length));
+      if (!b.table.length) continue;
+      const cols = b.table.reduce((m, r) => Math.max(m, r.length), 0);
       const ws = b.widths ?? Array(cols).fill(1);
       const sum = ws.reduce((a, c) => a + c, 0);
       const cw = ws.map((w) => (w / sum) * usable);
-      const drawRow = (r: readonly string[], bold: boolean) => {
-        const cells = cw.map((w, i) => wrap(r[i] ?? '', 10, w - 8, bold));
-        const h = Math.max(...cells.map((c) => c.length)) * 13 + 6;
-        const top = y;
-        let x = margin;
-        cells.forEach((c, i) => {
-          y = top - 3;
-          for (const l of c) {
-            y -= 13;
-            text(l, x + 4, 10, bold);
-          }
-          x += cw[i]!;
-        });
-        y = top - h;
-        page().push(`0.6 w ${margin} ${y.toFixed(2)} m ${(margin + usable).toFixed(2)} ${y.toFixed(2)} l S`);
-        return h;
-      };
+      const floor = margin + 24;
       const [head, ...rows] = b.table;
-      need(40);
-      if (head) drawRow(head, true);
-      for (const r of rows) {
-        const est = Math.max(...cw.map((w, i) => wrap(r[i] ?? '', 10, w - 8).length)) * 13 + 6;
-        if (y - est < margin + 24) {
-          newPage();
-          if (head) drawRow(head, true);
+      const lineCount = (r: readonly string[], bold: boolean) => cw.reduce((m, w, i) => Math.max(m, wrap(r[i] ?? '', 10, w - 8, bold).length), 1);
+      // The header repeats on each new page unless it would take most of the page itself.
+      const repeatHead = !!head && lineCount(head, true) * 13 + 6 < (ph - margin - floor) / 3;
+      const drawRow = (r: readonly string[], bold: boolean, isHead: boolean) => {
+        const cells = cw.map((w, i) => wrap(r[i] ?? '', 10, w - 8, bold));
+        const lines = cells.reduce((m, c) => Math.max(m, c.length), 1);
+        // A row taller than the room left continues on the next page, below the repeated header.
+        for (let from = 0; from < lines; ) {
+          const room = Math.floor((y - 6 - floor) / 13);
+          if (room < 1) {
+            newPage();
+            if (!isHead && repeatHead) drawRow(head!, true, true);
+            continue;
+          }
+          const n = Math.min(room, lines - from);
+          const top = y;
+          let x = margin;
+          cells.forEach((c, i) => {
+            y = top - 3;
+            for (const l of c.slice(from, from + n)) {
+              y -= 13;
+              text(l, x + 4, 10, bold);
+            }
+            x += cw[i]!;
+          });
+          y = top - n * 13 - 6;
+          page().push(`0.6 w ${margin} ${y.toFixed(2)} m ${(margin + usable).toFixed(2)} ${y.toFixed(2)} l S`);
+          from += n;
         }
-        drawRow(r, false);
+      };
+      need(40);
+      if (head) drawRow(head, true, true);
+      for (const r of rows) {
+        const est = lineCount(r, false) * 13 + 6;
+        // Start a row that fits on a page on a fresh page rather than splitting it.
+        if (y - est < floor && est <= ph - margin - floor - 40) {
+          newPage();
+          if (repeatHead) drawRow(head!, true, true);
+        }
+        drawRow(r, false, false);
       }
       y -= 10;
     }

@@ -56,7 +56,7 @@ export class Palette {
   search(query: string, can: (permission: string) => boolean, limit = 8): { command: Command; score: number }[] {
     const out: { command: Command; score: number }[] = [];
     for (const c of this.commands.values()) {
-      if (c.permission && !can(c.permission)) continue;
+      if (c.permission !== undefined && !can(c.permission)) continue;
       const best = Math.max(score(query, c.title), ...(c.keywords ?? []).map((k) => score(query, k) - 3), score(query, `${c.section} ${c.title}`) - 5);
       if (best < 0) continue;
       const r = this.recent.indexOf(c.id);
@@ -68,7 +68,7 @@ export class Palette {
   async run(id: string, can: (permission: string) => boolean): Promise<void> {
     const c = this.commands.get(id);
     if (!c) throw new Error(`no command ${id}`);
-    if (c.permission && !can(c.permission)) throw new Error('you cannot do that');
+    if (c.permission !== undefined && !can(c.permission)) throw new Error('you cannot do that');
     const i = this.recent.indexOf(id);
     if (i >= 0) this.recent.splice(i, 1);
     this.recent.unshift(id);
@@ -79,11 +79,11 @@ export class Palette {
   /** The command for a key press, if it is bound and allowed. */
   forKeys(keys: string, can: (permission: string) => boolean): Command | undefined {
     const c = this.commands.get(this.keys.get(normKeys(keys)) ?? '');
-    return c && (!c.permission || can(c.permission)) ? c : undefined;
+    return c && (c.permission === undefined || can(c.permission)) ? c : undefined;
   }
 
   /** Every binding, for the shortcuts help sheet. */
   cheatsheet(can: (permission: string) => boolean): { section: string; title: string; shortcut: string }[] {
-    return [...this.commands.values()].filter((c) => c.shortcut && (!c.permission || can(c.permission))).map((c) => ({ section: c.section, title: c.title, shortcut: c.shortcut! })).sort((a, b) => a.section.localeCompare(b.section) || a.title.localeCompare(b.title));
+    return [...this.commands.values()].filter((c) => c.shortcut && (c.permission === undefined || can(c.permission))).map((c) => ({ section: c.section, title: c.title, shortcut: c.shortcut! })).sort((a, b) => a.section.localeCompare(b.section) || a.title.localeCompare(b.title));
   }
 }

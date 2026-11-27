@@ -51,3 +51,16 @@ test('lists are filtered by the same rules; the matrix and policy checks are gen
   assert.equal(matrix(P)[1]!.scope, 'team = their teams');
   assert.deepEqual(check({ roles: { a: { label: 'A', inherits: ['b'] }, b: { label: 'B', inherits: ['a'] } }, grants: [{ role: 'zz', kind: 'x', actions: ['read'] }] }), ['a grant names the role "zz", which is not declared', 'the role "a" inherits itself', 'the role "b" inherits itself']);
 });
+
+test('a rule comparing with a subject attribute never holds because both sides are missing', () => {
+  const noTeam = { id: 'cy', roles: ['advisor'] };
+  assert.equal(decide(P, noTeam, 'write', 'note', { student: 'ana' }).allowed, false, 'no team on either side is not the same team');
+  assert.equal(decide(P, noTeam, 'write', 'note').allowed, false);
+  const Q: Policy = { roles: { r: { label: 'R' } }, grants: [{ role: 'r', kind: 'doc', actions: ['read'] }, { role: 'r', kind: 'doc', actions: ['read'], deny: true, when: [{ field: 'region', equalsSubject: 'region' }] }] };
+  assert.equal(decide(Q, { id: 'x', roles: ['r'] }, 'read', 'doc', {}).allowed, false, 'a refusal that cannot be ruled out still refuses');
+});
+
+test('role names that are inherited object properties are neither roles nor declared', () => {
+  assert.deepEqual([...rolesOf(P, { id: 'x', roles: ['constructor', 'toString', '__proto__'] })], []);
+  assert.deepEqual(check({ roles: {}, grants: [{ role: 'constructor', kind: 'x', actions: ['read'] }] }), ['a grant names the role "constructor", which is not declared']);
+});

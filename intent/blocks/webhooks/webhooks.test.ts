@@ -50,3 +50,33 @@ test('outbound: signed, retried with backoff, parked with the last answer, and r
   await out.flush();
   assert.equal(d!.state, 'delivered');
 });
+
+test('a captured request replayed under a fresh delivery id is still a replay', () => {
+  const t = 1_800_000_000_000;
+  const body = '{"type":"payment.succeeded"}';
+  const sig = signature('s', body, Math.floor(t / 1000));
+  const inb = new Inbound(['s'], { now: () => t });
+  inb.verify(body, sig, 'evt-1');
+  assert.throws(() => inb.verify(body, sig, 'evt-forged'), /already received/, 'the id is not signed, so it cannot be what makes a request new');
+});
+
+test('two flushes at once send each due delivery once', async () => {
+  let calls = 0;
+  let release: () => void = () => undefined;
+  const gate = new Promise<void>((r) => (release = r));
+  const f = (async () => {
+    calls++;
+    await gate;
+    return new Response(null, { status: 204 });
+  }) as unknown as typeof fetch;
+  const out = new Outbound({ fetch: f, now: () => 0 });
+  out.subscribe('ana', 'https://hooks.example.org/in', ['*'], 's');
+  out.emit('a', {});
+  out.emit('b', {});
+  const one = out.flush();
+  const two = out.flush();
+  release();
+  await Promise.all([one, two]);
+  assert.equal(calls, 2, 'two deliveries, two requests');
+  assert.ok(out.deliveries.every((d) => d.state === 'delivered' && d.attempts === 1));
+});

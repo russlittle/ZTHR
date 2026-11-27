@@ -2,8 +2,8 @@
  * What an uploaded image really is, read from its bytes rather than its name: PNG, JPEG, GIF or WebP, with width,
  * height and (for JPEG) the EXIF orientation, so a phone photo can be shown the right way up. Images whose pixel
  * count would exhaust memory when decoded are refused before anything decodes them. For JPEG, the metadata that
- * can give away where and on what a photo was taken (EXIF, including GPS, XMP, and Photoshop blocks) is stripped
- * while the colour profile is kept.
+ * can give away where and on what a photo was taken (EXIF, including GPS, XMP, Photoshop blocks, and pictures
+ * appended after the main one) is stripped while the colour profile is kept.
  */
 
 export type Kind = 'png' | 'jpeg' | 'gif' | 'webp';
@@ -48,23 +48,41 @@ function exifOrientation(seg: Buffer): number {
   return 1;
 }
 
-/** Walks JPEG segments up to the image data. */
+const isRst = (m: number) => m >= 0xd0 && m <= 0xd7;
+
+/**
+ * Walks JPEG segments, through each scan's entropy-coded data, up to and including the end-of-image marker. Fill
+ * bytes (extra 0xFF) before a marker are skipped. Every step moves forward, so hostile lengths cannot loop.
+ */
 function* segments(b: Buffer): Generator<{ marker: number; start: number; end: number }> {
   let p = 2;
-  while (p + 4 <= b.length) {
+  while (p + 1 < b.length) {
     if (b[p] !== 0xff) throw new Refused('the JPEG is damaged');
+    while (p + 2 < b.length && b[p + 1] === 0xff) p++;
     const marker = b[p + 1]!;
-    if (marker === 0xd9 || marker === 0xda) {
-      yield { marker, start: p, end: b.length };
+    if (marker === 0xd9) {
+      yield { marker, start: p, end: p + 2 };
       return;
     }
-    if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+    if (marker === 0x01 || isRst(marker)) {
       p += 2;
       continue;
     }
+    if (p + 4 > b.length) return;
     const len = b.readUInt16BE(p + 2);
-    yield { marker, start: p, end: p + 2 + len };
-    p += 2 + len;
+    if (len < 2) throw new Refused('the JPEG is damaged');
+    const end = Math.min(p + 2 + len, b.length);
+    if (marker !== 0xda) {
+      yield { marker, start: p, end };
+      p = end;
+      continue;
+    }
+    // A scan: its data runs to the next marker that is not a stuffed 0xFF00, a restart, or fill.
+    let q = end;
+    while (q + 1 < b.length && !(b[q] === 0xff && b[q + 1] !== 0x00 && b[q + 1] !== 0xff && !isRst(b[q + 1]!))) q++;
+    if (q + 1 >= b.length) q = b.length;
+    yield { marker, start: p, end: q };
+    p = q;
   }
 }
 
@@ -74,23 +92,31 @@ export function inspect(b: Buffer, o: { maxPixels?: number } = {}): Info {
   let width = 0;
   let height = 0;
   let orientation = 1;
+  const need = (n: number) => {
+    if (b.length < n) throw new Refused(`the ${kind === 'jpeg' ? 'JPEG' : kind === 'png' ? 'PNG' : kind === 'gif' ? 'GIF' : 'WebP'} is cut short`);
+  };
   if (kind === 'png') {
+    need(24);
     if (b.subarray(12, 16).toString('latin1') !== 'IHDR') throw new Refused('the PNG is damaged');
     width = b.readUInt32BE(16);
     height = b.readUInt32BE(20);
   } else if (kind === 'gif') {
+    need(10);
     width = b.readUInt16LE(6);
     height = b.readUInt16LE(8);
   } else if (kind === 'webp') {
     const chunk = b.subarray(12, 16).toString('latin1');
     if (chunk === 'VP8 ') {
+      need(30);
       width = b.readUInt16LE(26) & 0x3fff;
       height = b.readUInt16LE(28) & 0x3fff;
     } else if (chunk === 'VP8L') {
+      need(25);
       const bits = b.readUInt32LE(21);
       width = (bits & 0x3fff) + 1;
       height = ((bits >> 14) & 0x3fff) + 1;
     } else if (chunk === 'VP8X') {
+      need(30);
       width = b.readUIntLE(24, 3) + 1;
       height = b.readUIntLE(27, 3) + 1;
     } else throw new Refused('the WebP is damaged');
@@ -98,6 +124,7 @@ export function inspect(b: Buffer, o: { maxPixels?: number } = {}): Info {
     for (const s of segments(b)) {
       if (s.marker === 0xe1 && orientation === 1) orientation = exifOrientation(b.subarray(s.start + 4, s.end));
       if ((s.marker >= 0xc0 && s.marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(s.marker))) {
+        if (s.end < s.start + 9) throw new Refused('the JPEG is damaged');
         height = b.readUInt16BE(s.start + 5);
         width = b.readUInt16BE(s.start + 7);
         break;
@@ -112,12 +139,19 @@ export function inspect(b: Buffer, o: { maxPixels?: number } = {}): Info {
 /** Width and height as displayed, after the orientation is applied. */
 export const displayed = (i: Info) => (i.orientation >= 5 ? { width: i.height, height: i.width } : { width: i.width, height: i.height });
 
-/** A JPEG without EXIF (and its GPS), XMP, Photoshop blocks or comments; the ICC colour profile stays. */
+/**
+ * A JPEG without EXIF (and its GPS), XMP, Photoshop blocks, comments, multi-picture (MPF) data, or anything after
+ * the end of the picture (appended previews and motion-photo trailers carry their own metadata); the ICC colour
+ * profile and the Adobe segment, which says how to decode the colours, stay.
+ */
 export function stripJpeg(b: Buffer): Buffer {
   if (sniff(b) !== 'jpeg') throw new Refused('not a JPEG');
   const keep: Buffer[] = [b.subarray(0, 2)];
+  const starts = (s: { start: number; end: number }, tag: string) => b.subarray(s.start + 4, s.end).subarray(0, tag.length).toString('latin1') === tag;
   for (const s of segments(b)) {
-    const drop = s.marker === 0xe1 || s.marker === 0xed || s.marker === 0xfe || (s.marker >= 0xe3 && s.marker <= 0xef);
+    const app = s.marker >= 0xe1 && s.marker <= 0xef;
+    const kept = (s.marker === 0xe2 && !starts(s, 'MPF\0')) || (s.marker === 0xee && starts(s, 'Adobe'));
+    const drop = s.marker === 0xfe || (app && !kept);
     if (!drop) keep.push(b.subarray(s.start, s.end));
   }
   return Buffer.concat(keep);

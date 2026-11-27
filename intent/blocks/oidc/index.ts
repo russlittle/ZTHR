@@ -58,7 +58,18 @@ export interface Claims {
   readonly [k: string]: unknown;
 }
 
-type Jwk = JsonWebKey & { kid?: string; alg?: string };
+type Jwk = JsonWebKey & { kid?: string; alg?: string; use?: string };
+
+/** The key type and curve each accepted algorithm must be verified with, so a key is never used for another. */
+const FITS: Readonly<Record<string, (k: Jwk) => boolean>> = { RS256: (k) => k.kty === 'RSA', ES256: (k) => k.kty === 'EC' && k.crv === 'P-256' };
+
+const part = <T>(s: string, what: string): T => {
+  try {
+    return JSON.parse(Buffer.from(s, 'base64url').toString()) as T;
+  } catch {
+    throw new SignInFailed(`the ID token's ${what} is not JSON`);
+  }
+};
 
 export class Keys {
   private keys: Jwk[] = [];
@@ -82,25 +93,32 @@ export class Keys {
   }
 }
 
-/** Verifies an ID token: signature by a published key, then issuer, audience, expiry, issue time and nonce. */
+/**
+ * Verifies an ID token: signature by a published key of the type its algorithm needs, then issuer, audience (and
+ * the authorised party, when one is named or there are several audiences), expiry, issue time and nonce; a token
+ * without an expiry or issue time is refused.
+ */
 export async function verifyIdToken(token: string, p: Provider, keys: Keys, o: { nonce: string; now?: number; skewSec?: number }): Promise<Claims> {
   const parts = token.split('.');
   if (parts.length !== 3) throw new SignInFailed('the ID token is not a JWT');
   const [h, b, s] = parts as [string, string, string];
-  const header = JSON.parse(Buffer.from(h, 'base64url').toString()) as { alg: string; kid?: string };
+  const header = part<{ alg: string; kid?: string }>(h, 'header');
   if (header.alg !== 'RS256' && header.alg !== 'ES256') throw new SignInFailed(`the ID token is signed with ${header.alg}, which is not accepted`);
   const jwk = await keys.get(header.kid, o.now);
   if (!jwk) throw new SignInFailed('the ID token is signed with a key the provider does not publish');
+  if (!FITS[header.alg]!(jwk) || (jwk.alg && jwk.alg !== header.alg) || (jwk.use && jwk.use !== 'sig')) throw new SignInFailed(`the provider's key ${jwk.kid ?? ''} is not one for ${header.alg} signatures`);
   const key = createPublicKey({ key: jwk, format: 'jwk' });
   const ok = verifySig('sha256', Buffer.from(`${h}.${b}`), header.alg === 'ES256' ? { key, dsaEncoding: 'ieee-p1363' } : key, Buffer.from(s, 'base64url'));
   if (!ok) throw new SignInFailed('the ID token signature does not verify');
-  const c = JSON.parse(Buffer.from(b, 'base64url').toString()) as Claims;
+  const c = part<Claims>(b, 'body');
   const now = Math.floor((o.now ?? Date.now()) / 1000);
   const skew = o.skewSec ?? 60;
   if (c.iss !== p.issuer) throw new SignInFailed('the ID token is from another issuer');
-  const aud = typeof c.aud === 'string' ? [c.aud] : c.aud;
+  const aud = typeof c.aud === 'string' ? [c.aud] : Array.isArray(c.aud) ? c.aud : [];
   if (!aud.includes(p.clientId)) throw new SignInFailed('the ID token is for another application');
-  if (aud.length > 1 && c['azp'] !== p.clientId) throw new SignInFailed('the ID token names another authorised party');
+  if ((aud.length > 1 || c['azp'] !== undefined) && c['azp'] !== p.clientId) throw new SignInFailed('the ID token names another authorised party');
+  if (typeof c.exp !== 'number' || !Number.isFinite(c.exp)) throw new SignInFailed('the ID token carries no expiry');
+  if (typeof c.iat !== 'number' || !Number.isFinite(c.iat)) throw new SignInFailed('the ID token carries no issue time');
   if (c.exp + skew < now) throw new SignInFailed('the ID token has expired');
   if (c.iat - skew > now) throw new SignInFailed('the ID token was issued in the future');
   if (c.nonce !== o.nonce) throw new SignInFailed('the ID token does not answer this sign-in');

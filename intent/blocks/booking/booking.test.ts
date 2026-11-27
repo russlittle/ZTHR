@@ -37,3 +37,33 @@ test('a slot can be held by one person only, holds expire, and buffers keep gaps
   assert.deepEqual(b.busy('room-1'), [slot], 'confirmed stays; expired holds drop out');
   assert.throws(() => b.hold('room-1', { start: slot.end, end: slot.start }, 'x'), /end after/);
 });
+
+test('the day the clocks go forward is not skipped when the range starts near local midnight', () => {
+  const every = { 0: [9, 17], 1: [9, 17], 2: [9, 17], 3: [9, 17], 4: [9, 17], 5: [9, 17], 6: [9, 17] } as Calendar['hours'];
+  const lon: Calendar = { id: 'lon', tz: 'Europe/London', hours: every, busy: [] };
+  const f = free(lon, { start: t('2026-03-28T23:30:00Z'), end: t('2026-03-30T00:00:00Z') });
+  assert.deepEqual(f.map((s) => [iso(s.start), iso(s.end)]), [['2026-03-29T08:00', '2026-03-29T16:00']]);
+  const lh: Calendar = { id: 'lh', tz: 'Australia/Lord_Howe', hours: every, busy: [] };
+  const g = free(lh, { start: t('2026-10-03T13:20:00Z'), end: t('2026-10-04T13:00:00Z') });
+  assert.deepEqual(g.map((s) => [iso(s.start), iso(s.end)]), [['2026-10-03T22:00', '2026-10-04T06:00']]);
+});
+
+test('working hours can start on the half hour', () => {
+  const c: Calendar = { id: 'k', tz: 'Asia/Kathmandu', hours: { 1: [9.5, 17.25] }, busy: [] };
+  const f = free(c, { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-01T00:00:00Z') });
+  assert.deepEqual(f.map((s) => [iso(s.start), iso(s.end)]), [['2026-11-30T03:45', '2026-11-30T11:30']]);
+});
+
+test('a zero or negative step or length is refused instead of looping forever', () => {
+  const c: Calendar = { id: 'a', tz: 'UTC', hours: weekdays(9, 17), busy: [] };
+  const r = { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-01T00:00:00Z') };
+  assert.throws(() => findTime([c], r, 30, { stepMinutes: 0 }), /step/);
+  assert.throws(() => findTime([c], r, 0), /length/);
+  assert.throws(() => new Bookings().hold('r', { start: Number.NaN, end: 5 }, 'x'), /end after/);
+});
+
+test('slots nearer the middle of each person’s own working day rank first', () => {
+  const early: Calendar = { id: 'e', tz: 'UTC', hours: weekdays(6, 14), busy: [] };
+  const slots = findTime([early], { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-01T00:00:00Z') }, 60, { stepMinutes: 60, limit: 1 });
+  assert.equal(iso(slots[0]!.start), '2026-11-30T09:00');
+});

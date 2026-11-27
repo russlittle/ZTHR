@@ -51,3 +51,23 @@ test('presence shows who else is here and forgets people who went quiet', () => 
   p.leave('ben', 'doc:1');
   assert.deepEqual(p.here('doc:1'), []);
 });
+
+test('a client holding an id this hub never issued (the hub restarted) is told to reload', () => {
+  const hub = new Hub(10);
+  hub.publish(cat.make('/files', 'files.file.created', { path: '/x', size: 1 }));
+  assert.equal(hub.subscribe(() => true, () => {}, 500).missed, true);
+  assert.equal(hub.subscribe(() => true, () => {}, 1).missed, false, 'up to date');
+});
+
+test('CloudEvents 1.0 requires a non-empty source', () => {
+  assert.throws(() => cat.make('', 'files.file.created', { path: '/a', size: 1 }), /source/);
+});
+
+test('presence forgets places nobody looks at any more', () => {
+  let t = 0;
+  const p = new Presence(30_000, () => t);
+  for (let i = 0; i < 1000; i++) p.beat('ana', `doc:${i}`);
+  t = 120_000;
+  p.beat('ben', 'doc:new');
+  assert.equal(p.size, 1, 'only the one live place is still held');
+});

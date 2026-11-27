@@ -36,7 +36,7 @@ export async function readiness(checks: readonly Check[], deadlineMs = 2000): Pr
       }
     }),
   );
-  const failed = results.filter((r) => !r.ok).map((r) => checks.find((c) => c.name === r.name)!);
+  const failed = checks.filter((_, i) => !results[i]!.ok);
   const status: Status = failed.some((c) => c.critical) ? 'down' : failed.length ? 'degraded' : 'ok';
   return { status, checks: results };
 }

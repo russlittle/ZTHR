@@ -40,3 +40,29 @@ test('stale values are served while one refresh runs; expiry, tags and size limi
   assert.equal(await c.get('y', load), 4, 'least recently used y was dropped');
   assert.ok(c.hitRate() > 0);
 });
+
+test('an invalidation while a load is running is not undone by that load finishing', async () => {
+  const c = new Cache<string>({ ttlMs: 1000 });
+  let release!: (v: string) => void;
+  const pending = c.get('user:1', () => new Promise<string>((r) => (release = r)), ['user:1']);
+  c.invalidate('user:1');
+  release('old name');
+  assert.equal(await pending, 'old name', 'the caller that asked before the change still gets its answer');
+  assert.equal(await c.get('user:1', async () => 'new name'), 'new name', 'but the value read before the change is not cached');
+  let release2!: (v: string) => void;
+  const p2 = c.get('user:2', () => new Promise<string>((r) => (release2 = r)), ['user:2']);
+  assert.equal(c.invalidateTag('user:2'), 0);
+  release2('old');
+  await p2;
+  assert.equal(await c.get('user:2', async () => 'new'), 'new', 'a tag invalidation covers loads in flight too');
+});
+
+test('a refresh keeps the tags the entry was cached with, so a tag still drops it', async () => {
+  let t = 0;
+  const c = new Cache<number>({ ttlMs: 100, staleMs: 100, now: () => t });
+  await c.get('profile:1', async () => 1, ['user:1']);
+  t = 150;
+  await c.get('profile:1', async () => 2);
+  await new Promise((r) => setImmediate(r));
+  assert.equal(c.invalidateTag('user:1'), 1, 'the refreshed entry is still tagged user:1');
+});

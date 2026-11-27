@@ -42,3 +42,28 @@ test('the last word matches as a prefix while typing; phrases match in order; fi
   assert.equal(sn.includes('<script>'), false);
   assert.match(sn, /&#60;script&#62;/);
 });
+
+test('the word being typed still matches as a prefix when an earlier word repeats', () => {
+  const once = idx().search('budget quart', { canSee: all }).hits[0]!;
+  const twice = idx().search('budget budgets quart', { canSee: all }).hits[0]!;
+  assert.equal(twice.id, 'd1');
+  assert.equal(twice.score, once.score, 'the same words, the same score');
+});
+
+test('the word being typed narrows the results like every other word', () => {
+  assert.deepEqual(idx().search('budget holi', { canSee: all }).hits.map((h) => h.id), [], 'no document has budget and a word starting holi');
+  assert.deepEqual(idx().search('budget quart', { canSee: all }).hits.map((h) => h.id), ['d1']);
+});
+
+test('a phrase must sit inside one field, not run from the end of the title into the body', () => {
+  const i = new Index();
+  i.add({ id: 'x', fields: { title: 'Annual budget', body: 'Review notes' } });
+  assert.deepEqual(i.search('"budget review"', { canSee: all }).hits, []);
+});
+
+test('fields named like object properties are indexed with weight 1', () => {
+  const i = new Index({ weights: { title: 2 } });
+  i.add({ id: 'x', fields: { constructor: 'scaffold hire' } });
+  const [h] = i.search('scaffold ', { canSee: all }).hits;
+  assert.ok(h && Number.isFinite(h.score) && h.score > 0, String(h?.score));
+});

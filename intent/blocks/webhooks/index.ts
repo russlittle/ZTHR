@@ -42,8 +42,13 @@ export class Inbound {
     if (!ok) throw new Unverified('the signature does not match');
     if (!id) throw new Unverified('the request carries no delivery id');
     for (const [k, at] of this.seen) if (nowSec - at > this.toleranceSec * 2) this.seen.delete(k);
-    if (this.seen.has(id)) throw new Unverified('this delivery was already received');
-    this.seen.set(id, nowSec);
+    // The delivery id is not covered by the signature, so the signature itself is remembered too: a captured
+    // request sent again under a fresh id is still the same signed request.
+    const sigKey = `sig:${m[2]}`;
+    const idKey = `id:${id}`;
+    if (this.seen.has(idKey) || this.seen.has(sigKey)) throw new Unverified('this delivery was already received');
+    this.seen.set(idKey, nowSec);
+    this.seen.set(sigKey, nowSec);
   }
 }
 
@@ -74,7 +79,7 @@ export interface OutboundOptions {
   readonly now?: () => number;
   readonly maxAttempts?: number;
   readonly baseMs?: number;
-  /** After this many deliveries in a row fail, the endpoint is paused. */
+  /** After this many delivery attempts in a row fail (retries count), the endpoint is paused. */
   readonly pauseAfter?: number;
   readonly onPaused?: (e: Endpoint) => void;
 }
@@ -82,6 +87,7 @@ export interface OutboundOptions {
 export class Outbound {
   readonly endpoints = new Map<string, Endpoint>();
   readonly deliveries: Delivery[] = [];
+  private readonly sending = new Set<string>();
   private readonly o: Required<Omit<OutboundOptions, 'onPaused'>> & Pick<OutboundOptions, 'onPaused'>;
 
   constructor(o: OutboundOptions = {}) {
@@ -111,8 +117,20 @@ export class Outbound {
 
   /** Sends every delivery that is due; a 2xx answer within the timeout is an acknowledgement. */
   async flush(): Promise<number> {
-    const due = this.deliveries.filter((d) => d.state === 'pending' && d.next <= this.o.now());
-    for (const d of due) await this.send(d);
+    const due = this.deliveries.filter((d) => d.state === 'pending' && d.next <= this.o.now() && !this.sending.has(d.id));
+    // Claimed before the first await, so a flush that overlaps this one does not send the same delivery again.
+    for (const d of due) this.sending.add(d.id);
+    try {
+      for (const d of due) {
+        try {
+          await this.send(d);
+        } finally {
+          this.sending.delete(d.id);
+        }
+      }
+    } finally {
+      for (const d of due) this.sending.delete(d.id);
+    }
     return due.length;
   }
 

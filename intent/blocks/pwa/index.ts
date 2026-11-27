@@ -48,12 +48,16 @@ export interface Route {
   readonly cache?: string;
 }
 
-/** The service worker source for a plan. Routes are regexes over the path, first match wins. */
+/**
+ * The service worker source for a plan. Routes are regexes over the path, first match wins. Activation keeps only
+ * this version's caches (the precache and each route's cache) and deletes every other.
+ */
 export function worker(o: { version: string; precache: readonly string[]; routes: readonly Route[]; offline: string }): string {
   const routes = o.routes.map((r) => `[${JSON.stringify(r.match)},${JSON.stringify(r.strategy)},${JSON.stringify(r.cache ?? `rt-${o.version}`)}]`).join(',');
   return `const V=${JSON.stringify(o.version)},PRE=${JSON.stringify(o.precache)},OFF=${JSON.stringify(o.offline)},R=[${routes}].map(([m,s,c])=>[new RegExp(m),s,c]);
 self.addEventListener('install',e=>e.waitUntil(caches.open('pre-'+V).then(c=>c.addAll([...PRE,OFF])).then(()=>self.skipWaiting())));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>!k.endsWith(V)).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+const KEEP=new Set(['pre-'+V,...R.map(([,,c])=>c)]);
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>!KEEP.has(k)).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==location.origin)return;const r=R.find(([m])=>m.test(u.pathname));if(!r||r[1]==='networkOnly')return;const [,s,c]=r;
 const net=()=>fetch(e.request).then(res=>{if(res.ok){const cl=res.clone();caches.open(c).then(x=>x.put(e.request,cl));}return res;});
 if(s==='cacheFirst')e.respondWith(caches.match(e.request).then(h=>h||net()));
@@ -80,7 +84,7 @@ export class OfflineQueue {
     this.now = now;
   }
   add(method: Queued['method'], path: string, body?: unknown): Queued {
-    const q: Queued = { key: `off-${this.now().getTime().toString(36)}-${++this.n}`, method, path, ...(body !== undefined ? { body } : {}), at: this.now().toISOString(), tries: 0 };
+    const q: Queued = { key: `off-${this.now().getTime().toString(36)}-${++this.n}-${globalThis.crypto.randomUUID()}`, method, path, ...(body !== undefined ? { body } : {}), at: this.now().toISOString(), tries: 0 };
     this.items.push(q);
     return q;
   }

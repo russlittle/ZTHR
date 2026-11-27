@@ -43,12 +43,16 @@ export class Privacy {
     return [...this.sources.values()].map((s) => ({ name: s.name, description: s.description }));
   }
 
-  /** Everything about a person, as an archive: one JSON file per source, a manifest, and a readable summary. */
+  /** Everything about a person, as an archive: one JSON file per source (each its own name), a manifest, and a readable summary. */
   async export(person: string): Promise<{ archive: Buffer; manifest: Manifest }> {
     const files: { name: string; data: string }[] = [];
     const sources: Manifest['sources'][number][] = [];
+    const used = new Set(['manifest.json', 'readme.txt']);
     for (const s of this.sources.values()) {
-      const file = `${s.name.replace(/[^a-z0-9-]+/gi, '-')}.json`;
+      const stem = s.name.replace(/[^a-z0-9-]+/gi, '-') || 'source';
+      let file = `${stem}.json`;
+      for (let n = 2; used.has(file.toLowerCase()); n++) file = `${stem}-${n}.json`;
+      used.add(file.toLowerCase());
       try {
         const rows = await s.export(person);
         files.push({ name: file, data: JSON.stringify(rows, null, 2) });

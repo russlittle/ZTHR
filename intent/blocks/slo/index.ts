@@ -29,12 +29,19 @@ export function burnRate(o: Objective, w: Window): number {
   return (w.total - w.good) / w.total / (1 - o.target);
 }
 
-/** The usual pairs: page at 14.4x over 1h and 5m; page at 6x over 6h and 30m; ticket at 1x over 3d and 6h. */
+/**
+ * The usual pairs (Google SRE workbook, multi-window multi-burn-rate): page when 2% of the budget goes in 1h
+ * (checked with 5m), page at 5% in 6h (with 30m), ticket at 10% in 3d (with 6h). `rate` is the burn rate that
+ * means for a 30-day objective; for another window it scales with the window's length.
+ */
 export const POLICY = [
   { severity: 'page', rate: 14.4, long: '1h', short: '5m' },
   { severity: 'page', rate: 6, long: '6h', short: '30m' },
   { severity: 'ticket', rate: 1, long: '3d', short: '6h' },
 ] as const;
+
+/** The burn rate at which a policy line fires for this objective's window. */
+export const threshold = (o: Objective, rate: number) => Math.round(rate * (o.windowDays / 30) * 1e9) / 1e9;
 
 export function alerts(o: Objective, windows: Readonly<Record<string, Window>>): { severity: 'page' | 'ticket'; because: string }[] {
   const out: { severity: 'page' | 'ticket'; because: string }[] = [];
@@ -44,7 +51,8 @@ export function alerts(o: Objective, windows: Readonly<Record<string, Window>>):
     if (!l || !s) continue;
     const bl = burnRate(o, l);
     const bs = burnRate(o, s);
-    if (bl >= p.rate && bs >= p.rate) out.push({ severity: p.severity, because: `${o.name} burning ${bl.toFixed(1)}x over ${p.long} and ${bs.toFixed(1)}x over ${p.short} (limit ${p.rate}x)` });
+    const limit = threshold(o, p.rate);
+    if (bl >= limit && bs >= limit) out.push({ severity: p.severity, because: `${o.name} burning ${bl.toFixed(1)}x over ${p.long} and ${bs.toFixed(1)}x over ${p.short} (limit ${limit}x)` });
   }
   return out;
 }
@@ -98,7 +106,7 @@ export class Incidents {
   postmortem(id: number, p: Postmortem): void {
     const i = this.list[id - 1];
     if (!i) throw new Error(`no incident ${id}`);
-    const missing = [!p.cause.trim() && 'a cause', !p.impact.trim() && 'the impact', !p.actions.length && 'at least one action', ...p.actions.filter((a) => !a.owner).map((a) => `an owner for "${a.what}"`)].filter(Boolean);
+    const missing = [!p.cause.trim() && 'a cause', !p.impact.trim() && 'the impact', !p.actions.length && 'at least one action', ...p.actions.filter((a) => !a.owner?.trim()).map((a) => `an owner for "${a.what}"`)].filter(Boolean);
     if (missing.length) throw new Error(`a postmortem needs ${missing.join(', ')}`);
     i.postmortem = p;
   }

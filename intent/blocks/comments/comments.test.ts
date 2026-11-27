@@ -43,3 +43,33 @@ test('edits keep history, deletion leaves a marker, reactions toggle, and displa
   assert.equal(a.edits.length, 0, 'the removed words are gone, history included');
   assert.throws(() => c.post('u1', 'doc:1', '   '), /needs some text/);
 });
+
+test('a mention at the end of a sentence still counts', () => {
+  const c = make();
+  assert.deepEqual(c.post('u1', 'doc:1', 'Over to you, @ben.').mentions, ['u2']);
+  assert.deepEqual(c.post('u1', 'doc:1', 'Ask @ben...').mentions, ['u2']);
+});
+
+test('an edit is held to the same rules as a post', () => {
+  const c = make();
+  const a = c.post('u1', 'doc:1', 'hello');
+  assert.throws(() => c.edit('u1', a.id, '   '), /needs some text/);
+  assert.throws(() => c.edit('u1', a.id, 'x'.repeat(10_001)), /at most 10000/);
+  assert.equal(a.text, 'hello');
+  assert.equal(a.edits.length, 0);
+});
+
+test('a mention link covers only the whole name, not the start of a longer word', () => {
+  const c = make();
+  const a = c.post('u1', 'doc:1', 'cc @ben, not @benny');
+  assert.equal(display(a, (w) => `/p/${w}`, (w) => names[w]!), 'cc <a href="/p/u2">@ben</a>, not @benny');
+});
+
+test('any reaction text is safe, even one named like an object property', () => {
+  const c = make();
+  const a = c.post('u1', 'doc:1', 'hello');
+  c.react('u2', a.id, '__proto__');
+  c.react('u2', a.id, 'constructor');
+  assert.deepEqual(Object.entries(a.reactions), [['__proto__', ['u2']], ['constructor', ['u2']]]);
+  assert.equal(({} as Record<string, unknown>).u2, undefined);
+});

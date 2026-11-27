@@ -35,3 +35,21 @@ test('a soak finds a steady climb that no single sample would flag, and ignores 
   const flat = Array.from({ length: 48 }, (_, i) => ({ at: i * hour * 0.25, value: 200 + ((i * 7) % 11) }));
   assert.equal(soak(flat, 1).leak, false);
 });
+
+test('throughput is measured over the time the run really took, so a service that cannot keep up fails minRps', async () => {
+  let clock = 0;
+  const slow = async () => {
+    await null;
+    clock += 1000;
+  };
+  const r = await load(slow, { rps: 10, seconds: 1, limits: { minRps: 9 }, now: () => clock, sleep: async (ms) => void (clock += ms) });
+  assert.equal(r.sent, 10);
+  assert.equal(r.pass, false, JSON.stringify(r));
+  assert.match(r.failures[0]!, /requests a second is under 9/);
+});
+
+test('a target that throws before returning a promise counts as an error, not a crashed run', async () => {
+  let clock = 0;
+  const r = await load(() => { throw new Error('bad config'); }, { rps: 5, seconds: 1, limits: {}, now: () => clock, sleep: async (ms) => void (clock += ms) });
+  assert.deepEqual([r.sent, r.errors], [5, 5]);
+});

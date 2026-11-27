@@ -4,7 +4,7 @@
  * its source; an applied migration whose source has changed since is refused, because the database and the code
  * would no longer agree about what was done. One runner holds a lease while it works, so two starting servers never
  * migrate at once; a dry run lists what would run without touching anything; a failed step or verify stops the run
- * and is recorded with the error.
+ * and is reported with the error, leaving it unrecorded so it runs again next time.
  */
 import { createHash } from 'node:crypto';
 
@@ -62,7 +62,10 @@ export async function migrate<Db>(db: Db, list: readonly Migration<Db>[], ledger
   if (!(await ledger.lock(o.owner, o.lockMs ?? 600_000))) return { ran: [], pending: [...p.pending], problems: ['another runner is migrating; this one waits'] };
   const ran: string[] = [];
   try {
-    for (const id of p.pending) {
+    // Read the ledger again under the lease: another runner may have finished between the first read and the lock.
+    const q = plan(list, await ledger.applied());
+    if (q.problems.length) return { ran: [], pending: [...q.pending], problems: [...q.problems] };
+    for (const id of q.pending) {
       const m = list.find((x) => x.id === id)!;
       const t0 = now();
       try {
@@ -70,7 +73,7 @@ export async function migrate<Db>(db: Db, list: readonly Migration<Db>[], ledger
         const v = m.verify ? await m.verify(db) : true;
         if (v !== true) throw new Error(typeof v === 'string' ? v : 'verify said no');
       } catch (e) {
-        return { ran, pending: p.pending.filter((x) => !ran.includes(x)), problems: [], failed: { id, error: e instanceof Error ? e.message : String(e) } };
+        return { ran, pending: q.pending.filter((x) => !ran.includes(x)), problems: [], failed: { id, error: e instanceof Error ? e.message : String(e) } };
       }
       await ledger.record({ id, checksum: checksum(m as Migration<unknown>), at: new Date(now()).toISOString(), ms: now() - t0 });
       ran.push(id);

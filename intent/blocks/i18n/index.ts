@@ -12,7 +12,21 @@ export type Catalogue = Readonly<Record<string, Message>>;
 
 const RTL = new Set(['ar', 'he', 'fa', 'ur', 'ps', 'sd', 'yi', 'dv', 'ug']);
 
-export const direction = (locale: string): 'rtl' | 'ltr' => (RTL.has(locale.split('-')[0]!.toLowerCase()) ? 'rtl' : 'ltr');
+const RTL_SCRIPTS = new Set(['Arab', 'Hebr', 'Syrc', 'Thaa', 'Nkoo', 'Adlm', 'Rohg', 'Mand', 'Samr', 'Armi', 'Mend']);
+
+/** Right-to-left for right-to-left scripts, whether named in the tag (az-Arab) or implied by the language (ckb). */
+export function direction(locale: string): 'rtl' | 'ltr' {
+  try {
+    const l = new Intl.Locale(locale) as Intl.Locale & { textInfo?: { direction?: string } };
+    const d = l.textInfo?.direction;
+    if (d === 'rtl' || d === 'ltr') return d;
+    const script = l.maximize().script;
+    if (script) return RTL_SCRIPTS.has(script) ? 'rtl' : 'ltr';
+  } catch {
+    // Not a well-formed tag: fall back to the language list.
+  }
+  return RTL.has(locale.split('-')[0]!.toLowerCase()) ? 'rtl' : 'ltr';
+}
 
 /** fr-CA → [fr-CA, fr, source]. */
 export function chain(locale: string, source: string): string[] {
@@ -39,8 +53,11 @@ export function negotiate(header: string | undefined, supported: readonly string
     const t = tag.toLowerCase();
     const exact = lower.indexOf(t);
     if (exact >= 0) return supported[exact]!;
-    const base = lower.findIndex((s) => s === t.split('-')[0] || s.split('-')[0] === t.split('-')[0]);
-    if (base >= 0) return supported[base]!;
+    const lang = t.split('-')[0]!;
+    const plain = lower.indexOf(lang);
+    if (plain >= 0) return supported[plain]!;
+    const sibling = lower.findIndex((s) => s.split('-')[0] === lang);
+    if (sibling >= 0) return supported[sibling]!;
   }
   return fallback;
 }
@@ -51,14 +68,15 @@ export class I18n {
   readonly missing = new Set<string>();
 
   constructor(catalogues: Readonly<Record<string, Catalogue>>, source: string) {
-    if (!catalogues[source]) throw new Error(`no catalogue for the source language ${source}`);
+    if (!Object.hasOwn(catalogues, source)) throw new Error(`no catalogue for the source language ${source}`);
     this.catalogues = catalogues;
     this.source = source;
   }
 
   t(locale: string, key: string, values: Readonly<Record<string, string | number>> = {}): string {
     for (const l of chain(locale, this.source)) {
-      const m = this.catalogues[l]?.[key];
+      const cat = Object.hasOwn(this.catalogues, l) ? this.catalogues[l] : undefined;
+      const m = cat && Object.hasOwn(cat, key) ? cat[key] : undefined;
       if (m === undefined) continue;
       if (l !== locale) this.missing.add(`${locale}:${key}`);
       let text: string | undefined;
@@ -66,12 +84,12 @@ export class I18n {
       else {
         const n = values.count;
         if (typeof n !== 'number') throw new Error(`${key} has plural forms and needs a count`);
-        const exact = (m as Record<string, string | undefined>)[`=${n}`];
-        text = exact ?? m[new Intl.PluralRules(l).select(n)] ?? m.other;
+        const own = (k: string) => (Object.hasOwn(m, k) ? (m as Record<string, string | undefined>)[k] : undefined);
+        text = own(`=${n}`) ?? own(new Intl.PluralRules(l).select(n)) ?? own('other');
       }
       if (text === undefined) continue;
       return text.replace(/\{(\w+)\}/g, (_, k: string) => {
-        const v = values[k];
+        const v = Object.hasOwn(values, k) ? values[k] : undefined;
         if (v === undefined) throw new Error(`${key} needs {${k}}`);
         return typeof v === 'number' ? new Intl.NumberFormat(l).format(v) : v;
       });
@@ -88,9 +106,9 @@ export class I18n {
       if (l === this.source) continue;
       const needs = new Intl.PluralRules(l).resolvedOptions().pluralCategories;
       out[l] = {
-        missing: Object.keys(src).filter((k) => !(k in cat)).sort(),
-        extra: Object.keys(cat).filter((k) => !(k in src)).sort(),
-        plurals: Object.entries(cat).flatMap(([k, m]) => (typeof m === 'string' || typeof src[k] === 'string' ? [] : needs.filter((c) => !(c in m)).map((c) => `${k}.${c}`))).sort(),
+        missing: Object.keys(src).filter((k) => !Object.hasOwn(cat, k)).sort(),
+        extra: Object.keys(cat).filter((k) => !Object.hasOwn(src, k)).sort(),
+        plurals: Object.entries(cat).flatMap(([k, m]) => (typeof m === 'string' || typeof src[k] === 'string' ? [] : needs.filter((c) => !Object.hasOwn(m, c)).map((c) => `${k}.${c}`))).sort(),
       };
     }
     return out;

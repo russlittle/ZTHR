@@ -20,7 +20,16 @@ export interface Backup {
   readonly digest: Readonly<Record<string, { rows: number; hash: string }>>;
 }
 
-const canon = (v: unknown): string => (Array.isArray(v) ? `[${v.map(canon).join(',')}]` : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canon((v as Record<string, unknown>)[k])}`).join(',')}}` : JSON.stringify(v));
+/** JSON with sorted keys: values become what the stored backup holds (dates as ISO text, missing keys left out). */
+const canon = (v: unknown): string => {
+  const j = v !== null && typeof v === 'object' && typeof (v as { toJSON?: unknown }).toJSON === 'function' ? (v as { toJSON: () => unknown }).toJSON() : v;
+  if (Array.isArray(j)) return `[${j.map((x) => (x === undefined || typeof x === 'function' ? 'null' : canon(x))).join(',')}]`;
+  if (j !== null && typeof j === 'object') {
+    const o = j as Record<string, unknown>;
+    return `{${Object.keys(o).filter((k) => o[k] !== undefined && typeof o[k] !== 'function').sort().map((k) => `${JSON.stringify(k)}:${canon(o[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(j) ?? 'null';
+};
 
 /** Per collection: rows and a hash independent of row order. */
 export function digest(d: Data): Record<string, { rows: number; hash: string }> {

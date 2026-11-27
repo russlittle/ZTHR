@@ -27,3 +27,14 @@ test('flow measures: deploys a day, median lead time, change failure rate and ti
   assert.equal(p.where('a', new Date('2026-11-05T00:00:00Z'))!.state, 'done');
   assert.deepEqual(p.measures('2026-11-01T00:00:00Z', '2026-11-05T00:00:00Z'), { deploys: 4, perDay: 1, leadTimeHoursMedian: 7, changeFailureRate: 0.25, restoreHoursMedian: 0.5 });
 });
+
+test('a change shipped, rolled back and shipped again: only the failed deploy counts, and restore time is never negative', () => {
+  const p = make();
+  const at = (h: number) => new Date(Date.UTC(2026, 10, 1, h)).toISOString();
+  go(p, 'x', [['review', 'entered', at(0)], ['review', 'passed', at(0)], ['checks', 'entered', at(0)], ['checks', 'passed', at(0)], ['staging', 'entered', at(0)], ['staging', 'passed', at(1)], ['prod', 'entered', at(1)], ['prod', 'passed', at(2)], ['prod', 'rolledBack', at(3)], ['prod', 'entered', at(5)], ['prod', 'passed', at(6)]]);
+  go(p, 'y', [['review', 'entered', at(0)], ['review', 'passed', at(0)], ['checks', 'entered', at(0)], ['checks', 'passed', at(0)], ['staging', 'entered', at(0)], ['staging', 'rolledBack', at(1)], ['staging', 'passed', at(2)], ['prod', 'entered', at(2)], ['prod', 'passed', at(3)]]);
+  const m = p.measures(at(0), at(24));
+  assert.equal(m.deploys, 3);
+  assert.equal(m.changeFailureRate, 1 / 3, 'a rollback on staging is not a failed deployment');
+  assert.equal(m.restoreHoursMedian, 1);
+});

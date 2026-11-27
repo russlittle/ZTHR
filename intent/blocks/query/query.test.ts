@@ -35,3 +35,20 @@ test('writes do not exist, unknown names and wrong types are refused by name, an
   assert.throws(() => parse('from files where name = "x"; drop'), /cannot read/);
   assert.equal(c.log.filter((l) => l.error).length, 8);
 });
+
+test('a sensitive field cannot be sorted on either: the order would reveal what the mask hides', () => {
+  const c = make();
+  assert.throws(() => c.run('x', 'from files order by email select name'), /cannot sort on email/);
+  assert.deepEqual(c.run('dpo', 'from files order by email select name', { seeSensitive: true }).rows.map((r) => r.name), ['plan.pdf', 'cat.jpg', 'notes.txt']);
+});
+
+test('names inherited from Object.prototype are not fields', () => {
+  const c = make();
+  assert.throws(() => c.run('x', 'from files select constructor'), /files has no field constructor/);
+  assert.throws(() => c.run('x', 'from files where toString = "x"'), /files has no field toString/);
+  assert.throws(() => c.run('x', 'from files order by __proto__'), /files has no field __proto__/);
+});
+
+test('a text value with a bad escape is a query error, not a crash', () => {
+  assert.throws(() => parse('from files where name = "a\\q"'), QueryError);
+});

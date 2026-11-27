@@ -12,7 +12,7 @@ test('a key is shown once, kept as a hash, and allows only its scopes', async ()
   const { k, store } = setup();
   const { key, secret } = await k.issue('ana', 'reporting', ['reports:read']);
   assert.match(secret, /^zk_live_[0-9a-f]{12}_[A-Za-z0-9_-]{32}$/);
-  assert.ok(!JSON.stringify(await store.list('ana')).includes(secret.split('_').pop()!));
+  assert.ok(!JSON.stringify(await store.list('ana')).includes(secret.slice(`zk_live_${key.id}_`.length)));
   assert.equal((await k.check(secret, 'reports:read')).id, key.id);
   await assert.rejects(k.check(secret, 'reports:write'), /does not allow reports:write/);
   await assert.rejects(k.check(`${secret}x`, 'reports:read'), Rejected);
@@ -35,4 +35,17 @@ test('rotation overlaps, then the old key stops; revoked and expired keys stop a
   await assert.rejects(k.check(c.secret, 'x'), /expired/);
   assert.deepEqual((await k.list('ana')).map((x) => x.active), [false, false, false]);
   await assert.rejects(k.revoke('ben', c.key.id), /no such key of yours/);
+});
+
+test('a replacement keeps the expiry the old key had, and a retired or expired key cannot be rotated back to life', async () => {
+  const { k, tick } = setup();
+  const a = await k.issue('ana', 'ci', ['x'], { ttlMs: 10_000 });
+  const b = await k.rotate('ana', a.key.id, 1000);
+  assert.equal(b.key.expires, 1000 + 10_000, 'a key made to expire is not replaced by one that never does');
+  tick(1001);
+  await assert.rejects(k.check(a.secret, 'x'), /was replaced/);
+  await assert.rejects(k.rotate('ana', a.key.id, 60_000), Rejected);
+  await assert.rejects(k.check(a.secret, 'x'), /was replaced/, 'rotating again must not reopen the overlap');
+  tick(10_000);
+  await assert.rejects(k.rotate('ana', b.key.id, 60_000), /expired/);
 });

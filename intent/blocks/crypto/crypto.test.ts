@@ -44,3 +44,18 @@ test('constant-time equality and random ids', () => {
   assert.ok(!equal('abc', 'abcd'));
   assert.match(randomId(), /^[A-Za-z0-9_-]{22}$/);
 });
+
+test('a sealed value whose tag was cut short does not open (GCM tags are always the full 16 bytes)', () => {
+  const ring = { current: 'k1', keys: { k1: newKey() } };
+  const parts = seal(ring, 'secret', 'ctx').split('.');
+  parts[4] = Buffer.from(parts[4]!, 'base64url').subarray(0, 4).toString('base64url');
+  assert.throws(() => open(ring, parts.join('.'), 'ctx'), Unopenable, 'a 4-byte tag is a 2^32 forgery, not an integrity check');
+  const extra = `${seal(ring, 'secret', 'ctx')}.more`;
+  assert.throws(() => open(ring, extra, 'ctx'), Unopenable, 'trailing parts are not a sealed value');
+  assert.throws(() => open(ring, 'v1.constructor.AAAAAAAAAAAAAAAA.AA.AAAAAAAAAAAAAAAAAAAAAA', 'ctx'), Unopenable, 'a key id that names an inherited property is not in the ring');
+});
+
+test('a signed token with anything appended is not the token that was signed', () => {
+  const t = sign('s1', 'p', { user: 'ana' }, 60_000, 1000);
+  assert.throws(() => verify('s1', 'p', `${t}.extra`, 2000), BadToken);
+});

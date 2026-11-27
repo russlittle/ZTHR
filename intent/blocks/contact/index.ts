@@ -15,12 +15,22 @@ export interface Name {
   readonly sortAs?: string;
 }
 
+/** C0 and C1 controls, DEL, and the bidirectional overrides and isolates that can disguise text. */
+const CONTROL = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069<>]/;
+
+const clean = (s: string, what: string): string => {
+  const f = s.normalize('NFC').replace(/\s+/g, ' ').trim();
+  if (f.length > 300) throw new Error(`${what} can be at most 300 characters`);
+  if (CONTROL.test(f)) throw new Error(`${what} cannot contain control characters or angle brackets`);
+  return f;
+};
+
 export function name(full: string, o: { callMe?: string; sortAs?: string } = {}): Name {
-  const f = full.normalize('NFC').replace(/\s+/g, ' ').trim();
+  const f = clean(full, 'a name');
   if (!f) throw new Error('a name cannot be empty');
-  if (f.length > 300) throw new Error('a name can be at most 300 characters');
-  if (/[\u0000-\u001f<>]/.test(f)) throw new Error('a name cannot contain control characters or angle brackets');
-  return { full: f, ...(o.callMe?.trim() ? { callMe: o.callMe.trim() } : {}), ...(o.sortAs?.trim() ? { sortAs: o.sortAs.trim() } : {}) };
+  const callMe = o.callMe === undefined ? '' : clean(o.callMe, 'the name to use');
+  const sortAs = o.sortAs === undefined ? '' : clean(o.sortAs, 'the sort key');
+  return { full: f, ...(callMe ? { callMe } : {}), ...(sortAs ? { sortAs } : {}) };
 }
 
 export const greeting = (n: Name) => n.callMe ?? n.full;
@@ -56,8 +66,10 @@ export const FORMATS: Readonly<Record<string, Format>> = {
   IE: { name: 'Ireland', postcode: /^[A-Z]\d[\dW] ?[A-Z\d]{4}$/i, layout: ['{lines}', '{city}', '{region}', '{postcode}'], upper: ['postcode'] },
 };
 
+const own = <T>(table: Readonly<Record<string, T>>, k: string): T | undefined => (Object.hasOwn(table, k) ? table[k] : undefined);
+
 export function checkAddress(a: Address): string[] {
-  const f = FORMATS[a.country];
+  const f = own(FORMATS, a.country);
   const out: string[] = [];
   if (!a.lines.some((l) => l.trim())) out.push('add a street address');
   if (f?.postcode && a.postcode && !f.postcode.test(a.postcode.trim())) out.push(`${a.postcode} is not a ${f.name} postcode`);
@@ -67,12 +79,12 @@ export function checkAddress(a: Address): string[] {
 
 /** The address as lines for an envelope, in its country's order; adds the country when sending from elsewhere. */
 export function formatAddress(a: Address, from?: string): string[] {
-  const f = FORMATS[a.country] ?? { name: a.country, layout: ['{lines}', '{city} {region} {postcode}'] };
+  const f = own(FORMATS, a.country) ?? { name: a.country, layout: ['{lines}', '{city} {region} {postcode}'] };
   const v = (k: 'city' | 'region' | 'postcode') => {
     const s = (a[k] ?? '').trim();
     return f.upper?.includes(k) ? s.toUpperCase() : s;
   };
-  const out = f.layout.flatMap((line) => (line === '{lines}' ? a.lines.map((l) => l.trim()).filter(Boolean) : [line.replace('{city}', v('city')).replace('{region}', v('region')).replace('{postcode}', v('postcode')).replace(/\s+/g, ' ').replace(/^[\s,-]+|[\s,-]+$/g, '').replace(/^〒$/, '')]));
+  const out = f.layout.flatMap((line) => (line === '{lines}' ? a.lines.map((l) => l.trim()).filter(Boolean) : [line.replace(/\{(city|region|postcode)\}/g, (_, k: 'city' | 'region' | 'postcode') => v(k)).replace(/\s+/g, ' ').replace(/^[\s,-]+|[\s,-]+$/g, '').replace(/^〒$/, '')]));
   if (from && from !== a.country) out.push(f.name.toUpperCase());
   return out.filter(Boolean);
 }
@@ -94,16 +106,17 @@ export const PHONE: Readonly<Record<string, { cc: string; trunk?: string; len: r
 /** E.164 from what was typed, assuming `country` when there is no + or 00 prefix. */
 export function phone(typed: string, country: string): string {
   const t = typed.trim();
-  if (/[a-z]/i.test(t.replace(/\b(ext|x)\.?\s*\d+$/i, ''))) throw new Error('a phone number cannot contain letters');
   const main = t.replace(/\s*(ext|x)\.?\s*\d+$/i, '');
+  if (/[a-z]/i.test(main)) throw new Error('a phone number cannot contain letters');
   let digits = main.replace(/[^\d+]/g, '');
   if (digits.startsWith('00')) digits = `+${digits.slice(2)}`;
   if (digits.startsWith('+')) {
-    const d = digits.slice(1).replace(/\D/g, '');
-    if (d.length < 8 || d.length > 15) throw new Error('that is not a complete international number');
+    // "+44 (0)20 ..." shows the national trunk prefix in brackets; it is not dialled after the country code.
+    const d = main.replace(/^\s*(\+|00)/, '').replace(/\(\s*0\s*\)/, '').replace(/\D/g, '');
+    if (d.length < 8 || d.length > 15 || d.startsWith('0')) throw new Error('that is not a complete international number');
     return `+${d}`;
   }
-  const p = PHONE[country];
+  const p = own(PHONE, country);
   if (!p) throw new Error(`write the number with its country code (+...) for ${country}`);
   let n = digits.replace(/\D/g, '');
   if (p.trunk && n.startsWith(p.trunk) && n.length > p.len[1]) n = n.slice(p.trunk.length);

@@ -3,7 +3,8 @@
  * by its account's default); a request is answered at the latest version and then walked back through each change
  * newer than the pinned one, so every old shape is produced by a small, tested transform rather than by old code
  * kept alive. Deprecated versions answer with Deprecation and Sunset headers (RFC 9745, RFC 8594) and a link to the
- * notes; past sunset they are refused with a clear problem response.
+ * notes (a version with only a sunset date gets the Sunset header); past sunset they are refused with a clear problem
+ * response.
  */
 
 export interface Change {
@@ -33,6 +34,14 @@ export class Versions {
     this.known = [first, ...this.changes.map((c) => c.version)];
     if (new Set(this.known).size !== this.known.length) throw new Error('two changes share a version');
     this.latest = this.known.at(-1)!;
+    const isDate = (d: string) => {
+      const t = Date.parse(`${d}T00:00:00Z`);
+      return /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === d;
+    };
+    for (const l of o.lifecycle ?? []) {
+      if (!this.known.includes(l.version)) throw new Error(`${l.version} in the lifecycle is not a version`);
+      for (const d of [l.deprecated, l.sunset]) if (d !== undefined && !isDate(d)) throw new Error(`${d} is not a date (YYYY-MM-DD)`);
+    }
     this.life = new Map((o.lifecycle ?? []).map((l) => [l.version, l]));
     this.notes = o.notes;
   }
@@ -58,11 +67,11 @@ export class Versions {
   headers(version: string, today: string): { headers: Record<string, string> } | { problem: { status: 410; title: string; detail: string } } {
     const l = this.life.get(version);
     const h: Record<string, string> = { 'api-version': version };
-    if (!l?.deprecated) return { headers: h };
+    if (!l?.deprecated && !l?.sunset) return { headers: h };
     if (l.sunset && today >= l.sunset) return { problem: { status: 410, title: 'API version retired', detail: `${version} was retired on ${l.sunset}; move to ${this.latest} (${this.notes})` } };
-    h.deprecation = `@${Math.floor(Date.parse(`${l.deprecated}T00:00:00Z`) / 1000)}`;
+    if (l.deprecated) h.deprecation = `@${Math.floor(Date.parse(`${l.deprecated}T00:00:00Z`) / 1000)}`;
     if (l.sunset) h.sunset = new Date(`${l.sunset}T00:00:00Z`).toUTCString();
-    h.link = `<${this.notes}>; rel="deprecation"; type="text/html"`;
+    h.link = `<${this.notes}>; rel="${l.deprecated ? 'deprecation' : 'sunset'}"; type="text/html"`;
     return { headers: h };
   }
 

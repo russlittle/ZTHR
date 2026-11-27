@@ -10,6 +10,7 @@
  *   FILES_ADMIN_PASSWORD their password, from Secret Manager; needed only on first start
  *   FILES_QUOTA          a default quota for new people ("50 GB", "none")
  *   FILES_MAX_CHUNK      the largest upload chunk ("30 MB" on Cloud Run, whose HTTP/1 limit is 32 MiB)
+ *   FILES_PROXY_HOPS     proxies in front that append to X-Forwarded-For (Cloud Run: 1; default 0, the header is ignored)
  *
  * The state is saved after every change and on shutdown; a sweep of the trash, old versions, idle uploads and
  * expired links runs every six hours.
@@ -53,7 +54,7 @@ async function main() {
     log({ severity: 'NOTICE', message: `created the first admin, ${id}` });
   }
   const port = Number(env['PORT'] ?? 8080);
-  const server = await serve(files, port, { ...(env['FILES_ORIGIN'] ? { origin: env['FILES_ORIGIN'] } : {}), log });
+  const server = await serve(files, port, { ...(env['FILES_ORIGIN'] ? { origin: env['FILES_ORIGIN'] } : {}), proxyHops: Number(env['FILES_PROXY_HOPS'] ?? 0) || 0, log });
   log({ severity: 'NOTICE', message: `Files listening on ${port}`, store: env['FILES_STORE'] ?? 'disk' });
   const sweep = setInterval(async () => {
     try {

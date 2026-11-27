@@ -10,7 +10,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { encodePath } from '../../intent/blocks/dav/index.ts';
 import { NotFound } from '../../intent/blocks/tree/index.ts';
 import type { Files } from './app.ts';
-import { esc, fields, header, statusOf, type Reply, type Req } from './http.ts';
+import { esc, fields, header, signInAs, statusOf, type Reply, type Req } from './http.ts';
 import type { Person } from './state.ts';
 
 interface WebSession {
@@ -77,13 +77,13 @@ const page = (status: number, title: string, body: string, who?: { person: Perso
   body: shell(title, body, who),
 });
 
-const loginForm = (next: string, err = '', user = '') =>
-  page(err ? 401 : 200, 'Sign in', `<h1>Sign in</h1>${err ? `<p class="err" role="alert">${esc(err)}</p>` : ''}<form method="post" action="/login" style="max-width:22rem">
+const loginForm = (next: string, err = '', user = '', status = err ? 401 : 200, headers: Record<string, string> = {}) =>
+  page(status, 'Sign in', `<h1>Sign in</h1>${err ? `<p class="err" role="alert">${esc(err)}</p>` : ''}<form method="post" action="/login" style="max-width:22rem">
 <input type="hidden" name="next" value="${esc(next)}">
 <p><label for="user">Login name</label><input type="text" id="user" name="user" autocomplete="username" required value="${esc(user)}" style="width:100%"></p>
 <p><label for="password">Password</label><input type="password" id="password" name="password" autocomplete="current-password" required style="width:100%"></p>
 <p><button class="primary" type="submit">Sign in</button></p></form>
-<p class="muted">On a computer or phone, add this server's address in the Nextcloud app instead: it signs in through this browser once and keeps its own password.</p>`);
+<p class="muted">On a computer or phone, add this server's address in the Nextcloud app instead: it signs in through this browser once and keeps its own password.</p>`, undefined, headers);
 
 const safeNext = (n: string | undefined) => (n && n.startsWith('/apps/files') ? n : '/apps/files');
 
@@ -100,7 +100,7 @@ export async function web(files: Files, r: Req): Promise<Reply> {
   if (p === '/login' && r.method === 'POST') {
     const f = await fields(r);
     try {
-      const s = await files.signIn(f['user'] ?? '', f['password'] ?? '');
+      const s = await signInAs(files, r, f['user'] ?? '', f['password'] ?? '');
       if (s.device !== undefined) return loginForm(safeNext(f['next']), 'Sign in here with your account password, not an app password.', f['user'] ?? '');
       const id = randomBytes(32).toString('base64url');
       sessions.set(id, { user: s.person.id, csrf: randomBytes(24).toString('base64url'), until: Date.now() + HOURS * 3600_000 });
@@ -108,7 +108,8 @@ export async function web(files: Files, r: Req): Promise<Reply> {
       return { status: 303, headers: { location: safeNext(f['next']), 'set-cookie': `${COOKIE}=${id}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${HOURS * 3600}` } };
     } catch (e) {
       const st = statusOf(e);
-      return loginForm(safeNext(f['next']), st.status === 429 ? 'Too many failed sign-ins. Wait a minute and try again.' : 'That login name and password did not sign in.', f['user'] ?? '');
+      if (st.status === 429) return loginForm(safeNext(f['next']), 'Too many failed sign-ins. Wait a minute and try again.', f['user'] ?? '', 429, { 'retry-after': String(st.retryAfter ?? 60) });
+      return loginForm(safeNext(f['next']), 'That login name and password did not sign in.', f['user'] ?? '');
     }
   }
   const who = webSession(files, r);

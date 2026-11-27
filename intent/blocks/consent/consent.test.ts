@@ -34,3 +34,10 @@ test('withdrawing is a new record, as easy as giving; required terms cannot be w
   assert.throws(() => c.withdraw('ben', 'terms', 'settings'), /closing the account/);
   assert.throws(() => c.agree('ben', 'cookies', 'banner'), /no version/);
 });
+
+test('a version number cannot be reused or go backwards while a newer version is still waiting to take effect', () => {
+  const c = new Consent(() => new Date('2026-11-01T00:00:00Z'));
+  c.publish({ doc: 'terms', version: 1, effective: '2026-01-01', requiresAgreement: true, required: true, summary: '' });
+  c.publish({ doc: 'terms', version: 2, effective: '2026-12-01', requiresAgreement: true, required: true, summary: 'new fees' });
+  assert.throws(() => c.publish({ doc: 'terms', version: 2, effective: '2026-12-15', requiresAgreement: false, required: true, summary: 'other' }), /already at version 2/);
+});

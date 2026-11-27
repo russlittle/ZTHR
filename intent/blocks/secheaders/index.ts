@@ -22,7 +22,14 @@ const FEATURES = ['camera', 'microphone', 'geolocation', 'payment', 'usb', 'seri
 
 export const nonce = () => randomBytes(16).toString('base64');
 
+/** A CSP source expression: no whitespace, and none of the characters that end a source list or a directive. */
+const SOURCE = /^[^\s;,]+$/;
+/** A nonce is base64 (CSP's base64-value), so it cannot close its quotes or start another directive. */
+const NONCE = /^[A-Za-z0-9+/_-]+={0,2}$/;
+
 export function headers(o: HeaderOptions = {}): Record<string, string> {
+  if (o.nonce !== undefined && !NONCE.test(o.nonce)) throw new Error('a CSP nonce must be base64');
+  for (const xs of Object.values(o.allow ?? {})) for (const x of xs ?? []) if (!SOURCE.test(x)) throw new Error(`"${x}" is not a single CSP source`);
   const extra = (d: keyof NonNullable<HeaderOptions['allow']>) => (o.allow?.[d] ?? []).map((x) => ` ${x}`).join('');
   const csp = o.api
     ? "default-src 'none'; frame-ancestors 'none'"
@@ -54,8 +61,21 @@ export function headers(o: HeaderOptions = {}): Record<string, string> {
   };
 }
 
-/** Cookie attributes for a session: never readable by script, only over HTTPS, not sent on cross-site posts. */
-export const sessionCookie = (name: string, value: string, maxAgeSeconds: number) => `__Host-${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAgeSeconds}`;
+/** RFC 6265 cookie-name (a token) and cookie-value octets, so neither can add an attribute or another header. */
+const COOKIE_NAME = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+const COOKIE_VALUE = /^[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]*$/;
+
+/**
+ * Cookie attributes for a session: never readable by script, only over HTTPS, not sent on cross-site posts. The
+ * __Host- prefix pins it to this host (Secure, Path=/, no Domain). A name or value that would break out of the
+ * cookie is refused.
+ */
+export const sessionCookie = (name: string, value: string, maxAgeSeconds: number) => {
+  if (!COOKIE_NAME.test(name)) throw new Error(`"${name}" is not a cookie name`);
+  if (!COOKIE_VALUE.test(value)) throw new Error('that value cannot be put in a cookie as it is; encode it first');
+  if (!Number.isInteger(maxAgeSeconds)) throw new Error('a cookie Max-Age is a whole number of seconds');
+  return `__Host-${name}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAgeSeconds}`;
+};
 
 // ---------------------------------------------------------------- cross-site requests
 

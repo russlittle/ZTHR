@@ -38,3 +38,26 @@ test('the board puts overdue and severe first; a defect comes with evidence and 
   f.move(up.id, 'fixed');
   assert.deepEqual(f.board().map((x) => x.id), [typo.id]);
 });
+
+test('nothing a person wrote can escape the comments or the string of the generated test', () => {
+  const f = new Feedback({ now: () => new Date('2026-11-26T09:00:00Z') });
+  const t = f.report('ana', 'uploads fail\nprocess.exit(1)').ticket;
+  f.triage(t.id, 'major');
+  const d = f.defect(t.id, { steps: ['open files\nrequire("child_process").execSync("rm -rf /")'], expected: "it works\n'); process.exit(2); ('", actual: 'it breaks\u2028process.exit(3)' });
+  const code = d.test.split(/\r?\n|\u2028|\u2029/);
+  for (const line of code) assert.ok(/^(import |\s*\/\/|test\(|\s*assert\.fail|\}\);|$)/.test(line), `stray code: ${line}`);
+  assert.doesNotThrow(() => new Function(d.test.replace(/^import .*$/gm, '')));
+});
+
+test('secrets in key=value form are hidden however the key is spelled', () => {
+  const f = new Feedback();
+  const r = f.report('ana', 'failed with api_key=sk_live_123 access_token: abc secret=xyz Authorization: Bearer eyJabc').report.said;
+  for (const s of ['sk_live_123', 'abc ', 'xyz', 'eyJabc']) assert.ok(!r.includes(s), r);
+});
+
+test('redaction stays fast on a long unbroken paste', () => {
+  const f = new Feedback();
+  const t0 = performance.now();
+  f.report('ana', 'a'.repeat(200_000));
+  assert.ok(performance.now() - t0 < 500, `${performance.now() - t0} ms`);
+});

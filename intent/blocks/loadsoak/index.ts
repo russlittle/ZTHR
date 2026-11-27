@@ -43,7 +43,10 @@ export function judge(latencies: readonly number[], errors: number, seconds: num
   return { ...r, pass: f.length === 0, failures: f };
 }
 
-/** Calls `target` at `rps` for `seconds`; calls start on schedule whether or not earlier ones have finished. */
+/**
+ * Calls `target` at `rps` for `seconds`; calls start on schedule whether or not earlier ones have finished. The
+ * reported rate is over the whole run, until the last call settles.
+ */
 export async function load(target: () => Promise<unknown>, o: { rps: number; seconds: number; limits: Limits; now?: () => number; sleep?: (ms: number) => Promise<void> }): Promise<Report> {
   const now = o.now ?? (() => performance.now());
   const sleep = o.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
@@ -57,15 +60,22 @@ export async function load(target: () => Promise<unknown>, o: { rps: number; sec
     const wait = due - now();
     if (wait > 0) await sleep(wait);
     const t0 = now();
+    let call: Promise<unknown>;
+    try {
+      call = Promise.resolve(target());
+    } catch (e) {
+      call = Promise.reject(e);
+    }
     running.push(
-      target().then(
+      call.then(
         () => void lat.push(now() - t0),
         () => void errors++,
       ),
     );
   }
   await Promise.all(running);
-  return judge(lat, errors, o.seconds, o.limits);
+  // Throughput over the time the run really took: a service that cannot keep up stretches it past the plan.
+  return judge(lat, errors, Math.max(o.seconds, (now() - start) / 1000), o.limits);
 }
 
 /** Least-squares slope of samples over time, per hour. */

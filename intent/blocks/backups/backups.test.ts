@@ -44,3 +44,13 @@ test('retention keeps daily, weekly and monthly backups and says why', () => {
   assert.equal(r.keep.length + r.drop.length, 60);
   assert.ok(r.keep.length < 14);
 });
+
+test('dates and missing values hash as they are stored, so a restore matches and a changed date does not', async () => {
+  const at = new Date('2026-11-01T00:00:00Z');
+  const live: Data = { events: [{ id: 1, at, note: undefined }] };
+  const db = { dump: async () => live, load: async () => {} };
+  const b = await backup(db, new Date('2026-11-24T02:00:00Z'));
+  const d = await drill(b, memoryStore(), { targetMs: 60_000 });
+  assert.deepEqual(d.problems, []);
+  assert.notDeepEqual(digest({ e: [{ at: new Date('2026-11-01T00:00:00Z') }] }), digest({ e: [{ at: new Date('2027-01-01T00:00:00Z') }] }));
+});

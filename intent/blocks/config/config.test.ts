@@ -47,3 +47,21 @@ test('drift lists every setting whose live value differs from what was signed', 
     { name: 'EXTRA', declared: undefined, live: 'x' },
   ]);
 });
+
+test('a variable set to nothing gets its default, as one left out does', async () => {
+  const v = await load(DECL, { PUBLIC_URL: 'https://a.org', WORKERS: '', SESSION_TTL: '' }, envSecrets({ PAYMENTS_KEY: 'sk_live_x' }), { production: false });
+  assert.equal(v['WORKERS'], 2);
+  assert.equal(v['SESSION_TTL'], 43_200_000);
+});
+
+test('a duration too large to be a number of milliseconds is refused, not read as Infinity', async () => {
+  const decl: Setting[] = [{ name: 'T', kind: 'duration', description: 't' }];
+  await assert.rejects(load(decl, { T: `${'9'.repeat(400)}d` }, envSecrets({}), { production: false }), /T must be a duration/);
+});
+
+test('an unreadable rotation date marks the secret overdue instead of breaking the inventory', () => {
+  const inv = inventory(DECL, {}, { PAYMENTS_KEY: 'last spring' }, new Date('2026-11-26'));
+  const key = inv.find((x) => x.name === 'PAYMENTS_KEY')!;
+  assert.equal(key.overdue, true);
+  assert.equal(key.lastRotated, 'last spring');
+});

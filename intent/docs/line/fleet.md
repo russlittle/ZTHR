@@ -49,7 +49,7 @@ Every app can reach the tools people already use, through 20 connectors of 5 kin
 
 ### Housekeeping blocks
 
-The fleet maintains the code most apps get wrong, as tested blocks every product starts from (266 tests between them):
+The fleet maintains the code most apps get wrong, as tested blocks every product starts from (465 tests between them):
 
 | Block | What it holds | Tests |
 | --- | --- | --- |
@@ -130,13 +130,20 @@ The fleet maintains the code most apps get wrong, as tested blocks every product
 | [mcp](../../blocks/mcp/index.ts) | Agent tools over the Model Context Protocol: a JSON-RPC 2.0 handler with initialize, tools/list and tools/call, schema-checked arguments, per-person permissions, read-only hints and a call log | 2 |
 | [query](../../blocks/query/index.ts) | A read-only query console: a small query language parsed and checked against declared collections, capped results, masked sensitive fields, no filtering on hidden values, and a log of every query | 2 |
 | [uat](../../blocks/uat/index.ts) | Test-environment overrides of flags, clock and role for one tester, time-limited with a reason, shown on a banner, recorded, and refused in production | 2 |
+| [importer](../../blocks/importer/index.ts) | One way in for data from anywhere: uploaded bytes or pasted text recognised as CSV/TSV, .xlsx, .docx, JSON, JSON lines, vCard, iCalendar or a pasted table or address list, decoded from UTF-8 or UTF-16, held to size and row limits, matched to fields, with every bad row quarantined by where it was and why | 11 |
+| [ask](../../blocks/ask/index.ts) | Plain-language questions over a declared dataset: a model's proposed report is checked against the fields, measures and filters the person may see, small groups are suppressed, and the answer comes with its records, a plain-English description of what was computed, and the report itself | 6 |
+| [etl](../../blocks/etl/index.ts) | Declared extract-transform-load pipelines with per-step page checkpoints that resume, idempotent loads by id, capped row-level error capture, dry runs, per-run lineage with an every-row-accounted check, a cron schedule and a watch for stale, failed or drifting runs | 10 |
+| [console](../../blocks/console/index.ts) | The model behind the admin console, housekeeping console and feature explorer: sections of items with status, reason, path and permission built from the app's registries, filtered by permission with a summary line, plus a feature explorer that joins and searches features, screens, flags, journeys and evidence | 7 |
+| [factoryreports](../../blocks/factoryreports/index.ts) | Feature reports, operations reports and the improvement brief as documents with tables and evidenced findings, rendered to Markdown and delivered on a schedule, with the brief ranking what to change next by weighted evidence and saying why | 7 |
+| [walkthrough](../../blocks/walkthrough/index.ts) | A guided, ordered walk through a feature's journey steps showing each claim, its evidence and whether that evidence is current, with step-by-step sign-off refused on stale, failed, missing or untraceable evidence and voided when covered code changes | 5 |
+| [speech](../../blocks/speech/index.ts) | Speech transcripts turned into palette commands with spoken confirmation for destructive ones, dictation with spoken punctuation and corrections, and numbers and dates spoken in words, with a feature-detected Web Speech adapter | 9 |
 
 ```mermaid
 xychart-beta
   title "Library blocks built in this repository, by the tests each carries; every product that uses one inherits them."
-  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "ux", "conflicts", "jobs", "accounts", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "tabular", "time", "upkeep", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "reports", "search", "i18n", "booking", "contact", "payments", "docparse", "imagemeta", "palette", "testdata", "surfaces", "backups", "loadsoak", "datagate", "pwa", "migrations", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter", "analytics", "pdf", "geo", "sitemap", "apiver", "drafts", "privacy", "pipeline", "sync", "feedback", "cmi5", "mcp", "query", "uat"]
+  x-axis ["tree", "importer", "objects", "etl", "speech", "uploads", "grants", "dav", "console", "factoryreports", "leases", "devices", "ux", "ask", "conflicts", "jobs", "accounts", "walkthrough", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "tabular", "time", "upkeep", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "reports", "search", "i18n", "booking", "contact", "payments", "docparse", "imagemeta", "palette", "testdata", "surfaces", "backups", "loadsoak", "datagate", "pwa", "migrations", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter", "analytics", "pdf", "geo", "sitemap", "apiver", "drafts", "privacy", "pipeline", "sync", "feedback", "cmi5", "mcp", "query", "uat"]
   y-axis "tests" 0 --> 50
-  bar [12, 10, 8, 8, 8, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+  bar [12, 11, 10, 10, 9, 8, 8, 8, 7, 7, 6, 6, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 ```
 
 ## Architect

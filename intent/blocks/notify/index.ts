@@ -48,7 +48,7 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 export function render(t: string, values: Readonly<Record<string, string | number>>, html = true): string {
   const missing: string[] = [];
   const out = t.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_, k: string) => {
-    if (!(k in values)) {
+    if (!Object.hasOwn(values, k)) {
       missing.push(k);
       return '';
     }
@@ -76,7 +76,7 @@ export class Notify {
   private readonly prefs = new Map<string, Prefs>();
   private readonly suppressed = new Map<string, string>();
   private readonly unsubscribed = new Set<string>();
-  private readonly held: { to: string; m: Message; template: string }[] = [];
+  private readonly held: { to: string; m: Message; template: string; category: string }[] = [];
   private readonly digests = new Map<string, { template: string; subject: string }[]>();
   readonly receipts: Receipt[] = [];
   private readonly o: Required<NotifyOptions>;
@@ -122,9 +122,11 @@ export class Notify {
     const p = this.prefs.get(who) ?? { tz: 'UTC' };
     const cat = p.categories?.[t.category];
     const channels: readonly Channel[] = t.essential ? ['email'] : (cat?.channels ?? ['email', 'inbox']);
-    const subject = render(t.subject, values, false);
+    // A subject becomes a mail header: a line break in a value must not start a new header.
+    const subject = render(t.subject, values, false).replace(/[\r\n\u0085\u2028\u2029]+/g, ' ');
     const body = render(t.body, values);
     const out: Receipt[] = [];
+    let collected = false;
     if (!t.essential && this.unsubscribed.has(`${who}\n${t.category}`)) return [this.receipt({ to: who, template: t.key, channel: 'email', outcome: 'off', why: 'unsubscribed' })];
     for (const channel of channels) {
       if (channel === 'email' && this.suppressed.has(address.toLowerCase())) {
@@ -132,9 +134,12 @@ export class Notify {
         continue;
       }
       if (!t.essential && cat?.digest) {
-        const list = this.digests.get(who) ?? [];
-        list.push({ template: t.key, subject });
-        this.digests.set(who, list);
+        if (!collected) {
+          const list = this.digests.get(who) ?? [];
+          list.push({ template: t.key, subject });
+          this.digests.set(who, list);
+          collected = true;
+        }
         out.push(this.receipt({ to: who, template: t.key, channel, outcome: 'digest' }));
         continue;
       }
@@ -145,7 +150,7 @@ export class Notify {
       }
       const m: Message = { to: channel === 'email' ? address : who, channel, subject, body, headers };
       if (!t.essential && !o.urgent && p.quiet && inQuiet(localHour(this.o.now(), p.tz), p.quiet)) {
-        this.held.push({ to: who, m, template: t.key });
+        this.held.push({ to: who, m, template: t.key, category: t.category });
         out.push(this.receipt({ to: who, template: t.key, channel, outcome: 'held', why: 'quiet hours' }));
         continue;
       }
@@ -155,14 +160,27 @@ export class Notify {
     return out;
   }
 
-  /** Sends what quiet hours held, for people whose quiet hours have ended. */
+  /**
+   * Sends what quiet hours held, oldest first, for people whose quiet hours have ended. A bounce or an unsubscribe
+   * that arrived while it was held still applies.
+   */
   async release(): Promise<number> {
     let n = 0;
-    for (let i = this.held.length - 1; i >= 0; i--) {
-      const h = this.held[i]!;
+    const due = this.held.filter((h) => {
       const p = this.prefs.get(h.to);
-      if (p?.quiet && inQuiet(localHour(this.o.now(), p.tz), p.quiet)) continue;
-      this.held.splice(i, 1);
+      return !(p?.quiet && inQuiet(localHour(this.o.now(), p.tz), p.quiet));
+    });
+    for (const h of due) {
+      this.held.splice(this.held.indexOf(h), 1);
+      const address = h.m.to.toLowerCase();
+      if (h.m.channel === 'email' && this.suppressed.has(address)) {
+        this.receipt({ to: h.to, template: h.template, channel: h.m.channel, outcome: 'suppressed', why: `address ${this.suppressed.get(address)} bounced` });
+        continue;
+      }
+      if (this.unsubscribed.has(`${h.to}\n${h.category}`)) {
+        this.receipt({ to: h.to, template: h.template, channel: h.m.channel, outcome: 'off', why: 'unsubscribed' });
+        continue;
+      }
       await this.o.send(h.m);
       this.receipt({ to: h.to, template: h.template, channel: h.m.channel, outcome: 'sent', why: 'after quiet hours' });
       n++;
@@ -170,11 +188,22 @@ export class Notify {
     return n;
   }
 
-  /** One message per person with everything collected since the last digest. */
+  /**
+   * One message per person with everything collected since the last digest. Nothing goes to an address that
+   * bounced or to someone who used the digest's unsubscribe link; what was collected is dropped with a receipt.
+   */
   async digest(who: string, address: string): Promise<boolean> {
     const items = this.digests.get(who);
     if (!items?.length) return false;
     this.digests.delete(who);
+    if (this.suppressed.has(address.toLowerCase())) {
+      this.receipt({ to: who, template: 'digest', channel: 'email', outcome: 'suppressed', why: `address ${this.suppressed.get(address.toLowerCase())} bounced` });
+      return false;
+    }
+    if (this.unsubscribed.has(`${who}\ndigest`)) {
+      this.receipt({ to: who, template: 'digest', channel: 'email', outcome: 'off', why: 'unsubscribed' });
+      return false;
+    }
     const body = `<ul>${items.map((i) => `<li>${esc(i.subject)}</li>`).join('')}</ul>`;
     await this.o.send({ to: address, channel: 'email', subject: `${items.length} update${items.length === 1 ? '' : 's'}`, body, headers: { 'List-Unsubscribe': `<${this.o.unsubscribeUrl}?t=${this.token(who, 'digest')}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } });
     this.receipt({ to: who, template: 'digest', channel: 'email', outcome: 'sent' });

@@ -11,7 +11,7 @@ export interface Rule {
   readonly groups?: readonly string[];
   /** Attributes that must match (plan, region). */
   readonly attrs?: Readonly<Record<string, readonly string[]>>;
-  /** 0 to 100: share of the people this rule reaches. */
+  /** 0 to 100: share of the people this rule reaches; a value that is not a number reaches nobody. */
   readonly percent?: number;
 }
 
@@ -45,7 +45,7 @@ export function evaluate(f: Flag | undefined, who: Who): { on: boolean; because:
     if (r.people && !r.people.includes(who.id)) continue;
     if (r.groups && !r.groups.some((g) => who.groups?.includes(g))) continue;
     if (r.attrs && !Object.entries(r.attrs).every(([k, vs]) => vs.includes(who.attrs?.[k] ?? ''))) continue;
-    if (r.percent !== undefined && bucket(f.key, who.id) >= r.percent) continue;
+    if (r.percent !== undefined && !(bucket(f.key, who.id) < r.percent)) continue;
     return { on: true, because: `rule ${i + 1}${r.percent !== undefined ? ` (${r.percent}% rollout)` : ''}` };
   }
   return { on: false, because: 'no rule reaches them' };

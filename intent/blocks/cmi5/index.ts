@@ -3,8 +3,10 @@
  * with the cmi5 query parameters; its session sends the defined xAPI statements (launched, initialized, completed,
  * passed, failed, abandoned, waived, terminated) with the cmi5 context, and the rules the specification sets are
  * enforced within each session: initialized first and once, terminated last, passed or failed once and only with
- * a score that agrees with the mastery score, completed once. Across sessions of one registration the learning
- * record store holds the history; whether the learner may move on follows the unit's moveOn setting over all of it.
+ * a score that agrees with the mastery score, completed once; given the registration's history, passed and completed
+ * once per registration and failed never after passed. Every statement that judges or completes carries the moveOn
+ * category. Across sessions of one registration the learning record store holds the history; whether the learner
+ * may move on follows the unit's moveOn setting over all of it.
  */
 import { randomUUID } from 'node:crypto';
 
@@ -70,12 +72,19 @@ export class Session {
   private readonly sessionId = randomUUID();
   private readonly now: () => Date;
   private startedAt?: number;
+  private readonly before: readonly Statement[];
 
-  constructor(u: Unit, actor: Actor, registration: string, now: () => Date = () => new Date()) {
+  /** `history` is what the learning record store already holds; only this unit's statements in this registration count. */
+  constructor(u: Unit, actor: Actor, registration: string, now: () => Date = () => new Date(), history: readonly Statement[] = []) {
     this.u = u;
     this.actor = actor;
     this.registration = registration;
     this.now = now;
+    this.before = history.filter((s) => s.context.registration === registration && s.object.id === u.id);
+  }
+
+  private earlier(v: Verb) {
+    return this.before.some((s) => s.verb.id === VERBS[v]);
   }
 
   private has(v: Verb) {
@@ -110,7 +119,8 @@ export class Session {
   completed(): Statement {
     this.open();
     if (this.has('completed')) throw new Error('completed is sent once');
-    return this.send('completed', { completion: true, duration: duration(this.now().getTime() - this.startedAt!) }, this.u.moveOn.includes('Completed'));
+    if (this.earlier('completed')) throw new Error('completed is sent once per registration');
+    return this.send('completed', { completion: true, duration: duration(this.now().getTime() - this.startedAt!) }, true);
   }
 
   judged(scaled: number): Statement {
@@ -118,7 +128,8 @@ export class Session {
     if (this.has('passed') || this.has('failed')) throw new Error('passed or failed is sent once');
     if (!(scaled >= 0 && scaled <= 1)) throw new Error('a scaled score is between 0 and 1');
     const pass = this.u.masteryScore === undefined ? true : scaled >= this.u.masteryScore;
-    return this.send(pass ? 'passed' : 'failed', { score: { scaled }, success: pass, duration: duration(this.now().getTime() - this.startedAt!) }, pass && this.u.moveOn.includes('Passed'));
+    if (this.earlier('passed')) throw new Error(pass ? 'passed is sent once per registration' : 'failed is never sent after passed');
+    return this.send(pass ? 'passed' : 'failed', { score: { scaled }, success: pass, duration: duration(this.now().getTime() - this.startedAt!) }, true);
   }
 
   terminated(): Statement {

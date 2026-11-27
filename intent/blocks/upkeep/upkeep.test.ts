@@ -40,3 +40,37 @@ test('SARIF findings keep their fingerprint when code moves, and accepted ones s
   assert.deepEqual(triage([], a, {}).fixed.map((f) => f.rule), ['xss']);
   assert.deepEqual(sarif({}), []);
 });
+
+test('prerelease precedence follows SemVer 2.0.0 §11; build metadata is ignored', () => {
+  const order = ['1.0.0-alpha', '1.0.0-alpha.1', '1.0.0-alpha.beta', '1.0.0-beta', '1.0.0-beta.2', '1.0.0-beta.11', '1.0.0-rc.1', '1.0.0'];
+  for (let i = 0; i + 1 < order.length; i++) {
+    assert.equal(compare(order[i]!, order[i + 1]!), -1, `${order[i]} < ${order[i + 1]}`);
+    assert.equal(compare(order[i + 1]!, order[i]!), 1, `${order[i + 1]} > ${order[i]}`);
+  }
+  assert.equal(compare('2.0.0-rc.10', '2.0.0-rc.2'), 1);
+  assert.equal(compare('1.0.0-x-y', '1.0.0-x'), 1, 'a hyphen inside a prerelease is part of it');
+  assert.equal(compare('1.0.0-Beta', '1.0.0-alpha'), -1, 'identifiers compare in ASCII order');
+  assert.equal(compare('1.2.3+build.5', '1.2.3'), 0);
+  assert.equal(compare('1.2.4+build', '1.2.3'), 1);
+});
+
+test('an update clears every advisory that hits the version', () => {
+  const r = review([{ name: 'qs', version: '6.0.0', latest: '6.9.0' }], [{ package: 'qs', id: 'A', severity: 'low', fixedIn: '6.2.0' }, { package: 'qs', id: 'B', severity: 'moderate', fixedIn: '6.5.3' }], { today: '2026-11-26' });
+  assert.deepEqual(r, [{ name: 'qs', verdict: 'update', because: 'A, B fixed in 6.5.3' }]);
+});
+
+test('an expiry with a time of day is read, and one that cannot be read is refused rather than called ok', () => {
+  const e = expiry([{ what: 'TLS', kind: 'certificate', expires: '2026-12-10T12:00:00Z', owner: 'ops' }], '2026-11-26');
+  assert.deepEqual([e[0]!.daysLeft, e[0]!.state], [15, 'soon']);
+  assert.throws(() => expiry([{ what: 'key', kind: 'key', expires: 'soon', owner: 'ops' }], '2026-11-26'), /key/);
+});
+
+test('two findings with the same rule, file and text are two findings: accepting one does not hide the other', () => {
+  const res = (line: number) => ({ ruleId: 'sqli', message: { text: 'string-built query' }, locations: [{ physicalLocation: { artifactLocation: { uri: 'src/db.ts' }, region: { startLine: line } } }] });
+  const before = sarif({ runs: [{ tool: { driver: { name: 'semgrep' } }, results: [res(3)] }] });
+  const now = sarif({ runs: [{ tool: { driver: { name: 'semgrep' } }, results: [res(3), res(40)] }] });
+  assert.equal(new Set(now.map((f) => f.fingerprint)).size, 2);
+  const t = triage(now, before, { [before[0]!.fingerprint]: 'the input is a constant' });
+  assert.deepEqual(t.new.map((f) => f.line), [40]);
+  assert.deepEqual(t.accepted.map((f) => f.line), [3]);
+});

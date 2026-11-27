@@ -41,7 +41,7 @@ export const text = (o: { min?: number; max?: number; pattern?: RegExp; patternM
     const len = [...s].length;
     if (o.min !== undefined && len < o.min) return bad(p, 'short', `${name(p)} needs at least ${o.min} characters`);
     if (o.max !== undefined && len > o.max) return bad(p, 'long', `${name(p)} can have at most ${o.max} characters`);
-    if (o.pattern && !o.pattern.test(s)) return bad(p, 'pattern', o.patternMessage ?? `${name(p)} is not in the expected form`);
+    if (o.pattern && ((o.pattern.lastIndex = 0), !o.pattern.test(s))) return bad(p, 'pattern', o.patternMessage ?? `${name(p)} is not in the expected form`);
     return ok(s);
   });
 
@@ -106,12 +106,12 @@ export const record = <S extends Shape>(shape: S, o: { allowExtra?: boolean } = 
     const out: Record<string, unknown> = {};
     const problems: Problem[] = [];
     for (const [k, s] of Object.entries(shape)) {
-      const r = s.check(src[k], p ? `${p}.${k}` : k);
+      const r = s.check(Object.hasOwn(src, k) ? src[k] : undefined, p ? `${p}.${k}` : k);
       if (r.ok) {
-        if (r.value !== undefined) out[k] = r.value;
+        if (r.value !== undefined) Object.defineProperty(out, k, { value: r.value, enumerable: true, writable: true, configurable: true });
       } else problems.push(...r.problems);
     }
-    if (!o.allowExtra) for (const k of Object.keys(src)) if (!(k in shape)) problems.push({ path: p ? `${p}.${k}` : k, code: 'unknown', message: `${k} is not a field here` });
+    if (!o.allowExtra) for (const k of Object.keys(src)) if (!Object.hasOwn(shape, k)) problems.push({ path: p ? `${p}.${k}` : k, code: 'unknown', message: `${k} is not a field here` });
     return problems.length ? { ok: false, problems } : ok(out as Out<S>);
   });
 
@@ -130,9 +130,13 @@ export function parse<T>(s: Schema<T>, v: unknown): T {
   return r.value;
 }
 
-/** The one error body every API returns for invalid input (RFC 9457 problem details, with the field problems). */
+/**
+ * The one error body every API returns for invalid input (RFC 9457 problem details, with the field problems as
+ * the "errors" extension). With type "about:blank" the title is the status code's phrase (RFC 9457 4.2.1); the
+ * words for a person go in "detail".
+ */
 export function problemDetails(problems: readonly Problem[], instance?: string) {
-  return { type: 'about:blank', title: 'Some of what was sent needs fixing', status: 422, ...(instance ? { instance } : {}), errors: problems.map((x) => ({ path: x.path, code: x.code, detail: x.message })) };
+  return { type: 'about:blank', title: 'Unprocessable Content', status: 422, detail: 'Some of what was sent needs fixing', ...(instance ? { instance } : {}), errors: problems.map((x) => ({ path: x.path, code: x.code, detail: x.message })) };
 }
 
 /** For a form: each field's first problem, keyed by path, so it is shown beside that field. */

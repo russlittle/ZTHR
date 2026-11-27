@@ -19,12 +19,12 @@ export interface Running {
 
 export const PASS = 'correct horse battery';
 
-export async function start(o: Options & { persist?: Persist; objects?: ObjectStore; people?: { id: string; admin?: boolean; quota?: number | null; groups?: string[] }[] } = {}): Promise<Running> {
+export async function start(o: Options & { proxyHops?: number; persist?: Persist; objects?: ObjectStore; people?: { id: string; admin?: boolean; quota?: number | null; groups?: string[] }[] } = {}): Promise<Running> {
   const persist = o.persist ?? memoryPersist();
   const objects = o.objects ?? memoryObjects();
   const files = new Files(await State.open(persist), objects, o);
   for (const p of o.people ?? [{ id: 'ana', admin: true }, { id: 'ben' }]) if (!files.person(p.id)) await files.addPerson(p.id, PASS, { ...(p.admin ? { admin: true } : {}), ...(p.quota !== undefined ? { quota: p.quota } : {}), ...(p.groups ? { groups: p.groups } : {}), display: p.id[0]!.toUpperCase() + p.id.slice(1) });
-  const server = await serve(files, 0);
+  const server = await serve(files, 0, o.proxyHops !== undefined ? { proxyHops: o.proxyHops } : {});
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const go = (auth: string | null) => (path: string, init: RequestInit & { headers?: Record<string, string> } = {}) => fetch(`${base}${path}`, { ...init, redirect: 'manual', headers: { ...(auth ? { authorization: auth } : {}), ...(init.headers ?? {}) } });
   return {

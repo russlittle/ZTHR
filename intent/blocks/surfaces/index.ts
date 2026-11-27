@@ -35,9 +35,13 @@ export interface Step {
 export function check(list: readonly Surface[]): string[] {
   const out: string[] = [];
   const paths = new Map<string, string>();
+  const ids = new Set<string>();
   for (const s of list) {
-    if (paths.has(s.path)) out.push(`${s.id}: ${s.path} is also ${paths.get(s.path)}`);
-    paths.set(s.path, s.id);
+    if (ids.has(s.id)) out.push(`${s.id}: the id is used twice`);
+    ids.add(s.id);
+    const shape = s.path.replace(/:\w+/g, ':');
+    if (paths.has(shape)) out.push(`${s.id}: ${s.path} is also ${paths.get(shape)}`);
+    paths.set(shape, s.id);
     if (s.purpose.trim().length < 20) out.push(`${s.id}: say what the screen is for in a sentence`);
     if (!s.help.trim()) out.push(`${s.id}: no help text`);
     if (!s.states.loading.trim() || !s.states.empty.text.trim() || !s.states.error.trim()) out.push(`${s.id}: every state needs words: loading, empty and error`);
@@ -66,12 +70,16 @@ export class Surfaces {
     return this.list.get(id);
   }
 
+  /** The screen for a path; a fixed segment beats a `:param`, so `/files/new` is not taken for `/files/:id`. */
   forPath(path: string): Surface | undefined {
+    let best: { s: Surface; params: number } | undefined;
     for (const s of this.list.values()) {
       const re = new RegExp(`^${s.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\:\w+|:\w+/g, '[^/]+')}$`);
-      if (re.test(path)) return s;
+      if (!re.test(path)) continue;
+      const params = (s.path.match(/:\w+/g) ?? []).length;
+      if (!best || params < best.params) best = { s, params };
     }
-    return undefined;
+    return best?.s;
   }
 
   /** What "explain this screen" shows. */
@@ -83,7 +91,7 @@ export class Surfaces {
   /** News this person has not seen, for this surface (or general), for their roles; newest first. */
   whatsNew(who: string, roles: readonly string[], surface?: string): News[] {
     const seen = this.seen.get(who) ?? new Set();
-    return this.news.filter((n) => !seen.has(n.id) && (!n.audience || n.audience.some((a) => roles.includes(a))) && (!n.surfaces || (surface !== undefined && n.surfaces.includes(surface)))).sort((a, b) => b.date.localeCompare(a.date));
+    return this.news.filter((n) => !seen.has(n.id) && (!n.audience || n.audience.some((a) => a === 'everyone' || roles.includes(a))) && (!n.surfaces || (surface !== undefined && n.surfaces.includes(surface)))).sort((a, b) => b.date.localeCompare(a.date));
   }
 
   markSeen(who: string, ids: readonly string[]): void {

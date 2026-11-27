@@ -31,8 +31,12 @@ export interface SpanRecord {
 const als = new AsyncLocalStorage<Ctx>();
 const hex = (n: number) => randomBytes(n).toString('hex');
 
-/** Keys whose values are never written, at any depth, and value shapes that look like secrets wherever they appear. */
-export const SENSITIVE_KEYS = /^(password|passwd|secret|token|apikey|api_key|authorization|cookie|set-cookie|ssn|card|cardnumber|cvv|pin|dob|dateofbirth|access_token|refresh_token|private_key)$/i;
+/**
+ * Keys whose values are never written, at any depth (short ones exactly, the rest wherever they appear in the key,
+ * so "client_secret", "x-api-key" and "newPassword" are caught too), and value shapes that look like secrets
+ * wherever they appear.
+ */
+export const SENSITIVE_KEYS = /^(?:ssn|card|cardnumber|cvv|cvc|pin|dob|dateofbirth)$|pass(?:wd|word)|secret|token|api[-_]?key|authorization|cookie|private[-_]?key|credential/i;
 const SENSITIVE_VALUES: readonly [RegExp, string][] = [
   [/\b(?:\d[ -]?){13,19}\b/g, '[card]'],
   [/\b\d{3}-\d{2}-\d{4}\b/g, '[ssn]'],
@@ -70,7 +74,8 @@ export class Logger {
   log(severity: Severity, message: string, fields: Record<string, unknown> = {}): void {
     if (ORDER.indexOf(severity) < ORDER.indexOf(this.o.min ?? 'DEBUG')) return;
     const c = als.getStore();
-    const line: Record<string, unknown> = { severity, message: redact(message), time: new Date().toISOString(), ...(redact(fields, this.o.extraSensitive) as object) };
+    // Fields first, so none of them can overwrite the severity, message or time the line is filed under.
+    const line: Record<string, unknown> = { ...(redact(fields, this.o.extraSensitive) as object), severity, message: redact(message), time: new Date().toISOString() };
     if (this.o.build) line['build'] = this.o.build;
     if (c) {
       line['logging.googleapis.com/trace'] = this.o.project ? `projects/${this.o.project}/traces/${c.trace}` : c.trace;
@@ -90,10 +95,10 @@ export class Logger {
   }
 }
 
-/** The trace id from a W3C traceparent header, or a new one. */
+/** The trace id from a W3C traceparent header, or a new one (an all-zero trace or parent id is invalid there). */
 export function traceFrom(header: string | undefined): { trace: string; parent?: string } {
   const m = /^00-([0-9a-f]{32})-([0-9a-f]{16})-[0-9a-f]{2}$/.exec(header ?? '');
-  return m ? { trace: m[1]!, parent: m[2]! } : { trace: hex(16) };
+  return m && !/^0+$/.test(m[1]!) && !/^0+$/.test(m[2]!) ? { trace: m[1]!, parent: m[2]! } : { trace: hex(16) };
 }
 
 /** Runs a request's work in a trace; everything logged or spanned inside carries its id. */
@@ -206,16 +211,34 @@ export class Errors {
 
 const BUCKETS = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10_000];
 
+const METRIC_NAME = /^[a-zA-Z_:][a-zA-Z0-9_:]*$/;
+const LABEL_NAME = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+/** A label value as the text format writes it: backslash, double quote and line feed escaped. */
+const escapeLabel = (v: string) => v.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+
+interface Series {
+  readonly name: string;
+  /** The rendered label pairs, sorted by name, without braces. */
+  readonly labels: string;
+}
+
 export class Metrics {
   private readonly counters = new Map<string, number>();
-  private readonly hist = new Map<string, number[]>();
+  private readonly hist = new Map<string, { buckets: number[]; sum: number }>();
   private readonly samples = new Map<string, number[]>();
+  private readonly series = new Map<string, Series>();
   private key(name: string, labels: Record<string, string>) {
+    if (!METRIC_NAME.test(name)) throw new Error(`"${name}" is not a Prometheus metric name`);
     const l = Object.entries(labels)
-      .sort()
-      .map(([k, v]) => `${k}="${v}"`)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([k, v]) => {
+        if (!LABEL_NAME.test(k) || k.startsWith('__') || k === 'le') throw new Error(`"${k}" is not a label name that can be used`);
+        return `${k}="${escapeLabel(String(v))}"`;
+      })
       .join(',');
-    return l ? `${name}{${l}}` : name;
+    const k = l ? `${name}{${l}}` : name;
+    if (!this.series.has(k)) this.series.set(k, { name, labels: l });
+    return k;
   }
   count(name: string, labels: Record<string, string> = {}, by = 1): void {
     const k = this.key(name, labels);
@@ -223,9 +246,10 @@ export class Metrics {
   }
   observe(name: string, ms: number, labels: Record<string, string> = {}): void {
     const k = this.key(name, labels);
-    const h = this.hist.get(k) ?? new Array(BUCKETS.length + 1).fill(0);
+    const h = this.hist.get(k) ?? { buckets: new Array<number>(BUCKETS.length + 1).fill(0), sum: 0 };
     const i = BUCKETS.findIndex((b) => ms <= b);
-    h[i < 0 ? BUCKETS.length : i]++;
+    h.buckets[i < 0 ? BUCKETS.length : i]!++;
+    h.sum += ms;
     this.hist.set(k, h);
     const s = this.samples.get(k) ?? [];
     s.push(ms);
@@ -239,24 +263,42 @@ export class Metrics {
   percentile(name: string, p: number, labels: Record<string, string> = {}): number | null {
     const s = [...(this.samples.get(this.key(name, labels)) ?? [])].sort((a, b) => a - b);
     if (!s.length) return null;
-    return s[Math.min(s.length - 1, Math.ceil((p / 100) * s.length) - 1)]!;
+    return s[Math.max(0, Math.min(s.length - 1, Math.ceil((p / 100) * s.length) - 1))]!;
   }
-  /** Everything in the Prometheus text format. */
+  /**
+   * Everything in the Prometheus text format (version 0.0.4): each family once, with its TYPE line and all its
+   * series together; a histogram's buckets cumulative in increasing order, then +Inf, _sum and _count.
+   */
   text(): string {
-    const lines: string[] = [];
-    for (const [k, v] of this.counters) lines.push(`${k} ${v}`);
-    for (const [k, h] of this.hist) {
-      const [name, labels = ''] = k.includes('{') ? [k.slice(0, k.indexOf('{')), k.slice(k.indexOf('{') + 1, -1)] : [k];
+    const families = new Map<string, { type: 'counter' | 'histogram'; lines: string[] }>();
+    const family = (name: string, type: 'counter' | 'histogram') => {
+      let f = families.get(name);
+      if (!f) families.set(name, (f = { type, lines: [] }));
+      return f.lines;
+    };
+    const sortedKeys = (m: Map<string, unknown>) => [...m.keys()].sort();
+    for (const k of sortedKeys(this.counters)) family(this.series.get(k)!.name, 'counter').push(`${k} ${this.counters.get(k)!}`);
+    for (const k of sortedKeys(this.hist)) {
+      const { name, labels } = this.series.get(k)!;
+      const h = this.hist.get(k)!;
+      const out = family(name, 'histogram');
+      const braces = labels ? `{${labels}}` : '';
       let acc = 0;
       BUCKETS.forEach((b, i) => {
-        acc += h[i]!;
-        lines.push(`${name}_bucket{${labels ? `${labels},` : ''}le="${b}"} ${acc}`);
+        acc += h.buckets[i]!;
+        out.push(`${name}_bucket{${labels ? `${labels},` : ''}le="${b}"} ${acc}`);
       });
-      acc += h[BUCKETS.length]!;
-      lines.push(`${name}_bucket{${labels ? `${labels},` : ''}le="+Inf"} ${acc}`);
-      lines.push(`${name}_count${labels ? `{${labels}}` : ''} ${acc}`);
+      acc += h.buckets[BUCKETS.length]!;
+      out.push(`${name}_bucket{${labels ? `${labels},` : ''}le="+Inf"} ${acc}`);
+      out.push(`${name}_sum${braces} ${h.sum}`);
+      out.push(`${name}_count${braces} ${acc}`);
     }
-    return `${lines.sort().join('\n')}\n`;
+    const lines: string[] = [];
+    for (const name of [...families.keys()].sort()) {
+      const f = families.get(name)!;
+      lines.push(`# TYPE ${name} ${f.type}`, ...f.lines);
+    }
+    return `${lines.join('\n')}\n`;
   }
 }
 

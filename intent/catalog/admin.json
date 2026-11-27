@@ -341,7 +341,8 @@
       "name": "Feature explorer",
       "gives": "Open any feature and see everything about it: its assemblies and parts, its data, who may do what, its audit trail, its history and how it changed over time, its journeys and its evidence, with the record inspector's controls at every level",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "console: Explorer joins and searches features, screens, flags, journeys and evidence; no screen"
       }
     },
     {
@@ -372,21 +373,24 @@
       "name": "Confidence walkthrough",
       "gives": "Pick a feature and watch it work: its journeys walked on your test records, each step tied to the balloon it proves, with why the app decided what it did",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "walkthrough: evidence currency and sign-off rules; live walking of journeys not done here"
       }
     },
     {
       "name": "Feature reports",
       "gives": "A report for every feature, written from the datum: who uses it, whether its journeys complete within budget, where people stop, refusals and errors, scheduled and delivered",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "factoryreports: featureReport with small cells hidden, scheduled delivery"
       }
     },
     {
       "name": "Operations reports",
       "gives": "Availability, response times against the feedback budget, errors by feature, every run, who read what, and what model calls cost, every day",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "factoryreports: operationsReport, scheduled delivery"
       }
     },
     {
@@ -409,14 +413,16 @@
       "name": "Improvement brief",
       "gives": "One page a week for the person who holds the intent: what people leave, what is over budget, what nobody designed, who is not who the schematic expected, and the change each suggests",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "factoryreports: improvementBrief ranked by weighted evidence with reasons"
       }
     },
     {
       "name": "Data pipeline",
       "gives": "Every revision of the information planned, rehearsed on a copy with synthetic records, checked for integrity, loss and drift, promoted environment by environment with a ledger in each database, and watched every night",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "etl: resumable checkpointed runs, dry runs, idempotent loads, lineage and row-count drift; promotion between environments and schema drift not covered"
       }
     },
     {

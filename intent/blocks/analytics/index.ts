@@ -40,7 +40,8 @@ export class Analytics {
       this.dropped.noConsent++;
       return false;
     }
-    const allowed = new Set([...(this.o.allow['*'] ?? []), ...(this.o.allow[name] ?? [])]);
+    const list = (k: string) => (Object.hasOwn(this.o.allow, k) ? this.o.allow[k]! : []);
+    const allowed = new Set([...list('*'), ...(name === '*' ? [] : list(name))]);
     const kept: Record<string, string | number | boolean> = {};
     for (const [k, v] of Object.entries(props)) {
       if (!allowed.has(k) || !['string', 'number', 'boolean'].includes(typeof v)) {
@@ -63,7 +64,11 @@ export class Analytics {
 
   private byPerson(): Map<string, Event[]> {
     const m = new Map<string, Event[]>();
-    for (const e of [...this.events].sort((a, b) => a.at - b.at)) m.set(e.who, [...(m.get(e.who) ?? []), e]);
+    for (const e of [...this.events].sort((a, b) => a.at - b.at)) {
+      const list = m.get(e.who);
+      if (list) list.push(e);
+      else m.set(e.who, [e]);
+    }
     return m;
   }
 
@@ -75,11 +80,14 @@ export class Analytics {
       for (let s = 0; s < evs.length; s++) {
         if (evs[s]!.name !== steps[0]) continue;
         let k = 1;
-        for (let j = s + 1; j < evs.length && k < steps.length; j++) {
+        let j = s + 1;
+        for (; j < evs.length && k < steps.length; j++) {
           if (evs[j]!.at - evs[s]!.at > withinMs) break;
           if (evs[j]!.name === steps[k]) k++;
         }
         best = Math.max(best, k);
+        // Every step reached, or the scan ran to the end of their events: a later start cannot do better.
+        if (best === steps.length || j === evs.length) break;
       }
       for (let i = 0; i < best; i++) reached[i]!++;
     }

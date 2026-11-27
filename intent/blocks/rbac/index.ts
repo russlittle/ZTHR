@@ -42,10 +42,12 @@ export interface Decision {
 }
 
 /** Every role a subject holds, including those its roles inherit. */
+const declared = (p: Policy, r: string) => Object.hasOwn(p.roles, r);
+
 export function rolesOf(p: Policy, s: Subject): Set<string> {
   const out = new Set<string>();
   const add = (r: string) => {
-    if (out.has(r) || !p.roles[r]) return;
+    if (out.has(r) || !declared(p, r)) return;
     out.add(r);
     for (const i of p.roles[r]!.inherits ?? []) add(i);
   };
@@ -53,11 +55,18 @@ export function rolesOf(p: Policy, s: Subject): Set<string> {
   return out;
 }
 
-function holds(c: Condition, s: Subject, r: Rec): { ok: boolean; why: string } {
+/**
+ * Whether a condition holds. When the record lacks the field or the subject lacks the attribute, the comparison
+ * cannot be made: it does not hold for a grant, and does hold for a refusal (`unknownHolds`), so missing data
+ * never opens a record and never lifts a refusal.
+ */
+function holds(c: Condition, s: Subject, r: Rec, unknownHolds: boolean): { ok: boolean; why: string } {
   if ('any' in c) return { ok: true, why: 'any record' };
-  const v = r[c.field];
+  const v = Object.hasOwn(r, c.field) || !(c.field in Object.prototype) ? r[c.field] : undefined;
   if ('equalsSubject' in c) {
-    const want = c.equalsSubject === 'id' ? s.id : s.attrs?.[c.equalsSubject];
+    const want = c.equalsSubject === 'id' ? s.id : s.attrs && Object.hasOwn(s.attrs, c.equalsSubject) ? s.attrs[c.equalsSubject] : undefined;
+    const theirs = c.equalsSubject === 'id' ? 'theirs' : `their ${c.equalsSubject}`;
+    if (v === undefined || v === null || want === undefined) return { ok: unknownHolds, why: `whether ${c.field} is ${theirs} is not known` };
     const ok = Array.isArray(want) ? want.includes(v as string) : v === want;
     return { ok, why: `${c.field} ${ok ? 'is' : 'is not'} ${c.equalsSubject === 'id' ? 'theirs' : `their ${c.equalsSubject}`}` };
   }
@@ -70,7 +79,7 @@ export function decide(p: Policy, s: Subject, action: string, kind: string, r: R
   const roles = rolesOf(p, s);
   const relevant = p.grants.filter((g) => g.kind === kind && g.actions.includes(action) && roles.has(g.role));
   const evaluate = (g: Grant) => {
-    const results = (g.when ?? []).map((c) => holds(c, s, r));
+    const results = (g.when ?? []).map((c) => holds(c, s, r, !!g.deny));
     return { ok: results.every((x) => x.ok), why: results.map((x) => x.why).join(' and ') };
   };
   for (const g of relevant.filter((g) => g.deny)) {
@@ -112,14 +121,14 @@ export function matrix(p: Policy): { role: string; kind: string; action: string;
 /** Problems in a policy: grants naming roles that do not exist, inheritance cycles. */
 export function check(p: Policy): string[] {
   const out: string[] = [];
-  for (const g of p.grants) if (!p.roles[g.role]) out.push(`a grant names the role "${g.role}", which is not declared`);
+  for (const g of p.grants) if (!declared(p, g.role)) out.push(`a grant names the role "${g.role}", which is not declared`);
   for (const r of Object.keys(p.roles)) {
     const seen = new Set<string>();
     const walk = (x: string): boolean => {
       if (x === r) return true;
       if (seen.has(x)) return false;
       seen.add(x);
-      return (p.roles[x]?.inherits ?? []).some(walk);
+      return ((declared(p, x) ? p.roles[x]!.inherits : undefined) ?? []).some(walk);
     };
     if ((p.roles[r]!.inherits ?? []).some((i) => walk(i))) out.push(`the role "${r}" inherits itself`);
   }

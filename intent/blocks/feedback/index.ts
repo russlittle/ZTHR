@@ -27,7 +27,12 @@ export interface Ticket {
   readonly opened: string;
 }
 
-const scrub = (s: string) => s.replace(/[^\s@]+@[^\s@]+\.[a-z]{2,}/gi, '[email]').replace(/\b(?:\d[ -]?){13,19}\b/g, '[number]').replace(/\b(bearer|token|key|password)[=: ]+\S+/gi, '$1=[hidden]');
+// Bounded parts keep the email pattern linear on long unbroken text (RFC 5321: local part 64, domain 255).
+const scrub = (s: string) =>
+  s
+    .replace(/[^\s@]{1,64}@[^\s@]{1,255}\.[a-z]{2,63}/gi, '[email]')
+    .replace(/\b(?:\d[ -]?){13,19}\b/g, '[number]')
+    .replace(/\b([\w-]*?(?:bearer|token|key|password|passwd|secret))\b[=: ]+(?:bearer\s+)?\S+/gi, '$1=[hidden]');
 
 const words = (s: string) => new Set(s.toLowerCase().match(/[a-z0-9]{3,}/g) ?? []);
 const jaccard = (a: Set<string>, b: Set<string>) => {
@@ -108,8 +113,10 @@ export class Feedback {
     if (!t?.severity) throw new Error('triage it first: give it a severity');
     const reps = t.reports.map((r) => this.reports[r - 1]!);
     const evidence = reps.flatMap((r) => [r.context.trace && `trace ${r.context.trace}`, r.context.version && `version ${r.context.version}`, ...(r.context.errors ?? [])].filter((x): x is string => !!x));
-    const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    const test = [`import assert from 'node:assert/strict';`, `import { test } from 'node:test';`, '', `// Defect ${t.id}: ${esc(t.title)} (${t.severity}, ${t.reports.length} report${t.reports.length === 1 ? '' : 's'})`, `test('${esc(o.expected)}', async () => {`, ...o.steps.map((s, i) => `  // ${i + 1}. ${s}`), `  // Today: ${o.actual}`, `  assert.fail('write the steps above against the real code; this test must fail before the fix and pass after');`, '});', ''].join('\n');
+    const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r/g, '\\r').replace(/\n/g, '\\n').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+    // A comment is one line: any line break a person typed would turn the rest into live code.
+    const line = (s: string) => s.replace(/[\r\n\u2028\u2029]+/g, ' ');
+    const test = [`import assert from 'node:assert/strict';`, `import { test } from 'node:test';`, '', `// Defect ${t.id}: ${line(t.title)} (${t.severity}, ${t.reports.length} report${t.reports.length === 1 ? '' : 's'})`, `test('${esc(o.expected)}', async () => {`, ...o.steps.map((s, i) => `  // ${i + 1}. ${line(s)}`), `  // Today: ${line(o.actual)}`, `  assert.fail('write the steps above against the real code; this test must fail before the fix and pass after');`, '});', ''].join('\n');
     return { title: t.title, severity: t.severity, steps: o.steps, expected: o.expected, actual: o.actual, evidence: [...new Set(evidence)], test };
   }
 }

@@ -8,8 +8,8 @@
 export interface Draft {
   readonly who: string;
   readonly what: string;
-  /** The version of the record the draft started from. */
-  readonly base: number;
+  /** The version of the record the draft is based on; saving from a newer version moves it on. */
+  base: number;
   fields: Record<string, unknown>;
   readonly started: number;
   updated: number;
@@ -17,6 +17,9 @@ export interface Draft {
 }
 
 export type Resume = { readonly state: 'none' } | { readonly state: 'clean'; readonly draft: Draft } | { readonly state: 'conflict'; readonly draft: Draft; readonly changed: readonly string[] };
+
+/** A deep copy, so later edits to nested values in the editor cannot rewrite saved history. */
+const copy = (f: Record<string, unknown>): Record<string, unknown> => structuredClone(f);
 
 export class Drafts {
   private readonly drafts = new Map<string, Draft>();
@@ -27,11 +30,13 @@ export class Drafts {
   constructor(o: { now?: () => number; keepVersions?: number; minGapMs?: number } = {}) {
     this.now = o.now ?? Date.now;
     this.keep = o.keepVersions ?? 10;
+    if (!(this.keep >= 1)) throw new Error('keep at least one version');
     this.minGapMs = o.minGapMs ?? 30_000;
   }
 
+  /** Unambiguous for any ids, so no crafted id can reach another person's draft. */
   private key(who: string, what: string) {
-    return `${who}\n${what}`;
+    return JSON.stringify([who, what]);
   }
 
   /** Called on every pause in typing. A snapshot goes into history at most every `minGapMs`. */
@@ -40,15 +45,16 @@ export class Drafts {
     const t = this.now();
     const d = this.drafts.get(k);
     if (!d) {
-      const nd: Draft = { who, what, base, fields: { ...fields }, started: t, updated: t, history: [{ at: t, fields: { ...fields } }] };
+      const nd: Draft = { who, what, base, fields: copy(fields), started: t, updated: t, history: [{ at: t, fields: copy(fields) }] };
       this.drafts.set(k, nd);
       return nd;
     }
-    d.fields = { ...fields };
+    d.base = base;
+    d.fields = copy(fields);
     d.updated = t;
     const last = d.history.at(-1)!;
-    if (t - last.at >= this.minGapMs) d.history.push({ at: t, fields: { ...fields } });
-    else last.fields = { ...fields };
+    if (t - last.at >= this.minGapMs) d.history.push({ at: t, fields: copy(fields) });
+    else last.fields = copy(fields);
     while (d.history.length > this.keep) d.history.shift();
     return d;
   }
@@ -67,7 +73,7 @@ export class Drafts {
     const d = this.drafts.get(this.key(who, what));
     const h = d?.history[index];
     if (!d || !h) throw new Error('no such draft');
-    d.fields = { ...h.fields };
+    d.fields = copy(h.fields);
     d.updated = this.now();
     return d;
   }

@@ -37,3 +37,17 @@ test('incidents keep a timeline, show only public notes, and are owed a postmort
   inc.postmortem(i.id, { cause: 'a config change skipped the canary', impact: '45 minutes of failed uploads for 12% of people', detection: 'burn-rate page after 4 minutes', actions: [{ what: 'canary every deploy', owner: 'ana', due: '2026-12-10' }] });
   assert.deepEqual(inc.owed(), []);
 });
+
+test('alert thresholds follow the objective window: 2% of a 7-day budget in an hour pages', () => {
+  const week = { name: 'weekly', target: 0.999, windowDays: 7 };
+  const hour = { good: 99_000, total: 100_000 };
+  // A 10x burn spends 10/168 = 6% of a week's budget each hour, three times the 2% an hour that pages.
+  assert.deepEqual(alerts(week, { '1h': hour, '5m': hour }).map((x) => x.severity), ['page']);
+  assert.deepEqual(alerts(o, { '1h': hour, '5m': hour }), [], 'over 30 days the same hour spends 1.4%');
+});
+
+test('an action owned by blank space has no owner', () => {
+  const inc = new Incidents(() => new Date('2026-11-26T10:00:00Z'));
+  const i = inc.open('x', 2);
+  assert.throws(() => inc.postmortem(i.id, { cause: 'c', impact: 'i', detection: 'd', actions: [{ what: 'fix', owner: '  ', due: '2026-12-01' }] }), /an owner for "fix"/);
+});

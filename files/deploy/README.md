@@ -58,7 +58,7 @@ gcloud run deploy files \
   --min-instances 0 --max-instances 1 \
   --concurrency 80 --timeout 3600 \
   --memory 1Gi --cpu 1 \
-  --set-env-vars "FILES_STORE=gcs,FILES_BUCKET=${BUCKET},FILES_ADMIN=admin,FILES_MAX_CHUNK=30 MB" \
+  --set-env-vars "FILES_STORE=gcs,FILES_BUCKET=${BUCKET},FILES_ADMIN=admin,FILES_MAX_CHUNK=30 MB,FILES_PROXY_HOPS=1" \
   --set-secrets "FILES_ADMIN_PASSWORD=files-admin-password:latest"
 
 URL=$(gcloud run services describe files --region "$REGION" --format='value(status.url)')
@@ -66,7 +66,7 @@ gcloud run services update files --region "$REGION" --update-env-vars "FILES_ORI
 echo "$URL"
 ```
 
-`--allow-unauthenticated` lets the apps reach the server; every file request still needs a login. `--max-instances 1` is required: the state log has one writer and refuses a second. `FILES_MAX_CHUNK=30 MB` keeps every upload chunk under Cloud Run's 32 MiB request limit.
+`--allow-unauthenticated` lets the apps reach the server; every file request still needs a login. `--max-instances 1` is required: the state log has one writer and refuses a second. `FILES_MAX_CHUNK=30 MB` keeps every upload chunk under Cloud Run's 32 MiB request limit. `FILES_PROXY_HOPS=1` says Cloud Run's front end is the one proxy whose X-Forwarded-For entry is trusted, so wrong passwords are counted against the real address and not one the client made up; put a load balancer in front as well and it becomes 2.
 
 ## 4. Check it
 

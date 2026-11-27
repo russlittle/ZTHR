@@ -39,3 +39,18 @@ test('deprecated versions say so with standard headers, and are refused after su
   assert.deepEqual(v.stragglers([{ account: 'b', version: '2025-01-01' }, { account: 'a', version: '2025-01-01' }, { account: 'a', version: '2026-11-01' }, { account: 'b', version: '2025-01-01' }]), { '2025-01-01': ['a', 'b'] });
   assert.throws(() => new Versions('2025-01-01', [{ version: '2025-01-01', description: '', down: (b) => b }], { notes: '' }), /share a version/);
 });
+
+test('a version with a sunset but no deprecation date still announces and enforces its sunset', () => {
+  const w = new Versions('2025-01-01', [{ version: '2026-01-01', description: 'x', down: (b) => b }], { lifecycle: [{ version: '2025-01-01', sunset: '2026-12-31' }], notes: 'https://docs.example.org' });
+  const r = w.headers('2025-01-01', '2026-11-26');
+  assert.ok('headers' in r && r.headers.sunset === 'Thu, 31 Dec 2026 00:00:00 GMT');
+  assert.equal('headers' in r && r.headers.deprecation, undefined);
+  const gone = w.headers('2025-01-01', '2027-01-02');
+  assert.ok('problem' in gone && gone.problem.status === 410);
+});
+
+test('lifecycle dates that are not dates, or name unknown versions, are refused up front', () => {
+  assert.throws(() => new Versions('2025-01-01', [], { lifecycle: [{ version: '2025-01-01', deprecated: 'soon' }], notes: '' }), /not a date/);
+  assert.throws(() => new Versions('2025-01-01', [], { lifecycle: [{ version: '2025-01-01', sunset: '2026-02-30' }], notes: '' }), /not a date/);
+  assert.throws(() => new Versions('2025-01-01', [], { lifecycle: [{ version: '2024-01-01', deprecated: '2025-01-01' }], notes: '' }), /not a version/);
+});

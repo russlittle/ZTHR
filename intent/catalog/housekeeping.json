@@ -371,7 +371,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "console: chores with last run, next due and missed or failed runs via watchdog; no screen"
       }
     },
     {

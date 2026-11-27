@@ -69,20 +69,24 @@ export class Queue {
     return [...this.jobs.values()].filter((j) => j.state === 'waiting' && j.runAt <= t).sort((a, b) => a.runAt - b.runAt || a.created - b.created);
   }
 
-  /** Runs every due job once; returns how many ran. A worker calls this on a timer. */
+  /**
+   * Runs every due job once; returns how many ran. A worker calls this on a timer. A job cancelled, or taken by an
+   * overlapping tick, after the list was made is skipped.
+   */
   async tick(): Promise<number> {
-    const list = this.due();
-    for (const j of list) await this.run(j);
-    return list.length;
+    let n = 0;
+    for (const j of this.due()) if (await this.run(j)) n++;
+    return n;
   }
 
-  private async run(j: Job): Promise<void> {
+  private async run(j: Job): Promise<boolean> {
+    if (j.state !== 'waiting' || j.runAt > this.o.now()) return false;
     const h = this.handlers.get(j.kind);
     if (!h) {
       j.state = 'dead';
       j.lastError = `no handler for ${j.kind}`;
       j.finished = this.o.now();
-      return;
+      return true;
     }
     const ac = new AbortController();
     this.running.set(j.id, ac);
@@ -108,6 +112,7 @@ export class Queue {
     } finally {
       this.running.delete(j.id);
     }
+    return true;
   }
 
   /** Cancels a waiting job, or asks a running one to stop through its signal. */
@@ -169,6 +174,7 @@ export interface BackfillRun {
  */
 export async function backfill<T>(b: Backfill<T>, o: { dryRun: boolean; size?: number; resume?: BackfillRun; save?: (r: BackfillRun) => Promise<void>; signal?: AbortSignal; idOf?: (t: T) => string }): Promise<BackfillRun> {
   const run: BackfillRun = o.resume ? { ...o.resume, failed: [...o.resume.failed] } : { seen: 0, changed: 0, failed: [], finished: false };
+  if (run.finished) return run;
   for (;;) {
     if (o.signal?.aborted) return run;
     const { items, next } = await b.page(run.checkpoint, o.size ?? 500);
@@ -199,12 +205,16 @@ const RANGES: [number, number][] = [
   [0, 23],
   [1, 31],
   [1, 12],
-  [0, 6],
+  [0, 7],
 ];
+
+/** One comma-separated part of a field: "*", "n" or "n-m", optionally with "/step". */
+const PART = /^(?:\*|\d+(?:-\d+)?)(?:\/\d+)?$/;
 
 function field(spec: string, [lo, hi]: [number, number]): Set<number> {
   const out = new Set<number>();
   for (const part of spec.split(',')) {
+    if (!PART.test(part)) throw new Error(`"${spec}" is not a valid cron field`);
     const [range, stepS] = part.split('/');
     const step = stepS ? Number(stepS) : 1;
     let a = lo;
@@ -220,25 +230,34 @@ function field(spec: string, [lo, hi]: [number, number]): Set<number> {
   return out;
 }
 
-/** A parsed five-field cron expression (minute hour day-of-month month day-of-week), in UTC. */
+/**
+ * A parsed five-field cron expression (minute hour day-of-month month day-of-week, where Sunday is 0 or 7), in
+ * UTC. When both day fields are restricted, either may match.
+ */
 export function cron(expr: string) {
   const parts = expr.trim().split(/\s+/);
   if (parts.length !== 5) throw new Error('a cron expression has five fields: minute hour day month weekday');
   const [mi, h, dom, mo, dow] = parts.map((p, i) => field(p, RANGES[i]!)) as [Set<number>, Set<number>, Set<number>, Set<number>, Set<number>];
+  if (dow.delete(7)) dow.add(0);
   const domAny = parts[2] === '*';
   const dowAny = parts[4] === '*';
-  const matches = (d: Date) => {
-    const dayOk = domAny && dowAny ? true : domAny ? dow.has(d.getUTCDay()) : dowAny ? dom.has(d.getUTCDate()) : dom.has(d.getUTCDate()) || dow.has(d.getUTCDay());
-    return mi.has(d.getUTCMinutes()) && h.has(d.getUTCHours()) && mo.has(d.getUTCMonth() + 1) && dayOk;
-  };
+  const dayOk = (d: Date) => (domAny && dowAny ? true : domAny ? dow.has(d.getUTCDay()) : dowAny ? dom.has(d.getUTCDate()) : dom.has(d.getUTCDate()) || dow.has(d.getUTCDay()));
+  const matches = (d: Date) => mi.has(d.getUTCMinutes()) && h.has(d.getUTCHours()) && mo.has(d.getUTCMonth() + 1) && dayOk(d);
   return {
     matches,
     /** The first time strictly after `from` that it fires. */
     next(from: Date): Date {
       const d = new Date(Math.floor(from.getTime() / 60_000) * 60_000 + 60_000);
-      for (let i = 0; i < 366 * 24 * 60; i++) {
-        if (matches(d)) return d;
-        d.setTime(d.getTime() + 60_000);
+      // Far enough ahead for the longest gap between real dates (29 February skips 2100: eight years), skipping
+      // whole months, days and hours that cannot match.
+      const limit = d.getTime() + 9 * 366 * 86_400_000;
+      while (d.getTime() <= limit) {
+        const [y, m, day, hr] = [d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours()];
+        if (!mo.has(m + 1)) d.setTime(Date.UTC(y, m + 1, 1));
+        else if (!dayOk(d)) d.setTime(Date.UTC(y, m, day + 1));
+        else if (!h.has(hr)) d.setTime(Date.UTC(y, m, day, hr + 1));
+        else if (!mi.has(d.getUTCMinutes())) d.setTime(d.getTime() + 60_000);
+        else return d;
       }
       throw new Error(`"${expr}" never fires`);
     },

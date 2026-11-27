@@ -25,7 +25,12 @@ export class Conflict extends Error {
   }
 }
 
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/** Compares values as JSON, with object keys in a fixed order, so a reordered object is not a change. */
+const canon = (v: unknown) => JSON.stringify(v, (_k, x: unknown) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, (x as Record<string, unknown>)[k]])) : x));
+const same = (a: unknown, b: unknown) => canon(a) === canon(b);
+/** Field access by own key only, so fields named like `constructor` or `__proto__` never read or set the prototype. */
+const own = (o: Fields, k: string): unknown => (Object.hasOwn(o, k) ? o[k] : undefined);
+const put = (o: Record<string, unknown>, k: string, v: unknown) => Object.defineProperty(o, k, { value: v, enumerable: true, writable: true, configurable: true });
 
 export class History {
   private readonly changes = new Map<string, Change[]>();
@@ -53,9 +58,9 @@ export class History {
     const before: Record<string, unknown> = {};
     const after: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(fields)) {
-      if (same(cur[k], v)) continue;
-      before[k] = cur[k];
-      after[k] = v;
+      if (same(own(cur, k), v)) continue;
+      put(before, k, own(cur, k));
+      put(after, k, v);
     }
     const c: Change = { version: list.length + 1, by, at: this.now().toISOString(), before, after, ...(o.note ? { note: o.note } : {}), ...(o.undoes ? { undoes: o.undoes } : {}) };
     list.push(c);
@@ -76,7 +81,7 @@ export class History {
     for (const c of this.log(id).slice(0, version))
       for (const [k, v] of Object.entries(c.after)) {
         if (v === undefined) delete out[k];
-        else out[k] = v;
+        else put(out, k, v);
       }
     return out;
   }
@@ -84,7 +89,7 @@ export class History {
   diff(id: string, from: number, to: number): { field: string; from: unknown; to: unknown }[] {
     const a = this.at(id, from);
     const b = this.at(id, to);
-    return [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => !same(a[k], b[k])).sort().map((field) => ({ field, from: a[field], to: b[field] }));
+    return [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((k) => !same(own(a, k), own(b, k))).sort().map((field) => ({ field, from: own(a, field), to: own(b, field) }));
   }
 
   /** Undoes one change, as a new change. Refuses when a field it touched has changed again since. */
@@ -92,7 +97,7 @@ export class History {
     const c = this.log(id)[version - 1];
     if (!c) throw new Error(`no version ${version}`);
     const cur = this.current.get(id) ?? {};
-    const moved = Object.keys(c.after).filter((k) => !same(cur[k], c.after[k]));
+    const moved = Object.keys(c.after).filter((k) => !same(own(cur, k), c.after[k]));
     if (moved.length) throw new Conflict(moved);
     return this.change(id, by, c.before, { note: `undo of version ${version}`, undoes: version });
   }
@@ -102,7 +107,7 @@ export class History {
     const then = this.at(id, version);
     const cur = this.current.get(id) ?? {};
     const fields: Record<string, unknown> = { ...then };
-    for (const k of Object.keys(cur)) if (!(k in then)) fields[k] = undefined;
+    for (const k of Object.keys(cur)) if (!Object.hasOwn(then, k)) put(fields, k, undefined);
     return this.change(id, by, fields, { note: `restored version ${version}` });
   }
 }

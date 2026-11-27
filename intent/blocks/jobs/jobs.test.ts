@@ -100,3 +100,48 @@ test('cron: next run times, steps, ranges and the day-of-month or weekday rule',
   assert.throws(() => cron('61 * * * *'), /not a valid cron field/);
   assert.throws(() => cron('* * *'), /five fields/);
 });
+
+test('a job cancelled while a tick is working through the list does not run, and overlapping ticks run each job once', async () => {
+  const q = new Queue({ now: () => 0 });
+  const ran: string[] = [];
+  let second = '';
+  q.handle('k', async (p) => {
+    ran.push(String(p));
+    if (p === 'a') q.cancel(second);
+  });
+  q.enqueue('k', 'a');
+  second = q.enqueue('k', 'b').id;
+  await q.tick();
+  assert.deepEqual(ran, ['a'], 'b was cancelled before its turn');
+  assert.equal(q.jobs.get(second)!.state, 'cancelled');
+  const q2 = new Queue({ now: () => 0 });
+  let n = 0;
+  q2.handle('k', async () => {
+    n++;
+    await new Promise((r) => setTimeout(r, 5));
+  });
+  q2.enqueue('k', 1);
+  q2.enqueue('k', 2);
+  await Promise.all([q2.tick(), q2.tick()]);
+  assert.equal(n, 2);
+  assert.ok([...q2.jobs.values()].every((j) => j.attempts === 1));
+});
+
+test('cron: a 29 February schedule finds its next leap year, an impossible date is reported, and Sunday may be 7', () => {
+  assert.equal(cron('0 0 29 2 *').next(new Date('2026-11-26T00:00:00Z')).toISOString(), '2028-02-29T00:00:00.000Z');
+  assert.throws(() => cron('0 0 31 2 *').next(new Date('2026-11-26T00:00:00Z')), /never fires/);
+  assert.equal(cron('0 9 * * 7').next(new Date('2026-11-26T00:00:00Z')).toISOString(), '2026-11-29T09:00:00.000Z');
+  assert.throws(() => cron('-5 * * * *'), /not a valid cron field/);
+  assert.throws(() => cron('1,,2 * * * *'), /not a valid cron field/);
+  assert.throws(() => cron('*/0 * * * *'), /not a valid cron field/);
+});
+
+test('resuming a backfill that already finished does not walk everything again', async () => {
+  let pages = 0;
+  const b = { page: async () => (pages++, { items: [1, 2] }), plan: async () => 1, apply: async () => undefined };
+  const done = await backfill(b, { dryRun: false });
+  assert.equal(done.finished, true);
+  const again = await backfill(b, { dryRun: false, resume: done });
+  assert.equal(pages, 1);
+  assert.equal(again.changed, 2);
+});

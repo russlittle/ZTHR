@@ -38,3 +38,31 @@ test('resuming says when someone else saved in the meantime, and what changed', 
   assert.equal(d.sweep(60_000), 1);
   assert.deepEqual(d.mine('ana'), []);
 });
+
+test('one person’s draft can never be read through a crafted id of another', () => {
+  const d = new Drafts({ now: () => 0 });
+  d.save('ana', 'doc\nsecret', 1, { body: 'private' });
+  assert.equal(d.resume('ana\ndoc', 'secret', { version: 1, fields: {} }).state, 'none');
+});
+
+test('history keeps what was typed even when the editor later mutates nested values', () => {
+  let t = 0;
+  const d = new Drafts({ now: () => t });
+  const fields = { tags: ['a'] };
+  d.save('ana', 'doc:1', 1, fields);
+  fields.tags.push('b');
+  assert.deepEqual(d.mine('ana')[0]!.history[0]!.fields, { tags: ['a'] });
+  t = 60_000;
+  d.save('ana', 'doc:1', 1, { tags: ['x'] });
+  const restored = d.restore('ana', 'doc:1', 0);
+  (restored.fields.tags as string[]).push('changed');
+  assert.deepEqual(d.mine('ana')[0]!.history[0]!.fields, { tags: ['a'] });
+});
+
+test('a draft saved again from a newer version of the record is no longer in conflict', () => {
+  const d = new Drafts({ now: () => 0 });
+  d.save('ana', 'doc:1', 4, { body: 'mine' });
+  d.save('ana', 'doc:1', 5, { body: 'merged' });
+  assert.equal(d.resume('ana', 'doc:1', { version: 5, fields: { body: 'theirs' } }).state, 'clean');
+  assert.throws(() => new Drafts({ keepVersions: 0 }), /at least one/);
+});

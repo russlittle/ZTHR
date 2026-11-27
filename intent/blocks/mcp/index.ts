@@ -3,7 +3,7 @@
  * a JSON-RPC 2.0 handler (initialize, tools/list, tools/call, ping), transport-agnostic so it can sit behind stdio
  * or streamable HTTP. Each tool declares a JSON Schema for its input, checked before it runs; each call is made as
  * the person the agent acts for, so an agent can never do more than they could; read-only tools are marked so
- * clients can call them without asking; every call is recorded with its outcome.
+ * clients can call them without asking; every call that reaches a tool is recorded with its outcome.
  */
 
 export const PROTOCOL = '2025-06-18';
@@ -25,9 +25,9 @@ export function validate(s: Schema, v: unknown): string[] {
   if (typeof v !== 'object' || v === null || Array.isArray(v)) return ['arguments must be an object'];
   const o = v as Record<string, unknown>;
   const out: string[] = [];
-  for (const r of s.required ?? []) if (!(r in o)) out.push(`${r} is required`);
+  for (const r of s.required ?? []) if (!Object.hasOwn(o, r)) out.push(`${r} is required`);
   for (const [k, val] of Object.entries(o)) {
-    const p = s.properties[k];
+    const p = Object.hasOwn(s.properties, k) ? s.properties[k] : undefined;
     if (!p) {
       if (s.additionalProperties === false) out.push(`${k} is not an argument of this tool`);
       continue;
@@ -72,17 +72,25 @@ export class Server {
     this.now = now;
     for (const t of tools) {
       if (!/^[a-zA-Z0-9_-]{1,64}$/.test(t.name)) throw new Error(`${t.name}: tool names are letters, digits, _ and -`);
+      if (this.tools.has(t.name)) throw new Error(`${t.name}: a tool is named twice`);
       this.tools.set(t.name, t);
     }
   }
 
-  /** Handles one JSON-RPC message; notifications (no id) get no reply. */
+  /**
+   * Handles one JSON-RPC message; notifications (no id) get no reply. A request id is a string or a number: MCP
+   * forbids null, so null or any other kind of id is an invalid request, answered with a null id.
+   */
   async handle(raw: unknown, as: { who: string; can: (p: string) => boolean }): Promise<Reply | undefined> {
     const m = raw as Rpc;
-    const id = m && typeof m === 'object' && 'id' in m ? (m.id ?? null) : undefined;
-    const err = (code: number, message: string, data?: unknown): Reply => ({ jsonrpc: '2.0', id: id ?? null, error: { code, message, ...(data !== undefined ? { data } : {}) } });
-    if (!m || m.jsonrpc !== '2.0' || typeof m.method !== 'string') return err(-32600, 'not a JSON-RPC 2.0 request');
-    if (id === undefined) return undefined;
+    const given = m && typeof m === 'object' && !Array.isArray(m) && Object.hasOwn(m, 'id') ? (m as { id: unknown }).id : undefined;
+    const has = m && typeof m === 'object' && !Array.isArray(m) && Object.hasOwn(m, 'id');
+    const validId = typeof given === 'string' || (typeof given === 'number' && Number.isFinite(given));
+    const err = (code: number, message: string, data?: unknown): Reply => ({ jsonrpc: '2.0', id: validId ? (given as string | number) : null, error: { code, message, ...(data !== undefined ? { data } : {}) } });
+    if (!m || typeof m !== 'object' || Array.isArray(m) || m.jsonrpc !== '2.0' || typeof m.method !== 'string') return err(-32600, 'not a JSON-RPC 2.0 request');
+    if (!has) return undefined;
+    if (!validId) return err(-32600, 'a request id is a string or a number');
+    const id = given as string | number;
     const ok = (result: unknown): Reply => ({ jsonrpc: '2.0', id, result });
     switch (m.method) {
       case 'initialize':
@@ -102,7 +110,7 @@ export class Server {
         try {
           const out = await t.run(args, as);
           this.log.push({ at, who: as.who, tool: t.name, ok: true });
-          return ok({ content: [{ type: 'text', text: typeof out === 'string' ? out : JSON.stringify(out) }], ...(typeof out === 'object' && out !== null ? { structuredContent: out } : {}), isError: false });
+          return ok({ content: [{ type: 'text', text: typeof out === 'string' ? out : JSON.stringify(out) }], ...(typeof out === 'object' && out !== null && !Array.isArray(out) ? { structuredContent: out } : {}), isError: false });
         } catch (e) {
           const message = e instanceof Error ? e.message : String(e);
           this.log.push({ at, who: as.who, tool: t.name, ok: false, error: message });

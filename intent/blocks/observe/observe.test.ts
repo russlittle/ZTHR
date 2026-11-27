@@ -76,3 +76,54 @@ test('metrics: counters, latency percentiles and the Prometheus text format', ()
   assert.match(t, /latency_ms_count\{route="dav"\} 100/);
   assert.equal(keepDays({ severity: 'INFO', kind: 'audit' }, [{ match: { kind: 'audit' }, days: 400 }, { match: { severity: 'INFO' }, days: 30 }]), 400);
 });
+
+test('Prometheus text: label values are escaped, each family is typed and grouped, histograms carry _sum and ordered buckets', () => {
+  const m = new Metrics();
+  m.count('requests', { route: 'a"b\\c\nd' });
+  m.count('requests', { route: 'x', code: '200' });
+  m.observe('latency_ms', 7, { route: 'x' });
+  m.observe('latency_ms', 20_000, { route: 'x' });
+  const t = m.text();
+  assert.ok(t.includes('requests{route="a\\"b\\\\c\\nd"} 1'), t);
+  assert.equal(t.split('\n').filter((l) => l.startsWith('requests')).length, 2, 'a value cannot start a line of its own');
+  assert.match(t, /# TYPE requests counter\n/);
+  assert.match(t, /# TYPE latency_ms histogram\n/);
+  assert.match(t, /latency_ms_sum\{route="x"\} 20007\n/);
+  const les = [...t.matchAll(/latency_ms_bucket\{route="x",le="([^"]+)"\}/g)].map((x) => x[1]);
+  assert.deepEqual(les, ['5', '10', '25', '50', '100', '250', '500', '1000', '2500', '5000', '10000', '+Inf'], 'buckets in increasing order, +Inf last');
+  assert.notEqual(m.value('requests', { route: 'x",code="200' }), 1, 'a crafted value is not another series');
+  assert.throws(() => m.count('bad name', {}), /metric name/);
+  assert.throws(() => m.count('ok', { 'bad-label': 'x' }), /label name/);
+});
+
+test('the 0th percentile is the smallest observation', () => {
+  const m = new Metrics();
+  for (const v of [3, 1, 2]) m.observe('x', v);
+  assert.equal(m.percentile('x', 0), 1);
+  assert.equal(m.percentile('x', 100), 3);
+});
+
+test('fields cannot overwrite a line’s severity, message or time', () => {
+  const lines: string[] = [];
+  new Logger({ write: (l) => lines.push(l) }).error('disk full', { severity: 'DEBUG', message: 'all fine', time: 'never' });
+  const l = JSON.parse(lines[0]!);
+  assert.equal(l.severity, 'ERROR');
+  assert.equal(l.message, 'disk full');
+  assert.notEqual(l.time, 'never');
+});
+
+test('secret-bearing keys are redacted in their common spellings', () => {
+  const r = redact({ client_secret: 'a', 'x-api-key': 'b', 'api-key': 'c', 'proxy-authorization': 'd', id_token: 'e', newPassword: 'f', aws_secret_access_key: 'g', privateKey: 'h', user: 'ana' }) as Record<string, unknown>;
+  for (const k of ['client_secret', 'x-api-key', 'api-key', 'proxy-authorization', 'id_token', 'newPassword', 'aws_secret_access_key', 'privateKey']) assert.equal(r[k], '[redacted]', k);
+  assert.equal(r['user'], 'ana');
+});
+
+test('an all-zero trace or parent id in traceparent is invalid (W3C Trace Context) and starts a new trace', async () => {
+  const zeroTrace = '00-00000000000000000000000000000000-00f067aa0ba902b7-01';
+  const zeroParent = '00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000000-01';
+  for (const tp of [zeroTrace, zeroParent]) {
+    const { spans } = await withTrace({ traceparent: tp, name: 'x' }, async () => undefined);
+    assert.notEqual(spans[0]!.trace, '00000000000000000000000000000000');
+    assert.equal(spans[0]!.parent, undefined);
+  }
+});

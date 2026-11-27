@@ -33,3 +33,16 @@ test('production refuses every override; reasons, limits and roles are checked',
   u.set('ana', { kind: 'flag', flag: 'x', on: false }, 'second setting of x');
   assert.equal(u.flag('ana', 'x'), false, 'a new override replaces the old one');
 });
+
+test('production is refused however it is spelled, and so is any environment not known to be a test one', () => {
+  for (const env of ['prod', 'Production', ' production ', 'PRD', 'live', 'prod-eu']) {
+    assert.throws(() => new Uat({ env }).set('ana', { kind: 'flag', flag: 'x', on: true }, 'checking the flag'), /not available/, env);
+  }
+  assert.equal(new Uat({ env: 'QA' }).set('ana', { kind: 'flag', flag: 'x', on: true }, 'checking the flag').who, 'ana');
+  assert.equal(new Uat({ env: 'demo', testEnvs: ['demo'] }).set('ana', { kind: 'flag', flag: 'x', on: true }, 'checking the flag').who, 'ana');
+});
+
+test('an override needs a real, positive length of time', () => {
+  const u = new Uat({ env: 'uat' });
+  for (const m of [Number.NaN, 0, -5]) assert.throws(() => u.set('ana', { kind: 'flag', flag: 'x', on: true }, 'checking the flag', m), /minutes/, String(m));
+});

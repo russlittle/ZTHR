@@ -79,11 +79,18 @@ export class ApiKeys {
     return k;
   }
 
-  /** A replacement with the same scopes; the old key keeps working for `overlapMs`, then stops. */
+  /**
+   * A replacement with the same scopes and expiry; the old key keeps working for `overlapMs`, then stops. A key is
+   * replaced once: an expired or already replaced key is refused.
+   */
   async rotate(owner: string, id: string, overlapMs: number): Promise<{ key: Key; secret: string }> {
     const old = await this.store.byId(id);
     if (!old || old.owner !== owner || old.revoked) throw new Rejected('no such key of yours');
-    const next = await this.issue(owner, old.name, old.scopes);
+    const t = this.now();
+    if (old.expires && old.expires <= t) throw new Rejected('that key has expired; issue a new one');
+    if (old.replacedBy) throw new Rejected('that key was already replaced; rotate the new one');
+    // The replacement lives no longer than the key it replaces, so rotating never lifts an expiry.
+    const next = await this.issue(owner, old.name, old.scopes, old.expires ? { ttlMs: old.expires - t } : {});
     old.replacedBy = next.key.id;
     old.retiresAt = this.now() + overlapMs;
     await this.store.set(old);

@@ -409,7 +409,8 @@
         "adminjs"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "console: sections, statuses, reasons, permission filter and summary; no screen beyond escaped HTML"
       }
     },
     {

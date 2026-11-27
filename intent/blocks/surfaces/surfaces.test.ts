@@ -37,3 +37,18 @@ test('error pages say what happened and what to do, never blame the person for o
   assert.equal(errorPage(404, 'r').title, 'We cannot find that page');
   assert.equal(errorPage(418, 'r').title, 'That request did not make sense');
 });
+
+test('a fixed path wins over a pattern, whatever order the screens were registered in', () => {
+  const reg = new Surfaces([s('file', '/apps/files/:id'), s('upload', '/apps/files/new')]);
+  assert.equal(reg.forPath('/apps/files/new')!.id, 'upload');
+  assert.equal(reg.forPath('/apps/files/42')!.id, 'file');
+});
+
+test('two screens cannot share an id', () => {
+  assert.deepEqual(check([s('a', '/a'), s('a', '/b')]), ['a: the id is used twice']);
+});
+
+test('news for everyone reaches everyone, as it does in explain', () => {
+  const reg = new Surfaces([s('a', '/a')], { news: [{ id: 'n', date: '2026-11-01', title: 'Hi', body: '', audience: ['everyone'] }] });
+  assert.deepEqual(reg.whatsNew('ana', ['member']).map((n) => n.id), ['n']);
+});

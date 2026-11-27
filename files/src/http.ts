@@ -66,27 +66,49 @@ export async function fields(r: Req): Promise<Record<string, string>> {
   return out;
 }
 
-/** Wrong passwords from one address: ten a minute, then it waits. A success clears the count. */
-const signIns = new Failures(10, 60_000, { what: 'too many failed sign-ins from this address' });
+/**
+ * Wrong passwords from one address: ten a minute, then it waits. Every way in counts against the same limit (Basic,
+ * the web sign-in, the app sign-in page), and a success does not clear it, so signing in to an account of your own
+ * between guesses at someone else's buys no more guesses. One limit per server, so two servers in one process
+ * (as in tests) do not share it.
+ */
+const limits = new WeakMap<Files, Failures>();
+const signIns = (files: Files) => {
+  let f = limits.get(files);
+  if (!f) limits.set(files, (f = new Failures(10, 60_000, { what: 'too many failed sign-ins from this address' })));
+  return f;
+};
+
+/** Checks a login name and password (or app password), counted against the address's limit. */
+export async function signInAs(files: Files, r: Req, user: string, password: string): ReturnType<Files['signIn']> {
+  const lim = signIns(files);
+  lim.check(r.ip);
+  try {
+    return await files.signIn(user, password);
+  } catch (e) {
+    lim.fail(r.ip);
+    throw e;
+  }
+}
 
 /** Signs the request in from its Basic credentials; returns false when it carries none. */
 export async function authenticate(files: Files, r: Req): Promise<boolean> {
   const h = header(r, 'authorization');
   if (!h?.startsWith('Basic ')) return false;
-  signIns.check(r.ip);
+  signIns(files).check(r.ip);
   const raw = Buffer.from(h.slice(6), 'base64').toString('utf8');
   const i = raw.indexOf(':');
   if (i < 0) throw new NotSignedIn();
+  let user: string;
   try {
-    const s = await files.signIn(decodeURIComponent(raw.slice(0, i)), raw.slice(i + 1));
-    r.person = s.person;
-    if (s.device !== undefined) r.device = s.device;
-    signIns.succeed(r.ip);
-    return true;
-  } catch (e) {
-    signIns.fail(r.ip);
-    throw e;
+    user = decodeURIComponent(raw.slice(0, i));
+  } catch {
+    user = raw.slice(0, i);
   }
+  const s = await signInAs(files, r, user, raw.slice(i + 1));
+  r.person = s.person;
+  if (s.device !== undefined) r.device = s.device;
+  return true;
 }
 
 /** The status a block error means to a client. */
@@ -104,7 +126,7 @@ export function statusOf(e: unknown): { status: number; message: string; retryAf
   if (e instanceof Held) return { status: 423, message: m };
   if (e instanceof Insufficient || e instanceof OverQuota) return { status: 507, message: m };
   if (e instanceof TooLarge) return { status: 413, message: m };
-  if (e instanceof InvalidName || e instanceof BadChunk || e instanceof BadXml || e instanceof WrongLength || e instanceof SyntaxError) return { status: 400, message: m };
+  if (e instanceof InvalidName || e instanceof BadChunk || e instanceof BadXml || e instanceof WrongLength || e instanceof SyntaxError || e instanceof URIError) return { status: 400, message: m };
   if (e instanceof Refused) return { status: 400, message: m };
   return { status: 500, message: 'something went wrong on the server' };
 }

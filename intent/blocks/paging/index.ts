@@ -38,14 +38,20 @@ const dec = (s: string): unknown => {
   }
 };
 
-const cmp = (a: unknown, b: unknown): number => (a === b ? 0 : a === null || a === undefined ? -1 : b === null || b === undefined ? 1 : (a as never) < (b as never) ? -1 : 1);
+/** Missing and null are the same value and sort before everything else. */
+const cmp = (a: unknown, b: unknown): number => {
+  const na = a === null || a === undefined;
+  const nb = b === null || b === undefined;
+  if (na || nb) return na && nb ? 0 : na ? -1 : 1;
+  return a === b ? 0 : (a as never) < (b as never) ? -1 : 1;
+};
 
 /** Check a query against the list's declaration. Anything it does not allow is refused by name. */
 export function check<T>(spec: ListSpec<T>, q: Query): void {
   if (q.sort && !spec.sortable.includes(q.sort.field as never)) throw new BadQuery(`cannot sort by ${q.sort.field}`);
   for (const f of q.filters ?? []) {
-    const ops = spec.filterable[f.field as keyof T & string];
-    if (!ops || !ops.includes(f.op)) throw new BadQuery(`cannot filter ${f.field} by ${f.op}`);
+    const ops = Object.hasOwn(spec.filterable, f.field) ? spec.filterable[f.field as keyof T & string] : undefined;
+    if (!Array.isArray(ops) || !ops.includes(f.op)) throw new BadQuery(`cannot filter ${f.field} by ${f.op}`);
   }
   if (q.limit !== undefined && (!Number.isInteger(q.limit) || q.limit < 1)) throw new BadQuery('limit must be a whole number from 1');
 }

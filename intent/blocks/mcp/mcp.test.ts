@@ -41,3 +41,33 @@ test('arguments are checked against the schema; protocol errors use the JSON-RPC
   assert.deepEqual(validate({ type: 'object', properties: { n: { type: 'integer', minimum: 1, maximum: 10 }, tags: { type: 'array', items: { type: 'string', enum: ['a', 'b'] }, maxItems: 2 } } }, { n: 1.5, tags: ['a', 'c'] }), ['n must be a whole number', 'tags[1] must be one of a, b']);
   assert.throws(() => new Server({ name: 'f', version: '1' }, [{ ...tools[0]!, name: 'read file' }]), /tool names/);
 });
+
+test('argument names that live on Object.prototype are checked like any other, never crash the handler', async () => {
+  const s = new Server({ name: 'f', version: '1' }, tools);
+  const strict = { type: 'object' as const, properties: { path: { type: 'string' as const } }, required: ['path'], additionalProperties: false as const };
+  assert.deepEqual(validate(strict, JSON.parse('{"path":"/a","constructor":1}')), ['constructor is not an argument of this tool']);
+  assert.deepEqual(validate(strict, JSON.parse('{"path":"/a","__proto__":{"x":1}}')), ['__proto__ is not an argument of this tool']);
+  assert.deepEqual(validate({ type: 'object', properties: {}, required: ['toString'] }, {}), ['toString is required']);
+  const open = { type: 'object' as const, properties: { path: { type: 'string' as const } }, required: ['path'] };
+  assert.deepEqual(validate(open, { path: '/a', toString: 'x' }), []);
+  const r = await s.handle({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'delete_file', arguments: JSON.parse('{"path":"/a","hasOwnProperty":1}') } }, editor);
+  assert.equal(r!.error, undefined, 'an unknown extra argument on a tool that allows extras is ignored, not a crash');
+});
+
+test('a request id must be a string or a number (MCP forbids null); others are invalid requests', async () => {
+  const s = new Server({ name: 'f', version: '1' }, tools);
+  for (const id of [null, {}, [1], true]) {
+    const r = await s.handle({ jsonrpc: '2.0', id, method: 'ping' }, reader);
+    assert.equal(r!.error!.code, -32600, JSON.stringify(id));
+    assert.equal(r!.id, null);
+  }
+});
+
+test('structuredContent is only ever a JSON object; duplicate tool names are refused', async () => {
+  const list: Tool = { name: 'list', title: 'List', description: 'Lists', readOnly: true, inputSchema: { type: 'object', properties: {} }, run: async () => ['a', 'b'] };
+  const s = new Server({ name: 'f', version: '1' }, [list]);
+  const r = (await s.handle({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'list', arguments: {} } }, reader))!.result as Record<string, unknown>;
+  assert.deepEqual(r.content, [{ type: 'text', text: '["a","b"]' }]);
+  assert.equal('structuredContent' in r, false);
+  assert.throws(() => new Server({ name: 'f', version: '1' }, [tools[0]!, { ...tools[1]!, name: 'read_file' }]), /twice/);
+});

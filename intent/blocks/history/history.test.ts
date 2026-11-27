@@ -29,3 +29,21 @@ test('undo is a new change, and refuses to lose a newer edit', () => {
   assert.deepEqual(h.get('r'), { a: 1, b: 1 }, 'restore removes fields added later');
   assert.deepEqual(h.at('r', 5), { a: 5, b: 2 }, 'and every version before it is still there');
 });
+
+test('field names that are also object property names are fields like any other', () => {
+  const h = new History();
+  const c = h.change('r', 'ana', JSON.parse('{"constructor":"Acme Build","__proto__":{"admin":true}}') as Record<string, unknown>);
+  assert.equal(Object.hasOwn(c.before, 'constructor') && c.before.constructor, undefined, 'there was no constructor field before');
+  assert.equal((h.get('r') as Record<string, unknown>).admin, undefined, 'no inherited admin flag');
+  assert.equal((h.at('r', 1) as Record<string, unknown>).admin, undefined);
+  assert.deepEqual(Object.keys(h.at('r', 1)), ['constructor', '__proto__']);
+  h.undo('r', 1, 'ana');
+  assert.deepEqual(h.get('r'), {});
+});
+
+test('the same object written with its keys in another order is not a change', () => {
+  const h = new History();
+  h.change('r', 'ana', { address: { city: 'Dayton', zip: '45402' } });
+  const c = h.change('r', 'ben', { address: { zip: '45402', city: 'Dayton' } });
+  assert.deepEqual(c.after, {});
+});

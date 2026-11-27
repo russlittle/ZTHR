@@ -1,9 +1,9 @@
 /**
  * Full-text search with BM25 ranking. Text is folded (case and accents), split into words, and lightly stemmed;
  * fields carry weights (a title match counts more than a body match); the last word of a query also matches as a
- * prefix so results appear while typing; quoted phrases must appear in order; filters narrow by facet, and facet
- * counts come back with the results. Snippets mark the matched words, escaped for HTML. Documents are only ever
- * returned to someone the `canSee` check allows.
+ * prefix so results appear while typing (every word, that one included, must match); quoted phrases must appear in
+ * order within one field; filters narrow by facet, and facet counts come back with the results. Snippets mark the
+ * matched words, escaped for HTML. Documents are only ever returned to someone the `canSee` check allows.
  */
 
 export interface Doc {
@@ -44,6 +44,8 @@ export class Index {
   private readonly docs = new Map<string, Doc>();
   private readonly terms = new Map<string, Map<string, number>>();
   private readonly lengths = new Map<string, number>();
+  /** The terms each document was indexed under, so removing it touches only its own postings. */
+  private readonly docTerms = new Map<string, Set<string>>();
   private total = 0;
   private readonly o: Required<SearchOptions>;
 
@@ -55,9 +57,11 @@ export class Index {
     this.remove(d.id);
     this.docs.set(d.id, d);
     let len = 0;
+    const mine = new Set<string>();
     for (const [f, text] of Object.entries(d.fields)) {
-      const w = this.o.weights[f] ?? 1;
+      const w = (Object.hasOwn(this.o.weights, f) ? this.o.weights[f] : undefined) ?? 1;
       for (const t of words(text).map(stem)) {
+        mine.add(t);
         const m = this.terms.get(t) ?? new Map<string, number>();
         m.set(d.id, (m.get(d.id) ?? 0) + w);
         this.terms.set(t, m);
@@ -65,15 +69,18 @@ export class Index {
       }
     }
     this.lengths.set(d.id, len);
+    this.docTerms.set(d.id, mine);
     this.total += len;
   }
 
   remove(id: string): void {
     if (!this.docs.has(id)) return;
-    for (const [t, m] of this.terms) {
-      m.delete(id);
-      if (!m.size) this.terms.delete(t);
+    for (const t of this.docTerms.get(id) ?? []) {
+      const m = this.terms.get(t);
+      m?.delete(id);
+      if (m && !m.size) this.terms.delete(t);
     }
+    this.docTerms.delete(id);
     this.total -= this.lengths.get(id) ?? 0;
     this.lengths.delete(id);
     this.docs.delete(id);
@@ -93,9 +100,11 @@ export class Index {
     const N = this.docs.size || 1;
     const avg = this.total / N || 1;
     const scores = new Map<string, number>();
-    const expand = (t: string, raw: string | undefined) => (raw && raw === lastPrefix ? [...this.terms.keys()].filter((k) => k.startsWith(raw) || k === t) : [t]);
-    for (const [i, t] of terms.entries()) {
-      for (const term of expand(t, qWords[i])) {
+    // The word being typed is a prefix unless the same stem also appears as a finished word earlier in the query.
+    const prefixStem = lastPrefix !== undefined && !qWords.slice(0, -1).some((w) => stem(w) === stem(lastPrefix)) && !phrases.flat().some((w) => stem(w) === stem(lastPrefix)) ? stem(lastPrefix) : undefined;
+    const expand = (t: string) => (t === prefixStem ? [...this.terms.keys()].filter((k) => k.startsWith(lastPrefix!) || k === t) : [t]);
+    for (const t of terms) {
+      for (const term of expand(t)) {
         const posting = this.terms.get(term);
         if (!posting) continue;
         const idf = Math.log(1 + (N - posting.size + 0.5) / (posting.size + 0.5));
@@ -111,11 +120,12 @@ export class Index {
       const d = this.docs.get(id)!;
       if (!o.canSee(id)) continue;
       if (o.filters && !Object.entries(o.filters).every(([k, v]) => d.facets?.[k] === v)) continue;
-      const all = words(Object.values(d.fields).join(' '));
-      if (!phrases.every((p) => all.some((_, i) => p.every((w, j) => all[i + j] === w)))) continue;
-      const stems = new Set(all.map(stem));
-      const required = qWords.filter((w) => w !== lastPrefix).map(stem);
+      const perField = Object.values(d.fields).map(words);
+      if (!phrases.every((p) => perField.some((all) => all.some((_, i) => p.every((w, j) => all[i + j] === w))))) continue;
+      const stems = new Set(perField.flat().map(stem));
+      const required = (prefixStem === undefined ? qWords : qWords.slice(0, -1)).map(stem);
       if (!required.every((t) => stems.has(t))) continue;
+      if (prefixStem !== undefined && !stems.has(prefixStem) && ![...stems].some((t) => t.startsWith(lastPrefix!))) continue;
       matched.push({ id, score });
     }
     matched.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));

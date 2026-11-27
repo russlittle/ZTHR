@@ -75,3 +75,38 @@ test('stripping removes EXIF (and its GPS) and comments but keeps the colour pro
   assert.deepEqual([inspect(after).width, inspect(after).orientation], [800, 1]);
   assert.ok(after.subarray(-9).equals(before.subarray(-9)), 'the image data is untouched');
 });
+
+test('images appended after the end of the picture (multi-picture previews, motion-photo trailers) are stripped with their EXIF', () => {
+  const mpf = seg(0xe2, Buffer.from('MPF\0II*\0', 'latin1'));
+  const first = jpeg(800, 600, 6);
+  const withMpf = Buffer.concat([first.subarray(0, 2), mpf, first.subarray(2), jpeg(160, 120, 6), Buffer.from('trailer with secrets')]);
+  const after = stripJpeg(withMpf);
+  assert.equal(after.includes(Buffer.from('Exif\0\0', 'latin1')), false);
+  assert.equal(after.includes(Buffer.from('taken at home')), false);
+  assert.equal(after.includes(Buffer.from('MPF\0', 'latin1')), false);
+  assert.equal(after.includes(Buffer.from('trailer with secrets')), false);
+  assert.ok(after.subarray(-2).equals(Buffer.from([0xff, 0xd9])), 'ends at the end of the first picture');
+  assert.deepEqual([inspect(after).width, inspect(after).height], [800, 600]);
+});
+
+test('the Adobe segment, which says how to decode the colours, is kept', () => {
+  const adobe = seg(0xee, Buffer.from('Adobe\0\x64\0\0\0\0\x02', 'latin1'));
+  const j = jpeg(10, 10, 1);
+  const after = stripJpeg(Buffer.concat([j.subarray(0, 2), adobe, j.subarray(2)]));
+  assert.ok(after.includes(Buffer.from('Adobe', 'latin1')));
+});
+
+test('fill bytes before a marker are allowed, and short or damaged headers are refused cleanly', () => {
+  const j = jpeg(640, 480, 3);
+  const sof = j.indexOf(Buffer.from([0xff, 0xc0]));
+  const filled = Buffer.concat([j.subarray(0, sof), Buffer.from([0xff, 0xff]), j.subarray(sof)]);
+  assert.deepEqual([inspect(filled).width, inspect(filled).height, inspect(filled).orientation], [640, 480, 3]);
+  assert.throws(() => inspect(png(1, 1).subarray(0, 18)), Refused);
+  assert.throws(() => inspect(Buffer.from('GIF89a\x01', 'latin1')), Refused);
+  const webp = Buffer.alloc(16);
+  webp.write('RIFF', 0, 'latin1');
+  webp.write('WEBPVP8 ', 8, 'latin1');
+  assert.throws(() => inspect(webp), Refused);
+  assert.throws(() => inspect(Buffer.from([0xff, 0xd8, 0xff, 0xc0, 0x00, 0x05, 0x08])), Refused);
+  assert.throws(() => stripJpeg(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x00, 0x00])), Refused);
+});

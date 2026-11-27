@@ -35,3 +35,17 @@ test('masking keeps the shape and hides the content', () => {
   assert.equal(mask('Ana Okafor'), 'A•••••••••');
   assert.equal(mask(null), null);
 });
+
+test('a field classified twice is held to the higher level, and the inventory says so', () => {
+  const twice: Field[] = [{ collection: 'users', field: 'notes', level: 'sensitive' }, { collection: 'users', field: 'notes', level: 'public' }];
+  const g = new Gate(twice, [{ destination: 'vendor:crm', allow: 'public', why: 'only public data leaves' }]);
+  assert.deepEqual(g.decide('users', ['notes'], 'vendor:crm', 'ci').map((v) => [v.action, v.level]), [['deny', 'sensitive']]);
+  assert.deepEqual(inventory(twice).findings, ['users.notes is classified twice (sensitive, public); the higher level holds']);
+});
+
+test('a destination pattern with the global flag decides the same way every time', () => {
+  const g = new Gate(fields, [{ destination: /^staging/g, allow: 'internal', why: 'staging' }]);
+  const a = g.decide('users', ['plan'], 'staging', 'ci')[0]!.action;
+  const b = g.decide('users', ['plan'], 'staging', 'ci')[0]!.action;
+  assert.deepEqual([a, b], ['allow', 'allow']);
+});

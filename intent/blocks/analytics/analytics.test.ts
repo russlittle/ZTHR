@@ -39,3 +39,17 @@ test('funnels count steps in order within a time limit, suppress small counts, a
   assert.deepEqual(a.funnel(['visit', 'signup', 'upload'], 60_000, 6).map((x) => x.people), [10, 8, null], 'five is under the threshold');
   assert.deepEqual(a.journeys('visit', 3), [{ path: 'visit → signup → upload', people: 5 }]);
 });
+
+test('a heavy user does not make funnels quadratic', () => {
+  const { a, at } = make();
+  for (let i = 0; i < 40_000; i++) at(i), a.track('busy', 'visit');
+  const t0 = performance.now();
+  assert.deepEqual(a.funnel(['visit', 'signup'], 10_000_000, 1).map((x) => x.people), [1, null]);
+  assert.ok(performance.now() - t0 < 2_000, `${Math.round(performance.now() - t0)} ms`);
+});
+
+test('event names that are also Object properties do not break tracking', () => {
+  const { a } = make();
+  assert.equal(a.track('u1', 'constructor', { plan: 'pro' }), true);
+  assert.deepEqual(a.events[0]!.props, { plan: 'pro' });
+});

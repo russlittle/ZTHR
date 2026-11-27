@@ -158,6 +158,8 @@ export class Accounts {
   async reset(token: string, password: string): Promise<Account> {
     const p = this.take(token, 'reset');
     const a = this.accounts.get(p.account)!;
+    // Every other reset link for the account is spent with this one, so an older link cannot reset it again.
+    for (const [k, x] of this.pending) if (x.account === a.id && x.purpose === 'reset') this.pending.delete(k);
     a.passwordHash = await this.h.hash(password);
     a.emailConfirmed = true;
     await this.h.record?.(a.id, 'password-reset', a.id);
@@ -173,9 +175,11 @@ export class Accounts {
     return o;
   }
 
-  /** Invites someone into an organisation with a role; they set a password when they accept. */
+  /** Invites someone into an organisation with a role (only an owner grants "owner"); they set a password when they accept. */
   async invite(by: string, org: string, email: string, role: string): Promise<Account> {
-    if (!this.rolesIn(by, org).some((r) => r === 'owner' || r === 'admin')) throw new Refused('only an owner or admin invites people');
+    const mine = this.rolesIn(by, org);
+    if (!mine.some((r) => r === 'owner' || r === 'admin')) throw new Refused('only an owner or admin invites people');
+    if (role === 'owner' && !mine.includes('owner')) throw new Refused('only an owner makes someone an owner');
     let a = this.byEmail(email);
     if (!a) {
       a = { id: this.id('acct'), email: norm(email), name: '', state: 'invited', emailConfirmed: false, created: this.now() };
@@ -222,6 +226,7 @@ export class Accounts {
     const a = this.accounts.get(account);
     if (!a || a.state !== 'active') throw new Refused('only an active account can be deactivated');
     a.state = 'deactivated';
+    this.endElevationsOf(account);
     void this.h.record?.(by, 'deactivate', account);
   }
 
@@ -241,6 +246,7 @@ export class Accounts {
     a.state = 'offboarded';
     delete a.passwordHash;
     delete a.current;
+    this.endElevationsOf(account);
     for (const [k, p] of this.pending) if (p.account === account) this.pending.delete(k);
     await this.h.record?.(by, 'offboard', account);
   }
@@ -248,7 +254,7 @@ export class Accounts {
   /** Starts acting as someone (support) or emergency access (break-glass): time-boxed, reasoned, recorded, announced. */
   async elevate(kind: Elevation['kind'], by: string, o: { as?: string; reason: string; minutes: number }): Promise<Elevation> {
     if (o.reason.trim().length < 15) throw new Refused('write the reason in a sentence: it is recorded and reviewed');
-    if (o.minutes < 1 || o.minutes > (kind === 'break-glass' ? 240 : 60)) throw new Refused(`${kind} lasts at most ${kind === 'break-glass' ? 4 : 1} hour${kind === 'break-glass' ? 's' : ''}`);
+    if (!Number.isFinite(o.minutes) || o.minutes < 1 || o.minutes > (kind === 'break-glass' ? 240 : 60)) throw new Refused(`${kind} lasts at most ${kind === 'break-glass' ? 4 : 1} hour${kind === 'break-glass' ? 's' : ''}`);
     if (kind === 'act-as' && (!o.as || !this.accounts.has(o.as))) throw new Refused('name the person to act as');
     if (o.as === by) throw new Refused('you cannot act as yourself');
     const e: Elevation = { id: this.id('elev'), kind, by, ...(o.as ? { as: o.as } : {}), reason: o.reason.trim(), from: this.now(), until: this.now() + o.minutes * 60_000 };
@@ -261,17 +267,23 @@ export class Accounts {
   /** The elevation in force for a person now, if any. */
   active(by: string): Elevation | undefined {
     const t = this.now();
-    return this.elevations.find((e) => e.by === by && !e.ended && e.until > t);
+    return this.elevations.find((e) => e.by === by && e.ended === undefined && e.until > t);
+  }
+
+  /** Ends every elevation held by, or acting as, an account that can no longer act. */
+  private endElevationsOf(account: string): void {
+    const t = this.now();
+    for (const e of this.elevations) if (e.ended === undefined && e.until > t && (e.by === account || e.as === account)) e.ended = t;
   }
 
   end(id: string): void {
     const e = this.elevations.find((x) => x.id === id);
-    if (e && !e.ended) e.ended = this.now();
+    if (e && e.ended === undefined) e.ended = this.now();
   }
 
   /** Elevations still waiting for review, oldest first: every one is reviewed after it ends. */
   toReview(): Elevation[] {
     const t = this.now();
-    return this.elevations.filter((e) => e.ended || e.until <= t).sort((a, b) => a.from - b.from);
+    return this.elevations.filter((e) => e.ended !== undefined || e.until <= t).sort((a, b) => a.from - b.from);
   }
 }

@@ -35,6 +35,7 @@ export class Sessions {
   readonly all = new Map<string, Session>();
   private readonly p: SessionPolicy;
   private readonly now: () => number;
+  private swept = -Infinity;
 
   constructor(o: { policy?: SessionPolicy; now?: () => number } = {}) {
     this.p = o.policy ?? DEFAULT_POLICY;
@@ -42,9 +43,24 @@ export class Sessions {
   }
 
   start(user: string, device: string, mfa = false): Session {
+    // Sessions nobody comes back to would otherwise stay forever; sweep them, at most once per idle period.
+    if (this.now() - this.swept >= Math.min(this.p.idleMs, 60_000)) this.sweep();
     const s: Session = { id: randomBytes(32).toString('base64url'), user, created: this.now(), lastSeen: this.now(), mfa, device };
     this.all.set(s.id, s);
     return s;
+  }
+
+  /** Forgets every session that has ended; returns how many. */
+  sweep(): number {
+    const t = this.now();
+    this.swept = t;
+    let n = 0;
+    for (const [id, s] of this.all)
+      if (t >= this.endsAt(s)) {
+        this.all.delete(id);
+        n++;
+      }
+    return n;
   }
 
   /** When it ends if nothing more happens: the earlier of the idle and absolute limits. */
@@ -93,8 +109,10 @@ export class Sessions {
     return n;
   }
 
+  /** A person's sessions that are still signed in, most recently used first. */
   list(user: string): Session[] {
-    return [...this.all.values()].filter((s) => s.user === user).sort((a, b) => b.lastSeen - a.lastSeen);
+    const t = this.now();
+    return [...this.all.values()].filter((s) => s.user === user && t < this.endsAt(s)).sort((a, b) => b.lastSeen - a.lastSeen);
   }
 }
 
@@ -182,7 +200,9 @@ export function recoveryCodes(n = 10): { codes: string[]; hashes: string[] } {
 
 /** Uses a recovery code: returns the hashes left, or null when the code is not one of them. */
 export function useRecovery(code: string, hashes: readonly string[]): string[] | null {
-  const h = createHash('sha256').update(code.trim().replace(/\s/g, '')).digest('hex');
+  const digits = code.replace(/[\s-]/g, '');
+  const typed = /^\d{10}$/.test(digits) ? `${digits.slice(0, 5)}-${digits.slice(5)}` : code.trim();
+  const h = createHash('sha256').update(typed).digest('hex');
   const i = hashes.indexOf(h);
   return i < 0 ? null : hashes.filter((_, j) => j !== i);
 }

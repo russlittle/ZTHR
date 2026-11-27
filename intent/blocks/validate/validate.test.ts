@@ -41,3 +41,25 @@ test('length counts characters people see, not bytes, and text is normalised', (
   assert.equal(parse(text(), 'é'), 'é');
   assert.equal(parse(text().optional(), ''), undefined);
 });
+
+test('a record refuses unknown fields even when they are named like inherited properties', () => {
+  const s = record({ name: text() });
+  const r = s.check(JSON.parse('{"name":"Ana","__proto__":{"admin":true},"constructor":1,"toString":2}'), '');
+  assert.equal(r.ok, false);
+  assert.deepEqual(!r.ok && r.problems.map((x) => x.path).sort(), ['__proto__', 'constructor', 'toString']);
+  const c = record({ constructor: text().optional() }).check({}, '');
+  assert.deepEqual(c, { ok: true, value: {} }, 'a missing field is missing, not the inherited Object constructor');
+});
+
+test('problem details follow RFC 9457: with type about:blank the title is the status phrase', () => {
+  const pd = problemDetails([{ path: 'email', code: 'pattern', message: 'x' }]);
+  assert.equal(pd.type, 'about:blank');
+  assert.equal(pd.title, 'Unprocessable Content');
+  assert.equal(pd.detail, 'Some of what was sent needs fixing');
+});
+
+test('a pattern with the global flag gives the same answer every time', () => {
+  const s = text({ pattern: /^[a-z]+$/g });
+  assert.equal(s.check('abc', 'x').ok, true);
+  assert.equal(s.check('abc', 'x').ok, true);
+});

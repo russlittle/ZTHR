@@ -42,3 +42,13 @@ test('shortcuts resolve in any modifier order, conflicts are caught at registrat
   assert.throws(() => p.register({ id: 'share', title: 'dup', section: 'S', run: () => {} }), /already registered/);
   assert.deepEqual(p.cheatsheet(anyone).map((c) => c.shortcut), ['Shift+N', 'mod+u']);
 });
+
+test('an empty permission name still has to be granted', async () => {
+  const p = new Palette();
+  p.register({ id: 'wipe', title: 'Wipe everything', section: 'Admin', permission: '', shortcut: 'mod+shift+w', run: () => {} });
+  const none = () => false;
+  assert.equal(p.search('wipe', none).length, 0);
+  assert.equal(p.forKeys('shift+mod+w', none), undefined);
+  assert.deepEqual(p.cheatsheet(none), []);
+  await assert.rejects(p.run('wipe', none), /cannot do that/);
+});

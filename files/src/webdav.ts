@@ -3,7 +3,7 @@
  * /remote.php/webdav), chunked uploads under /uploads, the trash under /trashbin and old copies under /versions.
  * Each answer carries the properties clients read to sync: ids, etags, permission letters, sizes, checksums.
  */
-import { DAV, child, depth as depthOf, destination, el, encodePath, httpDate, ifTokens, keyOf, multistatus, overwrite as overwriteOf, parseXml, propfindRequest, proppatchRequest, timeout, type Out, type PropRequest } from '../../intent/blocks/dav/index.ts';
+import { DAV, child, depth as depthOf, destination as davDestination, el, encodePath, httpDate, ifTokens, keyOf, multistatus, overwrite as overwriteOf, parseXml, propfindRequest, proppatchRequest, timeout, type Out, type PropRequest } from '../../intent/blocks/dav/index.ts';
 import { parseChecksums, parseRange } from '../../intent/blocks/objects/index.ts';
 import { NotFound, type Node } from '../../intent/blocks/tree/index.ts';
 import type { Files, Where } from './app.ts';
@@ -166,6 +166,15 @@ export function davPath(path: string): DavPath | null {
   return { area: m[1] as DavPath['area'], user, rest: m[3] ?? '/', base: `/remote.php/dav/${m[1]}/${encodePath(user)}` };
 }
 
+/**
+ * The path a Destination header names under `base`. It must be `base` itself or below it: a name that only begins
+ * like it (another person's folder, `/files/anabel` for `ana`) is not a path under it.
+ */
+function destination(h: string | undefined, host: string, base: string): string | null {
+  const p = davDestination(h, host, base);
+  return p !== null && p.startsWith('/') ? p : null;
+}
+
 const DAV_HEADERS = { dav: '1, 3, extended-mkcol, access-control, calendarserver-principal-property-search, nextcloud-checksum-update, nc-calendar-search, nc-enable-birthday-calendar', 'ms-author-via': 'DAV' };
 
 export async function webdav(files: Files, r: Req, p: DavPath): Promise<Reply> {
@@ -220,10 +229,13 @@ async function filesArea(files: Files, r: Req, path: string, user: string, base:
     case 'PUT': {
       if (path.endsWith('/')) return davError(400, 'a file name is needed');
       const len = Number(header(r, 'content-length') ?? header(r, 'oc-total-length') ?? NaN);
+      await files.mayWrite(user, path, tokens);
       const { w } = await files.resolve(user, path);
-      const free = await files.free(w.owner);
-      if (free !== undefined && Number.isFinite(len) && len > free) return davError(507, `needs ${len} bytes, ${free} free`);
-      const blob = await files.objects.put(stream(r), free !== undefined ? { maxBytes: free + ((await files.tree.resolve(w.owner, w.path))?.size ?? 0) } : {});
+      // Old versions and the trash give way to new files, so what counts here is the room they could make.
+      const free = await files.room(w.owner);
+      const existing = (await files.tree.resolve(w.owner, w.path))?.size ?? 0;
+      if (free !== undefined && Number.isFinite(len) && len > free + existing) return davError(507, `needs ${len} bytes, ${free} free`);
+      const blob = await files.objects.put(stream(r), free !== undefined ? { maxBytes: free + existing } : {});
       const mtime = Number(header(r, 'x-oc-mtime'));
       const want = parseChecksums(header(r, 'oc-checksum'));
       for (const c of want.filter((x) => x.startsWith('SHA1:') || x.startsWith('MD5:') || x.startsWith('ADLER32:')))
@@ -247,7 +259,7 @@ async function filesArea(files: Files, r: Req, path: string, user: string, base:
       const to = destination(header(r, 'destination'), header(r, 'host') ?? '', base);
       if (!to) return davError(400, 'the Destination header must name a path on this server, under your files');
       const ow = overwriteOf(header(r, 'overwrite'));
-      const out = r.method === 'MOVE' ? await files.move(user, path, to, ow, tokens) : await files.copy(user, path, to, ow);
+      const out = r.method === 'MOVE' ? await files.move(user, path, to, ow, tokens) : await files.copy(user, path, to, ow, tokens);
       return { status: out.created ? 201 : 204, headers: { etag: `"${out.node.etag}"`, 'oc-etag': `"${out.node.etag}"`, 'oc-fileid': pad(out.node.id, files.instance) } };
     }
     case 'PROPPATCH': {
@@ -345,6 +357,7 @@ async function uploads(files: Files, r: Req, p: DavPath, user: string): Promise<
   switch (r.method) {
     case 'MKCOL': {
       const to = dest(header(r, 'destination')) ?? '/';
+      if (header(r, 'destination')) await files.mayWrite(user, to);
       await files.uploads.start(user, id, to, total);
       return { status: 201 };
     }
@@ -356,7 +369,26 @@ async function uploads(files: Files, r: Req, p: DavPath, user: string): Promise<
         if (!to) return davError(404, 'no such upload; create it with MKCOL first');
         await files.uploads.start(user, id, to, total);
       }
-      await files.uploads.chunk(user, id, name, stream(r), total);
+      // The chunks together may not pass the declared total, nor the room the person has: checked from the
+      // chunk's length before its bytes are kept, and again from what arrived when it had no length.
+      const over = async (incoming: number): Promise<Reply | null> => {
+        const sess = files.state.doc.sessions[`${user}\u0000${id}`];
+        const others = Object.entries(sess?.chunks ?? {}).reduce((a, [n, c]) => (Number(n) === Number(name) ? a : a + c.size), 0);
+        const declared = total ?? sess?.totalLength;
+        if (declared !== undefined && others + incoming > declared) return davError(400, `the chunks come to more than the ${declared} bytes declared`);
+        const room = await files.room(user);
+        if (room !== undefined && others + incoming > room) return davError(507, `needs ${others + incoming} bytes, ${room} free`);
+        return null;
+      };
+      const len = Number(header(r, 'content-length'));
+      const early = Number.isFinite(len) ? await over(len) : null;
+      if (early) return early;
+      const got = await files.uploads.chunk(user, id, name, stream(r), total);
+      const late = await over(got.size);
+      if (late) {
+        await files.uploads.abort(user, id);
+        return late;
+      }
       return { status: 201 };
     }
     case 'MOVE': {
@@ -447,7 +479,7 @@ async function versions(files: Files, r: Req, p: DavPath, user: string): Promise
   if (area !== 'versions' || !fid) return davError(404, 'name a file id under versions/');
   const node = await files.tree.get(Number(fid));
   if (!node || node.kind !== 'file') throw new NotFound(fid);
-  const may = node.owner === user || (await files.grants.effective(user, files.person(user)?.groups ?? [], [node, ...(await files.tree.ancestors(node))].map((n) => ({ id: n.id, kind: n.kind }))));
+  const may = (await files.permsOn(user, node)) > 0;
   if (!may) throw new NotFound(fid);
   const list = files.versionsOf(node.id);
   if (r.method === 'PROPFIND') {

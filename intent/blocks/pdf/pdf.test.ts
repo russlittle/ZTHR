@@ -31,3 +31,25 @@ test('a well-formed PDF: every cross-reference offset points at its object, text
     assert.equal(s.slice(at + Number(m[1]), at + Number(m[1]) + 10), '\nendstream');
   }
 });
+
+const ys = (s: string) => [...s.matchAll(/ ([\d.]+) Td /g)].map((m) => Number(m[1]));
+
+test('C1 control characters do not turn into WinAnsi symbols', () => {
+  assert.equal(winAnsi('a\u0080b\u0099c\u007f'), 'a?b?c?');
+  assert.equal(winAnsi('café ÿ'), 'café ÿ');
+});
+
+test('a table row taller than a page continues on the next page instead of running off the bottom', () => {
+  const b = pdf([{ table: [['A', 'B'], ['x', 'long '.repeat(3000)]] }], { title: 'T' });
+  const s = b.toString('latin1');
+  const footerY = 28;
+  assert.ok(ys(s).filter((y) => y !== footerY).every((y) => y >= 56 + 24 - 13), `lowest text at ${Math.min(...ys(s))}`);
+  assert.ok(Number(/\/Count (\d+)/.exec(s)![1]) >= 2);
+  assert.equal((s.match(/long/g) ?? []).length, 3000, 'every word is drawn once');
+});
+
+test('an empty table and a very long table are handled', () => {
+  assert.ok(pdf([{ table: [] }], { title: 'T' }).toString('latin1').includes('%%EOF'));
+  const rows = Array.from({ length: 150_000 }, (_, i) => [`${i}`]);
+  assert.ok(pdf([{ table: rows }], { title: 'T' }).length > 0);
+});

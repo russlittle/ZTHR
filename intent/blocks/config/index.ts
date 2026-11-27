@@ -44,7 +44,8 @@ const DURATION = /^(\d+)\s*(ms|s|m|h|d)$/;
 const toMs = (v: string) => {
   const m = DURATION.exec(v.trim());
   if (!m) return null;
-  return Number(m[1]) * { ms: 1, s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 }[m[2] as 'ms']!;
+  const ms = Number(m[1]) * { ms: 1, s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 }[m[2] as 'ms']!;
+  return Number.isSafeInteger(ms) ? ms : null;
 };
 
 function convert(s: Setting, raw: string): { value?: string | number | boolean | readonly string[]; problem?: string } {
@@ -86,7 +87,8 @@ export async function load(decl: readonly Setting[], env: Readonly<Record<string
   for (const s of decl) {
     if (seen.has(s.name)) problems.push(`${s.name} is declared twice`);
     seen.add(s.name);
-    const raw = s.secret ? await secrets.get(s.name) : (env[s.name] ?? s.default);
+    // An empty variable counts as unset, so `NAME=` in a deploy file gets the default rather than nothing.
+    const raw = s.secret ? await secrets.get(s.name) : env[s.name] || s.default;
     if (raw === undefined || raw === '') {
       if (s.required) problems.push(`${s.name} is required: ${s.description}`);
       continue;
@@ -126,11 +128,12 @@ export interface InventoryLine {
 /** Every setting and secret by name, where used, and each secret's rotation state. Never a value. */
 export function inventory(decl: readonly Setting[], v: Values, rotated: Readonly<Record<string, string>>, now = new Date()): InventoryLine[] {
   return decl.map((s) => {
-    const base = { name: s.name, kind: s.kind, secret: !!s.secret, set: s.name in v, usedBy: s.usedBy ?? [] };
+    const base = { name: s.name, kind: s.kind, secret: !!s.secret, set: Object.hasOwn(v, s.name), usedBy: s.usedBy ?? [] };
     if (!s.secret || !s.rotateDays) return base;
-    const last = rotated[s.name];
+    const last = Object.hasOwn(rotated, s.name) ? rotated[s.name] : undefined;
     if (!last) return { ...base, overdue: true };
     const due = new Date(Date.parse(last) + s.rotateDays * 86_400_000);
+    if (Number.isNaN(due.getTime())) return { ...base, lastRotated: last, overdue: true };
     return { ...base, lastRotated: last, rotationDue: due.toISOString().slice(0, 10), overdue: due.getTime() < now.getTime() };
   });
 }
@@ -141,7 +144,10 @@ export interface Drift {
   readonly live: unknown;
 }
 
-/** Settings whose live value differs from the signed declaration (secrets compared by fingerprint only). */
+/**
+ * Settings whose live value differs from the signed declaration. Both sides are reported as given, so pass each
+ * secret as its fingerprint, never its value.
+ */
 export function drift(declared: Readonly<Record<string, unknown>>, live: Readonly<Record<string, unknown>>): Drift[] {
   const out: Drift[] = [];
   for (const k of new Set([...Object.keys(declared), ...Object.keys(live)])) if (JSON.stringify(declared[k]) !== JSON.stringify(live[k])) out.push({ name: k, declared: declared[k], live: live[k] });

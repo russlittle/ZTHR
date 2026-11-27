@@ -33,3 +33,25 @@ test('phone numbers become E.164 from what people type', () => {
   assert.throws(() => phone('call me', 'US'), /letters/);
   assert.throws(() => phone('12345', 'ZZ'), /country code/);
 });
+
+test('the national "(0)" written after a country code is dropped, and extensions written straight on are understood', () => {
+  assert.equal(phone('+44 (0)20 7946 0018', 'US'), '+442079460018');
+  assert.equal(phone('0044 (0) 20 7946 0018', 'FR'), '+442079460018');
+  assert.equal(phone('937-555-0142x12', 'US'), '+19375550142');
+  assert.throws(() => phone('+0 123 456 789', 'US'), /international/);
+  assert.throws(() => phone('020 7946 0018', 'constructor'), /country code/);
+});
+
+test('the name to use and the sort key are checked like the name, and invisible controls are refused', () => {
+  assert.throws(() => name('Ana', { callMe: '<img src=x onerror=alert(1)>' }), /angle brackets/);
+  assert.throws(() => name('Ana', { sortAs: 'a\u0000b' }), /control/);
+  assert.throws(() => name('Ana‮gnp.exe'), /control/);
+  assert.throws(() => name('Ana\u0085'), /control/);
+});
+
+test('address values are inserted literally, never read as patterns or placeholders', () => {
+  assert.deepEqual(formatAddress({ country: 'US', lines: ['1 Main St'], city: "Dayton $&$'", region: 'oh', postcode: '45402' }), ['1 Main St', "Dayton $&$', OH 45402"]);
+  assert.deepEqual(formatAddress({ country: 'DE', lines: ['x'], city: '{postcode}', postcode: '10117' }), ['x', '10117 {postcode}']);
+  assert.deepEqual(formatAddress({ country: 'constructor', lines: ['x'], city: 'Y' }), ['x', 'Y']);
+  assert.deepEqual(checkAddress({ country: 'toString', lines: ['x'] }), []);
+});

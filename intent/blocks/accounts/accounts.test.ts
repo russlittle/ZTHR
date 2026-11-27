@@ -101,3 +101,38 @@ test('acting as someone and break-glass are time-boxed, need a reason, and are r
   assert.ok(log.some((l) => l.startsWith(`${adm.id} break-glass`)));
   assert.equal(a.toReview().length, 1, 'the ended one waits for review');
 });
+
+test('a password reset spends every other reset link for that account', async () => {
+  const { a, tokenOf } = setup();
+  await a.signUp('ana@example.org', 'Ana', 'old-password-1');
+  await a.requestReset('ana@example.org');
+  await a.requestReset('ana@example.org');
+  await a.reset(tokenOf(2), 'new-password-1');
+  await assert.rejects(a.reset(tokenOf(1), 'attacker-pass-1'), /not valid/, 'an older link left in a mailbox does not reset it again');
+});
+
+test('an admin cannot make anyone an owner, themselves included', async () => {
+  const { a, sent, tokenOf } = setup();
+  const owner = await a.signUp('own@example.org', 'Owner', 'owner-pass-1');
+  const org = a.createOrg('North', owner.id);
+  await a.invite(owner.id, org.id, 'adm@example.org', 'admin');
+  const adm = await a.accept(tokenOf(1), { password: 'admin-pass-1' });
+  await assert.rejects(a.invite(adm.id, org.id, 'adm@example.org', 'owner'), /only an owner/);
+  assert.equal(sent.length, 2);
+  await a.invite(owner.id, org.id, 'co@example.org', 'owner');
+});
+
+test('an elevation needs a real length of time, and ends when its holder is deactivated or offboarded', async () => {
+  const { a } = setup();
+  const adm = await a.signUp('adm@example.org', 'Admin', 'admin-pass-1');
+  const reason = 'production outage, restoring the student table';
+  await assert.rejects(a.elevate('break-glass', adm.id, { reason, minutes: Number.NaN }), Refused);
+  await a.elevate('break-glass', adm.id, { reason, minutes: 60 });
+  a.deactivate(adm.id, adm.id);
+  assert.equal(a.active(adm.id), undefined);
+  a.reactivate(adm.id, adm.id);
+  await a.elevate('break-glass', adm.id, { reason, minutes: 60 });
+  await a.offboard(adm.id, adm.id);
+  assert.equal(a.active(adm.id), undefined);
+  assert.equal(a.toReview().length, 2, 'both wait for review');
+});

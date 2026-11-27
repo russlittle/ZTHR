@@ -2,8 +2,11 @@
  * Dates and time zones done the way people mean them. Instants are stored in UTC; a wall time ("9:00 on Monday in
  * New York") is turned into an instant for its zone, including across daylight-saving changes (a time that does
  * not exist moves forward; one that happens twice takes the first). Recurrence follows a subset of RFC 5545 RRULE
- * (DAILY, WEEKLY with BYDAY, MONTHLY with BYMONTHDAY or a numbered weekday, YEARLY; INTERVAL, COUNT, UNTIL, EXDATE)
- * and repeats in wall time, so a 9:00 meeting stays at 9:00 after the clocks change.
+ * (DAILY, optionally limited by BYDAY or BYMONTHDAY; WEEKLY with BYDAY; MONTHLY with BYMONTHDAY, BYDAY (plain or
+ * numbered) or both, which means days matching both; YEARLY on the start's date; INTERVAL, COUNT, UNTIL, EXDATE,
+ * WKST=MO). Any other part is refused rather than ignored. A date-only or local-time UNTIL is read in the zone, so
+ * it includes the whole of its local day. Recurrence repeats in wall time, so a 9:00 meeting stays at 9:00 after
+ * the clocks change.
  */
 
 export interface Wall {
@@ -45,27 +48,68 @@ export interface Rule {
   readonly freq: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
   readonly interval: number;
   readonly count?: number;
+  /** An UNTIL given in UTC (…Z). */
   readonly until?: Date;
+  /** An UNTIL given as a date or a local time: read as wall time in the zone (a date includes its whole day). */
+  readonly untilWall?: Wall;
   readonly byDay?: readonly { n?: number; day: number }[];
   readonly byMonthDay?: readonly number[];
 }
 
+/** The parts each frequency supports here; anything else is refused rather than silently ignored. */
+const PARTS: Readonly<Record<Rule['freq'], readonly string[]>> = {
+  DAILY: ['BYDAY', 'BYMONTHDAY'],
+  WEEKLY: ['BYDAY'],
+  MONTHLY: ['BYDAY', 'BYMONTHDAY'],
+  YEARLY: [],
+};
+
+const posInt = (name: string, v: string): number => {
+  if (!/^\d+$/.test(v) || Number(v) < 1) throw new Error(`bad ${name} ${v}`);
+  return Number(v);
+};
+
 export function parseRule(s: string): Rule {
-  const kv = Object.fromEntries(s.replace(/^RRULE:/, '').split(';').map((p) => p.split('=') as [string, string]));
+  const kv: Record<string, string> = Object.create(null);
+  for (const p of s.trim().replace(/^RRULE:/, '').split(';').filter(Boolean)) {
+    const [k, v, ...more] = p.split('=');
+    if (!k || v === undefined || more.length) throw new Error(`bad RRULE part ${p}`);
+    kv[k.toUpperCase()] = v;
+  }
   const freq = kv.FREQ as Rule['freq'];
   if (!['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(freq)) throw new Error(`unsupported FREQ ${kv.FREQ}`);
-  const until = kv.UNTIL ? new Date(kv.UNTIL.replace(/^(\d{4})(\d{2})(\d{2})(T(\d{2})(\d{2})(\d{2})Z?)?$/, (_, y, m, d, _t, h = '23', mi = '59', se = '59') => `${y}-${m}-${d}T${h}:${mi}:${se}Z`)) : undefined;
+  for (const k of Object.keys(kv)) {
+    if (['FREQ', 'INTERVAL', 'COUNT', 'UNTIL'].includes(k) || PARTS[freq].includes(k)) continue;
+    if (k === 'WKST' && kv.WKST === 'MO') continue;
+    throw new Error(`unsupported ${k}${k === 'WKST' ? `=${kv.WKST} (weeks start on Monday)` : ` with FREQ=${freq}`}`);
+  }
+  if (kv.COUNT !== undefined && kv.UNTIL !== undefined) throw new Error('an RRULE cannot have both COUNT and UNTIL');
+  let until: Date | undefined;
+  let untilWall: Wall | undefined;
+  if (kv.UNTIL !== undefined) {
+    const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(kv.UNTIL);
+    if (!m) throw new Error(`bad UNTIL ${kv.UNTIL}`);
+    const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    if (mo < 1 || mo > 12 || d < 1 || d > dim(y, mo)) throw new Error(`bad UNTIL ${kv.UNTIL}`);
+    if (m[7]) until = new Date(Date.UTC(y, mo - 1, d, Number(m[4]), Number(m[5]), Number(m[6])));
+    else untilWall = m[4] ? { y, m: mo, d, h: Number(m[4]), min: Number(m[5]) } : { y, m: mo, d, h: 23, min: 59 };
+  }
   return {
     freq,
-    interval: kv.INTERVAL ? Number(kv.INTERVAL) : 1,
-    ...(kv.COUNT ? { count: Number(kv.COUNT) } : {}),
+    interval: kv.INTERVAL !== undefined ? posInt('INTERVAL', kv.INTERVAL) : 1,
+    ...(kv.COUNT !== undefined ? { count: posInt('COUNT', kv.COUNT) } : {}),
     ...(until ? { until } : {}),
+    ...(untilWall ? { untilWall } : {}),
     ...(kv.BYDAY ? { byDay: kv.BYDAY.split(',').map((x) => {
-      const m = /^([+-]?\d)?(SU|MO|TU|WE|TH|FR|SA)$/.exec(x);
+      const m = /^([+-]?[1-5])?(SU|MO|TU|WE|TH|FR|SA)$/.exec(x);
       if (!m) throw new Error(`bad BYDAY ${x}`);
+      if (m[1] && freq !== 'MONTHLY') throw new Error(`unsupported numbered BYDAY ${x} with FREQ=${freq}`);
       return { ...(m[1] ? { n: Number(m[1]) } : {}), day: DAYS.indexOf(m[2]!) };
     }) } : {}),
-    ...(kv.BYMONTHDAY ? { byMonthDay: kv.BYMONTHDAY.split(',').map(Number) } : {}),
+    ...(kv.BYMONTHDAY ? { byMonthDay: kv.BYMONTHDAY.split(',').map((x) => {
+      if (!/^[+-]?\d{1,2}$/.test(x) || Number(x) === 0 || Math.abs(Number(x)) > 31) throw new Error(`bad BYMONTHDAY ${x}`);
+      return Number(x);
+    }) } : {}),
   };
 }
 
@@ -78,10 +122,16 @@ export function occurrences(start: Wall, tz: string, rule: Rule, o: { limit?: nu
   const limit = o.limit ?? 500;
   const ex = new Set((o.exdates ?? []).map((d) => d.getTime()));
   let produced = 0;
+  const first = instant(start, tz).getTime();
+  const until = rule.until ?? (rule.untilWall ? instant(rule.untilWall, tz) : undefined);
+  const monthDays = (y: number, m: number): number[] => {
+    const n = dim(y, m);
+    return (rule.byMonthDay ?? []).map((d) => (d < 0 ? n + d + 1 : d)).filter((d) => d >= 1 && d <= n);
+  };
   const emit = (y: number, m: number, d: number): boolean => {
     const t = instant({ y, m, d, h: start.h, min: start.min }, tz);
-    if (t.getTime() < instant(start, tz).getTime()) return true;
-    if (rule.until && t > rule.until) return false;
+    if (t.getTime() < first) return true;
+    if (until && t > until) return false;
     if (rule.count !== undefined && produced >= rule.count) return false;
     produced++;
     if (ex.has(t.getTime())) return true;
@@ -93,7 +143,10 @@ export function occurrences(start: Wall, tz: string, rule: Rule, o: { limit?: nu
   for (let step = 0; step < 50_000; step++) {
     if (rule.freq === 'DAILY') {
       const dt = new Date(Date.UTC(start.y, start.m - 1, start.d + step * rule.interval));
-      if (!emit(dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate())) break;
+      const [y, m, d] = [dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate()];
+      if (rule.byDay && !rule.byDay.some((b) => b.day === dt.getUTCDay())) continue;
+      if (rule.byMonthDay && !monthDays(y, m).includes(d)) continue;
+      if (!emit(y, m, d)) break;
     } else if (rule.freq === 'WEEKLY') {
       const days = (rule.byDay?.map((b) => b.day) ?? [startDow]).slice().sort((a, b) => ((a - 1 + 7) % 7) - ((b - 1 + 7) % 7));
       const weekStart = new Date(Date.UTC(start.y, start.m - 1, start.d - ((startDow + 6) % 7) + step * 7 * rule.interval));
@@ -109,14 +162,19 @@ export function occurrences(start: Wall, tz: string, rule: Rule, o: { limit?: nu
       const m = (mm % 12) + 1;
       const n = dim(y, m);
       let days: number[];
-      if (rule.byDay?.length)
+      if (rule.byDay?.length) {
         days = rule.byDay.flatMap((b) => {
           const all = Array.from({ length: n }, (_, i) => i + 1).filter((d) => dow(y, m, d) === b.day);
           if (b.n === undefined) return all;
           const pick = b.n > 0 ? all[b.n - 1] : all[all.length + b.n];
           return pick ? [pick] : [];
         });
-      else days = (rule.byMonthDay ?? [start.d]).map((d) => (d < 0 ? n + d + 1 : d)).filter((d) => d >= 1 && d <= n);
+        // RFC 5545: in MONTHLY, BYDAY limits BYMONTHDAY when both are given.
+        if (rule.byMonthDay) {
+          const md = monthDays(y, m);
+          days = days.filter((d) => md.includes(d));
+        }
+      } else days = rule.byMonthDay ? monthDays(y, m) : start.d <= n ? [start.d] : [];
       let go = true;
       for (const d of [...new Set(days)].sort((a, b) => a - b)) if (!(go = emit(y, m, d))) break;
       if (!go) break;

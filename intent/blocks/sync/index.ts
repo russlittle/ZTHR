@@ -2,9 +2,10 @@
  * One sync engine for every outside system (a ticket tracker, a wiki, a data warehouse). An adapter says how to
  * list changes since a cursor and how to upsert by an external id; the engine pulls and pushes in pages, keeps the
  * cursor only after a page is fully applied (so a crash repeats a page rather than skipping one), maps records both
- * ways, and settles a record changed on both sides by a declared rule, reporting each conflict. Twins of the three
- * kinds of system make every path testable without an account anywhere; like the real ones, they send our own
- * writes back in the change feed, and the engine recognises that echo.
+ * ways, merges edits to different fields made on each side, and settles a field changed on both sides by a declared
+ * rule, reporting each conflict. Twins of the three kinds of system make every path testable without an account
+ * anywhere; like the real ones, they send our own writes back in the change feed, and the engine recognises that
+ * echo by comparing with what the remote held at the last sync.
  */
 
 export interface Remote {
@@ -25,6 +26,8 @@ export interface Local {
   fields: Record<string, unknown>;
   remoteId?: string;
   syncedAt?: string;
+  /** The remote record's fields, mapped to ours, as of the last sync: what tells a remote change from an echo. */
+  base?: Record<string, unknown>;
 }
 
 export type ConflictRule = 'remote' | 'local' | 'newest';
@@ -68,27 +71,40 @@ export class Sync {
       const r = await this.a.changes(this.cursor, page);
       for (const item of r.items) {
         const mapped = this.toLocal(item);
+        const keys = Object.keys(mapped);
         const l = this.byRemote(item.id);
+        const at = this.now().toISOString();
         if (!l) {
           const id = `${this.a.name}:${item.id}`;
-          this.local.set(id, { id, updated: item.updated, fields: mapped, remoteId: item.id, syncedAt: this.now().toISOString() });
+          this.local.set(id, { id, updated: at, fields: mapped, remoteId: item.id, syncedAt: at, base: snapshot(mapped) });
           pulled++;
           continue;
         }
-        const same = Object.keys(mapped).every((k) => JSON.stringify(mapped[k]) === JSON.stringify(l.fields[k]));
-        if (same) continue; // the echo of our own push, or a change that is already here
         const localChanged = !!l.syncedAt && l.updated > l.syncedAt;
-        if (localChanged) {
-          const differ = Object.keys(mapped).filter((k) => JSON.stringify(mapped[k]) !== JSON.stringify(l.fields[k]));
-          const keep = this.rule === 'local' ? 'local' : this.rule === 'remote' ? 'remote' : l.updated >= item.updated ? 'local' : 'remote';
-          if (differ.length) conflicts.push({ local: l.id, remote: item.id, kept: keep, fields: differ });
-          if (keep === 'local') continue;
+        // What the remote side held at the last sync; without it, every field that differs counts as changed on both sides.
+        const base = l.base ?? (localChanged ? undefined : l.fields);
+        const remoteKeys = keys.filter((k) => !base || !same(mapped[k], base[k]));
+        if (!remoteKeys.length || keys.every((k) => same(mapped[k], l.fields[k]))) {
+          l.base = snapshot(mapped); // the echo of our own push, or a change that is already here
+          continue;
         }
-        l.fields = { ...l.fields, ...mapped };
-        l.syncedAt = this.now().toISOString();
-        (l as { updated: string }).updated = l.syncedAt;
-        touched.add(l.id);
-        pulled++;
+        const localKeys = localChanged ? keys.filter((k) => !base || !same(l.fields[k], base[k])) : [];
+        const both = remoteKeys.filter((k) => localKeys.includes(k) && !same(mapped[k], l.fields[k]));
+        let keep: 'local' | 'remote' = 'remote';
+        if (both.length) {
+          keep = this.rule === 'local' ? 'local' : this.rule === 'remote' ? 'remote' : l.updated >= item.updated ? 'local' : 'remote';
+          conflicts.push({ local: l.id, remote: item.id, kept: keep, fields: both });
+        }
+        const take = remoteKeys.filter((k) => keep === 'remote' || !both.includes(k));
+        l.fields = { ...l.fields, ...Object.fromEntries(take.map((k) => [k, mapped[k]])) };
+        l.base = snapshot(mapped);
+        if (take.length) pulled++;
+        // Local edits that survive (on other fields, or kept by the rule) stay pending and are pushed below.
+        if (!localKeys.some((k) => !same(l.fields[k], mapped[k]))) {
+          l.syncedAt = at;
+          (l as { updated: string }).updated = at;
+          touched.add(l.id);
+        }
       }
       this.cursor = r.cursor;
       if (!r.more) break;
@@ -98,6 +114,7 @@ export class Sync {
       if (l.remoteId && l.syncedAt && l.updated <= l.syncedAt) continue;
       const out = await this.a.upsert(l.remoteId, this.toRemote(l));
       l.remoteId = out.id;
+      l.base = snapshot(this.toLocal(out));
       l.syncedAt = this.now().toISOString();
       (l as { updated: string }).updated = l.syncedAt;
       pushed++;
@@ -105,6 +122,10 @@ export class Sync {
     return { pulled, pushed, conflicts, cursor: this.cursor };
   }
 }
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/** A copy that later edits to the record's fields cannot reach. */
+const snapshot = (o: Record<string, unknown>): Record<string, unknown> => JSON.parse(JSON.stringify(o)) as Record<string, unknown>;
 
 /** A twin for any of the three kinds: records with ids, update times and a change feed ordered by a counter. */
 export class Twin implements Adapter {

@@ -39,3 +39,32 @@ test('a failed verify stops the run and is not recorded; two runners never migra
   await l.lock('other', 60_000);
   assert.deepEqual((await migrate({ users: [] }, [m2], l, { owner: 'a' })).problems, ['another runner is migrating; this one waits']);
 });
+
+test('a runner that read the ledger before another runner finished does not apply the same migration again', async () => {
+  const l = memoryLedger();
+  let runs = 0;
+  const once: Migration<Db> = { id: '2026-11-20-once', description: 'counts its runs', up: async () => void runs++ };
+  let release!: () => void;
+  const gate = new Promise<void>((r) => (release = r));
+  let reads = 0;
+  const late = { ...l, applied: async () => {
+    const a = await l.applied();
+    if (reads++ === 0) await gate;
+    return a;
+  } };
+  const b = migrate({ users: [] }, [once], late, { owner: 'b' });
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual((await migrate({ users: [] }, [once], l, { owner: 'a' })).ran, ['2026-11-20-once']);
+  release();
+  const rb = await b;
+  assert.equal(runs, 1, 'applied once');
+  assert.deepEqual(rb.ran, []);
+  assert.equal(l.rows.length, 1);
+});
+
+test('the lease is released even when the ledger fails to record', async () => {
+  const l = memoryLedger();
+  const broken = { ...l, record: async () => { throw new Error('ledger offline'); } };
+  await assert.rejects(migrate({ users: [] }, [m2], broken, { owner: 'a' }), /ledger offline/);
+  assert.equal(await l.lock('b', 1000), true);
+});

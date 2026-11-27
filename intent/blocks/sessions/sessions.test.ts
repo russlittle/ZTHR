@@ -66,3 +66,21 @@ test('sessions end when idle or at their absolute limit, warn first, and end eve
   assert.equal(s.endAll('ana', keep.id), 1);
   assert.deepEqual(s.list('ana').map((x) => x.device), ['y']);
 });
+
+test('ended sessions are not listed as signed in, and abandoned ones do not pile up', () => {
+  let t = 0;
+  const s = new Sessions({ policy: { idleMs: 1000, absoluteMs: 5000, warnMs: 200 }, now: () => t });
+  s.start('ana', 'laptop');
+  t = 2000;
+  assert.deepEqual(s.list('ana'), [], 'idle past its limit, it has ended');
+  for (let i = 0; i < 50; i++) s.start(`u${i}`, 'd');
+  t = 10_000;
+  s.start('ben', 'phone');
+  assert.equal(s.all.size, 1, 'sessions nobody came back to are swept as new ones start');
+});
+
+test('a recovery code typed without its hyphen, or with spaces, still works', () => {
+  const { codes, hashes } = recoveryCodes();
+  assert.equal(useRecovery(codes[0]!.replace('-', ''), hashes)?.length, 9);
+  assert.equal(useRecovery(` ${codes[1]!.replace('-', ' ')} `, hashes)?.length, 9);
+});

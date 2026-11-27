@@ -74,7 +74,7 @@ export class Files {
     this.o = o;
     this.now = o.now ?? Date.now;
     this.tree = new Tree(state.nodes, { now: () => Math.floor(this.now() / 1000) });
-    this.uploads = new Uploads(objects, state.sessions, { now: this.now, free: (u) => this.free(u), rules: { ...NEXTCLOUD_RULES, maxBytes: o.maxChunk ?? NEXTCLOUD_RULES.maxBytes } });
+    this.uploads = new Uploads(objects, state.sessions, { now: this.now, free: (u) => this.room(u), rules: { ...NEXTCLOUD_RULES, maxBytes: o.maxChunk ?? NEXTCLOUD_RULES.maxBytes } });
     this.leases = new Leases(memoryLeases(), { now: this.now });
     this.grants = new Grants(state.grants, { now: this.now });
     this.devices = new Devices(state.devices, { now: this.now });
@@ -169,8 +169,33 @@ export class Files {
 
   // ---------------------------------------------------------------- space
 
+  /** Bytes a person's files, old versions and trash take: all of it counts against their quota. */
   async used(user: string): Promise<number> {
-    return (await this.tree.root(user)).size;
+    return (await this.tree.root(user)).size + (await this.kept(user)).bytes;
+  }
+
+  /** The old versions and trashed items a person keeps, oldest first, with what each takes. */
+  private async kept(user: string): Promise<{ bytes: number; items: { at: number; size: number; drop: () => Promise<void> }[] }> {
+    const items: { at: number; size: number; drop: () => Promise<void> }[] = [];
+    const trash = this.trashOf(user);
+    const trashedIds = new Set(trash.flatMap((t) => t.nodes.map((n) => n.id)));
+    for (const [file, vs] of Object.entries(this.state.doc.versions)) {
+      const id = Number(file);
+      const owner = (await this.tree.get(id))?.owner ?? (trashedIds.has(id) ? user : undefined);
+      if (owner !== user) continue;
+      for (const v of vs) items.push({ at: v.closedAt, size: v.size, drop: () => this.dropVersion(file, v) });
+    }
+    for (const t of trash) items.push({ at: t.deletedAt, size: t.nodes[0]!.size, drop: () => this.purgeTrash(t) });
+    items.sort((a, b) => a.at - b.at);
+    return { bytes: items.reduce((a, x) => a + x.size, 0), items };
+  }
+
+  private async dropVersion(file: string, v: Version): Promise<void> {
+    const list = this.state.doc.versions[file] ?? [];
+    if (!list.includes(v)) return;
+    await this.objects.delete(v.blob);
+    this.state.doc.versions[file] = list.filter((x) => x !== v);
+    this.state.mark('versions', file);
   }
 
   /** Bytes left; undefined when the person has no limit. */
@@ -178,6 +203,25 @@ export class Files {
     const q = this.person(user)?.quota;
     if (q === null || q === undefined) return undefined;
     return Math.max(0, q - (await this.used(user)));
+  }
+
+  /** Bytes that could be made free by giving up old versions and the trash; undefined when there is no limit. */
+  async room(user: string): Promise<number | undefined> {
+    const q = this.person(user)?.quota;
+    if (q === null || q === undefined) return undefined;
+    return Math.max(0, q - (await this.tree.root(user)).size);
+  }
+
+  /** Gives up the oldest versions and trash, oldest first, until `need` bytes are free; returns what is free then. */
+  async makeRoom(user: string, need: number): Promise<number | undefined> {
+    let free = await this.free(user);
+    if (free === undefined || free >= need) return free;
+    for (const x of (await this.kept(user)).items) {
+      await x.drop();
+      free += x.size;
+      if (free >= need) break;
+    }
+    return free;
   }
 
   // ---------------------------------------------------------------- what a person sees
@@ -194,6 +238,8 @@ export class Files {
       if (seen.has(g.resource)) continue;
       const node = await this.tree.get(g.resource);
       if (!node || !this.person(node.owner) || node.owner === user) continue;
+      // A reshare whose giver has lost everything there gives nothing, and is not shown.
+      if (!(await this.permsOn(user, node))) continue;
       seen.add(g.resource);
       let name = node.name;
       for (let i = 2; taken.has(name); i++) name = node.kind === 'file' && node.name.includes('.') ? node.name.replace(/(\.[^.]*)$/, ` (${i})$1`) : `${node.name} (${i})`;
@@ -212,9 +258,7 @@ export class Files {
     const rest = s.slice(1);
     const owner = m.node.owner;
     const inner = rest.length ? await this.tree.resolve(owner, `${base}/${rest.join('/')}`) : m.node;
-    const p = this.person(user)!;
-    const chain = inner ? [inner, ...(await this.tree.ancestors(inner))] : [m.node, ...(await this.tree.ancestors(m.node))];
-    const bits = (await this.grants.effective(user, p.groups, chain.map((n) => ({ id: n.id, kind: n.kind })))) | m.grant.permissions;
+    const bits = await this.permsOn(user, inner ?? m.node);
     return { owner, path: rest.length ? `${base}/${rest.join('/')}` : base, perms: inner?.kind === 'file' ? bits & ~CREATE : bits, via: { grant: m.grant, at: `/${s[0]}` } };
   }
 
@@ -242,10 +286,9 @@ export class Files {
     const own = (await this.tree.list(node)).map((n) => ({ name: n.name, node: n, w: { ...w, path: `${w.path === '/' ? '' : w.path}/${n.name}`, perms: n.kind === 'file' ? w.perms & ~CREATE : w.perms } }));
     if (steps(path).length || w.owner !== user) return own;
     const ms = await this.mounts(user);
-    const p = this.person(user)!;
     const mounted = await Promise.all(
       ms.map(async (m) => {
-        const bits = (await this.grants.effective(user, p.groups, [m.node, ...(await this.tree.ancestors(m.node))].map((n) => ({ id: n.id, kind: n.kind })))) | m.grant.permissions;
+        const bits = await this.permsOn(user, m.node);
         return { name: m.name, node: m.node, w: { owner: m.node.owner, path: await this.tree.pathOf(m.node), perms: m.node.kind === 'file' ? bits & ~CREATE : bits, via: { grant: m.grant, at: `${base}/${m.name}` } } };
       }),
     );
@@ -286,6 +329,11 @@ export class Files {
     if (!(w.perms & bit)) throw new Denied(`you may not ${what} here`);
   }
 
+  /** Replacing what is at a target overwrites a file (update) or throws a folder away (delete). */
+  private needToReplace(w: Where, node: Node) {
+    this.need(w, node.kind === 'file' ? UPDATE : DELETE, 'replace what is there');
+  }
+
   private async parentWhere(user: string, path: string): Promise<Where> {
     const s = steps(path);
     if (!s.length) throw new Denied('the root cannot be written');
@@ -310,17 +358,35 @@ export class Files {
       if (before) this.need(w, UPDATE, 'change this file');
       else this.need(await this.parentWhere(user, path), CREATE, 'add files');
       await this.checkLock(w, user, o.tokens ?? []);
-      const free = await this.free(w.owner);
-      const grow = blob.size - (before?.size ?? 0);
-      if (free !== undefined && grow > free) throw new Insufficient(grow, free);
+      // The copy replaced is kept as a version, so the new bytes need room of their own; older versions and the
+      // trash give way first, and when even that is not enough the replaced copy is not kept.
+      const free = await this.makeRoom(w.owner, blob.size);
+      let keep = true;
+      if (free !== undefined && blob.size > free) {
+        if (blob.size - (before?.size ?? 0) > free) throw new Insufficient(blob.size - (before?.size ?? 0), free);
+        keep = false;
+      }
       const sums = o.checksum?.length ? o.checksum : blob.checksums.filter((c) => c.startsWith('SHA1:') || c.startsWith('MD5:') || c.startsWith('ADLER32:'));
       const { node } = await this.tree.put(w.owner, w.path, { size: blob.size, blob: blob.key, ...(o.mtime ? { mtime: o.mtime } : {}), ...(o.mime ? { mime: o.mime } : {}), checksums: sums });
-      if (before?.blob) await this.keepVersion(before, user);
+      if (before?.blob) {
+        if (keep) await this.keepVersion(before, user);
+        else await this.objects.delete(before.blob);
+      }
       return { node, created: !before };
     } catch (e) {
       await this.objects.delete(blob.key);
       throw e;
     }
+  }
+
+  /** Refuses a file write before any bytes arrive, when the name, the permissions or a lock would refuse it after. */
+  async mayWrite(user: string, path: string, tokens: readonly string[] = []): Promise<void> {
+    this.safe(path);
+    const { w, node } = await this.resolve(user, path);
+    if (node?.kind === 'folder') throw new Exists(path);
+    if (node) this.need(w, UPDATE, 'change this file');
+    else this.need(await this.parentWhere(user, path), CREATE, 'add files');
+    await this.checkLock(w, user, tokens);
   }
 
   async mkdir(user: string, path: string): Promise<Node> {
@@ -359,10 +425,14 @@ export class Files {
     // Renaming a shared item at your root renames only where it sits for you; it is not supported yet, so say so.
     if (a.w.via && steps(from).length === 1) throw new Denied('a share mounted at your root cannot be moved yet', 403);
     this.need(a.w, a.node.kind === 'file' ? UPDATE : DELETE, 'move this');
+    // Renaming in place needs only update; taking it out of its folder takes it away from there, which is a delete.
+    const parentOf = (p: string) => p.split('/').slice(0, -1).join('/');
+    if (a.w.owner !== b.w.owner || parentOf(a.w.path) !== parentOf(b.w.path)) this.need(await this.parentWhere(user, from), DELETE, 'take things out of here');
     this.need(await this.parentWhere(user, to), CREATE, 'add things there');
     await this.checkLock(a.w, user, tokens, true);
     await this.checkLock(b.w, user, tokens, true);
     if (b.node && !overwrite) throw new PreconditionFailed(`${to} exists and overwrite is off`);
+    if (b.node) this.needToReplace(b.w, b.node);
     if (a.w.owner === b.w.owner) {
       const r = await this.tree.move(a.w.owner, a.w.path, b.w.path, overwrite);
       await this.leases.rename(`/${a.w.owner}${a.w.path}`, `/${b.w.owner}${b.w.path}`);
@@ -370,21 +440,23 @@ export class Files {
       return { node: r.node, created: !b.node };
     }
     // Between two people's trees: the bytes are copied in the store, then the original goes.
-    const c = await this.copy(user, from, to, overwrite);
+    const c = await this.copy(user, from, to, overwrite, tokens);
     const gone = await this.tree.remove(a.w.owner, a.w.path);
     for (const n of gone) if (n.blob) await this.objects.delete(n.blob);
     return c;
   }
 
-  async copy(user: string, from: string, to: string, overwrite: boolean): Promise<{ node: Node; created: boolean }> {
+  async copy(user: string, from: string, to: string, overwrite: boolean, tokens: readonly string[] = []): Promise<{ node: Node; created: boolean }> {
     this.safe(to);
     const a = await this.resolve(user, from);
     if (!a.node) throw new NotFound(from);
     this.need(a.w, READ, 'read this');
     const b = await this.resolve(user, to);
     this.need(await this.parentWhere(user, to), CREATE, 'add things there');
+    await this.checkLock(b.w, user, tokens, true);
     if (b.node && !overwrite) throw new PreconditionFailed(`${to} exists and overwrite is off`);
-    const free = await this.free(b.w.owner);
+    if (b.node) this.needToReplace(b.w, b.node);
+    const free = await this.makeRoom(b.w.owner, a.node.size - (b.node?.size ?? 0));
     if (free !== undefined && a.node.size - (b.node?.size ?? 0) > free) throw new Insufficient(a.node.size, free);
     const dup = async (blob: string) => (await this.objects.compose([blob])).key;
     if (a.w.owner === b.w.owner) {
@@ -432,11 +504,7 @@ export class Files {
     const v = list.find((x) => x.id === versionId);
     if (!v) throw new NotFound(versionId);
     const path = await this.tree.pathOf(node);
-    if (node.owner !== user) {
-      const p = this.person(user);
-      const bits = p ? await this.grants.effective(user, p.groups, [node, ...(await this.tree.ancestors(node))].map((n) => ({ id: n.id, kind: n.kind }))) : 0;
-      if (!(bits & UPDATE)) throw new Denied('you may not change this file');
-    }
+    if (!((await this.permsOn(user, node)) & UPDATE)) throw new Denied('you may not change this file');
     const copy = await this.objects.compose([v.blob]);
     const { node: next } = await this.tree.put(node.owner, path, { size: v.size, blob: copy.key, mtime: v.mtime });
     await this.keepVersion(node, user);
@@ -465,8 +533,7 @@ export class Files {
     const ext = dot > 0 ? name.slice(dot) : '';
     let target = want;
     for (let i = 2; await this.tree.resolve(owner, target); i++) target = `${dir === '/' ? '' : dir}/${stem} (${i})${ext}`;
-    const free = await this.free(owner);
-    if (free !== undefined && t.nodes[0]!.size > free) throw new Insufficient(t.nodes[0]!.size, free);
+    // The trash already counts against the quota, so putting an item back needs no more room.
     const n = await this.tree.restore(owner, target, t.nodes);
     delete this.state.doc.trash[`${owner}\u0000${id}`];
     this.state.mark('trash', `${owner}\u0000${id}`);
@@ -537,6 +604,27 @@ export class Files {
     if (node.parent === null) throw new Denied('your whole folder cannot be shared', 400);
     if (i.kind === 'person' && i.to && !this.person(i.to)) throw new NotFound(i.to);
     return this.grants.create({ resource: node.id, resourceKind: node.kind, by: user, giverHas: w.perms, kind: i.kind, ...(i.to ? { to: i.to } : {}), ...(i.permissions !== undefined ? { permissions: i.permissions } : {}), ...(i.password ? { password: i.password } : {}), ...(i.expires !== undefined ? { expires: i.expires } : {}), ...(i.note ? { note: i.note } : {}), ...(i.label ? { label: i.label } : {}) });
+  }
+
+  /**
+   * What a person may do on a node, wherever it sits: everything on their own; otherwise the union of the grants
+   * that reach them on it or above it, each limited to what its giver may still do there. So a reshare loses what
+   * its giver loses: lowering or revoking a share lowers or ends every share made from it.
+   */
+  async permsOn(user: string, node: Node, depth = 0): Promise<number> {
+    if (node.owner === user) return ALL;
+    const p = this.person(user);
+    if (!p || depth > 16) return 0;
+    const chain = [node, ...(await this.tree.ancestors(node))];
+    const at = new Map(chain.map((n) => [n.id, n]));
+    let bits = 0;
+    for (const g of await this.grants.live((g) => at.has(g.resource) && ((g.kind === 'person' && g.to === user) || (g.kind === 'group' && !!g.to && p.groups.includes(g.to))))) {
+      const cap = g.by === node.owner ? ALL : await this.permsOn(g.by, at.get(g.resource)!, depth + 1);
+      // A file shared by itself has no inside to create or delete in; a file inside a shared folder may be deleted
+      // when the folder's share allows deleting.
+      bits |= g.permissions & cap & (node.kind === 'file' ? (g.resource === node.id ? FILE_MAX : ~CREATE) : ALL);
+    }
+    return bits;
   }
 
   /** Grants on paths a person owns, or made by them. */

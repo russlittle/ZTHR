@@ -16,20 +16,31 @@ export interface Field {
   readonly note?: string;
 }
 
-/** Fields missing a level, and fields whose names suggest a higher level than they were given. */
+const highest = (ls: readonly Level[]): Level => ls.reduce((a, b) => (ORDER.indexOf(b) > ORDER.indexOf(a) ? b : a));
+
+/** Fields missing a level, fields given two levels (the higher holds), and fields whose names suggest a higher level than they were given. */
 export function inventory(fields: readonly Field[]): { byLevel: Record<Level, string[]>; findings: string[] } {
   const byLevel = Object.fromEntries(ORDER.map((l) => [l, [] as string[]])) as unknown as Record<Level, string[]>;
   const findings: string[] = [];
   const hints: [RegExp, Level][] = [[/pass(word)?|secret|token|api_?key|private_?key/i, 'secret'], [/ssn|social|passport|licen[cs]e_?no|diagnos|health|medical|bank|iban|card/i, 'sensitive'], [/email|phone|address|birth|dob|name|ip_?addr/i, 'personal']];
+  const given = new Map<string, Level[]>();
+  for (const f of fields) if (f.level) given.set(`${f.collection}.${f.field}`, [...(given.get(`${f.collection}.${f.field}`) ?? []), f.level]);
+  const done = new Set<string>();
   for (const f of fields) {
     const id = `${f.collection}.${f.field}`;
-    if (!f.level) {
-      findings.push(`${id} has no classification`);
+    const levels = given.get(id);
+    if (!levels) {
+      if (!done.has(id)) findings.push(`${id} has no classification`);
+      done.add(id);
       continue;
     }
-    byLevel[f.level].push(id);
+    if (done.has(id)) continue;
+    done.add(id);
+    const level = highest(levels);
+    if (new Set(levels).size > 1) findings.push(`${id} is classified twice (${levels.join(', ')}); the higher level holds`);
+    byLevel[level].push(id);
     const hint = hints.find(([re]) => re.test(f.field));
-    if (hint && ORDER.indexOf(f.level) < ORDER.indexOf(hint[1])) findings.push(`${id} is ${f.level} but its name suggests ${hint[1]}`);
+    if (hint && ORDER.indexOf(level) < ORDER.indexOf(hint[1])) findings.push(`${id} is ${level} but its name suggests ${hint[1]}`);
   }
   return { byLevel, findings };
 }
@@ -52,13 +63,21 @@ export class Gate {
   private readonly now: () => Date;
 
   constructor(fields: readonly Field[], rules: readonly Rule[], now: () => Date = () => new Date()) {
-    for (const f of fields) if (f.level) this.levels.set(`${f.collection}.${f.field}`, f.level);
+    for (const f of fields) {
+      const id = `${f.collection}.${f.field}`;
+      const was = this.levels.get(id);
+      if (f.level) this.levels.set(id, was ? highest([was, f.level]) : f.level);
+    }
     this.rules = rules;
     this.now = now;
   }
 
   decide(collection: string, fields: readonly string[], destination: string, who: string): Verdict[] {
-    const rule = this.rules.find((r) => (typeof r.destination === 'string' ? r.destination === destination : r.destination.test(destination)));
+    const rule = this.rules.find((r) => {
+      if (typeof r.destination === 'string') return r.destination === destination;
+      r.destination.lastIndex = 0; // a global or sticky pattern would otherwise carry its position into the next call
+      return r.destination.test(destination);
+    });
     const verdicts = fields.map((f): Verdict => {
       const level = this.levels.get(`${collection}.${f}`);
       if (!level) return { field: f, action: 'deny', level: 'unclassified', rule: 'unclassified fields never leave' };

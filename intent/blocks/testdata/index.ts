@@ -50,7 +50,7 @@ export class Fake {
     return { given, family, full: `${given} ${family}` };
   }
   email(name?: string): string {
-    const local = (name ?? this.pick(GIVEN)).normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.|\.$/g, '');
+    const local = (name ?? this.pick(GIVEN)).normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.|\.$/g, '') || 'person';
     return `${local}.${this.int(1, 999)}@${this.pick(EMAIL_DOMAINS)}`;
   }
   /** A number in a range reserved for fiction. */
@@ -70,10 +70,15 @@ export class Fake {
   }
 }
 
-/** Builds records from defaults, with overrides, and a sequence number. */
+/** Builds records from defaults, with overrides, and a sequence number that starts at 1 for each Fake. */
 export function factory<T>(defaults: (f: Fake, i: number) => T): (f: Fake, overrides?: Partial<T>) => T {
-  let i = 0;
-  return (f, overrides = {}) => ({ ...defaults(f, ++i), ...overrides });
+  // Counted per Fake, so a seed gives the same sequence numbers however many records other tests built first.
+  const counts = new WeakMap<Fake, number>();
+  return (f, overrides = {}) => {
+    const i = (counts.get(f) ?? 0) + 1;
+    counts.set(f, i);
+    return { ...defaults(f, i), ...overrides };
+  };
 }
 
 /** True only for values that could have come from Fake: the guard a seeding script runs before writing anywhere. */

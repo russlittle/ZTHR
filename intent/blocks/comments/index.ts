@@ -40,17 +40,24 @@ export class Comments {
   private mentionsIn(text: string, record: string): string[] {
     const out = new Set<string>();
     for (const m of text.matchAll(/(?:^|[^\w@])@([a-zA-Z0-9_.-]{2,40})/g)) {
-      const who = this.o.person(m[1]!);
+      // "@ben." at the end of a sentence: the full stop is punctuation unless the longer handle exists.
+      const trimmed = m[1]!.replace(/[.-]+$/, '');
+      const who = this.o.person(m[1]!) ?? (trimmed !== m[1] && trimmed.length >= 2 ? this.o.person(trimmed) : undefined);
       if (who && this.o.canSee(who, record)) out.add(who);
     }
     return [...out];
   }
 
-  post(by: string, on: string, text: string, parent?: number): Comment {
-    if (!this.o.canSee(by, on)) throw new Error('you cannot see this record');
+  private checked(text: string): string {
     const t = text.trim();
     if (!t) throw new Error('a comment needs some text');
     if (t.length > this.o.maxLength) throw new Error(`a comment can be at most ${this.o.maxLength} characters`);
+    return t;
+  }
+
+  post(by: string, on: string, text: string, parent?: number): Comment {
+    if (!this.o.canSee(by, on)) throw new Error('you cannot see this record');
+    const t = this.checked(text);
     if (parent !== undefined) {
       const p = this.get(parent);
       if (p.on !== on) throw new Error('a reply belongs on the same record');
@@ -72,8 +79,9 @@ export class Comments {
     const c = this.get(id);
     if (c.by !== by) throw new Error('only the author can edit a comment');
     if (c.deleted) throw new Error('this comment was deleted');
+    const t = this.checked(text);
     c.edits.push({ text: c.text, at: this.o.now().toISOString() });
-    c.text = text.trim();
+    c.text = t;
     const before = new Set(c.mentions);
     c.mentions = this.mentionsIn(c.text, c.on);
     for (const who of c.mentions) if (!before.has(who) && who !== by) this.o.onMention?.(who, c);
@@ -90,7 +98,12 @@ export class Comments {
 
   react(who: string, id: number, emoji: string): void {
     const c = this.get(id);
-    const l = (c.reactions[emoji] ??= []);
+    let l = Object.hasOwn(c.reactions, emoji) ? c.reactions[emoji] : undefined;
+    if (!l) {
+      l = [];
+      // defineProperty, so a reaction named "__proto__" is a key like any other rather than a prototype change.
+      Object.defineProperty(c.reactions, emoji, { value: l, enumerable: true, writable: true, configurable: true });
+    }
     const i = l.indexOf(who);
     if (i >= 0) l.splice(i, 1);
     else l.push(who);
@@ -124,7 +137,11 @@ export class Comments {
 export function display(c: Comment, profileUrl: (who: string) => string, name: (who: string) => string): string {
   if (c.deleted) return `<em>${c.deleted}</em>`;
   const esc = (s: string) => s.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
-  let html = esc(c.text);
-  for (const who of c.mentions) html = html.replaceAll(`@${esc(name(who))}`, `<a href="${esc(profileUrl(who))}">@${esc(name(who))}</a>`);
-  return html;
+  const html = esc(c.text);
+  const byName = new Map(c.mentions.map((who) => [esc(name(who)), who] as const).filter(([n]) => n));
+  if (!byName.size) return html;
+  const alt = [...byName.keys()].sort((a, b) => b.length - a.length).map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // A whole handle only: not inside an email address, and not the start of a longer handle such as @benny.
+  const re = new RegExp(`(^|[^\\w@])@(${alt.join('|')})(?![\\w-]|\\.[\\w])`, 'g');
+  return html.replace(re, (_, pre: string, n: string) => `${pre}<a href="${esc(profileUrl(byName.get(n)!))}">@${n}</a>`);
 }

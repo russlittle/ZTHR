@@ -36,3 +36,15 @@ test('entries written at the same moment are chained in order, never forked', as
   assert.equal(await a.verify(), null);
   assert.equal(canonical({ b: 1, a: { d: 2, c: 3 } }), '{"a":{"c":3,"d":2},"b":1}');
 });
+
+test('an entry still verifies after a trip through a JSON store, and the caller changing its detail later changes nothing', async () => {
+  const s = memoryAudit();
+  const a = new Audit(s, { now: () => new Date('2026-11-26T12:00:00Z') });
+  const detail: Record<string, unknown> = { when: new Date('2026-01-01T00:00:00Z'), gone: undefined, n: 1 };
+  await a.record({ actor: 'ana', action: 'update', target: 'x', detail });
+  detail['n'] = 2;
+  assert.equal(await a.verify(), null, 'the caller kept a reference to the detail');
+  const stored = s.entries.map((e) => JSON.parse(JSON.stringify(e)));
+  s.entries.splice(0, s.entries.length, ...stored);
+  assert.equal(await a.verify(), null, 'dates and undefined values do not hash differently once stored');
+});

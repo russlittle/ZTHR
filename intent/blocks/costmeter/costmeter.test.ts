@@ -37,3 +37,16 @@ test('budgets warn once at each step, a hard budget stops spending, and the fore
   assert.equal(m.allowed('digests', 'acme', '2026-11'), true, 'other features carry on');
   assert.equal(m.allowed('summaries', 'acme', '2026-12'), true, 'a new month starts fresh');
 });
+
+test('money is added up in whole micro-cents and rounded half up, with no float drift', () => {
+  const m = new Meter([{ meter: 'calls', unit: 'call', microCentsPerUnit: 1000 }, { meter: 'tiny', unit: 'call', microCentsPerUnit: 100_000 }]);
+  m.record({ meter: 'calls', units: 1005, feature: 'f', tenant: 't', at: '2026-11-01T00:00:00Z' });
+  assert.equal(m.spent('2026-11'), 1.01, '1.005 cents is 1.01, not 1.00');
+  for (let i = 0; i < 3; i++) m.record({ meter: 'tiny', units: 1, feature: 'g', tenant: 't', at: '2026-11-02T00:00:00Z' });
+  assert.equal(m.bill('2026-11', { feature: 'g' })[0]!.cents, 0.3);
+});
+
+test('usage must be a finite number', () => {
+  const m = new Meter(rates);
+  assert.throws(() => m.record({ meter: 'emails', units: Infinity, feature: 'x', tenant: 'y', at: '2026-11-01' }), /finite/);
+});

@@ -36,3 +36,53 @@ test('zip bombs, unsafe paths and junk are refused', () => {
   damaged.writeUInt32LE(99, damaged.length - 22 + 16 - 0);
   assert.throws(() => unzip(damaged), Refused);
 });
+
+const book = (sheet: string, extra: { name: string; data: string }[] = []) => zip([
+  { name: 'xl/workbook.xml', data: '<workbook><sheets><sheet sheetId="1" r:id="rId1" name="S"/></sheets></workbook>' },
+  { name: 'xl/_rels/workbook.xml.rels', data: '<Relationships><Relationship Target="worksheets/sheet1.xml" Id="rId1"/></Relationships>' },
+  { name: 'xl/worksheets/sheet1.xml', data: `<worksheet><sheetData>${sheet}</sheetData></worksheet>` },
+  ...extra,
+]);
+
+test('cell references beyond the Excel grid, and sheets that pad out to millions of cells, are refused', () => {
+  assert.throws(() => xlsx(book('<row r="1"><c r="ZZZZZZZZ1"><v>1</v></c></row>')), Refused);
+  assert.throws(() => xlsx(book('<row r="99999999"><c r="A99999999"><v>1</v></c></row>')), Refused);
+  const wide = Array.from({ length: 2000 }, (_, i) => `<row r="${i + 1}"><c r="XFD${i + 1}"/></row>`).join('');
+  assert.throws(() => xlsx(book(wide), { maxCells: 1_000_000 }), /too many cells/);
+});
+
+test('cells without a reference, attributes in any order, and phonetic guides are read as Excel does', () => {
+  const sst = { name: 'xl/sharedStrings.xml', data: '<sst><si><r><t>東京</t></r><rPh sb="0" eb="2"><t>トウキョウ</t></rPh></si></sst>' };
+  const rows = xlsx(book('<row><c t="s"><v>0</v></c><c><v>2</v></c></row><row><c s="1" r="B2" t="b"><v>1</v></c></row>', [sst]));
+  assert.deepEqual(rows, [{ name: 'S', rows: [['東京', 2], [null, true]] }]);
+});
+
+test('hostile or damaged zips are refused, never crash with another error', () => {
+  assert.throws(() => unzip(Buffer.from('PK')), Refused);
+  const lying = zip([{ name: 'a.txt', data: 'hello hello hello hello' }]);
+  const cd = lying.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
+  lying.writeUInt32LE(5, cd + 24);
+  assert.throws(() => unzip(lying), Refused);
+  const far = zip([{ name: 'a.txt', data: 'x' }]);
+  far.writeUInt32LE(0x7fffffff, far.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02])) + 42);
+  assert.throws(() => unzip(far), Refused);
+  assert.throws(() => docx(zip([{ name: 'word/document.xml', data: '<w:p><w:t>&#x110000;</w:t></w:p>' }])), Refused);
+});
+
+test('unclosed tags do not make parsing quadratic', () => {
+  const junk = Array.from({ length: 40_000 }, (_, i) => `<w:p w:rsid="${((i * 2654435761) >>> 0).toString(16)}">`).join('');
+  let t0 = performance.now();
+  docx(zip([{ name: 'word/document.xml', data: `<w:document><w:p><w:t>a</w:t></w:p>${junk}` }]));
+  assert.ok(performance.now() - t0 < 1_000, `docx ${Math.round(performance.now() - t0)} ms`);
+  const cells = Array.from({ length: 40_000 }, (_, i) => `<c r="A${i + 1}" s="${i}">`).join('');
+  t0 = performance.now();
+  xlsx(book(`<row>${cells}</row>`));
+  assert.ok(performance.now() - t0 < 1_000, `xlsx ${Math.round(performance.now() - t0)} ms`);
+});
+
+test('an entry whose bytes do not match its CRC-32 is refused, not returned corrupted', () => {
+  const z = zip([{ name: 'a.txt', data: 'hello hello hello' }]);
+  const cd = z.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
+  z.writeUInt32LE((z.readUInt32LE(cd + 16) ^ 1) >>> 0, cd + 16);
+  assert.throws(() => unzip(z), /CRC|damaged/);
+});

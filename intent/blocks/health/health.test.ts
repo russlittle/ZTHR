@@ -56,3 +56,11 @@ test('the badge marks every environment but production, and the status page show
   assert.equal(s.incidents[0]!.latest!.text, 'Found it');
   assert.equal(statusPage([{ name: 'Sync', status: 'down' }], []).headline, 'The service is down');
 });
+
+test('readiness judges each check by its own criticality, even when two share a name', async () => {
+  const r = await readiness([
+    { name: 'db', critical: false, run: async () => undefined },
+    { name: 'db', critical: true, run: async () => Promise.reject(new Error('primary unreachable')) },
+  ]);
+  assert.equal(r.status, 'down', 'the critical one failed');
+});

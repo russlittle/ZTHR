@@ -27,3 +27,8 @@ test('rules for people, groups and attributes; a kill switch wins; each answer s
   assert.deepEqual(f.stale('2027-01-15').map((x) => x.key), ['beta', 'old']);
   assert.deepEqual(f.stale('2026-11-26').map((x) => x.key), ['old'], 'a flag with no removal date is always listed');
 });
+
+test('a percentage that is not a number reaches nobody rather than everybody', () => {
+  const f = { key: 'risky', description: '', owner: 'ana', on: true, rules: [{ percent: Number('ten') }] };
+  assert.equal(people.filter((p) => evaluate(f, p).on).length, 0);
+});

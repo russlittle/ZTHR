@@ -15,6 +15,22 @@ export interface ServeOptions {
   /** The address people use, when a proxy sits in front; otherwise it is read from the request. */
   readonly origin?: string;
   readonly log?: (line: Record<string, unknown>) => void;
+  /**
+   * How many proxies the deployment puts in front (Cloud Run: 1). Each appends the address it saw to
+   * X-Forwarded-For, so the client's address is that many entries from the right; anything to the left of it was
+   * written by the client and is never trusted. With 0 the header is ignored and the connection's address is used.
+   */
+  readonly proxyHops?: number;
+}
+
+/** The address a request came from, as far as the deployment's own proxies vouch for it. */
+export function clientAddress(forwarded: string | undefined, socket: string | undefined, hops: number): string {
+  if (hops > 0 && forwarded) {
+    const list = forwarded.split(',').map((x) => x.trim()).filter(Boolean);
+    const at = list[list.length - hops];
+    if (at) return at;
+  }
+  return socket ?? '';
 }
 
 const READS = new Set(['GET', 'HEAD', 'PROPFIND', 'OPTIONS', 'REPORT']);
@@ -37,7 +53,7 @@ export function handler(files: Files, o: ServeOptions = {}) {
     }
     // The apps reach some endpoints with and without index.php; both mean the same.
     const path = url.pathname.replace(/^\/index\.php(?=\/(apps|ocs|s)\/)/, '');
-    const r: Req = { method: (raw.method ?? 'GET').toUpperCase(), url, path, headers, ip: (headers['x-forwarded-for'] ?? '').split(',')[0]?.trim() || raw.socket.remoteAddress || '', raw };
+    const r: Req = { method: (raw.method ?? 'GET').toUpperCase(), url, path, headers, ip: clientAddress(headers['x-forwarded-for'], raw.socket.remoteAddress, o.proxyHops ?? 0), raw };
     let out: Reply;
     try {
       out = await route(files, r, origin);

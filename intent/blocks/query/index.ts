@@ -3,7 +3,8 @@
  * (`from files where size > 1000 and owner = "ana" order by size desc limit 20 select name, size`), parsed into a
  * plan that is checked against the declared collections and fields before it runs: no writes exist in the
  * language, unknown fields are refused by name, results are capped, sensitive fields are masked unless the person
- * may see them, and every query is recorded with who ran it and how many rows came back.
+ * may see them (and cannot be filtered or sorted on, which would reveal them), and every query is recorded with
+ * who ran it and how many rows came back.
  */
 
 export interface Collection {
@@ -52,7 +53,14 @@ export function parse(q: string, maxLimit = 500): Plan {
     if (want && x.toLowerCase() !== want) throw new QueryError(`expected ${want}, found ${x}`);
     return x;
   };
-  const value = (x: string): string | number | boolean => (x.startsWith('"') ? (JSON.parse(x) as string) : /^-?\d/.test(x) ? Number(x) : x === 'true' ? true : x === 'false' ? false : (() => { throw new QueryError(`${x} is not a value; quote text like "this"`); })());
+  const text = (x: string): string => {
+    try {
+      return JSON.parse(x) as string;
+    } catch {
+      throw new QueryError(`${x} is not readable text; the escapes are \\" \\\\ \\n \\t and \\u0000`);
+    }
+  };
+  const value = (x: string): string | number | boolean => (x.startsWith('"') ? text(x) : /^-?\d/.test(x) ? Number(x) : x === 'true' ? true : x === 'false' ? false : (() => { throw new QueryError(`${x} is not a value; quote text like "this"`); })());
   take('from');
   const from = take();
   const where: Cond[] = [];
@@ -91,7 +99,7 @@ export function parse(q: string, maxLimit = 500): Plan {
 export function checkPlan(p: Plan, cols: readonly Collection[]): Collection {
   const c = cols.find((x) => x.name === p.from);
   if (!c) throw new QueryError(`no collection ${p.from}; there are ${cols.map((x) => x.name).join(', ')}`);
-  for (const f of [...p.where.map((w) => w.field), ...(p.order ? [p.order.field] : []), ...(p.select ?? [])]) if (!c.fields[f]) throw new QueryError(`${p.from} has no field ${f}`);
+  for (const f of [...p.where.map((w) => w.field), ...(p.order ? [p.order.field] : []), ...(p.select ?? [])]) if (!Object.hasOwn(c.fields, f)) throw new QueryError(`${p.from} has no field ${f}`);
   for (const w of p.where) {
     const ty = c.fields[w.field]!.type;
     if (w.op === 'contains' ? ty !== 'string' : ty === 'number' ? typeof w.value !== 'number' : ty === 'boolean' ? typeof w.value !== 'boolean' : typeof w.value !== 'string') throw new QueryError(`${w.field} is a ${ty}; ${JSON.stringify(w.value)} does not fit ${w.op}`);
@@ -126,7 +134,10 @@ export class Console {
     try {
       const p = parse(query);
       const c = checkPlan(p, this.cols);
-      if (!o.seeSensitive) for (const w of p.where) if (c.fields[w.field]!.sensitive) throw new QueryError(`you cannot filter on ${w.field}`);
+      if (!o.seeSensitive) {
+        for (const w of p.where) if (c.fields[w.field]!.sensitive) throw new QueryError(`you cannot filter on ${w.field}`);
+        if (p.order && c.fields[p.order.field]!.sensitive) throw new QueryError(`you cannot sort on ${p.order.field}`);
+      }
       let rows = this.data(p.from).filter((r) => p.where.every((w) => test(r[w.field], w)));
       if (p.order) {
         const f = p.order.field;

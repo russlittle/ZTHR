@@ -774,6 +774,80 @@
       "requires": [],
       "tests": 2,
       "home": "intent/blocks/uat"
+    },
+    {
+      "name": "importer",
+      "purpose": "One way in for data from anywhere: uploaded bytes or pasted text recognised as CSV/TSV, .xlsx, .docx, JSON, JSON lines, vCard, iCalendar or a pasted table or address list, decoded from UTF-8 or UTF-16, held to size and row limits, matched to fields, with every bad row quarantined by where it was and why",
+      "requires": [
+        "docparse",
+        "tabular",
+        "ux"
+      ],
+      "tests": 11,
+      "home": "intent/blocks/importer"
+    },
+    {
+      "name": "ask",
+      "purpose": "Plain-language questions over a declared dataset: a model's proposed report is checked against the fields, measures and filters the person may see, small groups are suppressed, and the answer comes with its records, a plain-English description of what was computed, and the report itself",
+      "requires": [
+        "reports"
+      ],
+      "tests": 6,
+      "home": "intent/blocks/ask"
+    },
+    {
+      "name": "etl",
+      "purpose": "Declared extract-transform-load pipelines with per-step page checkpoints that resume, idempotent loads by id, capped row-level error capture, dry runs, per-run lineage with an every-row-accounted check, a cron schedule and a watch for stale, failed or drifting runs",
+      "requires": [
+        "jobs"
+      ],
+      "tests": 10,
+      "home": "intent/blocks/etl"
+    },
+    {
+      "name": "console",
+      "purpose": "The model behind the admin console, housekeeping console and feature explorer: sections of items with status, reason, path and permission built from the app's registries, filtered by permission with a summary line, plus a feature explorer that joins and searches features, screens, flags, journeys and evidence",
+      "requires": [
+        "surfaces",
+        "flags",
+        "jobs",
+        "watchdog",
+        "upkeep",
+        "backups",
+        "slo",
+        "health",
+        "palette"
+      ],
+      "tests": 7,
+      "home": "intent/blocks/console"
+    },
+    {
+      "name": "factoryreports",
+      "purpose": "Feature reports, operations reports and the improvement brief as documents with tables and evidenced findings, rendered to Markdown and delivered on a schedule, with the brief ranking what to change next by weighted evidence and saying why",
+      "requires": [
+        "jobs",
+        "slo",
+        "pipeline",
+        "feedback"
+      ],
+      "tests": 7,
+      "home": "intent/blocks/factoryreports"
+    },
+    {
+      "name": "walkthrough",
+      "purpose": "A guided, ordered walk through a feature's journey steps showing each claim, its evidence and whether that evidence is current, with step-by-step sign-off refused on stale, failed, missing or untraceable evidence and voided when covered code changes",
+      "requires": [],
+      "tests": 5,
+      "home": "intent/blocks/walkthrough"
+    },
+    {
+      "name": "speech",
+      "purpose": "Speech transcripts turned into palette commands with spoken confirmation for destructive ones, dictation with spoken punctuation and corrections, and numbers and dates spoken in words, with a feature-detected Web Speech adapter",
+      "requires": [
+        "palette"
+      ],
+      "tests": 9,
+      "home": "intent/blocks/speech"
     }
   ]
 }

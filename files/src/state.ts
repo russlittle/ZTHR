@@ -167,7 +167,6 @@ export class State {
   private dirty = new Map<Collection, Set<string>>();
   private writing: Promise<void> = Promise.resolve();
   private scheduled = false;
-  private failed: unknown = null;
   /** Indexes rebuilt from the document, never saved. */
   private kids = new Map<number, Map<string, number>>();
   private roots = new Map<string, number>();
@@ -238,42 +237,61 @@ export class State {
     this.scheduled = true;
     setImmediate(() => {
       this.scheduled = false;
-      this.writing = this.writing.then(() => this.write()).catch((e) => {
-        this.failed = e;
+      this.writing = this.writing.then(() => this.write()).catch(() => {
+        // The records stay marked (write puts them back), so the next write, or the flush waiting on this one,
+        // tries them again; nobody is told they are saved until an append that holds them succeeds.
       });
     });
   }
 
   private async write(): Promise<void> {
     if (!this.dirty.size) return;
+    const taken = this.dirty;
+    this.dirty = new Map();
     const put: Delta['put'] = {};
-    for (const [c, keys] of this.dirty) {
+    for (const [c, keys] of taken) {
       const src = this.doc[c] as Record<string, unknown>;
       const rec: Record<string, unknown> = {};
       for (const k of keys) rec[k] = k in src ? src[k] : null;
       if (keys.size) put[c] = rec;
     }
-    this.dirty.clear();
     const d: Delta = { n: this.n + 1, seq: { ...this.doc.seq }, put };
-    await this.persist.append(d.n, JSON.stringify(d));
+    try {
+      await this.persist.append(d.n, JSON.stringify(d));
+    } catch (e) {
+      // Not in the log: mark the records again, merged with anything changed meanwhile, so they are not forgotten.
+      for (const [c, keys] of taken) {
+        const now = this.dirty.get(c) ?? new Set<string>();
+        for (const k of keys) now.add(k);
+        this.dirty.set(c, now);
+      }
+      throw e;
+    }
     this.n = d.n;
     if (++this.sinceSnapshot >= this.every) {
-      await this.persist.snapshot(this.n, JSON.stringify({ n: this.n, doc: this.doc }));
-      this.sinceSnapshot = 0;
+      // The entry is in the log, so the change is saved whatever happens here; a snapshot that fails is tried
+      // again after the next entry.
+      try {
+        await this.persist.snapshot(this.n, JSON.stringify({ n: this.n, doc: this.doc }));
+        this.sinceSnapshot = 0;
+      } catch {
+        /* retried with the next entry */
+      }
     }
   }
 
-  /** Waits until every change so far is in the log; a failed write is reported here, to the request that waits. */
+  /**
+   * Waits until every change so far is in the log. If a write failed, its records are still marked and are
+   * written again here; a failure of that write is thrown to the request that waits, so every waiting request
+   * either sees its change in the log or hears that it is not.
+   */
   async flush(): Promise<void> {
-    if (this.scheduled || this.dirty.size) {
-      await new Promise<void>((ok) => setImmediate(ok));
-    }
+    if (this.scheduled) await new Promise<void>((ok) => setImmediate(ok));
     await this.writing;
-    if (this.dirty.size) await (this.writing = this.writing.then(() => this.write()));
-    if (this.failed) {
-      const e = this.failed;
-      this.failed = null;
-      throw e;
+    if (this.dirty.size) {
+      const p = this.writing.then(() => this.write());
+      this.writing = p.catch(() => {});
+      await p;
     }
   }
 

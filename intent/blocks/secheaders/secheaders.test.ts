@@ -28,3 +28,14 @@ test('a change must come from this site and carry its session’s token; reads a
   assert.match(csrf({ method: 'POST', origin: 'https://files.example.org', token, sessionId: 'sess-2' }, 'secret', site)!, /does not match/);
   assert.notEqual(csrfToken('secret', 'a'), csrfToken('secret', 'b'));
 });
+
+test('a cookie name or value cannot add attributes, and a nonce or source cannot add directives', () => {
+  assert.throws(() => sessionCookie('s', 'v; Domain=evil.example', 60), /cookie/);
+  assert.throws(() => sessionCookie('s; Path=/x', 'v', 60), /cookie/);
+  assert.throws(() => sessionCookie('s', 'v\r\nSet-Cookie: x=1', 60), /cookie/);
+  assert.throws(() => sessionCookie('s', 'v', Number.NaN), /cookie/);
+  assert.throws(() => headers({ nonce: "abc' 'unsafe-inline" }), /nonce/);
+  assert.throws(() => headers({ allow: { 'script-src': ["https://cdn.example.org; script-src 'unsafe-inline'"] } }), /source/);
+  assert.throws(() => headers({ allow: { 'frame-src': ['https://a.example.org,https://b'] } }), /source/);
+  assert.doesNotThrow(() => headers({ allow: { 'img-src': ['https://*.example.org', "'self'", 'blob:'] } }));
+});

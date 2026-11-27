@@ -34,3 +34,17 @@ test('factories take overrides and build datasets to a shape', () => {
   assert.equal(new Set(data.flatMap((d) => d.files.map((x) => x.id))).size, 12);
   assert.equal(account(f, { plan: 'enterprise' }).plan, 'enterprise');
 });
+
+test('a factory gives the same records for the same seed, whatever ran before it', () => {
+  const person = factory((fk, i) => ({ n: i, id: fk.id('p'), name: fk.name().full }));
+  const run = () => {
+    const f = new Fake(5);
+    return [person(f), person(f)];
+  };
+  assert.deepEqual(run(), run());
+});
+
+test('an email built from a name with no Latin letters is still a valid address', () => {
+  const f = new Fake(3);
+  for (const n of ['王芳', 'Ødegård', 'Σοφία']) assert.match(f.email(n), /^[a-z0-9]+(\.[a-z0-9]+)*@example\.(com|org|net)$/, n);
+});

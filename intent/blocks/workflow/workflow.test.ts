@@ -44,3 +44,13 @@ test('guards explain, approvals need distinct people who did not ask, rejection 
   assert.deepEqual(i.trail.map((x) => x.to), ['review', 'draft', 'review', 'approved', 'paid']);
   assert.equal(i.trail[1]!.why, 'receipt is missing');
 });
+
+test('a loop with no way on to a final state is refused, since a record in it is stranded', () => {
+  const loop: Definition = { name: 'loop', start: 'draft', final: ['done'], transitions: [
+    { from: 'draft', to: 'done', action: 'finish', roles: ['r'] },
+    { from: 'draft', to: 'a', action: 'park', roles: ['r'] },
+    { from: 'a', to: 'b', action: 'go', roles: ['r'] },
+    { from: 'b', to: 'a', action: 'back', roles: ['r'] },
+  ] };
+  assert.deepEqual(check(loop), ['a can never reach a final state', 'b can never reach a final state']);
+});

@@ -58,11 +58,15 @@ export class Audit {
     this.now = o.now ?? (() => new Date());
   }
 
-  /** Appends one entry, after every entry before it, chained to the last. */
+  /**
+   * Appends one entry, after every entry before it, chained to the last. The detail is kept as the JSON it will be
+   * stored as (dates become strings, undefined values go), so an entry hashes the same before and after a store,
+   * and later changes to the caller's object do not reach it.
+   */
   record(e: { actor: string; action: string; target: string; onBehalfOf?: string; sensitivity?: string; reason?: string; detail?: Record<string, unknown> }): Promise<Entry> {
     const run = async () => {
       const last = await this.store.last();
-      const body: Omit<Entry, 'hash'> = { n: (last?.n ?? 0) + 1, at: this.now().toISOString(), actor: e.actor, ...(e.onBehalfOf ? { onBehalfOf: e.onBehalfOf } : {}), action: e.action, target: e.target, ...(e.sensitivity ? { sensitivity: e.sensitivity } : {}), ...(e.reason ? { reason: e.reason } : {}), ...(e.detail ? { detail: e.detail } : {}), prev: last?.hash ?? GENESIS };
+      const body: Omit<Entry, 'hash'> = { n: (last?.n ?? 0) + 1, at: this.now().toISOString(), actor: e.actor, ...(e.onBehalfOf ? { onBehalfOf: e.onBehalfOf } : {}), action: e.action, target: e.target, ...(e.sensitivity ? { sensitivity: e.sensitivity } : {}), ...(e.reason ? { reason: e.reason } : {}), ...(e.detail ? { detail: JSON.parse(JSON.stringify(e.detail)) as Record<string, unknown> } : {}), prev: last?.hash ?? GENESIS };
       const entry: Entry = { ...body, hash: hashOf(body) };
       await this.store.append(entry);
       return entry;

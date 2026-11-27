@@ -64,3 +64,54 @@ test('a reminder stops the moment the thing is done, or after its limit', async 
   assert.equal(g.sent, 2);
   assert.equal(g.stopped, 'gave up');
 });
+
+test('the one-click link in a digest really stops digests, and a bounced address gets none', async () => {
+  const sent: Message[] = [];
+  const n = new Notify({ send: async (m) => void sent.push(m), secret: 's', unsubscribeUrl: 'https://x.example/u', now: () => new Date('2026-11-26T15:00:00Z') });
+  n.setPrefs('ben', { tz: 'UTC', categories: { sharing: { channels: ['email'], digest: true } } });
+  await n.notify('ben', 'ben@example.org', shared, { who: 'Ana', name: 'A' });
+  await n.digest('ben', 'ben@example.org');
+  const link = sent[0]!.headers['List-Unsubscribe']!;
+  assert.ok(n.unsubscribe(link.slice(link.indexOf('?t=') + 3, -1)));
+  await n.notify('ben', 'ben@example.org', shared, { who: 'Ana', name: 'B' });
+  assert.equal(await n.digest('ben', 'ben@example.org'), false, 'unsubscribed from digests');
+  assert.equal(sent.length, 1);
+  n.setPrefs('cy', { tz: 'UTC', categories: { sharing: { channels: ['email'], digest: true } } });
+  await n.notify('cy', 'cy@example.org', shared, { who: 'Ana', name: 'A' });
+  n.bounce('cy@example.org', 'hard');
+  assert.equal(await n.digest('cy', 'cy@example.org'), false, 'the address bounced');
+  assert.equal(sent.length, 1);
+});
+
+test('mail held for quiet hours goes in the order it was written, and not to an address that bounced meanwhile', async () => {
+  let now = new Date('2026-11-26T04:00:00Z');
+  const sent: Message[] = [];
+  const n = new Notify({ send: async (m) => void sent.push(m), secret: 's', unsubscribeUrl: 'https://x.example/u', now: () => now });
+  n.setPrefs('ana', { tz: 'America/New_York', quiet: [22, 7], categories: { sharing: { channels: ['email'] } } });
+  n.setPrefs('cy', { tz: 'America/New_York', quiet: [22, 7], categories: { sharing: { channels: ['email'] } } });
+  await n.notify('ana', 'ana@example.org', shared, { who: 'Ben', name: 'first' });
+  await n.notify('ana', 'ana@example.org', shared, { who: 'Ben', name: 'second' });
+  await n.notify('cy', 'cy@example.org', shared, { who: 'Ben', name: 'x' });
+  n.bounce('cy@example.org', 'complaint');
+  now = new Date('2026-11-26T13:00:00Z');
+  assert.equal(await n.release(), 2);
+  assert.deepEqual(sent.map((m) => m.subject), ['Ben shared first', 'Ben shared second']);
+  assert.equal(n.sentTo('cy').at(-1)!.outcome, 'suppressed');
+});
+
+test('a value only fills a placeholder it was given, and a subject cannot carry line breaks into the mail headers', async () => {
+  assert.throws(() => render('{{constructor}} {{toString}}', {}), /needs constructor, toString/);
+  const sent: Message[] = [];
+  const n = new Notify({ send: async (m) => void sent.push(m), secret: 's', unsubscribeUrl: 'https://x.example/u' });
+  await n.notify('ben', 'ben@example.org', shared, { who: 'Ana', name: 'x\r\nBcc: all@example.org' });
+  assert.equal(sent[0]!.subject, 'Ana shared x Bcc: all@example.org');
+});
+
+test('a digest lists each notice once, whatever channels the category uses', async () => {
+  const sent: Message[] = [];
+  const n = new Notify({ send: async (m) => void sent.push(m), secret: 's', unsubscribeUrl: 'https://x.example/u', now: () => new Date('2026-11-26T15:00:00Z') });
+  n.setPrefs('ben', { tz: 'UTC', categories: { sharing: { channels: ['email', 'inbox'], digest: true } } });
+  await n.notify('ben', 'ben@example.org', shared, { who: 'Ana', name: 'A' });
+  await n.digest('ben', 'ben@example.org');
+  assert.equal(sent[0]!.subject, '1 update');
+});

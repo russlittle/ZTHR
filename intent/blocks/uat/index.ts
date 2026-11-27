@@ -2,11 +2,14 @@
  * UAT overrides: what a tester needs to reach a case without editing data by hand. In a test environment, and only
  * there, a tester can switch a feature flag for themselves, set their own clock (to see what happens after a trial
  * ends), or act with a different role, each for a limited time with a reason. Overrides apply to the tester alone,
- * end on their own, show on a banner so nobody forgets one is on, and are recorded. In production every override is
- * refused, whatever the caller says.
+ * end on their own, show on a banner so nobody forgets one is on, and are recorded. Outside the named test
+ * environments, and in production however it is spelled, every override is refused, whatever the caller says.
  */
 
 export type Override = { readonly kind: 'flag'; readonly flag: string; readonly on: boolean } | { readonly kind: 'clock'; readonly at: string } | { readonly kind: 'role'; readonly role: string };
+
+/** The environments overrides work in unless the caller names others. */
+export const TEST_ENVS: readonly string[] = ['local', 'dev', 'development', 'test', 'testing', 'qa', 'uat', 'staging', 'sandbox', 'preview'];
 
 export interface Active {
   readonly id: number;
@@ -22,9 +25,12 @@ export class Uat {
   private readonly env: string;
   private readonly now: () => number;
   private readonly allowedRoles: readonly string[];
+  private readonly testEnvs: readonly string[];
 
-  constructor(o: { env: string; now?: () => number; allowedRoles?: readonly string[] }) {
-    this.env = o.env;
+  /** `testEnvs` names the environments overrides work in; any other environment, production above all, refuses them. */
+  constructor(o: { env: string; now?: () => number; allowedRoles?: readonly string[]; testEnvs?: readonly string[] }) {
+    this.env = o.env.trim().toLowerCase();
+    this.testEnvs = (o.testEnvs ?? TEST_ENVS).map((e) => e.trim().toLowerCase());
     this.now = o.now ?? Date.now;
     this.allowedRoles = o.allowedRoles ?? ['member', 'editor', 'viewer'];
   }
@@ -34,8 +40,10 @@ export class Uat {
   }
 
   set(who: string, o: Override, why: string, minutes = 60): Active {
-    if (this.env === 'production') throw new Error('overrides are not available in production');
+    if (/^(prod|prd|live)/.test(this.env)) throw new Error('overrides are not available in production');
+    if (!this.testEnvs.includes(this.env)) throw new Error(`overrides are not available in ${this.env}: it is not a test environment`);
     if (why.trim().length < 8) throw new Error('say why, so the record makes sense later');
+    if (!(minutes > 0)) throw new Error('an override lasts some minutes');
     if (minutes > 8 * 60) throw new Error('an override lasts at most a working day');
     if (o.kind === 'role' && !this.allowedRoles.includes(o.role)) throw new Error(`${o.role} cannot be taken on as an override`);
     if (o.kind === 'clock' && Number.isNaN(Date.parse(o.at))) throw new Error('the clock needs a date and time');

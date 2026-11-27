@@ -193,7 +193,11 @@ async function provisioning(files: Files, r: Req, v: 1 | 2, rest: string): Promi
     const f = await fields(r);
     const key = f['key'];
     const value = f['value'] ?? '';
-    if (key === 'password') await files.setPassword(id, value);
+    if (key === 'password') {
+      // An app password is one device's key; it must not be able to take the whole account.
+      if (r.device !== undefined) return ocs(r, v, 403, [], 'sign in with your account password to change it');
+      await files.setPassword(id, value);
+    }
     else if (key === 'displayname' || key === 'display') files.updatePerson(id, { display: value });
     else if (key === 'email') files.updatePerson(id, { email: value });
     else if (key === 'quota') {
@@ -247,7 +251,8 @@ async function shares(files: Files, r: Req, v: 1 | 2, rest: string, origin: stri
           const { node } = await files.resolve(me.id, path);
           if (!node) throw new NotFound(path);
           const kids = q.get('subfiles') === 'true' ? new Set((await files.tree.list(node)).map((n) => n.id)) : new Set([node.id]);
-          list = (await files.grants.live((g) => kids.has(g.resource))).filter((g) => g.by === me.id || q.get('reshares') === 'true');
+          // Others' shares on the same items are listed only to whoever owns them, as Nextcloud does.
+          list = (await files.grants.live((g) => kids.has(g.resource))).filter((g) => g.by === me.id || (q.get('reshares') === 'true' && node.owner === me.id));
         }
       }
       return ocs(r, v, 200, await Promise.all(list.map((g) => shareJson(files, g, me.id, origin))));
@@ -278,9 +283,12 @@ async function shares(files: Files, r: Req, v: 1 | 2, rest: string, origin: stri
   if (r.method === 'PUT') {
     if (!mine) return ocs(r, v, 403, [], 'only whoever shared it changes a share');
     const f = await fields(r);
-    const { w } = node ? await files.resolve(me.id, await files.tree.pathOf(node)) : { w: { perms: 0 } };
+    // What the giver may give is what they have on the node now, never more; the owner's path means nothing in a
+    // resharer's view, so it is worked out from the node and the grants that reach them.
+    if (!node) return ocs(r, v, 404, [], 'what was shared is gone');
+    const has = await files.permsOn(g.by, node);
     const exp = f['expireDate'] === '' ? null : dateMs(f['expireDate']);
-    const next = await files.grants.update(g.id, g.by, w.perms || ALL, { ...(f['permissions'] ? { permissions: Number(f['permissions']) } : {}), ...(f['password'] !== undefined ? { password: f['password'] === '' ? null : f['password'] } : {}), ...(exp !== undefined ? { expires: exp } : {}), ...(f['note'] !== undefined ? { note: f['note'] } : {}), ...(f['label'] !== undefined ? { label: f['label'] } : {}) });
+    const next = await files.grants.update(g.id, g.by, has, { ...(f['permissions'] ? { permissions: Number(f['permissions']) } : {}), ...(f['password'] !== undefined ? { password: f['password'] === '' ? null : f['password'] } : {}), ...(exp !== undefined ? { expires: exp } : {}), ...(f['note'] !== undefined ? { note: f['note'] } : {}), ...(f['label'] !== undefined ? { label: f['label'] } : {}) });
     return ocs(r, v, 200, await shareJson(files, next, me.id, origin));
   }
   return ocs(r, v, 405, [], 'not allowed');
