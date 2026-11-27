@@ -3,14 +3,15 @@ name: Night shift
 # Gauge calibration for the block library. Every block's tests are run against planted defects (mutants); each
 # surviving mutant becomes a work order in intent/factory/queue/mutation for the maintenance crew, and each block's
 # certificate (mutants, killed, survivors, score) is written to intent/eval/mutation. Nightly it calibrates every
-# block; on a push it calibrates the blocks that changed; by hand it calibrates the blocks named. A final job checks
+# block; on a push it calibrates the blocks that changed, or every block when the gauges themselves (the mutation
+# tooling or this workflow) changed; by hand it calibrates the blocks named. A final job checks
 # that no block's score fell and commits the certificates and work orders back to the branch.
 on:
   schedule:
     - cron: '17 4 * * *' # 04:17 UTC, clear of the 06:30-08:30 no-push window
   push:
     branches: [intent-surface]
-    paths: ['intent/blocks/**']
+    paths: ['intent/blocks/**', 'tools/mutation/**', '.github/workflows/night-shift.yml']
   workflow_dispatch:
     inputs:
       blocks:
@@ -45,6 +46,7 @@ jobs:
           set -euo pipefail
           all=$(for d in intent/blocks/*/; do b=$(basename "$d"); [ -f "$d/index.ts" ] && ls "$d"/*.test.ts >/dev/null 2>&1 && echo "$b"; done)
           if [ -n "${ASKED:-}" ]; then picked="$ASKED"
+          elif [ "$EVENT" = push ] && git diff --name-only HEAD~1 HEAD | grep -qE '^(tools/mutation/|\.github/workflows/night-shift\.yml)'; then picked="$all"
           elif [ "$EVENT" = push ]; then picked=$(git diff --name-only HEAD~1 HEAD -- intent/blocks | cut -d/ -f3 | sort -u | grep -Fx -f <(echo "$all") || true)
           else picked="$all"; fi
           echo "blocks=$(printf '%s\n' $picked | jq -R . | jq -cs 'map(select(length>0))')" >> "$GITHUB_OUTPUT"
