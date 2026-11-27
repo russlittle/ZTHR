@@ -205,7 +205,8 @@
       "name": "Ingest connectors",
       "gives": "Bring data in from files, APIs, webhooks and scheduled pulls from Cloud Storage, each recorded as a run",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "sync: the adapter interface; connectors per source still to write"
       }
     },
     {
@@ -252,7 +253,8 @@
       "name": "Warehouse sync",
       "gives": "Keep BigQuery in step with the application's data for analysis, with sensitivity classes carried across",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "sync: engine tested with a warehouse twin; no real warehouse adapter yet"
       }
     },
     {
@@ -283,7 +285,8 @@
       "name": "Progressive web features",
       "gives": "Modern browser features where they exist (install as an app, offline, push, share, view transitions, popovers, container queries), each detected before use, on a base that works on any phone without them",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "pwa: manifest check and service worker"
       }
     },
     {
@@ -313,21 +316,24 @@
       "name": "Training modules",
       "gives": "A lesson for every feature, built from its journeys and measures, published as a cmi5 course that reports through xAPI",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "cmi5: statements and rules; not yet run against a real learning record store"
       }
     },
     {
       "name": "Ticket sync",
       "gives": "Factory progress written to Jira, Asana, GitHub Issues or Linear: one ticket per feature, moved as each station finishes",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "sync: engine tested with a tracker twin; no real tracker adapter yet"
       }
     },
     {
       "name": "Wiki publishing",
       "gives": "The user guide and technical reference published to Confluence, Notion or a Git wiki on every release, replaced whole so they never drift",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "sync: engine tested with a wiki twin; no real wiki adapter yet"
       }
     },
     {
@@ -454,21 +460,24 @@
       "name": "Report a problem",
       "gives": "A button on every screen: say what happened and what you expected, as a bug, an idea, a question or praise. Where you were (feature, journey, screen, revision, trace) is captured for you; what you had typed elsewhere never is",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "feedback: report with redacted context"
       }
     },
     {
       "name": "Triage board",
       "gives": "Every ticket by status, severity and feature: triage, merge duplicates, assign, reply to the reporter, resolve, with time-to-triage and time-to-resolve watched",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "feedback: board with targets"
       }
     },
     {
       "name": "Defect from ticket",
       "gives": "A confirmed bug becomes a defect with a failing test written from it, and a ratchet once it is fixed, so it cannot come back",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "feedback: defect with a failing test skeleton"
       }
     }
   ],

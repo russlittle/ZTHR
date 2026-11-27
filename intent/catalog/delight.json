@@ -23,7 +23,11 @@
     },
     {
       "name": "Magic paste",
-      "gives": "Paste an email, table or screenshot and the form fills itself"
+      "gives": "Paste an email, table or screenshot and the form fills itself",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "ux: magicPaste"
+      }
     },
     {
       "name": "Import from anywhere",
@@ -39,7 +43,11 @@
     },
     {
       "name": "Works offline",
-      "gives": "Keep working without a connection; changes sync and merge when it returns"
+      "gives": "Keep working without a connection; changes sync and merge when it returns",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "pwa: offline page and replay queue"
+      }
     },
     {
       "name": "Who's here",
@@ -51,7 +59,11 @@
     },
     {
       "name": "Share a view",
-      "gives": "A read-only link to exactly what you see, expiring when you choose"
+      "gives": "A read-only link to exactly what you see, expiring when you choose",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "ux: shareView and openView"
+      }
     },
     {
       "name": "Explain this screen",
@@ -87,7 +99,11 @@
     },
     {
       "name": "Why am I seeing this?",
-      "gives": "Every automated decision explains itself on request"
+      "gives": "Every automated decision explains itself on request",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "ux: why"
+      }
     },
     {
       "name": "Your whole record",
@@ -107,15 +123,27 @@
     },
     {
       "name": "Smart defaults",
-      "gives": "Forms remember sensible choices, so the common path is one click"
+      "gives": "Forms remember sensible choices, so the common path is one click",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "ux: smartDefault"
+      }
     },
     {
       "name": "Bulk edit with preview",
-      "gives": "Change many records at once and see every change before it applies"
+      "gives": "Change many records at once and see every change before it applies",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "ux: preview"
+      }
     },
     {
       "name": "Snooze",
-      "gives": "Push any item away until a time you choose"
+      "gives": "Push any item away until a time you choose",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "ux: snoozeUntil"
+      }
     },
     {
       "name": "Teaching empty states",
@@ -131,7 +159,11 @@
     },
     {
       "name": "Reading comfort",
-      "gives": "Read aloud, larger text, dyslexia-friendly font and reduced motion, one switch each"
+      "gives": "Read aloud, larger text, dyslexia-friendly font and reduced motion, one switch each",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "ux: comfortCss"
+      }
     },
     {
       "name": "Your language",
@@ -143,14 +175,18 @@
     },
     {
       "name": "Progress you can feel",
-      "gives": "Quiet milestones that show what's been done, not just what's left"
+      "gives": "Quiet milestones that show what's been done, not just what's left",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "ux: Progress"
+      }
     },
     {
       "name": "Is it me or is it down?",
       "gives": "Live service status inside the app, so nobody wonders",
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "health: the status model for an in-app banner"
+        "coverage": "yes",
+        "from": "ux: meOrDown; health: status"
       }
     }
   ],

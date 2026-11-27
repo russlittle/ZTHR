@@ -708,6 +708,44 @@
       "requires": [],
       "tests": 2,
       "home": "intent/blocks/pipeline"
+    },
+    {
+      "name": "sync",
+      "purpose": "One sync engine for outside systems: paged pulls with a cursor kept only after a page applies, pushes by external id, echo recognition, conflicts settled by a rule and reported, and twins for testing",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/sync"
+    },
+    {
+      "name": "feedback",
+      "purpose": "Problem reports in the person's words with redacted context, grouping of similar reports, a triage board ordered by overdue and severity, and defects with evidence and a failing test skeleton",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/feedback"
+    },
+    {
+      "name": "cmi5",
+      "purpose": "cmi5 training modules: launch URLs, the defined xAPI statements with cmi5 context, the session rules, mastery scores and moveOn",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/cmi5"
+    },
+    {
+      "name": "pwa",
+      "purpose": "A checked web app manifest, a service worker built from a caching plan with an offline page, and an offline queue that replays in order and sets aside what the server refuses",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/pwa"
+    },
+    {
+      "name": "ux",
+      "purpose": "Snooze to times people mean, previewed bulk edits, signed shared views, learned defaults, magic paste, honest progress, reading comfort CSS, why am I seeing this, and is it me or is it down",
+      "requires": [
+        "time",
+        "tabular"
+      ],
+      "tests": 6,
+      "home": "intent/blocks/ux"
     }
   ]
 }

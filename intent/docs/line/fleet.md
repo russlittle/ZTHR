@@ -49,7 +49,7 @@ Every app can reach the tools people already use, through 20 connectors of 5 kin
 
 ### Housekeeping blocks
 
-The fleet maintains the code most apps get wrong, as tested blocks every product starts from (241 tests between them):
+The fleet maintains the code most apps get wrong, as tested blocks every product starts from (256 tests between them):
 
 | Block | What it holds | Tests |
 | --- | --- | --- |
@@ -121,13 +121,18 @@ The fleet maintains the code most apps get wrong, as tested blocks every product
 | [loadsoak](../../blocks/loadsoak/index.ts) | Open-model load runs at a fixed arrival rate with percentile and error-rate limits, and soak verdicts that find a steady climb by fitting a line, ignoring noise | 3 |
 | [datagate](../../blocks/datagate/index.ts) | A classified inventory of every field with findings for gaps, a gate that allows, masks or denies each field per destination with the deciding rule, and evidence of every decision | 3 |
 | [pipeline](../../blocks/pipeline/index.ts) | The delivery pipeline as stages and events: where each change is, what it waits for, what is stuck, and lead time, deployment frequency, change failure rate and time to restore | 2 |
+| [sync](../../blocks/sync/index.ts) | One sync engine for outside systems: paged pulls with a cursor kept only after a page applies, pushes by external id, echo recognition, conflicts settled by a rule and reported, and twins for testing | 2 |
+| [feedback](../../blocks/feedback/index.ts) | Problem reports in the person's words with redacted context, grouping of similar reports, a triage board ordered by overdue and severity, and defects with evidence and a failing test skeleton | 2 |
+| [cmi5](../../blocks/cmi5/index.ts) | cmi5 training modules: launch URLs, the defined xAPI statements with cmi5 context, the session rules, mastery scores and moveOn | 2 |
+| [pwa](../../blocks/pwa/index.ts) | A checked web app manifest, a service worker built from a caching plan with an offline page, and an offline queue that replays in order and sets aside what the server refuses | 3 |
+| [ux](../../blocks/ux/index.ts) | Snooze to times people mean, previewed bulk edits, signed shared views, learned defaults, magic paste, honest progress, reading comfort CSS, why am I seeing this, and is it me or is it down | 6 |
 
 ```mermaid
 xychart-beta
   title "Library blocks built in this repository, by the tests each carries; every product that uses one inherits them."
-  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "conflicts", "jobs", "accounts", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "tabular", "time", "upkeep", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "reports", "search", "i18n", "booking", "contact", "payments", "docparse", "imagemeta", "palette", "testdata", "surfaces", "backups", "loadsoak", "datagate", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter", "analytics", "pdf", "geo", "sitemap", "apiver", "drafts", "privacy", "pipeline"]
+  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "ux", "conflicts", "jobs", "accounts", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "tabular", "time", "upkeep", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "reports", "search", "i18n", "booking", "contact", "payments", "docparse", "imagemeta", "palette", "testdata", "surfaces", "backups", "loadsoak", "datagate", "pwa", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter", "analytics", "pdf", "geo", "sitemap", "apiver", "drafts", "privacy", "pipeline", "sync", "feedback", "cmi5"]
   y-axis "tests" 0 --> 50
-  bar [12, 10, 8, 8, 8, 6, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+  bar [12, 10, 8, 8, 8, 6, 6, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 ```
 
 ## Architect
