@@ -99,7 +99,11 @@
     },
     {
       "name": "Is it me or is it down?",
-      "gives": "Live service status inside the app, so nobody wonders"
+      "gives": "Live service status inside the app, so nobody wonders",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "health: the status model for an in-app banner"
+      }
     }
   ],
   "visual": [

@@ -25,8 +25,8 @@
         "accesscontrol"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "grants: permission sets to people, groups and links, never more than the giver has, unioned up the tree"
+        "coverage": "yes",
+        "from": "rbac and grants: roles, record rules and sharing"
       }
     },
     {
@@ -40,7 +40,8 @@
         "ajv"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "validate: the housekeeping block"
       }
     },
     {
@@ -83,8 +84,8 @@
         "convict"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "runtime: refuse-to-start"
+        "coverage": "yes",
+        "from": "config: the housekeeping block"
       }
     },
     {
@@ -96,7 +97,8 @@
         "winston"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "observe: the housekeeping block"
       }
     },
     {
@@ -107,7 +109,8 @@
         "@sentry/node"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "observe: errors grouped, linked to builds, features and traces"
       }
     },
     {
@@ -119,7 +122,8 @@
         "formik"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "validate: field errors from the same schema as the server"
       }
     },
     {
@@ -188,7 +192,7 @@
       ],
       "studentAdvocate": {
         "coverage": "partial",
-        "from": "operator: leases and idempotent dispatch confirmed by lookup"
+        "from": "jobs: queue, retries and cron in process"
       }
     },
     {
@@ -238,8 +242,8 @@
         "pg-audit-log"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "evidence: append-only, pseudonymous record"
+        "coverage": "yes",
+        "from": "audit: the housekeeping block"
       }
     },
     {
@@ -292,7 +296,8 @@
         "prom-client"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "observe: counters, histograms and traces in process"
       }
     },
     {
@@ -304,7 +309,8 @@
         "lightship"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "health: the housekeeping block"
       }
     },
     {
@@ -470,7 +476,8 @@
         "cors"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "secheaders: the housekeeping block"
       }
     },
     {
@@ -483,8 +490,8 @@
         "jose"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "runtime: sealed facts"
+        "coverage": "yes",
+        "from": "crypto and grants: envelope encryption, signed tokens, scrypt"
       }
     },
     {
@@ -520,8 +527,8 @@
         "@unkey/api"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "devices: per-device credentials kept only as hashes, revoked one at a time"
+        "coverage": "yes",
+        "from": "apikeys and devices: scoped keys and per-device tokens"
       }
     },
     {

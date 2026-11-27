@@ -346,6 +346,76 @@
       "requires": [],
       "tests": 4,
       "home": "intent/blocks/uploadsafe"
+    },
+    {
+      "name": "validate",
+      "purpose": "One schema per input and one error format: every problem at once, each with its path and a message, as problem details for APIs and field errors for forms",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/validate"
+    },
+    {
+      "name": "config",
+      "purpose": "Typed settings and secrets by name, refusing to start when one is missing or unsafe, an inventory that never shows a value, rotation dates and drift",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/config"
+    },
+    {
+      "name": "observe",
+      "purpose": "Structured logs redacted where written, errors grouped by kind and place, metrics with percentiles, and traces carried through async work",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/observe"
+    },
+    {
+      "name": "health",
+      "purpose": "Readiness with deadlines, the running version, graceful drain on shutdown, maintenance windows, the environment badge and the status model",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/health"
+    },
+    {
+      "name": "jobs",
+      "purpose": "A queue with jittered retries, dead letters and replay, keyed jobs, long tasks with progress and cancel, checkpointed backfills with a dry run, and cron",
+      "requires": [],
+      "tests": 5,
+      "home": "intent/blocks/jobs"
+    },
+    {
+      "name": "audit",
+      "purpose": "A hash-chained audit log of changes and sensitive reads, verifiable end to end and against a published head",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/audit"
+    },
+    {
+      "name": "crypto",
+      "purpose": "Envelope encryption bound to its record with a rotating key ring, purpose-bound expiring signed tokens, constant-time comparison and random ids",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/crypto"
+    },
+    {
+      "name": "rbac",
+      "purpose": "Roles and grants declared once, narrowed by record rules, refusals that win, and the same evaluator explaining every decision and filtering lists",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/rbac"
+    },
+    {
+      "name": "secheaders",
+      "purpose": "Strict browser headers with script nonces and features off by default, session cookie attributes, and cross-site request checks",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/secheaders"
+    },
+    {
+      "name": "apikeys",
+      "purpose": "Scoped API keys shown once and kept as hashes, found by prefix, rotated with an overlap, expired and revoked",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/apikeys"
     }
   ]
 }

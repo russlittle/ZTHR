@@ -62,7 +62,8 @@
       "group": "Data",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "jobs: checkpointed backfills with a dry run"
       }
     },
     {
@@ -125,7 +126,8 @@
       "group": "Work and integrations",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "jobs: dead letters and replay"
       }
     },
     {
@@ -146,7 +148,8 @@
       "group": "Work and integrations",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "jobs: progress and cancel"
       }
     },
     {
@@ -156,7 +159,8 @@
       "group": "Work and integrations",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "health: drain with a grace period"
       }
     },
     {
@@ -227,7 +231,8 @@
       "group": "Identity and access",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "config and crypto: rotation dates, overdue alerts, and a key ring that rotates without downtime"
       }
     },
     {
@@ -288,7 +293,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "config: drift against the signed declaration"
       }
     },
     {
@@ -298,7 +304,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "health: the status model from checks and incidents"
       }
     },
     {
@@ -338,7 +345,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "observe: redaction where written and retention rules"
       }
     },
     {
@@ -388,7 +396,8 @@
       "group": "Experience",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "health: windows, notice and read-only rule"
       }
     },
     {

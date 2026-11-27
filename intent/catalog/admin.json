@@ -37,21 +37,24 @@
       "name": "Error monitoring",
       "gives": "Errors grouped with the request, the build and the feature they belong to, linked to the feature registry",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "observe: grouping and the first-seen alert"
       }
     },
     {
       "name": "Roles and permissions (RBAC)",
       "gives": "Roles, permissions and grants declared in one place and enforced by one evaluator",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "rbac: the housekeeping block"
       }
     },
     {
       "name": "Permission explainer",
       "gives": "Why can or can't this person do this action on this record, answered by the same evaluator that enforces it",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "rbac: the same evaluator explains"
       }
     },
     {
@@ -59,22 +62,23 @@
       "gives": "Who can see which rows, enforced in the data layer itself and viewable per person",
       "studentAdvocate": {
         "coverage": "partial",
-        "from": "store: one owner per document"
+        "from": "rbac: record rules applied to lists"
       }
     },
     {
       "name": "Tamper-evident audit chain",
       "gives": "Every change and every read of sensitive data in a hash-chained log, with the chain head anchored where admins cannot rewrite it",
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "evidence: append-only record; gates: hashing"
+        "coverage": "yes",
+        "from": "audit: the chain and its published head"
       }
     },
     {
       "name": "Request tracer",
       "gives": "Follow one request through every block it touched, with timings and outcomes",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "observe: every span of a request, with timings and outcomes"
       }
     },
     {
@@ -90,7 +94,7 @@
       "gives": "Every setting and secret by name, where it is used and when it was last rotated, never the values",
       "studentAdvocate": {
         "coverage": "partial",
-        "from": "runtime: refuse-to-start"
+        "from": "config: the inventory, never a value"
       }
     },
     {
@@ -105,7 +109,8 @@
       "name": "Environment badge",
       "gives": "Dev, test, UAT or production shown on every screen in its own colour, linked to the exact commit running. Hover shows the last commit, who made it, when and a link, plus the version running in every other environment",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "health: the badge"
       }
     },
     {
