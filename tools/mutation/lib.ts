@@ -428,7 +428,7 @@ export function strykerConfig(block: string, o: { out: string; tmp: string; muta
     reporters: ['json'],
     jsonReporter: { fileName: o.out },
     tempDirName: o.tmp,
-    concurrency: 2,
+    concurrency: Number(process.env.MUTATION_CONCURRENCY ?? 2),
     timeoutMS: 20000,
     ignorePatterns: ['node_modules', 'docs', 'site', 'studio', 'eval', 'lexicon', 'library'],
     disableTypeChecks: true,
@@ -458,7 +458,8 @@ export function runTests(block: string, file = `blocks/${block}/${block}.test.ts
 }
 
 export function rangeSpec(block: string, m: Mutant): string {
-  return `blocks/${block}/index.ts:${m.line}:${m.column}-${m.endLine}:${m.endColumn}`;
+  // the mutate range is 0-based in columns, Stryker's report is 1-based
+  return `blocks/${block}/index.ts:${m.line}:${m.column - 1}-${m.endLine}:${m.endColumn - 1}`;
 }
 
 export function taskFiles(block?: string): string[] {
