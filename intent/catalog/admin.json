@@ -124,14 +124,16 @@
       "name": "Act as a user",
       "gives": "An admin searches for any user and uses the app as them to reproduce and verify a problem, with every action recorded under both names",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "accounts: elevate act-as, time-boxed, recorded and announced"
       }
     },
     {
       "name": "Role switcher",
       "gives": "People with more than one primary role switch between them from the top bar, next to the environment badge, with search, and see the app exactly as that role does",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "accounts: choices and switchTo"
       }
     },
     {

@@ -416,6 +416,65 @@
       "requires": [],
       "tests": 2,
       "home": "intent/blocks/apikeys"
+    },
+    {
+      "name": "accounts",
+      "purpose": "Sign-up with confirmation, sign-in, single-use password resets, organisations and invitations, a role switcher, deactivation and offboarding, and time-boxed act-as and break-glass that are recorded and announced",
+      "requires": [
+        "sessions",
+        "audit"
+      ],
+      "tests": 5,
+      "home": "intent/blocks/accounts"
+    },
+    {
+      "name": "sessions",
+      "purpose": "Sessions with idle and absolute limits and a warning before expiry, ending all sessions, TOTP enrolment and checking (RFC 6238, no replay) and single-use recovery codes",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/sessions"
+    },
+    {
+      "name": "oidc",
+      "purpose": "OpenID Connect sign-in: state, nonce and PKCE, a JWKS cache, and ID token checks (RS256/ES256 only; issuer, audience, expiry, nonce)",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/oidc"
+    },
+    {
+      "name": "webhooks",
+      "purpose": "Inbound webhooks believed only when signed, recent and not seen before; outbound delivery signed, retried with backoff, parked with the last answer, replayable, with failing endpoints paused",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/webhooks"
+    },
+    {
+      "name": "flags",
+      "purpose": "Feature flags for people, groups, attributes and stable percentage rollouts, a kill switch, an explanation for every answer, and a list of flags past their removal date",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/flags"
+    },
+    {
+      "name": "cache",
+      "purpose": "Read-through cache with one load per key under load, stale-while-refresh, tags, least-recently-used eviction and hit rates; failures are not cached",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/cache"
+    },
+    {
+      "name": "consent",
+      "purpose": "Terms and consent by version: agreement recorded with when and how, withdrawal as a new record, required re-agreement when a new version needs it",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/consent"
+    },
+    {
+      "name": "refdata",
+      "purpose": "Versioned code lists with effective and retirement dates, labels as of a day, replacements, and checks that refuse a version which would orphan stored values",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/refdata"
     }
   ]
 }

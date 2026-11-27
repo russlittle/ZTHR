@@ -41,7 +41,8 @@
       "group": "Data",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "refdata: effective dates, replacements, safe versions"
       }
     },
     {
@@ -211,7 +212,8 @@
       "group": "Identity and access",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "accounts: deactivate, reactivate, offboard"
       }
     },
     {
@@ -221,7 +223,8 @@
       "group": "Identity and access",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "sessions: warning before idle or absolute expiry"
       }
     },
     {
@@ -242,7 +245,8 @@
       "group": "Identity and access",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "accounts: break-glass with a reason, time box and review list"
       }
     },
     {
@@ -252,7 +256,8 @@
       "group": "Identity and access",
       "minimum": false,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "consent: versions, re-agreement, withdrawal"
       }
     },
     {

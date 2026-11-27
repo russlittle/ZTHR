@@ -12,8 +12,8 @@
         "@auth/core"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "devices: an app password per device from a browser sign-in flow, revocable and remotely wiped"
+        "coverage": "yes",
+        "from": "sessions: limits and expiry; accounts: sign-in"
       }
     },
     {
@@ -163,7 +163,8 @@
         "firebase-admin"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "accounts: sign-up with confirmation, sign-in, resets"
       }
     },
     {
@@ -271,7 +272,8 @@
         "keyv"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "cache: read-through, stampede-safe, tags"
       }
     },
     {
@@ -347,7 +349,8 @@
         "@octokit/webhooks"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "webhooks: signed inbound and reliable outbound"
       }
     },
     {
@@ -374,7 +377,8 @@
         "@workos-inc/node"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "accounts: organisations, invitations, roles in each"
       }
     },
     {
@@ -387,7 +391,8 @@
         "launchdarkly-node-server-sdk"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "flags: targeting, rollouts, kill switch"
       }
     },
     {
@@ -503,7 +508,8 @@
         "@simplewebauthn/server"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "sessions: TOTP (RFC 6238 vectors) and recovery codes"
       }
     },
     {
@@ -515,7 +521,8 @@
         "@node-saml/node-saml"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "partial",
+        "from": "oidc: OpenID Connect; SAML not built"
       }
     },
     {
