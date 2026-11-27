@@ -49,7 +49,7 @@ Every app can reach the tools people already use, through 20 connectors of 5 kin
 
 ### Housekeeping blocks
 
-The fleet maintains the code most apps get wrong, as tested blocks every product starts from (153 tests between them):
+The fleet maintains the code most apps get wrong, as tested blocks every product starts from (171 tests between them):
 
 | Block | What it holds | Tests |
 | --- | --- | --- |
@@ -89,13 +89,20 @@ The fleet maintains the code most apps get wrong, as tested blocks every product
 | [cache](../../blocks/cache/index.ts) | Read-through cache with one load per key under load, stale-while-refresh, tags, least-recently-used eviction and hit rates; failures are not cached | 2 |
 | [consent](../../blocks/consent/index.ts) | Terms and consent by version: agreement recorded with when and how, withdrawal as a new record, required re-agreement when a new version needs it | 2 |
 | [refdata](../../blocks/refdata/index.ts) | Versioned code lists with effective and retirement dates, labels as of a day, replacements, and checks that refuse a version which would orphan stored values | 2 |
+| [notify](../../blocks/notify/index.ts) | Notifications by template (escaped, nothing missing), per-category channel choices, quiet hours in the person's zone, digests, bounce suppression, one-click unsubscribe (RFC 8058), reminders that stop when done, and receipts | 4 |
+| [comments](../../blocks/comments/index.ts) | Threads and replies on any record, @mentions of people who can see it, edits with history, deletion markers, reactions, resolving and unread counts, shown escaped | 2 |
+| [history](../../blocks/history/index.ts) | Field-level change history for any record: rebuild any version, compare two, undo as a new change that refuses to overwrite newer edits, and restore | 2 |
+| [workflow](../../blocks/workflow/index.ts) | Declared state machines checked so no record can be stranded, guards that explain, approvals by distinct people who did not ask, reasons for rejection, deadlines that escalate, and a trail | 2 |
+| [events](../../blocks/events/index.ts) | A CloudEvents 1.0 catalogue that refuses undeclared events or missing fields, a hub with replay for reconnecting clients, server-sent events, and presence | 3 |
+| [slo](../../blocks/slo/index.ts) | Objectives, error budgets and multi-window burn-rate alerts; incidents with timelines and public notes; postmortems that need a cause, impact and owned actions | 3 |
+| [costmeter](../../blocks/costmeter/index.ts) | Usage priced from a rate card and attributed to feature and tenant, free units, budgets that warn and can stop spending, and a month-end forecast | 2 |
 
 ```mermaid
 xychart-beta
   title "Library blocks built in this repository, by the tests each carries; every product that uses one inherits them."
-  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "conflicts", "jobs", "accounts", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "paging", "retention", "watchdog", "audit", "oidc", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata"]
+  x-axis ["tree", "objects", "uploads", "grants", "dav", "leases", "devices", "conflicts", "jobs", "accounts", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter"]
   y-axis "tests" 0 --> 50
-  bar [12, 10, 8, 8, 8, 6, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2]
+  bar [12, 10, 8, 8, 8, 6, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 ```
 
 ## Architect

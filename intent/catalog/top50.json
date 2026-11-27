@@ -150,8 +150,8 @@
         "resend"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "twins: mail twin only"
+        "coverage": "yes",
+        "from": "notify: templates, unsubscribe headers, bounces; the provider sits behind send()"
       }
     },
     {
@@ -206,8 +206,8 @@
         "firebase-admin"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "twins: SMS twin only"
+        "coverage": "yes",
+        "from": "notify: channels, preferences, quiet hours, receipts"
       }
     },
     {
@@ -548,7 +548,8 @@
         "pusher"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "events: hub, replay and server-sent events"
       }
     },
     {
@@ -560,7 +561,8 @@
         "@liveblocks/node"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "comments: threads, mentions, edits, reactions"
       }
     },
     {
@@ -572,7 +574,8 @@
         "yjs"
       ],
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "history: versions, diff, restore"
       }
     },
     {
@@ -584,8 +587,8 @@
         "temporalio"
       ],
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "runtime and operator: approvals and holds"
+        "coverage": "yes",
+        "from": "workflow: checked definitions, approvals, escalation"
       }
     },
     {

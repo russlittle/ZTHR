@@ -171,7 +171,8 @@
       "group": "Work and integrations",
       "minimum": false,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "notify: suppression and one-click unsubscribe"
       }
     },
     {
@@ -181,7 +182,8 @@
       "group": "Work and integrations",
       "minimum": false,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "notify: per-category channels and digests"
       }
     },
     {
@@ -288,7 +290,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "costmeter: rates, attribution, budgets, forecast"
       }
     },
     {
@@ -309,8 +312,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "partial",
-        "from": "health: the status model from checks and incidents"
+        "coverage": "yes",
+        "from": "slo: public view of incidents; health: status"
       }
     },
     {
@@ -320,7 +323,8 @@
       "group": "Trust and evidence",
       "minimum": true,
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "slo: incidents, public notes, postmortems owed"
       }
     },
     {

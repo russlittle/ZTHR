@@ -3,7 +3,11 @@
   "delighters": [
     {
       "name": "Undo anything",
-      "gives": "Every action, not just text, can be undone for a while afterwards"
+      "gives": "Every action, not just text, can be undone for a while afterwards",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "history: undo as a new change, conflict-safe"
+      }
     },
     {
       "name": "Command palette",
@@ -31,7 +35,11 @@
     },
     {
       "name": "Who's here",
-      "gives": "See who else is viewing or editing, live"
+      "gives": "See who else is viewing or editing, live",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "events: presence"
+      }
     },
     {
       "name": "Share a view",
@@ -47,11 +55,19 @@
     },
     {
       "name": "Reminders that stop",
-      "gives": "Reminders across email, text and calendar that stop the moment it's done"
+      "gives": "Reminders across email, text and calendar that stop the moment it's done",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "notify: Reminder stops when done or after its limit"
+      }
     },
     {
       "name": "Receipts",
-      "gives": "A plain record after every important action of what happened and when"
+      "gives": "A plain record after every important action of what happened and when",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "notify: a receipt for every send, hold and suppression"
+      }
     },
     {
       "name": "Why am I seeing this?",

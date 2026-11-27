@@ -289,7 +289,8 @@
       "name": "Event catalogue",
       "gives": "An AsyncAPI 3.1 contract for what each feature emits, as CloudEvents envelopes delivered by signed webhooks",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "events: catalogue with fields and versions"
       }
     },
     {
@@ -429,7 +430,8 @@
       "name": "Service levels and alerts",
       "gives": "Objectives from the schematic (feedback budget, availability, each outcome's target), error-budget alerts, and a runbook entry for every alert",
       "studentAdvocate": {
-        "coverage": "none"
+        "coverage": "yes",
+        "from": "slo: budgets and multi-window burn-rate alerts"
       }
     },
     {

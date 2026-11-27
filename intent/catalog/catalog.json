@@ -475,6 +475,55 @@
       "requires": [],
       "tests": 2,
       "home": "intent/blocks/refdata"
+    },
+    {
+      "name": "notify",
+      "purpose": "Notifications by template (escaped, nothing missing), per-category channel choices, quiet hours in the person's zone, digests, bounce suppression, one-click unsubscribe (RFC 8058), reminders that stop when done, and receipts",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/notify"
+    },
+    {
+      "name": "comments",
+      "purpose": "Threads and replies on any record, @mentions of people who can see it, edits with history, deletion markers, reactions, resolving and unread counts, shown escaped",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/comments"
+    },
+    {
+      "name": "history",
+      "purpose": "Field-level change history for any record: rebuild any version, compare two, undo as a new change that refuses to overwrite newer edits, and restore",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/history"
+    },
+    {
+      "name": "workflow",
+      "purpose": "Declared state machines checked so no record can be stranded, guards that explain, approvals by distinct people who did not ask, reasons for rejection, deadlines that escalate, and a trail",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/workflow"
+    },
+    {
+      "name": "events",
+      "purpose": "A CloudEvents 1.0 catalogue that refuses undeclared events or missing fields, a hub with replay for reconnecting clients, server-sent events, and presence",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/events"
+    },
+    {
+      "name": "slo",
+      "purpose": "Objectives, error budgets and multi-window burn-rate alerts; incidents with timelines and public notes; postmortems that need a cause, impact and owned actions",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/slo"
+    },
+    {
+      "name": "costmeter",
+      "purpose": "Usage priced from a rate card and attributed to feature and tenant, free units, budgets that warn and can stop spending, and a month-end forecast",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/costmeter"
     }
   ]
 }

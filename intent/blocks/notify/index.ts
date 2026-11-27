@@ -1,0 +1,215 @@
+/**
+ * Notifications that respect the person. Templates fill named values (HTML-escaped) and refuse to send with one
+ * missing. Each person chooses, per category, which channels reach them, instantly or in a digest; quiet hours in
+ * their own time zone hold anything not urgent until morning. A hard bounce or complaint suppresses the address,
+ * and every marketing or digest email carries one-click unsubscribe (RFC 8058) with a signed link. Reminders stop
+ * as soon as the thing they nag about is done; every send leaves a receipt the person can see.
+ */
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+export type Channel = 'email' | 'push' | 'sms' | 'inbox';
+
+export interface Template {
+  readonly key: string;
+  readonly category: string;
+  readonly subject: string;
+  readonly body: string;
+  /** Account and security mail cannot be turned off and ignores quiet hours. */
+  readonly essential?: boolean;
+}
+
+export interface Prefs {
+  readonly tz: string;
+  /** Local hours, e.g. [22, 7]. */
+  readonly quiet?: readonly [number, number];
+  readonly categories?: Readonly<Record<string, { channels: readonly Channel[]; digest?: boolean }>>;
+}
+
+export interface Message {
+  readonly to: string;
+  readonly channel: Channel;
+  readonly subject: string;
+  readonly body: string;
+  readonly headers: Readonly<Record<string, string>>;
+}
+
+export interface Receipt {
+  readonly id: number;
+  readonly to: string;
+  readonly template: string;
+  readonly channel: Channel;
+  readonly outcome: 'sent' | 'held' | 'digest' | 'suppressed' | 'off';
+  readonly at: string;
+  readonly why?: string;
+}
+
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+export function render(t: string, values: Readonly<Record<string, string | number>>, html = true): string {
+  const missing: string[] = [];
+  const out = t.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_, k: string) => {
+    if (!(k in values)) {
+      missing.push(k);
+      return '';
+    }
+    return html ? esc(String(values[k])) : String(values[k]);
+  });
+  if (missing.length) throw new Error(`the template needs ${missing.join(', ')}`);
+  return out;
+}
+
+/** The hour of day in a time zone. */
+export function localHour(d: Date, tz: string): number {
+  return Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone: tz }).format(d));
+}
+
+const inQuiet = (h: number, [from, to]: readonly [number, number]) => (from <= to ? h >= from && h < to : h >= from || h < to);
+
+export interface NotifyOptions {
+  readonly send: (m: Message) => Promise<void>;
+  readonly secret: string;
+  readonly unsubscribeUrl: string;
+  readonly now?: () => Date;
+}
+
+export class Notify {
+  private readonly prefs = new Map<string, Prefs>();
+  private readonly suppressed = new Map<string, string>();
+  private readonly unsubscribed = new Set<string>();
+  private readonly held: { to: string; m: Message; template: string }[] = [];
+  private readonly digests = new Map<string, { template: string; subject: string }[]>();
+  readonly receipts: Receipt[] = [];
+  private readonly o: Required<NotifyOptions>;
+
+  constructor(o: NotifyOptions) {
+    this.o = { now: () => new Date(), ...o };
+  }
+
+  setPrefs(who: string, p: Prefs): void {
+    this.prefs.set(who, p);
+  }
+
+  private receipt(r: Omit<Receipt, 'id' | 'at'>): Receipt {
+    const full = { ...r, id: this.receipts.length + 1, at: this.o.now().toISOString() };
+    this.receipts.push(full);
+    return full;
+  }
+
+  /** A signed token for one person and category, for the unsubscribe link. */
+  token(who: string, category: string): string {
+    const p = Buffer.from(`${who}\n${category}`).toString('base64url');
+    return `${p}.${createHmac('sha256', this.o.secret).update(p).digest('base64url')}`;
+  }
+
+  /** Handles the one-click POST (or the link). Returns who and what, or undefined for a bad token. */
+  unsubscribe(token: string): { who: string; category: string } | undefined {
+    const [p, s] = token.split('.');
+    if (!p || !s) return undefined;
+    const want = createHmac('sha256', this.o.secret).update(p).digest();
+    const got = Buffer.from(s, 'base64url');
+    if (got.length !== want.length || !timingSafeEqual(got, want)) return undefined;
+    const [who, category] = Buffer.from(p, 'base64url').toString().split('\n');
+    this.unsubscribed.add(`${who}\n${category}`);
+    return { who: who!, category: category! };
+  }
+
+  /** From the mail provider: a hard bounce or a complaint stops mail to the address. */
+  bounce(address: string, kind: 'hard' | 'soft' | 'complaint'): void {
+    if (kind !== 'soft') this.suppressed.set(address.toLowerCase(), kind);
+  }
+
+  async notify(who: string, address: string, t: Template, values: Readonly<Record<string, string | number>>, o: { urgent?: boolean } = {}): Promise<Receipt[]> {
+    const p = this.prefs.get(who) ?? { tz: 'UTC' };
+    const cat = p.categories?.[t.category];
+    const channels: readonly Channel[] = t.essential ? ['email'] : (cat?.channels ?? ['email', 'inbox']);
+    const subject = render(t.subject, values, false);
+    const body = render(t.body, values);
+    const out: Receipt[] = [];
+    if (!t.essential && this.unsubscribed.has(`${who}\n${t.category}`)) return [this.receipt({ to: who, template: t.key, channel: 'email', outcome: 'off', why: 'unsubscribed' })];
+    for (const channel of channels) {
+      if (channel === 'email' && this.suppressed.has(address.toLowerCase())) {
+        out.push(this.receipt({ to: who, template: t.key, channel, outcome: 'suppressed', why: `address ${this.suppressed.get(address.toLowerCase())} bounced` }));
+        continue;
+      }
+      if (!t.essential && cat?.digest) {
+        const list = this.digests.get(who) ?? [];
+        list.push({ template: t.key, subject });
+        this.digests.set(who, list);
+        out.push(this.receipt({ to: who, template: t.key, channel, outcome: 'digest' }));
+        continue;
+      }
+      const headers: Record<string, string> = {};
+      if (channel === 'email' && !t.essential) {
+        headers['List-Unsubscribe'] = `<${this.o.unsubscribeUrl}?t=${this.token(who, t.category)}>`;
+        headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+      }
+      const m: Message = { to: channel === 'email' ? address : who, channel, subject, body, headers };
+      if (!t.essential && !o.urgent && p.quiet && inQuiet(localHour(this.o.now(), p.tz), p.quiet)) {
+        this.held.push({ to: who, m, template: t.key });
+        out.push(this.receipt({ to: who, template: t.key, channel, outcome: 'held', why: 'quiet hours' }));
+        continue;
+      }
+      await this.o.send(m);
+      out.push(this.receipt({ to: who, template: t.key, channel, outcome: 'sent' }));
+    }
+    return out;
+  }
+
+  /** Sends what quiet hours held, for people whose quiet hours have ended. */
+  async release(): Promise<number> {
+    let n = 0;
+    for (let i = this.held.length - 1; i >= 0; i--) {
+      const h = this.held[i]!;
+      const p = this.prefs.get(h.to);
+      if (p?.quiet && inQuiet(localHour(this.o.now(), p.tz), p.quiet)) continue;
+      this.held.splice(i, 1);
+      await this.o.send(h.m);
+      this.receipt({ to: h.to, template: h.template, channel: h.m.channel, outcome: 'sent', why: 'after quiet hours' });
+      n++;
+    }
+    return n;
+  }
+
+  /** One message per person with everything collected since the last digest. */
+  async digest(who: string, address: string): Promise<boolean> {
+    const items = this.digests.get(who);
+    if (!items?.length) return false;
+    this.digests.delete(who);
+    const body = `<ul>${items.map((i) => `<li>${esc(i.subject)}</li>`).join('')}</ul>`;
+    await this.o.send({ to: address, channel: 'email', subject: `${items.length} update${items.length === 1 ? '' : 's'}`, body, headers: { 'List-Unsubscribe': `<${this.o.unsubscribeUrl}?t=${this.token(who, 'digest')}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } });
+    this.receipt({ to: who, template: 'digest', channel: 'email', outcome: 'sent' });
+    return true;
+  }
+
+  /** What this person has been sent and why: the receipts page. */
+  sentTo(who: string): readonly Receipt[] {
+    return this.receipts.filter((r) => r.to === who);
+  }
+}
+
+/** A reminder that repeats on a schedule and stops by itself as soon as `done()` is true, or after `max` sends. */
+export class Reminder {
+  sent = 0;
+  stopped?: string;
+  private readonly done: () => Promise<boolean> | boolean;
+  private readonly fire: () => Promise<void>;
+  private readonly max: number;
+  constructor(done: () => Promise<boolean> | boolean, fire: () => Promise<void>, max = 3) {
+    this.done = done;
+    this.fire = fire;
+    this.max = max;
+  }
+  async tick(): Promise<void> {
+    if (this.stopped) return;
+    if (await this.done()) {
+      this.stopped = 'done';
+      return;
+    }
+    if (this.sent >= this.max) {
+      this.stopped = 'gave up';
+      return;
+    }
+    await this.fire();
+    this.sent++;
+  }
+}
