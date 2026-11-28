@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->295<!-- /fact --> blocks, <!-- fact:blocks.tests -->5090<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->310<!-- /fact --> blocks, <!-- fact:blocks.tests -->5346<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -304,6 +304,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [face-cluster](face-cluster/index.ts) | Faces clustered, named people kept through merges, splits and re-clustering, and recognition with a confidence margin | 15 |
 | [http-signatures](http-signatures/index.ts) | HTTP message signatures (RFC 9421 and the cavage draft) with digests, key caches, replay, skew and a signing policy | 24 |
 | [jsonld](jsonld/index.ts) | JSON-LD expanded, compacted and normalised for federation, with allowed contexts only and limits on size | 18 |
+| [invoices](invoices/index.ts) | Invoices and credit notes: exact money, tax rounded per rate, numbering with gaps found, terms and discounts, PDF, and UBL 2.1 / Peppol e-invoices | 16 |
+| [recurring-billing](recurring-billing/index.ts) | Subscriptions billed on anniversaries, prorated to the second, paused, changed between plans, and dunned, with charges never doubled | 17 |
+| [crdt-map](crdt-map/index.ts) | A map CRDT on a dot kernel: registers, observed-remove sets, counters and nested maps, causal delivery, and the merge laws tested | 15 |
+| [slash-commands](slash-commands/index.ts) | Slash commands and chat apps: a registry, signed requests and actions, response URLs, Block Kit checked, modals and bot tokens | 16 |
+| [crdt-awareness](crdt-awareness/index.ts) | Presence for collaborative editing, compatible with y-protocols: states that time out, identities bound, colours checked for contrast, cursors | 15 |
+| [playback-state](playback-state/index.ts) | Playback state across devices: resume points, play counts, watched thresholds, and a queue with stable shuffle | 15 |
+| [metadata-match](metadata-match/index.ts) | Media matched to catalogue entries: candidates scored, decided automatically or for review, choices locked, and providers behind a twin | 14 |
+| [library-scan](library-scan/index.ts) | Library scans diffed against the catalogue with moves found by id, hash or fingerprint, ignore rules, a guard on suspicious scans, and a watcher | 15 |
+| [audio-tags](audio-tags/index.ts) | Audio tags read and written: ID3 in every version, FLAC, MP4 and Vorbis comments, ReplayGain and cover art | 18 |
+| [playlists](playlists/index.ts) | Playlists, manual and smart: versioned edits, typed rules, natural sort, fair shuffles, share links with passwords, and M3U | 22 |
+| [opds-epub](opds-epub/index.ts) | EPUB read and written with paths checked and sizes capped, and OPDS catalogues in 1.2 and 2.0 with search and facets | 18 |
+| [subtitles](subtitles/index.ts) | Subtitles in SRT, WebVTT, ASS and TTML on one model: converted, shifted, stretched, synced, repaired and merged | 22 |
+| [xmltv-epg](xmltv-epg/index.ts) | TV guides in XMLTV read and written, channels mapped with time shifts, several sources merged, and recordings planned for the tuners | 17 |
+| [media-name-parse](media-name-parse/index.ts) | Movie, episode, track and extra identities read from file and folder names, with quality, ids and subtitle languages, safe on hostile names | 18 |
+| [matroska-probe](matroska-probe/index.ts) | Matroska and WebM headers read: tracks, HDR, profiles and levels, chapters, tags, attachments, duration, and what a partial read is missing | 18 |
 <!-- /gen -->
 
 ```mermaid

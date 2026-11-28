@@ -2562,6 +2562,133 @@
       "requires": [],
       "tests": 18,
       "home": "intent/blocks/jsonld"
+    },
+    {
+      "name": "invoices",
+      "purpose": "Invoices and credit notes: exact money, tax rounded per rate, numbering with gaps found, terms and discounts, PDF, and UBL 2.1 / Peppol e-invoices",
+      "requires": [
+        "money",
+        "pdf"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/invoices"
+    },
+    {
+      "name": "recurring-billing",
+      "purpose": "Subscriptions billed on anniversaries, prorated to the second, paused, changed between plans, and dunned, with charges never doubled",
+      "requires": [
+        "invoices",
+        "payments"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/recurring-billing"
+    },
+    {
+      "name": "crdt-map",
+      "purpose": "A map CRDT on a dot kernel: registers, observed-remove sets, counters and nested maps, causal delivery, and the merge laws tested",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/crdt-map"
+    },
+    {
+      "name": "slash-commands",
+      "purpose": "Slash commands and chat apps: a registry, signed requests and actions, response URLs, Block Kit checked, modals and bot tokens",
+      "requires": [
+        "webhooks"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/slash-commands"
+    },
+    {
+      "name": "crdt-awareness",
+      "purpose": "Presence for collaborative editing, compatible with y-protocols: states that time out, identities bound, colours checked for contrast, cursors",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/crdt-awareness"
+    },
+    {
+      "name": "playback-state",
+      "purpose": "Playback state across devices: resume points, play counts, watched thresholds, and a queue with stable shuffle",
+      "requires": [
+        "conflicts"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/playback-state"
+    },
+    {
+      "name": "metadata-match",
+      "purpose": "Media matched to catalogue entries: candidates scored, decided automatically or for review, choices locked, and providers behind a twin",
+      "requires": [
+        "fuzzy-match"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/metadata-match"
+    },
+    {
+      "name": "library-scan",
+      "purpose": "Library scans diffed against the catalogue with moves found by id, hash or fingerprint, ignore rules, a guard on suspicious scans, and a watcher",
+      "requires": [
+        "tree"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/library-scan"
+    },
+    {
+      "name": "audio-tags",
+      "purpose": "Audio tags read and written: ID3 in every version, FLAC, MP4 and Vorbis comments, ReplayGain and cover art",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/audio-tags"
+    },
+    {
+      "name": "playlists",
+      "purpose": "Playlists, manual and smart: versioned edits, typed rules, natural sort, fair shuffles, share links with passwords, and M3U",
+      "requires": [],
+      "tests": 22,
+      "home": "intent/blocks/playlists"
+    },
+    {
+      "name": "opds-epub",
+      "purpose": "EPUB read and written with paths checked and sizes capped, and OPDS catalogues in 1.2 and 2.0 with search and facets",
+      "requires": [
+        "feed-write",
+        "dav",
+        "zip-write"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/opds-epub"
+    },
+    {
+      "name": "subtitles",
+      "purpose": "Subtitles in SRT, WebVTT, ASS and TTML on one model: converted, shifted, stretched, synced, repaired and merged",
+      "requires": [
+        "dav"
+      ],
+      "tests": 22,
+      "home": "intent/blocks/subtitles"
+    },
+    {
+      "name": "xmltv-epg",
+      "purpose": "TV guides in XMLTV read and written, channels mapped with time shifts, several sources merged, and recordings planned for the tuners",
+      "requires": [
+        "dav"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/xmltv-epg"
+    },
+    {
+      "name": "media-name-parse",
+      "purpose": "Movie, episode, track and extra identities read from file and folder names, with quality, ids and subtitle languages, safe on hostile names",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/media-name-parse"
+    },
+    {
+      "name": "matroska-probe",
+      "purpose": "Matroska and WebM headers read: tracks, HDR, profiles and levels, chapters, tags, attachments, duration, and what a partial read is missing",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/matroska-probe"
     }
   ]
 }
