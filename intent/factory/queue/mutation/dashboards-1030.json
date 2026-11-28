@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "dashboards",
+  "mutant": {
+    "id": "1030",
+    "line": 421,
+    "column": 95,
+    "endLine": 421,
+    "endColumn": 97,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "return { id: 'panel', table, name: 'panel', owner: who.id, visibility: 'private', shares: [], ...(filter ? { filter } : {}), sort: extraFields.map((f) => ({ path: [f], dir: 'asc' as const })), groupBy: [], hidden: [], version: 0, created: '', updated: '' };",
+    "prevText": "#pseudo(who: Person, table: string, filter: Node | undefined, extraFields: string[]): View {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/dashboards/dashboards.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/dashboards-1030.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"dashboards\". Mutant: line 421:95-421:97, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/dashboards/index.ts (> marks the mutated line):\n   415        out[v.name] = { name: v.name, values: [...chosen], all: false, options };\n   416      }\n   417      return out;\n   418    }\n   419  \n   420    #pseudo(who: Person, table: string, filter: Node | undefined, extraFields: string[]): View {\n>  421      return { id: 'panel', table, name: 'panel', owner: who.id, visibility: 'private', shares: [], ...(filter ? { filter } : {}), sort: extraFields.map((f) => ({ path: [f], dir: 'asc' as const })), groupBy: [], hidden: [], version: 0, created: '', updated: '' };\n   422    }\n   423  \n   424    /** Run one panel for a person. */\n   425    async runPanel(who: Person, d: Dashboard, panelId: number, ctx: { vars: Record<string, Resolved>; fetch: Fetch; range?: TimeRange }): Promise<PanelResult> {\n   426      const stored = this.#d.get(d.uid);\n   427      if (!stored || (!this.can(who, stored, 'view') && this.#linkPeople.get(who) !== d.uid)) throw new NotFound(`no dashboard ${d.uid}`);\n\nTest file style (intent/blocks/dashboards/dashboards.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ViewEngine } from '../view-engine/index.ts';\nimport type { Node, Person, TableDef } from '../view-engine/index.ts';\nimport { BadLayout, DashboardError, Dashboards, NotAllowed, NotFound, VersionConflict, bucketStart, compact, interpolateNode, interpolateText, parseInterval, place, resolveRange, timeExpr, validateLayout } from './index.ts';\nimport type { Fetch, Panel, Resolved } from './index.ts';\n\nconst NY = 'America/New_York';\nconst NOW = new Date('2026-06-15T12:00:00Z');\nconst EVENTS: TableDef = { name: 'events', fields: [{ name: 'id', type: 'number' }, { name: 'ts', type: 'date' }, { name: 'region', type: 'select' }, { name: 'amount', type: 'number' }, { name: 'user', type: 'text' }, { name: 'secret', type: 'text', sensitive: true }] };\nconst rows = [\n  { id: 1, ts: '2026-06-12T10:00:00Z', region: 'eu', amount: 10, user: 'ana', secret: 's1' },\n  { id: 2, ts: '2026-06-13T03:00:00Z', region: 'eu', amount: 20, user: 'ben', secret: 's2' },\n  { id: 3, ts: '2026-06-13T15:00:00Z', region: 'us', amount: 30, user: 'cy', secret: 's3' },\n  { id: 4, ts: '2026-06-14T23:30:00Z', region: 'us', amount: 40, user: 'ana', secret: 's4' },\n  { id: 5, ts: '2026-06-15T01:00:00Z', region: 'eu', amount: 50, user: 'ben', secret: 's5' },\n  { id: 6, ts: '2026-06-10T00:00:00Z', region: 'eu', amount: 100, user: 'cy', secret: 's6' },\n];\nconst ana: Person = { id: 'ana' };\nconst ben: Person = { id: 'ben' };\nconst cy: Person = { id: 'cy' };\nconst root: Person = { id: 'root', admin: true };\n\nconst make = () => {\n  let n = 0;\n  const engine = new ViewEngine({ tables: [EVENTS], access: { canRead: (who, _t, f) => !(who === 'cy' && f === 'secret') && !(who.startsWith('link:') && f === 'secret') } });\n  const dash = new Dashboards({ engine, now: () => NOW, id: () => `d${++n}`, scopeFor: (who, table) => (who.id === 'ben' && table === 'events' ? ({ kind: 'cmp', path: ['region'], op: 'eq', value: 'eu' } as Node) : undefined) });\n  const seen: unknown[] = [];\n  const fetch: Fetch = (_t, c) => { seen.push(c); return rows; };\n  return { dash, engine, fetch, seen };\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/dashboards-1030.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.794Z"
+}

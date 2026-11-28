@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "execution-log",
+  "mutant": {
+    "id": "136",
+    "line": 163,
+    "column": 32,
+    "endLine": 163,
+    "endColumn": 46,
+    "mutator": "StringLiteral",
+    "original": "`no run ${id}`",
+    "replacement": "``",
+    "lineText": "if (!r) throw new NotFound(`no run ${id}`);",
+    "prevText": "const r = this.store.get(id);",
+    "nextText": "return r;"
+  },
+  "mayEdit": [
+    "intent/blocks/execution-log/execution-log.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/execution-log-136.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"execution-log\". Mutant: line 163:32-163:46, mutator StringLiteral: \"`no run ${id}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/execution-log/index.ts (> marks the mutated line):\n   157      await this.#audit?.record({ actor, action: 'run.start', target: `run/${run.id}`, detail: { flow, trigger } });\n   158      return run;\n   159    }\n   160  \n   161    #need(id: string): Run {\n   162      const r = this.store.get(id);\n>  163      if (!r) throw new NotFound(`no run ${id}`);\n   164      return r;\n   165    }\n   166  \n   167    /** Record one finished step. Input, output and error text are redacted as they are written. */\n   168    step(runId: string, s: { name: string; input: unknown; output?: unknown; error?: string; startedAt: Date; finishedAt?: Date; reused?: boolean }): StepRecord {\n   169      const run = this.#need(runId);\n\nTest file style (intent/blocks/execution-log/execution-log.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Audit, memoryAudit } from '../audit/index.ts';\nimport { ExecutionLog, NotFound, NotReplayable, REDACTED, redact } from './index.ts';\n\nconst clock = (start = '2026-11-01T00:00:00Z') => {\n  let t = new Date(start).getTime();\n  return { now: () => new Date(t), advance: (ms: number) => void (t += ms) };\n};\nconst ids = () => { let n = 0; return () => `r${++n}`; };\n\ntest('sensitive keys are redacted at any depth, other values are kept', () => {\n  const r = redact({ user: 'ana', password: 'hunter2', nested: { Authorization: 'Bearer abc', list: [{ apiKey: 'k', ok: 1 }] }, 'X-Api-Key': 'z' });\n  assert.deepEqual(r.value, { user: 'ana', password: REDACTED, nested: { Authorization: REDACTED, list: [{ apiKey: REDACTED, ok: 1 }] }, 'X-Api-Key': REDACTED });\n  assert.equal(r.altered, true);\n  assert.deepEqual(redact({ a: 1 }), { value: { a: 1 }, altered: false });\n});\n\ntest('declared secret values are removed from inside strings, longest first', () => {\n  const r = redact({ url: 'https://x/?k=supersecret123&z=1', note: 'supersecret123456 and supersecret123' }, { secrets: ['supersecret123', 'supersecret123456'] });\n  assert.deepEqual(r.value, { url: `https://x/?k=${REDACTED}&z=1`, note: `${REDACTED} and ${REDACTED}` });\n  assert.equal(redact('abc', { secrets: ['abc'] }).altered, false, 'a secret shorter than 4 characters is ignored, not scrubbed everywhere');\n});\n\ntest('long strings, long arrays, deep nesting and cycles are cut with a marker', () => {\n  const r = redact({ s: 'x'.repeat(30), a: [1, 2, 3, 4] }, { maxString: 10, maxItems: 2 });\n  assert.deepEqual(r.value, { s: `${'x'.repeat(10)}…[cut 20 characters]`, a: [1, 2, '[cut 2 more items]'] });\n  const cyc: Record<string, unknown> = { name: 'c' };\n  cyc.self = cyc;\n  assert.deepEqual(redact(cyc).value, { name: 'c', self: '[circular]' });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/execution-log-136.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.300Z"
+}

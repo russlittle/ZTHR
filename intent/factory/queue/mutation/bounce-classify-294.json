@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "bounce-classify",
+  "mutant": {
+    "id": "294",
+    "line": 174,
+    "column": 114,
+    "endLine": 174,
+    "endColumn": 160,
+    "mutator": "StringLiteral",
+    "original": "'the message was too big; the address is fine'",
+    "replacement": "\"\"",
+    "lineText": "if (status && status.cls === 5 && status.subject === 3 && status.detail === 4) return { class: 'soft', reason: 'the message was too big; the address is fine' };",
+    "prevText": "if (FULL_WORDS.test(diag) || (status && (status.cls === 5 || status.cls === 4) && status.subject === 2 && status.detail === 2)) return { class: 'soft', reason: 'the mailbox is full' };",
+    "nextText": "if (status && status.cls === 5 && status.subject === 7) return { class: 'soft', reason: 'blocked by the remote server policy; the address may be fine' };"
+  },
+  "mayEdit": [
+    "intent/blocks/bounce-classify/bounce-classify.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/bounce-classify-294.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"bounce-classify\". Mutant: line 174:114-174:160, mutator StringLiteral: \"'the message was too big; the address is fine'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/bounce-classify/index.ts (> marks the mutated line):\n   168  export function classifyRecipient(action: string, status: Status | undefined, diagnostic: string | undefined): { class: BounceClass; reason: string } {\n   169    const a = action.toLowerCase();\n   170    if (a === 'delivered' || a === 'relayed' || a === 'expanded') return { class: 'delivered', reason: `reported ${a}` };\n   171    if (a === 'delayed') return { class: 'soft', reason: 'delivery is delayed and the server is still trying' };\n   172    const diag = diagnostic ?? '';\n   173    if (FULL_WORDS.test(diag) || (status && (status.cls === 5 || status.cls === 4) && status.subject === 2 && status.detail === 2)) return { class: 'soft', reason: 'the mailbox is full' };\n>  174    if (status && status.cls === 5 && status.subject === 3 && status.detail === 4) return { class: 'soft', reason: 'the message was too big; the address is fine' };\n   175    if (status && status.cls === 5 && status.subject === 7) return { class: 'soft', reason: 'blocked by the remote server policy; the address may be fine' };\n   176    if (status && status.cls === 5 && status.subject === 4) return { class: 'soft', reason: 'a routing problem' };\n   177    if (status && status.cls === 4) return { class: 'soft', reason: status.text };\n   178    if (status && status.cls === 5) return { class: 'hard', reason: status.text };\n   179    if (HARD_WORDS.test(diag)) return { class: 'hard', reason: 'the remote server said the recipient is unknown' };\n   180    if (a === 'failed') return { class: 'hard', reason: 'delivery failed with no further detail' };\n\nTest file style (intent/blocks/bounce-classify/bounce-classify.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Notify } from '../notify/index.ts';\nimport { NotAReport, SoftBounceTracker, classifyMessage, classifyRecipient, feedSuppression, isAutoReply, parseMime, parseStatus, statusFromReply } from './index.ts';\n\nconst dsn = (fields: string, extra = '') => [\n  'From: MAILER-DAEMON@mx.example.org',\n  'To: sender@example.com',\n  'Subject: Undelivered Mail Returned to Sender',\n  'Content-Type: multipart/report; report-type=delivery-status; boundary=\"BND\"',\n  '',\n  '--BND',\n  'Content-Type: text/plain',\n  '',\n  'This is the mail system. Delivery failed.',\n  '--BND',\n  'Content-Type: message/delivery-status',\n  '',\n  'Reporting-MTA: dns; mx.example.org',\n  'Arrival-Date: Mon, 3 Mar 2025 10:00:00 +0000',\n  '',\n  fields,\n  extra,\n  '--BND',\n  'Content-Type: text/rfc822-headers',\n  '',\n  'From: sender@example.com',\n  'To: ana@example.net',\n  '--BND--',\n  '',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/bounce-classify-294.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.255Z"
+}

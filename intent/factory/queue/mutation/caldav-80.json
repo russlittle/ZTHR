@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "caldav",
+  "mutant": {
+    "id": "80",
+    "line": 105,
+    "column": 276,
+    "endLine": 105,
+    "endColumn": 278,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "const c: Collection = { path: p, displayName: o.displayName ?? p.split('/').filter(Boolean).at(-1)!, ...(o.description ? { description: o.description } : {}), components: o.components ?? ['VEVENT', 'VTODO'], kind: o.kind ?? 'calendar', resources: new Map(), seq: 0, log: [], logFloor: 0 };",
+    "prevText": "if (this.#cols.has(p)) throw new DavError(405, `${p} already exists`);",
+    "nextText": "this.#cols.set(p, c);"
+  },
+  "mayEdit": [
+    "intent/blocks/caldav/caldav.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/caldav-80.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"caldav\". Mutant: line 105:276-105:278, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/caldav/index.ts (> marks the mutated line):\n    99    }\n   100  \n   101    /** Create a collection directly (a home set's inbox, or in tests). */\n   102    create(path: string, o: { displayName?: string; kind?: 'calendar' | 'inbox'; components?: readonly string[]; description?: string } = {}): Collection {\n   103      const p = this.#colPath(path);\n   104      if (this.#cols.has(p)) throw new DavError(405, `${p} already exists`);\n>  105      const c: Collection = { path: p, displayName: o.displayName ?? p.split('/').filter(Boolean).at(-1)!, ...(o.description ? { description: o.description } : {}), components: o.components ?? ['VEVENT', 'VTODO'], kind: o.kind ?? 'calendar', resources: new Map(), seq: 0, log: [], logFloor: 0 };\n   106      this.#cols.set(p, c);\n   107      return c;\n   108    }\n   109  \n   110    collection(path: string): Collection {\n   111      const c = this.#cols.get(this.#colPath(path));\n\nTest file style (intent/blocks/caldav/caldav.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { child, children, parseXml } from '../dav/index.ts';\nimport { CALDAV, CalDav, CS } from './index.ts';\nimport type { Reply } from './index.ts';\n\nconst NS = 'xmlns:d=\"DAV:\" xmlns:c=\"urn:ietf:params:xml:ns:caldav\" xmlns:cs=\"http://calendarserver.org/ns/\"';\nconst HOME = '/calendars/ana/';\nconst CAL = `${HOME}work/`;\nconst INBOX = `${HOME}inbox/`;\n\nconst ics = (uid: string, lines: string[] = [], o: { method?: string; kind?: string; version?: string } = {}) => ['BEGIN:VCALENDAR', `VERSION:${o.version ?? '2.0'}`, 'PRODID:-//test//EN', ...(o.method ? [`METHOD:${o.method}`] : []), `BEGIN:${o.kind ?? 'VEVENT'}`, `UID:${uid}`, 'DTSTAMP:20260101T000000Z', ...lines, `END:${o.kind ?? 'VEVENT'}`, 'END:VCALENDAR', ''].join('\\r\\n');\nconst ev = (uid: string, start: string, end: string, more: string[] = []) => ics(uid, [`DTSTART:${start}`, `DTEND:${end}`, ...more]);\n\nconst setup = (o: ConstructorParameters<typeof CalDav>[0] = {}) => {\n  const dav = new CalDav({ now: () => 1_800_000_000_000, ...o });\n  dav.create(CAL, { displayName: 'Work' });\n  const req = (method: string, path: string, body = '', headers: Record<string, string> = {}): Reply => dav.handle({ method, path, headers, body });\n  const put = (name: string, text: string) => req('PUT', `${CAL}${name}`, text, { 'content-type': 'text/calendar; charset=utf-8' });\n  return { dav, req, put };\n};\n\nconst responses = (r: Reply) => children(parseXml(r.body), 'DAV:', 'response').map((x) => ({ href: child(x, 'DAV:', 'href')!.text, status: child(x, 'DAV:', 'status')?.text, el: x }));\nconst hrefs = (r: Reply) => responses(r).map((x) => x.href.replace(CAL, ''));\nconst query = (filter: string, prop = '<d:getetag/>') => `<c:calendar-query ${NS}><d:prop>${prop}</d:prop><c:filter><c:comp-filter name=\"VCALENDAR\">${filter}</c:comp-filter></c:filter></c:calendar-query>`;\nconst range = (a: string, b: string) => `<c:time-range start=\"${a}\" end=\"${b}\"/>`;\n\ntest('OPTIONS advertises calendar access and MKCALENDAR creates a calendar from its body', () => {\n  const { req, dav } = setup();\n  const o = req('OPTIONS', CAL);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/caldav-80.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.353Z"
+}

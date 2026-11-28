@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "graphql-schema",
+  "mutant": {
+    "id": "2446",
+    "line": 1361,
+    "column": 11,
+    "endLine": 1361,
+    "endColumn": 37,
+    "mutator": "EqualityOperator",
+    "original": "op.selections.length !== 1",
+    "replacement": "op.selections.length === 1",
+    "lineText": "if (op.selections.length !== 1 || keys.size !== 1) err(op.name ? `Subscription \"${op.name}\" must select only one top level field.` : 'Anonymous Subscription must select only one top level field.', op);",
+    "prevText": "const keys = new Set(op.selections.filter((s): s is FieldNode => s.kind === 'field').map((s) => s.alias ?? s.name));",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/graphql-schema/graphql-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-2446.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"graphql-schema\". Mutant: line 1361:11-1361:37, mutator EqualityOperator: \"op.selections.length !== 1\" becomes \"op.selections.length === 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/graphql-schema/index.ts (> marks the mutated line):\n  1355        else if (!['scalar', 'enum', 'input'].includes(tdef.kind)) err(`Variable \"$${v.name}\" cannot be non-input type \"${typeName(v.type)}\".`, v);\n  1356        else if (v.defaultValue) for (const p of literalProblems(schema, v.defaultValue, v.type, false, scalars)) err(`Variable \"$${v.name}\" of type \"${typeName(v.type)}\" has an invalid default value: ${p}`, v);\n  1357        checkDirectives(v.directives, 'VARIABLE_DEFINITION');\n  1358      }\n  1359      if (op.operation === 'subscription') {\n  1360        const keys = new Set(op.selections.filter((s): s is FieldNode => s.kind === 'field').map((s) => s.alias ?? s.name));\n> 1361        if (op.selections.length !== 1 || keys.size !== 1) err(op.name ? `Subscription \"${op.name}\" must select only one top level field.` : 'Anonymous Subscription must select only one top level field.', op);\n  1362      }\n  1363      checkSelections(op.selections, root);\n  1364      const used = new Set<string>();\n  1365      const positions: Position[] = [];\n  1366      walkVars(op.selections, root, used, positions, new Set());\n  1367      for (const u of used) if (!vars.has(u)) err(op.name ? `Variable \"$${u}\" is not defined by operation \"${op.name}\".` : `Variable \"$${u}\" is not defined.`, op);\n\nTest file style (intent/blocks/graphql-schema/graphql-schema.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { GraphQLError, GraphQLSyntaxError, analyze, buildSchema, execute, parse, plan, validate } from './index.ts';\nimport type { Schema } from './index.ts';\n\nconst SDL = `\n  \"\"\"The root.\"\"\"\n  type Query {\n    hello(name: String = \"world\"): String!\n    user(id: ID!): User\n    users(first: Int, after: String): [User!]!\n    search(text: String!): [SearchResult!]!\n    node(id: ID!): Node\n    flaky: String\n    must: String!\n    items: [Int!]\n    nested: Outer\n  }\n  type Mutation { bump(by: Int = 1): Int! rename(id: ID!, input: RenameInput!): User }\n  directive @auth(role: String!) on FIELD_DEFINITION\n  interface Node { id: ID! }\n  type User implements Node {\n    id: ID!\n    name: String\n    email: String @deprecated(reason: \"use contact\")\n    role: Role!\n    friends(first: Int): [User!]\n    posts(limit: Int = 20): [Post!]! @cost(value: 2, multipliers: [\"limit\"])\n  }\n  type Post implements Node { id: ID! title: String! author: User }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-2446.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:42.577Z"
+}

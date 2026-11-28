@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "smtp-protocol",
+  "mutant": {
+    "id": "1303",
+    "line": 679,
+    "column": 16,
+    "endLine": 679,
+    "endColumn": 23,
+    "mutator": "StringLiteral",
+    "original": "'PLAIN'",
+    "replacement": "\"\"",
+    "lineText": "mech = 'PLAIN';",
+    "prevText": "} else if (this.pending === 'PLAIN') {",
+    "nextText": "const p = parsePlain(line);"
+  },
+  "mayEdit": [
+    "intent/blocks/smtp-protocol/smtp-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-1303.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"smtp-protocol\". Mutant: line 679:16-679:23, mutator StringLiteral: \"'PLAIN'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/smtp-protocol/index.ts (> marks the mutated line):\n   673      let mech = 'LOGIN';\n   674      try {\n   675        if (this.state === 'auth-login-pass') {\n   676          user = this.loginUser;\n   677          secret = unb64(line).toString('utf8');\n   678        } else if (this.pending === 'PLAIN') {\n>  679          mech = 'PLAIN';\n   680          const p = parsePlain(line);\n   681          user = p.user;\n   682          secret = p.pass;\n   683          if (p.authzid && p.authzid !== p.user) return this.authFail(535, 'authorization identity not permitted', '5.7.8');\n   684        } else {\n   685          mech = 'XOAUTH2';\n\nTest file style (intent/blocks/smtp-protocol/smtp-protocol.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadCommand, ClientSession, ProtocolError, ReplyParser, ServerSession, classify, endsGroup, formatReply, parseCommand, parsePath, parsePlain, parseXoauth2, pipelineGroups, plainInitial, prepareBody, xoauth2Initial, type ClientOptions, type ClientResult, type Envelope, type ServerOptions } from './index.ts';\n\nconst mkServer = (o: Partial<ServerOptions> = {}) => {\n  const got: { env: Envelope; body: string }[] = [];\n  const s = new ServerSession({ hostname: 'mx.example.org', onMessage: (env, body) => void got.push({ env, body: body.toString('latin1') }), ...o });\n  return { s, got };\n};\nconst talk = (s: ServerSession, ...lines: string[]) => s.feed(lines.join(''));\nconst replies = (text: string) => new ReplyParser().push(text);\nconst codes = (text: string) => replies(text).map((r) => r.code);\n\n/** Runs a client against a server in memory, answering STARTTLS when asked. */\nfunction run(server: ServerSession, opts: ClientOptions) {\n  const client = new ClientSession(opts);\n  const parser = new ReplyParser();\n  const wire: string[] = [];\n  let inbox = server.greeting();\n  let result: ClientResult | undefined;\n  for (let guard = 0; guard < 200 && !result; guard++) {\n    wire.push(`S: ${inbox}`);\n    let outgoing = '';\n    let tls = false;\n    for (const r of parser.push(inbox)) {\n      const step = client.receive(r);\n      outgoing += step.send;\n      if (step.startTls) tls = true;\n      if (step.done) result = step.done;\n    }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-1303.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.987Z"
+}

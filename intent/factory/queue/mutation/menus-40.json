@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "menus",
+  "mutant": {
+    "id": "40",
+    "line": 121,
+    "column": 141,
+    "endLine": 121,
+    "endColumn": 166,
+    "mutator": "LogicalOperator",
+    "original": "keys.join(', ') || 'none'",
+    "replacement": "keys.join(', ') && 'none'",
+    "lineText": "if (keys.length !== 1) throw new InvalidCondition(`exactly one of all, any, not, authenticated, role, flag, locale, equals, exists; got ${keys.join(', ') || 'none'}`);",
+    "prevText": "const keys = Object.keys(c);",
+    "nextText": "const k = keys[0]!;"
+  },
+  "mayEdit": [
+    "intent/blocks/menus/menus.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/menus-40.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"menus\". Mutant: line 121:141-121:166, mutator LogicalOperator: \"keys.join(', ') || 'none'\" becomes \"keys.join(', ') && 'none'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/menus/index.ts (> marks the mutated line):\n   115  \n   116  /** Whether a condition holds for a context. Throws InvalidCondition for a shape it does not know. */\n   117  export function evaluate(c: Condition, ctx: Context, depth = 0): boolean {\n   118    if (depth > MAX_COND_DEPTH) throw new InvalidCondition(`nested deeper than ${MAX_COND_DEPTH}`);\n   119    if (typeof c !== 'object' || c === null) throw new InvalidCondition('a condition is an object');\n   120    const keys = Object.keys(c);\n>  121    if (keys.length !== 1) throw new InvalidCondition(`exactly one of all, any, not, authenticated, role, flag, locale, equals, exists; got ${keys.join(', ') || 'none'}`);\n   122    const k = keys[0]!;\n   123    const v = (c as Record<string, unknown>)[k];\n   124    switch (k) {\n   125      case 'all':\n   126        if (!Array.isArray(v)) throw new InvalidCondition('all needs a list');\n   127        return v.every((x) => evaluate(x as Condition, ctx, depth + 1));\n\nTest file style (intent/blocks/menus/menus.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { breadcrumbs, check, evaluate, find, insert, InvalidCondition, InvalidMenu, move, pick, remove, resolve, safeHref } from './index.ts';\nimport type { Condition, Context, MenuItem } from './index.ts';\n\nconst menu: MenuItem[] = [\n  { id: 'home', label: { en: 'Home', fr: 'Accueil', de: 'Start' }, href: '/' },\n  {\n    id: 'docs',\n    label: 'Docs',\n    href: '/docs',\n    match: 'prefix',\n    children: [\n      { id: 'docs-start', label: 'Getting started', href: '/docs/start' },\n      { id: 'docs-api', label: 'API', href: '/docs/api', children: [{ id: 'docs-api-auth', label: 'Auth', href: '/docs/api/auth' }] },\n      { id: 'docs-internal', label: 'Internal', href: '/docs/internal', permission: 'docs.internal' },\n    ],\n  },\n  {\n    id: 'account',\n    label: 'Account',\n    when: { authenticated: true },\n    children: [\n      { id: 'profile', label: 'Profile', href: '/me' },\n      { id: 'admin', label: 'Admin', href: '/admin', when: { role: ['admin', 'owner'] }, match: ['/admin/*', '/settings'] },\n      { id: 'beta', label: 'Beta', href: '/beta', when: { all: [{ flag: 'beta' }, { not: { locale: 'fr' } }] } },\n    ],\n  },\n  { id: 'login', label: 'Sign in', href: '/login', when: { authenticated: false } },\n  { id: 'ext', label: 'Blog', href: 'https://blog.example.com', target: '_blank', order: -1 },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/menus-40.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:49.401Z"
+}

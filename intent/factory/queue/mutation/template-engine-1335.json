@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "template-engine",
+  "mutant": {
+    "id": "1335",
+    "line": 594,
+    "column": 51,
+    "endLine": 594,
+    "endColumn": 68,
+    "mutator": "ConditionalExpression",
+    "original": "val === undefined",
+    "replacement": "true",
+    "lineText": "where: (v, [key, val]) => arr(v).filter((x) => (val === undefined ? truthy(step(x, str(key))) : looseEq(step(x, str(key)), val))),",
+    "prevText": "map: (v, [key]) => arr(v).map((x) => step(x, str(key))),",
+    "nextText": "uniq: (v) => arr(v).filter((x, i, a) => a.findIndex((y) => looseEq(x, y)) === i),"
+  },
+  "mayEdit": [
+    "intent/blocks/template-engine/template-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/template-engine-1335.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"template-engine\". Mutant: line 594:51-594:68, mutator ConditionalExpression: \"val === undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/template-engine/index.ts (> marks the mutated line):\n   588    sort: (v, [key]) => {\n   589      const k = key === undefined ? undefined : str(key);\n   590      const get = (x: unknown) => (k === undefined ? x : step(x, k));\n   591      return [...arr(v)].sort((a, b) => order(get(a), get(b)) ?? (str(get(a)) < str(get(b)) ? -1 : 1));\n   592    },\n   593    map: (v, [key]) => arr(v).map((x) => step(x, str(key))),\n>  594    where: (v, [key, val]) => arr(v).filter((x) => (val === undefined ? truthy(step(x, str(key))) : looseEq(step(x, str(key)), val))),\n   595    uniq: (v) => arr(v).filter((x, i, a) => a.findIndex((y) => looseEq(x, y)) === i),\n   596    compact: (v) => arr(v).filter((x) => x !== null && x !== undefined),\n   597    concat: (v, [o]) => [...arr(v), ...arr(o)],\n   598    default: (v, [d]) => (v === null || v === undefined || v === false || str(v) === '' || (Array.isArray(v) && v.length === 0) ? (d ?? '') : v),\n   599    plus: (v, [a]) => num(v) + num(a),\n   600    minus: (v, [a]) => num(v) - num(a),\n\nTest file style (intent/blocks/template-engine/template-engine.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Engine, FilterError, LimitExceeded, SafeString, TemplateSyntaxError, UndefinedVariable, render, strftime } from './index.ts';\n\nconst NOW = () => new Date('2026-03-05T14:07:09Z');\n\ntest('output tags are HTML-escaped by default; safe lets markup through', () => {\n  const d = { name: `<b>\"Tom\" & 'Jerry'</b>`, html: '<i>ok</i>' };\n  assert.equal(render('{{ name }}', d), '&lt;b&gt;&quot;Tom&quot; &amp; &#39;Jerry&#39;&lt;/b&gt;');\n  assert.equal(render('{{ html | safe }}', d), '<i>ok</i>');\n  assert.equal(render('{{ html | escape }}', d), '&lt;i&gt;ok&lt;/i&gt;', 'escape is not applied twice');\n  assert.equal(render('{{ html | upcase }}', d), '&lt;I&gt;OK&lt;/I&gt;');\n  assert.equal(render('{{ html | safe | upcase }}', d), '&lt;I&gt;OK&lt;/I&gt;', 'a filter that rebuilds the text loses the safe mark');\n  assert.equal(render('{{ x }}', { x: new SafeString('<u>') }), '<u>');\n});\n\ntest('paths read nested data, arrays, negative indexes and bracket keys', () => {\n  const d = { user: { name: 'Ana', tags: ['a', 'b', 'c'], 'full name': 'Ana L' }, key: 'name' };\n  assert.equal(render('{{ user.name }}|{{ user.tags[1] }}|{{ user.tags[-1] }}|{{ user.tags.size }}|{{ user.tags.first }}|{{ user.tags.last }}', d), 'Ana|b|c|3|a|c');\n  assert.equal(render('{{ user[\"full name\"] }}|{{ user[key] }}|{{ user.missing }}|{{ nothing.at.all }}', d), 'Ana L|Ana||');\n  assert.equal(render('{{ \"hello\" | size }} {{ user.name.size }}', d), '5 3');\n});\n\ntest('the program is out of reach: prototypes, constructors, methods and functions read as empty', () => {\n  const data = { s: 'text', fn: () => 'x', o: { own: 1 }, inherited: Object.create({ secret: 'hidden' }) };\n  assert.equal(render('{{ s.length }}|{{ s.constructor }}|{{ o.__proto__ }}|{{ o.constructor.name }}|{{ o.toString }}|{{ fn }}|{{ inherited.secret }}|{{ __proto__ }}|{{ constructor }}', data), '||||||||');\n  assert.equal(render('{{ o[\"__proto__\"] }}{{ o[\"constructor\"] }}{{ o.hasOwnProperty }}', data), '');\n  assert.equal(render('{{ own }}', Object.create({ own: 'inherited' })), '', 'top-level data is read as own properties only');\n  assert.equal(render('{{ o.own }}', data), '1');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/template-engine-1335.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:08.128Z"
+}

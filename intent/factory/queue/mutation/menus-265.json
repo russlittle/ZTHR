@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "menus",
+  "mutant": {
+    "id": "265",
+    "line": 202,
+    "column": 35,
+    "endLine": 202,
+    "endColumn": 41,
+    "mutator": "Regex",
+    "original": "/\\/+$/",
+    "replacement": "/\\/$/",
+    "lineText": "if (s.length > 1) s = s.replace(/\\/+$/, '');",
+    "prevText": "s = s.replace(/\\/{2,}/g, '/');",
+    "nextText": "return s || '/';"
+  },
+  "mayEdit": [
+    "intent/blocks/menus/menus.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/menus-265.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"menus\". Mutant: line 202:35-202:41, mutator Regex: \"/\\\\/+$/\" becomes \"/\\\\/$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/menus/index.ts (> marks the mutated line):\n   196    try {\n   197      s = decodeURI(s);\n   198    } catch {\n   199      /* keep as written */\n   200    }\n   201    s = s.replace(/\\/{2,}/g, '/');\n>  202    if (s.length > 1) s = s.replace(/\\/+$/, '');\n   203    return s || '/';\n   204  }\n   205  \n   206  function matchScore(item: MenuItem, href: string | undefined, path: string): number {\n   207    const rule: MatchRule = item.match ?? 'exact';\n   208    let best = 0;\n\nTest file style (intent/blocks/menus/menus.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { breadcrumbs, check, evaluate, find, insert, InvalidCondition, InvalidMenu, move, pick, remove, resolve, safeHref } from './index.ts';\nimport type { Condition, Context, MenuItem } from './index.ts';\n\nconst menu: MenuItem[] = [\n  { id: 'home', label: { en: 'Home', fr: 'Accueil', de: 'Start' }, href: '/' },\n  {\n    id: 'docs',\n    label: 'Docs',\n    href: '/docs',\n    match: 'prefix',\n    children: [\n      { id: 'docs-start', label: 'Getting started', href: '/docs/start' },\n      { id: 'docs-api', label: 'API', href: '/docs/api', children: [{ id: 'docs-api-auth', label: 'Auth', href: '/docs/api/auth' }] },\n      { id: 'docs-internal', label: 'Internal', href: '/docs/internal', permission: 'docs.internal' },\n    ],\n  },\n  {\n    id: 'account',\n    label: 'Account',\n    when: { authenticated: true },\n    children: [\n      { id: 'profile', label: 'Profile', href: '/me' },\n      { id: 'admin', label: 'Admin', href: '/admin', when: { role: ['admin', 'owner'] }, match: ['/admin/*', '/settings'] },\n      { id: 'beta', label: 'Beta', href: '/beta', when: { all: [{ flag: 'beta' }, { not: { locale: 'fr' } }] } },\n    ],\n  },\n  { id: 'login', label: 'Sign in', href: '/login', when: { authenticated: false } },\n  { id: 'ext', label: 'Blog', href: 'https://blog.example.com', target: '_blank', order: -1 },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/menus-265.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:49.408Z"
+}

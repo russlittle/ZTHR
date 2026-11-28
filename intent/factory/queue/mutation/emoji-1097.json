@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "emoji",
+  "mutant": {
+    "id": "1097",
+    "line": 245,
+    "column": 56,
+    "endLine": 245,
+    "endColumn": 72,
+    "mutator": "ArrowFunction",
+    "original": "() => Date.now()",
+    "replacement": "() => undefined",
+    "lineText": "constructor(builtin: Shortcodes, now: () => number = () => Date.now()) {",
+    "prevText": "",
+    "nextText": "this.builtin = builtin;"
+  },
+  "mayEdit": [
+    "intent/blocks/emoji/emoji.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/emoji-1097.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"emoji\". Mutant: line 245:56-245:72, mutator ArrowFunction: \"() => Date.now()\" becomes \"() => undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/emoji/index.ts (> marks the mutated line):\n   239  \n   240  export class CustomRegistry {\n   241    private readonly byName = new Map<string, CustomEmoji>();\n   242    private readonly builtin: Shortcodes;\n   243    private readonly now: () => number;\n   244  \n>  245    constructor(builtin: Shortcodes, now: () => number = () => Date.now()) {\n   246      this.builtin = builtin;\n   247      this.now = now;\n   248    }\n   249  \n   250    /** Adds an emoji. The name is 2 to 32 lower-case letters, digits and underscores, and cannot be a built-in name. */\n   251    add(e: { name: string; url: string; animated?: boolean; aliases?: readonly string[]; category?: string; createdBy: string }): CustomEmoji {\n\nTest file style (intent/blocks/emoji/emoji.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  CustomRegistry, EmojiError, ReactionError, Reactions, Shortcodes, canTone, extractEmoji, graphemesOf, isEmoji, isModifierBase, renderHtml, stripTone, toneOf, withTone,\n} from './index.ts';\nimport type { Tone } from './index.ts';\n\nconst u = (...cps: number[]) => String.fromCodePoint(...cps);\nconst codes = new Shortcodes();\nconst THUMB = u(0x1f44d);\nconst ENGLAND = u(0x1f3f4, 0xe0067, 0xe0062, 0xe0065, 0xe006e, 0xe0067, 0xe007f);\n\n// ------------------------------------------------------------ detection\n\ntest('what counts as an emoji: pictographs, flags, keycaps, joined and toned sequences, but not digits, letters or bare symbols', () => {\n  const yes = ['😀', u(0x1f44d, 0x1f3fd), u(0x1f1fa, 0x1f1f8), u(0x31, 0xfe0f, 0x20e3), u(0x2764, 0xfe0f), u(0x1f9d1, 0x200d, 0x1f4bb), u(0x1f468, 0x200d, 0x1f469, 0x200d, 0x1f467), ENGLAND, u(0xa9, 0xfe0f), '⭐'];\n  const no = ['a', '1', '#', '©', '™', ' ', '', '中', u(0x2764), '٣', 'é', 'ab'.repeat(30)];\n  for (const e of yes) assert.equal(isEmoji(e), true, [...e].map((c) => c.codePointAt(0)!.toString(16)).join(' '));\n  for (const t of no) assert.equal(isEmoji(t), false, JSON.stringify(t.slice(0, 10)));\n});\n\ntest('emoji are found in a text by grapheme, so a toned or joined emoji is one, and two flags are two', () => {\n  const text = `ok ${u(0x1f44d, 0x1f3fd)} and ${THUMB}, flags ${u(0x1f1eb, 0x1f1f7)}${u(0x1f1e9, 0x1f1ea)} dev ${u(0x1f9d1, 0x200d, 0x1f4bb)} 1 2 #`;\n  assert.deepEqual(extractEmoji(text), [u(0x1f44d, 0x1f3fd), THUMB, u(0x1f1eb, 0x1f1f7), u(0x1f1e9, 0x1f1ea), u(0x1f9d1, 0x200d, 0x1f4bb)]);\n  assert.equal(graphemesOf(`${ENGLAND}!`).length, 2);\n  assert.deepEqual(extractEmoji('no emoji here, 100% plain'), []);\n});\n\n// ------------------------------------------------------------ skin tones\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/emoji-1097.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.753Z"
+}

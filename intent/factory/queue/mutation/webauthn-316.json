@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webauthn",
+  "mutant": {
+    "id": "316",
+    "line": 168,
+    "column": 61,
+    "endLine": 168,
+    "endColumn": 100,
+    "mutator": "StringLiteral",
+    "original": "'attested credential data is cut short'",
+    "replacement": "\"\"",
+    "lineText": "if (d.length < pos + 18) throw new Rejected('authdata', 'attested credential data is cut short');",
+    "prevText": "if (flags & FLAG.AT) {",
+    "nextText": "const aaguid = uuid(d.subarray(pos, pos + 16));"
+  },
+  "mayEdit": [
+    "intent/blocks/webauthn/webauthn.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webauthn-316.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webauthn\". Mutant: line 168:61-168:100, mutator StringLiteral: \"'attested credential data is cut short'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webauthn/index.ts (> marks the mutated line):\n   162    if (d.length < 37) throw new Rejected('authdata', 'authenticator data is too short');\n   163    const flags = d[32]!;\n   164    const base = { rpIdHash: d.subarray(0, 32), flags, signCount: d.readUInt32BE(33) };\n   165    let pos = 37;\n   166    let attested: AuthData['attested'];\n   167    if (flags & FLAG.AT) {\n>  168      if (d.length < pos + 18) throw new Rejected('authdata', 'attested credential data is cut short');\n   169      const aaguid = uuid(d.subarray(pos, pos + 16));\n   170      const len = d.readUInt16BE(pos + 16);\n   171      pos += 18;\n   172      if (len < 1 || len > 1023 || d.length < pos + len) throw new Rejected('authdata', 'the credential id has an impossible length');\n   173      const credentialId = Buffer.from(d.subarray(pos, pos + len));\n   174      pos += len;\n\nTest file style (intent/blocks/webauthn/webauthn.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, generateKeyPairSync, randomBytes, sign as cryptoSign, X509Certificate } from 'node:crypto';\nimport type { KeyObject } from 'node:crypto';\nimport { test } from 'node:test';\nimport { bitString, boolean, explicit, integer, octetString, oid, oidOf, sequence, set, time, toPem, utf8String } from '../asn1-der/index.ts';\nimport { BadCbor, Challenges, coseToKey, FLAG, MemoryCredentials, Rejected, WebAuthn, decodeCbor, encodeCbor, parseAuthData, parseCbor } from './index.ts';\nimport type { Alg, AttestationPolicy, Cbor, RelyingParty } from './index.ts';\n\n// A throwaway attestation CA and authenticator certificate (EC P-256, valid for a century), made fresh for each run.\n/** A throwaway certificate made at run time: DER from the asn1-der writers, signed with node:crypto (ECDSA P-256 / SHA-256). */\nconst certName = (cn: string) => sequence(set(sequence(oid(oidOf('CN')), utf8String(cn))));\nfunction makeCert(o: { subject: string; publicKey: KeyObject; issuer?: string; issuerKey: KeyObject; ca?: boolean }): string {\n  const algId = sequence(oid(oidOf('ecdsa-with-SHA256')));\n  const exts = o.ca ? [explicit(3, sequence(sequence(oid(oidOf('basicConstraints')), boolean(true), octetString(sequence(boolean(true))))))] : [];\n  const tbs = sequence(\n    explicit(0, integer(2)), integer(BigInt(`0x${randomBytes(12).toString('hex')}`)), algId, certName(o.issuer ?? o.subject),\n    sequence(time(new Date(Date.UTC(2020, 0, 1))), time(new Date(Date.UTC(2120, 0, 1)))),\n    certName(o.subject), Buffer.from(o.publicKey.export({ type: 'spki', format: 'der' })), ...exts,\n  );\n  return toPem('CERTIFICATE', sequence(tbs, algId, bitString(cryptoSign('sha256', tbs, o.issuerKey)))).trim();\n}\nconst rootPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst leafPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst foreignPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst ROOT_PEM = `${makeCert({ subject: 'Test Attestation Root', publicKey: rootPair.publicKey, issuerKey: rootPair.privateKey, ca: true })}\\n`;\nconst LEAF_PEM = `${makeCert({ subject: 'Test Authenticator', issuer: 'Test Attestation Root', publicKey: leafPair.publicKey, issuerKey: rootPair.privateKey })}\\n`;\nconst FOREIGN_PEM = `${makeCert({ subject: 'Some Other Root', publicKey: foreignPair.publicKey, issuerKey: foreignPair.privateKey, ca: true })}\\n`;\nconst LEAF_KEY = leafPair.privateKey;\n\nconst ORIGIN = 'https://app.example.org';\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webauthn-316.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:13.711Z"
+}

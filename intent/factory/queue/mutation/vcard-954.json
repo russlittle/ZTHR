@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "vcard",
+  "mutant": {
+    "id": "954",
+    "line": 462,
+    "column": 37,
+    "endLine": 462,
+    "endColumn": 49,
+    "mutator": "ConditionalExpression",
+    "original": "to === '3.0'",
+    "replacement": "true",
+    "lineText": "} else if (p.name === 'KIND' && to === '3.0') q = String(p.value) === 'group' ? { name: 'X-ADDRESSBOOKSERVER-KIND', params: {}, value: 'group' } : p;",
+    "prevText": "} else q = { ...p, params: to === '3.0' ? { VALUE: ['uri'] } : {} };",
+    "nextText": "else if (p.name === 'X-ADDRESSBOOKSERVER-KIND' && to === '4.0') q = { name: 'KIND', params: {}, value: p.value };"
+  },
+  "mayEdit": [
+    "intent/blocks/vcard/vcard.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/vcard-954.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"vcard\". Mutant: line 462:37-462:49, mutator ConditionalExpression: \"to === '3.0'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/vcard/index.ts (> marks the mutated line):\n   456      } else if (p.name === 'PHOTO') {\n   457        const ph = photoOf(p, o.maxPhotoBytes ?? 5 * 1024 * 1024);\n   458        if (ph.bytes) {\n   459          const kind = sniff(ph.bytes)!;\n   460          q = to === '4.0' ? { name: 'PHOTO', params: {}, value: `data:image/${kind};base64,${ph.bytes.toString('base64')}`, ...(p.group ? { group: p.group } : {}) } : { name: 'PHOTO', params: { ENCODING: ['b'], TYPE: [kind.toUpperCase()] }, value: ph.bytes.toString('base64'), ...(p.group ? { group: p.group } : {}) };\n   461        } else q = { ...p, params: to === '3.0' ? { VALUE: ['uri'] } : {} };\n>  462      } else if (p.name === 'KIND' && to === '3.0') q = String(p.value) === 'group' ? { name: 'X-ADDRESSBOOKSERVER-KIND', params: {}, value: 'group' } : p;\n   463      else if (p.name === 'X-ADDRESSBOOKSERVER-KIND' && to === '4.0') q = { name: 'KIND', params: {}, value: p.value };\n   464      else if (p.name === 'MEMBER' && to === '3.0') q = { name: 'X-ADDRESSBOOKSERVER-MEMBER', params: {}, value: p.value };\n   465      else if (p.name === 'X-ADDRESSBOOKSERVER-MEMBER' && to === '4.0') q = { name: 'MEMBER', params: {}, value: p.value };\n   466      props.push(q);\n   467    }\n   468    return { version: to, props };\n\nTest file style (intent/blocks/vcard/vcard.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { VCardError, build, convert, hasMember, merge, parse, view, write } from './index.ts';\nimport type { Card } from './index.ts';\n\nconst BS = String.fromCharCode(92);\n// A 1x1 PNG and a 1x1 GIF, as the bytes a phone would attach.\nconst PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');\nconst GIF = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');\n\nconst V3 = [\n  'BEGIN:VCARD',\n  'VERSION:3.0',\n  'FN:Ana María Okafor',\n  'N:Okafor;Ana;María;Dr.;PhD',\n  'NICKNAME:Anita,Ana-M',\n  'ORG:Acme\\\\, Inc.;Research;Lab 2',\n  'TITLE:Chief of Things',\n  'item1.TEL;TYPE=WORK,VOICE,pref:+1 (937) 555-0100',\n  'item1.X-ABLabel:main line',\n  'TEL;TYPE=CELL:937-555-0142',\n  'EMAIL;TYPE=INTERNET,HOME:ana@example.org',\n  'ADR;TYPE=WORK:;;1 Main St' + BS + '; Suite 4;Dayton;OH;45402;USA',\n  'BDAY:1980-02-29',\n  'CATEGORIES:friends,work\\\\, other',\n  'NOTE:Line one' + BS + 'nLine two' + BS + ', with a comma' + BS + '; and a semicolon',\n  'X-CUSTOM-THING;FOO=bar:kept as is',\n  'UID:urn:uuid:11111111-2222-3333-4444-555555555555',\n  'REV:20260101T000000Z',\n  'END:VCARD',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/vcard-954.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:12.856Z"
+}

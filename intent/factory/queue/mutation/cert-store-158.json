@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "cert-store",
+  "mutant": {
+    "id": "158",
+    "line": 123,
+    "column": 11,
+    "endLine": 123,
+    "endColumn": 23,
+    "mutator": "ArithmeticOperator",
+    "original": "v.length % 4",
+    "replacement": "v.length * 4",
+    "lineText": "if (v.length % 4) throw new CertError('UniversalString length is not a multiple of 4');",
+    "prevText": "case 0x1c: {",
+    "nextText": "let s = '';"
+  },
+  "mayEdit": [
+    "intent/blocks/cert-store/cert-store.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/cert-store-158.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"cert-store\". Mutant: line 123:11-123:23, mutator ArithmeticOperator: \"v.length % 4\" becomes \"v.length * 4\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/cert-store/index.ts (> marks the mutated line):\n   117        if (v.length % 2) throw new CertError('BMPString has an odd length');\n   118        let s = '';\n   119        for (let i = 0; i < v.length; i += 2) s += String.fromCharCode(v[i]! * 256 + v[i + 1]!);\n   120        return s;\n   121      }\n   122      case 0x1c: {\n>  123        if (v.length % 4) throw new CertError('UniversalString length is not a multiple of 4');\n   124        let s = '';\n   125        for (let i = 0; i < v.length; i += 4) s += String.fromCodePoint(((v[i]! << 24) | (v[i + 1]! << 16) | (v[i + 2]! << 8) | v[i + 3]!) >>> 0);\n   126        return s;\n   127      }\n   128      default:\n   129        throw new CertError(`unsupported string type 0x${t.tag.toString(16)}`);\n\nTest file style (intent/blocks/cert-store/cert-store.test.ts):\n23 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CertError, CertStore, buildChain, certificateCoversHost, nameKey, nameToString, normalizeHost, parseCertificate, parseIp, parsePem, verifySignature } from './index.ts';\n\n// Generated once with OpenSSL; every certificate here is a throwaway test certificate.\nexport const PEM = {\n  ca: `-----BEGIN CERTIFICATE-----\nMIIB0DCCAXagAwIBAgIBATAKBggqhkjOPQQDAjA/MQswCQYDVQQGEwJVUzEWMBQG\nA1UECgwNRXhhbXBsZSBUcnVzdDEYMBYGA1UEAwwPRXhhbXBsZSBSb290IENBMB4X\nDTI2MTEyODA2NDk1MVoXDTM2MTEyNTA2NDk1MVowPzELMAkGA1UEBhMCVVMxFjAU\nBgNVBAoMDUV4YW1wbGUgVHJ1c3QxGDAWBgNVBAMMD0V4YW1wbGUgUm9vdCBDQTBZ\nMBMGByqGSM49AgEGCCqGSM49AwEHA0IABI0DXcPRwMXxQ14obQw2VTgc71tyUpKZ\nkWsxvl37gBZDRrPWdMvS9qHG7Tv6swo/FavGVyXgVrP3IXYznUfTBnqjYzBhMB8G\nA1UdIwQYMBaAFC0eqNIFuEyCZivxF89crzoMURK+MA8GA1UdEwEB/wQFMAMBAf8w\nDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBQtHqjSBbhMgmYr8RfPXK86DFESvjAK\nBggqhkjOPQQDAgNIADBFAiAIxfD/UaF7JwZgXA/OuL4p7QcFswvJNZZujGgMJRbl\nCgIhAKYqbBRoECqFt+cejmpIZo3FhQ/4D5fkXrryTVxMKBsN\n-----END CERTIFICATE-----\n`,\n  int: `-----BEGIN CERTIFICATE-----\nMIIB1zCCAX6gAwIBAgIBAjAKBggqhkjOPQQDAjA/MQswCQYDVQQGEwJVUzEWMBQG\nA1UECgwNRXhhbXBsZSBUcnVzdDEYMBYGA1UEAwwPRXhhbXBsZSBSb290IENBMB4X\nDTI2MTEyODA2NDk1MloXDTMxMTEwMjA2NDk1MlowRDELMAkGA1UEBhMCVVMxFjAU\nBgNVBAoMDUV4YW1wbGUgVHJ1c3QxHTAbBgNVBAMMFEV4YW1wbGUgSXNzdWluZyBD\nQSAxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAECCw1w08ZW+Q7jklDizWvL7Ut\nIod1FXhLqbyVKCzyOUOs9ylOEkjQ+2AWSd4513Ovp5BrGyUPLS65A9uxpOMAWKNm\nMGQwEgYDVR0TAQH/BAgwBgEB/wIBADAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYE\nFKnVKnfH4aiQX73M/n3XRZmsYIi7MB8GA1UdIwQYMBaAFC0eqNIFuEyCZivxF89c\nrzoMURK+MAoGCCqGSM49BAMCA0cAMEQCID4bUnIr1n3w+4SVEpCKp0z+Fl8LcCdO\nC5awI5xAnxbkAiARsrV9NQi8LUyczo/vCqpw5W0Aubur0ATR48OwK0Ge6A==\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/cert-store-158.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.823Z"
+}

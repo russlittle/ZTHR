@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webrtc-signaling",
+  "mutant": {
+    "id": "619",
+    "line": 240,
+    "column": 127,
+    "endLine": 240,
+    "endColumn": 149,
+    "mutator": "LogicalOperator",
+    "original": "x === 192 && y === 168",
+    "replacement": "x === 192 || y === 168",
+    "lineText": "if (m) { const [x, y] = [Number(m[1]), Number(m[2])]; return x === 10 || x === 127 || (x === 172 && y >= 16 && y <= 31) || (x === 192 && y === 168) || (x === 169 && y === 254); }",
+    "prevText": "const m = IPV4.exec(a);",
+    "nextText": "return /^(fe80|fc|fd|::1)/i.test(a) || a.endsWith('.local');"
+  },
+  "mayEdit": [
+    "intent/blocks/webrtc-signaling/webrtc-signaling.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webrtc-signaling-619.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webrtc-signaling\". Mutant: line 240:127-240:149, mutator LogicalOperator: \"x === 192 && y === 168\" becomes \"x === 192 || y === 168\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webrtc-signaling/index.ts (> marks the mutated line):\n   234    return parts.join(' ');\n   235  }\n   236  \n   237  /** True for addresses on a private network, loopback or link-local: what a host candidate leaks. */\n   238  export function isPrivateAddress(a: string): boolean {\n   239    const m = IPV4.exec(a);\n>  240    if (m) { const [x, y] = [Number(m[1]), Number(m[2])]; return x === 10 || x === 127 || (x === 172 && y >= 16 && y <= 31) || (x === 192 && y === 168) || (x === 169 && y === 254); }\n   241    return /^(fe80|fc|fd|::1)/i.test(a) || a.endsWith('.local');\n   242  }\n   243  \n   244  // --- SDP munging ------------------------------------------------------------------------------------------------\n   245  \n   246  export type MungeRule =\n\nTest file style (intent/blocks/webrtc-signaling/webrtc-signaling.test.ts):\n25 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHmac } from 'node:crypto';\nimport { test } from 'node:test';\nimport { BadSdp, BadToken, ERR, ForbiddenMunge, Signaling, attrOf, checkTurnCredential, formatCandidate, hasFingerprint, isPrivateAddress, munge, parseCandidate, parseSdp, rtpmaps, signJwt, turnCredentials, verifyJwt, writeSdp } from './index.ts';\n\n// RFC 8866 section 5 example.\nconst RFC8866 = [\n  'v=0',\n  'o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5',\n  's=SDP Seminar',\n  'i=A Seminar on the session description protocol',\n  'u=http://www.example.com/seminars/sdp.pdf',\n  'e=j.doe@example.com (Jane Doe)',\n  'c=IN IP4 224.2.17.12/127',\n  't=2873397496 2873404696',\n  'a=recvonly',\n  'm=audio 49170 RTP/AVP 0',\n  'm=video 51372 RTP/AVP 99',\n  'c=IN IP4 203.0.113.1',\n  'a=rtpmap:99 h263-1998/90000',\n  '',\n].join('\\r\\n');\n\nconst offer = (o: { ufrag?: string; extra?: string[]; fingerprint?: boolean } = {}) => [\n  'v=0',\n  'o=- 4611731400430051336 2 IN IP4 127.0.0.1',\n  's=-',\n  't=0 0',\n  'a=group:BUNDLE 0 1',\n  ...(o.fingerprint === false ? [] : ['a=fingerprint:sha-256 AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89']),\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webrtc-signaling-619.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.072Z"
+}

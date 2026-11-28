@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webrtc-signaling",
+  "mutant": {
+    "id": "923",
+    "line": 350,
+    "column": 7,
+    "endLine": 350,
+    "endColumn": 32,
+    "mutator": "ConditionalExpression",
+    "original": "typeof c.nbf === 'number'",
+    "replacement": "true",
+    "lineText": "if (typeof c.nbf === 'number' && t < c.nbf - skew) throw new BadToken('the token is not valid yet');",
+    "prevText": "if (t > c.exp + skew) throw new BadToken('the token has expired');",
+    "nextText": "if (o.audience !== undefined) { const aud = Array.isArray(c.aud) ? c.aud : [c.aud]; if (!aud.includes(o.audience)) throw new BadToken('the token is for a different audience'); }"
+  },
+  "mayEdit": [
+    "intent/blocks/webrtc-signaling/webrtc-signaling.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webrtc-signaling-923.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webrtc-signaling\". Mutant: line 350:7-350:32, mutator ConditionalExpression: \"typeof c.nbf === 'number'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webrtc-signaling/index.ts (> marks the mutated line):\n   344    try { c = JSON.parse(Buffer.from(p, 'base64url').toString('utf8')) as Record<string, unknown>; } catch { throw new BadToken('the token body is not JSON'); }\n   345    if (c === null || typeof c !== 'object' || Array.isArray(c)) throw new BadToken('the token body is not an object');\n   346    const skew = o.skewSeconds ?? 30;\n   347    const t = Math.floor(o.now / 1000);\n   348    if (typeof c.exp !== 'number') throw new BadToken('the token has no expiry');\n   349    if (t > c.exp + skew) throw new BadToken('the token has expired');\n>  350    if (typeof c.nbf === 'number' && t < c.nbf - skew) throw new BadToken('the token is not valid yet');\n   351    if (o.audience !== undefined) { const aud = Array.isArray(c.aud) ? c.aud : [c.aud]; if (!aud.includes(o.audience)) throw new BadToken('the token is for a different audience'); }\n   352    if (o.issuer !== undefined && c.iss !== o.issuer) throw new BadToken('the token is from a different issuer');\n   353    return c;\n   354  }\n   355  \n   356  // --- Signalling ------------------------------------------------------------------------------------------------\n\nTest file style (intent/blocks/webrtc-signaling/webrtc-signaling.test.ts):\n25 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHmac } from 'node:crypto';\nimport { test } from 'node:test';\nimport { BadSdp, BadToken, ERR, ForbiddenMunge, Signaling, attrOf, checkTurnCredential, formatCandidate, hasFingerprint, isPrivateAddress, munge, parseCandidate, parseSdp, rtpmaps, signJwt, turnCredentials, verifyJwt, writeSdp } from './index.ts';\n\n// RFC 8866 section 5 example.\nconst RFC8866 = [\n  'v=0',\n  'o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5',\n  's=SDP Seminar',\n  'i=A Seminar on the session description protocol',\n  'u=http://www.example.com/seminars/sdp.pdf',\n  'e=j.doe@example.com (Jane Doe)',\n  'c=IN IP4 224.2.17.12/127',\n  't=2873397496 2873404696',\n  'a=recvonly',\n  'm=audio 49170 RTP/AVP 0',\n  'm=video 51372 RTP/AVP 99',\n  'c=IN IP4 203.0.113.1',\n  'a=rtpmap:99 h263-1998/90000',\n  '',\n].join('\\r\\n');\n\nconst offer = (o: { ufrag?: string; extra?: string[]; fingerprint?: boolean } = {}) => [\n  'v=0',\n  'o=- 4611731400430051336 2 IN IP4 127.0.0.1',\n  's=-',\n  't=0 0',\n  'a=group:BUNDLE 0 1',\n  ...(o.fingerprint === false ? [] : ['a=fingerprint:sha-256 AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89']),\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webrtc-signaling-923.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.083Z"
+}

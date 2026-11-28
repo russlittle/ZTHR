@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "ldap",
+  "mutant": {
+    "id": "1075",
+    "line": 564,
+    "column": 119,
+    "endLine": 564,
+    "endColumn": 132,
+    "mutator": "EqualityOperator",
+    "original": "x === f.value",
+    "replacement": "x !== f.value",
+    "lineText": "const test = (vals: string[] | undefined): Tri => (vals === undefined ? undefined : vals.some((x) => (exact ? x === f.value : foldValue(x) === foldValue(f.value))));",
+    "prevText": "const exact = f.rule === 'caseExactMatch';",
+    "nextText": "if (f.attr) {"
+  },
+  "mayEdit": [
+    "intent/blocks/ldap/ldap.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ldap-1075.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ldap\". Mutant: line 564:119-564:132, mutator EqualityOperator: \"x === f.value\" becomes \"x !== f.value\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ldap/index.ts (> marks the mutated line):\n   558            if (v === undefined || !/^\\d+$/.test(f.value)) return undefined;\n   559            const want = BigInt(f.value);\n   560            return v.some((x) => /^-?\\d+$/.test(x) && (f.rule === BIT_AND ? (BigInt(x) & want) === want : (BigInt(x) & want) !== 0n));\n   561          }\n   562          if (f.rule && !['caseIgnoreMatch', 'caseExactMatch', 'distinguishedNameMatch'].includes(f.rule)) return undefined;\n   563          const exact = f.rule === 'caseExactMatch';\n>  564          const test = (vals: string[] | undefined): Tri => (vals === undefined ? undefined : vals.some((x) => (exact ? x === f.value : foldValue(x) === foldValue(f.value))));\n   565          if (f.attr) {\n   566            const r = test(this.values(e, f.attr));\n   567            if (r || !f.dn) return r;\n   568          } else if (!f.dn) {\n   569            return or3([...e.attrs.keys()].map((k) => test(e.attrs.get(k)!.values)));\n   570          }\n\nTest file style (intent/blocks/ldap/ldap.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Directory, LdapError, RC, parseDn, normalizeDn, dnEquals, escapeDnValue, formatDn, parentDn, isUnder, parseFilter, formatFilter, escapeFilterValue, filterTemplate, hashPassword, verifyPassword, mapEntry, MappingError, resolveGroups, planUserSync, SyncRefused } from './index.ts';\n\nconst mk = (o: Partial<ConstructorParameters<typeof Directory>[0]> = {}) => {\n  const d = new Directory({ suffixes: ['dc=ex,dc=com'], ...o });\n  d.add('dc=ex,dc=com', { objectClass: 'domain', dc: 'ex' });\n  d.add('ou=people,dc=ex,dc=com', { objectClass: 'organizationalUnit', ou: 'people' });\n  d.add('ou=groups,dc=ex,dc=com', { objectClass: 'organizationalUnit', ou: 'groups' });\n  return d;\n};\nconst person = (d: Directory, uid: string, extra: Record<string, string | string[]> = {}) =>\n  d.add(`uid=${uid},ou=people,dc=ex,dc=com`, { objectClass: ['inetOrgPerson', 'person'], uid, cn: uid.toUpperCase(), sn: 'S', mail: `${uid}@ex.com`, ...extra });\n\ntest('DN parsing: escapes, hex pairs, multi-valued, errors', () => {\n  const r = parseDn('CN=Smith\\\\, John+uid=js,OU=A\\\\2BB,dc=ex');\n  assert.equal(r.length, 3);\n  assert.deepEqual(r[0]!.map((a) => a.value), ['Smith, John', 'js']);\n  assert.equal(r[1]![0]!.value, 'A+B');\n  assert.deepEqual(parseDn(''), []);\n  assert.equal(parseDn('cn=\\\\C3\\\\A9')[0]![0]!.value, 'é');\n  assert.equal(parseDn('cn=#0402AB')[0]![0]!.hex, true);\n  for (const b of ['cn', 'cn=a,', 'cn=a<b', '=a', 'cn=\\\\zz', 'cn=\\\\C3', 'cn=#abc']) assert.throws(() => parseDn(b), (e: unknown) => e instanceof LdapError && e.code === RC.invalidDNSyntax, b);\n  assert.throws(() => parseDn('cn=' + 'a'.repeat(3000)));\n});\n\ntest('DN normalisation and comparison', () => {\n  assert.ok(dnEquals('CN=Ana  Lee, OU=People ,DC=Ex', 'cn=ana lee,ou=people,dc=ex'));\n  assert.ok(dnEquals('cn=a+uid=b,dc=x', 'uid=B+cn=A,dc=x'));\n  assert.ok(!dnEquals('cn=a,dc=x', 'cn=a,dc=y'));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ldap-1075.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:46.516Z"
+}

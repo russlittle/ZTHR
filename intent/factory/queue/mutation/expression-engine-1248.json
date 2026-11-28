@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "expression-engine",
+  "mutant": {
+    "id": "1248",
+    "line": 512,
+    "column": 50,
+    "endLine": 512,
+    "endColumn": 94,
+    "mutator": "StringLiteral",
+    "original": "'a function returned data nested too deeply'",
+    "replacement": "\"\"",
+    "lineText": "if (depth > 20) throw new ExpressionLimitError('a function returned data nested too deeply');",
+    "prevText": "function sanitize(v: unknown, rt: Runtime, depth: number): unknown {",
+    "nextText": "if (v === undefined || v === null || typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return v;"
+  },
+  "mayEdit": [
+    "intent/blocks/expression-engine/expression-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1248.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"expression-engine\". Mutant: line 512:50-512:94, mutator StringLiteral: \"'a function returned data nested too deeply'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/expression-engine/index.ts (> marks the mutated line):\n   506    if (rt.o.strict) throw err(`${name} is not defined (at position ${at})`);\n   507    return undefined;\n   508  }\n   509  \n   510  /** Results of caller-supplied functions must be plain data; anything else is refused. */\n   511  function sanitize(v: unknown, rt: Runtime, depth: number): unknown {\n>  512    if (depth > 20) throw new ExpressionLimitError('a function returned data nested too deeply');\n   513    if (v === undefined || v === null || typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') return v;\n   514    if (Array.isArray(v)) { rt.alloc(v.length); return v.map((x) => sanitize(x, rt, depth + 1)); }\n   515    if (typeof v === 'object' && isPlain(v)) { const o: Record<string, unknown> = {}; for (const [k, x] of Object.entries(v)) { if (BAD_KEYS.has(k)) continue; rt.alloc(1); Object.defineProperty(o, k, { value: sanitize(x, rt, depth + 1), enumerable: true, writable: true, configurable: true }); } return o; }\n   516    throw new ExpressionForbidden('a function returned something that is not plain data');\n   517  }\n   518  \n\nTest file style (intent/blocks/expression-engine/expression-engine.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  compile, evaluate, references, render, resolve, resolveDeep, compileTemplate,\n  ExpressionSyntaxError, ExpressionRuntimeError, ExpressionLimitError, ExpressionForbidden,\n} from './index.ts';\n\nconst ev = (s: string, ctx: unknown = {}) => evaluate(s, ctx);\n\ntest('arithmetic and precedence', () => {\n  assert.equal(ev('1 + 2 * 3'), 7);\n  assert.equal(ev('(1 + 2) * 3'), 9);\n  assert.equal(ev('2 ** 3 ** 2'), 512);\n  assert.equal(ev('10 % 4'), 2);\n  assert.equal(ev('-3 + 5'), 2);\n});\n\ntest('strings, concatenation and comparison', () => {\n  assert.equal(ev('\"a\" + \"b\" + 1'), 'ab1');\n  assert.equal(ev('\"abc\" < \"abd\"'), true);\n  assert.equal(ev('1 === 1 && 2 !== 3'), true);\n});\n\ntest('logic operators return operands', () => {\n  assert.equal(ev('0 || \"x\"'), 'x');\n  assert.equal(ev('\"a\" && \"b\"'), 'b');\n  assert.equal(ev('null ?? 5'), 5);\n  assert.equal(ev('0 ?? 5'), 0);\n  assert.equal(ev('true ? 1 : 2'), 1);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1248.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.832Z"
+}

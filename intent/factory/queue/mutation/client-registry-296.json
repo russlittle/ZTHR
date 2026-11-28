@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "client-registry",
+  "mutant": {
+    "id": "296",
+    "line": 282,
+    "column": 65,
+    "endLine": 282,
+    "endColumn": 107,
+    "mutator": "Regex",
+    "original": "/^(client_id|client_secret|registration_)/",
+    "replacement": "/(client_id|client_secret|registration_)/",
+    "lineText": "for (const k of Object.keys(m)) if (!KNOWN_FIELDS.has(k) && /^(client_id|client_secret|registration_)/.test(k)) throw metaError(`${k} is set by the server`);",
+    "prevText": "// Unknown members are ignored, as RFC 7591 section 2 asks of a server, but never copied onto the record.",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/client-registry/client-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-296.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"client-registry\". Mutant: line 282:65-282:107, mutator Regex: \"/^(client_id|client_secret|registration_)/\" becomes \"/(client_id|client_secret|registration_)/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/client-registry/index.ts (> marks the mutated line):\n   276    register(metadata: unknown, initialAccessTokenOk = false): RegistrationResponse {\n   277      if (!this.policy.openRegistration && !initialAccessTokenOk) throw new ClientError('forbidden', 'registration needs an initial access token');\n   278      if (typeof metadata !== 'object' || metadata === null || Array.isArray(metadata)) throw metaError('the metadata must be a JSON object');\n   279      const m = metadata as Record<string, unknown>;\n   280      if (m.software_statement !== undefined) throw new ClientError('invalid_software_statement', 'software statements are not accepted here');\n   281      // Unknown members are ignored, as RFC 7591 section 2 asks of a server, but never copied onto the record.\n>  282      for (const k of Object.keys(m)) if (!KNOWN_FIELDS.has(k) && /^(client_id|client_secret|registration_)/.test(k)) throw metaError(`${k} is set by the server`);\n   283  \n   284      const applicationType = (m.application_type ?? 'web') as unknown;\n   285      if (applicationType !== 'web' && applicationType !== 'native') throw metaError('application_type must be web or native');\n   286      const authMethod = (m.token_endpoint_auth_method ?? 'client_secret_basic') as unknown;\n   287      if (typeof authMethod !== 'string' || !AUTH_METHODS.includes(authMethod)) throw metaError(`token_endpoint_auth_method must be one of ${AUTH_METHODS.join(', ')}`);\n   288  \n\nTest file style (intent/blocks/client-registry/client-registry.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ClientError, ClientRegistry, checkRedirectUri, matchRedirectUri, parseBasicAuthorization } from './index.ts';\n\n/** Deterministic randomness: each call yields bytes counting up from a seed. */\nfunction counter() {\n  let n = 0;\n  return (len: number) => {\n    n += 1;\n    return Uint8Array.from({ length: len }, (_, i) => (n * 31 + i) & 0xff);\n  };\n}\nconst make = (o: { t?: { v: number }; policy?: object } = {}) => {\n  const t = o.t ?? { v: 1_800_000_000_000 };\n  return { t, reg: new ClientRegistry({ now: () => t.v, randomBytes: counter(), registrationEndpoint: 'https://as.example.org/register', ...(o.policy ? { policy: o.policy } : {}) }) };\n};\nconst code = (fn: () => unknown) => {\n  try {\n    fn();\n  } catch (e) {\n    assert.ok(e instanceof ClientError, String(e));\n    return e.code;\n  }\n  assert.fail('expected a ClientError');\n};\n\ntest('redirect URIs match exactly: no prefix, case, trailing-slash or query-parameter leniency', () => {\n  const reg = ['https://app.example.org/cb', 'https://app.example.org/cb2?x=1'];\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb'), true);\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb/'), false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-296.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.267Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "formula-engine",
+  "mutant": {
+    "id": "1980",
+    "line": 669,
+    "column": 74,
+    "endLine": 669,
+    "endColumn": 79,
+    "mutator": "ConditionalExpression",
+    "original": "n < 1",
+    "replacement": "false",
+    "lineText": "def('CHAR', 1, 1, ([a]) => { const n = num1(a!); return isError(n) ? n : n < 1 || n > 255 ? E.value : String.fromCharCode(Math.floor(n)); });",
+    "prevText": "def('TEXTJOIN', 3, 255, ([d, skip, ...rest]) => { const sep = str1(d!); const sk = toBool(first(skip!)); if (isError(sep)) return sep; if (isError(sk)) return sk; const parts: string[] = []; for (const x of rest) for (const v of flat(x)) { const t = toStr(v); if (isError(t)) return t; if (t === '' && sk) continue; parts.push(t); } return parts.join(sep); });",
+    "nextText": "def('CODE', 1, 1, ([a]) => { const s = str1(a!); return isError(s) ? s : s === '' ? E.value : s.charCodeAt(0); });"
+  },
+  "mayEdit": [
+    "intent/blocks/formula-engine/formula-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/formula-engine-1980.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"formula-engine\". Mutant: line 669:74-669:79, mutator ConditionalExpression: \"n < 1\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/formula-engine/index.ts (> marks the mutated line):\n   663  finder('SEARCH', true);\n   664  def('REPT', 2, 2, ([a, n]) => { const s = str1(a!); const k = num1(n!); if (isError(s)) return s; if (isError(k)) return k; return k < 0 || s.length * k > 32767 ? E.value : s.repeat(Math.floor(k)); });\n   665  def('EXACT', 2, 2, ([a, b]) => { const x = str1(a!); const y = str1(b!); return isError(x) ? x : isError(y) ? y : x === y; });\n   666  def('VALUE', 1, 1, ([a]) => { const v = first(a!); return typeof v === 'string' && v.trim() === '' ? E.value : toNum(v); });\n   667  def('TEXT', 2, 2, ([a, f]) => { const n = num1(a!); const fmt = str1(f!); if (isError(fmt)) return fmt; if (isError(n)) return n; return formatText(n, fmt); });\n   668  def('TEXTJOIN', 3, 255, ([d, skip, ...rest]) => { const sep = str1(d!); const sk = toBool(first(skip!)); if (isError(sep)) return sep; if (isError(sk)) return sk; const parts: string[] = []; for (const x of rest) for (const v of flat(x)) { const t = toStr(v); if (isError(t)) return t; if (t === '' && sk) continue; parts.push(t); } return parts.join(sep); });\n>  669  def('CHAR', 1, 1, ([a]) => { const n = num1(a!); return isError(n) ? n : n < 1 || n > 255 ? E.value : String.fromCharCode(Math.floor(n)); });\n   670  def('CODE', 1, 1, ([a]) => { const s = str1(a!); return isError(s) ? s : s === '' ? E.value : s.charCodeAt(0); });\n   671  \n   672  // ---- lookup\n   673  def('ROW', 0, 1, ([a], c) => (a === undefined ? c.cell?.row ?? E.value : E.value));\n   674  def('COLUMN', 0, 1, ([a], c) => (a === undefined ? c.cell?.col ?? E.value : E.value));\n   675  def('ROWS', 1, 1, ([a]) => gridOf(a!).length);\n\nTest file style (intent/blocks/formula-engine/formula-engine.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { calc, colName, colNumber, compare, dateOf, display, formatText, FormulaError, FormulaSyntaxError, FUNCTIONS, fromTyped, isError, parse, parseRef, serialOf, Workbook, type Scalar } from './index.ts';\n\nconst clock = { now: () => new Date('2026-03-09T15:30:00Z'), random: () => 0.25 };\nconst c = (f: string, cells: Record<string, Scalar> = {}) => {\n  const v = calc(f, cells, { clock });\n  return isError(v) ? v.code : v;\n};\n\ntest('operators follow Excel precedence and associativity', () => {\n  assert.equal(c('=-2^2'), 4, 'unary minus binds tighter than ^');\n  assert.equal(c('=2^3^2'), 64, '^ is left to right');\n  assert.equal(c('=2+3*4'), 14);\n  assert.equal(c('=(2+3)*4'), 20);\n  assert.equal(c('=7-2-1'), 4);\n  assert.equal(c('=10/4'), 2.5);\n  assert.equal(c('=50%'), 0.5);\n  assert.equal(c('=200*10%'), 20);\n  assert.equal(c('=2^-1'), 0.5);\n  assert.equal(c('=\"a\"&\"b\"&1'), 'ab1');\n  assert.equal(c('=1+2&\"x\"'), '3x', '+ before &');\n  assert.equal(c('=1+1=2'), true, 'comparison last');\n  assert.equal(c('= 1 + 2 '), 3, 'spaces are ignored');\n  assert.equal(c('=1.5e2+.5'), 150.5);\n  assert.equal(c('=\"say \"\"hi\"\"\"'), 'say \"hi\"');\n});\n\ntest('errors are values that travel, and IFERROR catches them', () => {\n  assert.equal(c('=1/0'), '#DIV/0!');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/formula-engine-1980.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.591Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "options-store",
+  "mutant": {
+    "id": "49",
+    "line": 119,
+    "column": 119,
+    "endLine": 119,
+    "endColumn": 140,
+    "mutator": "ConditionalExpression",
+    "original": "meta.by !== undefined",
+    "replacement": "true",
+    "lineText": "const next: Stored = { value: structuredClone(value), version: (cur?.version ?? 0) + 1, updatedAt: meta.at, ...(meta.by !== undefined ? { updatedBy: meta.by } : {}) };",
+    "prevText": "if (typeof expected === 'number' && cur?.version !== expected) throw new VersionConflict(key, scope);",
+    "nextText": "data.set(k(scope, key), next);"
+  },
+  "mayEdit": [
+    "intent/blocks/options-store/options-store.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/options-store-49.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"options-store\". Mutant: line 119:119-119:140, mutator ConditionalExpression: \"meta.by !== undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/options-store/index.ts (> marks the mutated line):\n   113        return out;\n   114      },\n   115      async write(scope, key, value, expected, meta) {\n   116        const cur = data.get(k(scope, key));\n   117        if (expected === null && cur) throw new VersionConflict(key, scope);\n   118        if (typeof expected === 'number' && cur?.version !== expected) throw new VersionConflict(key, scope);\n>  119        const next: Stored = { value: structuredClone(value), version: (cur?.version ?? 0) + 1, updatedAt: meta.at, ...(meta.by !== undefined ? { updatedBy: meta.by } : {}) };\n   120        data.set(k(scope, key), next);\n   121        return { ...next, value: structuredClone(next.value) };\n   122      },\n   123      async remove(scope, key) {\n   124        return data.delete(k(scope, key));\n   125      },\n\nTest file style (intent/blocks/options-store/options-store.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { InvalidValue, memoryBackend, NotLoaded, OptionsStore, ScopeNotAllowed, UnknownOption, VersionConflict, scopeKind } from './index.ts';\nimport type { Backend, Change, OptionDef } from './index.ts';\n\nconst defs: OptionDef[] = [\n  { key: 'site.title', type: 'string', default: 'Untitled', autoload: true, maxLength: 20 },\n  { key: 'posts.per_page', type: 'integer', default: 10, min: 1, max: 100, scopes: ['site', 'tenant'] },\n  { key: 'ui.theme', type: 'enum', default: 'light', values: ['light', 'dark'], autoload: true, scopes: ['site', 'tenant', 'user'] },\n  { key: 'mail.enabled', type: 'boolean', default: false, scopes: ['site', 'tenant'] },\n  { key: 'tax.rate', type: 'number', default: 0.2, min: 0, max: 1, scopes: ['site', 'tenant'] },\n  { key: 'menu.links', type: 'json', default: [], scopes: ['site'] },\n  { key: 'smtp.token', type: 'string', default: '', secret: true },\n  { key: 'site.slogan', type: 'string', default: '', validate: (v) => (typeof v === 'string' && /<script/i.test(v) ? 'no scripts in the slogan' : null) },\n];\nconst make = (backend: Backend = memoryBackend(), now = () => 1_000) => ({ store: new OptionsStore(defs, { backend, now }), backend });\n\ntest('an option nobody set answers with its default and says so', async () => {\n  const { store } = make();\n  assert.deepEqual(await store.resolve('posts.per_page'), { value: 10, source: 'default' });\n  assert.equal(await store.get('site.title'), 'Untitled');\n  assert.deepEqual(await store.get('menu.links'), []);\n});\n\ntest('scopes: the most specific scope that has a value wins, and each falls back to the next', async () => {\n  const { store } = make();\n  await store.set('ui.theme', 'site', 'dark');\n  assert.deepEqual(await store.resolve('ui.theme', ['user:7', 'tenant:acme', 'site']), { value: 'dark', source: 'site', version: 1 });\n  await store.set('ui.theme', 'tenant:acme', 'light');\n  assert.equal((await store.resolve('ui.theme', ['user:7', 'tenant:acme', 'site'])).source, 'tenant:acme');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/options-store-49.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:52.821Z"
+}

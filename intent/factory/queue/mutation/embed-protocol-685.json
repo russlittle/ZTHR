@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "embed-protocol",
+  "mutant": {
+    "id": "685",
+    "line": 262,
+    "column": 45,
+    "endLine": 262,
+    "endColumn": 57,
+    "mutator": "StringLiteral",
+    "original": "'connecting'",
+    "replacement": "\"\"",
+    "lineText": "state: 'connecting' | 'open' | 'closed' = 'connecting';",
+    "prevText": "channel: string | undefined;",
+    "nextText": "readonly refused: string[] = [];"
+  },
+  "mayEdit": [
+    "intent/blocks/embed-protocol/embed-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/embed-protocol-685.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"embed-protocol\". Mutant: line 262:45-262:57, mutator StringLiteral: \"'connecting'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/embed-protocol/index.ts (> marks the mutated line):\n   256   * One end of an embed connection. The frame sends `ready`; the page answers `init` with a fresh channel id; from\n   257   * then on every message must carry that channel and a higher sequence number than the last. A page that\n   258   * reloads the frame gets a new `ready` and re-initialises with a new channel, ending the old one.\n   259   */\n   260  export class Endpoint {\n   261    channel: string | undefined;\n>  262    state: 'connecting' | 'open' | 'closed' = 'connecting';\n   263    readonly refused: string[] = [];\n   264    private seqOut = 0;\n   265    private seqIn = 0;\n   266    private readonly o: EndpointOptions;\n   267    private readonly peerRole: Role;\n   268    private readonly origin: string;\n\nTest file style (intent/blocks/embed-protocol/embed-protocol.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  checkEmbedRequest, embeddableHeaders, embedUrl, Endpoint, EmbedRefused, frameCookie, hostPageNeeds, normalizeOrigin, originAllowed, parseMessage, pickHostOrigin, popupFeatures, ResizeController, snippet,\n  type Envelope, type Incoming,\n} from './index.ts';\n\nconst HOST = 'https://shop.example.com';\nconst FRAME = 'https://app.example.org';\n\n/** Two endpoints wired through fake windows; messages are queued so tests control delivery. */\nfunction pair() {\n  const hostWin = { name: 'host-window' };\n  const frameWin = { name: 'frame-window' };\n  const toHost: { m: Envelope; target: string }[] = [];\n  const toFrame: { m: Envelope; target: string }[] = [];\n  let n = 0;\n  const random = (len: number) => `chan${String(++n).padStart(len - 4, '0')}`;\n  const host = new Endpoint({ role: 'host', peerOrigin: FRAME, peerWindow: frameWin, post: (m, t) => toFrame.push({ m, target: t }), random });\n  const frame = new Endpoint({ role: 'frame', peerOrigin: HOST, peerWindow: hostWin, post: (m, t) => toHost.push({ m, target: t }), random });\n  const atHost = (m: unknown): Incoming => ({ origin: FRAME, source: frameWin, data: m });\n  const atFrame = (m: unknown): Incoming => ({ origin: HOST, source: hostWin, data: m });\n  return { host, frame, toHost, toFrame, atHost, atFrame, hostWin, frameWin };\n}\nfunction opened() {\n  const p = pair();\n  const ready = p.frame.send('ready');\n  p.host.receive(p.atHost(ready));\n  const init = p.host.send('init', { theme: 'dark' });\n  p.frame.receive(p.atFrame(init));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/embed-protocol-685.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.560Z"
+}

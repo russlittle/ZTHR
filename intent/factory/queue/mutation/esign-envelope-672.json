@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "esign-envelope",
+  "mutant": {
+    "id": "672",
+    "line": 426,
+    "column": 107,
+    "endLine": 426,
+    "endColumn": 117,
+    "mutator": "StringLiteral",
+    "original": "'declined'",
+    "replacement": "\"\"",
+    "lineText": "const canSign = this.state === 'sent' && s.role !== 'viewer' && s.status !== 'signed' && s.status !== 'declined' && !waiting.length;",
+    "prevText": "}",
+    "nextText": "const note = this.state !== 'sent' ? `this envelope is ${this.state}` : waiting.length ? `waiting for ${waiting.join(', ')}` : s.status === 'signed' ? 'you have already signed' : undefined;"
+  },
+  "mayEdit": [
+    "intent/blocks/esign-envelope/esign-envelope.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/esign-envelope-672.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"esign-envelope\". Mutant: line 426:107-426:117, mutator StringLiteral: \"'declined'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/esign-envelope/index.ts (> marks the mutated line):\n   420        if (ctx.ip) s.evidence.viewIp = ctx.ip;\n   421        if (ctx.agent) s.evidence.viewAgent = ctx.agent.slice(0, 300);\n   422        s.evidence.auth = auth;\n   423        if (s.status === 'notified') s.status = 'viewed';\n   424        this.log(s.email, 'viewed', ctx.ip ?? '');\n   425      }\n>  426      const canSign = this.state === 'sent' && s.role !== 'viewer' && s.status !== 'signed' && s.status !== 'declined' && !waiting.length;\n   427      const note = this.state !== 'sent' ? `this envelope is ${this.state}` : waiting.length ? `waiting for ${waiting.join(', ')}` : s.status === 'signed' ? 'you have already signed' : undefined;\n   428      return { signer: { id: s.id, name: s.name, email: s.email, role: s.role, order: s.order }, state: this.state, canSign, waitingFor: waiting, fields: this.fields.filter((f) => f.signer === s.id), documents: [...this.docs], ...(note ? { note } : {}) };\n   429    }\n   430  \n   431    private waitingFor(s: SignerRec): string[] {\n   432      return this.signers.filter((x) => x.order < s.order && !this.done(x)).map((x) => x.name);\n\nTest file style (intent/blocks/esign-envelope/esign-envelope.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { test } from 'node:test';\nimport { sign as signLink } from '../crypto/index.ts';\nimport { pdf } from '../pdf/index.ts';\nimport { readForm } from '../pdf-forms/index.ts';\nimport { Envelope, EnvelopeError } from './index.ts';\nimport type { Certificate, FieldSpec, Message } from './index.ts';\n\nconst T0 = Date.UTC(2026, 2, 2, 9, 0, 0);\nconst HOUR = 3_600_000;\nconst SECRET = createHash('sha256').update('esign-envelope test key 1').digest('hex');\n\nfunction clock() {\n  const c = { t: T0 };\n  return { c, now: () => c.t };\n}\n\nfunction make(opts: { days?: number } = {}) {\n  const { c, now } = clock();\n  let n = 0;\n  const env = new Envelope({ now, secret: SECRET, baseUrl: 'https://sign.example.com', ids: () => `env${++n}` }, { subject: 'Services agreement', sender: { name: 'Sam Ortiz', email: 'Sam@Example.com' }, ...(opts.days ? { expiresInDays: opts.days } : {}) });\n  return { env, c };\n}\n\nconst DOC = pdf([{ h: 'Services agreement' }, { p: 'The supplier will deliver the services described.' }, { p: 'Signed by both parties.' }], { title: 'Agreement', size: 'Letter' });\nconst sha = (b: Uint8Array) => createHash('sha256').update(b).digest('hex');\nconst place = { x: 72, y: 600, width: 200, height: 30 };\nconst sigField = (id: string, signer: string, over: Partial<FieldSpec> = {}): FieldSpec => ({ id, signer, document: 'd1', page: 0, at: place, kind: 'signature', ...over });\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/esign-envelope-672.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.057Z"
+}

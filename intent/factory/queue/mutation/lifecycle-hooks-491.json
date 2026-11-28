@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "lifecycle-hooks",
+  "mutant": {
+    "id": "491",
+    "line": 473,
+    "column": 77,
+    "endLine": 473,
+    "endColumn": 83,
+    "mutator": "StringLiteral",
+    "original": "'hook'",
+    "replacement": "\"\"",
+    "lineText": "this.write({ opId, op, collection, recordId: idLater, kind: 'hook', point: afterPoint, hookId: h.id, ...(h.owner ? { owner: h.owner } : {}), outcome, durationMs: this.o.now() - t0, ...(message === undefined ? {} : { message }), ...actor });",
+    "prevText": "const rec = (outcome: AuditEntry['outcome'], message?: string) =>",
+    "nextText": "try {"
+  },
+  "mayEdit": [
+    "intent/blocks/lifecycle-hooks/lifecycle-hooks.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/lifecycle-hooks-491.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"lifecycle-hooks\". Mutant: line 473:77-473:83, mutator StringLiteral: \"'hook'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/lifecycle-hooks/index.ts (> marks the mutated line):\n   467                  after: written === undefined ? undefined : structuredClone(written),\n   468                  actor: options.actor, depth, phase: 'after-commit',\n   469                  reject(): never { throw new LifecycleError('an after hook cannot reject: the change is already saved'); },\n   470                  service: this.serviceFor(undefined, depth),\n   471                };\n   472                const rec = (outcome: AuditEntry['outcome'], message?: string) =>\n>  473                  this.write({ opId, op, collection, recordId: idLater, kind: 'hook', point: afterPoint, hookId: h.id, ...(h.owner ? { owner: h.owner } : {}), outcome, durationMs: this.o.now() - t0, ...(message === undefined ? {} : { message }), ...actor });\n   474                try {\n   475                  await h.handler(ctx);\n   476                  rec('ok');\n   477                } catch (err) {\n   478                  rec('ok-after-failure', err instanceof Error ? err.message : String(err));\n   479                }\n\nTest file style (intent/blocks/lifecycle-hooks/lifecycle-hooks.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { DepthExceeded, HookFailed, Lifecycle, MemoryStore, NotFound, OperationRejected, POINTS } from './index.ts';\nimport type { AuditEntry } from './index.ts';\n\nfunction setup(extra: { maxDepth?: number; protectedFields?: string[] } = {}) {\n  const store = new MemoryStore();\n  let clock = 1000;\n  let n = 0;\n  const lc = new Lifecycle({ store, now: () => clock++, newId: () => `r${++n}`, ...extra });\n  return { store, lc, tick: (ms: number) => (clock += ms) };\n}\n\ntest('create, update and delete work with no hooks, and stamp the ids and times', async () => {\n  const { lc, store } = setup();\n  const a = await lc.service.create('post', { title: 'Hi' });\n  assert.equal(a['id'], 'r1');\n  assert.equal(a['title'], 'Hi');\n  assert.equal(typeof a['createdAt'], 'number');\n  assert.deepEqual(store.get('post', 'r1'), a);\n  const b = await lc.service.update('post', 'r1', { title: 'Hello', draft: true });\n  assert.equal(b['title'], 'Hello');\n  assert.equal(b['createdAt'], a['createdAt']);\n  assert.ok((b['updatedAt'] as number) > (a['updatedAt'] as number));\n  const gone = await lc.service.delete('post', 'r1');\n  assert.equal(gone['title'], 'Hello');\n  assert.equal(store.get('post', 'r1'), undefined);\n  await assert.rejects(lc.service.update('post', 'r1', {}), NotFound);\n  await assert.rejects(lc.service.delete('post', 'nope'), NotFound);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/lifecycle-hooks-491.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:46.888Z"
+}

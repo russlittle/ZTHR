@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "fuzzy-match",
+  "mutant": {
+    "id": "296",
+    "line": 150,
+    "column": 10,
+    "endLine": 150,
+    "endColumn": 31,
+    "mutator": "LogicalOperator",
+    "original": "p < 4 && p < x.length",
+    "replacement": "p < 4 || p < x.length",
+    "lineText": "while (p < 4 && p < x.length && p < y.length && x[p] === y[p]) p++;",
+    "prevText": "let p = 0;",
+    "nextText": "return j + p * scale * (1 - j);"
+  },
+  "mayEdit": [
+    "intent/blocks/fuzzy-match/fuzzy-match.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/fuzzy-match-296.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"fuzzy-match\". Mutant: line 150:10-150:31, mutator LogicalOperator: \"p < 4 && p < x.length\" becomes \"p < 4 || p < x.length\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/fuzzy-match/index.ts (> marks the mutated line):\n   144  /** Jaro with a bonus for a shared start (up to four characters, scaling 0.1), good for names. */\n   145  export function jaroWinkler(a: string, b: string, scale = 0.1): number {\n   146    const j = jaro(a, b);\n   147    const x = chars(a);\n   148    const y = chars(b);\n   149    let p = 0;\n>  150    while (p < 4 && p < x.length && p < y.length && x[p] === y[p]) p++;\n   151    return j + p * scale * (1 - j);\n   152  }\n   153  \n   154  // ---------------------------------------------------------------- trigrams\n   155  \n   156  /** The trigrams of a text as pg_trgm makes them: per word, two spaces before and one after. */\n\nTest file style (intent/blocks/fuzzy-match/fuzzy-match.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { TooLong, TrigramIndex, allowedEdits, damerauLevenshtein, jaro, jaroWinkler, levenshtein, metaphone, normalise, osa, similarity, soundex, suggest, tokenSet, tokenSort, trigramSimilarity, trigrams } from './index.ts';\n\nconst close = (a: number, b: number, eps = 0.0001) => assert.ok(Math.abs(a - b) < eps, `${a} is not within ${eps} of ${b}`);\n\ntest('Levenshtein: the textbook cases', () => {\n  assert.equal(levenshtein('kitten', 'sitting'), 3);\n  assert.equal(levenshtein('flaw', 'lawn'), 2);\n  assert.equal(levenshtein('', 'abc'), 3);\n  assert.equal(levenshtein('abc', ''), 3);\n  assert.equal(levenshtein('same', 'same'), 0);\n  assert.equal(levenshtein('Saturday', 'Sunday'), 3);\n  assert.equal(levenshtein('😀a', '😀b'), 1, 'counts characters, not code units');\n});\n\ntest('Levenshtein with a cut-off stops early and reports \"more than max\"', () => {\n  assert.equal(levenshtein('kitten', 'sitting', 3), 3);\n  assert.equal(levenshtein('kitten', 'sitting', 2), 3);\n  assert.equal(levenshtein('abcdef', 'uvwxyz', 1), 2);\n  assert.equal(levenshtein('a', 'abcdefgh', 2), 3);\n});\n\ntest('the transposition cases that separate OSA from true Damerau-Levenshtein', () => {\n  assert.equal(levenshtein('ca', 'abc'), 3);\n  assert.equal(osa('ca', 'abc'), 3);\n  assert.equal(damerauLevenshtein('ca', 'abc'), 2);\n  assert.equal(damerauLevenshtein('teh', 'the'), 1);\n  assert.equal(osa('teh', 'the'), 1);\n  assert.equal(damerauLevenshtein('abcd', 'acbd'), 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/fuzzy-match-296.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.821Z"
+}

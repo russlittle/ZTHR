@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "tasks",
+  "mutant": {
+    "id": "624",
+    "line": 478,
+    "column": 23,
+    "endLine": 478,
+    "endColumn": 66,
+    "mutator": "StringLiteral",
+    "original": "`${done ? 'ticked' : 'unticked'} ${itemId}`",
+    "replacement": "``",
+    "lineText": "this.note(by, id, `${done ? 'ticked' : 'unticked'} ${itemId}`);",
+    "prevText": "t.updatedAt = this.now();",
+    "nextText": "return item;"
+  },
+  "mayEdit": [
+    "intent/blocks/tasks/tasks.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/tasks-624.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"tasks\". Mutant: line 478:23-478:66, mutator StringLiteral: \"`${done ? 'ticked' : 'unticked'} ${itemId}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/tasks/index.ts (> marks the mutated line):\n   472    tick(id: string, itemId: string, done: boolean, by: string): ChecklistItem {\n   473      const t = this.must(id);\n   474      const item = t.checklist.find((c) => c.id === itemId);\n   475      if (!item) throw new TaskError(`no checklist item ${itemId}`);\n   476      item.done = done;\n   477      t.updatedAt = this.now();\n>  478      this.note(by, id, `${done ? 'ticked' : 'unticked'} ${itemId}`);\n   479      return item;\n   480    }\n   481  \n   482    /** Done and total counts through subtasks (each leaf counts once, cancelled ones not at all) and checklists. */\n   483    progress(id: string): { done: number; total: number; percent: number } {\n   484      const t = this.must(id);\n\nTest file style (intent/blocks/tasks/tasks.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { TaskError, Tasks, rankBetween } from './index.ts';\n\nconst H = 3_600_000;\nconst D = 24 * H;\nfunction mk(start = Date.UTC(2026, 0, 5, 12, 0)) {\n  let t = start;\n  const s = new Tasks({ now: () => t });\n  return { s, at: (ms: number) => void (t = ms), now: () => t };\n}\n\ntest('a task is created with trimmed, normalised fields and recorded in the log', () => {\n  const { s } = mk();\n  const t = s.create({ title: '  Write the report  ', labels: ['Q1 Plan', 'q1  plan', 'Urgent'], assignees: ['ana', 'ana', 'bo'], priority: 'high', checklist: ['draft', 'review'] }, 'ana');\n  assert.equal(t.title, 'Write the report');\n  assert.deepEqual(t.labels, ['q1-plan', 'urgent']);\n  assert.deepEqual(t.assignees, ['ana', 'bo']);\n  assert.deepEqual(t.checklist.map((c) => c.id), ['c1', 'c2']);\n  assert.equal(t.status, 'todo');\n  assert.deepEqual(s.log.map((l) => l.what), ['created']);\n  assert.throws(() => s.create({ title: '   ' }, 'x'), /1 to 500/);\n  assert.throws(() => s.create({ title: 'x', priority: 'huge' as 'low' }, 'x'), /priority must be one of/);\n  assert.throws(() => s.create({ title: 'x', start: 10, due: 5 }, 'x'), /start is after the due/);\n  assert.throws(() => s.create({ title: 'x', reminders: [-1] }, 'x'), /reminder is 0 to 366 days/);\n  assert.throws(() => s.create({ title: 'x', recurrence: { rule: 'FREQ=DAILY', tz: 'UTC', mode: 'fixed' } }, 'x'), /needs a due date/);\n  assert.throws(() => s.create({ title: 'x', due: 1, recurrence: { rule: 'FREQ=SECONDLY', tz: 'UTC', mode: 'fixed' } }, 'x'), /recurrence is not valid/);\n  assert.throws(() => s.create({ title: 'x', due: 1, recurrence: { rule: 'FREQ=DAILY', tz: 'Not/AZone', mode: 'fixed' } }, 'x'), /recurrence is not valid/);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/tasks-624.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:07.661Z"
+}

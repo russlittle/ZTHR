@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "vcard",
+  "mutant": {
+    "id": "546",
+    "line": 314,
+    "column": 127,
+    "endLine": 314,
+    "endColumn": 135,
+    "mutator": "StringLiteral",
+    "original": "'latin1'",
+    "replacement": "\"\"",
+    "lineText": "bytes = /;base64/i.test(m[2]!) ? Buffer.from(m[3]!.replace(/\\s/g, ''), 'base64') : Buffer.from(decodeURIComponent(m[3]!), 'latin1');",
+    "prevText": "claimed = m[1] || claimed;",
+    "nextText": "} else if (enc === 'b' || enc === 'base64') bytes = Buffer.from(v.replace(/\\s/g, ''), 'base64');"
+  },
+  "mayEdit": [
+    "intent/blocks/vcard/vcard.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/vcard-546.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"vcard\". Mutant: line 314:127-314:135, mutator StringLiteral: \"'latin1'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/vcard/index.ts (> marks the mutated line):\n   308    let bytes: Buffer | undefined;\n   309    let claimed = (p.params['MEDIATYPE']?.[0] ?? (p.params['TYPE']?.[0] ? `image/${p.params['TYPE']![0]!.toLowerCase().replace('jpg', 'jpeg')}` : undefined));\n   310    if (/^data:/i.test(v)) {\n   311      const m = /^data:([^;,]*)((?:;[^;,]*)*),(.*)$/is.exec(v);\n   312      if (!m) throw new VCardError('a PHOTO data URI is malformed');\n   313      claimed = m[1] || claimed;\n>  314      bytes = /;base64/i.test(m[2]!) ? Buffer.from(m[3]!.replace(/\\s/g, ''), 'base64') : Buffer.from(decodeURIComponent(m[3]!), 'latin1');\n   315    } else if (enc === 'b' || enc === 'base64') bytes = Buffer.from(v.replace(/\\s/g, ''), 'base64');\n   316    if (bytes) {\n   317      if (bytes.length > max) throw new VCardError(`a photo of ${bytes.length} bytes is over the ${max} byte limit`);\n   318      const kind = sniff(bytes);\n   319      if (!kind) throw new VCardError('the photo is not a PNG, JPEG, GIF or WebP image');\n   320      const real = `image/${kind}`;\n\nTest file style (intent/blocks/vcard/vcard.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { VCardError, build, convert, hasMember, merge, parse, view, write } from './index.ts';\nimport type { Card } from './index.ts';\n\nconst BS = String.fromCharCode(92);\n// A 1x1 PNG and a 1x1 GIF, as the bytes a phone would attach.\nconst PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');\nconst GIF = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');\n\nconst V3 = [\n  'BEGIN:VCARD',\n  'VERSION:3.0',\n  'FN:Ana María Okafor',\n  'N:Okafor;Ana;María;Dr.;PhD',\n  'NICKNAME:Anita,Ana-M',\n  'ORG:Acme\\\\, Inc.;Research;Lab 2',\n  'TITLE:Chief of Things',\n  'item1.TEL;TYPE=WORK,VOICE,pref:+1 (937) 555-0100',\n  'item1.X-ABLabel:main line',\n  'TEL;TYPE=CELL:937-555-0142',\n  'EMAIL;TYPE=INTERNET,HOME:ana@example.org',\n  'ADR;TYPE=WORK:;;1 Main St' + BS + '; Suite 4;Dayton;OH;45402;USA',\n  'BDAY:1980-02-29',\n  'CATEGORIES:friends,work\\\\, other',\n  'NOTE:Line one' + BS + 'nLine two' + BS + ', with a comma' + BS + '; and a semicolon',\n  'X-CUSTOM-THING;FOO=bar:kept as is',\n  'UID:urn:uuid:11111111-2222-3333-4444-555555555555',\n  'REV:20260101T000000Z',\n  'END:VCARD',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/vcard-546.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:12.834Z"
+}

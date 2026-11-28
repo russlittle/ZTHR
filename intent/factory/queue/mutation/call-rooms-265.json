@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "call-rooms",
+  "mutant": {
+    "id": "265",
+    "line": 196,
+    "column": 39,
+    "endLine": 196,
+    "endColumn": 86,
+    "mutator": "ConditionalExpression",
+    "original": "t - m.requestedAt >= this.config.lobbyTimeoutMs",
+    "replacement": "true",
+    "lineText": "for (const m of this.lobby()) if (t - m.requestedAt >= this.config.lobbyTimeoutMs) { m.status = 'left'; out.push(m.user); this.#log('lobby-timeout', undefined, m.user); }",
+    "prevText": "const out: string[] = [];",
+    "nextText": "return out;"
+  },
+  "mayEdit": [
+    "intent/blocks/call-rooms/call-rooms.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/call-rooms-265.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"call-rooms\". Mutant: line 196:39-196:86, mutator ConditionalExpression: \"t - m.requestedAt >= this.config.lobbyTimeoutMs\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/call-rooms/index.ts (> marks the mutated line):\n   190    }\n   191  \n   192    /** Remove people who have waited longer than the limit. */\n   193    sweep(): string[] {\n   194      const t = this.#now();\n   195      const out: string[] = [];\n>  196      for (const m of this.lobby()) if (t - m.requestedAt >= this.config.lobbyTimeoutMs) { m.status = 'left'; out.push(m.user); this.#log('lobby-timeout', undefined, m.user); }\n   197      return out;\n   198    }\n   199  \n   200    /** The target may be muted by someone above them; the mute is hard (they cannot undo it). */\n   201    mute(by: string, who: string, kinds: { audio?: boolean; video?: boolean } = { audio: true }): void {\n   202      this.#open();\n\nTest file style (intent/blocks/call-rooms/call-rooms.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Signaling, verifyJwt } from '../webrtc-signaling/index.ts';\nimport { NotFound, Room, RoomClosed, joinToken } from './index.ts';\nimport type { Role, RoomConfig } from './index.ts';\n\nconst SECRET = 'call-rooms-0123456';\nconst T0 = 1_800_000_000_000;\n\nconst make = (c: Partial<RoomConfig> = {}) => {\n  let now = T0;\n  const room = new Room({ id: 'standup', title: 'Standup', host: 'hana', ...c }, { secrets: [SECRET], now: () => now });\n  const tok = (user: string, role: Role = 'participant', o: { ttl?: number; room?: string } = {}) => joinToken(SECRET, { room: o.room ?? 'standup', user, name: user.toUpperCase(), role, ttlSeconds: o.ttl ?? 300, now });\n  const join = (user: string, role: Role = 'participant') => room.join(tok(user, role));\n  return { room, tok, join, tick: (ms: number) => void (now += ms) };\n};\n\nconst crowd = (c: Partial<RoomConfig> = {}) => {\n  const r = make({ lobby: 'guests', ...c });\n  r.join('hana', 'host'); r.join('mo', 'moderator'); r.join('pat', 'participant'); r.join('pia', 'participant');\n  return r;\n};\n\ntest('a token carries the room, person and role, expires, and also opens the signalling socket', () => {\n  const { tok } = make();\n  const c = verifyJwt(SECRET, tok('ana'), { now: T0 });\n  assert.deepEqual([c.room, c.sub, c.name, c.role], ['standup', 'ana', 'ANA', 'participant']);\n  assert.equal(c.exp, T0 / 1000 + 300);\n  const sent: string[] = [];\n  const sig = new Signaling({ secrets: [SECRET], now: () => T0 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/call-rooms-265.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.492Z"
+}

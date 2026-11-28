@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "entitlements",
+  "mutant": {
+    "id": "679",
+    "line": 445,
+    "column": 101,
+    "endLine": 445,
+    "endColumn": 157,
+    "mutator": "ConditionalExpression",
+    "original": "this.ledger.used(a.id, l, 'gauge', a.anchorDay, now) > 0",
+    "replacement": "true",
+    "lineText": "for (const [l, v] of Object.entries(cur.limits)) if (!next.limits[l] && v.period === 'gauge' && this.ledger.used(a.id, l, 'gauge', a.anchorDay, now) > 0) out.push(`${l} is in use but not part of ${to}`);",
+    "prevText": "}",
+    "nextText": "return out;"
+  },
+  "mayEdit": [
+    "intent/blocks/entitlements/entitlements.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/entitlements-679.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"entitlements\". Mutant: line 445:101-445:157, mutator ConditionalExpression: \"this.ledger.used(a.id, l, 'gauge', a.anchorDay, now) > 0\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/entitlements/index.ts (> marks the mutated line):\n   439      for (const [f, v] of Object.entries(cur.features)) if (v.enabled && !next.features[f]!.enabled) out.push(`${f} would be switched off`);\n   440      for (const [l, v] of Object.entries(next.limits)) {\n   441        if (v.limit === null) continue;\n   442        const used = this.ledger.used(a.id, l, v.period, a.anchorDay, now);\n   443        if (v.period === 'gauge' && used > v.limit) out.push(`${l} is ${used} but ${to} allows ${v.limit}`);\n   444      }\n>  445      for (const [l, v] of Object.entries(cur.limits)) if (!next.limits[l] && v.period === 'gauge' && this.ledger.used(a.id, l, 'gauge', a.anchorDay, now) > 0) out.push(`${l} is in use but not part of ${to}`);\n   446      return out;\n   447    }\n   448  \n   449    changePlan(a: Account, to: string, now: number, force = false): Account {\n   450      if (!this.catalog.plans[to]) throw new EntitlementError(`there is no plan \"${to}\"`);\n   451      const problems = this.downgradeProblems(a, to, now);\n\nTest file style (intent/blocks/entitlements/entitlements.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Flags } from '../flags/index.ts';\nimport { EntitlementError, Entitlements, Ledger, checkCatalog, flatten, periodOf, resolve } from './index.ts';\nimport type { Account, Catalog } from './index.ts';\n\nconst D = 86_400_000;\nconst at = (s: string) => Date.parse(s);\nconst T = at('2026-03-10T12:00:00Z');\n\nconst catalog: Catalog = {\n  features: ['sso', 'audit-log', 'api', 'beta-editor'],\n  limits: ['seats', 'emails', 'storage', 'exports'],\n  plans: {\n    free: { name: 'free', features: { api: false }, limits: { seats: { included: 3, period: 'gauge' }, emails: { included: 100, period: 'month', overage: { mode: 'block' } }, exports: { included: 5, period: 'day' } } },\n    pro: {\n      name: 'pro',\n      extends: 'free',\n      trialDays: 14,\n      features: { api: true, 'audit-log': true, 'beta-editor': { enabled: true, flag: 'beta-editor' } },\n      limits: { seats: { included: 10, period: 'gauge' }, emails: { included: 1000, period: 'month', overage: { mode: 'charge', price: 200, perUnits: 500, cap: 5000 } }, storage: { included: 50, period: 'lifetime', overage: { mode: 'allow' } } },\n    },\n    team: { name: 'team', extends: 'pro', features: { sso: true }, limits: { seats: { included: null, period: 'gauge' } } },\n  },\n};\n\nconst acct = (over: Partial<Account> = {}): Account => ({ id: 'acme', plan: 'pro', anchorDay: 15, ...over });\nconst make = (flags?: Flags) => new Entitlements(catalog, new Ledger(), flags);\n\ntest('a catalog is checked as a whole: unknown names, loops, bad numbers and prices that do not add up', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/entitlements-679.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.854Z"
+}

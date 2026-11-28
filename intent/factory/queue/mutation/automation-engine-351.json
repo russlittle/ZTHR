@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "automation-engine",
+  "mutant": {
+    "id": "351",
+    "line": 210,
+    "column": 37,
+    "endLine": 210,
+    "endColumn": 67,
+    "mutator": "StringLiteral",
+    "original": "'the expression ends too soon'",
+    "replacement": "\"\"",
+    "lineText": "if (!p) throw new TemplateError('the expression ends too soon');",
+    "prevText": "const p = this.toks[this.i++];",
+    "nextText": "if (p.t === 'num') return { k: 'lit', v: Number(p.v) };"
+  },
+  "mayEdit": [
+    "intent/blocks/automation-engine/automation-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-351.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"automation-engine\". Mutant: line 210:37-210:67, mutator StringLiteral: \"'the expression ends too soon'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/automation-engine/index.ts (> marks the mutated line):\n   204          a = { k: 'get', of: a, key };\n   205        } else return a;\n   206      }\n   207    }\n   208    private primary(): Node {\n   209      const p = this.toks[this.i++];\n>  210      if (!p) throw new TemplateError('the expression ends too soon');\n   211      if (p.t === 'num') return { k: 'lit', v: Number(p.v) };\n   212      if (p.t === 'str') return { k: 'lit', v: p.v };\n   213      if (p.t === 'id') {\n   214        if (p.v === 'true' || p.v === 'True') return { k: 'lit', v: true };\n   215        if (p.v === 'false' || p.v === 'False') return { k: 'lit', v: false };\n   216        if (p.v === 'none' || p.v === 'None') return { k: 'lit', v: null };\n\nTest file style (intent/blocks/automation-engine/automation-engine.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AutomationError, Engine, TemplateError, evaluate, render, renderData } from './index.ts';\nimport type { Automation } from './index.ts';\n\nconst flush = () => new Promise<void>((r) => setImmediate(r));\n\nfunction rig(start = Date.UTC(2026, 0, 5, 12, 0, 0), offsetMinutes = 0) {\n  const states = new Map<string, string>();\n  const calls: { service: string; data: Record<string, unknown> }[] = [];\n  const events: { type: string; data: unknown }[] = [];\n  const clock = { now: start };\n  let n = 0;\n  const engine = new Engine({\n    now: () => clock.now,\n    state: (e) => states.get(e),\n    call: async (service, data) => {\n      calls.push({ service, data: { ...data } });\n      return { ok: true, service };\n    },\n    fire: (type, data) => events.push({ type, data }),\n    newId: () => `run${++n}`,\n    zoneOffsetMinutes: () => offsetMinutes,\n  });\n  return { engine, states, calls, events, clock };\n}\n\nconst lamp: Automation = {\n  id: 'a1',\n  alias: 'Lamp',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-351.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.810Z"
+}

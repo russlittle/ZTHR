@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "tasks",
+  "mutant": {
+    "id": "524",
+    "line": 385,
+    "column": 39,
+    "endLine": 385,
+    "endColumn": 56,
+    "mutator": "ArithmeticOperator",
+    "original": "t.seriesIndex + 1",
+    "replacement": "t.seriesIndex - 1",
+    "lineText": "if (rule.count !== undefined && t.seriesIndex + 1 >= rule.count) return undefined;",
+    "prevText": "// each task counts from its own completion, so COUNT is the number of tasks in the series",
+    "nextText": "const { count: _drop, ...open } = rule;"
+  },
+  "mayEdit": [
+    "intent/blocks/tasks/tasks.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/tasks-524.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"tasks\". Mutant: line 385:39-385:56, mutator ArithmeticOperator: \"t.seriesIndex + 1\" becomes \"t.seriesIndex - 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/tasks/index.ts (> marks the mutated line):\n   379      const r = t.recurrence;\n   380      if (!r || t.due === undefined) return undefined;\n   381      const rule = parseRule(r.rule);\n   382      const completed = t.completedAt ?? this.now();\n   383      if (r.mode === 'afterCompletion') {\n   384        // each task counts from its own completion, so COUNT is the number of tasks in the series\n>  385        if (rule.count !== undefined && t.seriesIndex + 1 >= rule.count) return undefined;\n   386        const { count: _drop, ...open } = rule;\n   387        const list = occurrences(wallOf(new Date(completed), r.tz), r.tz, open, { limit: 1, after: new Date(completed + 1) });\n   388        return list[0]?.getTime();\n   389      }\n   390      // \"fixed\" skips occurrences already in the past when completed late, so a long-overdue task does not spawn a backlog\n   391      const after = new Date(Math.max(t.due, completed) + 1);\n\nTest file style (intent/blocks/tasks/tasks.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { TaskError, Tasks, rankBetween } from './index.ts';\n\nconst H = 3_600_000;\nconst D = 24 * H;\nfunction mk(start = Date.UTC(2026, 0, 5, 12, 0)) {\n  let t = start;\n  const s = new Tasks({ now: () => t });\n  return { s, at: (ms: number) => void (t = ms), now: () => t };\n}\n\ntest('a task is created with trimmed, normalised fields and recorded in the log', () => {\n  const { s } = mk();\n  const t = s.create({ title: '  Write the report  ', labels: ['Q1 Plan', 'q1  plan', 'Urgent'], assignees: ['ana', 'ana', 'bo'], priority: 'high', checklist: ['draft', 'review'] }, 'ana');\n  assert.equal(t.title, 'Write the report');\n  assert.deepEqual(t.labels, ['q1-plan', 'urgent']);\n  assert.deepEqual(t.assignees, ['ana', 'bo']);\n  assert.deepEqual(t.checklist.map((c) => c.id), ['c1', 'c2']);\n  assert.equal(t.status, 'todo');\n  assert.deepEqual(s.log.map((l) => l.what), ['created']);\n  assert.throws(() => s.create({ title: '   ' }, 'x'), /1 to 500/);\n  assert.throws(() => s.create({ title: 'x', priority: 'huge' as 'low' }, 'x'), /priority must be one of/);\n  assert.throws(() => s.create({ title: 'x', start: 10, due: 5 }, 'x'), /start is after the due/);\n  assert.throws(() => s.create({ title: 'x', reminders: [-1] }, 'x'), /reminder is 0 to 366 days/);\n  assert.throws(() => s.create({ title: 'x', recurrence: { rule: 'FREQ=DAILY', tz: 'UTC', mode: 'fixed' } }, 'x'), /needs a due date/);\n  assert.throws(() => s.create({ title: 'x', due: 1, recurrence: { rule: 'FREQ=SECONDLY', tz: 'UTC', mode: 'fixed' } }, 'x'), /recurrence is not valid/);\n  assert.throws(() => s.create({ title: 'x', due: 1, recurrence: { rule: 'FREQ=DAILY', tz: 'Not/AZone', mode: 'fixed' } }, 'x'), /recurrence is not valid/);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/tasks-524.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:07.657Z"
+}

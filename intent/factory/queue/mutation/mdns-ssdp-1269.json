@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mdns-ssdp",
+  "mutant": {
+    "id": "1269",
+    "line": 659,
+    "column": 9,
+    "endLine": 659,
+    "endColumn": 78,
+    "mutator": "ConditionalExpression",
+    "original": "nts !== 'ssdp:byebye' && (maxAge === undefined || !h.get('location'))",
+    "replacement": "false",
+    "lineText": "if (nts !== 'ssdp:byebye' && (maxAge === undefined || !h.get('location'))) throw new DiscoveryError('an alive notice needs CACHE-CONTROL max-age and LOCATION');",
+    "prevText": "const maxAge = parseMaxAge(h.get('cache-control'));",
+    "nextText": "const boot = h.get('bootid.upnp.org');"
+  },
+  "mayEdit": [
+    "intent/blocks/mdns-ssdp/mdns-ssdp.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mdns-ssdp-1269.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mdns-ssdp\". Mutant: line 659:9-659:78, mutator ConditionalExpression: \"nts !== 'ssdp:byebye' && (maxAge === undefined || !h.get('location'))\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mdns-ssdp/index.ts (> marks the mutated line):\n   653      return { kind: 'm-search', st: need('st'), mx: Math.min(mx, 5), ...(h.get('user-agent') ? { userAgent: h.get('user-agent')! } : {}) };\n   654    }\n   655    if (/^NOTIFY \\* HTTP\\/1\\.1$/i.test(start)) {\n   656      const nts = need('nts');\n   657      if (nts !== 'ssdp:alive' && nts !== 'ssdp:byebye' && nts !== 'ssdp:update') throw new DiscoveryError(`NTS ${nts.slice(0, 20)} is not known`);\n   658      const maxAge = parseMaxAge(h.get('cache-control'));\n>  659      if (nts !== 'ssdp:byebye' && (maxAge === undefined || !h.get('location'))) throw new DiscoveryError('an alive notice needs CACHE-CONTROL max-age and LOCATION');\n   660      const boot = h.get('bootid.upnp.org');\n   661      return { kind: 'notify', nts, nt: need('nt'), usn: need('usn'), ...(h.get('location') ? { location: h.get('location')! } : {}), ...(maxAge !== undefined ? { maxAge } : {}), ...(h.get('server') ? { server: h.get('server')! } : {}), ...(boot && /^\\d+$/.test(boot) ? { bootId: Number(boot) } : {}) };\n   662    }\n   663    if (/^HTTP\\/1\\.1 200 OK$/i.test(start)) {\n   664      const maxAge = parseMaxAge(h.get('cache-control'));\n   665      if (maxAge === undefined) throw new DiscoveryError('a search response needs CACHE-CONTROL max-age');\n\nTest file style (intent/blocks/mdns-ssdp/mdns-ssdp.test.ts):\n28 test() blocks. Imports and the first tests, verbatim:\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  DiscoveryError, MdnsCache, SsdpCache, announce, answerQuery, browse, checkLocation, decodeMessage, decodeTxt, encodeMessage, encodeTxt, goodbye,\n  matchesSearch, msearch, notify, parseName, parseSsdp, resolve, searchResponse, serviceRecords, sameName, nameToString,\n  type Message, type Service,\n} from './index.ts';\n\nconst svc: Service = { instance: 'Front Printer', type: '_ipp._tcp', host: 'printer', port: 631, addresses: ['192.168.1.20', 'fe80::1'], txt: { rp: 'ipp/print', color: 'T', duplex: true } };\n\nlet t = 1_000_000;\nconst clock = () => t;\ntest.beforeEach(() => { t = 1_000_000; });\n\ntest('a query for _http._tcp.local has the bytes RFC 6762 gives (compression of the repeated name)', () => {\n  const b = encodeMessage({ id: 0, response: false, questions: [{ name: ['_http', '_tcp', 'local'], type: 'PTR' }], answers: [] });\n  assert.equal(b.toString('hex'), '000000000001000000000000' + '055f68747470045f746370056c6f63616c00' + '000c0001');\n});\n\ntest('the unicast-response bit is the top bit of a question class', () => {\n  const b = encodeMessage({ id: 0, response: false, questions: [{ name: ['a', 'local'], type: 'A', unicast: true }], answers: [] });\n  assert.equal(b.readUInt16BE(b.length - 2), 0x8001);\n  assert.equal(decodeMessage(b).questions[0]!.unicast, true);\n});\n\ntest('a message round-trips: A, AAAA, PTR, SRV, TXT and NSEC', () => {\n  const m: Message = {\n    id: 7, response: true, authoritative: true, questions: [],\n    answers: [\n      { name: ['h', 'local'], ttl: 120, flush: true, data: { type: 'A', address: '10.0.0.5' } },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mdns-ssdp-1269.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:48.826Z"
+}

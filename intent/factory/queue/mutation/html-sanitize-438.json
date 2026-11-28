@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "html-sanitize",
+  "mutant": {
+    "id": "438",
+    "line": 127,
+    "column": 55,
+    "endLine": 127,
+    "endColumn": 97,
+    "mutator": "Regex",
+    "original": "/^[A-Za-z][A-Za-z0-9+.-]*:\\/\\/[^/\\\\?#\\s]+/",
+    "replacement": "/[A-Za-z][A-Za-z0-9+.-]*:\\/\\/[^/\\\\?#\\s]+/",
+    "lineText": "if ((scheme === 'http' || scheme === 'https') && !/^[A-Za-z][A-Za-z0-9+.-]*:\\/\\/[^/\\\\?#\\s]+/.test(u.replace(/\\\\/g, '/'))) return null;",
+    "prevText": "if (!o.schemes.includes(scheme)) return null;",
+    "nextText": "return u;"
+  },
+  "mayEdit": [
+    "intent/blocks/html-sanitize/html-sanitize.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/html-sanitize-438.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"html-sanitize\". Mutant: line 127:55-127:97, mutator Regex: \"/^[A-Za-z][A-Za-z0-9+.-]*:\\\\/\\\\/[^/\\\\\\\\?#\\\\s]+/\" becomes \"/[A-Za-z][A-Za-z0-9+.-]*:\\\\/\\\\/[^/\\\\\\\\?#\\\\s]+/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/html-sanitize/index.ts (> marks the mutated line):\n   121        const d = /^data:image\\/(png|jpeg|gif|webp);base64,([A-Za-z0-9+/]*={0,2})$/i.exec(u);\n   122        if (!o.dataImages || !d) return null;\n   123        if (Math.floor((d[2]!.length * 3) / 4) > (o.maxDataBytes ?? 100_000)) return null;\n   124        return u;\n   125      }\n   126      if (!o.schemes.includes(scheme)) return null;\n>  127      if ((scheme === 'http' || scheme === 'https') && !/^[A-Za-z][A-Za-z0-9+.-]*:\\/\\/[^/\\\\?#\\s]+/.test(u.replace(/\\\\/g, '/'))) return null;\n   128      return u;\n   129    }\n   130    const norm = u.replace(/\\\\/g, '/');\n   131    if (norm.startsWith('//')) return o.allowProtocolRelative ? u : null;\n   132    if (o.allowRelative === false) return null;\n   133    // A first path segment with a colon would read as a scheme (\"a:b\"); that was handled above, so only odd cases remain.\n\nTest file style (intent/blocks/html-sanitize/html-sanitize.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BASIC, PLAIN, RICH, TooLarge, cleanStyle, cleanUrl, decodeEntities, escapeAttr, sanitize, toText, type Policy } from './index.ts';\n\nconst clean = (html: string, p: Policy = RICH) => sanitize(html, p);\n/** Nothing in the output may let script run: no script tag, no handler, no javascript: scheme. */\nconst inert = (out: string) => !/<script|<iframe|<object|<embed|<svg|<math|<style|\\son\\w+\\s*=|javascript:|vbscript:|data:text/i.test(out);\n\ntest('allowed markup passes through unchanged and is canonical', () => {\n  assert.equal(clean('<p>Hello <b>world</b> and <em>you</em>.</p>'), '<p>Hello <b>world</b> and <em>you</em>.</p>');\n  assert.equal(clean('<ul><li>one</li><li>two</li></ul>'), '<ul><li>one</li><li>two</li></ul>');\n  assert.equal(clean('<P CLASS=x><B>Loud</B></P>'), '<p><b>Loud</b></p>', 'tags are lower-cased and class is dropped by default');\n  assert.equal(clean('line<br/>two<hr>'), 'line<br>two<hr>');\n  assert.equal(clean('<h1 title=\"T\">x</h1>'), '<h1 title=\"T\">x</h1>');\n});\n\ntest('text is escaped, entities are normalised, and a stray < is just a character', () => {\n  assert.equal(clean('1 < 2 && 3 > 2'), '1 &lt; 2 &amp;&amp; 3 &gt; 2');\n  assert.equal(clean('a &amp; b &lt;script&gt; &copy; &#x41; &#66; &bogus;'), 'a &amp; b &lt;script&gt; © A B &amp;bogus;');\n  assert.equal(clean('<<b>x</b>'), '&lt;<b>x</b>');\n  assert.equal(clean('a<3 b'), 'a&lt;3 b');\n  assert.equal(clean('&lt;img src=x onerror=alert(1)&gt;'), '&lt;img src=x onerror=alert(1)&gt;', 'escaped markup stays text');\n  assert.equal(decodeEntities('&#0; &#xD800; &#x110000;'), '� � �');\n  assert.equal(escapeAttr(`\"'<>&\\``), '&quot;&#39;&lt;&gt;&amp;&#96;');\n});\n\ntest('script, style, iframe and the other containers are removed with their content', () => {\n  assert.equal(clean('a<script>alert(1)</script>b'), 'ab');\n  assert.equal(clean('a<SCRIPT SRC=//evil/x.js></SCRIPT>b'), 'ab');\n  assert.equal(clean('a<style>@import \"x\"; body{}</style>b'), 'ab');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/html-sanitize-438.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.326Z"
+}

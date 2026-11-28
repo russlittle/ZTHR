@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "shortcodes",
+  "mutant": {
+    "id": "507",
+    "line": 393,
+    "column": 82,
+    "endLine": 393,
+    "endColumn": 84,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "const content = n.content === null ? null : h.raw ? (n.rawContent ?? '') : run(n.content, depth + 1);",
+    "prevText": "try {",
+    "nextText": "let r = h.run({ tag: n.tag, attrs: n.attrs, positional: n.positional, content, depth });"
+  },
+  "mayEdit": [
+    "intent/blocks/shortcodes/shortcodes.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/shortcodes-507.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"shortcodes\". Mutant: line 393:82-393:84, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/shortcodes/index.ts (> marks the mutated line):\n   387          } else if (expansions >= maxExpansions) {\n   388            errors.push({ tag: n.tag, message: `more than ${maxExpansions} expansions` });\n   389            piece = o.onError === 'drop' ? '' : n.raw;\n   390          } else {\n   391            expansions++;\n   392            try {\n>  393              const content = n.content === null ? null : h.raw ? (n.rawContent ?? '') : run(n.content, depth + 1);\n   394              let r = h.run({ tag: n.tag, attrs: n.attrs, positional: n.positional, content, depth });\n   395              if (typeof r !== 'string') throw new TypeError('a handler must return a string');\n   396              if (h.rescan && depth < L.maxDepth) r = run(parse(r, names, L), depth + 1);\n   397              piece = r;\n   398            } catch (e) {\n   399              errors.push({ tag: n.tag, message: e instanceof Error ? e.message : String(e) });\n\nTest file style (intent/blocks/shortcodes/shortcodes.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { build, escapeHtml, expand, expandTags, has, LimitExceeded, MissingValue, parse, parseAttributes, strip } from './index.ts';\nimport type { Context, Handlers } from './index.ts';\n\nconst h = {\n  b: (c: Context) => `<b>${c.content ?? ''}</b>`,\n  quote: (c: Context) => `<q cite=\"${escapeHtml(c.attrs['cite'] ?? '')}\">${c.content}</q>`,\n  button: (c: Context) => `<a class=\"${c.positional.includes('primary') ? 'p' : 's'}\">${escapeHtml(c.positional[0] ?? '')}</a>`,\n  gallery: (c: Context) => `<gallery ids=\"${c.attrs['ids'] ?? ''}\" cols=\"${c.attrs['columns'] ?? '3'}\">`,\n};\nconst out = (text: string, handlers: Handlers = h, o = {}) => expand(text, handlers, o).text;\n\ntest('a self-closing and an enclosing shortcode expand with their attributes', () => {\n  assert.equal(out('A [gallery ids=\"1,2,3\" columns=2] B'), 'A <gallery ids=\"1,2,3\" cols=\"2\"> B');\n  assert.equal(out(\"[quote cite='Ann Lee']Words[/quote]\"), '<q cite=\"Ann Lee\">Words</q>');\n  assert.equal(out('[gallery /]'), '<gallery ids=\"\" cols=\"3\">');\n  assert.equal(out('[gallery/]'), '<gallery ids=\"\" cols=\"3\">');\n  assert.equal(out('[b]x[/b] and [b]y[/b]'), '<b>x</b> and <b>y</b>');\n});\n\ntest('attributes: named, quoted both ways, unquoted, positional and bare flags', () => {\n  const a = parseAttributes(`id=7 title=\"Two words\" alt='single' \"first pos\" flag x:y=\"1\"`);\n  assert.deepEqual(a, { attrs: { id: '7', title: 'Two words', alt: 'single', 'x:y': '1' }, positional: ['first pos', 'flag'] });\n  assert.equal(out('[button \"Buy now\" primary /]'), '<a class=\"p\">Buy now</a>');\n  assert.equal(out('[button \"Read\" /]'), '<a class=\"s\">Read</a>');\n  assert.deepEqual(parseAttributes('a=1 a=2').attrs, { a: '2' }, 'the later of two equal names wins');\n  assert.deepEqual(parseAttributes('__proto__=x ok=1').attrs, { ok: '1' });\n  assert.equal(({} as Record<string, unknown>)['x'], undefined);\n  assert.deepEqual(parseAttributes('title=\"a ] b\"').attrs, { title: 'a ] b' });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/shortcodes-507.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:02.426Z"
+}

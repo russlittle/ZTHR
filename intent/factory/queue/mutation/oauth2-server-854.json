@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "oauth2-server",
+  "mutant": {
+    "id": "854",
+    "line": 659,
+    "column": 45,
+    "endLine": 659,
+    "endColumn": 65,
+    "mutator": "StringLiteral",
+    "original": "'the person refused'",
+    "replacement": "\"\"",
+    "lineText": "throw new OAuthError('access_denied', 'the person refused');",
+    "prevText": "this.dropDevice(key, rec);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/oauth2-server/oauth2-server.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/oauth2-server-854.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"oauth2-server\". Mutant: line 659:45-659:65, mutator StringLiteral: \"'the person refused'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/oauth2-server/index.ts (> marks the mutated line):\n   653        rec.lastPoll = t;\n   654        throw new OAuthError('slow_down', `poll no faster than every ${rec.interval - 5} seconds`);\n   655      }\n   656      rec.lastPoll = t;\n   657      if (rec.status === 'denied') {\n   658        this.dropDevice(key, rec);\n>  659        throw new OAuthError('access_denied', 'the person refused');\n   660      }\n   661      if (rec.status === 'pending') throw new OAuthError('authorization_pending', 'the person has not approved yet');\n   662      this.dropDevice(key, rec);\n   663      const scopes = rec.grantedScopes ?? rec.scopes;\n   664      const fam = this.newFamily(client, rec.subject!.id, scopes, rec.subject!.authTime, undefined);\n   665      return this.respond(client, fam, scopes, client.grantTypes.includes(GRANT_REFRESH));\n\nTest file style (intent/blocks/oauth2-server/oauth2-server.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, generateKeyPairSync } from 'node:crypto';\nimport { test } from 'node:test';\nimport { ClientRegistry } from '../client-registry/index.ts';\nimport { AuthorizationServer, BadJwt, OAuthError, parseParams, pkceChallenge, signJwt, verifyJwt } from './index.ts';\nimport type { AuthorizeResult, ServerOptions, Subject } from './index.ts';\n\nfunction counter() {\n  let n = 0;\n  return (len: number) => {\n    n += 1;\n    return Uint8Array.from({ length: len }, (_, i) => (n * 37 + i * 11 + (n >> 3)) & 0xff);\n  };\n}\nconst SCOPES = [\n  { name: 'openid', description: 'Know who you are' },\n  { name: 'profile', description: 'See your name' },\n  { name: 'read', description: 'Read your data' },\n  { name: 'write', description: 'Change your data', implies: ['read'] },\n  { name: 'admin', description: 'Administer everything', implies: ['write'], sensitive: true },\n  { name: 'offline_access', description: 'Stay signed in' },\n];\nconst VERIFIER = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';\nconst CHALLENGE = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';\nconst ALICE: Subject = { id: 'alice', authTime: 1_800_000_000_000 };\n\nfunction setup(over: Partial<ServerOptions> = {}) {\n  const t = { v: 1_800_000_000_000 };\n  const registry = new ClientRegistry({ now: () => t.v, randomBytes: counter(), policy: { allowedScopes: SCOPES.map((s) => s.name), defaultScopes: ['openid'] } });\n  const web = registry.create({ name: 'Web', clientId: 'web', redirectUris: ['https://app.example.org/cb'], grantTypes: ['authorization_code', 'refresh_token', 'client_credentials'], scopes: ['openid', 'profile', 'read', 'write', 'admin', 'offline_access'] });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/oauth2-server-854.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.385Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "geoip",
+  "mutant": {
+    "id": "727",
+    "line": 397,
+    "column": 9,
+    "endLine": 397,
+    "endColumn": 134,
+    "mutator": "ConditionalExpression",
+    "original": "m.description && typeof m.description === 'object' && !Array.isArray(m.description) && !(m.description instanceof Uint8Array)",
+    "replacement": "true",
+    "lineText": "if (m.description && typeof m.description === 'object' && !Array.isArray(m.description) && !(m.description instanceof Uint8Array)) for (const [k, v] of Object.entries(m.description)) if (typeof v === 'string') Object.defineProperty(description, k, { value: v, enumerable: true, writable: true, configurable: true });",
+    "prevText": "const description: Record<string, string> = {};",
+    "nextText": "const treeSize = nodeCount * (recordSize / 4);"
+  },
+  "mayEdit": [
+    "intent/blocks/geoip/geoip.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/geoip-727.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"geoip\". Mutant: line 397:9-397:134, mutator ConditionalExpression: \"m.description && typeof m.description === 'object' && !Array.isArray(m.description) && !(m.description instanceof Uint8Array)\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/geoip/index.ts (> marks the mutated line):\n   391      if (recordSize !== 24 && recordSize !== 28 && recordSize !== 32) fail('record_size must be 24, 28 or 32');\n   392      if (ipVersion !== 4 && ipVersion !== 6) fail('ip_version must be 4 or 6');\n   393      if (typeof m.database_type !== 'string') fail('metadata database_type is missing');\n   394      const buildEpoch = typeof m.build_epoch === 'bigint' ? Number(m.build_epoch) : typeof m.build_epoch === 'number' ? m.build_epoch : 0;\n   395      const languages = Array.isArray(m.languages) ? m.languages.filter((x): x is string => typeof x === 'string') : [];\n   396      const description: Record<string, string> = {};\n>  397      if (m.description && typeof m.description === 'object' && !Array.isArray(m.description) && !(m.description instanceof Uint8Array)) for (const [k, v] of Object.entries(m.description)) if (typeof v === 'string') Object.defineProperty(description, k, { value: v, enumerable: true, writable: true, configurable: true });\n   398      const treeSize = nodeCount * (recordSize / 4);\n   399      if (!Number.isSafeInteger(treeSize) || nodeCount < 1 || treeSize + 16 > found) fail('the search tree does not fit in the file');\n   400      for (let i = 0; i < 16; i++) if (buf[treeSize + i] !== 0) fail('the data section separator is not zero');\n   401      const metadata: Metadata = { nodeCount, recordSize: recordSize as 24 | 28 | 32, ipVersion: ipVersion as 4 | 6, databaseType: m.database_type as string, languages, buildEpoch, description, binaryFormat: `${major}.${typeof m.binary_format_minor_version === 'number' ? m.binary_format_minor_version : 0}` };\n   402      return new MmdbReader(buf, metadata, treeSize, found, limits);\n   403    }\n\nTest file style (intent/blocks/geoip/geoip.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { coarsen } from '../geo/index.ts';\nimport { AddressError, DatabaseError, Geolocator, MmdbReader, RangeTable, anonymize, classify, decodeValue, formatIp, isPublic, parseCidr, parseIp } from './index.ts';\nimport type { MmdbValue } from './index.ts';\n\n// ---- a small mmdb writer, only for building fixtures -------------------------------------------------------------\n\nclass Tag {\n  readonly kind: string;\n  readonly v: number | bigint;\n  constructor(kind: string, v: number | bigint) { this.kind = kind; this.v = v; }\n}\nconst u16 = (v: number) => new Tag('u16', v);\nconst u32 = (v: number) => new Tag('u32', v);\nconst u64 = (v: bigint) => new Tag('u64', v);\nconst i32 = (v: number) => new Tag('i32', v);\nconst dbl = (v: number) => new Tag('dbl', v);\nclass Ptr {\n  readonly offset: number;\n  constructor(offset: number) { this.offset = offset; }\n}\n\nconst head = (type: number, size: number): number[] => {\n  let sb: number; let extra: number[] = [];\n  if (size < 29) sb = size;\n  else if (size < 285) { sb = 29; extra = [size - 29]; }\n  else if (size < 65821) { sb = 30; const x = size - 285; extra = [x >> 8, x & 255]; }\n  else { sb = 31; const x = size - 65821; extra = [x >> 16, (x >> 8) & 255, x & 255]; }\n  return type <= 7 ? [(type << 5) | sb, ...extra] : [sb, type - 7, ...extra];\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/geoip-727.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:42.041Z"
+}

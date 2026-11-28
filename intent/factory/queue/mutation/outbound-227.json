@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "outbound",
+  "mutant": {
+    "id": "227",
+    "line": 233,
+    "column": 40,
+    "endLine": 233,
+    "endColumn": 59,
+    "mutator": "ConditionalExpression",
+    "original": "curMethod !== 'GET'",
+    "replacement": "true",
+    "lineText": "if (curBody !== undefined && curMethod !== 'GET' && curMethod !== 'HEAD') init.body = curBody as BodyInit;",
+    "prevText": "const init: RequestInit = { method: curMethod, headers, redirect: 'manual', signal: ctl.signal };",
+    "nextText": "res = await o.fetch(cur.toString(), init);"
+  },
+  "mayEdit": [
+    "intent/blocks/outbound/outbound.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/outbound-227.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"outbound\". Mutant: line 233:40-233:59, mutator ConditionalExpression: \"curMethod !== 'GET'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/outbound/index.ts (> marks the mutated line):\n   227          if (redirects > 0 && bare(cur.hostname) !== bare(u.hostname)) for (const k of Object.keys(headers)) if (secretish(k)) delete headers[k];\n   228          const ctl = new AbortController();\n   229          const timer = setTimeout(() => ctl.abort(), deadline);\n   230          let res: Response;\n   231          try {\n   232            const init: RequestInit = { method: curMethod, headers, redirect: 'manual', signal: ctl.signal };\n>  233            if (curBody !== undefined && curMethod !== 'GET' && curMethod !== 'HEAD') init.body = curBody as BodyInit;\n   234            res = await o.fetch(cur.toString(), init);\n   235            if ([301, 302, 303, 307, 308].includes(res.status) && res.headers.get('location')) {\n   236              await res.body?.cancel().catch(() => {});\n   237              if (++redirects > maxRedirects) throw new EgressRefused(`more than ${maxRedirects} redirects`);\n   238              cur = new URL(res.headers.get('location')!, cur);\n   239              if (res.status === 303 || ((res.status === 301 || res.status === 302) && curMethod === 'POST')) {\n\nTest file style (intent/blocks/outbound/outbound.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { EgressRefused, EgressTwin, allowed, door, routedEgress } from './index.ts';\n\nconst allow = {\n  'api.weather.example': { purposes: ['weather.forecast'] },\n  '*.hooks.example': { purposes: ['webhook.deliver'], methods: ['POST'] },\n  'files.example': { purposes: ['*'], ports: [8443] },\n};\nconst PUBLIC = async () => ['93.184.216.34'];\n\nfunction mk(handler: (url: string, init: RequestInit) => Response | Promise<Response>, extra: Record<string, unknown> = {}) {\n  const calls: { url: string; init: RequestInit }[] = [];\n  let t = 1000;\n  const egress = door({\n    allow,\n    resolve: PUBLIC,\n    now: () => (t += 5),\n    fetch: async (url, init) => {\n      calls.push({ url, init });\n      return handler(url, init);\n    },\n    ...extra,\n  });\n  return { egress, calls };\n}\n\ntest('a call to an allowed host for its declared purpose goes through and is recorded without query values', async () => {\n  const { egress, calls } = mk(() => new Response('{\"temp\":21}', { status: 200 }));\n  const r = await egress.request({ purpose: 'weather.forecast', url: 'https://api.weather.example/v1/f?city=Dayton&apikey=hunter2' });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/outbound-227.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:53.075Z"
+}

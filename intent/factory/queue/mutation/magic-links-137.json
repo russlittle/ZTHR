@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "magic-links",
+  "mutant": {
+    "id": "137",
+    "line": 203,
+    "column": 43,
+    "endLine": 203,
+    "endColumn": 60,
+    "mutator": "ConditionalExpression",
+    "original": "r.kind === 'link'",
+    "replacement": "true",
+    "lineText": "for (const r of this.store.all()) if (r.kind === 'link' && equal(r.secretHash, h)) found = r;",
+    "prevText": "let found: Record_ | undefined;",
+    "nextText": "return found;"
+  },
+  "mayEdit": [
+    "intent/blocks/magic-links/magic-links.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/magic-links-137.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"magic-links\". Mutant: line 203:43-203:60, mutator ConditionalExpression: \"r.kind === 'link'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/magic-links/index.ts (> marks the mutated line):\n   197    }\n   198  \n   199    private find(token: string): Record_ | undefined {\n   200      const h = this.mac('link', token);\n   201      // Stored hashes are looked up one by one in constant time; there is no early exit on a partial match.\n   202      let found: Record_ | undefined;\n>  203      for (const r of this.store.all()) if (r.kind === 'link' && equal(r.secretHash, h)) found = r;\n   204      return found;\n   205    }\n   206  \n   207    private check(r: Record_, purpose: string, device: string): void {\n   208      if (r.revoked) throw new NotValid('revoked');\n   209      if (r.usedAt !== undefined) throw new NotValid('used');\n\nTest file style (intent/blocks/magic-links/magic-links.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Limited, MagicLinks, MemoryStore, NotValid, maskSubject } from './index.ts';\nimport type { Ask } from './index.ts';\n\nconst SECRET = 'long-enough-0123456';\nlet seed = 0;\nconst det = (n: number) => {\n  const b = Buffer.alloc(n);\n  for (let i = 0; i < n; i++) b[i] = (seed = (seed * 1103515245 + 12345) & 0x7fffffff) >> 16;\n  return b;\n};\nconst make = (o: Partial<ConstructorParameters<typeof MagicLinks>[0]> = {}) => {\n  const t = { now: 1_000_000 };\n  const store = new MemoryStore();\n  const m = new MagicLinks({ secret: SECRET, now: () => t.now, store, random: det, ...o });\n  return { m, t, store };\n};\nconst ask = (o: Partial<Ask> = {}): Ask => ({ subject: 'ana@example.org', purpose: 'sign-in', device: 'dev-1', address: '203.0.113.5', ...o });\nconst reason = (f: () => unknown) => {\n  try {\n    f();\n  } catch (e) {\n    assert.ok(e instanceof NotValid, String(e));\n    return e.reason;\n  }\n  return 'ok';\n};\n\ntest('a link is issued, redeemed once, and says who and what it was for', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/magic-links-137.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.821Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webauthn",
+  "mutant": {
+    "id": "1028",
+    "line": 607,
+    "column": 33,
+    "endLine": 607,
+    "endColumn": 53,
+    "mutator": "ConditionalExpression",
+    "original": "cred.signCount !== 0",
+    "replacement": "false",
+    "lineText": "if (auth.signCount !== 0 || cred.signCount !== 0) {",
+    "prevText": "let warn = false;",
+    "nextText": "if (auth.signCount <= cred.signCount) {"
+  },
+  "mayEdit": [
+    "intent/blocks/webauthn/webauthn.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webauthn-1028.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webauthn\". Mutant: line 607:33-607:53, mutator ConditionalExpression: \"cred.signCount !== 0\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webauthn/index.ts (> marks the mutated line):\n   601      } else if (handle && handle !== cred.userHandle) throw new Rejected('credential', 'the user handle does not match the credential');\n   602      const { key } = coseToKey(b64(cred.cosePublicKey));\n   603      if (!checkSignature(key, cred.alg, Buffer.concat([rawAuth, sha256(rawClient)]), b64(r.response.signature))) throw new Rejected('signature', 'the signature is not valid for this credential');\n   604      // Backup eligibility is fixed for the life of a credential; a change means this is not the same credential.\n   605      if (!!(auth.flags & FLAG.BE) !== cred.backupEligible) throw new Rejected('flags', 'the backup eligibility of the credential changed');\n   606      let warn = false;\n>  607      if (auth.signCount !== 0 || cred.signCount !== 0) {\n   608        if (auth.signCount <= cred.signCount) {\n   609          if (this.rp.onCounterRegression === 'warn') warn = true;\n   610          else throw new Rejected('counter', 'the sign-in counter did not go up: this authenticator may have been cloned');\n   611        }\n   612      }\n   613      cred.signCount = Math.max(cred.signCount, auth.signCount);\n\nTest file style (intent/blocks/webauthn/webauthn.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, generateKeyPairSync, randomBytes, sign as cryptoSign, X509Certificate } from 'node:crypto';\nimport type { KeyObject } from 'node:crypto';\nimport { test } from 'node:test';\nimport { bitString, boolean, explicit, integer, octetString, oid, oidOf, sequence, set, time, toPem, utf8String } from '../asn1-der/index.ts';\nimport { BadCbor, Challenges, coseToKey, FLAG, MemoryCredentials, Rejected, WebAuthn, decodeCbor, encodeCbor, parseAuthData, parseCbor } from './index.ts';\nimport type { Alg, AttestationPolicy, Cbor, RelyingParty } from './index.ts';\n\n// A throwaway attestation CA and authenticator certificate (EC P-256, valid for a century), made fresh for each run.\n/** A throwaway certificate made at run time: DER from the asn1-der writers, signed with node:crypto (ECDSA P-256 / SHA-256). */\nconst certName = (cn: string) => sequence(set(sequence(oid(oidOf('CN')), utf8String(cn))));\nfunction makeCert(o: { subject: string; publicKey: KeyObject; issuer?: string; issuerKey: KeyObject; ca?: boolean }): string {\n  const algId = sequence(oid(oidOf('ecdsa-with-SHA256')));\n  const exts = o.ca ? [explicit(3, sequence(sequence(oid(oidOf('basicConstraints')), boolean(true), octetString(sequence(boolean(true))))))] : [];\n  const tbs = sequence(\n    explicit(0, integer(2)), integer(BigInt(`0x${randomBytes(12).toString('hex')}`)), algId, certName(o.issuer ?? o.subject),\n    sequence(time(new Date(Date.UTC(2020, 0, 1))), time(new Date(Date.UTC(2120, 0, 1)))),\n    certName(o.subject), Buffer.from(o.publicKey.export({ type: 'spki', format: 'der' })), ...exts,\n  );\n  return toPem('CERTIFICATE', sequence(tbs, algId, bitString(cryptoSign('sha256', tbs, o.issuerKey)))).trim();\n}\nconst rootPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst leafPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst foreignPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst ROOT_PEM = `${makeCert({ subject: 'Test Attestation Root', publicKey: rootPair.publicKey, issuerKey: rootPair.privateKey, ca: true })}\\n`;\nconst LEAF_PEM = `${makeCert({ subject: 'Test Authenticator', issuer: 'Test Attestation Root', publicKey: leafPair.publicKey, issuerKey: rootPair.privateKey })}\\n`;\nconst FOREIGN_PEM = `${makeCert({ subject: 'Some Other Root', publicKey: foreignPair.publicKey, issuerKey: foreignPair.privateKey, ca: true })}\\n`;\nconst LEAF_KEY = leafPair.privateKey;\n\nconst ORIGIN = 'https://app.example.org';\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webauthn-1028.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:13.757Z"
+}

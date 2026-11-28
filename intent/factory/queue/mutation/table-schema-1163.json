@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "table-schema",
+  "mutant": {
+    "id": "1163",
+    "line": 252,
+    "column": 7,
+    "endLine": 252,
+    "endColumn": 30,
+    "mutator": "ConditionalExpression",
+    "original": "from.type === 'decimal'",
+    "replacement": "true",
+    "lineText": "if (from.type === 'decimal' && to.type === 'integer' && typeof x === 'number') x = Math.trunc(x);",
+    "prevText": "let x: unknown = value;",
+    "nextText": "else if (from.type === 'integer' && to.type === 'boolean') x = x !== 0;"
+  },
+  "mayEdit": [
+    "intent/blocks/table-schema/table-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/table-schema-1163.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"table-schema\". Mutant: line 252:7-252:30, mutator ConditionalExpression: \"from.type === 'decimal'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/table-schema/index.ts (> marks the mutated line):\n   246  /** The value as the new type would hold it, or why it cannot be held. */\n   247  export function convertValue(from: Field, to: Field, value: unknown): { ok: true; value: unknown } | { ok: false; reason: string } {\n   248    if (value === null || value === undefined || value === '') return { ok: true, value: null };\n   249    const c = conversion(from, to);\n   250    if (c.kind === 'impossible') return { ok: false, reason: c.note };\n   251    let x: unknown = value;\n>  252    if (from.type === 'decimal' && to.type === 'integer' && typeof x === 'number') x = Math.trunc(x);\n   253    else if (from.type === 'integer' && to.type === 'boolean') x = x !== 0;\n   254    else if (from.type === 'boolean' && to.type === 'integer') x = x ? 1 : 0;\n   255    else if (from.type === 'date' && to.type === 'datetime') x = `${String(x)}T00:00:00Z`;\n   256    else if (from.type === 'datetime' && to.type === 'date') x = String(x).slice(0, 10);\n   257    else if (from.type === 'select' && to.type === 'multiselect') x = [x];\n   258    else if (from.type === 'multiselect' && to.type === 'select') x = Array.isArray(x) ? x[0] : undefined;\n\nTest file style (intent/blocks/table-schema/table-schema.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { checkTable, checkRow, findDuplicates, conversion, convertValue, previewConversion, createTable, dropTable, diff, toMigration, needsApproval, fieldTypes, SchemaError } from './index.ts';\nimport type { Table, Field } from './index.ts';\nimport { plan } from '../migrations/index.ts';\n\nconst f = (o: Partial<Field> & Pick<Field, 'id' | 'name' | 'type'>): Field => o;\nconst contacts: Table = {\n  name: 'contacts',\n  fields: [\n    f({ id: 'a', name: 'full_name', type: 'text', required: true, maxLength: 80 }),\n    f({ id: 'b', name: 'email', type: 'email', unique: true }),\n    f({ id: 'c', name: 'age', type: 'integer', min: 0, max: 150 }),\n    f({ id: 'd', name: 'stage', type: 'select', options: ['lead', 'won', \"it's lost\"], default: 'lead' }),\n    f({ id: 'e', name: 'tags', type: 'multiselect', options: ['x', 'y'] }),\n  ],\n};\n\ntest('registry covers the documented types', () => {\n  assert.deepEqual(fieldTypes().sort(), ['boolean', 'date', 'datetime', 'decimal', 'email', 'integer', 'json', 'longtext', 'multiselect', 'select', 'text', 'url', 'uuid']);\n});\n\ntest('a sound table has no problems', () => assert.deepEqual(checkTable(contacts), []));\n\ntest('bad names, reserved words, duplicates and misplaced options are reported', () => {\n  const bad: Table = { name: 'Users;', fields: [f({ id: 'a', name: 'select', type: 'text' }), f({ id: 'a', name: 'x', type: 'text', options: ['a'] }), f({ id: 'c', name: 'x', type: 'weird' as never }), f({ id: 'd', name: 'p', type: 'select' }), f({ id: 'e', name: 'j', type: 'json', unique: true })] };\n  const p = checkTable(bad).join('\\n');\n  for (const s of ['table name', 'not allowed', 'two fields have id a', 'two fields have this name', 'unknown type', 'options are 1 to 200', 'cannot be unique', 'options does not apply']) assert.match(p, new RegExp(s));\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/table-schema-1163.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:07.238Z"
+}

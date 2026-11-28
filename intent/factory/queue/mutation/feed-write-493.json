@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "feed-write",
+  "mutant": {
+    "id": "493",
+    "line": 271,
+    "column": 63,
+    "endLine": 271,
+    "endColumn": 130,
+    "mutator": "StringLiteral",
+    "original": "`${w}: the podcast image must be an absolute http or https address`",
+    "replacement": "``",
+    "lineText": "if (p.image !== undefined && !isHttp(p.image)) out.push(`${w}: the podcast image must be an absolute http or https address`);",
+    "prevText": "for (const k of ['episode', 'season'] as const) if (p[k] !== undefined && (!Number.isInteger(p[k]) || p[k]! < 0)) out.push(`${w}: ${k} must be a whole number`);",
+    "nextText": "if (p.transcript && (!isHttp(p.transcript.url) || !MIME.test(p.transcript.type))) out.push(`${w}: the transcript needs an address and a media type`);"
+  },
+  "mayEdit": [
+    "intent/blocks/feed-write/feed-write.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/feed-write-493.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"feed-write\". Mutant: line 271:63-271:130, mutator StringLiteral: \"`${w}: the podcast image must be an absolute http or https address`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/feed-write/index.ts (> marks the mutated line):\n   265        if (!MIME.test(e.type)) out.push(`${w}: the enclosure type is not a media type`);\n   266      }\n   267      const p = it.podcast;\n   268      if (p) {\n   269        if (p.duration !== undefined && itunesDuration(p.duration) === undefined) out.push(`${w}: the duration \"${String(p.duration)}\" is not seconds or HH:MM:SS`);\n   270        for (const k of ['episode', 'season'] as const) if (p[k] !== undefined && (!Number.isInteger(p[k]) || p[k]! < 0)) out.push(`${w}: ${k} must be a whole number`);\n>  271        if (p.image !== undefined && !isHttp(p.image)) out.push(`${w}: the podcast image must be an absolute http or https address`);\n   272        if (p.transcript && (!isHttp(p.transcript.url) || !MIME.test(p.transcript.type))) out.push(`${w}: the transcript needs an address and a media type`);\n   273        if (p.chapters && (!isHttp(p.chapters.url) || !MIME.test(p.chapters.type))) out.push(`${w}: the chapters need an address and a media type`);\n   274      }\n   275      for (const c of it.media?.content ?? []) {\n   276        if (!isHttp(c.url)) out.push(`${w}: a media content address must be an absolute http or https address`);\n   277        if (c.type !== undefined && !MIME.test(c.type)) out.push(`${w}: a media content type is not a media type`);\n\nTest file style (intent/blocks/feed-write/feed-write.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { parseXml, type El } from '../dav/index.ts';\nimport {\n  FeedError, cdata, durationSeconds, escapeAttr, escapeText, etagOf, feedProblems, itunesDuration, rfc3339, rfc822,\n  respond, toDate, write, writeAtom, writeJsonFeed, writeRss, xmlSafe, type Feed,\n} from './index.ts';\n\nconst T0 = Date.UTC(2024, 4, 6, 12, 30, 5);\ntype Mut<T> = { -readonly [K in keyof T]: T[K] };\nconst base = (): Mut<Feed> => ({\n  title: 'Notes & Things',\n  link: 'https://example.com/',\n  selfUrl: 'https://example.com/feed.xml',\n  description: 'Writing <on> the web',\n  language: 'en-GB',\n  updated: T0,\n  items: [\n    { id: 'https://example.com/a', link: 'https://example.com/a', title: 'First', published: T0 - 86_400_000, contentHtml: '<p>Hello</p>', summary: 'Hi', authors: [{ name: 'Ann' }], categories: ['x', 'y'] },\n    { id: 'https://example.com/b', link: 'https://example.com/b', title: 'Second', published: T0, updated: T0 + 1000 },\n  ],\n});\nconst find = (e: El, name: string): El[] => [...(e.name === name ? [e] : []), ...e.children.flatMap((c) => find(c, name))];\n\ntest('RFC 822 and RFC 3339 dates match the specs examples', () => {\n  assert.equal(rfc822(new Date(Date.UTC(2002, 8, 7, 0, 0, 1))), 'Sat, 07 Sep 2002 00:00:01 GMT');\n  assert.equal(rfc3339(new Date(Date.UTC(2003, 11, 13, 18, 30, 2, 900))), '2003-12-13T18:30:02Z');\n});\n\ntest('toDate takes dates, numbers and ISO strings and refuses nonsense', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/feed-write-493.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.144Z"
+}

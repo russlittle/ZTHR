@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "text-diff",
+  "mutant": {
+    "id": "277",
+    "line": 128,
+    "column": 12,
+    "endLine": 128,
+    "endColumn": 24,
+    "mutator": "EqualityOperator",
+    "original": "p < a.length",
+    "replacement": "p >= a.length",
+    "lineText": "while (p < a.length && p < b.length && a[p] === b[p]) p++;",
+    "prevText": "let p = 0;",
+    "nextText": "let s = 0;"
+  },
+  "mayEdit": [
+    "intent/blocks/text-diff/text-diff.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/text-diff-277.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"text-diff\". Mutant: line 128:12-128:24, mutator EqualityOperator: \"p < a.length\" becomes \"p >= a.length\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/text-diff/index.ts (> marks the mutated line):\n   122    try {\n   123      rec(0, a.length, 0, b.length);\n   124      return { ops: Uint8Array.from(out), approximate: false };\n   125    } catch (e) {\n   126      if (!(e instanceof OutOfWork)) throw e;\n   127      let p = 0;\n>  128      while (p < a.length && p < b.length && a[p] === b[p]) p++;\n   129      let s = 0;\n   130      while (s < a.length - p && s < b.length - p && a[a.length - 1 - s] === b[b.length - 1 - s]) s++;\n   131      const ops: number[] = [];\n   132      for (let i = 0; i < p; i++) ops.push(0);\n   133      for (let i = 0; i < a.length - p - s; i++) ops.push(1);\n   134      for (let i = 0; i < b.length - p - s; i++) ops.push(2);\n\nTest file style (intent/blocks/text-diff/text-diff.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  PatchConflict, PatchError, TooLarge, applyPatch, diffChars, diffLines, diffTokens, diffWords, findMoves, hunks, inlineModel, parsePatch, reversePatch, sideBySide, sideText, splitLines, stats, tokenizeWords, unified,\n} from './index.ts';\nimport type { Seg } from './index.ts';\n\nconst lcs = (a: readonly string[], b: readonly string[]): number => {\n  const t = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));\n  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) t[i]![j] = a[i - 1] === b[j - 1] ? t[i - 1]![j - 1]! + 1 : Math.max(t[i - 1]![j]!, t[i]![j - 1]!);\n  return t[a.length]![b.length]!;\n};\nconst rng = (seed: number) => () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };\n/** Rebuild b from a and the segments: equal and deleted items come from a, inserted ones from b. */\nconst rebuild = (a: readonly string[], b: readonly string[], segs: readonly Seg[]): { fromA: string[]; fromB: string[] } => {\n  const fromA: string[] = []; const fromB: string[] = [];\n  for (const s of segs) {\n    if (s.type !== 'insert') fromA.push(...a.slice(s.aStart, s.aStart + s.len));\n    if (s.type !== 'delete') fromB.push(...b.slice(s.bStart, s.bStart + s.len));\n  }\n  return { fromA, fromB };\n};\n\ntest('the example from Myers\\' paper has an edit distance of 5', () => {\n  const a = [...'ABCABBA']; const b = [...'CBABAC'];\n  const d = diffTokens(a, b);\n  const edits = d.segs.filter((s) => s.type !== 'equal').reduce((n, s) => n + s.len, 0);\n  assert.equal(edits, 5);\n  assert.equal(d.segs.filter((s) => s.type === 'equal').reduce((n, s) => n + s.len, 0), 4, 'the longest common subsequence is 4 long');\n  assert.equal(d.approximate, false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/text-diff-277.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:08.638Z"
+}

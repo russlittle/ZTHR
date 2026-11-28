@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "ocs-share-api",
+  "mutant": {
+    "id": "249",
+    "line": 239,
+    "column": 21,
+    "endLine": 239,
+    "endColumn": 56,
+    "mutator": "MethodExpression",
+    "original": "[...gs].sort((a, b) => a.id - b.id)",
+    "replacement": "[...gs]",
+    "lineText": "for (const g of [...gs].sort((a, b) => a.id - b.id)) {",
+    "prevText": "const out: ShareJson[] = [];",
+    "nextText": "const j = await this.json(g);"
+  },
+  "mayEdit": [
+    "intent/blocks/ocs-share-api/ocs-share-api.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ocs-share-api-249.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ocs-share-api\". Mutant: line 239:21-239:56, mutator MethodExpression: \"[...gs].sort((a, b) => a.id - b.id)\" becomes \"[...gs]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ocs-share-api/index.ts (> marks the mutated line):\n   233      if (g.token) out.url = `${this.o.baseUrl.replace(/\\/+$/, '')}/s/${g.token}`;\n   234      return out;\n   235    }\n   236  \n   237    private async many(gs: readonly Grant[]): Promise<ShareJson[]> {\n   238      const out: ShareJson[] = [];\n>  239      for (const g of [...gs].sort((a, b) => a.id - b.id)) {\n   240        const j = await this.json(g);\n   241        if (j) out.push(j);\n   242      }\n   243      return out;\n   244    }\n   245  \n\nTest file style (intent/blocks/ocs-share-api/ocs-share-api.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ALL, Grants, memoryGrants } from '../grants/index.ts';\nimport { CREATE, DELETE, FILE_MAX, OcsShares, READ, SHARE, UPDATE, parseParams, permissionNames, toXml } from './index.ts';\nimport type { Env, Reply, Target } from './index.ts';\n\nconst NOW = Date.UTC(2026, 2, 10, 15, 30);\nconst BASEPATH = '/ocs/v2.php/apps/files_sharing/api/v1/shares';\n\ninterface Node extends Target {\n  parent?: number;\n}\nfunction world() {\n  const nodes: Node[] = [\n    { id: 1, kind: 'folder', path: '/Docs', owner: 'ana' },\n    { id: 2, kind: 'file', path: '/Docs/plan.txt', owner: 'ana', mimetype: 'text/plain', parent: 1 },\n    { id: 3, kind: 'file', path: '/notes.md', owner: 'ana', mimetype: 'text/markdown' },\n    { id: 4, kind: 'folder', path: '/Docs/Sub', owner: 'ana', parent: 1 },\n  ];\n  const groups: Record<string, string[]> = { bo: ['team'], cy: ['team'], ana: [] };\n  const grants = new Grants(memoryGrants(), { now: () => NOW });\n  const chainOf = (n: Node) => {\n    const c: { id: number; kind: 'file' | 'folder' }[] = [];\n    for (let x: Node | undefined = n; x; x = nodes.find((y) => y.id === x!.parent)) c.push({ id: x.id, kind: x.kind });\n    return c;\n  };\n  const env: Env = {\n    find: async (user, path) => {\n      const n = nodes.find((x) => x.path === path);\n      if (!n) return undefined;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ocs-share-api-249.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.884Z"
+}

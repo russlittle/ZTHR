@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "identity-brokering",
+  "mutant": {
+    "id": "434",
+    "line": 289,
+    "column": 9,
+    "endLine": 289,
+    "endColumn": 51,
+    "mutator": "ConditionalExpression",
+    "original": "this.store.findLink(p.provider, p.subject)",
+    "replacement": "false",
+    "lineText": "if (this.store.findLink(p.provider, p.subject)) throw new BrokeringError('that provider identity is already linked');",
+    "prevText": "if (!account || account.disabled) return this.deny('account-disabled', 'this account is disabled', ev);",
+    "nextText": "this.store.addLink({ provider: p.provider, subject: p.subject, accountId: account.id, linkedAt: now, lastLoginAt: now });"
+  },
+  "mayEdit": [
+    "intent/blocks/identity-brokering/identity-brokering.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/identity-brokering-434.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"identity-brokering\". Mutant: line 289:9-289:51, mutator ConditionalExpression: \"this.store.findLink(p.provider, p.subject)\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/identity-brokering/index.ts (> marks the mutated line):\n   283      if (!p) throw new BrokeringError('there is no such pending link, or it was already used');\n   284      const now = this.o.now();\n   285      if (now >= p.expiresAt) throw new BrokeringError('the pending link has expired; sign in with the provider again');\n   286      if (p.accountId !== authenticatedAccountId) throw new BrokeringError('the pending link belongs to a different account');\n   287      const account = this.store.get(p.accountId);\n   288      if (!account || account.disabled) return this.deny('account-disabled', 'this account is disabled', ev);\n>  289      if (this.store.findLink(p.provider, p.subject)) throw new BrokeringError('that provider identity is already linked');\n   290      this.store.addLink({ provider: p.provider, subject: p.subject, accountId: account.id, linkedAt: now, lastLoginAt: now });\n   291      ev.push('linked:challenge-completed');\n   292      return { kind: 'linked', account, credentialsReset: false, events: ev };\n   293    }\n   294  \n   295    /** Removes a link, unless that would leave the account with no way to sign in. */\n\nTest file style (intent/blocks/identity-brokering/identity-brokering.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Broker, BrokeringError, MemoryAccountStore, mapRoles, normalizeEmail, usernameFrom } from './index.ts';\nimport type { Account, ExternalLogin, ProviderConfig } from './index.ts';\n\nconst google: ProviderConfig = { id: 'google', kind: 'social', issuer: 'https://accounts.google.com', trust: 'verified-email', jit: 'create' };\nconst corp: ProviderConfig = {\n  id: 'corp',\n  kind: 'enterprise',\n  issuer: 'https://login.corp.example',\n  trust: 'authoritative',\n  domains: ['corp.example'],\n  jit: 'create',\n  sync: 'force',\n  roles: { defaults: ['member'], grantable: ['admin', 'finance'], mappings: [{ group: 'eng-admins', role: 'admin' }, { group: 'fin-*', role: 'finance' }, { group: 'owners', role: 'owner' }] },\n};\nconst github: ProviderConfig = { id: 'github', kind: 'social', issuer: 'https://github.com', trust: 'none', jit: 'create', requireVerifiedEmail: false };\n\nfunction setup(extra: ProviderConfig[] = []) {\n  let t = 1_000_000;\n  let n = 0;\n  const store = new MemoryAccountStore();\n  const broker = new Broker({ providers: [google, corp, github, ...extra], store, now: () => t, newId: () => `id-${++n}` });\n  return { broker, store, advance: (ms: number) => (t += ms) };\n}\nconst g = (claims: Record<string, unknown>): ExternalLogin => ({ provider: 'google', issuer: 'https://accounts.google.com', claims });\nconst c = (claims: Record<string, unknown>): ExternalLogin => ({ provider: 'corp', issuer: 'https://login.corp.example', claims });\nconst local = (over: Partial<Account> = {}): Account => ({ id: 'local-1', email: 'ana@example.com', emailVerified: true, username: 'ana', roles: ['user'], disabled: false, hasLocalCredential: true, createdAt: 1, ...over });\n\ntest('a first sign-in with a verified email creates the account on the spot, with its link and a username', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/identity-brokering-434.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:44.232Z"
+}

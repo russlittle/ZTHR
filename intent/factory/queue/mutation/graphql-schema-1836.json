@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "graphql-schema",
+  "mutant": {
+    "id": "1836",
+    "line": 1092,
+    "column": 23,
+    "endLine": 1092,
+    "endColumn": 45,
+    "mutator": "EqualityOperator",
+    "original": "d.kind === 'schemaDef'",
+    "replacement": "d.kind !== 'schemaDef'",
+    "lineText": "} else err(`The ${d.kind === 'schemaDef' ? 'schema' : d.kind === 'directiveDef' ? `\"${d.name}\" directive` : `\"${d.name}\" type`} definition is not executable.`, d);",
+    "prevText": "else frags.set(d.name, d);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/graphql-schema/graphql-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-1836.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"graphql-schema\". Mutant: line 1092:23-1092:45, mutator EqualityOperator: \"d.kind === 'schemaDef'\" becomes \"d.kind !== 'schemaDef'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/graphql-schema/index.ts (> marks the mutated line):\n  1086    const frags = new Map<string, FragmentNode>();\n  1087    for (const d of doc.definitions) {\n  1088      if (d.kind === 'operation') ops.push(d);\n  1089      else if (d.kind === 'fragment') {\n  1090        if (frags.has(d.name)) err(`There can be only one fragment named \"${d.name}\".`, d);\n  1091        else frags.set(d.name, d);\n> 1092      } else err(`The ${d.kind === 'schemaDef' ? 'schema' : d.kind === 'directiveDef' ? `\"${d.name}\" directive` : `\"${d.name}\" type`} definition is not executable.`, d);\n  1093    }\n  1094    const names = new Set<string>();\n  1095    for (const op of ops) {\n  1096      if (op.name) {\n  1097        if (names.has(op.name)) err(`There can be only one operation named \"${op.name}\".`, op);\n  1098        names.add(op.name);\n\nTest file style (intent/blocks/graphql-schema/graphql-schema.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { GraphQLError, GraphQLSyntaxError, analyze, buildSchema, execute, parse, plan, validate } from './index.ts';\nimport type { Schema } from './index.ts';\n\nconst SDL = `\n  \"\"\"The root.\"\"\"\n  type Query {\n    hello(name: String = \"world\"): String!\n    user(id: ID!): User\n    users(first: Int, after: String): [User!]!\n    search(text: String!): [SearchResult!]!\n    node(id: ID!): Node\n    flaky: String\n    must: String!\n    items: [Int!]\n    nested: Outer\n  }\n  type Mutation { bump(by: Int = 1): Int! rename(id: ID!, input: RenameInput!): User }\n  directive @auth(role: String!) on FIELD_DEFINITION\n  interface Node { id: ID! }\n  type User implements Node {\n    id: ID!\n    name: String\n    email: String @deprecated(reason: \"use contact\")\n    role: Role!\n    friends(first: Int): [User!]\n    posts(limit: Int = 20): [Post!]! @cost(value: 2, multipliers: [\"limit\"])\n  }\n  type Post implements Node { id: ID! title: String! author: User }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-1836.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:42.497Z"
+}

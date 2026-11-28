@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "text-diff",
+  "mutant": {
+    "id": "702",
+    "line": 329,
+    "column": 49,
+    "endLine": 329,
+    "endColumn": 90,
+    "mutator": "StringLiteral",
+    "original": "`a patch has more than ${maxLines} lines`",
+    "replacement": "``",
+    "lineText": "if (src.length > maxLines) throw new TooLarge(`a patch has more than ${maxLines} lines`);",
+    "prevText": "const src = text.split('\\n');",
+    "nextText": "if (src[src.length - 1] === '') src.pop();"
+  },
+  "mayEdit": [
+    "intent/blocks/text-diff/text-diff.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/text-diff-702.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"text-diff\". Mutant: line 329:49-329:90, mutator StringLiteral: \"`a patch has more than ${maxLines} lines`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/text-diff/index.ts (> marks the mutated line):\n   323  \n   324  /** Reads unified diff text. Lines before the first `---` (a `diff --git` line, `index` lines, mail headers) are ignored. */\n   325  export function parsePatch(text: string, o: ParseOptions = {}): FilePatch[] {\n   326    const maxHunks = o.maxHunks ?? 10_000;\n   327    const maxLines = o.maxLines ?? 1_000_000;\n   328    const src = text.split('\\n');\n>  329    if (src.length > maxLines) throw new TooLarge(`a patch has more than ${maxLines} lines`);\n   330    if (src[src.length - 1] === '') src.pop();\n   331    const out: FilePatch[] = [];\n   332    let i = 0;\n   333    const name = (s: string): string => { const t = s.indexOf('\\t'); return (t < 0 ? s : s.slice(0, t)).trim(); };\n   334    let total = 0;\n   335    while (i < src.length) {\n\nTest file style (intent/blocks/text-diff/text-diff.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  PatchConflict, PatchError, TooLarge, applyPatch, diffChars, diffLines, diffTokens, diffWords, findMoves, hunks, inlineModel, parsePatch, reversePatch, sideBySide, sideText, splitLines, stats, tokenizeWords, unified,\n} from './index.ts';\nimport type { Seg } from './index.ts';\n\nconst lcs = (a: readonly string[], b: readonly string[]): number => {\n  const t = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));\n  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) t[i]![j] = a[i - 1] === b[j - 1] ? t[i - 1]![j - 1]! + 1 : Math.max(t[i - 1]![j]!, t[i]![j - 1]!);\n  return t[a.length]![b.length]!;\n};\nconst rng = (seed: number) => () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };\n/** Rebuild b from a and the segments: equal and deleted items come from a, inserted ones from b. */\nconst rebuild = (a: readonly string[], b: readonly string[], segs: readonly Seg[]): { fromA: string[]; fromB: string[] } => {\n  const fromA: string[] = []; const fromB: string[] = [];\n  for (const s of segs) {\n    if (s.type !== 'insert') fromA.push(...a.slice(s.aStart, s.aStart + s.len));\n    if (s.type !== 'delete') fromB.push(...b.slice(s.bStart, s.bStart + s.len));\n  }\n  return { fromA, fromB };\n};\n\ntest('the example from Myers\\' paper has an edit distance of 5', () => {\n  const a = [...'ABCABBA']; const b = [...'CBABAC'];\n  const d = diffTokens(a, b);\n  const edits = d.segs.filter((s) => s.type !== 'equal').reduce((n, s) => n + s.len, 0);\n  assert.equal(edits, 5);\n  assert.equal(d.segs.filter((s) => s.type === 'equal').reduce((n, s) => n + s.len, 0), 4, 'the longest common subsequence is 4 long');\n  assert.equal(d.approximate, false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/text-diff-702.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:08.648Z"
+}

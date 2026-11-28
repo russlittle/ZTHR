@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pricing",
+  "mutant": {
+    "id": "175",
+    "line": 197,
+    "column": 56,
+    "endLine": 197,
+    "endColumn": 70,
+    "mutator": "ConditionalExpression",
+    "original": "sum.minor > 0n",
+    "replacement": "false",
+    "lineText": "return { amounts: out, eligible: sum.minor > 0n, ...(sum.minor > 0n ? {} : { why: 'it would take nothing off' }) };",
+    "prevText": "const sum = out.reduce((a, m) => add(a, m), zero(cur));",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/pricing/pricing.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pricing-175.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pricing\". Mutant: line 197:56-197:70, mutator ConditionalExpression: \"sum.minor > 0n\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pricing/index.ts (> marks the mutated line):\n   191    else if (e.kind === 'buy-get') for (const i of idx) out[i] = min(basis(i), times_(ws[i]!.unit, Math.floor(ws[i]!.qty / (e.buy + e.get)) * e.get));\n   192    else {\n   193      const total = min(e.off, idx.reduce((a, i) => add(a, basis(i)), zero(cur)));\n   194      if (total.minor > 0n) allocate(total, idx.map((i) => Number(basis(i).minor))).forEach((m, k) => (out[idx[k]!] = m));\n   195    }\n   196    const sum = out.reduce((a, m) => add(a, m), zero(cur));\n>  197    return { amounts: out, eligible: sum.minor > 0n, ...(sum.minor > 0n ? {} : { why: 'it would take nothing off' }) };\n   198  }\n   199  \n   200  const worth = (amounts: readonly Money[], cur: string) => amounts.reduce((a, m) => add(a, m), zero(cur));\n   201  \n   202  /** Check a coupon for a customer now; a refusal says why in plain words. */\n   203  export function checkCoupon(cat: Catalog, code: string, customer: Customer, now: Date, log: RedemptionLog): CouponResult & { coupon?: Coupon } {\n\nTest file style (intent/blocks/pricing/pricing.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { money } from '../money/index.ts';\nimport type { Policy } from '../rbac/index.ts';\nimport { checkCoupon, NoPrice, NotAllowed, overrideUnit, priceOf, quote, redeem, RedemptionLog, type Catalog, type Customer, type Promotion } from './index.ts';\n\nconst usd = (n: number) => money(n, 'USD');\nconst NOW = new Date('2026-06-15T12:00:00Z');\nconst alice: Customer = { id: 'alice', groups: [] };\nconst vip: Customer = { id: 'vera', groups: ['vip'] };\n\nconst base: Catalog = {\n  lists: [\n    { id: 'retail', currency: 'USD', priority: 1, entries: { tee: [{ minQty: 1, unit: usd(2000) }, { minQty: 10, unit: usd(1800) }, { minQty: 50, unit: usd(1500) }], mug: [{ minQty: 1, unit: usd(1000) }] } },\n    { id: 'vip', currency: 'USD', priority: 1, groups: ['vip'], entries: { tee: [{ minQty: 1, unit: usd(1700) }] } },\n    { id: 'summer', currency: 'USD', priority: 5, from: '2026-06-01', to: '2026-06-30', entries: { mug: [{ minQty: 1, unit: usd(900) }] } },\n    { id: 'euro', currency: 'EUR', priority: 1, entries: { tee: [{ minQty: 1, unit: money(1900, 'EUR') }] } },\n  ],\n  promotions: [],\n  coupons: [],\n};\nconst promo = (p: Partial<Promotion> & { id: string }): Promotion => ({ label: p.id, effect: { kind: 'percent', bps: 1000 }, stacking: 'stack', priority: 10, ...p });\nconst withPromos = (promotions: Promotion[], coupons: Catalog['coupons'] = []): Catalog => ({ ...base, promotions, coupons });\nconst req = (lines: { sku: string; qty: number }[], extra: { customer?: Customer; coupons?: string[] } = {}) => ({ customer: extra.customer ?? alice, currency: 'USD', lines, now: NOW, ...(extra.coupons ? { coupons: extra.coupons } : {}) });\n\ntest('quantity tiers set the unit price from the highest tier reached', () => {\n  assert.equal(priceOf(base, 'tee', 1, alice, 'USD', NOW).tier.unit.minor, 2000n);\n  assert.equal(priceOf(base, 'tee', 9, alice, 'USD', NOW).tier.unit.minor, 2000n);\n  assert.equal(priceOf(base, 'tee', 10, alice, 'USD', NOW).tier.unit.minor, 1800n);\n  assert.equal(priceOf(base, 'tee', 500, alice, 'USD', NOW).tier.unit.minor, 1500n);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pricing-175.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.363Z"
+}

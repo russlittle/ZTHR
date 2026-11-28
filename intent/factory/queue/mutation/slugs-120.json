@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "slugs",
+  "mutant": {
+    "id": "120",
+    "line": 55,
+    "column": 159,
+    "endLine": 55,
+    "endColumn": 162,
+    "mutator": "StringLiteral",
+    "original": "'t'",
+    "replacement": "\"\"",
+    "lineText": "α: 'a', β: 'v', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'i', θ: 'th', ι: 'i', κ: 'k', λ: 'l', μ: 'm', ν: 'n', ξ: 'x', ο: 'o', π: 'p', ρ: 'r', σ: 's', ς: 's', τ: 't', υ: 'y', φ: 'f', χ: 'ch', ψ: 'ps', ω: 'o',",
+    "prevText": "const GREEK: Readonly<Record<string, string>> = {",
+    "nextText": "};"
+  },
+  "mayEdit": [
+    "intent/blocks/slugs/slugs.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/slugs-120.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"slugs\". Mutant: line 55:159-55:162, mutator StringLiteral: \"'t'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/slugs/index.ts (> marks the mutated line):\n    49  const GERMAN: Readonly<Record<string, string>> = { 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue' };\n    50  const CYRILLIC: Readonly<Record<string, string>> = {\n    51    а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u',\n    52    ф: 'f', х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya', і: 'i', ї: 'yi', є: 'ye', ґ: 'g', ў: 'u', ј: 'j', љ: 'lj', њ: 'nj', ћ: 'c', џ: 'dz',\n    53  };\n    54  const GREEK: Readonly<Record<string, string>> = {\n>   55    α: 'a', β: 'v', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'i', θ: 'th', ι: 'i', κ: 'k', λ: 'l', μ: 'm', ν: 'n', ξ: 'x', ο: 'o', π: 'p', ρ: 'r', σ: 's', ς: 's', τ: 't', υ: 'y', φ: 'f', χ: 'ch', ψ: 'ps', ω: 'o',\n    56  };\n    57  \n    58  /** Latin letters, digits and punctuation from any text the tables cover; other scripts and emoji are dropped unless kept. */\n    59  export function transliterate(text: string, o: { locale?: string; keepUnicode?: boolean } = {}): string {\n    60    const german = (o.locale ?? '').toLowerCase().split(/[-_]/)[0] === 'de';\n    61    let out = '';\n\nTest file style (intent/blocks/slugs/slugs.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { InvalidSlug, isValidSlug, NotFound, reserved, reservedReason, SlugRegistry, SlugTaken, slugify, transliterate, uniqueSlug } from './index.ts';\n\ntest('plain titles become lower-case words joined by hyphens', () => {\n  assert.equal(slugify('Hello, World!'), 'hello-world');\n  assert.equal(slugify('  --Foo__Bar--  '), 'foo-bar');\n  assert.equal(slugify('One   two\\tthree\\nfour'), 'one-two-three-four');\n  assert.equal(slugify('Version 2.0 (final)'), 'version-2-0-final');\n  assert.equal(slugify(\"It's Bob’s book\"), 'its-bobs-book', 'apostrophes vanish instead of splitting words');\n  assert.equal(slugify('50% off & more'), '50-percent-off-and-more');\n  assert.equal(slugify('Mix_of.separators/and\\\\slashes'), 'mix-of-separators-and-slashes');\n  assert.equal(slugify('Hello World', { separator: '_' }), 'hello_world');\n});\n\ntest('accents and special letters fold to ASCII', () => {\n  assert.equal(slugify('Crème Brûlée à la Mode'), 'creme-brulee-a-la-mode');\n  assert.equal(slugify('Straße'), 'strasse');\n  assert.equal(slugify('København Ærø Œuvre'), 'kobenhavn-aero-oeuvre');\n  assert.equal(slugify('Łódź Đà Nẵng'), 'lodz-da-nang');\n  assert.equal(slugify('Þórr and Ðe'), 'thorr-and-de');\n  assert.equal(slugify('Ｆｕｌｌｗｉｄｔｈ ①'), 'fullwidth-1', 'compatibility forms are folded');\n  assert.equal(slugify('école'), 'ecole', 'combining accents too');\n});\n\ntest('German umlauts are spelled out only when the locale asks', () => {\n  assert.equal(slugify('Müller Böhm Äpfel'), 'muller-bohm-apfel');\n  assert.equal(slugify('Müller Böhm Äpfel', { locale: 'de' }), 'mueller-boehm-aepfel');\n  assert.equal(slugify('Müller', { locale: 'de-AT' }), 'mueller');\n  assert.equal(slugify('Müller', { locale: 'sv' }), 'muller');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/slugs-120.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.723Z"
+}

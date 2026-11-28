@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "doc-classify",
+  "mutant": {
+    "id": "513",
+    "line": 312,
+    "column": 23,
+    "endLine": 312,
+    "endColumn": 29,
+    "mutator": "StringLiteral",
+    "original": "'type'",
+    "replacement": "\"\"",
+    "lineText": "const type = pick('type', 'document type', this.o.types);",
+    "prevText": "const correspondent = pick('correspondent', 'correspondent', this.o.correspondents);",
+    "nextText": "const storagePath = pick('storagePath', 'storage path', this.o.storagePaths);"
+  },
+  "mayEdit": [
+    "intent/blocks/doc-classify/doc-classify.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/doc-classify-513.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"doc-classify\". Mutant: line 312:23-312:29, mutator StringLiteral: \"'type'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/doc-classify/index.ts (> marks the mutated line):\n   306          reasons.push({ field: label, entity: es.find((e) => e.id === l.id)!.name, why: `learned from ${this.single.get(field)!.count(l.id)} filed documents, ${Math.round(l.p * 100)}% sure` });\n   307          return l.id;\n   308        }\n   309        return undefined;\n   310      };\n   311      const correspondent = pick('correspondent', 'correspondent', this.o.correspondents);\n>  312      const type = pick('type', 'document type', this.o.types);\n   313      const storagePath = pick('storagePath', 'storage path', this.o.storagePaths);\n   314      const tags: string[] = [];\n   315      for (const t of this.o.tags ?? []) {\n   316        const m = matches(t.rule, text);\n   317        if (m.matched) {\n   318          tags.push(t.id);\n\nTest file style (intent/blocks/doc-classify/doc-classify.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadRule, Classifier, checkRegex, checkTemplate, matches, renderPath, safeSegment, validateRule } from './index.ts';\nimport type { Document, Entity, MatchRule } from './index.ts';\n\nconst doc = (content: string, o: Partial<Document> = {}): Document => ({ title: 'scan 001', content, created: '2024-03-17', ...o });\nconst m = (rule: MatchRule, text: string) => matches(rule, text);\n\ntest('any: one of the words, whole words only, ignoring case and accents', () => {\n  assert.equal(m({ algorithm: 'any', pattern: 'invoice rechnung' }, 'Your RECHNUNG for March').matched, true);\n  assert.equal(m({ algorithm: 'any', pattern: 'invoice' }, 'invoices attached').matched, false, 'a word inside another word is not a match');\n  assert.equal(m({ algorithm: 'any', pattern: 'cafe' }, 'Café menu').matched, true);\n  assert.equal(m({ algorithm: 'any', pattern: 'Cafe', insensitive: false }, 'cafe menu').matched, false);\n  assert.equal(m({ algorithm: 'any', pattern: 'a b' }, 'a b b a').strength, 2);\n});\n\ntest('all: every word must be there, in any order', () => {\n  assert.equal(m({ algorithm: 'all', pattern: 'electric bill' }, 'the bill for electric service').matched, true);\n  assert.equal(m({ algorithm: 'all', pattern: 'electric bill' }, 'the bill for gas').matched, false);\n});\n\ntest('literal: the exact phrase, across line breaks and punctuation', () => {\n  assert.equal(m({ algorithm: 'literal', pattern: 'Amount due' }, 'Total\\nAmount   due: $5').matched, true);\n  assert.equal(m({ algorithm: 'literal', pattern: 'amount due' }, 'due amount').matched, false);\n  assert.equal(m({ algorithm: 'literal', pattern: 'amount due' }, 'discount amount duelling').matched, false);\n});\n\ntest('regex: matches and says where; case option; bad patterns are refused when the rule is made', () => {\n  const r = m({ algorithm: 'regex', pattern: 'INV-\\\\d{4,}' }, 'Ref inv-20431 today');\n  assert.equal(r.matched, true);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/doc-classify-513.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.556Z"
+}

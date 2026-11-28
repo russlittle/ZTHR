@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "entitlements",
+  "mutant": {
+    "id": "524",
+    "line": 379,
+    "column": 168,
+    "endLine": 379,
+    "endColumn": 173,
+    "mutator": "BooleanLiteral",
+    "original": "false",
+    "replacement": "true",
+    "lineText": "if (!view) return { allowed: false, because: `${limit} is not part of ${a.plan}`, limit: 0, used: 0, requested, remaining: 0, overage: requested, charge: 0, warn: false };",
+    "prevText": "const view = resolve(this.catalog, a, now).limits[limit];",
+    "nextText": "const used = this.ledger.used(a.id, limit, view.period, a.anchorDay, now);"
+  },
+  "mayEdit": [
+    "intent/blocks/entitlements/entitlements.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/entitlements-524.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"entitlements\". Mutant: line 379:168-379:173, mutator BooleanLiteral: \"false\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/entitlements/index.ts (> marks the mutated line):\n   373  \n   374    /** Whether `requested` more units of a limit may be used now, without recording anything. */\n   375    check(a: Account, limit: string, requested: number, now: number): Decision {\n   376      if (!this.catalog.limits.includes(limit)) throw new EntitlementError(`\"${limit}\" is not a limit in the catalog`);\n   377      if (!Number.isInteger(requested) || requested < 0 || requested > 1e12) throw new EntitlementError('a request is a whole number of units from 0');\n   378      const view = resolve(this.catalog, a, now).limits[limit];\n>  379      if (!view) return { allowed: false, because: `${limit} is not part of ${a.plan}`, limit: 0, used: 0, requested, remaining: 0, overage: requested, charge: 0, warn: false };\n   380      const used = this.ledger.used(a.id, limit, view.period, a.anchorDay, now);\n   381      if (view.limit === null) return { allowed: true, because: 'unlimited', limit: null, used, requested, remaining: null, overage: 0, charge: 0, warn: false };\n   382      const room = Math.max(0, view.limit - used);\n   383      const over = Math.max(0, requested - room);\n   384      const base = { limit: view.limit, used, requested, remaining: room, overage: over };\n   385      const warn = view.limit > 0 && (used + requested) / view.limit >= view.warnAt && over === 0;\n\nTest file style (intent/blocks/entitlements/entitlements.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Flags } from '../flags/index.ts';\nimport { EntitlementError, Entitlements, Ledger, checkCatalog, flatten, periodOf, resolve } from './index.ts';\nimport type { Account, Catalog } from './index.ts';\n\nconst D = 86_400_000;\nconst at = (s: string) => Date.parse(s);\nconst T = at('2026-03-10T12:00:00Z');\n\nconst catalog: Catalog = {\n  features: ['sso', 'audit-log', 'api', 'beta-editor'],\n  limits: ['seats', 'emails', 'storage', 'exports'],\n  plans: {\n    free: { name: 'free', features: { api: false }, limits: { seats: { included: 3, period: 'gauge' }, emails: { included: 100, period: 'month', overage: { mode: 'block' } }, exports: { included: 5, period: 'day' } } },\n    pro: {\n      name: 'pro',\n      extends: 'free',\n      trialDays: 14,\n      features: { api: true, 'audit-log': true, 'beta-editor': { enabled: true, flag: 'beta-editor' } },\n      limits: { seats: { included: 10, period: 'gauge' }, emails: { included: 1000, period: 'month', overage: { mode: 'charge', price: 200, perUnits: 500, cap: 5000 } }, storage: { included: 50, period: 'lifetime', overage: { mode: 'allow' } } },\n    },\n    team: { name: 'team', extends: 'pro', features: { sso: true }, limits: { seats: { included: null, period: 'gauge' } } },\n  },\n};\n\nconst acct = (over: Partial<Account> = {}): Account => ({ id: 'acme', plan: 'pro', anchorDay: 15, ...over });\nconst make = (flags?: Flags) => new Entitlements(catalog, new Ledger(), flags);\n\ntest('a catalog is checked as a whole: unknown names, loops, bad numbers and prices that do not add up', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/entitlements-524.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.851Z"
+}

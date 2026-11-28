@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "esign-envelope",
+  "mutant": {
+    "id": "242",
+    "line": 274,
+    "column": 46,
+    "endLine": 274,
+    "endColumn": 59,
+    "mutator": "MethodExpression",
+    "original": "s.name.trim()",
+    "replacement": "s.name",
+    "lineText": "const rec: SignerRec = { id: s.id, name: s.name.trim(), email: s.email.toLowerCase(), role, order: s.order ?? 1, status: 'pending', evidence: {}, reminders: 0, lastNotified: null, failedCodes: 0 };",
+    "prevText": "if (problems.length) throw new EnvelopeError(problems);",
+    "nextText": "if (s.accessCode) {"
+  },
+  "mayEdit": [
+    "intent/blocks/esign-envelope/esign-envelope.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/esign-envelope-242.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"esign-envelope\". Mutant: line 274:46-274:59, mutator MethodExpression: \"s.name.trim()\" becomes \"s.name\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/esign-envelope/index.ts (> marks the mutated line):\n   268      if (!EMAIL.test(s.email)) problems.push(`\"${s.email}\" is not an email address`);\n   269      else if (this.signers.some((x) => x.email === s.email.toLowerCase() && x.order === (s.order ?? 1))) problems.push(`${s.email} is already a recipient at this step`);\n   270      if (!SIGNER_ROLES.includes(role)) problems.push(`role \"${role}\" is not signer, approver or viewer`);\n   271      if (s.order !== undefined && (!Number.isInteger(s.order) || s.order < 1 || s.order > 100)) problems.push('order is a whole number from 1 to 100');\n   272      if (s.accessCode !== undefined && s.accessCode.length < 4) problems.push('an access code has at least 4 characters');\n   273      if (problems.length) throw new EnvelopeError(problems);\n>  274      const rec: SignerRec = { id: s.id, name: s.name.trim(), email: s.email.toLowerCase(), role, order: s.order ?? 1, status: 'pending', evidence: {}, reminders: 0, lastNotified: null, failedCodes: 0 };\n   275      if (s.accessCode) {\n   276        rec.codeSalt = randomBytes(16).toString('hex');\n   277        rec.codeHash = scryptSync(s.accessCode, rec.codeSalt, 32).toString('hex');\n   278      }\n   279      this.signers.push(rec);\n   280      this.log(this.sender.email, 'signer added', `${rec.id} ${rec.email} ${rec.role} step ${rec.order}${rec.codeHash ? ' with access code' : ''}`);\n\nTest file style (intent/blocks/esign-envelope/esign-envelope.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { test } from 'node:test';\nimport { sign as signLink } from '../crypto/index.ts';\nimport { pdf } from '../pdf/index.ts';\nimport { readForm } from '../pdf-forms/index.ts';\nimport { Envelope, EnvelopeError } from './index.ts';\nimport type { Certificate, FieldSpec, Message } from './index.ts';\n\nconst T0 = Date.UTC(2026, 2, 2, 9, 0, 0);\nconst HOUR = 3_600_000;\nconst SECRET = createHash('sha256').update('esign-envelope test key 1').digest('hex');\n\nfunction clock() {\n  const c = { t: T0 };\n  return { c, now: () => c.t };\n}\n\nfunction make(opts: { days?: number } = {}) {\n  const { c, now } = clock();\n  let n = 0;\n  const env = new Envelope({ now, secret: SECRET, baseUrl: 'https://sign.example.com', ids: () => `env${++n}` }, { subject: 'Services agreement', sender: { name: 'Sam Ortiz', email: 'Sam@Example.com' }, ...(opts.days ? { expiresInDays: opts.days } : {}) });\n  return { env, c };\n}\n\nconst DOC = pdf([{ h: 'Services agreement' }, { p: 'The supplier will deliver the services described.' }, { p: 'Signed by both parties.' }], { title: 'Agreement', size: 'Letter' });\nconst sha = (b: Uint8Array) => createHash('sha256').update(b).digest('hex');\nconst place = { x: 72, y: 600, width: 200, height: 30 };\nconst sigField = (id: string, signer: string, over: Partial<FieldSpec> = {}): FieldSpec => ({ id, signer, document: 'd1', page: 0, at: place, kind: 'signature', ...over });\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/esign-envelope-242.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.039Z"
+}

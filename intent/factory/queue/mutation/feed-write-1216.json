@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "feed-write",
+  "mutant": {
+    "id": "1216",
+    "line": 532,
+    "column": 107,
+    "endLine": 532,
+    "endColumn": 109,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "if (method !== 'GET' && method !== 'HEAD') return { status: 405, headers: { Allow: 'GET, HEAD' }, body: '' };",
+    "prevText": "const method = (req.method ?? 'GET').toUpperCase();",
+    "nextText": "const body = write(format, feed, o);"
+  },
+  "mayEdit": [
+    "intent/blocks/feed-write/feed-write.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/feed-write-1216.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"feed-write\". Mutant: line 532:107-532:109, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/feed-write/index.ts (> marks the mutated line):\n   526   * Answers a request for a feed. `headers` are the request's (lower-case names). A matching If-None-Match gives\n   527   * 304 and ignores If-Modified-Since; with no If-None-Match, a feed not newer than If-Modified-Since gives 304.\n   528   * Only GET and HEAD are served. `Last-Modified` is the newest change in the feed, never later than now.\n   529   */\n   530  export function respond(format: Format, feed: Feed, req: { method?: string; headers?: Readonly<Record<string, string | undefined>> }, o: WriteOptions & { maxAgeSeconds?: number } = {}): FeedResponse {\n   531    const method = (req.method ?? 'GET').toUpperCase();\n>  532    if (method !== 'GET' && method !== 'HEAD') return { status: 405, headers: { Allow: 'GET, HEAD' }, body: '' };\n   533    const body = write(format, feed, o);\n   534    const etag = etagOf(body);\n   535    const now = (o.now ?? (() => Date.now()))();\n   536    const changed = lastChange(feed);\n   537    const lm = changed ? new Date(Math.min(changed.getTime(), now)) : undefined;\n   538    const lmSeconds = lm ? Math.floor(lm.getTime() / 1000) : undefined;\n\nTest file style (intent/blocks/feed-write/feed-write.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { parseXml, type El } from '../dav/index.ts';\nimport {\n  FeedError, cdata, durationSeconds, escapeAttr, escapeText, etagOf, feedProblems, itunesDuration, rfc3339, rfc822,\n  respond, toDate, write, writeAtom, writeJsonFeed, writeRss, xmlSafe, type Feed,\n} from './index.ts';\n\nconst T0 = Date.UTC(2024, 4, 6, 12, 30, 5);\ntype Mut<T> = { -readonly [K in keyof T]: T[K] };\nconst base = (): Mut<Feed> => ({\n  title: 'Notes & Things',\n  link: 'https://example.com/',\n  selfUrl: 'https://example.com/feed.xml',\n  description: 'Writing <on> the web',\n  language: 'en-GB',\n  updated: T0,\n  items: [\n    { id: 'https://example.com/a', link: 'https://example.com/a', title: 'First', published: T0 - 86_400_000, contentHtml: '<p>Hello</p>', summary: 'Hi', authors: [{ name: 'Ann' }], categories: ['x', 'y'] },\n    { id: 'https://example.com/b', link: 'https://example.com/b', title: 'Second', published: T0, updated: T0 + 1000 },\n  ],\n});\nconst find = (e: El, name: string): El[] => [...(e.name === name ? [e] : []), ...e.children.flatMap((c) => find(c, name))];\n\ntest('RFC 822 and RFC 3339 dates match the specs examples', () => {\n  assert.equal(rfc822(new Date(Date.UTC(2002, 8, 7, 0, 0, 1))), 'Sat, 07 Sep 2002 00:00:01 GMT');\n  assert.equal(rfc3339(new Date(Date.UTC(2003, 11, 13, 18, 30, 2, 900))), '2003-12-13T18:30:02Z');\n});\n\ntest('toDate takes dates, numbers and ISO strings and refuses nonsense', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/feed-write-1216.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.201Z"
+}

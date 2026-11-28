@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mdns-ssdp",
+  "mutant": {
+    "id": "254",
+    "line": 180,
+    "column": 59,
+    "endLine": 180,
+    "endColumn": 101,
+    "mutator": "ConditionalExpression",
+    "original": "!Number.isInteger(x) || x < 0 || x > 65535",
+    "replacement": "false",
+    "lineText": "for (const x of [d.priority, d.weight, d.port]) if (!Number.isInteger(x) || x < 0 || x > 65535) throw new DiscoveryError('SRV numbers are 0 to 65535');",
+    "prevText": "case 'SRV': {",
+    "nextText": "const t = new Writer();"
+  },
+  "mayEdit": [
+    "intent/blocks/mdns-ssdp/mdns-ssdp.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mdns-ssdp-254.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mdns-ssdp\". Mutant: line 180:59-180:101, mutator ConditionalExpression: \"!Number.isInteger(x) || x < 0 || x > 65535\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mdns-ssdp/index.ts (> marks the mutated line):\n   174  function rdata(d: RData, w: Writer): Buffer {\n   175    switch (d.type) {\n   176      case 'A': return ipv4(d.address);\n   177      case 'AAAA': return ipv6(d.address);\n   178      case 'PTR': { const t = new Writer(); t.name(d.target, false); return Buffer.concat(t.parts); }\n   179      case 'SRV': {\n>  180        for (const x of [d.priority, d.weight, d.port]) if (!Number.isInteger(x) || x < 0 || x > 65535) throw new DiscoveryError('SRV numbers are 0 to 65535');\n   181        const t = new Writer();\n   182        t.name(d.target, false);\n   183        return Buffer.concat([Buffer.from([d.priority >> 8, d.priority & 255, d.weight >> 8, d.weight & 255, d.port >> 8, d.port & 255]), ...t.parts]);\n   184      }\n   185      case 'TXT': {\n   186        const strs = d.strings.length ? d.strings : [Buffer.alloc(0)];\n\nTest file style (intent/blocks/mdns-ssdp/mdns-ssdp.test.ts):\n28 test() blocks. Imports and the first tests, verbatim:\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  DiscoveryError, MdnsCache, SsdpCache, announce, answerQuery, browse, checkLocation, decodeMessage, decodeTxt, encodeMessage, encodeTxt, goodbye,\n  matchesSearch, msearch, notify, parseName, parseSsdp, resolve, searchResponse, serviceRecords, sameName, nameToString,\n  type Message, type Service,\n} from './index.ts';\n\nconst svc: Service = { instance: 'Front Printer', type: '_ipp._tcp', host: 'printer', port: 631, addresses: ['192.168.1.20', 'fe80::1'], txt: { rp: 'ipp/print', color: 'T', duplex: true } };\n\nlet t = 1_000_000;\nconst clock = () => t;\ntest.beforeEach(() => { t = 1_000_000; });\n\ntest('a query for _http._tcp.local has the bytes RFC 6762 gives (compression of the repeated name)', () => {\n  const b = encodeMessage({ id: 0, response: false, questions: [{ name: ['_http', '_tcp', 'local'], type: 'PTR' }], answers: [] });\n  assert.equal(b.toString('hex'), '000000000001000000000000' + '055f68747470045f746370056c6f63616c00' + '000c0001');\n});\n\ntest('the unicast-response bit is the top bit of a question class', () => {\n  const b = encodeMessage({ id: 0, response: false, questions: [{ name: ['a', 'local'], type: 'A', unicast: true }], answers: [] });\n  assert.equal(b.readUInt16BE(b.length - 2), 0x8001);\n  assert.equal(decodeMessage(b).questions[0]!.unicast, true);\n});\n\ntest('a message round-trips: A, AAAA, PTR, SRV, TXT and NSEC', () => {\n  const m: Message = {\n    id: 7, response: true, authoritative: true, questions: [],\n    answers: [\n      { name: ['h', 'local'], ttl: 120, flush: true, data: { type: 'A', address: '10.0.0.5' } },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mdns-ssdp-254.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:48.786Z"
+}

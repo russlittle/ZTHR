@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "smtp-protocol",
+  "mutant": {
+    "id": "1557",
+    "line": 836,
+    "column": 48,
+    "endLine": 836,
+    "endColumn": 138,
+    "mutator": "StringLiteral",
+    "original": "`the server offers ${offered.join(', ') || 'no AUTH'}, none usable with these credentials`",
+    "replacement": "``",
+    "lineText": "if (!pick) return this.failLocal('auth', `the server offers ${offered.join(', ') || 'no AUTH'}, none usable with these credentials`);",
+    "prevText": "const pick = a.token && offered.includes('XOAUTH2') ? 'XOAUTH2' : a.pass !== undefined && offered.includes('PLAIN') ? 'PLAIN' : a.pass !== undefined && offered.includes('LOGIN') ? 'LOGIN' : '';",
+    "nextText": "this.mech = pick;"
+  },
+  "mayEdit": [
+    "intent/blocks/smtp-protocol/smtp-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-1557.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"smtp-protocol\". Mutant: line 836:48-836:138, mutator StringLiteral: \"`the server offers ${offered.join(', ') || 'no AUTH'}, none usable with these credentials`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/smtp-protocol/index.ts (> marks the mutated line):\n   830      if (!this.tls && tlsMode === 'required') return this.failLocal('starttls', 'the server does not offer STARTTLS and encryption is required');\n   831      const a = this.o.auth;\n   832      if (a) {\n   833        if (!this.tls && !this.o.allowInsecureAuth) return this.failLocal('auth', 'credentials are not sent over an unencrypted connection');\n   834        const offered = (this.ext.get('AUTH') ?? '').toUpperCase().split(' ').filter(Boolean);\n   835        const pick = a.token && offered.includes('XOAUTH2') ? 'XOAUTH2' : a.pass !== undefined && offered.includes('PLAIN') ? 'PLAIN' : a.pass !== undefined && offered.includes('LOGIN') ? 'LOGIN' : '';\n>  836        if (!pick) return this.failLocal('auth', `the server offers ${offered.join(', ') || 'no AUTH'}, none usable with these credentials`);\n   837        this.mech = pick;\n   838        this.state = pick === 'LOGIN' ? 'auth-login-user' : 'auth';\n   839        if (pick === 'LOGIN') return { send: 'AUTH LOGIN\\r\\n' };\n   840        return { send: `AUTH ${pick} ${pick === 'PLAIN' ? plainInitial(a.user, a.pass!) : xoauth2Initial(a.user, a.token!)}\\r\\n` };\n   841      }\n   842      return this.beginMail();\n\nTest file style (intent/blocks/smtp-protocol/smtp-protocol.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadCommand, ClientSession, ProtocolError, ReplyParser, ServerSession, classify, endsGroup, formatReply, parseCommand, parsePath, parsePlain, parseXoauth2, pipelineGroups, plainInitial, prepareBody, xoauth2Initial, type ClientOptions, type ClientResult, type Envelope, type ServerOptions } from './index.ts';\n\nconst mkServer = (o: Partial<ServerOptions> = {}) => {\n  const got: { env: Envelope; body: string }[] = [];\n  const s = new ServerSession({ hostname: 'mx.example.org', onMessage: (env, body) => void got.push({ env, body: body.toString('latin1') }), ...o });\n  return { s, got };\n};\nconst talk = (s: ServerSession, ...lines: string[]) => s.feed(lines.join(''));\nconst replies = (text: string) => new ReplyParser().push(text);\nconst codes = (text: string) => replies(text).map((r) => r.code);\n\n/** Runs a client against a server in memory, answering STARTTLS when asked. */\nfunction run(server: ServerSession, opts: ClientOptions) {\n  const client = new ClientSession(opts);\n  const parser = new ReplyParser();\n  const wire: string[] = [];\n  let inbox = server.greeting();\n  let result: ClientResult | undefined;\n  for (let guard = 0; guard < 200 && !result; guard++) {\n    wire.push(`S: ${inbox}`);\n    let outgoing = '';\n    let tls = false;\n    for (const r of parser.push(inbox)) {\n      const step = client.receive(r);\n      outgoing += step.send;\n      if (step.startTls) tls = true;\n      if (step.done) result = step.done;\n    }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-1557.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:04.001Z"
+}

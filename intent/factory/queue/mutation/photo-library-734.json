@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "photo-library",
+  "mutant": {
+    "id": "734",
+    "line": 562,
+    "column": 61,
+    "endLine": 562,
+    "endColumn": 101,
+    "mutator": "StringLiteral",
+    "original": "`${bucket} is not a month or day bucket`",
+    "replacement": "``",
+    "lineText": "if (!isBucket(bucket)) throw new LibraryError('bucket', `${bucket} is not a month or day bucket`);",
+    "prevText": "timelineBucket(owner: string, bucket: string, q: TimelineQuery = {}): Asset[] {",
+    "nextText": "const g: Granularity = bucket.length === 7 ? 'month' : 'day';"
+  },
+  "mayEdit": [
+    "intent/blocks/photo-library/photo-library.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/photo-library-734.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"photo-library\". Mutant: line 562:61-562:101, mutator StringLiteral: \"`${bucket} is not a month or day bucket`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/photo-library/index.ts (> marks the mutated line):\n   556      }\n   557      return [...counts].map(([bucket, count]) => ({ bucket, count })).sort((a, b) => (a.bucket < b.bucket ? 1 : -1));\n   558    }\n   559  \n   560    /** One bucket's assets, newest first. A \"2024-03\" bucket holds the month; a \"2024-03-09\" bucket the day. */\n   561    timelineBucket(owner: string, bucket: string, q: TimelineQuery = {}): Asset[] {\n>  562      if (!isBucket(bucket)) throw new LibraryError('bucket', `${bucket} is not a month or day bucket`);\n   563      const g: Granularity = bucket.length === 7 ? 'month' : 'day';\n   564      return this.visible(owner, q)\n   565        .filter((a) => bucketOf(a.takenAt, g, q.offsetMinutes ?? 0) === bucket)\n   566        .sort((x, y) => y.takenAt - x.takenAt || y.id - x.id);\n   567    }\n   568  }\n\nTest file style (intent/blocks/photo-library/photo-library.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Grants, memoryGrants } from '../grants/index.ts';\nimport { Tree, memoryNodes } from '../tree/index.ts';\nimport { LibraryError, PhotoLibrary, bucketOf, checkTemplate, cleanStep, renderTemplate, withSuffix } from './index.ts';\n\nconst DAY = 86_400_000;\nconst at = (s: string) => Date.parse(s);\n\nconst make = (o: { template?: string; trashDays?: number; groups?: Record<string, string[]> } = {}) => {\n  let t = at('2024-06-01T00:00:00Z');\n  const now = () => t;\n  const tree = new Tree(memoryNodes(), { now: () => Math.floor(t / 1000) });\n  const grants = new Grants(memoryGrants(), { now });\n  const lib = new PhotoLibrary({ tree, grants, now, ...(o.template ? { template: o.template } : {}), ...(o.trashDays !== undefined ? { trashDays: o.trashDays } : {}), groupsOf: (p) => o.groups?.[p] ?? [] });\n  let n = 0;\n  const add = (owner: string, takenAt: string, filename = `IMG_${++n}.jpg`, checksum = `sum${n}`) => lib.add({ owner, filename, size: 100, blob: `b${n}`, checksum, mime: 'image/jpeg', takenAt: at(takenAt) });\n  return { lib, tree, grants, add, tick: (ms: number) => (t += ms) };\n};\nconst code = (e: unknown) => e instanceof LibraryError && e.code;\n\n// ------------------------------------------------------------ templates\n\ntest('a template fills dates in UTC, pads, and keeps the file name', () => {\n  const v = { takenAt: at('2024-03-09T07:05:03Z'), filename: 'Beach Day.JPG', assetId: 7, owner: 'ana' };\n  assert.equal(renderTemplate('{{y}}/{{MM}}/{{dd}}/{{filename}}', v), '/2024/03/09/Beach Day.JPG');\n  assert.equal(renderTemplate('{{yy}}{{MMM}}/{{HH}}{{mm}}{{ss}}-{{filenameNoExt}}.{{ext}}', v), '/24Mar/070503-Beach Day.jpg');\n  assert.equal(renderTemplate('{{owner}}/{{assetId}}.{{ext}}', v), '/ana/7.jpg');\n  assert.equal(renderTemplate('{{ y }}/{{filename}}', v), '/2024/Beach Day.JPG');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/photo-library-734.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:55.488Z"
+}

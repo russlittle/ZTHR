@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "hls-dash",
+  "mutant": {
+    "id": "248",
+    "line": 195,
+    "column": 41,
+    "endLine": 195,
+    "endColumn": 96,
+    "mutator": "ConditionalExpression",
+    "original": "s !== undefined && s.startsWith('\"') && s.endsWith('\"')",
+    "replacement": "true",
+    "lineText": "const unq = (s: string | undefined) => (s !== undefined && s.startsWith('\"') && s.endsWith('\"') ? s.slice(1, -1) : s);",
+    "prevText": "}",
+    "nextText": "const parseRange = (s: string): { length: number; offset?: number } => {"
+  },
+  "mayEdit": [
+    "intent/blocks/hls-dash/hls-dash.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/hls-dash-248.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"hls-dash\". Mutant: line 195:41-195:96, mutator ConditionalExpression: \"s !== undefined && s.startsWith('\\\"') && s.endsWith('\\\"')\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/hls-dash/index.ts (> marks the mutated line):\n   189      }\n   190      if (text[i] === ',') i++;\n   191      out[name] = value;\n   192    }\n   193    return out;\n   194  }\n>  195  const unq = (s: string | undefined) => (s !== undefined && s.startsWith('\"') && s.endsWith('\"') ? s.slice(1, -1) : s);\n   196  const parseRange = (s: string): { length: number; offset?: number } => {\n   197    const m = /^(\\d+)(?:@(\\d+))?$/.exec(s);\n   198    if (!m) throw new ManifestError(`\"${s.slice(0, 30)}\" is not a byte range`);\n   199    return { length: Number(m[1]), ...(m[2] !== undefined ? { offset: Number(m[2]) } : {}) };\n   200  };\n   201  \n\nTest file style (intent/blocks/hls-dash/hls-dash.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  buildLadder, dashLiveEdge, expandTimeline, fillTemplate, formatIsoDuration, ladderMaster, LivePlaylist, ManifestError, parseAttributes, parseIsoDuration,\n  parseMasterPlaylist, parseMediaPlaylist, parseMpd, parsePlaylist, requiredVersion, segmentName, segmentUrls, validateMedia, writeMasterPlaylist, writeMediaPlaylist, writeMpd,\n} from './index.ts';\nimport type { MediaPlaylist, Mpd } from './index.ts';\n\nconst vod = (): MediaPlaylist => ({\n  kind: 'media', targetDuration: 6, mediaSequence: 0, playlistType: 'VOD', endList: true,\n  segments: [{ uri: 'a.ts', duration: 6 }, { uri: 'b.ts', duration: 5.96 }, { uri: 'c.ts', duration: 2.5 }],\n});\n\n// ------------------------------------------------------------ HLS media\n\ntest('a VOD playlist is written in the shape of the RFC example, and the version follows what is used', () => {\n  assert.equal(writeMediaPlaylist(vod()), [\n    '#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-TARGETDURATION:6', '#EXT-X-PLAYLIST-TYPE:VOD', '#EXT-X-MEDIA-SEQUENCE:0',\n    '#EXTINF:6,', 'a.ts', '#EXTINF:5.96,', 'b.ts', '#EXTINF:2.5,', 'c.ts', '#EXT-X-ENDLIST', '',\n  ].join('\\n'));\n  const whole: MediaPlaylist = { ...vod(), segments: [{ uri: 'a.ts', duration: 6 }] };\n  assert.equal(requiredVersion(whole), 1);\n  assert.equal(requiredVersion(vod()), 3);\n  assert.equal(requiredVersion({ ...vod(), segments: [{ uri: 'a.ts', duration: 6, byteRange: { length: 10, offset: 0 } }] }), 4);\n  assert.equal(requiredVersion({ ...vod(), segments: [{ uri: 'a.m4s', duration: 6, map: { uri: 'init.mp4' } }] }), 6);\n  assert.equal(requiredVersion({ ...vod(), segments: [{ uri: 'a.m4s', duration: 6, key: { method: 'AES-128', uri: 'k', keyFormat: 'identity' } }] }), 5);\n});\n\ntest('write then parse gives the playlist back, with titles, discontinuities, keys, maps, dates and byte ranges', () => {\n  // key and map are sticky: they apply to every segment after the line, so they are on all four\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/hls-dash-248.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.030Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "promql-lite",
+  "mutant": {
+    "id": "212",
+    "line": 144,
+    "column": 41,
+    "endLine": 144,
+    "endColumn": 59,
+    "mutator": "ObjectLiteral",
+    "original": "{ min: 2, max: 2 }",
+    "replacement": "{}",
+    "lineText": "clamp: { min: 3, max: 3 }, clamp_min: { min: 2, max: 2 }, clamp_max: { min: 2, max: 2 },",
+    "prevText": "exp: { min: 1, max: 1 }, ln: { min: 1, max: 1 }, log2: { min: 1, max: 1 }, log10: { min: 1, max: 1 },",
+    "nextText": "absent: { min: 1, max: 1 }, scalar: { min: 1, max: 1 }, vector: { min: 1, max: 1 }, time: { min: 0, max: 0 },"
+  },
+  "mayEdit": [
+    "intent/blocks/promql-lite/promql-lite.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/promql-lite-212.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"promql-lite\". Mutant: line 144:41-144:59, mutator ObjectLiteral: \"{ min: 2, max: 2 }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/promql-lite/index.ts (> marks the mutated line):\n   138    rate: { min: 1, max: 1 }, irate: { min: 1, max: 1 }, increase: { min: 1, max: 1 }, delta: { min: 1, max: 1 }, idelta: { min: 1, max: 1 },\n   139    sum_over_time: { min: 1, max: 1 }, avg_over_time: { min: 1, max: 1 }, min_over_time: { min: 1, max: 1 }, max_over_time: { min: 1, max: 1 },\n   140    count_over_time: { min: 1, max: 1 }, last_over_time: { min: 1, max: 1 },\n   141    histogram_quantile: { min: 2, max: 2 },\n   142    abs: { min: 1, max: 1 }, ceil: { min: 1, max: 1 }, floor: { min: 1, max: 1 }, round: { min: 1, max: 2 }, sqrt: { min: 1, max: 1 },\n   143    exp: { min: 1, max: 1 }, ln: { min: 1, max: 1 }, log2: { min: 1, max: 1 }, log10: { min: 1, max: 1 },\n>  144    clamp: { min: 3, max: 3 }, clamp_min: { min: 2, max: 2 }, clamp_max: { min: 2, max: 2 },\n   145    absent: { min: 1, max: 1 }, scalar: { min: 1, max: 1 }, vector: { min: 1, max: 1 }, time: { min: 0, max: 0 },\n   146    sort: { min: 1, max: 1 }, sort_desc: { min: 1, max: 1 }, label_replace: { min: 5, max: 5 },\n   147  };\n   148  const RANGE_FUNCS = new Set(['rate', 'irate', 'increase', 'delta', 'idelta', 'sum_over_time', 'avg_over_time', 'min_over_time', 'max_over_time', 'count_over_time', 'last_over_time']);\n   149  \n   150  const PREC: Record<string, number> = { or: 1, and: 2, unless: 2, '==': 3, '!=': 3, '<': 3, '>': 3, '<=': 3, '>=': 3, '+': 4, '-': 4, '*': 5, '/': 5, '%': 5, '^': 6 };\n\nTest file style (intent/blocks/promql-lite/promql-lite.test.ts):\n28 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { alignRange, instantQuery, parse, parseDuration, PromQLError, rangeQuery, SeriesStore } from './index.ts';\nimport type { Result } from './index.ts';\n\nconst S = 1000;\nconst approx = (a: number, b: number, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${a} is not ${b}`);\n\n/** A counter growing 1 per second: samples every 10 s from 0 to 120 s. */\nfunction counters(): SeriesStore {\n  const st = new SeriesStore();\n  for (let i = 0; i <= 12; i++) {\n    st.ingest('http_requests_total', { job: 'api', code: '200' }, i * 10 * S, i * 10);\n    st.ingest('http_requests_total', { job: 'api', code: '500' }, i * 10 * S, i);\n    st.ingest('http_requests_total', { job: 'web', code: '200' }, i * 10 * S, i * 20);\n  }\n  return st;\n}\nconst vec = (r: Result) => {\n  assert.equal(r.type, 'vector');\n  return (r as Extract<Result, { type: 'vector' }>).samples.map((s) => ({ labels: { ...s.labels }, value: s.value }));\n};\nconst scalar = (r: Result) => {\n  assert.equal(r.type, 'scalar');\n  return (r as Extract<Result, { type: 'scalar' }>).value;\n};\n\n// ------------------------------------------------------------ parsing\n\ntest('durations: units, compound forms, and refusal of nonsense', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/promql-lite-212.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.943Z"
+}

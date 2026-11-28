@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "change-feed",
+  "mutant": {
+    "id": "345",
+    "line": 157,
+    "column": 19,
+    "endLine": 157,
+    "endColumn": 31,
+    "mutator": "Regex",
+    "original": "/^\\((.*)\\)$/",
+    "replacement": "/\\((.*)\\)$/",
+    "lineText": "const l = /^\\((.*)\\)$/.exec(raw);",
+    "prevText": "if (cmp === 'in') {",
+    "nextText": "if (!l) throw new FeedError('in takes a list like in.(1,2,3)');"
+  },
+  "mayEdit": [
+    "intent/blocks/change-feed/change-feed.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/change-feed-345.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"change-feed\". Mutant: line 157:19-157:31, mutator Regex: \"/^\\\\((.*)\\\\)$/\" becomes \"/\\\\((.*)\\\\)$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/change-feed/index.ts (> marks the mutated line):\n   151        const lit = (s: string): unknown => (/^-?\\d+(?:\\.\\d+)?$/.test(s) ? Number(s) : s === 'true' ? true : s === 'false' ? false : s);\n   152        if (cmp === 'is' || cmp === 'not.is') {\n   153          if (raw !== 'null') throw new FeedError('is and not.is only compare with null');\n   154          return { column, cmp: cmp === 'is' ? 'isNull' : 'notNull' } as Condition;\n   155        }\n   156        if (cmp === 'in') {\n>  157          const l = /^\\((.*)\\)$/.exec(raw);\n   158          if (!l) throw new FeedError('in takes a list like in.(1,2,3)');\n   159          return { column, cmp: 'in', value: l[1]!.split(',').map((s) => lit(s.trim())) };\n   160        }\n   161        return { column, cmp: cmp as Cmp, value: lit(raw) };\n   162      });\n   163  }\n\nTest file style (intent/blocks/change-feed/change-feed.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { randomBytes } from 'node:crypto';\nimport { ChangeFeed, ResumeError, FeedError, compileFilter, parseFilter, coalesce, toCloudEvent, isGap } from './index.ts';\nimport type { Change, Gap } from './index.ts';\n\nconst key = randomBytes(32);\nconst mk = (o: { retain?: number; epoch?: string } = {}) => new ChangeFeed({ signingKey: key, now: () => 1_700_000_000_000, epoch: 'e1', ...o });\nconst changes = (items: ReturnType<ChangeFeed['subscribe']>['poll'] extends (...a: never[]) => infer R ? R : never) => items.filter((i): i is Change => !isGap(i));\n\ntest('captured changes get gapless, increasing sequence numbers and frozen rows', () => {\n  const f = mk();\n  const a = f.capture('orders', 'insert', '1', null, { id: 1, status: 'new' })!;\n  const b = f.capture('orders', 'update', '1', { id: 1, status: 'new' }, { id: 1, status: 'paid' })!;\n  const c = f.capture('orders', 'delete', '1', { id: 1, status: 'paid' }, null)!;\n  assert.deepEqual([a.seq, b.seq, c.seq], [1, 2, 3]);\n  assert.deepEqual(b.changed, ['status']);\n  assert.ok(Object.isFrozen(a.after));\n  assert.equal(f.head, 3);\n});\n\ntest('an update that changes nothing is not a change; malformed changes are refused', () => {\n  const f = mk();\n  assert.equal(f.capture('t', 'update', '1', { a: 1, b: { x: [1] } }, { a: 1, b: { x: [1] } }), undefined);\n  assert.equal(f.head, 0);\n  assert.throws(() => f.capture('t', 'insert', '1', { a: 1 }, { a: 1 }), FeedError);\n  assert.throws(() => f.capture('t', 'delete', '1', null, null), FeedError);\n  assert.throws(() => f.capture('', 'insert', '1', null, { a: 1 }), FeedError);\n  assert.throws(() => f.capture('t', 'update', '1', null, { a: 1 }), FeedError);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/change-feed-345.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.987Z"
+}

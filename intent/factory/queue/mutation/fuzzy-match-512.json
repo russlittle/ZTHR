@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "fuzzy-match",
+  "mutant": {
+    "id": "512",
+    "line": 269,
+    "column": 69,
+    "endLine": 269,
+    "endColumn": 99,
+    "mutator": "LogicalOperator",
+    "original": "n === 'I' && at(i + 2) === 'A'",
+    "replacement": "n === 'I' || at(i + 2) === 'A'",
+    "lineText": "if ('EIY'.includes(n) && n) out += at(i - 1) === 'S' ? '' : n === 'I' && at(i + 2) === 'A' ? 'X' : 'S';",
+    "prevText": "case 'C':",
+    "nextText": "else if (n === 'H') {"
+  },
+  "mayEdit": [
+    "intent/blocks/fuzzy-match/fuzzy-match.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/fuzzy-match-512.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"fuzzy-match\". Mutant: line 269:69-269:99, mutator LogicalOperator: \"n === 'I' && at(i + 2) === 'A'\" becomes \"n === 'I' || at(i + 2) === 'A'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/fuzzy-match/index.ts (> marks the mutated line):\n   263          if (i === 0) out += c;\n   264          break;\n   265        case 'B':\n   266          if (!(i === w.length - 1 && at(i - 1) === 'M')) out += 'B';\n   267          break;\n   268        case 'C':\n>  269          if ('EIY'.includes(n) && n) out += at(i - 1) === 'S' ? '' : n === 'I' && at(i + 2) === 'A' ? 'X' : 'S';\n   270          else if (n === 'H') {\n   271            out += i === 0 && !V.includes(at(i + 2)) ? 'K' : 'X';\n   272            i++;\n   273          } else out += 'K';\n   274          break;\n   275        case 'D':\n\nTest file style (intent/blocks/fuzzy-match/fuzzy-match.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { TooLong, TrigramIndex, allowedEdits, damerauLevenshtein, jaro, jaroWinkler, levenshtein, metaphone, normalise, osa, similarity, soundex, suggest, tokenSet, tokenSort, trigramSimilarity, trigrams } from './index.ts';\n\nconst close = (a: number, b: number, eps = 0.0001) => assert.ok(Math.abs(a - b) < eps, `${a} is not within ${eps} of ${b}`);\n\ntest('Levenshtein: the textbook cases', () => {\n  assert.equal(levenshtein('kitten', 'sitting'), 3);\n  assert.equal(levenshtein('flaw', 'lawn'), 2);\n  assert.equal(levenshtein('', 'abc'), 3);\n  assert.equal(levenshtein('abc', ''), 3);\n  assert.equal(levenshtein('same', 'same'), 0);\n  assert.equal(levenshtein('Saturday', 'Sunday'), 3);\n  assert.equal(levenshtein('😀a', '😀b'), 1, 'counts characters, not code units');\n});\n\ntest('Levenshtein with a cut-off stops early and reports \"more than max\"', () => {\n  assert.equal(levenshtein('kitten', 'sitting', 3), 3);\n  assert.equal(levenshtein('kitten', 'sitting', 2), 3);\n  assert.equal(levenshtein('abcdef', 'uvwxyz', 1), 2);\n  assert.equal(levenshtein('a', 'abcdefgh', 2), 3);\n});\n\ntest('the transposition cases that separate OSA from true Damerau-Levenshtein', () => {\n  assert.equal(levenshtein('ca', 'abc'), 3);\n  assert.equal(osa('ca', 'abc'), 3);\n  assert.equal(damerauLevenshtein('ca', 'abc'), 2);\n  assert.equal(damerauLevenshtein('teh', 'the'), 1);\n  assert.equal(osa('teh', 'the'), 1);\n  assert.equal(damerauLevenshtein('abcd', 'acbd'), 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/fuzzy-match-512.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.829Z"
+}

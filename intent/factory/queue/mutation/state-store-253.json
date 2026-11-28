@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "state-store",
+  "mutant": {
+    "id": "253",
+    "line": 204,
+    "column": 9,
+    "endLine": 204,
+    "endColumn": 20,
+    "mutator": "ConditionalExpression",
+    "original": "p.t >= o.to",
+    "replacement": "false",
+    "lineText": "if (p.t >= o.to) break;",
+    "prevText": "}",
+    "nextText": "// spread the time this value held across the buckets it touches"
+  },
+  "mayEdit": [
+    "intent/blocks/state-store/state-store.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/state-store-253.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"state-store\". Mutant: line 204:9-204:20, mutator ConditionalExpression: \"p.t >= o.to\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/state-store/index.ts (> marks the mutated line):\n   198      const nextT = nums[i + 1]?.t ?? o.to;\n   199      let delta = 0;\n   200      if (o.kind === 'total_increasing') {\n   201        delta = prevMeter === undefined ? 0 : p.v >= prevMeter ? p.v - prevMeter : p.v;\n   202        prevMeter = p.v;\n   203      }\n>  204      if (p.t >= o.to) break;\n   205      // spread the time this value held across the buckets it touches\n   206      const from = Math.max(p.t, o.from);\n   207      const till = Math.min(nextT, o.to);\n   208      const startB = Math.floor((p.t >= o.from ? p.t : o.from) / o.width) * o.width;\n   209      const b = buckets.get(startB) ?? { min: Infinity, max: -Infinity, weighted: 0, span: 0, last: p.v, count: 0, sum: 0 };\n   210      if (p.t >= o.from) {\n\nTest file style (intent/blocks/state-store/state-store.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { StateMachine, StateError, Timeseries, History, statistics, domainOf, MAX_STATE, type State } from './index.ts';\nimport { Hub } from '../events/index.ts';\n\nconst H = 3_600_000;\nlet t = 10 * H;\nconst mk = () => new StateMachine({ now: () => t });\ntest.beforeEach(() => { t = 10 * H; });\n\ntest('setting a new entity creates it with all three times equal', () => {\n  const m = mk();\n  const r = m.set('sensor.kitchen_temp', '21.5', { unit: 'C' });\n  assert.equal(r.changed, true);\n  assert.deepEqual({ ...r.state }, { entityId: 'sensor.kitchen_temp', state: '21.5', attributes: { unit: 'C' }, lastChanged: t, lastUpdated: t, lastReported: t });\n  assert.equal(m.get('sensor.kitchen_temp')!.state, '21.5');\n  assert.equal(m.count(), 1);\n});\n\ntest('the same state and attributes again moves only last_reported and publishes nothing', () => {\n  const m = mk();\n  m.set('light.hall', 'on');\n  const seen: unknown[] = [];\n  m.hub.subscribe(() => true, (e) => seen.push(e));\n  t += 5000;\n  const r = m.set('light.hall', 'on');\n  assert.equal(r.changed, false);\n  assert.equal(r.updated, false);\n  const s = m.get('light.hall')!;\n  assert.equal(s.lastReported, t);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/state-store-253.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.137Z"
+}

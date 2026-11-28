@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "wiki-pages",
+  "mutant": {
+    "id": "431",
+    "line": 325,
+    "column": 59,
+    "endLine": 325,
+    "endColumn": 107,
+    "mutator": "StringLiteral",
+    "original": "`there is already a page called \"${slug}\" there`",
+    "replacement": "``",
+    "lineText": "if (siblings.has(slug)) throw new WikiError('exists', `there is already a page called \"${slug}\" there`);",
+    "prevText": "const siblings = this.childMap(parent?.id ?? null);",
+    "nextText": "if (siblings.size >= this.o.maxChildren) throw new WikiError('limit', `a page may have at most ${this.o.maxChildren} sub-pages`);"
+  },
+  "mayEdit": [
+    "intent/blocks/wiki-pages/wiki-pages.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/wiki-pages-431.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"wiki-pages\". Mutant: line 325:59-325:107, mutator StringLiteral: \"`there is already a page called \\\"${slug}\\\" there`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/wiki-pages/index.ts (> marks the mutated line):\n   319      this.checkContent(title, body);\n   320      const slug = input.slug ?? slugify(title);\n   321      this.checkSlug(slug);\n   322      if (this.pages.size >= this.o.maxPages) throw new WikiError('limit', `the wiki is limited to ${this.o.maxPages} pages`);\n   323      if (this.depthOf(parent?.id ?? null) + 1 > this.o.maxDepth) throw new WikiError('limit', `pages may be nested at most ${this.o.maxDepth} deep`);\n   324      const siblings = this.childMap(parent?.id ?? null);\n>  325      if (siblings.has(slug)) throw new WikiError('exists', `there is already a page called \"${slug}\" there`);\n   326      if (siblings.size >= this.o.maxChildren) throw new WikiError('limit', `a page may have at most ${this.o.maxChildren} sub-pages`);\n   327      const id = this.o.id();\n   328      if (this.pages.has(id)) throw new WikiError('invalid', 'the id generator returned an id already in use');\n   329      const p: Stored = { id, parent: parent?.id ?? null, slug, title, body, acl: new Map(), createdBy: u.id, createdAt: this.o.now().toISOString(), links: extractLinks(body).map((l) => l.target) };\n   330      this.pages.set(id, p);\n   331      siblings.set(slug, id);\n\nTest file style (intent/blocks/wiki-pages/wiki-pages.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Wiki, WikiError, diffLines, extractLinks, type User } from './index.ts';\n\nconst ada: User = { id: 'ada' };\nconst bob: User = { id: 'bob', groups: ['staff'] };\nconst root: User = { id: 'root' };\n\nfunction setup(o: { defaultRole?: 'none' | 'read' | 'edit' | 'admin' } = {}) {\n  let t = Date.parse('2024-03-01T10:00:00Z');\n  let n = 0;\n  const clock = { advance: (s: number) => { t += s * 1000; } };\n  const w = new Wiki({ now: () => new Date(t), id: () => `p${++n}`, admins: ['root'], defaultRole: o.defaultRole ?? 'edit' });\n  return { w, clock };\n}\nconst code = (f: () => unknown): string | undefined => { try { f(); return undefined; } catch (e) { return e instanceof WikiError ? e.code : `other:${String(e)}`; } };\n\ntest('create builds a tree with slug paths and breadcrumbs', () => {\n  const { w } = setup();\n  const a = w.create(ada, { title: 'Handbook' });\n  assert.equal(a.path, 'handbook');\n  const b = w.create(ada, { parent: 'handbook', title: 'On boarding!' });\n  assert.equal(b.path, 'handbook/on-boarding');\n  const c = w.create(ada, { parent: 'handbook/on-boarding', title: 'Laptops', slug: 'laptops' });\n  assert.equal(c.path, 'handbook/on-boarding/laptops');\n  assert.deepEqual(w.breadcrumbs(ada, c.path).map((x) => x.title), ['Handbook', 'On boarding!', 'Laptops']);\n  assert.deepEqual(w.children(ada, 'handbook').map((x) => x.slug), ['on-boarding']);\n  assert.equal(w.get(ada, c.path).version, 1);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/wiki-pages-431.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.654Z"
+}

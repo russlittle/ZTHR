@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "content-types",
+  "mutant": {
+    "id": "1031",
+    "line": 561,
+    "column": 57,
+    "endLine": 561,
+    "endColumn": 92,
+    "mutator": "StringLiteral",
+    "original": "`\"${uid}\" has no draft and publish`",
+    "replacement": "``",
+    "lineText": "if (!t.draftAndPublish) throw new ContentModelError(`\"${uid}\" has no draft and publish`);",
+    "prevText": "const t = this.reg.type(uid);",
+    "nextText": "const locale = this.locale(uid, options.locale);"
+  },
+  "mayEdit": [
+    "intent/blocks/content-types/content-types.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/content-types-1031.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"content-types\". Mutant: line 561:57-561:92, mutator StringLiteral: \"`\\\"${uid}\\\" has no draft and publish`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/content-types/index.ts (> marks the mutated line):\n   555      }\n   556      return out;\n   557    }\n   558  \n   559    unpublish(uid: string, documentId: string, options: { locale?: string } = {}): Entry {\n   560      const t = this.reg.type(uid);\n>  561      if (!t.draftAndPublish) throw new ContentModelError(`\"${uid}\" has no draft and publish`);\n   562      const locale = this.locale(uid, options.locale);\n   563      const d = this.doc(uid, documentId);\n   564      const v = d.variants.get(locale);\n   565      if (!v) throw new NotFoundError(`${uid} \"${documentId}\" has no ${locale} variant`);\n   566      v.published = undefined;\n   567      v.publishedAt = null;\n\nTest file style (intent/blocks/content-types/content-types.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ContentModelError, ContentStore, NotFoundError, Registry, slugify, ValidationFailed, validateFields } from './index.ts';\n\nfunction model(): Registry {\n  const r = new Registry();\n  r.defineComponent({ uid: 'shared.seo', fields: { metaTitle: { kind: 'string', required: true, maxLength: 60 }, metaDescription: { kind: 'text', maxLength: 160 } } });\n  r.defineComponent({ uid: 'blocks.hero', fields: { heading: { kind: 'string', required: true }, image: { kind: 'media' } } });\n  r.defineComponent({ uid: 'blocks.quote', fields: { text: { kind: 'text', required: true }, author: { kind: 'string' } } });\n  r.defineComponent({ uid: 'shared.link', fields: { label: { kind: 'string', required: true }, url: { kind: 'string', required: true, regex: '^https?://' } } });\n  r.defineType({ uid: 'author', fields: { name: { kind: 'string', required: true }, email: { kind: 'email', unique: true } } });\n  r.defineType({\n    uid: 'article',\n    draftAndPublish: true,\n    localized: true,\n    fields: {\n      title: { kind: 'string', required: true, maxLength: 120 },\n      slug: { kind: 'uid', targetField: 'title' },\n      views: { kind: 'integer', min: 0, default: 0, localized: false },\n      kind: { kind: 'enumeration', values: ['news', 'essay'], default: 'news' },\n      seo: { kind: 'component', component: 'shared.seo' },\n      links: { kind: 'component', component: 'shared.link', repeatable: true, max: 3 },\n      body: { kind: 'dynamiczone', components: ['blocks.hero', 'blocks.quote'] },\n      author: { kind: 'relation', target: 'author', relation: 'manyToOne' },\n      tags: { kind: 'relation', target: 'author', relation: 'manyToMany' },\n      internalNote: { kind: 'text', private: true },\n      published_on: { kind: 'date' },\n    },\n  });\n  r.defineType({ uid: 'homepage', kind: 'single', fields: { tagline: { kind: 'string', required: true } } });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/content-types-1031.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.916Z"
+}

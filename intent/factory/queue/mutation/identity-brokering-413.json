@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "identity-brokering",
+  "mutant": {
+    "id": "413",
+    "line": 282,
+    "column": 26,
+    "endLine": 282,
+    "endColumn": 28,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "const ev: string[] = [];",
+    "prevText": "const p = this.store.takePending(pendingId);",
+    "nextText": "if (!p) throw new BrokeringError('there is no such pending link, or it was already used');"
+  },
+  "mayEdit": [
+    "intent/blocks/identity-brokering/identity-brokering.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/identity-brokering-413.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"identity-brokering\". Mutant: line 282:26-282:28, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/identity-brokering/index.ts (> marks the mutated line):\n   276      return { kind: 'created', account, events: ev };\n   277    }\n   278  \n   279    /** Finishes a pending link after the person has signed in to the existing account by its own method. Single use. */\n   280    completeLink(pendingId: string, authenticatedAccountId: string): Outcome {\n   281      const p = this.store.takePending(pendingId);\n>  282      const ev: string[] = [];\n   283      if (!p) throw new BrokeringError('there is no such pending link, or it was already used');\n   284      const now = this.o.now();\n   285      if (now >= p.expiresAt) throw new BrokeringError('the pending link has expired; sign in with the provider again');\n   286      if (p.accountId !== authenticatedAccountId) throw new BrokeringError('the pending link belongs to a different account');\n   287      const account = this.store.get(p.accountId);\n   288      if (!account || account.disabled) return this.deny('account-disabled', 'this account is disabled', ev);\n\nTest file style (intent/blocks/identity-brokering/identity-brokering.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Broker, BrokeringError, MemoryAccountStore, mapRoles, normalizeEmail, usernameFrom } from './index.ts';\nimport type { Account, ExternalLogin, ProviderConfig } from './index.ts';\n\nconst google: ProviderConfig = { id: 'google', kind: 'social', issuer: 'https://accounts.google.com', trust: 'verified-email', jit: 'create' };\nconst corp: ProviderConfig = {\n  id: 'corp',\n  kind: 'enterprise',\n  issuer: 'https://login.corp.example',\n  trust: 'authoritative',\n  domains: ['corp.example'],\n  jit: 'create',\n  sync: 'force',\n  roles: { defaults: ['member'], grantable: ['admin', 'finance'], mappings: [{ group: 'eng-admins', role: 'admin' }, { group: 'fin-*', role: 'finance' }, { group: 'owners', role: 'owner' }] },\n};\nconst github: ProviderConfig = { id: 'github', kind: 'social', issuer: 'https://github.com', trust: 'none', jit: 'create', requireVerifiedEmail: false };\n\nfunction setup(extra: ProviderConfig[] = []) {\n  let t = 1_000_000;\n  let n = 0;\n  const store = new MemoryAccountStore();\n  const broker = new Broker({ providers: [google, corp, github, ...extra], store, now: () => t, newId: () => `id-${++n}` });\n  return { broker, store, advance: (ms: number) => (t += ms) };\n}\nconst g = (claims: Record<string, unknown>): ExternalLogin => ({ provider: 'google', issuer: 'https://accounts.google.com', claims });\nconst c = (claims: Record<string, unknown>): ExternalLogin => ({ provider: 'corp', issuer: 'https://login.corp.example', claims });\nconst local = (over: Partial<Account> = {}): Account => ({ id: 'local-1', email: 'ana@example.com', emailVerified: true, username: 'ana', roles: ['user'], disabled: false, hasLocalCredential: true, createdAt: 1, ...over });\n\ntest('a first sign-in with a verified email creates the account on the spot, with its link and a username', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/identity-brokering-413.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:44.231Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "tenant-model",
+  "mutant": {
+    "id": "17",
+    "line": 54,
+    "column": 7,
+    "endLine": 54,
+    "endColumn": 28,
+    "mutator": "ConditionalExpression",
+    "original": "typeof v !== 'string'",
+    "replacement": "false",
+    "lineText": "if (typeof v !== 'string' || !TENANT_ID.test(v) || v.includes('--')) throw new TenantError(`\"${String(v).slice(0, 40)}\" is not a tenant id (2-63 of a-z, 0-9 and single hyphens)`);",
+    "prevText": "export function tenantId(v: string): string {",
+    "nextText": "return v;"
+  },
+  "mayEdit": [
+    "intent/blocks/tenant-model/tenant-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/tenant-model-17.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"tenant-model\". Mutant: line 54:7-54:28, mutator ConditionalExpression: \"typeof v !== 'string'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/tenant-model/index.ts (> marks the mutated line):\n    48  // ---------------------------------------------------------------- ids, context, keys\n    49  \n    50  const TENANT_ID = /^[a-z0-9][a-z0-9-]{1,62}$/;\n    51  \n    52  /** A tenant id: lower-case letters, digits and hyphens, 2 to 63 long, starting with a letter or digit. */\n    53  export function tenantId(v: string): string {\n>   54    if (typeof v !== 'string' || !TENANT_ID.test(v) || v.includes('--')) throw new TenantError(`\"${String(v).slice(0, 40)}\" is not a tenant id (2-63 of a-z, 0-9 and single hyphens)`);\n    55    return v;\n    56  }\n    57  \n    58  export interface TenantContext {\n    59    readonly tenant: string;\n    60    readonly actor?: string;\n\nTest file style (intent/blocks/tenant-model/tenant-model.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { setTimeout as sleep } from 'node:timers/promises';\nimport type { Policy } from '../rbac/index.ts';\nimport { CrossTenant, FairShare, MemoryBacking, Memberships, NoTenant, QuotaExceeded, Quotas, ScopedStore, TenantError, TenantRate, TooBusy, UsageWindow, assertScoped, can, currentTenant, keyBelongsTo, parseTenantKey, scopeFilter, scopeSql, tenantId, tenantKey, tenantSecret, withTenant, type Row } from './index.ts';\n\ninterface Doc extends Row {\n  title: string;\n}\n\ntest('tenant ids are checked once, strictly', () => {\n  assert.equal(tenantId('acme-co'), 'acme-co');\n  for (const bad of ['', 'a', 'A', 'acme co', '-acme', 'a--b', 'a:b', 'a/b', '../x', 'x'.repeat(64), 'ünï']) assert.throws(() => tenantId(bad), TenantError, bad);\n});\n\ntest('the context follows async work, nests, and has no default', async () => {\n  assert.throws(() => currentTenant(), NoTenant);\n  const seen: string[] = [];\n  await Promise.all([\n    withTenant({ tenant: 'one', actor: 'ana' }, async () => {\n      await sleep(5);\n      seen.push(`${currentTenant().tenant}/${currentTenant().actor}`);\n      await withTenant({ tenant: 'inner' }, async () => {\n        await sleep(1);\n        seen.push(currentTenant().tenant);\n      });\n      seen.push(currentTenant().tenant);\n    }),\n    withTenant({ tenant: 'two' }, async () => {\n      await sleep(1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/tenant-model-17.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:08.324Z"
+}

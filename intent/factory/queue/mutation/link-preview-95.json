@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "link-preview",
+  "mutant": {
+    "id": "95",
+    "line": 78,
+    "column": 7,
+    "endLine": 78,
+    "endColumn": 21,
+    "mutator": "LogicalOperator",
+    "original": "!head || !tail",
+    "replacement": "!head && !tail",
+    "lineText": "if (!head || !tail) return null;",
+    "prevText": "const tail = halves.length === 2 ? toGroups(halves[1]!) : [];",
+    "nextText": "if (halves.length === 1) return head.length === 8 ? head : null;"
+  },
+  "mayEdit": [
+    "intent/blocks/link-preview/link-preview.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/link-preview-95.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"link-preview\". Mutant: line 78:7-78:21, mutator LogicalOperator: \"!head || !tail\" becomes \"!head && !tail\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/link-preview/index.ts (> marks the mutated line):\n    72        else return null;\n    73      }\n    74      return out;\n    75    };\n    76    const head = toGroups(halves[0]!);\n    77    const tail = halves.length === 2 ? toGroups(halves[1]!) : [];\n>   78    if (!head || !tail) return null;\n    79    if (halves.length === 1) return head.length === 8 ? head : null;\n    80    const fill = 8 - head.length - tail.length;\n    81    if (fill < 1) return null;\n    82    return [...head, ...new Array<number>(fill).fill(0), ...tail];\n    83  }\n    84  \n\nTest file style (intent/blocks/link-preview/link-preview.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Blocked, checkUrl, clean, cleanUrl, embedIframe, FetchFailed, InvalidOEmbed, isPublicAddress, matchProvider, oembedRequestUrl, parseOEmbed, readCard, safeFetch, withOEmbed } from './index.ts';\nimport type { Deps, Response } from './index.ts';\n\nconst page = (head: string) => `<!doctype html><html><head>${head}</head><body>x</body></html>`;\nconst enc = (s: string) => new TextEncoder().encode(s);\nasync function* chunks(...parts: Uint8Array[]) {\n  for (const p of parts) yield p;\n}\nconst ok = (body: string | Uint8Array[], headers: Record<string, string> = {}): Response => ({\n  status: 200,\n  headers: { 'content-type': 'text/html; charset=utf-8', ...headers },\n  body: chunks(...(typeof body === 'string' ? [enc(body)] : body)),\n});\n\ntest('Open Graph fields are read, with structured image properties attached to the image they follow', () => {\n  const c = readCard(\n    page(`<meta property=\"og:title\" content=\"  The Title  \"><meta property=\"og:description\" content=\"A &amp; B\">\n      <meta property=\"og:site_name\" content=\"Example\"><meta property=\"og:type\" content=\"article\">\n      <meta property=\"og:image\" content=\"/a.png\"><meta property=\"og:image:width\" content=\"1200\"><meta property=\"og:image:height\" content=\"630\"><meta property=\"og:image:alt\" content=\"First\">\n      <meta property=\"og:image\" content=\"https://cdn.example.com/b.png\"><meta property=\"og:image:width\" content=\"800\">\n      <meta property=\"article:published_time\" content=\"2026-11-01T10:00:00Z\"><meta property=\"og:locale\" content=\"en_GB\"><meta property=\"og:url\" content=\"https://example.com/post\">`),\n    'https://example.com/post?utm=1',\n  );\n  assert.deepEqual(c.images, [\n    { url: 'https://example.com/a.png', width: 1200, height: 630, alt: 'First' },\n    { url: 'https://cdn.example.com/b.png', width: 800 },\n  ]);\n  assert.equal(c.title, 'The Title');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/link-preview-95.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:46.994Z"
+}

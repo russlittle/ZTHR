@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crud-from-schema",
+  "mutant": {
+    "id": "830",
+    "line": 463,
+    "column": 9,
+    "endLine": 463,
+    "endColumn": 22,
+    "mutator": "ConditionalExpression",
+    "original": "body === null",
+    "replacement": "false",
+    "lineText": "if (body === null || typeof body !== 'object' || Array.isArray(body)) throw new Problem(422, 'The body must be a JSON object', [{ path: '', message: 'must be an object' }]);",
+    "prevText": "const validateWrite = (e: Entity, s: Subject, mode: 'create' | 'update', body: unknown, current?: Rec): Rec => {",
+    "nextText": "const input = body as Rec;"
+  },
+  "mayEdit": [
+    "intent/blocks/crud-from-schema/crud-from-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crud-from-schema-830.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crud-from-schema\". Mutant: line 463:9-463:22, mutator ConditionalExpression: \"body === null\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crud-from-schema/index.ts (> marks the mutated line):\n   457          out[n] = r.rows.map((x) => project(other, s, x));\n   458        }\n   459      }\n   460    };\n   461  \n   462    const validateWrite = (e: Entity, s: Subject, mode: 'create' | 'update', body: unknown, current?: Rec): Rec => {\n>  463      if (body === null || typeof body !== 'object' || Array.isArray(body)) throw new Problem(422, 'The body must be a JSON object', [{ path: '', message: 'must be an object' }]);\n   464      const input = body as Rec;\n   465      const sch = schemas.get(e.name)![mode];\n   466      const issues = validateValue(sch, input).map((p) => ({ path: p.path, message: p.message }));\n   467      for (const n of Object.keys(input)) if (e.fields[n]?.readOnly) issues.push({ path: `/${n}`, message: 'is set by the server and cannot be written' });\n   468      const seen = new Set(issues.map((i) => i.path));\n   469      const dedup = issues.filter((i) => !(i.message === 'is not allowed here' && seen.has(i.path) && issues.some((j) => j.path === i.path && j !== i)));\n\nTest file style (intent/blocks/crud-from-schema/crud-from-schema.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { BadSchema, StoreConflict, crud, declare, memoryStore } from './index.ts';\nimport type { Entity, Req } from './index.ts';\nimport type { Policy, Subject } from '../rbac/index.ts';\nimport { check, contract, verifyResponse } from '../openapi/index.ts';\n\nconst User: Entity = {\n  name: 'User', plural: 'users',\n  fields: {\n    name: { type: 'string', required: true, minLength: 1, maxLength: 50, filterable: true, sortable: true },\n    email: { type: 'string', required: true, format: 'email', unique: true, filterable: true },\n    salary: { type: 'integer', nullable: true, readAction: 'read-salary', writeAction: 'write-salary', filterable: true, sortable: true },\n  },\n};\nconst Post: Entity = {\n  name: 'Post', plural: 'posts',\n  fields: {\n    title: { type: 'string', required: true, maxLength: 80, filterable: true, sortable: true },\n    status: { type: 'string', enum: ['draft', 'published'], default: 'draft', filterable: true },\n    views: { type: 'integer', default: 0, minimum: 0, filterable: true, sortable: true },\n    authorId: { type: 'string', required: true, filterable: true },\n    meta: { type: 'json' },\n  },\n  relations: { author: { entity: 'User', kind: 'one', field: 'authorId' }, comments: { entity: 'Comment', kind: 'many', field: 'postId' } },\n};\nconst Comment: Entity = { name: 'Comment', plural: 'comments', fields: { postId: { type: 'string', required: true, filterable: true }, text: { type: 'string', required: true } }, operations: ['list', 'get', 'create'] };\n\nconst policy: Policy = {\n  roles: { member: { label: 'Member' }, admin: { label: 'Admin', inherits: ['member'] } },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crud-from-schema-830.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.530Z"
+}

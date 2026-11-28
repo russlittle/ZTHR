@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "ws-rpc",
+  "mutant": {
+    "id": "50",
+    "line": 113,
+    "column": 10,
+    "endLine": 113,
+    "endColumn": 65,
+    "mutator": "ConditionalExpression",
+    "original": "this.stage === 'new' || this.stage === 'authenticating'",
+    "replacement": "true",
+    "lineText": "if ((this.stage === 'new' || this.stage === 'authenticating') && this.now() - this.openedAt >= (this.o.authTimeoutMs ?? 10_000)) this.end(4401, 'authentication timed out');",
+    "prevText": "tick(): void {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/ws-rpc/ws-rpc.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ws-rpc-50.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ws-rpc\". Mutant: line 113:10-113:65, mutator ConditionalExpression: \"this.stage === 'new' || this.stage === 'authenticating'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ws-rpc/index.ts (> marks the mutated line):\n   107    get closed(): boolean {\n   108      return this.stage === 'closed';\n   109    }\n   110  \n   111    /** Call now and then: a socket that does not authenticate in time is closed. */\n   112    tick(): void {\n>  113      if ((this.stage === 'new' || this.stage === 'authenticating') && this.now() - this.openedAt >= (this.o.authTimeoutMs ?? 10_000)) this.end(4401, 'authentication timed out');\n   114    }\n   115  \n   116    /** The socket closed: subscriptions end, and a client that comes back resumes from its token. */\n   117    closedByPeer(): void {\n   118      this.shutdown();\n   119    }\n\nTest file style (intent/blocks/ws-rpc/ws-rpc.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Catalogue, Hub } from '../events/index.ts';\nimport type { CloudEvent } from '../events/index.ts';\nimport { Failures } from '../ratelimit/index.ts';\nimport { Connection, RpcClient, RpcError, RpcFailed } from './index.ts';\nimport type { ConnectionOptions, Principal } from './index.ts';\n\nconst cat = new Catalogue([\n  { type: 'files.file.created', version: 1, owner: 'files', description: 'a file was made', fields: { id: 'string', owner: 'string' } },\n  { type: 'files.file.deleted', version: 1, owner: 'files', description: 'a file was removed', fields: { id: 'string', owner: 'string' } },\n  { type: 'chat.message.sent', version: 1, owner: 'chat', description: 'a message', fields: { id: 'string', owner: 'string' } },\n]);\nconst ev = (type: string, id: string, owner = 'ana') => cat.make('urn:test', type, { id, owner }, { now: new Date(0) });\n\nconst people: Record<string, Principal> = { 'tok-ana': { id: 'ana' }, 'tok-bo': { id: 'bo' } };\n\ninterface Rig {\n  hub: Hub;\n  t: { now: number };\n  toClient: string[];\n  toServer: string[];\n  closed: { code: number; reason: string }[];\n  conn: () => Connection;\n  client: RpcClient;\n  server: Connection;\n  pump: () => Promise<void>;\n  newServer: (o?: Partial<ConnectionOptions>) => Connection;\n  resyncs: string[];\n}\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ws-rpc-50.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:16.236Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "iam-policy",
+  "mutant": {
+    "id": "727",
+    "line": 352,
+    "column": 93,
+    "endLine": 352,
+    "endColumn": 97,
+    "mutator": "BooleanLiteral",
+    "original": "true",
+    "replacement": "false",
+    "lineText": "if (st.NotAction !== undefined && list(st.NotAction).some((a) => wildcardMatch(a, action, true))) return 'action is excluded by NotAction';",
+    "prevText": "if (st.Action !== undefined && !list(st.Action).some((a) => wildcardMatch(a, action, true))) return 'action did not match';",
+    "nextText": "if (st.Resource !== undefined && !patterns(list(st.Resource), true).some((t) => matchTokens(t, req.resource))) return 'resource did not match';"
+  },
+  "mayEdit": [
+    "intent/blocks/iam-policy/iam-policy.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/iam-policy-727.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"iam-policy\". Mutant: line 352:93-352:97, mutator BooleanLiteral: \"true\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/iam-policy/index.ts (> marks the mutated line):\n   346  function why(st: Statement, req: Request, ctx: Context): string | null {\n   347    const action = req.action;\n   348    if (st.Principal !== undefined && !principalMatches(st.Principal, req.principal)) return 'principal did not match';\n   349    if (st.NotPrincipal !== undefined && principalMatches(st.NotPrincipal, req.principal)) return 'principal is excluded by NotPrincipal';\n   350    const patterns = (xs: string[], wild: boolean) => xs.map((x) => tokens(x, wild ? ctx : null, true)).filter((t): t is Token[] => t !== null);\n   351    if (st.Action !== undefined && !list(st.Action).some((a) => wildcardMatch(a, action, true))) return 'action did not match';\n>  352    if (st.NotAction !== undefined && list(st.NotAction).some((a) => wildcardMatch(a, action, true))) return 'action is excluded by NotAction';\n   353    if (st.Resource !== undefined && !patterns(list(st.Resource), true).some((t) => matchTokens(t, req.resource))) return 'resource did not match';\n   354    if (st.NotResource !== undefined && patterns(list(st.NotResource), true).some((t) => matchTokens(t, req.resource))) return 'resource is excluded by NotResource';\n   355    if (st.Condition) return conditionFailure(st.Condition, ctx);\n   356    return null;\n   357  }\n   358  \n\nTest file style (intent/blocks/iam-policy/iam-policy.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CONDITION_OPERATORS, PolicyError, evaluate, evaluateMany, ipInCidr, validatePolicy, wildcardMatch } from './index.ts';\nimport type { Policy, Request, Statement } from './index.ts';\n\nconst allow = (s: Partial<Statement> & Pick<Statement, 'Action'>): Policy => ({ Version: '2012-10-17', Statement: { Effect: 'Allow', Resource: '*', ...s } });\nconst deny = (s: Partial<Statement> & Pick<Statement, 'Action'>): Policy => ({ Version: '2012-10-17', Statement: { Effect: 'Deny', Resource: '*', ...s } });\nconst ok = (policies: Policy[], req: Request, boundaries?: Policy[][]) => evaluate({ policies, ...(boundaries ? { boundaries } : {}) }, req).allowed;\nconst get = (resource: string, context: Request['context'] = {}): Request => ({ action: 's3:GetObject', resource, context });\n\ntest('everything is denied until a statement allows it, and the reason says so', () => {\n  const d = evaluate({ policies: [] }, get('arn:aws:s3:::b/k'));\n  assert.equal(d.allowed, false);\n  assert.equal(d.reason, 'implicit-deny');\n  assert.match(d.explanation, /no statement allows s3:GetObject on arn:aws:s3:::b\\/k/);\n  const other = evaluate({ policies: [allow({ Action: 's3:PutObject' })] }, get('arn:aws:s3:::b/k'));\n  assert.equal(other.reason, 'implicit-deny');\n  assert.equal(other.trace[0]!.why, 'action did not match');\n});\n\ntest('an allow matches by wildcard action and resource; actions ignore case, resources do not', () => {\n  const p = allow({ Action: ['s3:Get*', 'ec2:Describe?nstances'], Resource: 'arn:aws:s3:::reports/*' });\n  assert.equal(ok([p], get('arn:aws:s3:::reports/2024/q1.csv')), true);\n  assert.equal(ok([p], { action: 'S3:getobject', resource: 'arn:aws:s3:::reports/x' }), true, 'service and action names are case-insensitive');\n  assert.equal(ok([p], get('arn:aws:s3:::Reports/x')), false, 'resources are case-sensitive');\n  assert.equal(ok([p], get('arn:aws:s3:::other/x')), false);\n  assert.equal(ok([p], { action: 'ec2:DescribeInstances', resource: 'arn:aws:s3:::reports/x' }), true, '? matches one character');\n  assert.equal(ok([allow({ Action: '*' })], get('anything')), true);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/iam-policy-727.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.870Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "expression-engine",
+  "mutant": {
+    "id": "1537",
+    "line": 594,
+    "column": 52,
+    "endLine": 594,
+    "endColumn": 62,
+    "mutator": "ConditionalExpression",
+    "original": "l !== null",
+    "replacement": "true",
+    "lineText": "case '==': return typeof l === 'object' && l !== null || typeof r === 'object' && r !== null ? l === r : l == r; // eslint-disable-line eqeqeq",
+    "prevText": "case '!==': return l !== r;",
+    "nextText": "case '!=': return typeof l === 'object' && l !== null || typeof r === 'object' && r !== null ? l !== r : l != r; // eslint-disable-line eqeqeq"
+  },
+  "mayEdit": [
+    "intent/blocks/expression-engine/expression-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1537.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"expression-engine\". Mutant: line 594:52-594:62, mutator ConditionalExpression: \"l !== null\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/expression-engine/index.ts (> marks the mutated line):\n   588          case '*': return num(l, 'multiplication') * num(r, 'multiplication');\n   589          case '/': return num(l, 'division') / num(r, 'division');\n   590          case '%': return num(l, 'modulo') % num(r, 'modulo');\n   591          case '**': { const e = num(r, 'power'); if (Math.abs(e) > 1000) throw new ExpressionLimitError('an exponent over 1000'); return num(l, 'power') ** e; }\n   592          case '===': return l === r;\n   593          case '!==': return l !== r;\n>  594          case '==': return typeof l === 'object' && l !== null || typeof r === 'object' && r !== null ? l === r : l == r; // eslint-disable-line eqeqeq\n   595          case '!=': return typeof l === 'object' && l !== null || typeof r === 'object' && r !== null ? l !== r : l != r; // eslint-disable-line eqeqeq\n   596          default: {\n   597            const both = (typeof l === 'string' && typeof r === 'string') ? [l, r] : [num(l, 'comparison'), num(r, 'comparison')];\n   598            const [x, y] = both as [number, number];\n   599            return a.op === '<' ? x < y : a.op === '>' ? x > y : a.op === '<=' ? x <= y : x >= y;\n   600          }\n\nTest file style (intent/blocks/expression-engine/expression-engine.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  compile, evaluate, references, render, resolve, resolveDeep, compileTemplate,\n  ExpressionSyntaxError, ExpressionRuntimeError, ExpressionLimitError, ExpressionForbidden,\n} from './index.ts';\n\nconst ev = (s: string, ctx: unknown = {}) => evaluate(s, ctx);\n\ntest('arithmetic and precedence', () => {\n  assert.equal(ev('1 + 2 * 3'), 7);\n  assert.equal(ev('(1 + 2) * 3'), 9);\n  assert.equal(ev('2 ** 3 ** 2'), 512);\n  assert.equal(ev('10 % 4'), 2);\n  assert.equal(ev('-3 + 5'), 2);\n});\n\ntest('strings, concatenation and comparison', () => {\n  assert.equal(ev('\"a\" + \"b\" + 1'), 'ab1');\n  assert.equal(ev('\"abc\" < \"abd\"'), true);\n  assert.equal(ev('1 === 1 && 2 !== 3'), true);\n});\n\ntest('logic operators return operands', () => {\n  assert.equal(ev('0 || \"x\"'), 'x');\n  assert.equal(ev('\"a\" && \"b\"'), 'b');\n  assert.equal(ev('null ?? 5'), 5);\n  assert.equal(ev('0 ?? 5'), 0);\n  assert.equal(ev('true ? 1 : 2'), 1);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1537.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.849Z"
+}

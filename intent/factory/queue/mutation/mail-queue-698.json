@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mail-queue",
+  "mutant": {
+    "id": "698",
+    "line": 523,
+    "column": 9,
+    "endLine": 523,
+    "endColumn": 26,
+    "mutator": "ConditionalExpression",
+    "original": "what === 'bounce'",
+    "replacement": "false",
+    "lineText": "if (what === 'bounce') s.bounced++;",
+    "prevText": "const s = this.roll(ip);",
+    "nextText": "else s.complaints++;"
+  },
+  "mayEdit": [
+    "intent/blocks/mail-queue/mail-queue.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mail-queue-698.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mail-queue\". Mutant: line 523:9-523:26, mutator ConditionalExpression: \"what === 'bounce'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mail-queue/index.ts (> marks the mutated line):\n   517      return best;\n   518    }\n   519  \n   520    /** Counts a bounce or a complaint against today's judgement of an IP. */\n   521    note(ip: string, what: 'bounce' | 'complaint'): void {\n   522      const s = this.roll(ip);\n>  523      if (what === 'bounce') s.bounced++;\n   524      else s.complaints++;\n   525    }\n   526  \n   527    /** What tomorrow's judgement would be, from today's numbers so far. */\n   528    advice(ip: string): Advice {\n   529      const s = this.roll(ip);\n\nTest file style (intent/blocks/mail-queue/mail-queue.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { DEFAULT_CURVE, MailQueue, QueueError, Warmup, classifyReply, judgeDay, retryDelay, warmupSchedule, type QueueEvent, type QueueOptions } from './index.ts';\n\nconst MIN = 60_000;\nconst HOUR = 60 * MIN;\nconst T0 = Date.UTC(2026, 2, 1, 12, 0, 0);\n\nfunction setup(o: Partial<QueueOptions> = {}) {\n  const clock = { t: T0 };\n  const q = new MailQueue({ now: () => clock.t, random: () => 0.5, ...o });\n  return { q, clock };\n}\nconst msg = (id: string, to: string[], priority?: number) => ({ id, from: 'app@example.org', recipients: to, ...(priority === undefined ? {} : { priority }) });\nconst types = (ev: QueueEvent[]) => ev.map((e) => e.type);\n\ntest('reply classification: delivered, throttled, greylisted, full, unknown user, policy, content, size', () => {\n  const c = (code: number, enh: string | undefined, text: string) => {\n    const v = classifyReply(code, enh, text);\n    return `${v.action}/${v.class ?? '-'}/${v.scope}${v.suppress ? '/suppress' : ''}`;\n  };\n  assert.equal(c(250, '2.0.0', 'OK'), 'delivered/-/recipient');\n  assert.equal(c(421, '4.7.0', 'Our system has detected an unusual rate of unsolicited mail. Please try again later'), 'defer/throttle/domain');\n  assert.equal(c(451, '4.7.1', 'Greylisted, please try again in 300 seconds'), 'defer/greylist/recipient');\n  assert.equal(c(450, '4.2.1', 'Too many connections from your IP'), 'defer/throttle/domain');\n  assert.equal(c(452, '4.2.2', 'Mailbox full'), 'defer/mailbox-full/recipient');\n  assert.equal(c(451, '4.3.0', 'Local error in processing'), 'defer/temporary/recipient');\n  assert.equal(c(550, '5.1.1', 'The email account does not exist'), 'bounce/no-such-user/recipient/suppress');\n  assert.equal(c(550, undefined, 'User unknown in virtual mailbox table'), 'bounce/no-such-user/recipient/suppress');\n  assert.equal(c(550, '5.7.1', 'Message rejected due to DMARC policy'), 'bounce/policy/domain');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mail-queue-698.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.934Z"
+}

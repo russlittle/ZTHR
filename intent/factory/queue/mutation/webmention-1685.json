@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webmention",
+  "mutant": {
+    "id": "1685",
+    "line": 693,
+    "column": 12,
+    "endLine": 693,
+    "endColumn": 86,
+    "mutator": "MethodExpression",
+    "original": "[...this.#byKey.values()].filter((m) => t === undefined || m.target === t)",
+    "replacement": "[...this.#byKey.values()]",
+    "lineText": "return [...this.#byKey.values()].filter((m) => t === undefined || m.target === t).sort((a, b) => (a.verifiedAt < b.verifiedAt ? 1 : a.verifiedAt > b.verifiedAt ? -1 : a.source < b.source ? -1 : 1));",
+    "prevText": "const t = target === undefined ? undefined : normalize(target);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/webmention/webmention.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webmention-1685.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webmention\". Mutant: line 693:12-693:86, mutator MethodExpression: \"[...this.#byKey.values()].filter((m) => t === undefined || m.target === t)\" becomes \"[...this.#byKey.values()]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webmention/index.ts (> marks the mutated line):\n   687      return n;\n   688    }\n   689  \n   690    /** Mentions of a target (or all), newest verification first. */\n   691    list(target?: string): Mention[] {\n   692      const t = target === undefined ? undefined : normalize(target);\n>  693      return [...this.#byKey.values()].filter((m) => t === undefined || m.target === t).sort((a, b) => (a.verifiedAt < b.verifiedAt ? 1 : a.verifiedAt > b.verifiedAt ? -1 : a.source < b.source ? -1 : 1));\n   694    }\n   695  \n   696    /** Counts by type for a target: what a \"12 likes, 3 replies\" line is made from. */\n   697    summary(target: string): Record<MentionType, number> {\n   698      const out: Record<MentionType, number> = { reply: 0, like: 0, repost: 0, bookmark: 0, mention: 0 };\n   699      for (const m of this.list(target)) out[m.type]++;\n\nTest file style (intent/blocks/webmention/webmention.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  Inbox, WebmentionRejected, checkUrl, decodeEntities, discover, findEndpoint, interpret, isPrivateHost, linksTo,\n  normalize, outgoingTargets, parseLinkHeader, parseMf2, send, type Fetch, type FetchInit, type FetchResult,\n} from './index.ts';\n\ntype Reply = Partial<FetchResult> & { status?: number };\nconst html = (body: string, extra: Reply = {}): Reply => ({ status: 200, headers: { 'content-type': 'text/html; charset=utf-8' }, body, ...extra });\nfunction world(pages: Record<string, Reply | ((i: FetchInit) => Reply)>) {\n  const calls: { url: string; init: FetchInit }[] = [];\n  const fetch: Fetch = async (url, init) => {\n    calls.push({ url, init });\n    const p = pages[url];\n    if (!p) return { status: 404, headers: {}, body: '' };\n    const r = typeof p === 'function' ? p(init) : p;\n    return { status: r.status ?? 200, headers: r.headers ?? {}, body: r.body ?? '' };\n  };\n  return { fetch, calls };\n}\nconst T0 = Date.UTC(2024, 4, 6, 12, 0, 0);\nconst ours = (u: URL) => u.hostname === 'me.example';\n\ntest('Link header parsing handles several links, commas in URLs and quoted rels', () => {\n  const l = parseLinkHeader('<https://a.example/x,y>; rel=\"webmention\", <https://b.example/>; rel=\"stylesheet preload\"; title=\"a, b\", </wm>; REL=webmention');\n  assert.deepEqual(l.map((x) => x.url), ['https://a.example/x,y', 'https://b.example/', '/wm']);\n  assert.deepEqual(l[1]!.rels, ['stylesheet', 'preload']);\n  assert.deepEqual(l[2]!.rels, ['webmention']);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webmention-1685.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:14.652Z"
+}

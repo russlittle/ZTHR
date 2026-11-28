@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mime",
+  "mutant": {
+    "id": "551",
+    "line": 322,
+    "column": 13,
+    "endLine": 322,
+    "endColumn": 61,
+    "mutator": "LogicalOperator",
+    "original": "ATOM_LIST.test(m.name) && !SPECIALS.test(m.name)",
+    "replacement": "ATOM_LIST.test(m.name) || !SPECIALS.test(m.name)",
+    "lineText": "return `${ATOM_LIST.test(m.name) && !SPECIALS.test(m.name) ? m.name : `\"${m.name.replace(/([\"\\\\])/g, '\\\\$1')}\"`} <${addr}>`;",
+    "prevText": "if (!isAscii(m.name)) return `${encodeWords(m.name).join(' ')} <${addr}>`;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/mime/mime.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mime-551.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mime\". Mutant: line 322:13-322:61, mutator LogicalOperator: \"ATOM_LIST.test(m.name) && !SPECIALS.test(m.name)\" becomes \"ATOM_LIST.test(m.name) || !SPECIALS.test(m.name)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mime/index.ts (> marks the mutated line):\n   316    const domain = domainToASCII(m.address.slice(at + 1));\n   317    if (!domain || !isAscii(local) || !ADDR.test(`${local}@${domain}`)) throw new MimeError(`${JSON.stringify(m.address)} is not an address this block can send to`);\n   318    const addr = `${local}@${domain}`;\n   319    if (!m.name) return addr;\n   320    safeHeaderValue(m.name, 'a name');\n   321    if (!isAscii(m.name)) return `${encodeWords(m.name).join(' ')} <${addr}>`;\n>  322    return `${ATOM_LIST.test(m.name) && !SPECIALS.test(m.name) ? m.name : `\"${m.name.replace(/([\"\\\\])/g, '\\\\$1')}\"`} <${addr}>`;\n   323  }\n   324  \n   325  // ---------------------------------------------------------------- parameters (RFC 2045, 2231)\n   326  \n   327  export interface ParamValue {\n   328    readonly value: string;\n\nTest file style (intent/blocks/mime/mime.test.ts):\n23 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MimeError, attachments, bodies, buildMessage, contentIds, decodeQuotedPrintable, decodeWords, encodeBase64Lines, encodeQuotedPrintable, encodeWords, foldHeader, formatMailbox, formatParam, header, headerText, parseAddresses, parseMessage, parseParams, rewriteCids, safeFilename, textValue } from './index.ts';\nimport type { OutMessage } from './index.ts';\n\nconst crlf = (s: string) => s.replace(/\\n/g, '\\r\\n');\n\ntest('RFC 2047 section 8: the published encoded-word examples', () => {\n  const cases: [string, string][] = [\n    ['(=?ISO-8859-1?Q?a?=)', '(a)'],\n    ['(=?ISO-8859-1?Q?a?= b)', '(a b)'],\n    ['(=?ISO-8859-1?Q?a?= =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a?=  =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a?=\\r\\n    =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a_b?=)', '(a b)'],\n    ['(=?ISO-8859-1?Q?a?= =?ISO-8859-2?Q?_b?=)', '(a b)'],\n    ['=?US-ASCII?Q?Keith_Moore?=', 'Keith Moore'],\n    ['=?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?=', 'Keld Jørn Simonsen'],\n    ['=?ISO-8859-1?Q?Andr=E9?= Pirard', 'André Pirard'],\n    ['=?ISO-8859-1?B?SWYgeW91IGNhbiByZWFkIHRoaXMgeW8=?= =?ISO-8859-2?B?dSB1bmRlcnN0YW5kIHRoZSBleGFtcGxlLg==?=', 'If you can read this you understand the example.'],\n    ['=?ISO-8859-1?Q?Olle_J=E4rnefors?=', 'Olle Järnefors'],\n  ];\n  for (const [src, want] of cases) assert.equal(decodeWords(src), want, src);\n});\n\ntest('encoded words: not decoded when malformed, charsets honoured, and a language tag allowed', () => {\n  assert.equal(decodeWords('=?UTF-8?Q?caf=C3=A9?='), 'café');\n  assert.equal(decodeWords('=?utf-8*en?B?Y2Fmw6k=?='), 'café');\n  assert.equal(decodeWords('=?UTF-8?X?abc?='), '=?UTF-8?X?abc?=');\n  assert.equal(decodeWords('plain text, no words'), 'plain text, no words');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mime-551.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:49.921Z"
+}

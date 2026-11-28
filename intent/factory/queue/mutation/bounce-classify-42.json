@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "bounce-classify",
+  "mutant": {
+    "id": "42",
+    "line": 59,
+    "column": 13,
+    "endLine": 59,
+    "endColumn": 25,
+    "mutator": "Regex",
+    "original": "/\\r?\\n\\r?\\n/",
+    "replacement": "/\\r\\n\\r?\\n/",
+    "lineText": "const m = /\\r?\\n\\r?\\n/.exec(raw);",
+    "prevText": "const splitHead = (raw: string): [string, string] => {",
+    "nextText": "return m ? [raw.slice(0, m.index), raw.slice(m.index + m[0].length)] : [raw, ''];"
+  },
+  "mayEdit": [
+    "intent/blocks/bounce-classify/bounce-classify.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/bounce-classify-42.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"bounce-classify\". Mutant: line 59:13-59:25, mutator Regex: \"/\\\\r?\\\\n\\\\r?\\\\n/\" becomes \"/\\\\r\\\\n\\\\r?\\\\n/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/bounce-classify/index.ts (> marks the mutated line):\n    53    }\n    54    flush();\n    55    return m;\n    56  }\n    57  \n    58  const splitHead = (raw: string): [string, string] => {\n>   59    const m = /\\r?\\n\\r?\\n/.exec(raw);\n    60    return m ? [raw.slice(0, m.index), raw.slice(m.index + m[0].length)] : [raw, ''];\n    61  };\n    62  \n    63  /** The value and parameters of a structured header like Content-Type. */\n    64  export function params(h: string | undefined): { value: string; params: Record<string, string> } {\n    65    const [first = '', ...rest] = (h ?? '').split(';');\n\nTest file style (intent/blocks/bounce-classify/bounce-classify.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Notify } from '../notify/index.ts';\nimport { NotAReport, SoftBounceTracker, classifyMessage, classifyRecipient, feedSuppression, isAutoReply, parseMime, parseStatus, statusFromReply } from './index.ts';\n\nconst dsn = (fields: string, extra = '') => [\n  'From: MAILER-DAEMON@mx.example.org',\n  'To: sender@example.com',\n  'Subject: Undelivered Mail Returned to Sender',\n  'Content-Type: multipart/report; report-type=delivery-status; boundary=\"BND\"',\n  '',\n  '--BND',\n  'Content-Type: text/plain',\n  '',\n  'This is the mail system. Delivery failed.',\n  '--BND',\n  'Content-Type: message/delivery-status',\n  '',\n  'Reporting-MTA: dns; mx.example.org',\n  'Arrival-Date: Mon, 3 Mar 2025 10:00:00 +0000',\n  '',\n  fields,\n  extra,\n  '--BND',\n  'Content-Type: text/rfc822-headers',\n  '',\n  'From: sender@example.com',\n  'To: ana@example.net',\n  '--BND--',\n  '',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/bounce-classify-42.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.244Z"
+}

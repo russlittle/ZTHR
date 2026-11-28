@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf-sign",
+  "mutant": {
+    "id": "1947",
+    "line": 1080,
+    "column": 54,
+    "endLine": 1080,
+    "endColumn": 67,
+    "mutator": "ConditionalExpression",
+    "original": "hash !== null",
+    "replacement": "true",
+    "lineText": "const ok = info.sigOid === OID.rsaEncryption || (hash !== null && info.sigOid === RSA_SIG_OID[hash]);",
+    "prevText": "if (bits < 2048) problems.push(`the RSA key is ${bits} bits; 2048 is the least accepted`);",
+    "nextText": "if (!ok) problems.push(`signature algorithm ${info.sigOid} does not fit an RSA key and ${hashName ?? 'this digest'}`);"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf-sign/pdf-sign.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-sign-1947.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf-sign\". Mutant: line 1080:54-1080:67, mutator ConditionalExpression: \"hash !== null\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf-sign/index.ts (> marks the mutated line):\n  1074    else if (hashName === 'sha1' || hashName === 'md5') problems.push(`${hashName.toUpperCase()} is not accepted as a signature digest`);\n  1075    const hash = toHashName(hashName);\n  1076    const keyType = cert.publicKey.asymmetricKeyType;\n  1077    if (keyType === 'rsa') {\n  1078      const bits = cert.publicKey.asymmetricKeyDetails?.modulusLength ?? 0;\n  1079      if (bits < 2048) problems.push(`the RSA key is ${bits} bits; 2048 is the least accepted`);\n> 1080      const ok = info.sigOid === OID.rsaEncryption || (hash !== null && info.sigOid === RSA_SIG_OID[hash]);\n  1081      if (!ok) problems.push(`signature algorithm ${info.sigOid} does not fit an RSA key and ${hashName ?? 'this digest'}`);\n  1082    } else if (keyType === 'ec') {\n  1083      if (!hash || info.sigOid !== EC_SIG_OID[hash]) problems.push(`signature algorithm ${info.sigOid} does not fit an ECDSA key and ${hashName ?? 'this digest'}`);\n  1084    } else problems.push(`a ${keyType ?? 'unknown'} key is not supported`);\n  1085  \n  1086    // 2. the digest over the byte ranges, and the signed attributes\n\nTest file style (intent/blocks/pdf-sign/pdf-sign.test.ts):\n38 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { X509Certificate, createHash, generateKeyPairSync } from 'node:crypto';\nimport type { KeyObject } from 'node:crypto';\nimport { deflateSync } from 'node:zlib';\nimport { pdf } from '../pdf/index.ts';\nimport {\n  PdfSignError, embedSignature, issueCertificate, integer, keySigner, name, cmsParts, oid, oidOf, octets, parseDer, parseDerPadded, prepareSignature, readDoc, pageRefs, seq, serialize, setOf, signPdf, signedBytes, textOf, textString, tlv, utf8, verifyPdf,\n} from './index.ts';\nimport type { Der, Signer, SignOptions } from './index.ts';\nimport { test } from 'node:test';\n\nconst hex = (b: Uint8Array) => Buffer.from(b).toString('hex');\nconst NOW = new Date('2026-06-15T12:00:00Z');\nconst SIGNED_AT = new Date('2026-06-15T11:30:00Z');\nconst YEAR = 365 * 86_400_000;\n\n// Keys are made once, at run time; nothing secret is written in this file.\nconst rsaKeys = generateKeyPairSync('rsa', { modulusLength: 2048 });\nconst ecKeys = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });\nconst ec384 = generateKeyPairSync('ec', { namedCurve: 'secp384r1' });\nconst caKeys = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });\n\nconst cert = (cn: string, k: { publicKey: KeyObject; privateKey: KeyObject }, over: { from?: Date; to?: Date; serial?: number } = {}) =>\n  issueCertificate({ commonName: cn, publicKey: k.publicKey, privateKey: k.privateKey, serial: over.serial ?? 1001, notBefore: over.from ?? new Date(NOW.getTime() - YEAR), notAfter: over.to ?? new Date(NOW.getTime() + YEAR) });\n\nconst rsaCert = cert('Ana Rivera', rsaKeys);\nconst ecCert = cert('Bo Chen', ecKeys, { serial: 2002 });\nconst rsaSigner: Signer = keySigner(rsaKeys.privateKey, rsaCert);\nconst ecSigner: Signer = keySigner(ecKeys.privateKey, ecCert);\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-sign-1947.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:54.906Z"
+}

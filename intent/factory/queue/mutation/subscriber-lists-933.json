@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "subscriber-lists",
+  "mutant": {
+    "id": "933",
+    "line": 625,
+    "column": 77,
+    "endLine": 625,
+    "endColumn": 87,
+    "mutator": "OptionalChaining",
+    "original": "ev?.source",
+    "replacement": "ev.source",
+    "lineText": "rows.push([s.email, s.state, ev ? new Date(ev.at).toISOString() : '', ev?.source ?? '', ev ? String(ev.consentVersion) : '', ev?.ip ?? '']);",
+    "prevText": "const ev = [...s.evidence].reverse().find((e) => e.method !== 'preference-centre' && e.method !== 'unsubscribe-link');",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/subscriber-lists/subscriber-lists.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/subscriber-lists-933.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"subscriber-lists\". Mutant: line 625:77-625:87, mutator OptionalChaining: \"ev?.source\" becomes \"ev.source\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/subscriber-lists/index.ts (> marks the mutated line):\n   619    /** Subscribers as CSV, formula-safe. Includes the evidence summary so the file is a consent register too. */\n   620    exportCsv(listId: string): string {\n   621      const l = this.list(listId);\n   622      const rows = [['email', 'state', 'consented_at', 'source', 'consent_version', 'ip']];\n   623      for (const s of [...l.subs.values()].sort((a, b) => a.email.localeCompare(b.email))) {\n   624        const ev = [...s.evidence].reverse().find((e) => e.method !== 'preference-centre' && e.method !== 'unsubscribe-link');\n>  625        rows.push([s.email, s.state, ev ? new Date(ev.at).toISOString() : '', ev?.source ?? '', ev ? String(ev.consentVersion) : '', ev?.ip ?? '']);\n   626      }\n   627      return `${rows.map((r) => r.map(csvCell).join(',')).join('\\r\\n')}\\r\\n`;\n   628    }\n   629  \n   630    // -- import ----------------------------------------------------------------------------------------------\n   631  \n\nTest file style (intent/blocks/subscriber-lists/subscriber-lists.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ListError, SubscriberLists, addressFingerprint, csvCell, isRoleAddress, normalizeEmail, parseCsv } from './index.ts';\nimport type { ListsOptions } from './index.ts';\nimport type { Message } from '../notify/index.ts';\nimport type { Record_ } from '../consent/index.ts';\n\nconst T0 = Date.UTC(2026, 5, 1, 9, 0, 0);\nconst DAY = 86_400_000;\n\ninterface Rig {\n  readonly lists: SubscriberLists;\n  readonly sent: Message[];\n  readonly consents: Record_[];\n  clock: { t: number };\n}\n\nfunction rig(over: Partial<ListsOptions> = {}, double = true): Rig {\n  const sent: Message[] = [];\n  const consents: Record_[] = [];\n  const clock = { t: T0 };\n  const lists = new SubscriberLists({\n    secret: 'test-secret-01234', now: () => clock.t, send: async (m) => { sent.push(m); }, onConsent: (r) => consents.push(r),\n    confirmUrl: 'https://example.org/confirm', unsubscribeUrl: 'https://example.org/unsub?src=mail', preferencesUrl: 'https://example.org/prefs',\n    ...over,\n  });\n  lists.createList({ id: 'news', name: 'Monthly news', doubleOptIn: double, consentText: 'Send me the monthly news by email.', topics: [{ id: 'product', name: 'Product', defaultOn: true }, { id: 'events', name: 'Events', defaultOn: false }], frequencies: ['weekly', 'monthly'] });\n  return { lists, sent, consents, clock };\n}\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/subscriber-lists-933.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:06.028Z"
+}

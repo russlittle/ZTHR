@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "expression-engine",
+  "mutant": {
+    "id": "153",
+    "line": 90,
+    "column": 24,
+    "endLine": 90,
+    "endColumn": 27,
+    "mutator": "StringLiteral",
+    "original": "'.'",
+    "replacement": "\"\"",
+    "lineText": "if (num && !(c === '.' && !/\\d/.test(src[i + 1] ?? ''))) { out.push({ k: 'num', v: num[0], at: i }); i += num[0].length; continue; }",
+    "prevText": "const num = /^(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?/.exec(src.slice(i));",
+    "nextText": "const id = /^[A-Za-z_$][A-Za-z0-9_$]*/.exec(src.slice(i));"
+  },
+  "mayEdit": [
+    "intent/blocks/expression-engine/expression-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-153.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"expression-engine\". Mutant: line 90:24-90:27, mutator StringLiteral: \"'.'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/expression-engine/index.ts (> marks the mutated line):\n    84        if (j >= src.length) throw new ExpressionSyntaxError('an unterminated string', i);\n    85        out.push({ k: 'str', v, at: i });\n    86        i = j + 1;\n    87        continue;\n    88      }\n    89      const num = /^(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][-+]?\\d+)?/.exec(src.slice(i));\n>   90      if (num && !(c === '.' && !/\\d/.test(src[i + 1] ?? ''))) { out.push({ k: 'num', v: num[0], at: i }); i += num[0].length; continue; }\n    91      const id = /^[A-Za-z_$][A-Za-z0-9_$]*/.exec(src.slice(i));\n    92      if (id) { out.push({ k: 'id', v: id[0], at: i }); i += id[0].length; continue; }\n    93      const op = OPS.find((o) => src.startsWith(o, i));\n    94      if (!op) throw new ExpressionSyntaxError(`cannot read \"${c}\"`, i);\n    95      if (op === '?.' && /\\d/.test(src[i + 2] ?? '')) { out.push({ k: 'op', v: '?', at: i }); i++; continue; }\n    96      if (op === '{') braces++;\n\nTest file style (intent/blocks/expression-engine/expression-engine.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  compile, evaluate, references, render, resolve, resolveDeep, compileTemplate,\n  ExpressionSyntaxError, ExpressionRuntimeError, ExpressionLimitError, ExpressionForbidden,\n} from './index.ts';\n\nconst ev = (s: string, ctx: unknown = {}) => evaluate(s, ctx);\n\ntest('arithmetic and precedence', () => {\n  assert.equal(ev('1 + 2 * 3'), 7);\n  assert.equal(ev('(1 + 2) * 3'), 9);\n  assert.equal(ev('2 ** 3 ** 2'), 512);\n  assert.equal(ev('10 % 4'), 2);\n  assert.equal(ev('-3 + 5'), 2);\n});\n\ntest('strings, concatenation and comparison', () => {\n  assert.equal(ev('\"a\" + \"b\" + 1'), 'ab1');\n  assert.equal(ev('\"abc\" < \"abd\"'), true);\n  assert.equal(ev('1 === 1 && 2 !== 3'), true);\n});\n\ntest('logic operators return operands', () => {\n  assert.equal(ev('0 || \"x\"'), 'x');\n  assert.equal(ev('\"a\" && \"b\"'), 'b');\n  assert.equal(ev('null ?? 5'), 5);\n  assert.equal(ev('0 ?? 5'), 0);\n  assert.equal(ev('true ? 1 : 2'), 1);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-153.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.767Z"
+}

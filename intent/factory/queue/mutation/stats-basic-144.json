@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "stats-basic",
+  "mutant": {
+    "id": "144",
+    "line": 107,
+    "column": 24,
+    "endLine": 107,
+    "endColumn": 33,
+    "mutator": "ArithmeticOperator",
+    "original": "x + 1e-12",
+    "replacement": "x - 1e-12",
+    "lineText": "const j = Math.floor(x + 1e-12);",
+    "prevText": "const x = n * p + mm;",
+    "nextText": "const g = x - j < 1e-12 ? 0 : x - j;"
+  },
+  "mayEdit": [
+    "intent/blocks/stats-basic/stats-basic.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/stats-basic-144.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"stats-basic\". Mutant: line 107:24-107:33, mutator ArithmeticOperator: \"x + 1e-12\" becomes \"x - 1e-12\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/stats-basic/index.ts (> marks the mutated line):\n   101    const at = (j: number): number => s[Math.min(n, Math.max(1, j)) - 1]!;\n   102    if (type === 1) return at(Math.ceil(n * p - 1e-12) || 1);\n   103    const m: Record<number, number> = { 4: 0, 5: 0.5, 6: p, 7: 1 - p, 8: (p + 1) / 3, 9: p / 4 + 3 / 8 };\n   104    const mm = m[type];\n   105    if (mm === undefined) throw new StatsError('quantile type must be one of 1, 4, 5, 6, 7, 8, 9');\n   106    const x = n * p + mm;\n>  107    const j = Math.floor(x + 1e-12);\n   108    const g = x - j < 1e-12 ? 0 : x - j;\n   109    return g === 0 ? at(j) : (1 - g) * at(j) + g * at(j + 1);\n   110  }\n   111  \n   112  export function median(xs: readonly number[]): number {\n   113    return quantile(xs, 0.5, 7);\n\nTest file style (intent/blocks/stats-basic/stats-basic.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  RunningStats, StatsError, chiSquareCdf, chiSquareGof, chiSquareIndependence, chiSquareQuantile, clopperPearsonInterval, cohensD, correlation, correlationTest, cramersV,\n  describe, hedgesG, kurtosis, logGamma, mean, meanInterval, median, medianAbsoluteDeviation, modes, normalCdf, normalQuantile, outliers, powerForTwoMeans, quantile,\n  sampleSizeForMean, sampleSizeForProportion, sampleSizeForTwoMeans, skewness, stdev, sum, tCdf, tQuantile, tTestOneSample, tTestPaired, tTestTwoSample, variance,\n  varianceInterval, wilsonInterval, betaI, gammaP,\n} from './index.ts';\n\nconst near = (a: number, b: number, tol = 1e-6, msg?: string): void => assert.ok(Math.abs(a - b) <= tol, `${msg ?? ''} ${a} is not within ${tol} of ${b}`);\nconst A = [27.5, 21.0, 19.0, 23.6, 17.0, 17.9, 16.9, 20.1, 21.9, 22.6, 23.1, 19.6, 19.0, 21.7, 21.4];\nconst B = [27.1, 22.0, 20.8, 23.4, 23.4, 23.5, 25.8, 22.0, 24.8, 20.2, 21.9, 22.1, 22.9, 20.5, 24.4];\nconst ONE_TO_TEN = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];\n\ntest('mean, variance and standard deviation on the textbook example', () => {\n  const xs = [2, 4, 4, 4, 5, 5, 7, 9];\n  assert.equal(mean(xs), 5);\n  assert.equal(variance(xs, 0), 4);\n  assert.equal(stdev(xs, 0), 2);\n  near(variance(xs), 32 / 7, 1e-12);\n  near(variance(A), 7.867428571428571, 1e-12);\n  near(mean(A), 20.82, 1e-12);\n});\n\ntest('compensated sum survives values that cancel; variance survives a large offset', () => {\n  assert.equal(sum([1e16, 1, -1e16]), 1);\n  assert.equal(sum([]), 0);\n  near(variance([1e9 + 4, 1e9 + 7, 1e9 + 13, 1e9 + 16]), 30, 1e-6);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/stats-basic-144.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.288Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "form-builder",
+  "mutant": {
+    "id": "1082",
+    "line": 505,
+    "column": 26,
+    "endLine": 505,
+    "endColumn": 35,
+    "mutator": "Regex",
+    "original": "/^-?\\d+$/",
+    "replacement": "/-?\\d+$/",
+    "lineText": "case 'rating': v = /^-?\\d+$/.test(raw.trim()) ? Number(raw) : undefined; break;",
+    "prevText": "case 'integer':",
+    "nextText": "case 'boolean': v = raw === 'true' || raw === '1' || raw === 'on' ? true : raw === 'false' || raw === '0' || raw === 'off' ? false : undefined; break;"
+  },
+  "mayEdit": [
+    "intent/blocks/form-builder/form-builder.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/form-builder-1082.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"form-builder\". Mutant: line 505:26-505:35, mutator Regex: \"/^-?\\\\d+$/\" becomes \"/-?\\\\d+$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/form-builder/index.ts (> marks the mutated line):\n   499      const raw = params[key]!;\n   500      if (raw.length > 500) continue;\n   501      let v: Answer | undefined;\n   502      switch (f.type) {\n   503        case 'number': v = /^-?\\d+(\\.\\d+)?$/.test(raw.trim()) ? Number(raw) : undefined; break;\n   504        case 'integer':\n>  505        case 'rating': v = /^-?\\d+$/.test(raw.trim()) ? Number(raw) : undefined; break;\n   506        case 'boolean': v = raw === 'true' || raw === '1' || raw === 'on' ? true : raw === 'false' || raw === '0' || raw === 'off' ? false : undefined; break;\n   507        case 'select': v = f.options?.some((o) => o.value === raw) ? raw : undefined; break;\n   508        case 'multiselect': { const xs = raw.split(',').map((x) => x.trim()).filter(Boolean); v = xs.length && xs.every((x) => f.options?.some((o) => o.value === x)) && new Set(xs).size === xs.length ? xs : undefined; break; }\n   509        case 'date': v = date().check(raw, f.id).ok ? raw : undefined; break;\n   510        case 'email': v = email().check(raw, f.id).ok ? raw.trim() : undefined; break;\n   511        default: v = raw.replace(/[\\u0000-\\u0008\\u000b-\\u001f\\u007f]/g, '').trim() || undefined;\n\nTest file style (intent/blocks/form-builder/form-builder.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { fieldErrors } from '../validate/index.ts';\nimport { checkForm, confirmation, evaluate, FormError, nextPage, prefill, previousPage, route, submit, validateForm, validatePage, visiblePages, type FormDef } from './index.ts';\n\nconst seats = [{ value: 'front', label: 'Front' }, { value: 'back', label: 'Back' }];\nconst form: FormDef = {\n  id: 'signup',\n  version: 3,\n  title: 'Event signup',\n  pages: [\n    {\n      id: 'about',\n      title: 'About you',\n      fields: [\n        { id: 'name', type: 'text', label: 'Full name', required: true, max: 40 },\n        { id: 'email', type: 'email', label: 'Email', required: true },\n        { id: 'age', type: 'integer', label: 'Age', required: true, min: 0, max: 120 },\n        { id: 'guardian', type: 'text', label: 'Parent or guardian', required: '{age} < 18', visibleWhen: '{age} < 18' },\n        { id: 'note', type: 'longtext', label: 'Note for the guardian', visibleWhen: '{guardian} <> \"\"' },\n      ],\n    },\n    {\n      id: 'tickets',\n      title: 'Tickets',\n      fields: [\n        { id: 'kind', type: 'select', label: 'Ticket', required: true, options: [{ value: 'std', label: 'Standard' }, { value: 'vip', label: 'VIP' }] },\n        { id: 'qty', type: 'integer', label: 'How many', required: true, min: 1, max: 10, default: 1 },\n        { id: 'price', type: 'calculated', label: 'Price', formula: 'IF({kind}=\"vip\",150,60)' },\n        { id: 'total', type: 'calculated', label: 'Total', formula: '{price}*{qty}' },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/form-builder-1082.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.406Z"
+}

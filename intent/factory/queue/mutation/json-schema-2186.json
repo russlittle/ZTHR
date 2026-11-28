@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "json-schema",
+  "mutant": {
+    "id": "2186",
+    "line": 680,
+    "column": 60,
+    "endLine": 680,
+    "endColumn": 77,
+    "mutator": "StringLiteral",
+    "original": "`${kw} was added`",
+    "replacement": "``",
+    "lineText": "if (a[kw] === undefined) narrower(`${at}/${kw}`, kw, `${kw} was added`);",
+    "prevText": "for (const kw of ['allOf', 'anyOf', 'oneOf', 'not', 'if', 'then', 'else']) if (!jsonEqual(a[kw], b[kw])) {",
+    "nextText": "else if (b[kw] === undefined) wider(`${at}/${kw}`, kw, `${kw} was removed`);"
+  },
+  "mayEdit": [
+    "intent/blocks/json-schema/json-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/json-schema-2186.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"json-schema\". Mutant: line 680:60-680:77, mutator StringLiteral: \"`${kw} was added`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/json-schema/index.ts (> marks the mutated line):\n   674      if (a.items !== undefined && b.items !== undefined) walk(a.items as SchemaValue, b.items as SchemaValue, `${at}/items`, depth + 1);\n   675      else if (a.items === undefined && b.items !== undefined) narrower(`${at}/items`, 'items', 'items now have rules');\n   676      else if (a.items !== undefined && b.items === undefined) wider(`${at}/items`, 'items', 'items no longer have rules');\n   677      if (Array.isArray(a.prefixItems) && Array.isArray(b.prefixItems)) (a.prefixItems as SchemaValue[]).forEach((x, i) => { if (i < (b.prefixItems as unknown[]).length) walk(x, (b.prefixItems as SchemaValue[])[i]!, `${at}/prefixItems/${i}`, depth + 1); else wider(`${at}/prefixItems/${i}`, 'prefixItems', 'a positional rule was removed'); });\n   678  \n   679      for (const kw of ['allOf', 'anyOf', 'oneOf', 'not', 'if', 'then', 'else']) if (!jsonEqual(a[kw], b[kw])) {\n>  680        if (a[kw] === undefined) narrower(`${at}/${kw}`, kw, `${kw} was added`);\n   681        else if (b[kw] === undefined) wider(`${at}/${kw}`, kw, `${kw} was removed`);\n   682        else if (kw === 'anyOf' && Array.isArray(a[kw]) && Array.isArray(b[kw])) {\n   683          const A = a[kw] as unknown[], B = b[kw] as unknown[];\n   684          if (A.every((x) => B.some((y) => jsonEqual(x, y))) && B.length > A.length) wider(`${at}/anyOf`, 'anyOf', 'alternatives were added');\n   685          else if (B.every((x) => A.some((y) => jsonEqual(x, y))) && A.length > B.length) narrower(`${at}/anyOf`, 'anyOf', 'alternatives were removed');\n   686          else unknown(`${at}/anyOf`, 'anyOf', 'the alternatives changed');\n\nTest file style (intent/blocks/json-schema/json-schema.test.ts):\n29 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { compile, validate, infer, example, diff, isCompatible, jsonEqual, SchemaError, SchemaLimitError, type SchemaValue } from './index.ts';\n\nconst ok = (s: SchemaValue, i: unknown, o = {}) => validate(s, i, o).valid;\nconst msgs = (s: SchemaValue, i: unknown) => validate(s, i).problems.map((p) => `${p.path}|${p.code}`);\n\ntest('type keyword including integer and arrays of types', () => {\n  assert.equal(ok({ type: 'string' }, 'a'), true);\n  assert.equal(ok({ type: 'string' }, 1), false);\n  assert.equal(ok({ type: 'integer' }, 3), true);\n  assert.equal(ok({ type: 'integer' }, 3.0), true);\n  assert.equal(ok({ type: 'integer' }, 3.5), false);\n  assert.equal(ok({ type: 'number' }, 3), true);\n  assert.equal(ok({ type: ['string', 'null'] }, null), true);\n  assert.equal(ok({ type: 'object' }, []), false);\n  assert.equal(ok({ type: 'array' }, {}), false);\n  assert.equal(ok({ type: 'number' }, NaN), false);\n});\n\ntest('enum and const use deep equality', () => {\n  assert.equal(ok({ enum: [1, 'a', { x: [1, 2] }] }, { x: [1, 2] }), true);\n  assert.equal(ok({ enum: [1, 'a'] }, 2), false);\n  assert.equal(ok({ const: { a: 1, b: 2 } }, { b: 2, a: 1 }), true);\n  assert.equal(ok({ const: 1 }, '1'), false);\n  assert.equal(jsonEqual([1, { a: 2 }], [1, { a: 2 }]), true);\n});\n\ntest('numeric keywords', () => {\n  assert.equal(ok({ minimum: 5 }, 5), true);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/json-schema-2186.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:45.627Z"
+}

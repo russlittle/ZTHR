@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "client-registry",
+  "mutant": {
+    "id": "744",
+    "line": 549,
+    "column": 92,
+    "endLine": 549,
+    "endColumn": 130,
+    "mutator": "StringLiteral",
+    "original": "`no secret ${secretId} on ${clientId}`",
+    "replacement": "``",
+    "lineText": "if (!c.secrets.some((s) => s.id === secretId)) throw new ClientError('unknown_client', `no secret ${secretId} on ${clientId}`);",
+    "prevText": "const c = this.must(clientId);",
+    "nextText": "this.clients.set(clientId, { ...c, secrets: c.secrets.filter((s) => s.id !== secretId) });"
+  },
+  "mayEdit": [
+    "intent/blocks/client-registry/client-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-744.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"client-registry\". Mutant: line 549:92-549:130, mutator StringLiteral: \"`no secret ${secretId} on ${clientId}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/client-registry/index.ts (> marks the mutated line):\n   543      return { secret: fresh.plain, id: fresh.record.id, expiresAt: fresh.record.expiresAt };\n   544    }\n   545  \n   546    /** Ends one secret now (a leaked old one), leaving the others. */\n   547    revokeSecret(clientId: string, secretId: string): void {\n   548      const c = this.must(clientId);\n>  549      if (!c.secrets.some((s) => s.id === secretId)) throw new ClientError('unknown_client', `no secret ${secretId} on ${clientId}`);\n   550      this.clients.set(clientId, { ...c, secrets: c.secrets.filter((s) => s.id !== secretId) });\n   551    }\n   552  \n   553    /** Secrets that expire within `withinMs`, for a warning before an app breaks. */\n   554    expiring(withinMs: number): { clientId: string; secretId: string; expiresAt: number }[] {\n   555      const t = this.now();\n\nTest file style (intent/blocks/client-registry/client-registry.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ClientError, ClientRegistry, checkRedirectUri, matchRedirectUri, parseBasicAuthorization } from './index.ts';\n\n/** Deterministic randomness: each call yields bytes counting up from a seed. */\nfunction counter() {\n  let n = 0;\n  return (len: number) => {\n    n += 1;\n    return Uint8Array.from({ length: len }, (_, i) => (n * 31 + i) & 0xff);\n  };\n}\nconst make = (o: { t?: { v: number }; policy?: object } = {}) => {\n  const t = o.t ?? { v: 1_800_000_000_000 };\n  return { t, reg: new ClientRegistry({ now: () => t.v, randomBytes: counter(), registrationEndpoint: 'https://as.example.org/register', ...(o.policy ? { policy: o.policy } : {}) }) };\n};\nconst code = (fn: () => unknown) => {\n  try {\n    fn();\n  } catch (e) {\n    assert.ok(e instanceof ClientError, String(e));\n    return e.code;\n  }\n  assert.fail('expected a ClientError');\n};\n\ntest('redirect URIs match exactly: no prefix, case, trailing-slash or query-parameter leniency', () => {\n  const reg = ['https://app.example.org/cb', 'https://app.example.org/cb2?x=1'];\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb'), true);\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb/'), false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-744.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.284Z"
+}

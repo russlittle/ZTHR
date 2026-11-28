@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "email-html",
+  "mutant": {
+    "id": "50",
+    "line": 50,
+    "column": 368,
+    "endLine": 50,
+    "endColumn": 371,
+    "mutator": "StringLiteral",
+    "original": "'è'",
+    "replacement": "\"\"",
+    "lineText": "const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '\"', apos: \"'\", nbsp: ' ', copy: '©', reg: '®', trade: '™', mdash: '—', ndash: '–', hellip: '…', euro: '€', pound: '£', yen: '¥', cent: '¢', laquo: '«', raquo: '»', lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”', bull: '•', middot: '·', deg: '°', times: '×', divide: '÷', eacute: 'é', egrave: 'è', agrave: 'à', aacute: 'á', uuml: 'ü', ouml: 'ö', auml: 'ä', szlig: 'ß', ntilde: 'ñ', ccedil: 'ç', zwnj: '‌', shy: '­' };",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/email-html/email-html.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/email-html-50.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"email-html\". Mutant: line 50:368-50:371, mutator StringLiteral: \"'è'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/email-html/index.ts (> marks the mutated line):\n    44  export type Node = El | Text | Comment;\n    45  \n    46  const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);\n    47  const RAW = new Set(['script', 'style']);\n    48  const LIMITS = { bytes: 2 * 1024 * 1024, depth: 200, nodes: 200_000, rules: 20_000 };\n    49  \n>   50  const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '\"', apos: \"'\", nbsp: ' ', copy: '©', reg: '®', trade: '™', mdash: '—', ndash: '–', hellip: '…', euro: '€', pound: '£', yen: '¥', cent: '¢', laquo: '«', raquo: '»', lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”', bull: '•', middot: '·', deg: '°', times: '×', divide: '÷', eacute: 'é', egrave: 'è', agrave: 'à', aacute: 'á', uuml: 'ü', ouml: 'ö', auml: 'ä', szlig: 'ß', ntilde: 'ñ', ccedil: 'ç', zwnj: '‌', shy: '­' };\n    51  \n    52  export function decodeEntities(s: string): string {\n    53    if (!s.includes('&')) return s;\n    54    return s.replace(/&(#x[0-9a-fA-F]{1,6}|#\\d{1,7}|[a-zA-Z][a-zA-Z0-9]{1,10});/g, (m, e: string) => {\n    55      if (e[0] === '#') {\n    56        const cp = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);\n\nTest file style (intent/blocks/email-html/email-html.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { sanitize, inlineCss, rewriteLinks, toText, darkModeHints, supportReport, parseHtml, serialize, safeUrl, parseCss, parseSelector, specificity, misleadingLinks, decodeEntities, wrapText, prepareEmail, EmailHtmlError } from './index.ts';\n\ntest('sanitize removes scripts, handlers, frames and forms with their content', () => {\n  const out = sanitize('<p onclick=\"x()\">hi</p><script>alert(1)</script><iframe src=\"http://e\"></iframe><form><input></form><object data=\"x\"></object>');\n  assert.equal(out, '<p>hi</p>');\n});\n\ntest('sanitize refuses javascript: URLs even when disguised', () => {\n  for (const u of ['javascript:alert(1)', 'JaVaScRiPt:alert(1)', 'java\\tscript:alert(1)', ' \\u0001javascript:x', 'jav&#x09;ascript:x', 'vbscript:x', 'data:text/html;base64,AAAA']) {\n    const out = sanitize(`<a href=\"${u}\">x</a>`);\n    assert.ok(!/href/.test(out), u);\n  }\n  assert.match(sanitize('<a href=\"https://ok.example/p?a=1&amp;b=2\">x</a>'), /href=\"https:\\/\\/ok.example\\/p\\?a=1&amp;b=2\"/);\n  assert.match(sanitize('<a href=\"mailto:a@b.example\">x</a>'), /mailto:a@b.example/);\n});\n\ntest('safeUrl rules for images', () => {\n  assert.equal(safeUrl('cid:logo', { image: true }), true);\n  assert.equal(safeUrl('data:image/png;base64,AAAA', { image: true }), false);\n  assert.equal(safeUrl('data:image/png;base64,AAAA', { image: true, allowDataImage: true }), true);\n  assert.equal(safeUrl('data:image/svg+xml;base64,AAAA', { image: true, allowDataImage: true }), false);\n  assert.equal(safeUrl('//evil.example/x'), false);\n});\n\ntest('sanitize filters styles: unknown properties, expression and non-http url() go', () => {\n  const out = sanitize('<div style=\"color: red; position: fixed; background: url(javascript:x); width: expression(alert(1)); margin: 0\">a</div>');\n  assert.equal(out, '<div style=\"color: red; margin: 0\">a</div>');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/email-html-50.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.982Z"
+}

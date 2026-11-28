@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "fuzzy-match",
+  "mutant": {
+    "id": "838",
+    "line": 409,
+    "column": 17,
+    "endLine": 409,
+    "endColumn": 68,
+    "mutator": "MethodExpression",
+    "original": "Math.max(score, 0.75 + 0.2 * (q.length / n.length))",
+    "replacement": "Math.min(score, 0.75 + 0.2 * (q.length / n.length))",
+    "lineText": "score = Math.max(score, 0.75 + 0.2 * (q.length / n.length));",
+    "prevText": "if (n.startsWith(q) && q.length >= 2) {",
+    "nextText": "why.push('starts with what was typed');"
+  },
+  "mayEdit": [
+    "intent/blocks/fuzzy-match/fuzzy-match.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/fuzzy-match-838.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"fuzzy-match\". Mutant: line 409:17-409:68, mutator MethodExpression: \"Math.max(score, 0.75 + 0.2 * (q.length / n.length))\" becomes \"Math.min(score, 0.75 + 0.2 * (q.length / n.length))\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/fuzzy-match/index.ts (> marks the mutated line):\n   403        const tok = Math.max(tokenSort(q, n), tokenSet(q, n) * 0.95);\n   404        const jw = jaroWinkler(q, n);\n   405        score = Math.max(edit, tri, tok * 0.98, jw * 0.9);\n   406        if (dl <= allowedEdits(chars(q).length) && dl > 0) why.push(`${dl} edit${dl === 1 ? '' : 's'} away`);\n   407        else if (dl > allowedEdits(Math.max(chars(q).length, chars(n).length)) && !tri) score = Math.min(score, 0.3);\n   408        if (n.startsWith(q) && q.length >= 2) {\n>  409          score = Math.max(score, 0.75 + 0.2 * (q.length / n.length));\n   410          why.push('starts with what was typed');\n   411        }\n   412        if (tri >= 0.5) why.push(`trigram similarity ${tri.toFixed(2)}`);\n   413        if (tok >= 0.8 && q !== n) why.push('same words, different order or extras');\n   414        const sq = soundex(q);\n   415        if (sq && q.split(' ').length === 1 && sq === soundex(n) && n.split(' ').length === 1) {\n\nTest file style (intent/blocks/fuzzy-match/fuzzy-match.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { TooLong, TrigramIndex, allowedEdits, damerauLevenshtein, jaro, jaroWinkler, levenshtein, metaphone, normalise, osa, similarity, soundex, suggest, tokenSet, tokenSort, trigramSimilarity, trigrams } from './index.ts';\n\nconst close = (a: number, b: number, eps = 0.0001) => assert.ok(Math.abs(a - b) < eps, `${a} is not within ${eps} of ${b}`);\n\ntest('Levenshtein: the textbook cases', () => {\n  assert.equal(levenshtein('kitten', 'sitting'), 3);\n  assert.equal(levenshtein('flaw', 'lawn'), 2);\n  assert.equal(levenshtein('', 'abc'), 3);\n  assert.equal(levenshtein('abc', ''), 3);\n  assert.equal(levenshtein('same', 'same'), 0);\n  assert.equal(levenshtein('Saturday', 'Sunday'), 3);\n  assert.equal(levenshtein('😀a', '😀b'), 1, 'counts characters, not code units');\n});\n\ntest('Levenshtein with a cut-off stops early and reports \"more than max\"', () => {\n  assert.equal(levenshtein('kitten', 'sitting', 3), 3);\n  assert.equal(levenshtein('kitten', 'sitting', 2), 3);\n  assert.equal(levenshtein('abcdef', 'uvwxyz', 1), 2);\n  assert.equal(levenshtein('a', 'abcdefgh', 2), 3);\n});\n\ntest('the transposition cases that separate OSA from true Damerau-Levenshtein', () => {\n  assert.equal(levenshtein('ca', 'abc'), 3);\n  assert.equal(osa('ca', 'abc'), 3);\n  assert.equal(damerauLevenshtein('ca', 'abc'), 2);\n  assert.equal(damerauLevenshtein('teh', 'the'), 1);\n  assert.equal(osa('teh', 'the'), 1);\n  assert.equal(damerauLevenshtein('abcd', 'acbd'), 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/fuzzy-match-838.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.857Z"
+}

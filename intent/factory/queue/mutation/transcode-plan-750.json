@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "transcode-plan",
+  "mutant": {
+    "id": "750",
+    "line": 369,
+    "column": 12,
+    "endLine": 369,
+    "endColumn": 36,
+    "mutator": "ConditionalExpression",
+    "original": "p.videoAction !== 'none'",
+    "replacement": "true",
+    "lineText": "if (v && p.videoAction !== 'none') args.push('-map', '0:v:0');",
+    "prevText": "const v = p.media.video;",
+    "nextText": "if (p.audioAction !== 'none') args.push('-map', `0:a:${p.audioIndex}`);"
+  },
+  "mayEdit": [
+    "intent/blocks/transcode-plan/transcode-plan.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/transcode-plan-750.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"transcode-plan\". Mutant: line 369:12-369:36, mutator ConditionalExpression: \"p.videoAction !== 'none'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/transcode-plan/index.ts (> marks the mutated line):\n   363    if (o.threads !== undefined) {\n   364      if (!Number.isInteger(o.threads) || o.threads < 0) throw new PlanError('threads must be a whole number, zero or more');\n   365      args.push('-threads', String(o.threads));\n   366    }\n   367    args.push('-i', /^file:/.test(input) || /^[A-Za-z]:[\\\\/]/.test(input) ? input : `file:${input}`);\n   368    const v = p.media.video;\n>  369    if (v && p.videoAction !== 'none') args.push('-map', '0:v:0');\n   370    if (p.audioAction !== 'none') args.push('-map', `0:a:${p.audioIndex}`);\n   371    args.push('-sn', '-dn', '-map_metadata', '-1');\n   372  \n   373    if (v && p.videoAction === 'copy') args.push('-c:v', 'copy');\n   374    if (v && p.videoAction === 'transcode') {\n   375      const t = p.target as NonNullable<Plan['target']>;\n\nTest file style (intent/blocks/transcode-plan/transcode-plan.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { probe } from '../iso-bmff-probe/index.ts';\nimport { escapeFilterValue, ffmpegArgs, ladderFor, mediaFromProbe, plan, PlanError, PROFILES } from './index.ts';\nimport type { MediaInfo } from './index.ts';\n\nconst h264 = (over: Partial<NonNullable<MediaInfo['video']>> = {}): NonNullable<MediaInfo['video']> => ({ codec: 'h264', profile: 'high', level: 40, width: 1920, height: 1080, fps: 30, bitrate: 6_000_000, bitDepth: 8, ...over });\nconst media = (over: Partial<MediaInfo> = {}): MediaInfo => ({ container: 'mp4', durationSeconds: 100, video: h264(), audio: [{ codec: 'aac', channels: 2, bitrate: 128_000 }], subtitles: [], ...over });\nconst chrome = PROFILES['chrome']!;\nconst { hls: _noHls, ...chromeNoHls } = chrome;\nconst bare = (codec: 'hevc' | 'h264'): NonNullable<MediaInfo['video']> => ({ codec, width: 1920, height: 1080, fps: 30, bitrate: 6_000_000, bitDepth: 8 });\nconst safari = PROFILES['safari']!;\nconst tv = PROFILES['android-tv-basic']!;\nconst codes = (p: ReturnType<typeof plan>) => p.reasons.map((x) => x.code);\n\n// ------------------------------------------------------------ the decision\n\ntest('direct play when the container, video and audio are all taken as they are', () => {\n  const p = plan(media(), chrome);\n  assert.equal(p.mode, 'direct-play');\n  assert.deepEqual([p.videoAction, p.audioAction, p.subtitleAction], ['copy', 'copy', 'none']);\n  assert.deepEqual(p.reasons, []);\n  assert.equal(p.target, undefined);\n});\n\ntest('remux when only the container is wrong: video and audio are copied into one the device plays', () => {\n  const p = plan(media({ container: 'mkv' }), chrome);\n  assert.equal(p.mode, 'remux');\n  assert.deepEqual(codes(p), ['ContainerNotSupported']);\n  assert.equal(p.container, 'mp4');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/transcode-plan-750.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:10.380Z"
+}

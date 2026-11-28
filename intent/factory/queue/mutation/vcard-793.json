@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "vcard",
+  "mutant": {
+    "id": "793",
+    "line": 413,
+    "column": 55,
+    "endLine": 413,
+    "endColumn": 60,
+    "mutator": "ArrayDeclaration",
+    "original": "['1']",
+    "replacement": "[]",
+    "lineText": "if (a.pref && version === '4.0') params['PREF'] = ['1'];",
+    "prevText": "if (types.length) params['TYPE'] = types;",
+    "nextText": "add('ADR', [[a.pobox], [a.extended], [a.street], [a.locality], [a.region], [a.postal], [a.country]], params);"
+  },
+  "mayEdit": [
+    "intent/blocks/vcard/vcard.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/vcard-793.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"vcard\". Mutant: line 413:55-413:60, mutator ArrayDeclaration: \"['1']\" becomes \"[]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/vcard/index.ts (> marks the mutated line):\n   407    if (c.role) add('ROLE', c.role);\n   408    props.push(...typedProps('EMAIL', c.emails, version), ...typedProps('TEL', c.phones, version));\n   409    for (const a of c.addresses) {\n   410      const params: Record<string, string[]> = {};\n   411      const types = [...a.types, ...(a.pref && version === '3.0' ? ['pref'] : [])];\n   412      if (types.length) params['TYPE'] = types;\n>  413      if (a.pref && version === '4.0') params['PREF'] = ['1'];\n   414      add('ADR', [[a.pobox], [a.extended], [a.street], [a.locality], [a.region], [a.postal], [a.country]], params);\n   415    }\n   416    props.push(...typedProps('URL', c.urls, version));\n   417    if (c.categories.length) add('CATEGORIES', [...c.categories]);\n   418    if (c.note) add('NOTE', c.note);\n   419    if (c.photo) {\n\nTest file style (intent/blocks/vcard/vcard.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { VCardError, build, convert, hasMember, merge, parse, view, write } from './index.ts';\nimport type { Card } from './index.ts';\n\nconst BS = String.fromCharCode(92);\n// A 1x1 PNG and a 1x1 GIF, as the bytes a phone would attach.\nconst PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');\nconst GIF = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');\n\nconst V3 = [\n  'BEGIN:VCARD',\n  'VERSION:3.0',\n  'FN:Ana María Okafor',\n  'N:Okafor;Ana;María;Dr.;PhD',\n  'NICKNAME:Anita,Ana-M',\n  'ORG:Acme\\\\, Inc.;Research;Lab 2',\n  'TITLE:Chief of Things',\n  'item1.TEL;TYPE=WORK,VOICE,pref:+1 (937) 555-0100',\n  'item1.X-ABLabel:main line',\n  'TEL;TYPE=CELL:937-555-0142',\n  'EMAIL;TYPE=INTERNET,HOME:ana@example.org',\n  'ADR;TYPE=WORK:;;1 Main St' + BS + '; Suite 4;Dayton;OH;45402;USA',\n  'BDAY:1980-02-29',\n  'CATEGORIES:friends,work\\\\, other',\n  'NOTE:Line one' + BS + 'nLine two' + BS + ', with a comma' + BS + '; and a semicolon',\n  'X-CUSTOM-THING;FOO=bar:kept as is',\n  'UID:urn:uuid:11111111-2222-3333-4444-555555555555',\n  'REV:20260101T000000Z',\n  'END:VCARD',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/vcard-793.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:12.848Z"
+}

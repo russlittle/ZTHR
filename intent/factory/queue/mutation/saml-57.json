@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "saml",
+  "mutant": {
+    "id": "57",
+    "line": 63,
+    "column": 70,
+    "endLine": 63,
+    "endColumn": 81,
+    "mutator": "ConditionalExpression",
+    "original": "+m[4]! > 23",
+    "replacement": "false",
+    "lineText": "if (d.getUTCMonth() !== +m[2]! - 1 || d.getUTCDate() !== +m[3]! || +m[4]! > 23 || +m[5]! > 59 || +m[6]! > 60) throw new SamlError('time', `${what} is not a real time`);",
+    "prevText": "const d = new Date(ms);",
+    "nextText": "return ms;"
+  },
+  "mayEdit": [
+    "intent/blocks/saml/saml.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/saml-57.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"saml\". Mutant: line 63:70-63:81, mutator ConditionalExpression: \"+m[4]! > 23\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/saml/index.ts (> marks the mutated line):\n    57  export function parseTime(s: string | undefined, what: string): number {\n    58    if (s === undefined) throw new SamlError('time', `${what} is missing`);\n    59    const m = /^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(\\.\\d{1,9})?Z$/.exec(s.trim());\n    60    if (!m) throw new SamlError('time', `${what} is not a UTC time`);\n    61    const ms = Date.UTC(+m[1]!, +m[2]! - 1, +m[3]!, +m[4]!, +m[5]!, +m[6]!, m[7] ? Math.floor(Number(m[7]) * 1000) : 0);\n    62    const d = new Date(ms);\n>   63    if (d.getUTCMonth() !== +m[2]! - 1 || d.getUTCDate() !== +m[3]! || +m[4]! > 23 || +m[5]! > 59 || +m[6]! > 60) throw new SamlError('time', `${what} is not a real time`);\n    64    return ms;\n    65  }\n    66  export const formatTime = (ms: number) => new Date(ms).toISOString().replace(/\\.\\d{3}Z$/, 'Z');\n    67  \n    68  // ---------------------------------------------------------------- stores\n    69  \n\nTest file style (intent/blocks/saml/saml.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, createPublicKey, randomBytes, sign as nodeSign, type KeyObject } from 'node:crypto';\nimport { bitString, boolean, explicit, integer, octetString, oid, oidOf, sequence, set, time, toPem, utf8String } from '../asn1-der/index.ts';\nimport { inflateRawSync, deflateRawSync } from 'node:zlib';\nimport { Sp, SamlError, MemoryRequestStore, MemoryReplayCache, parseTime, formatTime, inflateRedirect, verifyRedirectSignature, spMetadata, parseIdpMetadata, NS, BINDING, NAMEID, type SpConfig } from './index.ts';\nimport { sign, readXml, verifyDocument, childNamed, NS_DSIG } from '../xml-dsig/index.ts';\n\n/** A throwaway certificate made at run time: DER from the asn1-der writers, signed with node:crypto (ECDSA P-256 / SHA-256). */\nconst certName = (cn: string) => sequence(set(sequence(oid(oidOf('CN')), utf8String(cn))));\nfunction makeCert(o: { subject: string; publicKey: KeyObject; issuer?: string; issuerKey: KeyObject; ca?: boolean }): string {\n  const algId = sequence(oid(oidOf('ecdsa-with-SHA256')));\n  const exts = o.ca ? [explicit(3, sequence(sequence(oid(oidOf('basicConstraints')), boolean(true), octetString(sequence(boolean(true))))))] : [];\n  const tbs = sequence(\n    explicit(0, integer(2)), integer(BigInt(`0x${randomBytes(12).toString('hex')}`)), algId, certName(o.issuer ?? o.subject),\n    sequence(time(new Date(Date.UTC(2020, 0, 1))), time(new Date(Date.UTC(2120, 0, 1)))),\n    certName(o.subject), Buffer.from(o.publicKey.export({ type: 'spki', format: 'der' })), ...exts,\n  );\n  return toPem('CERTIFICATE', sequence(tbs, algId, bitString(nodeSign('sha256', tbs, o.issuerKey)))).trim();\n}\n// A fresh key pair and a self-signed certificate for it, made for each run.\nconst KEY_PAIR = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst KEY = KEY_PAIR.privateKey.export({ type: 'pkcs8', format: 'pem' }) as string;\nconst CERT = makeCert({ subject: 'example.org', publicKey: KEY_PAIR.publicKey, issuerKey: KEY_PAIR.privateKey });\nconst SP = 'https://sp.example/metadata';\nconst ACS = 'https://sp.example/saml/acs';\nconst IDP = 'https://idp.example/entity';\nconst SSO = 'https://idp.example/sso';\nconst T = Date.UTC(2026, 11, 15, 12, 0, 0);\nconst iso = (ms: number) => formatTime(ms);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/saml-57.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.783Z"
+}

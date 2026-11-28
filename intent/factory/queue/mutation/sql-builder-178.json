@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "sql-builder",
+  "mutant": {
+    "id": "178",
+    "line": 157,
+    "column": 47,
+    "endLine": 157,
+    "endColumn": 88,
+    "mutator": "StringLiteral",
+    "original": "`${what} is longer than 10000 characters`",
+    "replacement": "``",
+    "lineText": "if (v.length > 10_000) throw new SqlError(`${what} is longer than 10000 characters`);",
+    "prevText": "if (typeof v !== 'string') throw new SqlError(`${what} is text`);",
+    "nextText": "if (v.includes('\\u0000')) throw new SqlError(`${what} contains a null character`);"
+  },
+  "mayEdit": [
+    "intent/blocks/sql-builder/sql-builder.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sql-builder-178.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sql-builder\". Mutant: line 157:47-157:88, mutator StringLiteral: \"`${what} is longer than 10000 characters`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sql-builder/index.ts (> marks the mutated line):\n   151    } else if (type === 'date') {\n   152      const iso = v instanceof Date ? (Number.isNaN(v.getTime()) ? '' : v.toISOString()) : typeof v === 'string' ? v : '';\n   153      if (!/^\\d{4}-\\d{2}-\\d{2}(?:[T ]\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{1,6})?)?(?:Z|[+-]\\d{2}:?\\d{2})?)?$/.test(iso) || Number.isNaN(Date.parse(iso.length === 10 ? `${iso}T00:00:00Z` : iso))) throw new SqlError(`${what} is a date like 2026-03-01 or 2026-03-01T12:00:00Z`);\n   154      out = iso;\n   155    } else {\n   156      if (typeof v !== 'string') throw new SqlError(`${what} is text`);\n>  157      if (v.length > 10_000) throw new SqlError(`${what} is longer than 10000 characters`);\n   158      if (v.includes('\\u0000')) throw new SqlError(`${what} contains a null character`);\n   159      out = v;\n   160    }\n   161    return ctx.bind(out);\n   162  }\n   163  \n\nTest file style (intent/blocks/sql-builder/sql-builder.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { selectSql, insertSql, updateSql, deleteSql, planToSql, placeholdersMatch, checkReadOnly, assertReadOnly, policyFor, limitTo, checkExplain, SqlError, UnsafeSql } from './index.ts';\nimport type { Collection } from '../query/index.ts';\n\nconst cols: Collection[] = [\n  { name: 'customers', fields: { id: { type: 'number' }, name: { type: 'string' }, email: { type: 'string', sensitive: true }, created: { type: 'date' }, vip: { type: 'boolean' } } },\n  { name: 'orders', fields: { id: { type: 'number' }, customer_id: { type: 'number' }, total: { type: 'number' }, status: { type: 'string' } } },\n];\nconst policy = policyFor(cols, { maxLimit: 500 });\n\ntest('select quotes names and binds every value (pg)', () => {\n  const b = selectSql({ from: 'orders', columns: ['id', 'total'], where: { and: [{ column: 'status', op: '=', value: 'open' }, { column: 'total', op: '>=', value: 10 }] }, limit: 20 }, cols);\n  assert.equal(b.text, 'SELECT \"orders\".\"id\", \"orders\".\"total\" FROM \"orders\" WHERE (\"orders\".\"status\" = $1 AND \"orders\".\"total\" >= $2) LIMIT $3');\n  assert.deepEqual(b.params, ['open', 10, 20]);\n  assert.ok(placeholdersMatch(b));\n});\n\ntest('mysql and sqlite use ? and their quoting', () => {\n  const b = selectSql({ from: 'orders', columns: ['id'], where: { column: 'id', op: 'in', value: [1, 2, 3] } }, cols, { dialect: 'mysql' });\n  assert.match(b.text, /^SELECT `orders`\\.`id` FROM `orders` WHERE `orders`\\.`id` IN \\(\\?, \\?, \\?\\) LIMIT \\?$/);\n  assert.deepEqual(b.params, [1, 2, 3, 100]);\n  assert.ok(placeholdersMatch(b, 'mysql'));\n});\n\ntest('injection text stays in the parameters', () => {\n  const evil = \"x'; DROP TABLE orders; --\";\n  const b = selectSql({ from: 'orders', columns: ['id'], where: { column: 'status', op: '=', value: evil } }, cols);\n  assert.ok(!b.text.includes('DROP'));\n  assert.deepEqual(b.params[0], evil);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sql-builder-178.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:04.749Z"
+}

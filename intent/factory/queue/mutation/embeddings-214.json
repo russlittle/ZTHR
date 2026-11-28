@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "embeddings",
+  "mutant": {
+    "id": "214",
+    "line": 245,
+    "column": 11,
+    "endLine": 245,
+    "endColumn": 39,
+    "mutator": "EqualityOperator",
+    "original": "total > this.o.maxTotalChars",
+    "replacement": "total >= this.o.maxTotalChars",
+    "lineText": "if (total > this.o.maxTotalChars) throw new BadRequest(`more than ${this.o.maxTotalChars} characters in all`, i);",
+    "prevText": "total += s.length;",
+    "nextText": "return s;"
+  },
+  "mayEdit": [
+    "intent/blocks/embeddings/embeddings.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/embeddings-214.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"embeddings\". Mutant: line 245:11-245:39, mutator EqualityOperator: \"total > this.o.maxTotalChars\" becomes \"total >= this.o.maxTotalChars\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/embeddings/index.ts (> marks the mutated line):\n   239          if (this.o.tooLong === 'error') throw new BadRequest(`text ${i} is ${s.length} characters; the limit is ${this.o.maxChars}`, i);\n   240          s = s.slice(0, this.o.maxChars);\n   241          // Do not leave half of a surrogate pair at the cut.\n   242          if (/[\\ud800-\\udbff]$/.test(s)) s = s.slice(0, -1);\n   243        }\n   244        total += s.length;\n>  245        if (total > this.o.maxTotalChars) throw new BadRequest(`more than ${this.o.maxTotalChars} characters in all`, i);\n   246        return s;\n   247      });\n   248    }\n   249  \n   250    /** Embeds documents (what is stored and searched). */\n   251    embed(texts: readonly string[]): Promise<Float32Array[]> {\n\nTest file style (intent/blocks/embeddings/embeddings.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Cache } from '../cache/index.ts';\nimport { Breaker, BreakerOpen, TimedOut } from '../resilience/index.ts';\nimport { BadEmbedding, BadRequest, DimensionMismatch, Embedder, EmbeddingFailed, ProviderError, assertSameSpace, cosine, twin, words } from './index.ts';\nimport type { EmbeddingProvider } from './index.ts';\n\nconst noSleep = async () => {};\nconst mk = (o: Partial<ConstructorParameters<typeof Embedder>[0]> = {}, p = twin({ dim: 32, maxBatch: 10 })) => ({ p, e: new Embedder({ provider: p, sleep: noSleep, random: () => 0.5, ...o }) });\n\n/** A provider whose answers a test controls. */\nfunction scripted(dim: number, script: (texts: readonly string[], call: number, signal: AbortSignal) => Promise<ArrayLike<number>[]> | ArrayLike<number>[], model = 'scripted'): EmbeddingProvider & { calls: number } {\n  const p = {\n    model,\n    dim,\n    maxBatch: 4,\n    calls: 0,\n    async embed(texts: readonly string[], o: { signal: AbortSignal }) {\n      return script(texts, p.calls++, o.signal);\n    },\n  };\n  return p;\n}\nconst unit = (dim: number, hot = 0) => Array.from({ length: dim }, (_, i) => (i === hot ? 1 : 0));\n\ntest('the twin gives the same unit vector for the same text, close vectors for shared words, far for unrelated', async () => {\n  const a = twin({ dim: 256 });\n  const [x1, y1, z1] = (await a.embed(['the quick brown fox', 'the quick brown fox', 'a quick brown dog'], { kind: 'document', signal: new AbortController().signal })) as number[][];\n  assert.deepEqual(x1, y1);\n  assert.ok(Math.abs(Math.hypot(...x1!) - 1) < 1e-9, 'unit length');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/embeddings-214.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.638Z"
+}

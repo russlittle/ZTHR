@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "svg-writer",
+  "mutant": {
+    "id": "686",
+    "line": 327,
+    "column": 35,
+    "endLine": 330,
+    "endColumn": 4,
+    "mutator": "BlockStatement",
+    "original": "{\n    this.defsList.push(...nodes);\n    return this;\n  }",
+    "replacement": "{}",
+    "lineText": "defs(...nodes: SvgNode[]): this {",
+    "prevText": "",
+    "nextText": "this.defsList.push(...nodes);"
+  },
+  "mayEdit": [
+    "intent/blocks/svg-writer/svg-writer.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/svg-writer-686.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"svg-writer\". Mutant: line 327:35-330:4, mutator BlockStatement: \"{\\n    this.defsList.push(...nodes);\\n    return this;\\n  }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/svg-writer/index.ts (> marks the mutated line):\n   321  \n   322    add(...nodes: (SvgNode | undefined)[]): this {\n   323      for (const n of nodes) if (n) this.body.push(n);\n   324      return this;\n   325    }\n   326  \n>  327    defs(...nodes: SvgNode[]): this {\n   328      this.defsList.push(...nodes);\n   329      return this;\n   330    }\n   331  \n   332    private gradient(tag: 'linearGradient' | 'radialGradient', id: string, attrs: Attrs, stops: readonly Stop[]): string {\n   333      if (stops.length < 2) throw new SvgError('a gradient needs at least two stops');\n\nTest file style (intent/blocks/svg-writer/svg-writer.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Path, Svg, SvgError, circle, el, escapeAttr, escapeText, estimateTextWidth, group, labelled, line, num, paint, parsePath, pathEl, polygon, polyline, rect, serializePath, text, write } from './index.ts';\n\n/** A small well-formedness check: tags nest and close, attributes are quoted and unique, and no stray \"<\" or \"&\" remains. */\nfunction wellFormed(xml: string): void {\n  const body = xml.replace(/^<\\?xml[^>]*\\?>\\s*/, '');\n  const stack: string[] = [];\n  const re = /<(\\/?)([A-Za-z][\\w:-]*)((?:\\s+[\\w:-]+=\"[^\"<]*\")*)\\s*(\\/?)>|([^<]+)/g;\n  let m: RegExpExecArray | null;\n  let consumed = 0;\n  while ((m = re.exec(body))) {\n    consumed += m[0].length;\n    if (m[5] !== undefined) {\n      assert.ok(!/&(?!amp;|lt;|gt;|quot;|apos;|#\\d+;)/.test(m[5]), `bare ampersand in text: ${m[5]}`);\n      continue;\n    }\n    const names = [...m[3]!.matchAll(/\\s+([\\w:-]+)=/g)].map((x) => x[1]);\n    assert.equal(new Set(names).size, names.length, `duplicate attribute in ${m[0]}`);\n    if (m[1]) assert.equal(stack.pop(), m[2], `mismatched </${m[2]}>`);\n    else if (!m[4]) stack.push(m[2]!);\n  }\n  assert.equal(consumed, body.length, 'unparsed content left in the document');\n  assert.deepEqual(stack, [], 'unclosed elements');\n}\n\ntest('numbers: bounded precision, no trailing zeros, no -0, never NaN or infinity', () => {\n  assert.equal(num(1), '1');\n  assert.equal(num(1.5), '1.5');\n  assert.equal(num(1 / 3), '0.333');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/svg-writer-686.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:06.829Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "signature-capture",
+  "mutant": {
+    "id": "166",
+    "line": 102,
+    "column": 7,
+    "endLine": 102,
+    "endColumn": 26,
+    "mutator": "EqualityOperator",
+    "original": "stats.maxSpeed > 20",
+    "replacement": "stats.maxSpeed >= 20",
+    "lineText": "if (stats.maxSpeed > 20) flags.push('too-fast');",
+    "prevText": "if (stats.points > 5 && stats.durationMs === 0) flags.push('no-timing');",
+    "nextText": "const all = strokes.flat();"
+  },
+  "mayEdit": [
+    "intent/blocks/signature-capture/signature-capture.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/signature-capture-166.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"signature-capture\". Mutant: line 102:7-102:26, mutator EqualityOperator: \"stats.maxSpeed > 20\" becomes \"stats.maxSpeed >= 20\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/signature-capture/index.ts (> marks the mutated line):\n    96  export type Flag = 'no-timing' | 'perfectly-straight' | 'too-fast' | 'machine-regular';\n    97  \n    98  /** Things a reviewer should know about a drawn signature; none of them refuses it. */\n    99  export function flagsOf(strokes: readonly Stroke[], stats: StrokeStats): Flag[] {\n   100    const flags: Flag[] = [];\n   101    if (stats.points > 5 && stats.durationMs === 0) flags.push('no-timing');\n>  102    if (stats.maxSpeed > 20) flags.push('too-fast');\n   103    const all = strokes.flat();\n   104    if (all.length >= 3) {\n   105      const a = all[0]!;\n   106      const b = all[all.length - 1]!;\n   107      const span = Math.hypot(b.x - a.x, b.y - a.y);\n   108      if (span > 0 && all.every((p) => Math.abs((b.x - a.x) * (a.y - p.y) - (a.x - p.x) * (b.y - a.y)) / span < 0.5)) flags.push('perfectly-straight');\n\nTest file style (intent/blocks/signature-capture/signature-capture.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, randomBytes } from 'node:crypto';\nimport { test } from 'node:test';\nimport { Consent } from '../consent/index.ts';\nimport { CaptureRefused, SignatureCapture, flagsOf, inspectImage, intentStatement, measure, strokesToSvg, typedToSvg } from './index.ts';\nimport type { DeviceEvidence, Point, SignatureBody, Stroke } from './index.ts';\n\nconst pad = { width: 400, height: 150 };\nconst docHash = createHash('sha256').update('the lease').digest('hex');\nconst evidence: DeviceEvidence = { ip: '203.0.113.7', userAgent: 'Mozilla/5.0 (X11; Linux)', timezone: 'America/New_York', locale: 'en-US', screen: { width: 1280, height: 800 }, pointer: 'touch' };\nconst wiggle = (n = 40, dt = 7): Stroke => Array.from({ length: n }, (_, i): Point => ({ x: 10 + i * 8, y: 75 + Math.sin(i / 3) * 30, t: i * dt + (i % 3) }));\n\nconst setup = () => {\n  const clock = { d: new Date('2025-03-03T12:00:00Z') };\n  const consent = new Consent(() => clock.d);\n  consent.publish({ doc: 'esign', version: 1, effective: '2025-01-01', requiresAgreement: true, required: true, summary: 'Electronic signature disclosure' });\n  consent.agree('s1', 'esign', 'signing page');\n  let n = 0;\n  const key = randomBytes(24).toString('hex');\n  const cap = new SignatureCapture({ consent, consentDoc: 'esign', sealKey: key, now: () => clock.d, newId: () => `sig${++n}` });\n  const base = (body: SignatureBody, o: Partial<Parameters<SignatureCapture['capture']>[0]> = {}) => ({ signerId: 's1', signerName: 'Ana Silva', documentSha256: docHash, documentTitle: 'Lease', intentShown: intentStatement('Ana Silva', 'Lease'), body, evidence, ...o });\n  return { clock, consent, cap, base, key };\n};\n\nconst png = (w: number, h: number) => {\n  const b = Buffer.alloc(33);\n  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(b);\n  b.writeUInt32BE(13, 8);\n  b.write('IHDR', 12, 'latin1');\n  b.writeUInt32BE(w, 16);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/signature-capture-166.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:02.573Z"
+}

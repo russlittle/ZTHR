@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mail-tracking",
+  "mutant": {
+    "id": "522",
+    "line": 379,
+    "column": 32,
+    "endLine": 379,
+    "endColumn": 42,
+    "mutator": "UpdateOperator",
+    "original": "l.unique++",
+    "replacement": "l.unique--",
+    "lineText": "if (key === undefined) l.unique++;",
+    "prevText": "l.clicks++;",
+    "nextText": "else if (!l.who.has(key)) {"
+  },
+  "mayEdit": [
+    "intent/blocks/mail-tracking/mail-tracking.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mail-tracking-522.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mail-tracking\". Mutant: line 379:32-379:42, mutator UpdateOperator: \"l.unique++\" becomes \"l.unique--\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mail-tracking/index.ts (> marks the mutated line):\n   373          else {\n   374            clickers.add(key);\n   375            opened.add(key);\n   376          }\n   377          const l = (links[e.link ?? '?'] ??= { clicks: 0, unique: 0, who: new Set() });\n   378          l.clicks++;\n>  379          if (key === undefined) l.unique++;\n   380          else if (!l.who.has(key)) {\n   381            l.who.add(key);\n   382            l.unique++;\n   383          }\n   384        }\n   385      }\n\nTest file style (intent/blocks/mail-tracking/mail-tracking.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { randomBytes } from 'node:crypto';\nimport { test } from 'node:test';\nimport { sign } from '../crypto/index.ts';\nimport { BadLink, classify, ipInRanges, OPEN_GIF, openResponse, Recorder, redirectResponse, TrackingError, Tracker, type Hit } from './index.ts';\n\nconst secret = randomBytes(32).toString('base64');\nconst T0 = Date.UTC(2026, 5, 1, 12, 0, 0);\nconst base = 'https://track.example.com';\nconst mk = (o: Partial<ConstructorParameters<typeof Tracker>[0]> = {}) => new Tracker({ secret, baseUrl: base, now: () => T0, ...o });\nconst ctx = { campaign: 'spring', message: 'm1', recipient: 'r-42' };\nconst human: Hit = { at: T0 + 60_000, method: 'GET', userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148', ip: '203.0.113.9' };\nconst tokenOf = (url: string | null) => new URL(url!).pathname.split('/').pop()!.replace(/\\.gif$/, '');\n\ntest('the open pixel is a real 1x1 gif and is never cached or sniffed', () => {\n  assert.deepEqual([...OPEN_GIF.subarray(0, 6)], [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);\n  assert.equal(OPEN_GIF.length, 42);\n  const r = openResponse();\n  assert.equal(r.status, 200);\n  assert.equal(r.headers['content-type'], 'image/gif');\n  assert.equal(r.headers['cache-control'], 'no-store, max-age=0');\n  assert.equal(r.headers['x-content-type-options'], 'nosniff');\n  assert.equal(r.headers['content-length'], '42');\n});\n\ntest('a click link round-trips the destination through a signed token', () => {\n  const t = mk();\n  const link = t.clickUrl(ctx, 'https://shop.example.org/sale?a=1&b=2#top', 'hero');\n  assert.ok(link.startsWith(`${base}/t/c/`));\n  const c = t.resolveClick(tokenOf(link));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mail-tracking-522.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:48.049Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crud-from-schema",
+  "mutant": {
+    "id": "157",
+    "line": 188,
+    "column": 125,
+    "endLine": 188,
+    "endColumn": 129,
+    "mutator": "BooleanLiteral",
+    "original": "true",
+    "replacement": "false",
+    "lineText": "let rows = [...table(kind).values()].filter((r) => q.where.every((w) => matches(r, w)) && (q.visible ? q.visible(r) : true));",
+    "prevText": "async list(kind, q) {",
+    "nextText": "rows.sort((a, b) => {"
+  },
+  "mayEdit": [
+    "intent/blocks/crud-from-schema/crud-from-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crud-from-schema-157.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crud-from-schema\". Mutant: line 188:125-188:129, mutator BooleanLiteral: \"true\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crud-from-schema/index.ts (> marks the mutated line):\n   182    return {\n   183      async get(kind, id) {\n   184        const r = table(kind).get(id);\n   185        return r ? (structuredClone(r) as Rec) : undefined;\n   186      },\n   187      async list(kind, q) {\n>  188        let rows = [...table(kind).values()].filter((r) => q.where.every((w) => matches(r, w)) && (q.visible ? q.visible(r) : true));\n   189        rows.sort((a, b) => {\n   190          for (const s of q.sort) {\n   191            const c = cmp(a[s.field], b[s.field]);\n   192            if (c) return s.desc ? -c : c;\n   193          }\n   194          return cmp(a['id'], b['id']);\n\nTest file style (intent/blocks/crud-from-schema/crud-from-schema.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { BadSchema, StoreConflict, crud, declare, memoryStore } from './index.ts';\nimport type { Entity, Req } from './index.ts';\nimport type { Policy, Subject } from '../rbac/index.ts';\nimport { check, contract, verifyResponse } from '../openapi/index.ts';\n\nconst User: Entity = {\n  name: 'User', plural: 'users',\n  fields: {\n    name: { type: 'string', required: true, minLength: 1, maxLength: 50, filterable: true, sortable: true },\n    email: { type: 'string', required: true, format: 'email', unique: true, filterable: true },\n    salary: { type: 'integer', nullable: true, readAction: 'read-salary', writeAction: 'write-salary', filterable: true, sortable: true },\n  },\n};\nconst Post: Entity = {\n  name: 'Post', plural: 'posts',\n  fields: {\n    title: { type: 'string', required: true, maxLength: 80, filterable: true, sortable: true },\n    status: { type: 'string', enum: ['draft', 'published'], default: 'draft', filterable: true },\n    views: { type: 'integer', default: 0, minimum: 0, filterable: true, sortable: true },\n    authorId: { type: 'string', required: true, filterable: true },\n    meta: { type: 'json' },\n  },\n  relations: { author: { entity: 'User', kind: 'one', field: 'authorId' }, comments: { entity: 'Comment', kind: 'many', field: 'postId' } },\n};\nconst Comment: Entity = { name: 'Comment', plural: 'comments', fields: { postId: { type: 'string', required: true, filterable: true }, text: { type: 'string', required: true } }, operations: ['list', 'get', 'create'] };\n\nconst policy: Policy = {\n  roles: { member: { label: 'Member' }, admin: { label: 'Admin', inherits: ['member'] } },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crud-from-schema-157.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.492Z"
+}

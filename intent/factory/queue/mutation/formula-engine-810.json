@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "formula-engine",
+  "mutant": {
+    "id": "810",
+    "line": 415,
+    "column": 14,
+    "endLine": 415,
+    "endColumn": 19,
+    "mutator": "StringLiteral",
+    "original": "'mmm'",
+    "replacement": "\"\"",
+    "lineText": "case 'mmm': return MONTHS[d.m - 1]!.slice(0, 3);",
+    "prevText": "case 'mmmm': return MONTHS[d.m - 1]!;",
+    "nextText": "case 'mm': return String(d.m).padStart(2, '0');"
+  },
+  "mayEdit": [
+    "intent/blocks/formula-engine/formula-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/formula-engine-810.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"formula-engine\". Mutant: line 415:14-415:19, mutator StringLiteral: \"'mmm'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/formula-engine/index.ts (> marks the mutated line):\n   409        const minute = (l === 'mm' || l === 'm') && ((hasH && /h[^a-z]*$/.test(before)) || /^[^a-z]*s/.test(fmt.slice(off + tok.length).toLowerCase()));\n   410        if (minute) return String(Math.floor((secs % 3600) / 60)).padStart(l.length, '0');\n   411        switch (l) {\n   412          case 'yyyy': return String(d.y);\n   413          case 'yy': return String(d.y % 100).padStart(2, '0');\n   414          case 'mmmm': return MONTHS[d.m - 1]!;\n>  415          case 'mmm': return MONTHS[d.m - 1]!.slice(0, 3);\n   416          case 'mm': return String(d.m).padStart(2, '0');\n   417          case 'm': return String(d.m);\n   418          case 'dddd': return DAYS[wd]!;\n   419          case 'ddd': return DAYS[wd]!.slice(0, 3);\n   420          case 'dd': return String(d.d).padStart(2, '0');\n   421          case 'd': return String(d.d);\n\nTest file style (intent/blocks/formula-engine/formula-engine.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { calc, colName, colNumber, compare, dateOf, display, formatText, FormulaError, FormulaSyntaxError, FUNCTIONS, fromTyped, isError, parse, parseRef, serialOf, Workbook, type Scalar } from './index.ts';\n\nconst clock = { now: () => new Date('2026-03-09T15:30:00Z'), random: () => 0.25 };\nconst c = (f: string, cells: Record<string, Scalar> = {}) => {\n  const v = calc(f, cells, { clock });\n  return isError(v) ? v.code : v;\n};\n\ntest('operators follow Excel precedence and associativity', () => {\n  assert.equal(c('=-2^2'), 4, 'unary minus binds tighter than ^');\n  assert.equal(c('=2^3^2'), 64, '^ is left to right');\n  assert.equal(c('=2+3*4'), 14);\n  assert.equal(c('=(2+3)*4'), 20);\n  assert.equal(c('=7-2-1'), 4);\n  assert.equal(c('=10/4'), 2.5);\n  assert.equal(c('=50%'), 0.5);\n  assert.equal(c('=200*10%'), 20);\n  assert.equal(c('=2^-1'), 0.5);\n  assert.equal(c('=\"a\"&\"b\"&1'), 'ab1');\n  assert.equal(c('=1+2&\"x\"'), '3x', '+ before &');\n  assert.equal(c('=1+1=2'), true, 'comparison last');\n  assert.equal(c('= 1 + 2 '), 3, 'spaces are ignored');\n  assert.equal(c('=1.5e2+.5'), 150.5);\n  assert.equal(c('=\"say \"\"hi\"\"\"'), 'say \"hi\"');\n});\n\ntest('errors are values that travel, and IFERROR catches them', () => {\n  assert.equal(c('=1/0'), '#DIV/0!');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/formula-engine-810.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.526Z"
+}

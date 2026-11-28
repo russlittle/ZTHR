@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "document-templates",
+  "mutant": {
+    "id": "536",
+    "line": 281,
+    "column": 34,
+    "endLine": 281,
+    "endColumn": 73,
+    "mutator": "ConditionalExpression",
+    "original": "base !== undefined && rest.length === 0",
+    "replacement": "false",
+    "lineText": "if (!declared.has(full) && !(base !== undefined && rest.length === 0)) problems.push({ where, message: `${path} is not a declared field` });",
+    "prevText": "if (first === 'loop') return;",
+    "nextText": "};"
+  },
+  "mayEdit": [
+    "intent/blocks/document-templates/document-templates.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/document-templates-536.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"document-templates\". Mutant: line 281:34-281:73, mutator ConditionalExpression: \"base !== undefined && rest.length === 0\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/document-templates/index.ts (> marks the mutated line):\n   275    let nodes = 0;\n   276    const known = (path: string, loops: ReadonlyMap<string, string>, where: string) => {\n   277      const [first, ...rest] = path.split('.');\n   278      const base = loops.get(first!);\n   279      const full = base !== undefined ? [base, ...rest].join('.') : path;\n   280      if (first === 'loop') return;\n>  281      if (!declared.has(full) && !(base !== undefined && rest.length === 0)) problems.push({ where, message: `${path} is not a declared field` });\n   282    };\n   283    const text = (s: string, loops: ReadonlyMap<string, string>, where: string) => {\n   284      try {\n   285        for (const p of parseMerge(s, where)) if (typeof p !== 'string') known(p.path, loops, where);\n   286      } catch (e) {\n   287        if (e instanceof TemplateProblems) problems.push(...e.problems);\n\nTest file style (intent/blocks/document-templates/document-templates.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { TemplateLibrary, TemplateProblems, checkData, checkTemplate, fillRole, hashTemplate, lookup, merge, parseMerge, renderBlocks } from './index.ts';\nimport type { Problem, Template } from './index.ts';\n\nconst invoice: Template = {\n  id: 'invoice',\n  name: 'Invoice {{number}}',\n  roles: [{ id: 'issuer', label: 'Issuer' }, { id: 'client', label: 'Client' }],\n  fields: [\n    { name: 'number', type: 'text', label: 'Invoice number', role: 'issuer', required: true },\n    { name: 'date', type: 'date', label: 'Date', role: 'issuer', required: true },\n    { name: 'client', type: 'text', label: 'Client name', role: 'issuer', required: true },\n    { name: 'note', type: 'text', label: 'Note', role: 'issuer' },\n    { name: 'terms', type: 'choice', label: 'Terms', role: 'issuer', choices: ['net15', 'net30'] },\n    { name: 'total', type: 'money', label: 'Total', role: 'issuer', required: true },\n    { name: 'items', type: 'list', label: 'Line items', role: 'issuer', required: true, item: [{ name: 'description', type: 'text', label: 'Description', required: true }, { name: 'qty', type: 'number', label: 'Quantity', required: true }, { name: 'price', type: 'money', label: 'Price', required: true }] },\n    { name: 'signedBy', type: 'text', label: 'Signed by', role: 'client', required: true },\n  ],\n  body: [\n    { h: 'Invoice {{number}}' },\n    { p: 'Billed to {{client | upper}} on {{date | date:\"long\"}}.' },\n    { if: { exists: 'note' }, then: [{ p: 'Note: {{note}}' }] },\n    { table: { header: ['#', 'Description', 'Qty', 'Price'], widths: [1, 6, 1, 2], repeat: { over: 'items', as: 'item', cells: ['{{loop.index}}', '{{item.description}}', '{{item.qty | number:0}}', '{{item.price | money}}'] } } },\n    { p: 'Total due: {{total | money}}' },\n    { if: { eq: ['terms', 'net30'] }, then: [{ p: 'Payable within 30 days.' }], else: [{ p: 'Payable within 15 days.' }] },\n    { p: 'Signed: {{signedBy | default:\"(unsigned)\"}}' },\n  ],\n};\nconst money = (minor: number, currency = 'USD') => ({ minor, currency });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/document-templates-536.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.789Z"
+}

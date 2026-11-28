@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "json-schema",
+  "mutant": {
+    "id": "255",
+    "line": 120,
+    "column": 24,
+    "endLine": 120,
+    "endColumn": 136,
+    "mutator": "BlockStatement",
+    "original": "{ if (!validIPv4(s.slice(lastColon + 1))) return false; groups = `${s.slice(0, lastColon + 1)}0:0`; extra = 0; }",
+    "replacement": "{}",
+    "lineText": "if (s.includes('.')) { if (!validIPv4(s.slice(lastColon + 1))) return false; groups = `${s.slice(0, lastColon + 1)}0:0`; extra = 0; }",
+    "prevText": "const lastColon = s.lastIndexOf(':');",
+    "nextText": "const dbl = groups.split('::');"
+  },
+  "mayEdit": [
+    "intent/blocks/json-schema/json-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/json-schema-255.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"json-schema\". Mutant: line 120:24-120:136, mutator BlockStatement: \"{ if (!validIPv4(s.slice(lastColon + 1))) return false; groups = `${s.slice(0, lastColon + 1)}0:0`; extra = 0; }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/json-schema/index.ts (> marks the mutated line):\n   114  }\n   115  function validIPv6(s: string): boolean {\n   116    if (!/^[0-9a-f:.]+$/i.test(s)) return false;\n   117    let groups = s;\n   118    let extra = 0;\n   119    const lastColon = s.lastIndexOf(':');\n>  120    if (s.includes('.')) { if (!validIPv4(s.slice(lastColon + 1))) return false; groups = `${s.slice(0, lastColon + 1)}0:0`; extra = 0; }\n   121    const dbl = groups.split('::');\n   122    if (dbl.length > 2) return false;\n   123    const parts = (x: string) => (x === '' ? [] : x.split(':'));\n   124    const all = dbl.flatMap(parts);\n   125    if (!all.every((g) => /^[0-9a-f]{1,4}$/i.test(g))) return false;\n   126    return (dbl.length === 2 ? all.length < 8 : all.length === 8) && extra === 0;\n\nTest file style (intent/blocks/json-schema/json-schema.test.ts):\n29 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { compile, validate, infer, example, diff, isCompatible, jsonEqual, SchemaError, SchemaLimitError, type SchemaValue } from './index.ts';\n\nconst ok = (s: SchemaValue, i: unknown, o = {}) => validate(s, i, o).valid;\nconst msgs = (s: SchemaValue, i: unknown) => validate(s, i).problems.map((p) => `${p.path}|${p.code}`);\n\ntest('type keyword including integer and arrays of types', () => {\n  assert.equal(ok({ type: 'string' }, 'a'), true);\n  assert.equal(ok({ type: 'string' }, 1), false);\n  assert.equal(ok({ type: 'integer' }, 3), true);\n  assert.equal(ok({ type: 'integer' }, 3.0), true);\n  assert.equal(ok({ type: 'integer' }, 3.5), false);\n  assert.equal(ok({ type: 'number' }, 3), true);\n  assert.equal(ok({ type: ['string', 'null'] }, null), true);\n  assert.equal(ok({ type: 'object' }, []), false);\n  assert.equal(ok({ type: 'array' }, {}), false);\n  assert.equal(ok({ type: 'number' }, NaN), false);\n});\n\ntest('enum and const use deep equality', () => {\n  assert.equal(ok({ enum: [1, 'a', { x: [1, 2] }] }, { x: [1, 2] }), true);\n  assert.equal(ok({ enum: [1, 'a'] }, 2), false);\n  assert.equal(ok({ const: { a: 1, b: 2 } }, { b: 2, a: 1 }), true);\n  assert.equal(ok({ const: 1 }, '1'), false);\n  assert.equal(jsonEqual([1, { a: 2 }], [1, { a: 2 }]), true);\n});\n\ntest('numeric keywords', () => {\n  assert.equal(ok({ minimum: 5 }, 5), true);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/json-schema-255.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:45.464Z"
+}

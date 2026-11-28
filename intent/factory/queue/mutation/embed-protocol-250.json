@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "embed-protocol",
+  "mutant": {
+    "id": "250",
+    "line": 158,
+    "column": 61,
+    "endLine": 158,
+    "endColumn": 82,
+    "mutator": "ConditionalExpression",
+    "original": "typeof x === 'object'",
+    "replacement": "true",
+    "lineText": "const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);",
+    "prevText": "const only = (p: Record<string, unknown>, keys: readonly string[]) => Object.keys(p).find((k) => !keys.includes(k));",
+    "nextText": "const isInt = (x: unknown, lo: number, hi: number): x is number => typeof x === 'number' && Number.isInteger(x) && x >= lo && x <= hi;"
+  },
+  "mayEdit": [
+    "intent/blocks/embed-protocol/embed-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/embed-protocol-250.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"embed-protocol\". Mutant: line 158:61-158:82, mutator ConditionalExpression: \"typeof x === 'object'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/embed-protocol/index.ts (> marks the mutated line):\n   152    readonly seq: number;\n   153    readonly payload: Readonly<Record<string, unknown>>;\n   154  }\n   155  \n   156  type Check = (p: Record<string, unknown>) => string | undefined;\n   157  const only = (p: Record<string, unknown>, keys: readonly string[]) => Object.keys(p).find((k) => !keys.includes(k));\n>  158  const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);\n   159  const isInt = (x: unknown, lo: number, hi: number): x is number => typeof x === 'number' && Number.isInteger(x) && x >= lo && x <= hi;\n   160  \n   161  const SCHEMAS: Readonly<Record<string, { from: readonly Role[]; check: Check }>> = {\n   162    ready: { from: ['frame'], check: (p) => (only(p, ['features']) ? `unknown field ${only(p, ['features'])}` : p.features !== undefined && !(Array.isArray(p.features) && p.features.length <= 20 && p.features.every((f) => typeof f === 'string' && /^[a-z][a-z0-9-]{0,31}$/.test(f))) ? 'features is a short list of names' : undefined) },\n   163    init: {\n   164      from: ['host'],\n\nTest file style (intent/blocks/embed-protocol/embed-protocol.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  checkEmbedRequest, embeddableHeaders, embedUrl, Endpoint, EmbedRefused, frameCookie, hostPageNeeds, normalizeOrigin, originAllowed, parseMessage, pickHostOrigin, popupFeatures, ResizeController, snippet,\n  type Envelope, type Incoming,\n} from './index.ts';\n\nconst HOST = 'https://shop.example.com';\nconst FRAME = 'https://app.example.org';\n\n/** Two endpoints wired through fake windows; messages are queued so tests control delivery. */\nfunction pair() {\n  const hostWin = { name: 'host-window' };\n  const frameWin = { name: 'frame-window' };\n  const toHost: { m: Envelope; target: string }[] = [];\n  const toFrame: { m: Envelope; target: string }[] = [];\n  let n = 0;\n  const random = (len: number) => `chan${String(++n).padStart(len - 4, '0')}`;\n  const host = new Endpoint({ role: 'host', peerOrigin: FRAME, peerWindow: frameWin, post: (m, t) => toFrame.push({ m, target: t }), random });\n  const frame = new Endpoint({ role: 'frame', peerOrigin: HOST, peerWindow: hostWin, post: (m, t) => toHost.push({ m, target: t }), random });\n  const atHost = (m: unknown): Incoming => ({ origin: FRAME, source: frameWin, data: m });\n  const atFrame = (m: unknown): Incoming => ({ origin: HOST, source: hostWin, data: m });\n  return { host, frame, toHost, toFrame, atHost, atFrame, hostWin, frameWin };\n}\nfunction opened() {\n  const p = pair();\n  const ready = p.frame.send('ready');\n  p.host.receive(p.atHost(ready));\n  const init = p.host.send('init', { theme: 'dark' });\n  p.frame.receive(p.atFrame(init));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/embed-protocol-250.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.536Z"
+}

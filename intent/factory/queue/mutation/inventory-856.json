@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "inventory",
+  "mutant": {
+    "id": "856",
+    "line": 471,
+    "column": 90,
+    "endLine": 471,
+    "endColumn": 107,
+    "mutator": "StringLiteral",
+    "original": "'serial-required'",
+    "replacement": "\"\"",
+    "lineText": "if (id === undefined) throw new StockError(p.tracking === 'lot' ? 'lot-required' : 'serial-required', `${o.sku} is counted by ${p.tracking}`);",
+    "prevText": "const id = p.tracking === 'none' ? '' : f.id;",
+    "nextText": "if (p.tracking === 'serial' && f.qty > 1) throw new StockError('bad-quantity', 'a serial number is counted once');"
+  },
+  "mayEdit": [
+    "intent/blocks/inventory/inventory.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/inventory-856.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"inventory\". Mutant: line 471:90-471:107, mutator StringLiteral: \"'serial-required'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/inventory/index.ts (> marks the mutated line):\n   465      if (!loss || this.place(loss).kind !== 'loss') throw new StockError('unknown-place', 'a count needs a loss place');\n   466      if (!isOwned(this.place(o.place).kind)) throw new StockError('not-owned', 'only your own places are counted');\n   467      const found = new Map<string, number>();\n   468      for (const f of o.found) {\n   469        if (!Number.isSafeInteger(f.qty) || f.qty < 0) throw new StockError('bad-quantity', 'a counted quantity is zero or more');\n   470        const id = p.tracking === 'none' ? '' : f.id;\n>  471        if (id === undefined) throw new StockError(p.tracking === 'lot' ? 'lot-required' : 'serial-required', `${o.sku} is counted by ${p.tracking}`);\n   472        if (p.tracking === 'serial' && f.qty > 1) throw new StockError('bad-quantity', 'a serial number is counted once');\n   473        found.set(id, (found.get(id) ?? 0) + f.qty);\n   474      }\n   475      const ids = new Set([...found.keys(), ...this.contents(o.sku, o.place).map((c) => c.id)]);\n   476      const variances: Variance[] = [];\n   477      const moves: Move[] = [];\n\nTest file style (intent/blocks/inventory/inventory.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Ledger } from '../ledger/index.ts';\nimport { money } from '../money/index.ts';\nimport { Inventory, StockError } from './index.ts';\n\nconst usd = (n: number) => money(n, 'USD');\nlet clock = new Date('2026-03-10T10:00:00Z');\nconst make = (valuation: 'fifo' | 'average' = 'fifo', tracking: 'none' | 'lot' | 'serial' = 'none') => {\n  clock = new Date('2026-03-10T10:00:00Z');\n  const inv = new Inventory({ now: () => clock, currency: 'USD' });\n  inv.addPlace({ id: 'supplier', kind: 'supplier' });\n  inv.addPlace({ id: 'customer', kind: 'customer' });\n  inv.addPlace({ id: 'loss', kind: 'loss' });\n  inv.addPlace({ id: 'main', kind: 'internal' });\n  inv.addPlace({ id: 'shop', kind: 'internal' });\n  inv.addPlace({ id: 'van', kind: 'transit' });\n  inv.addProduct({ sku: 'W', tracking, valuation });\n  return inv;\n};\nconst code = (f: () => unknown) => {\n  try {\n    f();\n    return 'no error';\n  } catch (e) {\n    return e instanceof StockError ? e.code : `other: ${(e as Error).message}`;\n  }\n};\n\ntest('quantity is the sum of moves; every receipt and issue is on record', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/inventory-856.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:44.779Z"
+}

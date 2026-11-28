@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "cohorts",
+  "mutant": {
+    "id": "444",
+    "line": 379,
+    "column": 53,
+    "endLine": 379,
+    "endColumn": 93,
+    "mutator": "StringLiteral",
+    "original": "'the inactivity limit is at least 1 day'",
+    "replacement": "\"\"",
+    "lineText": "if (!(o.inactiveDays >= 1)) throw new CohortError('the inactivity limit is at least 1 day');",
+    "prevText": "export function survival(events: readonly Event[] | Columns, o: { asOf: number; inactiveDays: number; days: number; activeEvents?: readonly string[] }): SurvivalPoint[] {",
+    "nextText": "if (!Number.isInteger(o.days) || o.days < 1 || o.days > 730) throw new CohortError('days is a whole number from 1 to 730');"
+  },
+  "mayEdit": [
+    "intent/blocks/cohorts/cohorts.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/cohorts-444.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"cohorts\". Mutant: line 379:53-379:93, mutator StringLiteral: \"'the inactivity limit is at least 1 day'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/cohorts/index.ts (> marks the mutated line):\n   373  \n   374  /**\n   375   * Kaplan-Meier survival from each person's first event. A person has \"churned\" at the time of their last event\n   376   * if nothing followed for `inactiveDays`; anyone still within that gap is censored at `asOf`, not counted as a survivor.\n   377   */\n   378  export function survival(events: readonly Event[] | Columns, o: { asOf: number; inactiveDays: number; days: number; activeEvents?: readonly string[] }): SurvivalPoint[] {\n>  379    if (!(o.inactiveDays >= 1)) throw new CohortError('the inactivity limit is at least 1 day');\n   380    if (!Number.isInteger(o.days) || o.days < 1 || o.days > 730) throw new CohortError('days is a whole number from 1 to 730');\n   381    const cols = events instanceof Columns ? events : Columns.from(events);\n   382    const names = cols.nameIds(o.activeEvents);\n   383    const first = new Map<number, number>();\n   384    const last = new Map<number, number>();\n   385    for (const r of cols.order(names)) {\n\nTest file style (intent/blocks/cohorts/cohorts.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Columns, CohortError, buildCohorts, growthAccounting, inactivityChurn, survival, periodIndex, periodStart, label, formatTable } from './index.ts';\nimport type { Event } from '../analytics/index.ts';\n\nconst H = 3_600_000, DAY = 86_400_000;\nconst D0 = Date.UTC(2026, 2, 2); // Monday 2026-03-02\nconst at = (d: number, h = 10) => D0 + d * DAY + h * H;\nconst ev = (who: string, name: string, d: number, props: Event['props'] = {}, h = 10): Event => ({ who, name, at: at(d, h), props });\nconst FIX: Event[] = [\n  ev('a', 'signup', 0), ev('b', 'signup', 0), ev('c', 'signup', 0), ev('d', 'signup', 7), ev('e', 'signup', 7),\n  ev('a', 'use', 8), ev('a', 'use', 15), ev('b', 'use', 9), ev('c', 'use', 24), ev('d', 'use', 15),\n];\nconst ASOF = at(28, 12); // Monday 2026-03-30 noon: weeks up to the one of Mar 23 are complete\nconst W = { period: 'week' as const, asOf: ASOF };\n\ntest('weeks and months are labelled and started where a reader expects', () => {\n  assert.equal(label(periodIndex(at(0), { period: 'week' }), { period: 'week' }), '2026-03-02');\n  assert.equal(label(periodIndex(at(6), { period: 'week' }), { period: 'week' }), '2026-03-02');\n  assert.equal(label(periodIndex(at(6), { period: 'week', weekStart: 'sunday' }), { period: 'week', weekStart: 'sunday' }), '2026-03-08');\n  assert.equal(label(periodIndex(at(0), { period: 'month' }), { period: 'month' }), '2026-03');\n  assert.equal(periodStart(periodIndex(at(3), { period: 'day' }), { period: 'day' }), D0 + 3 * DAY);\n  assert.equal(periodStart(periodIndex(at(0), { period: 'month' }), { period: 'month' }), Date.UTC(2026, 2, 1));\n});\n\ntest('the UTC offset moves an event into the reader\\'s own day and month', () => {\n  const t = Date.UTC(2026, 1, 28, 23, 30);\n  assert.equal(label(periodIndex(t, { period: 'month' }), { period: 'month' }), '2026-02');\n  assert.equal(label(periodIndex(t, { period: 'month', offsetMinutes: 60 }), { period: 'month', offsetMinutes: 60 }), '2026-03');\n  assert.equal(periodStart(periodIndex(t, { period: 'day', offsetMinutes: 60 }), { period: 'day', offsetMinutes: 60 }), Date.UTC(2026, 1, 28, 23, 0));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/cohorts-444.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.394Z"
+}

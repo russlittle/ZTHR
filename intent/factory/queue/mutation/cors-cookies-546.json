@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "cors-cookies",
+  "mutant": {
+    "id": "546",
+    "line": 275,
+    "column": 33,
+    "endLine": 275,
+    "endColumn": 55,
+    "mutator": "MethodExpression",
+    "original": "c.path.startsWith('/')",
+    "replacement": "c.path.endsWith('/')",
+    "lineText": "if (c.path !== undefined && (!c.path.startsWith('/') || !PATH_OK.test(c.path))) throw new CookieError('the Path must start with \"/\" and have no semicolons or controls');",
+    "prevText": "if (c.domain !== undefined && !/^[a-z0-9.-]+$/i.test(c.domain)) throw new CookieError('the Domain is not a host name');",
+    "nextText": "const out = [`${c.name}=${c.value}`];"
+  },
+  "mayEdit": [
+    "intent/blocks/cors-cookies/cors-cookies.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/cors-cookies-546.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"cors-cookies\". Mutant: line 275:33-275:55, mutator MethodExpression: \"c.path.startsWith('/')\" becomes \"c.path.endsWith('/')\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/cors-cookies/index.ts (> marks the mutated line):\n   269  }\n   270  \n   271  /** A Set-Cookie header value for a cookie, refusing anything that would not survive a browser or would inject. */\n   272  export function serializeSetCookie(c: Cookie, now: number): string {\n   273    checked(c);\n   274    if (c.domain !== undefined && !/^[a-z0-9.-]+$/i.test(c.domain)) throw new CookieError('the Domain is not a host name');\n>  275    if (c.path !== undefined && (!c.path.startsWith('/') || !PATH_OK.test(c.path))) throw new CookieError('the Path must start with \"/\" and have no semicolons or controls');\n   276    const out = [`${c.name}=${c.value}`];\n   277    if (c.expires !== undefined) {\n   278      out.push(`Expires=${new Date(c.expires).toUTCString()}`);\n   279      out.push(`Max-Age=${Math.max(0, Math.round((c.expires - now) / 1000))}`);\n   280    }\n   281    if (c.domain !== undefined) out.push(`Domain=${c.domain}`);\n\nTest file style (intent/blocks/cors-cookies/cors-cookies.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CookieError, CookieJar, Cors, CorsError, defaultPath, domainMatch, normalizeOrigin, parseCookieHeader, parseSetCookie, pathMatch, sameSite, serializeSetCookie } from './index.ts';\n\nconst policy = { origins: ['https://app.example.com', 'https://*.example.org', 'http://localhost:3000'], methods: ['PUT', 'DELETE'], allowedHeaders: ['Content-Type', 'X-Token'], exposedHeaders: ['X-Total'], credentials: true, maxAgeSec: 120 };\nconst pre = (origin: string, m: string, h?: string, extra: Record<string, string> = {}) => ({ method: 'OPTIONS', headers: { origin, 'access-control-request-method': m, ...(h ? { 'access-control-request-headers': h } : {}), ...extra } });\n\ntest('cors: a listed origin is echoed exactly, with credentials, exposed headers and Vary: Origin', () => {\n  const r = new Cors(policy).check({ method: 'GET', headers: { origin: 'https://app.example.com' } });\n  assert.equal(r.action, 'allow');\n  assert.equal(r.headers['access-control-allow-origin'], 'https://app.example.com');\n  assert.equal(r.headers['access-control-allow-credentials'], 'true');\n  assert.equal(r.headers['access-control-expose-headers'], 'X-Total');\n  assert.equal(r.headers['vary'], 'Origin');\n});\n\ntest('cors: unlisted origins, lookalikes and a different port or scheme get nothing', () => {\n  const c = new Cors(policy);\n  for (const o of ['https://evil.com', 'https://app.example.com.evil.com', 'http://app.example.com', 'https://app.example.com:8443', 'https://evilexample.org', 'not an origin', 'https://app.example.com/path']) {\n    const r = c.check({ method: 'GET', headers: { origin: o } });\n    assert.equal(r.action, 'deny', o);\n    assert.equal(r.headers['access-control-allow-origin'], undefined, o);\n  }\n});\n\ntest('cors: wildcard subdomains match subdomains only, never the bare domain, and keep scheme and port', () => {\n  const c = new Cors(policy);\n  assert.equal(c.allows('https://a.example.org'), true);\n  assert.equal(c.allows('https://a.b.example.org'), true);\n  assert.equal(c.allows('https://example.org'), false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/cors-cookies-546.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.990Z"
+}

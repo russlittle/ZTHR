@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "perceptual-hash",
+  "mutant": {
+    "id": "251",
+    "line": 191,
+    "column": 15,
+    "endLine": 191,
+    "endColumn": 20,
+    "mutator": "ConditionalExpression",
+    "original": "i < j",
+    "replacement": "true",
+    "lineText": "const k = i < j ? i * n + j : j * n + i;",
+    "prevText": "const d = (i: number, j: number) => {",
+    "nextText": "let v = dist.get(k);"
+  },
+  "mayEdit": [
+    "intent/blocks/perceptual-hash/perceptual-hash.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/perceptual-hash-251.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"perceptual-hash\". Mutant: line 191:15-191:20, mutator ConditionalExpression: \"i < j\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/perceptual-hash/index.ts (> marks the mutated line):\n   185      seen.add(it.id);\n   186      checkHash(it.hash);\n   187    }\n   188    const n = items.length;\n   189    const dist = new Map<number, number>();\n   190    const d = (i: number, j: number) => {\n>  191      const k = i < j ? i * n + j : j * n + i;\n   192      let v = dist.get(k);\n   193      if (v === undefined) {\n   194        v = distance((items[i] as Item).hash, (items[j] as Item).hash);\n   195        dist.set(k, v);\n   196      }\n   197      return v;\n\nTest file style (intent/blocks/perceptual-hash/perceptual-hash.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { raster, resize, type Raster } from '../thumbnails/index.ts';\nimport { ALGORITHMS, HashError, aHash, dHash, dct8, distance, distanceAnyOrientation, group, hash, judge, nearest, pHash, similarity, toGray, transforms } from './index.ts';\n\nconst rng = (seed: number) => () => {\n  seed = (seed * 1664525 + 1013904223) >>> 0;\n  return seed / 2 ** 32;\n};\n\n/** A picture of overlapping soft blocks: enough structure to hash, different per seed. */\nfunction scene(seed: number, w = 128, h = 96): Raster {\n  const r = rng(seed);\n  const blocks = Array.from({ length: 14 }, () => ({ x: r() * w, y: r() * h, w: 10 + r() * w * 0.45, h: 10 + r() * h * 0.45, v: r() * 255 }));\n  const out = raster(w, h);\n  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {\n    let v = 128;\n    for (const b of blocks) if (x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) v = b.v;\n    out.data.set([v, v, v, 255], (y * w + x) * 4);\n  }\n  return out;\n}\nconst map = (src: Raster, f: (v: number, x: number, y: number) => number): Raster => {\n  const out = raster(src.width, src.height);\n  for (let i = 0; i < src.data.length; i += 4) {\n    const p = i / 4;\n    const v = f(src.data[i] as number, p % src.width, Math.floor(p / src.width));\n    out.data.set([v, v, v, 255], i);\n  }\n  return out;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/perceptual-hash-251.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:55.208Z"
+}

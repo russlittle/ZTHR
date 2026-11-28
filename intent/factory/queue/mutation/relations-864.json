@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "relations",
+  "mutant": {
+    "id": "864",
+    "line": 584,
+    "column": 37,
+    "endLine": 584,
+    "endColumn": 57,
+    "mutator": "ConditionalExpression",
+    "original": "r.ordered === 'both'",
+    "replacement": "false",
+    "lineText": "if (r.ordered === 'left' || r.ordered === 'both') ordered('left');",
+    "prevText": "};",
+    "nextText": "if (r.ordered === 'right' || r.ordered === 'both') ordered('right');"
+  },
+  "mayEdit": [
+    "intent/blocks/relations/relations.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/relations-864.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"relations\". Mutant: line 584:37-584:57, mutator ConditionalExpression: \"r.ordered === 'both'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/relations/index.ts (> marks the mutated line):\n   578            for (const l of ls) groups.set(l[side], [...(groups.get(l[side]) ?? []), side === 'left' ? l.posL : l.posR]);\n   579            for (const [id, ps] of groups) {\n   580              const sorted = [...ps].sort((a, b) => a - b);\n   581              if (!sorted.every((p, i) => p === i)) out.push({ kind: 'bad-order', severity: 'warning', relation: r.name, type: side === 'left' ? r.left : r.right, id, detail: `positions ${sorted.join(',')} are not 0..${sorted.length - 1}` });\n   582            }\n   583          };\n>  584          if (r.ordered === 'left' || r.ordered === 'both') ordered('left');\n   585          if (r.ordered === 'right' || r.ordered === 'both') ordered('right');\n   586        } else {\n   587          for (const x of this.table(r.from).values()) {\n   588            const v = own(x, r.field);\n   589            if (typeof v !== 'string' || !v) continue;\n   590            if (!this.lookupSoft(r, v)) out.push({ kind: 'dangling-soft', severity: 'warning', relation: r.name, type: r.from, id: x.id, detail: `${r.field} \"${v.slice(0, 80)}\" names nothing that exists` });\n\nTest file style (intent/blocks/relations/relations.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { IntegrityError, Restricted, SchemaError, Store, cascadeLoops, checkSchema } from './index.ts';\nimport type { Schema } from './index.ts';\n\nconst schema: Schema = {\n  types: ['user', 'post', 'comment', 'tag', 'folder', 'profile', 'page'],\n  relations: [\n    { kind: 'belongsTo', name: 'post.author', from: 'post', field: 'authorId', to: 'user', onDelete: 'restrict', required: true },\n    { kind: 'belongsTo', name: 'comment.post', from: 'comment', field: 'postId', to: 'post', onDelete: 'cascade', required: true },\n    { kind: 'belongsTo', name: 'comment.author', from: 'comment', field: 'authorId', to: 'user', onDelete: 'set-null' },\n    { kind: 'belongsTo', name: 'folder.parent', from: 'folder', field: 'parentId', to: 'folder', onDelete: 'cascade', acyclic: true },\n    { kind: 'oneToOne', name: 'profile.user', from: 'profile', field: 'userId', to: 'user', onDelete: 'cascade', required: true },\n    { kind: 'manyToMany', name: 'post.tags', left: 'post', right: 'tag', ordered: 'left' },\n    { kind: 'manyToMany', name: 'post.related', left: 'post', right: 'post' },\n    { kind: 'soft', name: 'post.seeAlso', from: 'post', field: 'seeAlso', to: ['post'], toField: 'slug' },\n    { kind: 'soft', name: 'comment.target', from: 'comment', field: 'target', to: ['post', 'page'] },\n  ],\n};\n\nconst seed = () => {\n  const s = new Store(schema);\n  s.insert('user', { id: 'u1' });\n  s.insert('user', { id: 'u2' });\n  s.insert('post', { id: 'p1', authorId: 'u1', slug: 'hello' });\n  s.insert('post', { id: 'p2', authorId: 'u1', slug: 'world', seeAlso: 'hello' });\n  s.insert('comment', { id: 'c1', postId: 'p1', authorId: 'u2' });\n  s.insert('comment', { id: 'c2', postId: 'p1', authorId: 'u1' });\n  for (const t of ['a', 'b', 'c']) s.insert('tag', { id: t });\n  return s;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/relations-864.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:59.204Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "automation-engine",
+  "mutant": {
+    "id": "504",
+    "line": 255,
+    "column": 7,
+    "endLine": 255,
+    "endColumn": 38,
+    "mutator": "ConditionalExpression",
+    "original": "of === null || of === undefined",
+    "replacement": "false",
+    "lineText": "if (of === null || of === undefined) return undefined;",
+    "prevText": "function getKey(of: unknown, key: unknown): unknown {",
+    "nextText": "const k = typeof key === 'number' ? String(key) : String(key);"
+  },
+  "mayEdit": [
+    "intent/blocks/automation-engine/automation-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-504.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"automation-engine\". Mutant: line 255:7-255:38, mutator ConditionalExpression: \"of === null || of === undefined\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/automation-engine/index.ts (> marks the mutated line):\n   249    if (Number.isNaN(n)) throw new TemplateError(`${name}: \"${String(v)}\" is not a number`);\n   250    return n;\n   251  };\n   252  const text = (v: unknown): string => (v === undefined || v === null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v));\n   253  \n   254  function getKey(of: unknown, key: unknown): unknown {\n>  255    if (of === null || of === undefined) return undefined;\n   256    const k = typeof key === 'number' ? String(key) : String(key);\n   257    if (BLOCKED.has(k)) return undefined;\n   258    if (Array.isArray(of)) return k === 'length' ? of.length : /^\\d+$/.test(k) ? of[Number(k)] : undefined;\n   259    if (typeof of === 'string') return k === 'length' ? of.length : /^\\d+$/.test(k) ? of[Number(k)] : undefined;\n   260    if (typeof of === 'object') return Object.hasOwn(of, k) ? (of as Record<string, unknown>)[k] : undefined;\n   261    return undefined;\n\nTest file style (intent/blocks/automation-engine/automation-engine.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AutomationError, Engine, TemplateError, evaluate, render, renderData } from './index.ts';\nimport type { Automation } from './index.ts';\n\nconst flush = () => new Promise<void>((r) => setImmediate(r));\n\nfunction rig(start = Date.UTC(2026, 0, 5, 12, 0, 0), offsetMinutes = 0) {\n  const states = new Map<string, string>();\n  const calls: { service: string; data: Record<string, unknown> }[] = [];\n  const events: { type: string; data: unknown }[] = [];\n  const clock = { now: start };\n  let n = 0;\n  const engine = new Engine({\n    now: () => clock.now,\n    state: (e) => states.get(e),\n    call: async (service, data) => {\n      calls.push({ service, data: { ...data } });\n      return { ok: true, service };\n    },\n    fire: (type, data) => events.push({ type, data }),\n    newId: () => `run${++n}`,\n    zoneOffsetMinutes: () => offsetMinutes,\n  });\n  return { engine, states, calls, events, clock };\n}\n\nconst lamp: Automation = {\n  id: 'a1',\n  alias: 'Lamp',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-504.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.819Z"
+}

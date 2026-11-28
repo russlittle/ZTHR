@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "semver",
+  "mutant": {
+    "id": "15",
+    "line": 54,
+    "column": 7,
+    "endLine": 54,
+    "endColumn": 32,
+    "mutator": "ConditionalExpression",
+    "original": "typeof input !== 'string'",
+    "replacement": "false",
+    "lineText": "if (typeof input !== 'string') throw new InvalidVersion(String(input), 'not text');",
+    "prevText": "export function parse(input: string): SemVer {",
+    "nextText": "if (input.length > MAX_LENGTH) throw new InvalidVersion(input.slice(0, 20) + '...', `longer than ${MAX_LENGTH} characters`);"
+  },
+  "mayEdit": [
+    "intent/blocks/semver/semver.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/semver-15.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"semver\". Mutant: line 54:7-54:32, mutator ConditionalExpression: \"typeof input !== 'string'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/semver/index.ts (> marks the mutated line):\n    48  const PRE_ID = '(?:0|[1-9]\\\\d*|\\\\d*[A-Za-z-][0-9A-Za-z-]*)';\n    49  const BUILD_ID = '[0-9A-Za-z-]+';\n    50  const SEMVER = new RegExp(`^${NUM}\\\\.${NUM}\\\\.${NUM}(?:-(${PRE_ID}(?:\\\\.${PRE_ID})*))?(?:\\\\+(${BUILD_ID}(?:\\\\.${BUILD_ID})*))?$`);\n    51  const MAX_LENGTH = 256;\n    52  \n    53  export function parse(input: string): SemVer {\n>   54    if (typeof input !== 'string') throw new InvalidVersion(String(input), 'not text');\n    55    if (input.length > MAX_LENGTH) throw new InvalidVersion(input.slice(0, 20) + '...', `longer than ${MAX_LENGTH} characters`);\n    56    const m = SEMVER.exec(input);\n    57    if (!m) throw new InvalidVersion(input, 'expected MAJOR.MINOR.PATCH with optional -prerelease and +build, no leading zeros');\n    58    const nums = [m[1]!, m[2]!, m[3]!].map(Number);\n    59    for (const n of nums) if (!Number.isSafeInteger(n)) throw new InvalidVersion(input, 'a number is too large');\n    60    const prerelease = m[4] === undefined ? [] : m[4].split('.').map((p) => (/^\\d+$/.test(p) ? Number(p) : p));\n\nTest file style (intent/blocks/semver/semver.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { calver, compare, diff, format, inc, InvalidRange, InvalidVersion, isValid, maxSatisfying, minSatisfying, parse, parseRange, rsort, satisfies, solve, sort, TooComplex, validRange } from './index.ts';\n\ntest('the SemVer 2.0.0 precedence example sorts exactly as the specification lists it', () => {\n  const ordered = ['1.0.0-alpha', '1.0.0-alpha.1', '1.0.0-alpha.beta', '1.0.0-beta', '1.0.0-beta.2', '1.0.0-beta.11', '1.0.0-rc.1', '1.0.0'];\n  assert.deepEqual(sort([...ordered].reverse()), ordered);\n  assert.deepEqual(rsort(ordered), [...ordered].reverse());\n  assert.equal(compare('1.0.0-beta.2', '1.0.0-beta.11'), -1, 'numeric identifiers compare as numbers');\n  assert.equal(compare('2.1.1', '2.0.9'), 1);\n  assert.equal(compare('1.9.0', '1.10.0'), -1, 'not as text');\n});\n\ntest('build metadata is ignored in precedence but kept in the parse', () => {\n  assert.equal(compare('1.0.0+20130313144700', '1.0.0+other'), 0);\n  const v = parse('1.2.3-rc.1+build.5');\n  assert.deepEqual(v, { major: 1, minor: 2, patch: 3, prerelease: ['rc', 1], build: ['build', '5'] });\n  assert.equal(format(v), '1.2.3-rc.1+build.5');\n});\n\ntest('strict parsing refuses what the specification refuses', () => {\n  for (const bad of ['1.2', '1', '01.1.1', '1.01.1', '1.1.01', '1.1.1-01', '1.1.1-', '1.1.1+', 'v1.2.3', ' 1.2.3', '1.2.3.4', '1.2.3-a..b', '1.2.3-a_b', '', '9007199254740993.0.0'])\n    assert.throws(() => parse(bad), InvalidVersion, bad);\n  assert.equal(isValid('0.0.0'), true);\n  assert.equal(isValid('1.0.0-0A.is.legal'), true);\n  assert.equal(isValid('1.0.0-x-y-z.--'), true);\n  assert.throws(() => parse('1.0.0-' + 'a'.repeat(300)), /longer than 256/);\n});\n\ntest('inc and diff', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/semver-15.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:01.853Z"
+}

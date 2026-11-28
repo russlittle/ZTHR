@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "timeseries",
+  "mutant": {
+    "id": "670",
+    "line": 454,
+    "column": 9,
+    "endLine": 454,
+    "endColumn": 19,
+    "mutator": "ConditionalExpression",
+    "original": "old.length",
+    "replacement": "true",
+    "lineText": "if (old.length) {",
+    "prevText": "const old = this.raw.filter((p) => p.t < cut1);",
+    "nextText": "const g = { stepMs: this.tiers[1]!.stepMs, offsetMs: this.offsetMs };"
+  },
+  "mayEdit": [
+    "intent/blocks/timeseries/timeseries.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/timeseries-670.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"timeseries\". Mutant: line 454:9-454:19, mutator ConditionalExpression: \"old.length\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/timeseries/index.ts (> marks the mutated line):\n   448    compact(now: number): { rolled: number; dropped: number } {\n   449      let rolled = 0;\n   450      let dropped = 0;\n   451      const cut1 = this.rawCut(now);\n   452      this.watermark = Math.max(this.watermark, cut1);\n   453      const old = this.raw.filter((p) => p.t < cut1);\n>  454      if (old.length) {\n   455        const g = { stepMs: this.tiers[1]!.stepMs, offsetMs: this.offsetMs };\n   456        const fresh = rollup(old, g);\n   457        const have = new Map(this.rolls[0]!.map((r) => [r.t, r]));\n   458        for (const r of fresh) have.set(r.t, have.has(r.t) ? mergeRollups(r.t, [have.get(r.t)!, r]) : r);\n   459        this.rolls[0] = [...have.values()].sort((a, b) => a.t - b.t);\n   460        this.raw = this.raw.filter((p) => p.t >= cut1);\n\nTest file style (intent/blocks/timeseries/timeseries.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { clean, bucketStart, downsample, quantile, increase, rate, irate, rateBuckets, delta, rollup, mergeRollups, coarsen, fromRollup, increaseFromRollups, resample, fillGaps, findGaps, TieredStore, SeriesError, type Point } from './index.ts';\n\nconst S = 1000;\nconst M = 60 * S;\nconst H = 60 * M;\nconst D = 24 * H;\nconst pts = (...vs: [number, number][]): Point[] => vs.map(([t, v]) => ({ t, v }));\n\ntest('clean sorts, resolves duplicates (last wins), and drops NaN and infinities, counting each', () => {\n  const r = clean(pts([3, 3], [1, 1], [2, NaN], [1, 10], [4, Infinity], [5, 5]));\n  assert.deepEqual(r.points, pts([1, 10], [3, 3], [5, 5]));\n  assert.deepEqual(r.dropped, { invalid: 2, duplicates: 1 });\n});\n\ntest('buckets align to the step and offset, and are not fooled by negatives', () => {\n  assert.equal(bucketStart(1_700_000_123_456, { stepMs: M }), 1_700_000_100_000);\n  assert.equal(bucketStart(-1, { stepMs: 10 }), -10);\n  assert.equal(bucketStart(5 * H, { stepMs: D, offsetMs: 3 * H }), 3 * H);\n  assert.equal(bucketStart(2 * H, { stepMs: D, offsetMs: 3 * H }), -21 * H);\n  for (const bad of [0, -5, 1.5, NaN]) assert.throws(() => bucketStart(1, { stepMs: bad }), SeriesError);\n});\n\ntest('downsample: every aggregate, ranges, empty buckets left out, unsorted input', () => {\n  const p = pts([0, 1], [10, 3], [20, 5], [100, 10], [110, 20], [250, 7]);\n  const ds = (agg: Parameters<typeof downsample>[1]['agg']) => downsample(p, { stepMs: 100, agg }).map((b) => b.v);\n  assert.deepEqual(ds('avg'), [3, 15, 7]);\n  assert.deepEqual(ds('sum'), [9, 30, 7]);\n  assert.deepEqual(ds('min'), [1, 10, 7]);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/timeseries-670.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:09.627Z"
+}

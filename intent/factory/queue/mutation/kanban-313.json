@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "kanban",
+  "mutant": {
+    "id": "313",
+    "line": 184,
+    "column": 38,
+    "endLine": 184,
+    "endColumn": 56,
+    "mutator": "EqualityOperator",
+    "original": "op.id.length > 130",
+    "replacement": "op.id.length >= 130",
+    "lineText": "if (typeof op.id !== 'string' || op.id.length > 130 || !op.id) throw new BadOp('a change needs an id');",
+    "prevText": "if (typeof op !== 'object' || op === null) throw new BadOp('a change must be an object');",
+    "nextText": "const s = op.stamp;"
+  },
+  "mayEdit": [
+    "intent/blocks/kanban/kanban.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/kanban-313.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"kanban\". Mutant: line 184:38-184:56, mutator EqualityOperator: \"op.id.length > 130\" becomes \"op.id.length >= 130\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/kanban/index.ts (> marks the mutated line):\n   178  \n   179    // --- merging --------------------------------------------------------------------------------------------------\n   180  \n   181    /** Checks one received write; throws BadOp for anything a good client would not send. */\n   182    private check(op: Op): void {\n   183      if (typeof op !== 'object' || op === null) throw new BadOp('a change must be an object');\n>  184      if (typeof op.id !== 'string' || op.id.length > 130 || !op.id) throw new BadOp('a change needs an id');\n   185      const s = op.stamp;\n   186      if (!s || !Number.isSafeInteger(s.c) || s.c < 1 || typeof s.a !== 'string' || !ID.test(s.a)) throw new BadOp('a change needs a stamp with a clock and a writer');\n   187      const f = FIELDS[op.entity];\n   188      if (!f) throw new BadOp(`unknown kind of thing: ${String(op.entity)}`);\n   189      if (!ID.test(String(op.ref))) throw new BadOp('a change needs the id of what it is about');\n   190      const ok = Object.hasOwn(f, op.field) ? f[op.field]!(op.value) : false;\n\nTest file style (intent/blocks/kanban/kanban.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { checkOrder } from '../fractional-index/index.ts';\nimport { BadOp, Blocked, Board, NotFound, WipLimit } from './index.ts';\nimport type { Op } from './index.ts';\n\nconst seeded = (seed: number) => () => ((seed = (seed * 48271) % 2147483647) / 2147483647);\nconst mk = (actor: string, seed = 1) => new Board({ actor, random: seeded(seed) });\n\nfunction basic(b = mk('ana')) {\n  b.addList('todo', 'To do');\n  b.addList('doing', 'Doing', { kind: 'doing', after: 'todo' });\n  b.addList('done', 'Done', { kind: 'done', after: 'doing' });\n  return b;\n}\n\ntest('lists keep their order, cards keep theirs, and a move puts a card exactly where it was dropped', () => {\n  const b = basic();\n  assert.deepEqual(b.lists().map((l) => l.id), ['todo', 'doing', 'done']);\n  b.addCard('c1', 'todo', 'One');\n  b.addCard('c2', 'todo', 'Two');\n  b.addCard('c3', 'todo', 'Three');\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c1', 'c2', 'c3']);\n  b.moveCard('c3', 'todo', { before: 'c1' });\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c1', 'c2']);\n  b.moveCard('c1', 'todo', { after: 'c2' });\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c2', 'c1']);\n  b.moveCard('c2', 'doing');\n  assert.deepEqual(b.cards('doing').map((c) => c.id), ['c2']);\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c1']);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/kanban-313.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:46.340Z"
+}

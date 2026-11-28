@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "scim",
+  "mutant": {
+    "id": "1173",
+    "line": 461,
+    "column": 69,
+    "endLine": 461,
+    "endColumn": 101,
+    "mutator": "StringLiteral",
+    "original": "`${name} has no values to match`",
+    "replacement": "``",
+    "lineText": "if (!def.multi || !Array.isArray(cur)) throw new ScimError(400, `${name} has no values to match`, 'noTarget');",
+    "prevText": "const cur = holder[name];",
+    "nextText": "const hit = cur.map((e, i) => [e, i] as const).filter(([e]) => matches(p.filter!, e));"
+  },
+  "mayEdit": [
+    "intent/blocks/scim/scim.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/scim-1173.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"scim\". Mutant: line 461:69-461:101, mutator StringLiteral: \"`${name} has no values to match`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/scim/index.ts (> marks the mutated line):\n   455      return;\n   456    }\n   457    if (o.value === undefined) throw new ScimError(400, `${op} needs a value`, 'invalidValue');\n   458  \n   459    if (p.filter) {\n   460      const cur = holder[name];\n>  461      if (!def.multi || !Array.isArray(cur)) throw new ScimError(400, `${name} has no values to match`, 'noTarget');\n   462      const hit = cur.map((e, i) => [e, i] as const).filter(([e]) => matches(p.filter!, e));\n   463      if (hit.length === 0) throw new ScimError(400, `nothing in ${name} matches the filter`, 'noTarget');\n   464      for (const [e, i] of hit) {\n   465        if (subName) {\n   466          if (!isObj(e)) continue;\n   467          e[subName] = coerce(subDef!, o.value, `${name}.${subName}`);\n\nTest file style (intent/blocks/scim/scim.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { SCHEMA_BULK_REQUEST, SCHEMA_ENTERPRISE, SCHEMA_PATCH, ScimError, ScimServer, applyPatch, matches, parseFilter } from './index.ts';\nimport type { Resource, ScimResponse } from './index.ts';\n\nfunction setup() {\n  let n = 0;\n  const t = { v: Date.UTC(2026, 10, 1) };\n  const passwords: [string, string][] = [];\n  const changes: string[] = [];\n  const s = new ScimServer({ baseUrl: 'https://app.example.org/scim/v2', now: () => t.v, newId: () => `id${++n}`, onPassword: (i, p) => passwords.push([i, p]), onChange: (e) => changes.push(`${e.action}:${e.kind}:${e.id}`) });\n  const call = (method: string, path: string, body?: unknown, extra: { query?: Record<string, string>; headers?: Record<string, string> } = {}) => s.handle({ method, path, ...(body === undefined ? {} : { body }), ...extra });\n  return { s, t, call, passwords, changes };\n}\nconst USER = (name: string, extra: object = {}) => ({ schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'], userName: name, ...extra });\nconst patch = (...ops: object[]) => ({ schemas: [SCHEMA_PATCH], Operations: ops });\nconst body = (r: ScimResponse) => r.body as Resource;\nconst err = (r: ScimResponse) => r.body as { status: string; scimType?: string; detail: string };\nconst people = [\n  { id: '1', userName: 'Ana', name: { givenName: 'Ana', familyName: 'Ruiz' }, active: true, emails: [{ value: 'ana@work.example', type: 'work', primary: true }, { value: 'ana@home.example', type: 'home' }], meta: { lastModified: '2026-01-02T00:00:00Z' } },\n  { id: '2', userName: 'bo', name: { givenName: 'Bo' }, active: false, emails: [{ value: 'bo@work.example', type: 'work' }], title: 'Chief' },\n  { id: '3', userName: 'Cy', externalId: 'ExT-9', active: true },\n];\nconst pick = (f: string) => people.filter((p) => matches(parseFilter(f), p)).map((p) => p.id).join(',');\n\ntest('filters: comparison operators, case-insensitive attribute names and strings, case-exact ids', () => {\n  assert.equal(pick('userName eq \"ana\"'), '1');\n  assert.equal(pick('USERNAME EQ \"BO\"'), '2');\n  assert.equal(pick('userName sw \"A\"'), '1');\n  assert.equal(pick('userName ew \"y\"'), '3');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/scim-1173.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:01.231Z"
+}

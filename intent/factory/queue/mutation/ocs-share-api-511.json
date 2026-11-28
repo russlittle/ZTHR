@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "ocs-share-api",
+  "mutant": {
+    "id": "511",
+    "line": 355,
+    "column": 11,
+    "endLine": 355,
+    "endColumn": 51,
+    "mutator": "ConditionalExpression",
+    "original": "g.kind !== 'link' || t.kind !== 'folder'",
+    "replacement": "false",
+    "lineText": "if (g.kind !== 'link' || t.kind !== 'folder') throw new Fail(403, 'Public upload is only possible for publicly shared folders');",
+    "prevText": "if (truthy(p.publicUpload)) {",
+    "nextText": "change.permissions = READ | UPDATE | CREATE | DELETE;"
+  },
+  "mayEdit": [
+    "intent/blocks/ocs-share-api/ocs-share-api.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ocs-share-api-511.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ocs-share-api\". Mutant: line 355:11-355:51, mutator ConditionalExpression: \"g.kind !== 'link' || t.kind !== 'folder'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ocs-share-api/index.ts (> marks the mutated line):\n   349        if (perms < 1 || perms > ALL || !(perms & READ)) throw new Fail(400, 'invalid permissions');\n   350        if (g.kind === 'link') perms &= ~SHARE;\n   351        if (t.kind === 'file') perms &= FILE_MAX;\n   352        change.permissions = perms;\n   353      }\n   354      if (truthy(p.publicUpload)) {\n>  355        if (g.kind !== 'link' || t.kind !== 'folder') throw new Fail(403, 'Public upload is only possible for publicly shared folders');\n   356        change.permissions = READ | UPDATE | CREATE | DELETE;\n   357      } else if (p.publicUpload !== undefined && g.kind === 'link' && change.permissions === undefined) change.permissions = READ;\n   358      if (p.password !== undefined) {\n   359        if (g.kind !== 'link') throw new Fail(400, 'Passwords are only for public links');\n   360        change.password = p.password === '' ? null : p.password;\n   361      }\n\nTest file style (intent/blocks/ocs-share-api/ocs-share-api.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ALL, Grants, memoryGrants } from '../grants/index.ts';\nimport { CREATE, DELETE, FILE_MAX, OcsShares, READ, SHARE, UPDATE, parseParams, permissionNames, toXml } from './index.ts';\nimport type { Env, Reply, Target } from './index.ts';\n\nconst NOW = Date.UTC(2026, 2, 10, 15, 30);\nconst BASEPATH = '/ocs/v2.php/apps/files_sharing/api/v1/shares';\n\ninterface Node extends Target {\n  parent?: number;\n}\nfunction world() {\n  const nodes: Node[] = [\n    { id: 1, kind: 'folder', path: '/Docs', owner: 'ana' },\n    { id: 2, kind: 'file', path: '/Docs/plan.txt', owner: 'ana', mimetype: 'text/plain', parent: 1 },\n    { id: 3, kind: 'file', path: '/notes.md', owner: 'ana', mimetype: 'text/markdown' },\n    { id: 4, kind: 'folder', path: '/Docs/Sub', owner: 'ana', parent: 1 },\n  ];\n  const groups: Record<string, string[]> = { bo: ['team'], cy: ['team'], ana: [] };\n  const grants = new Grants(memoryGrants(), { now: () => NOW });\n  const chainOf = (n: Node) => {\n    const c: { id: number; kind: 'file' | 'folder' }[] = [];\n    for (let x: Node | undefined = n; x; x = nodes.find((y) => y.id === x!.parent)) c.push({ id: x.id, kind: x.kind });\n    return c;\n  };\n  const env: Env = {\n    find: async (user, path) => {\n      const n = nodes.find((x) => x.path === path);\n      if (!n) return undefined;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ocs-share-api-511.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.893Z"
+}

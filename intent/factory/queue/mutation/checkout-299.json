@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "checkout",
+  "mutant": {
+    "id": "299",
+    "line": 268,
+    "column": 98,
+    "endLine": 268,
+    "endColumn": 107,
+    "mutator": "StringLiteral",
+    "original": "'bad-tax'",
+    "replacement": "\"\"",
+    "lineText": "if (!Number.isInteger(rate.bps) || rate.bps < 0 || rate.bps > 10000) throw new CheckoutError('bad-tax', 'a tax rate is whole basis points from 0 to 10000');",
+    "prevText": "const rate = this.o.taxFor(c.shippingTo!);",
+    "nextText": "const base = this.o.taxShipping ? add(goods, ship) : goods;"
+  },
+  "mayEdit": [
+    "intent/blocks/checkout/checkout.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/checkout-299.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"checkout\". Mutant: line 268:98-268:107, mutator StringLiteral: \"'bad-tax'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/checkout/index.ts (> marks the mutated line):\n   262  \n   263    private price(c: Rec, q: Quote): void {\n   264      const cur = q.currency;\n   265      const goods = q.total;\n   266      const ship = c.shipping ? this.leftOf(c.shipping.price, cur) : money(0, cur);\n   267      const rate = this.o.taxFor(c.shippingTo!);\n>  268      if (!Number.isInteger(rate.bps) || rate.bps < 0 || rate.bps > 10000) throw new CheckoutError('bad-tax', 'a tax rate is whole basis points from 0 to 10000');\n   269      const base = this.o.taxShipping ? add(goods, ship) : goods;\n   270      const tax = times(base, BigInt(rate.bps), 10000n);\n   271      c.totals = { currency: cur, goods, discount: q.discount, shipping: ship, tax, taxRateBps: rate.bps, taxLabel: rate.label, total: add(add(goods, ship), tax) };\n   272    }\n   273  \n   274    // --------------------------------------------------------------------------------------------------- payment\n\nTest file style (intent/blocks/checkout/checkout.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Carts } from '../cart/index.ts';\nimport { Inventory } from '../inventory/index.ts';\nimport { money } from '../money/index.ts';\nimport { TEST_METHODS, TwinProvider, type Charge, type Provider } from '../payments/index.ts';\nimport { RedemptionLog, type Catalog } from '../pricing/index.ts';\nimport { CheckoutError, Checkouts, type Options, type Party } from './index.ts';\n\nconst usd = (n: number) => money(n, 'USD');\nconst MIN = 60_000;\nlet t = 0;\n\nconst home: Party = { name: 'Ada Lovelace', country: 'US', lines: ['1 Main St'], city: 'Dayton', region: 'OH', postcode: '45402' };\n\nfunction setup(extra: Partial<Options> = {}, provider: Provider = new TwinProvider()) {\n  t = Date.parse('2026-06-15T12:00:00Z');\n  const cat: { c: Catalog } = {\n    c: {\n      lists: [{ id: 'retail', currency: 'USD', priority: 1, entries: { tee: [{ minQty: 1, unit: usd(2000) }], mug: [{ minQty: 1, unit: usd(999) }] } }],\n      promotions: [],\n      coupons: [],\n    },\n  };\n  const inv = new Inventory({ now: () => new Date(t), currency: 'USD' });\n  inv.addPlace({ id: 'supplier', kind: 'supplier' });\n  inv.addPlace({ id: 'customer', kind: 'customer' });\n  inv.addPlace({ id: 'main', kind: 'internal' });\n  for (const sku of ['tee', 'mug']) inv.addProduct({ sku, tracking: 'none', valuation: 'fifo' });\n  inv.receive({ sku: 'tee', qty: 5, to: 'main', unitCost: usd(500) });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/checkout-299.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.126Z"
+}

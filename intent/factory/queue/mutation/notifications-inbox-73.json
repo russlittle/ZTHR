@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "notifications-inbox",
+  "mutant": {
+    "id": "73",
+    "line": 122,
+    "column": 99,
+    "endLine": 122,
+    "endColumn": 101,
+    "mutator": "UnaryOperator",
+    "original": "-1",
+    "replacement": "+1",
+    "lineText": "const newer = (a: Item, b: Item) => b.updatedAt - a.updatedAt || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0);",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/notifications-inbox/notifications-inbox.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/notifications-inbox-73.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"notifications-inbox\". Mutant: line 122:99-122:101, mutator UnaryOperator: \"-1\" becomes \"+1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/notifications-inbox/index.ts (> marks the mutated line):\n   116    const s = Buffer.from(c, 'base64url').toString();\n   117    const m = /^(\\d{1,16}):(.{1,100})$/s.exec(s);\n   118    if (!m) throw new InboxError('the cursor is not valid');\n   119    return [Number(m[1]), m[2]!];\n   120  }\n   121  \n>  122  const newer = (a: Item, b: Item) => b.updatedAt - a.updatedAt || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0);\n   123  \n   124  export interface ListOptions {\n   125    readonly app?: string;\n   126    readonly unread?: boolean;\n   127    readonly archived?: boolean;\n   128    readonly limit?: number;\n\nTest file style (intent/blocks/notifications-inbox/notifications-inbox.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Inbox, InboxError, safeLink } from './index.ts';\n\nconst H = 3_600_000;\nconst D = 24 * H;\nfunction mk(o: ConstructorParameters<typeof Inbox>[0] = {}) {\n  let t = 1_700_000_000_000;\n  const inbox = new Inbox({ now: () => t, hosts: ['app.example.com'], ...o });\n  return { inbox, tick: (ms: number) => void (t += ms), now: () => t };\n}\nconst base = { app: 'docs', kind: 'comment', title: 'Ana commented' };\n\ntest('an item is stored with cleaned text and appears in the list newest first', () => {\n  const { inbox, tick } = mk();\n  const a = inbox.add('u', { ...base, title: ' Hello\\u0000‮ world ', body: 'line1\\r\\nline2' });\n  tick(1000);\n  const b = inbox.add('u', { ...base, title: 'Second' });\n  assert.equal(a.title, 'Hello world');\n  assert.equal(a.body, 'line1\\nline2');\n  assert.deepEqual(inbox.list('u').items.map((i) => i.id), [b.id, a.id]);\n  assert.deepEqual(inbox.list('other').items, []);\n});\n\ntest('markup is kept as text, never interpreted', () => {\n  const { inbox } = mk();\n  const i = inbox.add('u', { ...base, title: '<img src=x onerror=alert(1)>' });\n  assert.equal(i.title, '<img src=x onerror=alert(1)>');\n  const d = inbox.digest('u', 0, { subject: 'You have {{count}}', line: '- {{title}}' })!;\n  assert.match(d.text, /<img src=x/, 'digest text is plain text, so it is not escaped to HTML either');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/notifications-inbox-73.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.743Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "rich-text-doc",
+  "mutant": {
+    "id": "1058",
+    "line": 667,
+    "column": 18,
+    "endLine": 667,
+    "endColumn": 32,
+    "mutator": "ArithmeticOperator",
+    "original": "this.depth + 1",
+    "replacement": "this.depth - 1",
+    "lineText": "return d === this.depth + 1 ? this.pos : (this.path[d * 3 - 1] as number);",
+    "prevText": "if (d === 0) throw new RangeError('There is no position before the top-level node');",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/rich-text-doc/rich-text-doc.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-doc-1058.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"rich-text-doc\". Mutant: line 667:18-667:32, mutator ArithmeticOperator: \"this.depth + 1\" becomes \"this.depth - 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/rich-text-doc/index.ts (> marks the mutated line):\n   661    }\n   662    end(d: number): number {\n   663      return this.start(d) + fragSize(this.node(d).content ?? []);\n   664    }\n   665    before(d: number): number {\n   666      if (d === 0) throw new RangeError('There is no position before the top-level node');\n>  667      return d === this.depth + 1 ? this.pos : (this.path[d * 3 - 1] as number);\n   668    }\n   669    after(d: number): number {\n   670      if (d === 0) throw new RangeError('There is no position after the top-level node');\n   671      return d === this.depth + 1 ? this.pos : (this.path[d * 3 - 1] as number) + nodeSize(this.path[d * 3] as Node);\n   672    }\n   673    get textOffset(): number {\n\nTest file style (intent/blocks/rich-text-doc/rich-text-doc.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AddMarkStep, AttrStep, InvalidContent, Mapping, ReplaceAroundStep, ReplaceError, ReplaceStep, RemoveMarkStep, Schema, StepMap, Transform, TransformError, basicSchema as S, cut, emptySlice, fragSize, fromHTML, nodeSize, nodesBetween, replace, resolve, slice, sliceOf, stepFromJSON, textBetween, textContent, toHTML } from './index.ts';\nimport type { Node, Step } from './index.ts';\n\nconst t = (s: string, marks?: Parameters<typeof S.text>[1]) => S.text(s, marks);\nconst p = (...c: Node[]) => S.node('paragraph', undefined, c);\nconst h = (level: number, ...c: Node[]) => S.node('heading', { level }, c);\nconst doc = (...c: Node[]) => S.node('doc', undefined, c);\nconst li = (...c: Node[]) => S.node('list_item', undefined, c);\nconst ul = (...c: Node[]) => S.node('bullet_list', undefined, c);\nconst bq = (...c: Node[]) => S.node('blockquote', undefined, c);\nconst strong = S.mark('strong');\nconst em = S.mark('em');\nconst link = (href: string) => S.mark('link', { href });\nconst same = (a: Node, b: Node) => assert.deepEqual(a, b);\nconst valid = (d: Node) => assert.deepEqual(S.check(d), []);\n\nfunction run(d: Node, f: (tr: Transform) => void): Transform {\n  const tr = new Transform(S, d);\n  f(tr);\n  valid(tr.doc);\n  return tr;\n}\nfunction undo(tr: Transform): Node {\n  const back = new Transform(S, tr.doc);\n  for (const s of tr.inverted()) back.step(s);\n  return back.doc;\n}\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-doc-1058.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.075Z"
+}

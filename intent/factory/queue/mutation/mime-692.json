@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mime",
+  "mutant": {
+    "id": "692",
+    "line": 399,
+    "column": 38,
+    "endLine": 399,
+    "endColumn": 44,
+    "mutator": "StringLiteral",
+    "original": "'utf8'",
+    "replacement": "\"\"",
+    "lineText": "const enc = [...Buffer.from(value, 'utf8')].map((b) => (/[A-Za-z0-9!#$&+.^_`|~-]/.test(String.fromCharCode(b)) ? String.fromCharCode(b) : `%${b.toString(16).toUpperCase().padStart(2, '0')}`)).join('');",
+    "prevText": "if (/^[\\x20-\\x7e]*$/.test(value)) return /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/.test(value) ? `${name}=${value}` : `${name}=\"${value.replace(/([\"\\\\])/g, '\\\\$1')}\"`;",
+    "nextText": "const fallback = value.normalize('NFKD').replace(/\\p{M}/gu, '').replace(/[^\\x20-\\x7e]/g, '_').replace(/([\"\\\\])/g, '\\\\$1');"
+  },
+  "mayEdit": [
+    "intent/blocks/mime/mime.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mime-692.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mime\". Mutant: line 399:38-399:44, mutator StringLiteral: \"'utf8'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mime/index.ts (> marks the mutated line):\n   393  }\n   394  \n   395  /** One parameter for a header: plain when it can be, RFC 2231 extended (with a plain ASCII fallback) when not. */\n   396  export function formatParam(name: string, value: string): string {\n   397    safeHeaderValue(value, `parameter ${name}`);\n   398    if (/^[\\x20-\\x7e]*$/.test(value)) return /^[A-Za-z0-9!#$%&'*+.^_`|~-]+$/.test(value) ? `${name}=${value}` : `${name}=\"${value.replace(/([\"\\\\])/g, '\\\\$1')}\"`;\n>  399    const enc = [...Buffer.from(value, 'utf8')].map((b) => (/[A-Za-z0-9!#$&+.^_`|~-]/.test(String.fromCharCode(b)) ? String.fromCharCode(b) : `%${b.toString(16).toUpperCase().padStart(2, '0')}`)).join('');\n   400    const fallback = value.normalize('NFKD').replace(/\\p{M}/gu, '').replace(/[^\\x20-\\x7e]/g, '_').replace(/([\"\\\\])/g, '\\\\$1');\n   401    return `${name}*=UTF-8''${enc}; ${name}=\"${fallback}\"`;\n   402  }\n   403  \n   404  /** A name safe to store: no path, no control or bidi override characters, no leading dots, at most 255 bytes. */\n   405  export function safeFilename(name: string | undefined, fallback = 'attachment'): string {\n\nTest file style (intent/blocks/mime/mime.test.ts):\n23 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MimeError, attachments, bodies, buildMessage, contentIds, decodeQuotedPrintable, decodeWords, encodeBase64Lines, encodeQuotedPrintable, encodeWords, foldHeader, formatMailbox, formatParam, header, headerText, parseAddresses, parseMessage, parseParams, rewriteCids, safeFilename, textValue } from './index.ts';\nimport type { OutMessage } from './index.ts';\n\nconst crlf = (s: string) => s.replace(/\\n/g, '\\r\\n');\n\ntest('RFC 2047 section 8: the published encoded-word examples', () => {\n  const cases: [string, string][] = [\n    ['(=?ISO-8859-1?Q?a?=)', '(a)'],\n    ['(=?ISO-8859-1?Q?a?= b)', '(a b)'],\n    ['(=?ISO-8859-1?Q?a?= =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a?=  =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a?=\\r\\n    =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a_b?=)', '(a b)'],\n    ['(=?ISO-8859-1?Q?a?= =?ISO-8859-2?Q?_b?=)', '(a b)'],\n    ['=?US-ASCII?Q?Keith_Moore?=', 'Keith Moore'],\n    ['=?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?=', 'Keld Jørn Simonsen'],\n    ['=?ISO-8859-1?Q?Andr=E9?= Pirard', 'André Pirard'],\n    ['=?ISO-8859-1?B?SWYgeW91IGNhbiByZWFkIHRoaXMgeW8=?= =?ISO-8859-2?B?dSB1bmRlcnN0YW5kIHRoZSBleGFtcGxlLg==?=', 'If you can read this you understand the example.'],\n    ['=?ISO-8859-1?Q?Olle_J=E4rnefors?=', 'Olle Järnefors'],\n  ];\n  for (const [src, want] of cases) assert.equal(decodeWords(src), want, src);\n});\n\ntest('encoded words: not decoded when malformed, charsets honoured, and a language tag allowed', () => {\n  assert.equal(decodeWords('=?UTF-8?Q?caf=C3=A9?='), 'café');\n  assert.equal(decodeWords('=?utf-8*en?B?Y2Fmw6k=?='), 'café');\n  assert.equal(decodeWords('=?UTF-8?X?abc?='), '=?UTF-8?X?abc?=');\n  assert.equal(decodeWords('plain text, no words'), 'plain text, no words');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mime-692.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:49.929Z"
+}

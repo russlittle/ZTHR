@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "node-registry",
+  "mutant": {
+    "id": "386",
+    "line": 271,
+    "column": 42,
+    "endLine": 271,
+    "endColumn": 44,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "if (typeof x !== 'string' || x === '') throw new InvalidParameters(`credential ${c.name}`, [{ path: `/${f ?? ''}`, message: 'is required' }]);",
+    "prevText": "const x = f === undefined ? undefined : data[f];",
+    "nextText": "return x;"
+  },
+  "mayEdit": [
+    "intent/blocks/node-registry/node-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/node-registry-386.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"node-registry\". Mutant: line 271:42-271:44, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/node-registry/index.ts (> marks the mutated line):\n   265      const c = this.credentialType(credentialType);\n   266      const a = c.authenticate;\n   267      const headers: Record<string, string> = {};\n   268      const query: Record<string, string> = {};\n   269      const val = (f: string | undefined) => {\n   270        const x = f === undefined ? undefined : data[f];\n>  271        if (typeof x !== 'string' || x === '') throw new InvalidParameters(`credential ${c.name}`, [{ path: `/${f ?? ''}`, message: 'is required' }]);\n   272        return x;\n   273      };\n   274      if (a.kind === 'bearer') headers.authorization = `Bearer ${val(a.field)}`;\n   275      else if (a.kind === 'basic') headers.authorization = `Basic ${Buffer.from(`${val('user')}:${val('password')}`).toString('base64')}`;\n   276      else if (a.kind === 'header') headers[(a.name ?? 'x-api-key').toLowerCase()] = val(a.field);\n   277      else query[a.name ?? 'api_key'] = val(a.field);\n\nTest file style (intent/blocks/node-registry/node-registry.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { InvalidDefinition, InvalidParameters, Registry, UnknownNode, checkSchema, withDefaults } from './index.ts';\nimport type { CredentialType, JsonSchema, NodeType } from './index.ts';\n\nconst apiKey: CredentialType = {\n  name: 'slackApi',\n  displayName: 'Slack API',\n  schema: { type: 'object', required: ['token'], additionalProperties: false, properties: { token: { type: 'string', minLength: 8, description: 'Bot token' }, workspace: { type: 'string' } } },\n  secretFields: ['token'],\n  authenticate: { kind: 'bearer', field: 'token' },\n};\n\nconst slack: NodeType = {\n  name: 'slack',\n  displayName: 'Slack',\n  group: 'action',\n  versions: [\n    {\n      version: 1,\n      credentials: ['slackApi'],\n      operations: [{ name: 'post', description: 'Post a message', parameters: { type: 'object', required: ['channel', 'text'], properties: { channel: { type: 'string' }, text: { type: 'string' } } } }],\n    },\n    {\n      version: 2,\n      credentials: ['slackApi'],\n      migrateFromPrevious: [{ rename: { channel: 'channelId' } }, { set: { unfurl: false } }],\n      operations: [\n        {\n          name: 'post',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/node-registry-386.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.634Z"
+}

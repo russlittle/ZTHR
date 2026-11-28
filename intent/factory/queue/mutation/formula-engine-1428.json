@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "formula-engine",
+  "mutant": {
+    "id": "1428",
+    "line": 590,
+    "column": 103,
+    "endLine": 590,
+    "endColumn": 105,
+    "mutator": "UnaryOperator",
+    "original": "-d",
+    "replacement": "+d",
+    "lineText": "rounder('ROUNDUP', (x, d) => (x < 0 ? -1 : 1) * Number(`${Math.ceil(Number(`${Math.abs(x)}e${d}`))}e${-d}`));",
+    "prevText": "rounder('ROUND', roundHalfAway);",
+    "nextText": "rounder('ROUNDDOWN', (x, d) => (x < 0 ? -1 : 1) * Number(`${Math.floor(Number(`${Math.abs(x)}e${d}`))}e${-d}`));"
+  },
+  "mayEdit": [
+    "intent/blocks/formula-engine/formula-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/formula-engine-1428.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"formula-engine\". Mutant: line 590:103-590:105, mutator UnaryOperator: \"-d\" becomes \"+d\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/formula-engine/index.ts (> marks the mutated line):\n   584  unary('SIGN', Math.sign);\n   585  unary('FACT', (n) => factorial(Math.floor(n)));\n   586  def('LOG', 1, 2, ([a, b]) => { const n = num1(a!); const base = b === undefined ? 10 : num1(b); if (isError(n)) return n; if (isError(base)) return base; return n <= 0 || base <= 0 || base === 1 ? E.num : Math.log(n) / Math.log(base); });\n   587  def('PI', 0, 0, () => Math.PI);\n   588  const rounder = (name: string, f: (x: number, d: number) => number) => def(name, 2, 2, ([a, d]) => { const n = num1(a!); const k = num1(d!); if (isError(n)) return n; if (isError(k)) return k; return fin(f(n, Math.trunc(k))); });\n   589  rounder('ROUND', roundHalfAway);\n>  590  rounder('ROUNDUP', (x, d) => (x < 0 ? -1 : 1) * Number(`${Math.ceil(Number(`${Math.abs(x)}e${d}`))}e${-d}`));\n   591  rounder('ROUNDDOWN', (x, d) => (x < 0 ? -1 : 1) * Number(`${Math.floor(Number(`${Math.abs(x)}e${d}`))}e${-d}`));\n   592  def('TRUNC', 1, 2, ([a, d]) => { const n = num1(a!); const k = d === undefined ? 0 : num1(d); if (isError(n)) return n; if (isError(k)) return k; return (n < 0 ? -1 : 1) * Number(`${Math.floor(Number(`${Math.abs(n)}e${Math.trunc(k)}`))}e${-Math.trunc(k)}`); });\n   593  def('MOD', 2, 2, ([a, b]) => { const n = num1(a!); const d = num1(b!); if (isError(n)) return n; if (isError(d)) return d; return d === 0 ? E.div0 : n - d * Math.floor(n / d); });\n   594  def('POWER', 2, 2, ([a, b]) => { const n = num1(a!); const p = num1(b!); if (isError(n)) return n; if (isError(p)) return p; return n === 0 && p < 0 ? E.div0 : fin(n ** p); });\n   595  def('CEILING', 2, 2, ([a, b]) => { const n = num1(a!); const s = num1(b!); if (isError(n)) return n; if (isError(s)) return s; return s === 0 ? 0 : n > 0 && s < 0 ? E.num : Math.ceil(n / s) * s; });\n   596  def('FLOOR', 2, 2, ([a, b]) => { const n = num1(a!); const s = num1(b!); if (isError(n)) return n; if (isError(s)) return s; return s === 0 ? E.div0 : n > 0 && s < 0 ? E.num : Math.floor(n / s) * s; });\n\nTest file style (intent/blocks/formula-engine/formula-engine.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { calc, colName, colNumber, compare, dateOf, display, formatText, FormulaError, FormulaSyntaxError, FUNCTIONS, fromTyped, isError, parse, parseRef, serialOf, Workbook, type Scalar } from './index.ts';\n\nconst clock = { now: () => new Date('2026-03-09T15:30:00Z'), random: () => 0.25 };\nconst c = (f: string, cells: Record<string, Scalar> = {}) => {\n  const v = calc(f, cells, { clock });\n  return isError(v) ? v.code : v;\n};\n\ntest('operators follow Excel precedence and associativity', () => {\n  assert.equal(c('=-2^2'), 4, 'unary minus binds tighter than ^');\n  assert.equal(c('=2^3^2'), 64, '^ is left to right');\n  assert.equal(c('=2+3*4'), 14);\n  assert.equal(c('=(2+3)*4'), 20);\n  assert.equal(c('=7-2-1'), 4);\n  assert.equal(c('=10/4'), 2.5);\n  assert.equal(c('=50%'), 0.5);\n  assert.equal(c('=200*10%'), 20);\n  assert.equal(c('=2^-1'), 0.5);\n  assert.equal(c('=\"a\"&\"b\"&1'), 'ab1');\n  assert.equal(c('=1+2&\"x\"'), '3x', '+ before &');\n  assert.equal(c('=1+1=2'), true, 'comparison last');\n  assert.equal(c('= 1 + 2 '), 3, 'spaces are ignored');\n  assert.equal(c('=1.5e2+.5'), 150.5);\n  assert.equal(c('=\"say \"\"hi\"\"\"'), 'say \"hi\"');\n});\n\ntest('errors are values that travel, and IFERROR catches them', () => {\n  assert.equal(c('=1/0'), '#DIV/0!');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/formula-engine-1428.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.564Z"
+}

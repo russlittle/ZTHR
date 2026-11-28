@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "template-engine",
+  "mutant": {
+    "id": "638",
+    "line": 370,
+    "column": 42,
+    "endLine": 370,
+    "endColumn": 53,
+    "mutator": "Regex",
+    "original": "/\\s*\\.\\s*/g",
+    "replacement": "/\\s\\.\\s*/g",
+    "lineText": "const p = new ExprParser(src.replace(/\\s*\\.\\s*/g, '.').replace(/\\s*\\[\\s*/g, '[').replace(/\\s*\\]/g, ']'), line, known);",
+    "prevText": "const valueOf = (src: string, line: number): Expr => {",
+    "nextText": "const e = p.value();"
+  },
+  "mayEdit": [
+    "intent/blocks/template-engine/template-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/template-engine-638.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"template-engine\". Mutant: line 370:42-370:53, mutator Regex: \"/\\\\s*\\\\.\\\\s*/g\" becomes \"/\\\\s\\\\.\\\\s*/g\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/template-engine/index.ts (> marks the mutated line):\n   364        out.push([k.v, valueOf(sub, line)]);\n   365        n = m;\n   366      }\n   367      return out;\n   368    };\n   369    const valueOf = (src: string, line: number): Expr => {\n>  370      const p = new ExprParser(src.replace(/\\s*\\.\\s*/g, '.').replace(/\\s*\\[\\s*/g, '[').replace(/\\s*\\]/g, ']'), line, known);\n   371      const e = p.value();\n   372      if (!p.done()) throw new TemplateSyntaxError('something follows the value that does not belong', line);\n   373      return e;\n   374    };\n   375    const tag = (t: Extract<Tok2, { k: 'tag' }>, depth: number): Node => {\n   376      const { name, src, line } = t;\n\nTest file style (intent/blocks/template-engine/template-engine.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Engine, FilterError, LimitExceeded, SafeString, TemplateSyntaxError, UndefinedVariable, render, strftime } from './index.ts';\n\nconst NOW = () => new Date('2026-03-05T14:07:09Z');\n\ntest('output tags are HTML-escaped by default; safe lets markup through', () => {\n  const d = { name: `<b>\"Tom\" & 'Jerry'</b>`, html: '<i>ok</i>' };\n  assert.equal(render('{{ name }}', d), '&lt;b&gt;&quot;Tom&quot; &amp; &#39;Jerry&#39;&lt;/b&gt;');\n  assert.equal(render('{{ html | safe }}', d), '<i>ok</i>');\n  assert.equal(render('{{ html | escape }}', d), '&lt;i&gt;ok&lt;/i&gt;', 'escape is not applied twice');\n  assert.equal(render('{{ html | upcase }}', d), '&lt;I&gt;OK&lt;/I&gt;');\n  assert.equal(render('{{ html | safe | upcase }}', d), '&lt;I&gt;OK&lt;/I&gt;', 'a filter that rebuilds the text loses the safe mark');\n  assert.equal(render('{{ x }}', { x: new SafeString('<u>') }), '<u>');\n});\n\ntest('paths read nested data, arrays, negative indexes and bracket keys', () => {\n  const d = { user: { name: 'Ana', tags: ['a', 'b', 'c'], 'full name': 'Ana L' }, key: 'name' };\n  assert.equal(render('{{ user.name }}|{{ user.tags[1] }}|{{ user.tags[-1] }}|{{ user.tags.size }}|{{ user.tags.first }}|{{ user.tags.last }}', d), 'Ana|b|c|3|a|c');\n  assert.equal(render('{{ user[\"full name\"] }}|{{ user[key] }}|{{ user.missing }}|{{ nothing.at.all }}', d), 'Ana L|Ana||');\n  assert.equal(render('{{ \"hello\" | size }} {{ user.name.size }}', d), '5 3');\n});\n\ntest('the program is out of reach: prototypes, constructors, methods and functions read as empty', () => {\n  const data = { s: 'text', fn: () => 'x', o: { own: 1 }, inherited: Object.create({ secret: 'hidden' }) };\n  assert.equal(render('{{ s.length }}|{{ s.constructor }}|{{ o.__proto__ }}|{{ o.constructor.name }}|{{ o.toString }}|{{ fn }}|{{ inherited.secret }}|{{ __proto__ }}|{{ constructor }}', data), '||||||||');\n  assert.equal(render('{{ o[\"__proto__\"] }}{{ o[\"constructor\"] }}{{ o.hasOwnProperty }}', data), '');\n  assert.equal(render('{{ own }}', Object.create({ own: 'inherited' })), '', 'top-level data is read as own properties only');\n  assert.equal(render('{{ o.own }}', data), '1');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/template-engine-638.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:08.087Z"
+}

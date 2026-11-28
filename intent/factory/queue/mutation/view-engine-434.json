@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "view-engine",
+  "mutant": {
+    "id": "434",
+    "line": 303,
+    "column": 38,
+    "endLine": 303,
+    "endColumn": 56,
+    "mutator": "ConditionalExpression",
+    "original": "parts.length === 0",
+    "replacement": "false",
+    "lineText": "const filter: Node | undefined = parts.length === 0 ? undefined : parts.length === 1 ? parts[0]! : { kind: 'and', children: parts };",
+    "prevText": "const parts = [o.scope, fill(v.filter, who.id, today), o.extra].filter((x): x is Node => x !== undefined);",
+    "nextText": "return { table: v.table, ...(filter ? { filter } : {}), sort: v.sort, groupBy: v.groupBy, columns };"
+  },
+  "mayEdit": [
+    "intent/blocks/view-engine/view-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/view-engine-434.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"view-engine\". Mutant: line 303:38-303:56, mutator ConditionalExpression: \"parts.length === 0\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/view-engine/index.ts (> marks the mutated line):\n   297      if (!this.role(who.id, v)) throw new NotFound(`no view ${v.id}`);\n   298      const t = this.table(v.table);\n   299      this.#checkReadable(v.table, who.id, [...this.#needs(v), ...fieldsIn(o.extra)]);\n   300      const columns = t.fields.map((f) => f.name).filter((f) => !v.hidden.includes(f) && this.#o.access.canRead(who.id, v.table, f));\n   301      const today = o.today ?? this.#now().toISOString().slice(0, 10);\n   302      const parts = [o.scope, fill(v.filter, who.id, today), o.extra].filter((x): x is Node => x !== undefined);\n>  303      const filter: Node | undefined = parts.length === 0 ? undefined : parts.length === 1 ? parts[0]! : { kind: 'and', children: parts };\n   304      return { table: v.table, ...(filter ? { filter } : {}), sort: v.sort, groupBy: v.groupBy, columns };\n   305    }\n   306  \n   307    /** Run a compiled view over rows in memory: filter, sort, group, and keep only the columns allowed. */\n   308    run(c: Compiled, rows: readonly Record<string, unknown>[], o: { limit?: number; offset?: number } = {}): { total: number; rows: Record<string, unknown>[]; groups?: { key: unknown[]; count: number; rows: Record<string, unknown>[] }[] } {\n   309      const kept = rows.filter((r) => matches(c.filter, r));\n\nTest file style (intent/blocks/view-engine/view-engine.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { FieldDenied, NotAllowed, NotFound, VersionConflict, ViewEngine, ViewError } from './index.ts';\nimport type { Node, Person, TableDef } from './index.ts';\n\nconst TASKS: TableDef = { name: 'tasks', fields: [{ name: 'id', type: 'number' }, { name: 'title', type: 'text' }, { name: 'status', type: 'select' }, { name: 'owner', type: 'text' }, { name: 'due', type: 'date' }, { name: 'points', type: 'number' }, { name: 'salary', type: 'number', sensitive: true }] };\nconst ana: Person = { id: 'ana', canPublish: true };\nconst ben: Person = { id: 'ben' };\nconst cy: Person = { id: 'cy' };\nconst root: Person = { id: 'root', admin: true, canPublish: true };\n\nconst rows = [\n  { id: 1, title: 'Write spec', status: 'open', owner: 'ana', due: '2026-06-01', points: 3, salary: 100 },\n  { id: 2, title: 'Review spec', status: 'open', owner: 'ben', due: '2026-06-02', points: 5, salary: 200 },\n  { id: 3, title: 'Ship', status: 'done', owner: 'ana', due: null, points: 8, salary: 300 },\n  { id: 4, title: 'Retro', status: 'done', owner: 'cy', due: '2026-05-01', points: 1, salary: 400 },\n];\n\nconst make = (denied: Record<string, string[]> = { cy: ['salary'], ben: ['salary'] }) => {\n  let n = 0;\n  return new ViewEngine({ tables: [TASKS], access: { canRead: (who, _t, f) => !(denied[who]?.includes(f)) }, id: () => `v${++n}`, now: () => new Date('2026-06-15T12:00:00Z') });\n};\nconst eq = (path: string, value: unknown): Node => ({ kind: 'cmp', path: [path], op: 'eq', value });\n\ntest('a new view is private to its owner and invisible to everyone else', () => {\n  const e = make();\n  const v = e.create(ana, 'tasks', { name: 'Mine', filter: eq('owner', 'ana') });\n  assert.deepEqual([v.id, v.owner, v.visibility, v.version], ['v1', 'ana', 'private', 1]);\n  assert.equal(e.get('v1').name, 'Mine');\n  assert.equal(e.see(ana, 'v1').id, 'v1');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/view-engine-434.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:13.042Z"
+}

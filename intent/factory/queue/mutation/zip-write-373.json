@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "zip-write",
+  "mutant": {
+    "id": "373",
+    "line": 258,
+    "column": 32,
+    "endLine": 258,
+    "endColumn": 42,
+    "mutator": "EqualityOperator",
+    "original": "usize >= T",
+    "replacement": "usize < T",
+    "lineText": "if (mode64 === 'never' && (usize >= T || csize >= T)) throw new Zip64Required(`${name} needs ZIP64 and it is turned off`);",
+    "prevText": "if (!z64 && (usize >= T || csize >= T)) throw new Zip64Required(`${name} grew past 4 GiB; give a size hint or allow ZIP64 so its header is written for it`);",
+    "nextText": "if (hint !== undefined && hint !== usize) throw new SizeMismatch(`${name}: the size hint was ${hint} but ${usize} bytes arrived`);"
+  },
+  "mayEdit": [
+    "intent/blocks/zip-write/zip-write.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/zip-write-373.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"zip-write\". Mutant: line 258:32-258:42, mutator EqualityOperator: \"usize >= T\" becomes \"usize < T\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/zip-write/index.ts (> marks the mutated line):\n   252      const chain = method === 8 ? pipeline(Readable.from(chunksOf(e.data!), { objectMode: false }), tap, createDeflateRaw(), () => undefined) : pipeline(Readable.from(chunksOf(e.data!), { objectMode: false }), tap, () => undefined);\n   253      for await (const c of chain as AsyncIterable<Buffer>) {\n   254        csize += c.length;\n   255        yield out(c);\n   256      }\n   257      if (!z64 && (usize >= T || csize >= T)) throw new Zip64Required(`${name} grew past 4 GiB; give a size hint or allow ZIP64 so its header is written for it`);\n>  258      if (mode64 === 'never' && (usize >= T || csize >= T)) throw new Zip64Required(`${name} needs ZIP64 and it is turned off`);\n   259      if (hint !== undefined && hint !== usize) throw new SizeMismatch(`${name}: the size hint was ${hint} but ${usize} bytes arrived`);\n   260      yield out(Buffer.concat([u32(0x08074b50), u32(crc), z64 ? Buffer.concat([u64(csize), u64(usize)]) : Buffer.concat([u32(csize), u32(usize)])]));\n   261      total += usize;\n   262      if (o.maxTotalBytes !== undefined && total > o.maxTotalBytes) throw new ArchiveError(`the archive would hold more than ${o.maxTotalBytes} bytes`);\n   263      done.push({ ...base, flags: 0x0808, method, crc, csize, usize, offset, zip64Local: z64 });\n   264    }\n\nTest file style (intent/blocks/zip-write/zip-write.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { crc32, inflateRawSync } from 'node:zlib';\nimport { unzip } from '../docparse/index.ts';\nimport { ArchiveError, SizeMismatch, UnsafePath, Zip64Required, collect, dosTime, listTar, listZip, readZipEntry, safePath, tarBuffer, tarStream, uniquePath, zipBuffer, zipStream, type Entry } from './index.ts';\n\nconst T = new Date('2026-03-05T14:07:09Z');\nconst text = 'The quick brown fox jumps over the lazy dog. '.repeat(200);\nconst contents = (zip: Buffer) => {\n  const { entries } = listZip(zip);\n  return Object.fromEntries(entries.map((e) => [e.name, e.dir ? null : readZipEntry(zip, e).toString('utf8')]));\n};\nasync function* gen<T>(...xs: T[]): AsyncGenerator<T> {\n  for (const x of xs) yield x;\n}\n\ntest('a zip round trips through our reader and through docparse, with the CRC and sizes right', async () => {\n  const zip = await zipBuffer([{ name: 'a.txt', data: 'hello' }, { name: 'dir/b.txt', data: text }, { name: 'empty.txt', data: '' }], { now: T });\n  assert.deepEqual(contents(zip), { 'a.txt': 'hello', 'dir/b.txt': text, 'empty.txt': '' });\n  const { entries } = listZip(zip);\n  assert.deepEqual(entries.map((e) => [e.name, e.uncompressedSize, e.crc32]), [['a.txt', 5, crc32('hello')], ['dir/b.txt', text.length, crc32(text)], ['empty.txt', 0, 0]]);\n  assert.equal(zip.readUInt32LE(0), 0x04034b50);\n  const viaDocparse = unzip(zip);\n  assert.equal(viaDocparse.get('dir/b.txt')!.toString(), text, 'a different reader agrees');\n  assert.equal(zip.length < text.length, true, 'the repeated text was compressed');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/zip-write-373.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:17.031Z"
+}

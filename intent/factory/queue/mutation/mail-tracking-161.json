@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mail-tracking",
+  "mutant": {
+    "id": "161",
+    "line": 104,
+    "column": 53,
+    "endLine": 104,
+    "endColumn": 55,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "if (/prefetch|prerender/i.test(`${h['purpose'] ?? ''};${h['sec-purpose'] ?? ''};${h['x-moz'] ?? ''}`)) return { kind: 'bot', reason: 'a prefetch, not a visit' };",
+    "prevText": "if (hit.method.toUpperCase() === 'HEAD') return { kind: 'bot', reason: 'a HEAD request is a link checker' };",
+    "nextText": "if (BOT.test(ua)) return { kind: 'bot', reason: 'a known scanner or robot' };"
+  },
+  "mayEdit": [
+    "intent/blocks/mail-tracking/mail-tracking.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mail-tracking-161.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mail-tracking\". Mutant: line 104:53-104:55, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mail-tracking/index.ts (> marks the mutated line):\n    98  \n    99  export function classify(kind: 'open' | 'click', hit: Hit, o: { sentAt: number; scannerWindowMs?: number; proxyRanges?: readonly string[] }): Verdict {\n   100    const ua = (hit.userAgent ?? '').trim();\n   101    const h = hit.headers ?? {};\n   102    if (!ua) return { kind: 'bot', reason: 'no user agent' };\n   103    if (hit.method.toUpperCase() === 'HEAD') return { kind: 'bot', reason: 'a HEAD request is a link checker' };\n>  104    if (/prefetch|prerender/i.test(`${h['purpose'] ?? ''};${h['sec-purpose'] ?? ''};${h['x-moz'] ?? ''}`)) return { kind: 'bot', reason: 'a prefetch, not a visit' };\n   105    if (BOT.test(ua)) return { kind: 'bot', reason: 'a known scanner or robot' };\n   106    if (kind === 'open') {\n   107      if (/GoogleImageProxy/i.test(ua)) return { kind: 'proxy', reason: 'Gmail image proxy: the open is real but the time and place are not' };\n   108      if (ipInRanges(hit.ip, o.proxyRanges ?? DEFAULT_PROXY_RANGES)) return { kind: 'proxy', reason: 'Apple Mail Privacy Protection fetches every image on delivery' };\n   109    }\n   110    const win = o.scannerWindowMs ?? 2000;\n\nTest file style (intent/blocks/mail-tracking/mail-tracking.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { randomBytes } from 'node:crypto';\nimport { test } from 'node:test';\nimport { sign } from '../crypto/index.ts';\nimport { BadLink, classify, ipInRanges, OPEN_GIF, openResponse, Recorder, redirectResponse, TrackingError, Tracker, type Hit } from './index.ts';\n\nconst secret = randomBytes(32).toString('base64');\nconst T0 = Date.UTC(2026, 5, 1, 12, 0, 0);\nconst base = 'https://track.example.com';\nconst mk = (o: Partial<ConstructorParameters<typeof Tracker>[0]> = {}) => new Tracker({ secret, baseUrl: base, now: () => T0, ...o });\nconst ctx = { campaign: 'spring', message: 'm1', recipient: 'r-42' };\nconst human: Hit = { at: T0 + 60_000, method: 'GET', userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148', ip: '203.0.113.9' };\nconst tokenOf = (url: string | null) => new URL(url!).pathname.split('/').pop()!.replace(/\\.gif$/, '');\n\ntest('the open pixel is a real 1x1 gif and is never cached or sniffed', () => {\n  assert.deepEqual([...OPEN_GIF.subarray(0, 6)], [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]);\n  assert.equal(OPEN_GIF.length, 42);\n  const r = openResponse();\n  assert.equal(r.status, 200);\n  assert.equal(r.headers['content-type'], 'image/gif');\n  assert.equal(r.headers['cache-control'], 'no-store, max-age=0');\n  assert.equal(r.headers['x-content-type-options'], 'nosniff');\n  assert.equal(r.headers['content-length'], '42');\n});\n\ntest('a click link round-trips the destination through a signed token', () => {\n  const t = mk();\n  const link = t.clickUrl(ctx, 'https://shop.example.org/sale?a=1&b=2#top', 'hero');\n  assert.ok(link.startsWith(`${base}/t/c/`));\n  const c = t.resolveClick(tokenOf(link));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mail-tracking-161.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:48.039Z"
+}

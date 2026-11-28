@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "json-patch",
+  "mutant": {
+    "id": "515",
+    "line": 302,
+    "column": 11,
+    "endLine": 302,
+    "endColumn": 26,
+    "mutator": "ConditionalExpression",
+    "original": "v !== undefined",
+    "replacement": "true",
+    "lineText": "if (v !== undefined) u.push({ op: 'replace', path: op.path, value: clone(v) });",
+    "prevText": "const v = getPointer(work, tokens);",
+    "nextText": "} else if (op.op === 'copy') {"
+  },
+  "mayEdit": [
+    "intent/blocks/json-patch/json-patch.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/json-patch-515.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"json-patch\". Mutant: line 302:11-302:26, mutator ConditionalExpression: \"v !== undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/json-patch/index.ts (> marks the mutated line):\n   296        else u.push({ op: 'remove', path: op.path });\n   297      } else if (op.op === 'remove') {\n   298        const v = getPointer(work, tokens);\n   299        if (v !== undefined) u.push({ op: 'add', path: op.path, value: clone(v) });\n   300      } else if (op.op === 'replace') {\n   301        const v = getPointer(work, tokens);\n>  302        if (v !== undefined) u.push({ op: 'replace', path: op.path, value: clone(v) });\n   303      } else if (op.op === 'copy') {\n   304        const v = getPointer(work, tokens);\n   305        const parent = tokens.length ? getPointer(work, tokens.slice(0, -1)) : undefined;\n   306        if (v !== undefined && !Array.isArray(parent)) u.push({ op: 'replace', path: op.path, value: clone(v) });\n   307        else u.push({ op: 'remove', path: Array.isArray(parent) ? formatPointer([...tokens.slice(0, -1), tokens[tokens.length - 1] === '-' ? String(parent.length) : tokens[tokens.length - 1]!]) : op.path });\n   308      } else if (op.op === 'move') u.push({ op: 'move', path: op.from, from: op.path });\n\nTest file style (intent/blocks/json-patch/json-patch.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { parsePointer, formatPointer, fromFragment, toFragment, getPointer, jsonEqual, validatePatch, applyPatch, dryRun, invertPatch, diff, mergePatch, createMergePatch, stalePatch, merge3, PatchError, type Json, type Patch } from './index.ts';\n\nconst code = (c: string) => (e: unknown) => e instanceof PatchError && e.code === c;\nconst apply = (doc: Json, patch: unknown) => applyPatch(doc, patch as Patch);\n\ntest('RFC 6901 section 5 examples', () => {\n  const doc = { foo: ['bar', 'baz'], '': 0, 'a/b': 1, 'c%d': 2, 'e^f': 3, 'g|h': 4, 'i\\\\j': 5, 'k\"l': 6, ' ': 7, 'm~n': 8 };\n  const cases: [string, Json][] = [['', doc], ['/foo', ['bar', 'baz']], ['/foo/0', 'bar'], ['/', 0], ['/a~1b', 1], ['/c%d', 2], ['/e^f', 3], ['/g|h', 4], ['/i\\\\j', 5], ['/k\"l', 6], ['/ ', 7], ['/m~0n', 8]];\n  for (const [p, v] of cases) assert.deepEqual(getPointer(doc, p), v, p);\n  assert.deepEqual(getPointer(doc, fromFragment('#/c%25d')), 2);\n  assert.deepEqual(getPointer(doc, fromFragment('#/a~1b')), 1);\n  assert.deepEqual(getPointer(doc, fromFragment('#/%20')), 7);\n  assert.equal(toFragment(['c%d', ' ', 'a/b']), '#/c%25d/%20/a~1b');\n  assert.deepEqual(parsePointer(formatPointer(['a/b', 'm~n', '', '~1'])), ['a/b', 'm~n', '', '~1']);\n});\n\ntest('pointer errors and reads that must not leak inherited properties', () => {\n  for (const bad of ['a', '/a~', '/a~2', '~0']) assert.throws(() => parsePointer(bad), code('invalid_pointer'), bad);\n  assert.throws(() => parsePointer('/' + 'a'.repeat(5000)), code('limit'));\n  assert.throws(() => fromFragment('/x'), code('invalid_pointer'));\n  assert.throws(() => fromFragment('#/%E0%A4%A'), code('invalid_pointer'));\n  const doc = { a: [1, 2], o: {} };\n  for (const p of ['/__proto__', '/constructor', '/toString', '/o/hasOwnProperty', '/a/length', '/a/01', '/a/-', '/a/+1', '/a/1.0', '/a/-0', '/a/2', '/nope/x']) assert.equal(getPointer(doc, p), undefined, p);\n  assert.equal(getPointer(doc, '/a/1'), 2);\n});\n\nconst A: [string, Json, unknown, Json | 'error'][] = [\n  ['A.1 add object member', { foo: 'bar' }, [{ op: 'add', path: '/baz', value: 'qux' }], { baz: 'qux', foo: 'bar' }],\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/json-patch-515.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:45.336Z"
+}

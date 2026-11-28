@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "rich-text-doc",
+  "mutant": {
+    "id": "2528",
+    "line": 1733,
+    "column": 7,
+    "endLine": 1733,
+    "endColumn": 27,
+    "mutator": "LogicalOperator",
+    "original": "last && isText(last)",
+    "replacement": "last || isText(last)",
+    "lineText": "if (last && isText(last)) {",
+    "prevText": "const last = k[k.length - 1];",
+    "nextText": "const t = last.text!.replace(/ +$/, '');"
+  },
+  "mayEdit": [
+    "intent/blocks/rich-text-doc/rich-text-doc.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-doc-2528.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"rich-text-doc\". Mutant: line 1733:7-1733:27, mutator LogicalOperator: \"last && isText(last)\" becomes \"last || isText(last)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/rich-text-doc/index.ts (> marks the mutated line):\n  1727    if (k[0] && isText(k[0])) {\n  1728      const t = k[0].text!.replace(/^ +/, '');\n  1729      if (t) k[0] = withText(k[0], t);\n  1730      else k.shift();\n  1731    }\n  1732    const last = k[k.length - 1];\n> 1733    if (last && isText(last)) {\n  1734      const t = last.text!.replace(/ +$/, '');\n  1735      if (t) k[k.length - 1] = withText(last, t);\n  1736      else k.pop();\n  1737    }\n  1738    return k;\n  1739  }\n\nTest file style (intent/blocks/rich-text-doc/rich-text-doc.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AddMarkStep, AttrStep, InvalidContent, Mapping, ReplaceAroundStep, ReplaceError, ReplaceStep, RemoveMarkStep, Schema, StepMap, Transform, TransformError, basicSchema as S, cut, emptySlice, fragSize, fromHTML, nodeSize, nodesBetween, replace, resolve, slice, sliceOf, stepFromJSON, textBetween, textContent, toHTML } from './index.ts';\nimport type { Node, Step } from './index.ts';\n\nconst t = (s: string, marks?: Parameters<typeof S.text>[1]) => S.text(s, marks);\nconst p = (...c: Node[]) => S.node('paragraph', undefined, c);\nconst h = (level: number, ...c: Node[]) => S.node('heading', { level }, c);\nconst doc = (...c: Node[]) => S.node('doc', undefined, c);\nconst li = (...c: Node[]) => S.node('list_item', undefined, c);\nconst ul = (...c: Node[]) => S.node('bullet_list', undefined, c);\nconst bq = (...c: Node[]) => S.node('blockquote', undefined, c);\nconst strong = S.mark('strong');\nconst em = S.mark('em');\nconst link = (href: string) => S.mark('link', { href });\nconst same = (a: Node, b: Node) => assert.deepEqual(a, b);\nconst valid = (d: Node) => assert.deepEqual(S.check(d), []);\n\nfunction run(d: Node, f: (tr: Transform) => void): Transform {\n  const tr = new Transform(S, d);\n  f(tr);\n  valid(tr.doc);\n  return tr;\n}\nfunction undo(tr: Transform): Node {\n  const back = new Transform(S, tr.doc);\n  for (const s of tr.inverted()) back.step(s);\n  return back.doc;\n}\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-doc-2528.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.170Z"
+}

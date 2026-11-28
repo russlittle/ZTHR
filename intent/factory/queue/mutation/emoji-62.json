@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "emoji",
+  "mutant": {
+    "id": "62",
+    "line": 52,
+    "column": 3,
+    "endLine": 52,
+    "endColumn": 21,
+    "mutator": "ArrayDeclaration",
+    "original": "[0x1f491, 0x1f491]",
+    "replacement": "[]",
+    "lineText": "[0x1f491, 0x1f491], [0x1f4aa, 0x1f4aa], [0x1f574, 0x1f575], [0x1f57a, 0x1f57a], [0x1f590, 0x1f590], [0x1f595, 0x1f596], [0x1f645, 0x1f647],",
+    "prevText": "[0x1f442, 0x1f443], [0x1f446, 0x1f450], [0x1f466, 0x1f478], [0x1f47c, 0x1f47c], [0x1f481, 0x1f483], [0x1f485, 0x1f487], [0x1f48f, 0x1f48f],",
+    "nextText": "[0x1f64b, 0x1f64f], [0x1f6a3, 0x1f6a3], [0x1f6b4, 0x1f6b6], [0x1f6c0, 0x1f6c0], [0x1f6cc, 0x1f6cc], [0x1f90c, 0x1f90c], [0x1f90f, 0x1f90f],"
+  },
+  "mayEdit": [
+    "intent/blocks/emoji/emoji.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/emoji-62.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"emoji\". Mutant: line 52:3-52:21, mutator ArrayDeclaration: \"[0x1f491, 0x1f491]\" becomes \"[]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/emoji/index.ts (> marks the mutated line):\n    46  const toneOfCode = (cp: number): Tone | undefined => (cp >= TONE_BASE && cp <= TONE_BASE + 4 ? ((cp - TONE_BASE + 2) as Tone) : undefined);\n    47  \n    48  /** Unicode Emoji_Modifier_Base, as ranges. */\n    49  const BASES: readonly (readonly [number, number])[] = [\n    50    [0x261d, 0x261d], [0x26f9, 0x26f9], [0x270a, 0x270d], [0x1f385, 0x1f385], [0x1f3c2, 0x1f3c4], [0x1f3c7, 0x1f3c7], [0x1f3ca, 0x1f3cc],\n    51    [0x1f442, 0x1f443], [0x1f446, 0x1f450], [0x1f466, 0x1f478], [0x1f47c, 0x1f47c], [0x1f481, 0x1f483], [0x1f485, 0x1f487], [0x1f48f, 0x1f48f],\n>   52    [0x1f491, 0x1f491], [0x1f4aa, 0x1f4aa], [0x1f574, 0x1f575], [0x1f57a, 0x1f57a], [0x1f590, 0x1f590], [0x1f595, 0x1f596], [0x1f645, 0x1f647],\n    53    [0x1f64b, 0x1f64f], [0x1f6a3, 0x1f6a3], [0x1f6b4, 0x1f6b6], [0x1f6c0, 0x1f6c0], [0x1f6cc, 0x1f6cc], [0x1f90c, 0x1f90c], [0x1f90f, 0x1f90f],\n    54    [0x1f918, 0x1f91f], [0x1f926, 0x1f926], [0x1f930, 0x1f939], [0x1f93c, 0x1f93e], [0x1f977, 0x1f977], [0x1f9b5, 0x1f9b6], [0x1f9b8, 0x1f9b9],\n    55    [0x1f9bb, 0x1f9bb], [0x1f9cd, 0x1f9cf], [0x1f9d1, 0x1f9dd], [0x1fac3, 0x1fac5], [0x1faf0, 0x1faf8],\n    56  ];\n    57  \n    58  export const isModifierBase = (cp: number) => BASES.some(([a, b]) => cp >= a && cp <= b);\n\nTest file style (intent/blocks/emoji/emoji.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  CustomRegistry, EmojiError, ReactionError, Reactions, Shortcodes, canTone, extractEmoji, graphemesOf, isEmoji, isModifierBase, renderHtml, stripTone, toneOf, withTone,\n} from './index.ts';\nimport type { Tone } from './index.ts';\n\nconst u = (...cps: number[]) => String.fromCodePoint(...cps);\nconst codes = new Shortcodes();\nconst THUMB = u(0x1f44d);\nconst ENGLAND = u(0x1f3f4, 0xe0067, 0xe0062, 0xe0065, 0xe006e, 0xe0067, 0xe007f);\n\n// ------------------------------------------------------------ detection\n\ntest('what counts as an emoji: pictographs, flags, keycaps, joined and toned sequences, but not digits, letters or bare symbols', () => {\n  const yes = ['😀', u(0x1f44d, 0x1f3fd), u(0x1f1fa, 0x1f1f8), u(0x31, 0xfe0f, 0x20e3), u(0x2764, 0xfe0f), u(0x1f9d1, 0x200d, 0x1f4bb), u(0x1f468, 0x200d, 0x1f469, 0x200d, 0x1f467), ENGLAND, u(0xa9, 0xfe0f), '⭐'];\n  const no = ['a', '1', '#', '©', '™', ' ', '', '中', u(0x2764), '٣', 'é', 'ab'.repeat(30)];\n  for (const e of yes) assert.equal(isEmoji(e), true, [...e].map((c) => c.codePointAt(0)!.toString(16)).join(' '));\n  for (const t of no) assert.equal(isEmoji(t), false, JSON.stringify(t.slice(0, 10)));\n});\n\ntest('emoji are found in a text by grapheme, so a toned or joined emoji is one, and two flags are two', () => {\n  const text = `ok ${u(0x1f44d, 0x1f3fd)} and ${THUMB}, flags ${u(0x1f1eb, 0x1f1f7)}${u(0x1f1e9, 0x1f1ea)} dev ${u(0x1f9d1, 0x200d, 0x1f4bb)} 1 2 #`;\n  assert.deepEqual(extractEmoji(text), [u(0x1f44d, 0x1f3fd), THUMB, u(0x1f1eb, 0x1f1f7), u(0x1f1e9, 0x1f1ea), u(0x1f9d1, 0x200d, 0x1f4bb)]);\n  assert.equal(graphemesOf(`${ENGLAND}!`).length, 2);\n  assert.deepEqual(extractEmoji('no emoji here, 100% plain'), []);\n});\n\n// ------------------------------------------------------------ skin tones\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/emoji-62.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.706Z"
+}

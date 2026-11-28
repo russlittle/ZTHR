@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "tenant-model",
+  "mutant": {
+    "id": "231",
+    "line": 277,
+    "column": 44,
+    "endLine": 277,
+    "endColumn": 68,
+    "mutator": "ConditionalExpression",
+    "original": "record.tenant !== tenant",
+    "replacement": "true",
+    "lineText": "if (typeof record.tenant === 'string' && record.tenant !== tenant) return { allowed: false, because: `the record belongs to another tenant` };",
+    "prevText": "if (!m) return { allowed: false, because: `${user} does not belong to tenant ${tenant}` };",
+    "nextText": "const d = decide(policy, { id: user, roles: m.roles, ...(m.attrs ? { attrs: m.attrs } : {}) }, action, kind, record);"
+  },
+  "mayEdit": [
+    "intent/blocks/tenant-model/tenant-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/tenant-model-231.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"tenant-model\". Mutant: line 277:44-277:68, mutator ConditionalExpression: \"record.tenant !== tenant\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/tenant-model/index.ts (> marks the mutated line):\n   271   * Whether a person may do an action on a record in a tenant: they must belong to the tenant, the record must be\n   272   * the tenant's, and then the rbac policy decides with the roles they hold in that tenant only.\n   273   */\n   274  export function can(policy: Policy, members: Memberships, user: string, tenant: string, action: string, kind: string, record: Rec = {}): { allowed: boolean; because: string } {\n   275    const m = members.get(user, tenantId(tenant));\n   276    if (!m) return { allowed: false, because: `${user} does not belong to tenant ${tenant}` };\n>  277    if (typeof record.tenant === 'string' && record.tenant !== tenant) return { allowed: false, because: `the record belongs to another tenant` };\n   278    const d = decide(policy, { id: user, roles: m.roles, ...(m.attrs ? { attrs: m.attrs } : {}) }, action, kind, record);\n   279    return { allowed: d.allowed, because: d.because };\n   280  }\n   281  \n   282  // ---------------------------------------------------------------- quotas and limits\n   283  \n\nTest file style (intent/blocks/tenant-model/tenant-model.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { setTimeout as sleep } from 'node:timers/promises';\nimport type { Policy } from '../rbac/index.ts';\nimport { CrossTenant, FairShare, MemoryBacking, Memberships, NoTenant, QuotaExceeded, Quotas, ScopedStore, TenantError, TenantRate, TooBusy, UsageWindow, assertScoped, can, currentTenant, keyBelongsTo, parseTenantKey, scopeFilter, scopeSql, tenantId, tenantKey, tenantSecret, withTenant, type Row } from './index.ts';\n\ninterface Doc extends Row {\n  title: string;\n}\n\ntest('tenant ids are checked once, strictly', () => {\n  assert.equal(tenantId('acme-co'), 'acme-co');\n  for (const bad of ['', 'a', 'A', 'acme co', '-acme', 'a--b', 'a:b', 'a/b', '../x', 'x'.repeat(64), 'ünï']) assert.throws(() => tenantId(bad), TenantError, bad);\n});\n\ntest('the context follows async work, nests, and has no default', async () => {\n  assert.throws(() => currentTenant(), NoTenant);\n  const seen: string[] = [];\n  await Promise.all([\n    withTenant({ tenant: 'one', actor: 'ana' }, async () => {\n      await sleep(5);\n      seen.push(`${currentTenant().tenant}/${currentTenant().actor}`);\n      await withTenant({ tenant: 'inner' }, async () => {\n        await sleep(1);\n        seen.push(currentTenant().tenant);\n      });\n      seen.push(currentTenant().tenant);\n    }),\n    withTenant({ tenant: 'two' }, async () => {\n      await sleep(1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/tenant-model-231.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:08.329Z"
+}

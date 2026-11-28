@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "promql-lite",
+  "mutant": {
+    "id": "570",
+    "line": 287,
+    "column": 48,
+    "endLine": 287,
+    "endColumn": 77,
+    "mutator": "StringLiteral",
+    "original": "'expected a duration like 5m'",
+    "replacement": "\"\"",
+    "lineText": "if (d.k !== 'dur') throw new PromQLError('expected a duration like 5m', d.pos);",
+    "prevText": "const d = this.next();",
+    "nextText": "if (d.v <= 0) throw new PromQLError('a range must be longer than zero', d.pos);"
+  },
+  "mayEdit": [
+    "intent/blocks/promql-lite/promql-lite.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/promql-lite-570.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"promql-lite\". Mutant: line 287:48-287:77, mutator StringLiteral: \"'expected a duration like 5m'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/promql-lite/index.ts (> marks the mutated line):\n   281      if (name === undefined && matchers.length === 0) throw new PromQLError('a selector needs a name or a matcher', this.cur.pos);\n   282      if (name === undefined && matchers.every((m) => matches('', m))) throw new PromQLError('a selector must match something other than the empty string', this.cur.pos);\n   283      let rangeMs: number | undefined;\n   284      if (this.isOp('[')) {\n   285        this.i++;\n   286        const d = this.next();\n>  287        if (d.k !== 'dur') throw new PromQLError('expected a duration like 5m', d.pos);\n   288        if (d.v <= 0) throw new PromQLError('a range must be longer than zero', d.pos);\n   289        rangeMs = d.v;\n   290        this.expectOp(']');\n   291      }\n   292      let offsetMs = 0;\n   293      if (this.isId('offset')) {\n\nTest file style (intent/blocks/promql-lite/promql-lite.test.ts):\n28 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { alignRange, instantQuery, parse, parseDuration, PromQLError, rangeQuery, SeriesStore } from './index.ts';\nimport type { Result } from './index.ts';\n\nconst S = 1000;\nconst approx = (a: number, b: number, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${a} is not ${b}`);\n\n/** A counter growing 1 per second: samples every 10 s from 0 to 120 s. */\nfunction counters(): SeriesStore {\n  const st = new SeriesStore();\n  for (let i = 0; i <= 12; i++) {\n    st.ingest('http_requests_total', { job: 'api', code: '200' }, i * 10 * S, i * 10);\n    st.ingest('http_requests_total', { job: 'api', code: '500' }, i * 10 * S, i);\n    st.ingest('http_requests_total', { job: 'web', code: '200' }, i * 10 * S, i * 20);\n  }\n  return st;\n}\nconst vec = (r: Result) => {\n  assert.equal(r.type, 'vector');\n  return (r as Extract<Result, { type: 'vector' }>).samples.map((s) => ({ labels: { ...s.labels }, value: s.value }));\n};\nconst scalar = (r: Result) => {\n  assert.equal(r.type, 'scalar');\n  return (r as Extract<Result, { type: 'scalar' }>).value;\n};\n\n// ------------------------------------------------------------ parsing\n\ntest('durations: units, compound forms, and refusal of nonsense', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/promql-lite-570.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.955Z"
+}

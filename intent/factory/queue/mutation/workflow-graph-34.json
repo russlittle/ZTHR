@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "workflow-graph",
+  "mutant": {
+    "id": "34",
+    "line": 164,
+    "column": 66,
+    "endLine": 164,
+    "endColumn": 76,
+    "mutator": "ArrayDeclaration",
+    "original": "['engine']",
+    "replacement": "[]",
+    "lineText": "{ from: 'running', to: 'succeeded', action: 'finish', roles: ['engine'] },",
+    "prevText": "{ from: 'running', to: 'waiting', action: 'wait', roles: ['engine'] },",
+    "nextText": "{ from: 'running', to: 'failed', action: 'fail', roles: ['engine'] },"
+  },
+  "mayEdit": [
+    "intent/blocks/workflow-graph/workflow-graph.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/workflow-graph-34.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"workflow-graph\". Mutant: line 164:66-164:76, mutator ArrayDeclaration: \"['engine']\" becomes \"[]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/workflow-graph/index.ts (> marks the mutated line):\n   158    start: 'queued',\n   159    final: ['succeeded', 'failed', 'cancelled'],\n   160    transitions: [\n   161      { from: 'queued', to: 'running', action: 'start', roles: ['engine'] },\n   162      { from: 'queued', to: 'cancelled', action: 'cancel', roles: ['engine', 'user'] },\n   163      { from: 'running', to: 'waiting', action: 'wait', roles: ['engine'] },\n>  164      { from: 'running', to: 'succeeded', action: 'finish', roles: ['engine'] },\n   165      { from: 'running', to: 'failed', action: 'fail', roles: ['engine'] },\n   166      { from: 'running', to: 'cancelled', action: 'cancel', roles: ['engine', 'user'] },\n   167      { from: 'waiting', to: 'running', action: 'wake', roles: ['engine'] },\n   168      { from: 'waiting', to: 'cancelled', action: 'cancel', roles: ['engine', 'user'] },\n   169      { from: 'waiting', to: 'failed', action: 'fail', roles: ['engine'] },\n   170    ],\n\nTest file style (intent/blocks/workflow-graph/workflow-graph.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Queue } from '../jobs/index.ts';\nimport { GraphEngine, RUN_LIFECYCLE, NonRetryable, RetryAfter, evalCondition, attachToQueue, enqueueRun, memoryStore, type Graph, type Item, type RunState, type NodeHandler } from './index.ts';\nimport { check } from '../workflow/index.ts';\n\nconst mk = () => {\n  let t = 1_000_000;\n  const e = new GraphEngine({ now: () => t });\n  return { e, adv: (ms: number) => { t += ms; }, now: () => t };\n};\nconst it = (...xs: Record<string, unknown>[]): Item[] => xs.map((json) => ({ json }));\nconst roundtrip = (s: RunState): RunState => JSON.parse(JSON.stringify(s)) as RunState;\nconst vals = (items: Item[] | undefined, k: string) => (items ?? []).map((x) => x.json[k]);\n\nconst double: NodeHandler = { mode: 'each', run: (i) => ({ json: { ...(i as Item).json, n: Number((i as Item).json.n) * 2 } }) };\n\ntest('validation finds mistakes before a run does', () => {\n  const { e } = mk();\n  const bad: Graph = {\n    nodes: [{ id: 'a', type: 'start' }, { id: 'b', type: 'nope' }, { id: 'c', type: 'if', params: { condition: { field: 'x', op: 'exists' } } }, { id: 'm', type: 'merge' }, { id: 'orphan', type: 'noop' }, { id: 'a', type: 'noop' }, { id: 'w', type: 'wait' }],\n    edges: [{ from: 'a', to: 'c' }, { from: 'c', to: 'm', port: 'maybe' }, { from: 'c', to: 'zz' }, { from: 'c', to: 'm', port: 'true' }],\n  };\n  const v = e.validate(bad);\n  for (const re of [/defined twice/, /unknown type nope/, /needs ms or event/, /no port maybe/, /unknown node zz/]) assert.ok(v.errors.some((x) => re.test(x)), String(re));\n  const ok = e.validate({ start: 'a', nodes: [{ id: 'a', type: 'start' }, { id: 'b', type: 'noop' }, { id: 'c', type: 'noop' }, { id: 'd', type: 'noop' }], edges: [{ from: 'a', to: 'b' }, { from: 'b', to: 'c' }, { from: 'c', to: 'b' }, { from: 'c', to: 'd' }] });\n  assert.ok(ok.errors.some((x) => /cycle that does not go through a loop/.test(x)));\n  assert.throws(() => e.start({ nodes: [{ id: 'a', type: 'zzz' }], edges: [] }), /not valid/);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/workflow-graph-34.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.852Z"
+}

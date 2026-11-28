@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "expression-engine",
+  "mutant": {
+    "id": "247",
+    "line": 128,
+    "column": 26,
+    "endLine": 128,
+    "endColumn": 45,
+    "mutator": "ConditionalExpression",
+    "original": "this.cur.k === 'op'",
+    "replacement": "true",
+    "lineText": "is(v: string) { return this.cur.k === 'op' && this.cur.v === v; }",
+    "prevText": "err(why: string, at = this.cur.at): never { throw new ExpressionSyntaxError(why, at); }",
+    "nextText": "eat(v: string) { if (this.is(v)) { this.p++; return true; } return false; }"
+  },
+  "mayEdit": [
+    "intent/blocks/expression-engine/expression-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-247.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"expression-engine\". Mutant: line 128:26-128:45, mutator ConditionalExpression: \"this.cur.k === 'op'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/expression-engine/index.ts (> marks the mutated line):\n   122    constructor(toks: Tok[], maxDepth: number) {\n   123      this.toks = toks;\n   124      this.maxDepth = maxDepth;\n   125    }\n   126    get cur() { return this.toks[this.p]!; }\n   127    err(why: string, at = this.cur.at): never { throw new ExpressionSyntaxError(why, at); }\n>  128    is(v: string) { return this.cur.k === 'op' && this.cur.v === v; }\n   129    eat(v: string) { if (this.is(v)) { this.p++; return true; } return false; }\n   130    need(v: string) { if (!this.eat(v)) this.err(`expected ${v}`); }\n   131    nest<T>(f: () => T): T { if (++this.depth > this.maxDepth) this.err('the expression is nested too deeply'); const r = f(); this.depth--; return r; }\n   132  \n   133    expression(): Ast { return this.nest(() => this.ternary()); }\n   134    ternary(): Ast {\n\nTest file style (intent/blocks/expression-engine/expression-engine.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  compile, evaluate, references, render, resolve, resolveDeep, compileTemplate,\n  ExpressionSyntaxError, ExpressionRuntimeError, ExpressionLimitError, ExpressionForbidden,\n} from './index.ts';\n\nconst ev = (s: string, ctx: unknown = {}) => evaluate(s, ctx);\n\ntest('arithmetic and precedence', () => {\n  assert.equal(ev('1 + 2 * 3'), 7);\n  assert.equal(ev('(1 + 2) * 3'), 9);\n  assert.equal(ev('2 ** 3 ** 2'), 512);\n  assert.equal(ev('10 % 4'), 2);\n  assert.equal(ev('-3 + 5'), 2);\n});\n\ntest('strings, concatenation and comparison', () => {\n  assert.equal(ev('\"a\" + \"b\" + 1'), 'ab1');\n  assert.equal(ev('\"abc\" < \"abd\"'), true);\n  assert.equal(ev('1 === 1 && 2 !== 3'), true);\n});\n\ntest('logic operators return operands', () => {\n  assert.equal(ev('0 || \"x\"'), 'x');\n  assert.equal(ev('\"a\" && \"b\"'), 'b');\n  assert.equal(ev('null ?? 5'), 5);\n  assert.equal(ev('0 ?? 5'), 0);\n  assert.equal(ev('true ? 1 : 2'), 1);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-247.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.772Z"
+}

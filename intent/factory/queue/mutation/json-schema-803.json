@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "json-schema",
+  "mutant": {
+    "id": "803",
+    "line": 309,
+    "column": 55,
+    "endLine": 309,
+    "endColumn": 81,
+    "mutator": "ConditionalExpression",
+    "original": "inst >= s.exclusiveMaximum",
+    "replacement": "true",
+    "lineText": "if (typeof s.exclusiveMaximum === 'number' && inst >= s.exclusiveMaximum) fail('exclusiveMaximum', 'exclusiveMaximum', `must be less than ${s.exclusiveMaximum}`);",
+    "prevText": "if (typeof s.exclusiveMinimum === 'number' && inst <= s.exclusiveMinimum) fail('exclusiveMinimum', 'exclusiveMinimum', `must be more than ${s.exclusiveMinimum}`);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/json-schema/json-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/json-schema-803.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"json-schema\". Mutant: line 309:55-309:81, mutator ConditionalExpression: \"inst >= s.exclusiveMaximum\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/json-schema/index.ts (> marks the mutated line):\n   303  \n   304        if (typeof inst === 'number') {\n   305          if (typeof s.multipleOf === 'number' && !multipleOf(inst, s.multipleOf)) fail('multipleOf', 'multipleOf', `must be a multiple of ${s.multipleOf}`);\n   306          if (typeof s.minimum === 'number' && inst < s.minimum) fail('minimum', 'minimum', `must be at least ${s.minimum}`);\n   307          if (typeof s.maximum === 'number' && inst > s.maximum) fail('maximum', 'maximum', `must be at most ${s.maximum}`);\n   308          if (typeof s.exclusiveMinimum === 'number' && inst <= s.exclusiveMinimum) fail('exclusiveMinimum', 'exclusiveMinimum', `must be more than ${s.exclusiveMinimum}`);\n>  309          if (typeof s.exclusiveMaximum === 'number' && inst >= s.exclusiveMaximum) fail('exclusiveMaximum', 'exclusiveMaximum', `must be less than ${s.exclusiveMaximum}`);\n   310        }\n   311  \n   312        if (typeof inst === 'string') {\n   313          const len = [...inst].length;\n   314          if (typeof s.minLength === 'number' && len < s.minLength) fail('minLength', 'minLength', `must have at least ${s.minLength} characters`);\n   315          if (typeof s.maxLength === 'number' && len > s.maxLength) fail('maxLength', 'maxLength', `must have at most ${s.maxLength} characters`);\n\nTest file style (intent/blocks/json-schema/json-schema.test.ts):\n29 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { compile, validate, infer, example, diff, isCompatible, jsonEqual, SchemaError, SchemaLimitError, type SchemaValue } from './index.ts';\n\nconst ok = (s: SchemaValue, i: unknown, o = {}) => validate(s, i, o).valid;\nconst msgs = (s: SchemaValue, i: unknown) => validate(s, i).problems.map((p) => `${p.path}|${p.code}`);\n\ntest('type keyword including integer and arrays of types', () => {\n  assert.equal(ok({ type: 'string' }, 'a'), true);\n  assert.equal(ok({ type: 'string' }, 1), false);\n  assert.equal(ok({ type: 'integer' }, 3), true);\n  assert.equal(ok({ type: 'integer' }, 3.0), true);\n  assert.equal(ok({ type: 'integer' }, 3.5), false);\n  assert.equal(ok({ type: 'number' }, 3), true);\n  assert.equal(ok({ type: ['string', 'null'] }, null), true);\n  assert.equal(ok({ type: 'object' }, []), false);\n  assert.equal(ok({ type: 'array' }, {}), false);\n  assert.equal(ok({ type: 'number' }, NaN), false);\n});\n\ntest('enum and const use deep equality', () => {\n  assert.equal(ok({ enum: [1, 'a', { x: [1, 2] }] }, { x: [1, 2] }), true);\n  assert.equal(ok({ enum: [1, 'a'] }, 2), false);\n  assert.equal(ok({ const: { a: 1, b: 2 } }, { b: 2, a: 1 }), true);\n  assert.equal(ok({ const: 1 }, '1'), false);\n  assert.equal(jsonEqual([1, { a: 2 }], [1, { a: 2 }]), true);\n});\n\ntest('numeric keywords', () => {\n  assert.equal(ok({ minimum: 5 }, 5), true);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/json-schema-803.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:45.506Z"
+}

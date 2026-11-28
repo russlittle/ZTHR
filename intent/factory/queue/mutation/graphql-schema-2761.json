@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "graphql-schema",
+  "mutant": {
+    "id": "2761",
+    "line": 1537,
+    "column": 11,
+    "endLine": 1537,
+    "endColumn": 25,
+    "mutator": "ConditionalExpression",
+    "original": "d.defaultValue",
+    "replacement": "false",
+    "lineText": "if (d.defaultValue) out[d.name] = valueFromLiteral(schema, d.defaultValue, d.type, {}, scalars);",
+    "prevText": "if (!present) {",
+    "nextText": "else if (d.type.kind === 'nonNull') problems.push(`Variable \"$${d.name}\" of required type \"${typeName(d.type)}\" was not provided.`);"
+  },
+  "mayEdit": [
+    "intent/blocks/graphql-schema/graphql-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-2761.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"graphql-schema\". Mutant: line 1537:11-1537:25, mutator ConditionalExpression: \"d.defaultValue\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/graphql-schema/index.ts (> marks the mutated line):\n  1531  function coerceVariables(schema: Schema, op: OperationNode, given: Variables, scalars: Readonly<Record<string, ScalarCoercion>>): { vars: Variables; errors: GraphQLError[] } {\n  1532    const out: Record<string, unknown> = {};\n  1533    const problems: string[] = [];\n  1534    for (const d of op.variables) {\n  1535      const present = Object.prototype.hasOwnProperty.call(given, d.name) && given[d.name] !== undefined;\n  1536      if (!present) {\n> 1537        if (d.defaultValue) out[d.name] = valueFromLiteral(schema, d.defaultValue, d.type, {}, scalars);\n  1538        else if (d.type.kind === 'nonNull') problems.push(`Variable \"$${d.name}\" of required type \"${typeName(d.type)}\" was not provided.`);\n  1539        continue;\n  1540      }\n  1541      const errs: string[] = [];\n  1542      const v = coerceInput(schema, given[d.name], d.type, `Variable \"$${d.name}\"`, errs, scalars);\n  1543      if (errs.length) problems.push(...errs.map((e) => e.replace(/^(Variable \"\\$[^\"]+\")([^:]*): /, '$1$2 got invalid value: ')));\n\nTest file style (intent/blocks/graphql-schema/graphql-schema.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { GraphQLError, GraphQLSyntaxError, analyze, buildSchema, execute, parse, plan, validate } from './index.ts';\nimport type { Schema } from './index.ts';\n\nconst SDL = `\n  \"\"\"The root.\"\"\"\n  type Query {\n    hello(name: String = \"world\"): String!\n    user(id: ID!): User\n    users(first: Int, after: String): [User!]!\n    search(text: String!): [SearchResult!]!\n    node(id: ID!): Node\n    flaky: String\n    must: String!\n    items: [Int!]\n    nested: Outer\n  }\n  type Mutation { bump(by: Int = 1): Int! rename(id: ID!, input: RenameInput!): User }\n  directive @auth(role: String!) on FIELD_DEFINITION\n  interface Node { id: ID! }\n  type User implements Node {\n    id: ID!\n    name: String\n    email: String @deprecated(reason: \"use contact\")\n    role: Role!\n    friends(first: Int): [User!]\n    posts(limit: Int = 20): [Post!]! @cost(value: 2, multipliers: [\"limit\"])\n  }\n  type Post implements Node { id: ID! title: String! author: User }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-2761.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:42.627Z"
+}

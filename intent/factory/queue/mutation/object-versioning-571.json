@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "object-versioning",
+  "mutant": {
+    "id": "571",
+    "line": 443,
+    "column": 32,
+    "endLine": 443,
+    "endColumn": 55,
+    "mutator": "EqualityOperator",
+    "original": "v.retention.until > now",
+    "replacement": "v.retention.until >= now",
+    "lineText": "const cur = v.retention && v.retention.until > now ? v.retention : undefined;",
+    "prevText": "this.checkRetention(r, now);",
+    "nextText": "if (cur) {"
+  },
+  "mayEdit": [
+    "intent/blocks/object-versioning/object-versioning.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/object-versioning-571.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"object-versioning\". Mutant: line 443:32-443:55, mutator EqualityOperator: \"v.retention.until > now\" becomes \"v.retention.until >= now\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/object-versioning/index.ts (> marks the mutated line):\n   437  \n   438    setRetention(key: string, versionId: string | undefined, r: Retention | undefined, o: { bypassGovernance?: boolean; who?: string } = {}): void {\n   439      if (!this.lock) throw new VersionError('InvalidState', 'object lock is not enabled on this bucket');\n   440      const v = this.head(key, versionId);\n   441      const now = this.now();\n   442      this.checkRetention(r, now);\n>  443      const cur = v.retention && v.retention.until > now ? v.retention : undefined;\n   444      if (cur) {\n   445        const shortens = r === undefined || r.until < cur.until;\n   446        const weakens = r !== undefined && cur.mode === 'COMPLIANCE' && r.mode === 'GOVERNANCE';\n   447        if (cur.mode === 'COMPLIANCE' && (shortens || weakens)) throw new VersionError('ObjectLocked', 'compliance retention can only be lengthened');\n   448        if (cur.mode === 'GOVERNANCE' && shortens) {\n   449          if (!o.bypassGovernance) throw new VersionError('ObjectLocked', 'shortening governance retention needs bypass');\n\nTest file style (intent/blocks/object-versioning/object-versioning.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { memoryObjects, readAll } from '../objects/index.ts';\nimport { VersionError, VersionedBucket } from './index.ts';\nimport type { Options } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 0, 1);\n\nfunction mk(o: Options = {}, state: 'enabled' | 'suspended' | 'unversioned' = 'enabled') {\n  const objects = memoryObjects();\n  let t = T0;\n  const b = new VersionedBucket(objects, { now: () => t, ...o });\n  if (state !== 'unversioned' && !o.objectLock) b.setVersioning(state);\n  return { b, objects, tick: (ms: number) => void (t += ms), now: () => t };\n}\nconst body = async (b: VersionedBucket, key: string, versionId?: string) => (await readAll((await b.get(key, versionId ? { versionId } : {})).stream)).toString();\nconst fails = async (f: () => Promise<unknown> | unknown, code: string, msg?: RegExp) => {\n  try {\n    await f();\n  } catch (e) {\n    assert.ok(e instanceof VersionError, `a VersionError, got ${String(e)}`);\n    assert.equal(e.code, code);\n    if (msg) assert.match(e.message, msg);\n    return e;\n  }\n  assert.fail(`expected ${code}`);\n};\n\ntest('unversioned: a write replaces, a delete deletes, and the bytes go with them', async () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/object-versioning-571.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.531Z"
+}

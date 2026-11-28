@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "content-types",
+  "mutant": {
+    "id": "766",
+    "line": 383,
+    "column": 34,
+    "endLine": 383,
+    "endColumn": 38,
+    "mutator": "StringLiteral",
+    "original": "'en'",
+    "replacement": "\"\"",
+    "lineText": "this.locales = o.locales ?? ['en'];",
+    "prevText": "this.newId = o.newId;",
+    "nextText": "for (const l of this.locales) if (!/^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(l)) throw new ContentModelError(`\"${l}\" is not a locale code`);"
+  },
+  "mayEdit": [
+    "intent/blocks/content-types/content-types.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/content-types-766.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"content-types\". Mutant: line 383:34-383:38, mutator StringLiteral: \"'en'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/content-types/index.ts (> marks the mutated line):\n   377    constructor(o: StoreOptions) {\n   378      const problems = o.registry.check();\n   379      if (problems.length) throw new ContentModelError(`the content model is not sound: ${problems.join('; ')}`);\n   380      this.reg = o.registry;\n   381      this.now = o.now;\n   382      this.newId = o.newId;\n>  383      this.locales = o.locales ?? ['en'];\n   384      for (const l of this.locales) if (!/^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(l)) throw new ContentModelError(`\"${l}\" is not a locale code`);\n   385      if (this.locales.length === 0) throw new ContentModelError('at least one locale is needed');\n   386    }\n   387  \n   388    private table(uid: string): Map<string, Doc> {\n   389      this.reg.type(uid);\n\nTest file style (intent/blocks/content-types/content-types.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ContentModelError, ContentStore, NotFoundError, Registry, slugify, ValidationFailed, validateFields } from './index.ts';\n\nfunction model(): Registry {\n  const r = new Registry();\n  r.defineComponent({ uid: 'shared.seo', fields: { metaTitle: { kind: 'string', required: true, maxLength: 60 }, metaDescription: { kind: 'text', maxLength: 160 } } });\n  r.defineComponent({ uid: 'blocks.hero', fields: { heading: { kind: 'string', required: true }, image: { kind: 'media' } } });\n  r.defineComponent({ uid: 'blocks.quote', fields: { text: { kind: 'text', required: true }, author: { kind: 'string' } } });\n  r.defineComponent({ uid: 'shared.link', fields: { label: { kind: 'string', required: true }, url: { kind: 'string', required: true, regex: '^https?://' } } });\n  r.defineType({ uid: 'author', fields: { name: { kind: 'string', required: true }, email: { kind: 'email', unique: true } } });\n  r.defineType({\n    uid: 'article',\n    draftAndPublish: true,\n    localized: true,\n    fields: {\n      title: { kind: 'string', required: true, maxLength: 120 },\n      slug: { kind: 'uid', targetField: 'title' },\n      views: { kind: 'integer', min: 0, default: 0, localized: false },\n      kind: { kind: 'enumeration', values: ['news', 'essay'], default: 'news' },\n      seo: { kind: 'component', component: 'shared.seo' },\n      links: { kind: 'component', component: 'shared.link', repeatable: true, max: 3 },\n      body: { kind: 'dynamiczone', components: ['blocks.hero', 'blocks.quote'] },\n      author: { kind: 'relation', target: 'author', relation: 'manyToOne' },\n      tags: { kind: 'relation', target: 'author', relation: 'manyToMany' },\n      internalNote: { kind: 'text', private: true },\n      published_on: { kind: 'date' },\n    },\n  });\n  r.defineType({ uid: 'homepage', kind: 'single', fields: { tagline: { kind: 'string', required: true } } });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/content-types-766.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.906Z"
+}

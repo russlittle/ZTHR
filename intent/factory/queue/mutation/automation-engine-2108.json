@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "automation-engine",
+  "mutant": {
+    "id": "2108",
+    "line": 1080,
+    "column": 74,
+    "endLine": 1080,
+    "endColumn": 94,
+    "mutator": "StringLiteral",
+    "original": "`${p}/parallel/${i}`",
+    "replacement": "``",
+    "lineText": "await Promise.all(x.parallel.map((seq, i) => this.runSeq(run, seq, `${p}/parallel/${i}`, { ...vars } as Record<string, unknown>, step)));",
+    "prevText": "log('parallel', x.parallel.length);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/automation-engine/automation-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-2108.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"automation-engine\". Mutant: line 1080:74-1080:94, mutator StringLiteral: \"`${p}/parallel/${i}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/automation-engine/index.ts (> marks the mutated line):\n  1074          vars.repeat = { index: n, first: n === 1, last: items ? n === items.length : count !== undefined ? n === count : false, ...(items ? { item: items[n - 1] } : {}) };\n  1075          await this.runSeq(run, r.sequence, `${p}/repeat/sequence`, vars, step);\n  1076          if (r.until && this.checkAll(r.until, vars, `${p}/until`).ok) break;\n  1077        }\n  1078      } else if ('parallel' in x) {\n  1079        log('parallel', x.parallel.length);\n> 1080        await Promise.all(x.parallel.map((seq, i) => this.runSeq(run, seq, `${p}/parallel/${i}`, { ...vars } as Record<string, unknown>, step)));\n  1081      }\n  1082    }\n  1083  \n  1084    /** Waits until `check` holds (true) or the time passes (false), or the run is stopped. Returns whether it timed out. */\n  1085    private wait(run: Live, check: () => boolean, ms: number | undefined): Promise<boolean> {\n  1086      return new Promise<boolean>((resolve) => {\n\nTest file style (intent/blocks/automation-engine/automation-engine.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AutomationError, Engine, TemplateError, evaluate, render, renderData } from './index.ts';\nimport type { Automation } from './index.ts';\n\nconst flush = () => new Promise<void>((r) => setImmediate(r));\n\nfunction rig(start = Date.UTC(2026, 0, 5, 12, 0, 0), offsetMinutes = 0) {\n  const states = new Map<string, string>();\n  const calls: { service: string; data: Record<string, unknown> }[] = [];\n  const events: { type: string; data: unknown }[] = [];\n  const clock = { now: start };\n  let n = 0;\n  const engine = new Engine({\n    now: () => clock.now,\n    state: (e) => states.get(e),\n    call: async (service, data) => {\n      calls.push({ service, data: { ...data } });\n      return { ok: true, service };\n    },\n    fire: (type, data) => events.push({ type, data }),\n    newId: () => `run${++n}`,\n    zoneOffsetMinutes: () => offsetMinutes,\n  });\n  return { engine, states, calls, events, clock };\n}\n\nconst lamp: Automation = {\n  id: 'a1',\n  alias: 'Lamp',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-2108.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.920Z"
+}

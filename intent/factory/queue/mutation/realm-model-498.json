@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "realm-model",
+  "mutant": {
+    "id": "498",
+    "line": 326,
+    "column": 60,
+    "endLine": 326,
+    "endColumn": 123,
+    "mutator": "LogicalOperator",
+    "original": "a.split('/').length - b.split('/').length || a.localeCompare(b)",
+    "replacement": "a.split('/').length - b.split('/').length && a.localeCompare(b)",
+    "lineText": "const groups = this.effectiveGroups(id).sort((a, b) => a.split('/').length - b.split('/').length || a.localeCompare(b));",
+    "prevText": "const out: Record<string, string[]> = Object.create(null);",
+    "nextText": "for (const g of groups) for (const [k, v] of Object.entries(this.groups.get(g)!.attrs)) out[k] = [...v];"
+  },
+  "mayEdit": [
+    "intent/blocks/realm-model/realm-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/realm-model-498.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"realm-model\". Mutant: line 326:60-326:123, mutator LogicalOperator: \"a.split('/').length - b.split('/').length || a.localeCompare(b)\" becomes \"a.split('/').length - b.split('/').length && a.localeCompare(b)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/realm-model/index.ts (> marks the mutated line):\n   320      return [...this.closure(base)].sort();\n   321    }\n   322  \n   323    /** Attributes with group values passed down (deeper groups override shallower) and the user's own on top. */\n   324    effectiveAttrs(id: string): Record<string, string[]> {\n   325      const out: Record<string, string[]> = Object.create(null);\n>  326      const groups = this.effectiveGroups(id).sort((a, b) => a.split('/').length - b.split('/').length || a.localeCompare(b));\n   327      for (const g of groups) for (const [k, v] of Object.entries(this.groups.get(g)!.attrs)) out[k] = [...v];\n   328      for (const [k, v] of Object.entries(this.user(id).attrs)) out[k] = [...v];\n   329      return out;\n   330    }\n   331  \n   332    /** The rbac block's view of a user: effective roles, and attributes with the realm and groups included. */\n\nTest file style (intent/blocks/realm-model/realm-model.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { decide } from '../rbac/index.ts';\nimport { Realm, RealmRefused, Realms, checkPassword } from './index.ts';\nimport type { RealmPolicy } from './index.ts';\n\nconst policy: RealmPolicy = { password: { minLength: 10, requireUpper: true, requireDigit: true, notUsername: true }, registrationAllowed: true, emailDomains: ['acme.test'], lockout: { maxFailures: 3, lockMs: 60_000 } };\nconst clock = { t: 1_000_000 };\nlet n = 0;\nconst make = (name = 'acme', p: RealmPolicy = policy) =>\n  new Realm({ name, policy: p, now: () => clock.t, newId: () => `u${++n}`, attributes: [{ name: 'dept', required: true, pattern: '[A-Z]{2,4}' }, { name: 'phone', multivalued: true, editableBy: 'user', maxLength: 20 }, { name: 'region' }], defaultRoles: ['member'] });\nconst seeded = (): Realm => {\n  const r = make();\n  r.defineRole({ name: 'member', label: 'Member' });\n  r.defineRole({ name: 'editor', label: 'Editor', includes: ['member'] });\n  r.defineRole({ name: 'admin', label: 'Administrator', includes: ['editor'] });\n  r.addGroup('/eng', { roles: ['editor'], attrs: { region: ['emea'] } });\n  r.addGroup('/eng/platform', { attrs: { region: ['us'] } });\n  return r;\n};\n\ntest('roles compose: an administrator is also an editor and a member', () => {\n  const r = seeded();\n  const u = r.createUser({ username: 'Ana', roles: ['admin'], attrs: { dept: ['ENG'] } });\n  assert.deepEqual(r.effectiveRoles(u.id), ['admin', 'editor', 'member']);\n});\n\ntest('role composition cycles are refused and leave the earlier definition alone', () => {\n  const r = seeded();\n  assert.throws(() => r.defineRole({ name: 'member', label: 'Member', includes: ['admin'] }), /include itself/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/realm-model-498.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:58.546Z"
+}

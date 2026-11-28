@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "token-service",
+  "mutant": {
+    "id": "206",
+    "line": 260,
+    "column": 47,
+    "endLine": 260,
+    "endColumn": 80,
+    "mutator": "StringLiteral",
+    "original": "'that refresh token is not valid'",
+    "replacement": "\"\"",
+    "lineText": "if (!f) throw new TokenRefused('unknown', 'that refresh token is not valid');",
+    "prevText": "const f = fid ? this.families.get(fid) : undefined;",
+    "nextText": "const t = this.now();"
+  },
+  "mayEdit": [
+    "intent/blocks/token-service/token-service.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/token-service-206.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"token-service\". Mutant: line 260:47-260:80, mutator StringLiteral: \"'that refresh token is not valid'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/token-service/index.ts (> marks the mutated line):\n   254  \n   255    /** Trades a refresh token for a new pair, retiring it. May narrow scope, never widen it. */\n   256    refresh(token: string, o: { clientId: string; binding?: string; scope?: readonly string[] }): TokenPair {\n   257      const h = sha(token);\n   258      const fid = this.byRefresh.get(h);\n   259      const f = fid ? this.families.get(fid) : undefined;\n>  260      if (!f) throw new TokenRefused('unknown', 'that refresh token is not valid');\n   261      const t = this.now();\n   262      if (f.revoked) throw new TokenRefused('revoked', 'that refresh token is not valid');\n   263      if (f.clientId !== o.clientId) {\n   264        // Another client presenting this token means it leaked: the family is ended, not just the request refused.\n   265        this.endFamily(f, 'presented by another client');\n   266        throw new TokenRefused('wrong_client', 'that refresh token is not valid');\n\nTest file style (intent/blocks/token-service/token-service.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, createHmac } from 'node:crypto';\nimport { test } from 'node:test';\nimport { BadJwt, TokenRefused, TokenService, decodeJwt, encodeJwt, hs256, jwks } from './index.ts';\nimport type { JwtKey, Options } from './index.ts';\n\nconst ec = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst ES: JwtKey = { alg: 'ES256', publicKey: ec.publicKey, privateKey: ec.privateKey };\nconst HS: JwtKey = { alg: 'HS256', secret: Buffer.from('0123456789abcdef0123456789abcdef') };\nlet n = 0;\nconst rnd = (len: number) => Buffer.alloc(len, 0).fill(String.fromCharCode(97 + (n++ % 26)));\nconst make = (o: Partial<Options> = {}) => {\n  const t = { now: 1_700_000_000_000 };\n  const svc = new TokenService({ issuer: 'https://id.example.org', audience: 'api', keys: { k1: ES, h1: HS }, currentKid: 'k1', now: () => t.now, random: rnd, ...o });\n  return { svc, t };\n};\nconst grant = { sub: 'ana', clientId: 'web', scope: ['read', 'write'] };\nconst refused = (f: () => unknown) => {\n  try {\n    f();\n  } catch (e) {\n    assert.ok(e instanceof TokenRefused, String(e));\n    return e.why;\n  }\n  return 'ok';\n};\n\ntest('RFC 7515 appendix A.1: the published HS256 token verifies, and one changed character does not', () => {\n  const key = Buffer.from('AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow', 'base64url');\n  // RFC 7515 A.1: header and payload are built from the RFC's JSON texts and signed with the RFC key; the computed signature must equal the published segment.\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/token-service-206.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:10.158Z"
+}

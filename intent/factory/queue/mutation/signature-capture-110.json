@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "signature-capture",
+  "mutant": {
+    "id": "110",
+    "line": 74,
+    "column": 46,
+    "endLine": 74,
+    "endColumn": 53,
+    "mutator": "EqualityOperator",
+    "original": "p.p < 0",
+    "replacement": "p.p <= 0",
+    "lineText": "if (p.p !== undefined && (!num(p.p) || p.p < 0 || p.p > 1)) throw new CaptureRefused('pressure must be between 0 and 1');",
+    "prevText": "if (p.x < 0 || p.y < 0 || p.x > pad.width || p.y > pad.height) throw new CaptureRefused('a point is outside the pad');",
+    "nextText": "if (p.t < lastT) throw new CaptureRefused('points are out of time order');"
+  },
+  "mayEdit": [
+    "intent/blocks/signature-capture/signature-capture.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/signature-capture-110.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"signature-capture\". Mutant: line 74:46-74:53, mutator EqualityOperator: \"p.p < 0\" becomes \"p.p <= 0\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/signature-capture/index.ts (> marks the mutated line):\n    68      if (!Array.isArray(s) || s.length === 0) throw new CaptureRefused('a stroke has no points');\n    69      if (s.length > LIMITS.pointsPerStroke) throw new CaptureRefused(`a stroke has more than ${LIMITS.pointsPerStroke} points`);\n    70      let prev: Point | undefined;\n    71      for (const p of s) {\n    72        if (!p || !num(p.x) || !num(p.y) || !num(p.t)) throw new CaptureRefused('a point is missing a number');\n    73        if (p.x < 0 || p.y < 0 || p.x > pad.width || p.y > pad.height) throw new CaptureRefused('a point is outside the pad');\n>   74        if (p.p !== undefined && (!num(p.p) || p.p < 0 || p.p > 1)) throw new CaptureRefused('pressure must be between 0 and 1');\n    75        if (p.t < lastT) throw new CaptureRefused('points are out of time order');\n    76        lastT = p.t;\n    77        tMin = Math.min(tMin, p.t);\n    78        tMax = Math.max(tMax, p.t);\n    79        x0 = Math.min(x0, p.x);\n    80        y0 = Math.min(y0, p.y);\n\nTest file style (intent/blocks/signature-capture/signature-capture.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, randomBytes } from 'node:crypto';\nimport { test } from 'node:test';\nimport { Consent } from '../consent/index.ts';\nimport { CaptureRefused, SignatureCapture, flagsOf, inspectImage, intentStatement, measure, strokesToSvg, typedToSvg } from './index.ts';\nimport type { DeviceEvidence, Point, SignatureBody, Stroke } from './index.ts';\n\nconst pad = { width: 400, height: 150 };\nconst docHash = createHash('sha256').update('the lease').digest('hex');\nconst evidence: DeviceEvidence = { ip: '203.0.113.7', userAgent: 'Mozilla/5.0 (X11; Linux)', timezone: 'America/New_York', locale: 'en-US', screen: { width: 1280, height: 800 }, pointer: 'touch' };\nconst wiggle = (n = 40, dt = 7): Stroke => Array.from({ length: n }, (_, i): Point => ({ x: 10 + i * 8, y: 75 + Math.sin(i / 3) * 30, t: i * dt + (i % 3) }));\n\nconst setup = () => {\n  const clock = { d: new Date('2025-03-03T12:00:00Z') };\n  const consent = new Consent(() => clock.d);\n  consent.publish({ doc: 'esign', version: 1, effective: '2025-01-01', requiresAgreement: true, required: true, summary: 'Electronic signature disclosure' });\n  consent.agree('s1', 'esign', 'signing page');\n  let n = 0;\n  const key = randomBytes(24).toString('hex');\n  const cap = new SignatureCapture({ consent, consentDoc: 'esign', sealKey: key, now: () => clock.d, newId: () => `sig${++n}` });\n  const base = (body: SignatureBody, o: Partial<Parameters<SignatureCapture['capture']>[0]> = {}) => ({ signerId: 's1', signerName: 'Ana Silva', documentSha256: docHash, documentTitle: 'Lease', intentShown: intentStatement('Ana Silva', 'Lease'), body, evidence, ...o });\n  return { clock, consent, cap, base, key };\n};\n\nconst png = (w: number, h: number) => {\n  const b = Buffer.alloc(33);\n  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(b);\n  b.writeUInt32BE(13, 8);\n  b.write('IHDR', 12, 'latin1');\n  b.writeUInt32BE(w, 16);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/signature-capture-110.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:02.572Z"
+}

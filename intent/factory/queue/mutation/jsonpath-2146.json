@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "jsonpath",
+  "mutant": {
+    "id": "2146",
+    "line": 801,
+    "column": 53,
+    "endLine": 801,
+    "endColumn": 74,
+    "mutator": "ConditionalExpression",
+    "original": "typeof k === 'string'",
+    "replacement": "true",
+    "lineText": "return fail(`Cannot index ${typeName(v)} with ${typeof k === 'string' ? `\"${k}\"` : typeName(k)}`);",
+    "prevText": "if (v === null && (typeof k === 'string' || typeof k === 'number')) return null;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/jsonpath/jsonpath.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/jsonpath-2146.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"jsonpath\". Mutant: line 801:53-801:74, mutator ConditionalExpression: \"typeof k === 'string'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/jsonpath/index.ts (> marks the mutated line):\n   795      return fail(`${typeName(a)} (${show(a)}) and ${typeName(b)} (${show(b)}) cannot be ${op === '+' ? 'added' : op === '-' ? 'subtracted' : op === '*' ? 'multiplied' : op === '/' ? 'divided' : 'taken modulo'}`);\n   796    }\n   797    function idx(v: Json, k: Json): Json {\n   798      if (isObj(v) && typeof k === 'string') return Object.hasOwn(v, k) ? v[k]! : null;\n   799      if (Array.isArray(v) && typeof k === 'number') { const i = Math.floor(k); const j = i < 0 ? v.length + i : i; return j >= 0 && j < v.length ? v[j]! : null; }\n   800      if (v === null && (typeof k === 'string' || typeof k === 'number')) return null;\n>  801      return fail(`Cannot index ${typeName(v)} with ${typeof k === 'string' ? `\"${k}\"` : typeName(k)}`);\n   802    }\n   803    function* ev(a: Ast, input: Json, d: number): Generator<Json> {\n   804      tick();\n   805      if (d > 200) throw new LimitExceeded('evaluation nested too deeply');\n   806      switch (a.t) {\n   807        case 'id': yield input; return;\n\nTest file style (intent/blocks/jsonpath/jsonpath.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { LimitExceeded, PathSyntaxError, TransformError, compile, paths, query, transform, values } from './index.ts';\n\n/** The bookstore document of RFC 9535 section 1.5. */\nconst STORE = {\n  store: {\n    book: [\n      { category: 'reference', author: 'Nigel Rees', title: 'Sayings of the Century', price: 8.95 },\n      { category: 'fiction', author: 'Evelyn Waugh', title: 'Sword of Honour', price: 12.99 },\n      { category: 'fiction', author: 'Herman Melville', title: 'Moby Dick', isbn: '0-553-21311-3', price: 8.99 },\n      { category: 'fiction', author: 'J. R. R. Tolkien', title: 'The Lord of the Rings', isbn: '0-395-19395-8', price: 22.99 },\n    ],\n    bicycle: { color: 'red', price: 399 },\n  },\n};\nconst LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];\n\ntest('RFC 9535 section 1.5 examples over the bookstore', () => {\n  assert.deepEqual(values(STORE, '$.store.book[*].author'), ['Nigel Rees', 'Evelyn Waugh', 'Herman Melville', 'J. R. R. Tolkien']);\n  assert.deepEqual(values(STORE, '$..author'), ['Nigel Rees', 'Evelyn Waugh', 'Herman Melville', 'J. R. R. Tolkien']);\n  assert.equal(values(STORE, '$.store.*').length, 2);\n  assert.deepEqual(values(STORE, '$.store..price'), [8.95, 12.99, 8.99, 22.99, 399]);\n  assert.equal((values(STORE, '$..book[2]')[0] as { title: string }).title, 'Moby Dick');\n  assert.equal((values(STORE, '$..book[-1]')[0] as { author: string }).author, 'J. R. R. Tolkien');\n  assert.deepEqual(values(STORE, '$..book[0,1].title'), ['Sayings of the Century', 'Sword of Honour']);\n  assert.deepEqual(values(STORE, '$..book[:2].title'), ['Sayings of the Century', 'Sword of Honour']);\n  assert.deepEqual(values(STORE, '$..book[?@.isbn].title'), ['Moby Dick', 'The Lord of the Rings']);\n  assert.deepEqual(values(STORE, '$..book[?@.price<10].title'), ['Sayings of the Century', 'Moby Dick']);\n  assert.equal(values(STORE, '$..*').length, 27, 'one store, its two members, four books, eighteen book fields, two bicycle fields');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/jsonpath-2146.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:46.041Z"
+}

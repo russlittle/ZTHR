@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "form-builder",
+  "mutant": {
+    "id": "243",
+    "line": 184,
+    "column": 34,
+    "endLine": 184,
+    "endColumn": 68,
+    "mutator": "StringLiteral",
+    "original": "`route id \"${r.id}\" is used twice`",
+    "replacement": "``",
+    "lineText": "if (rids.has(r.id)) out.push(`route id \"${r.id}\" is used twice`);",
+    "prevText": "for (const r of form.routes ?? []) {",
+    "nextText": "rids.add(r.id);"
+  },
+  "mayEdit": [
+    "intent/blocks/form-builder/form-builder.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/form-builder-243.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"form-builder\". Mutant: line 184:34-184:68, mutator StringLiteral: \"`route id \\\"${r.id}\\\" is used twice`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/form-builder/index.ts (> marks the mutated line):\n   178            out.push(`the pattern of \"${f.id}\" is not a valid pattern`);\n   179          }\n   180      }\n   181    }\n   182    const rids = new Set<string>();\n   183    for (const r of form.routes ?? []) {\n>  184      if (rids.has(r.id)) out.push(`route id \"${r.id}\" is used twice`);\n   185      rids.add(r.id);\n   186      check(`route \"${r.id}\"`, r.when);\n   187      if (r.when !== undefined && r.otherwise) out.push(`route \"${r.id}\" has a rule and is also the fallback`);\n   188      if (!r.to.target.trim()) out.push(`route \"${r.id}\" has no target`);\n   189      if (r.to.kind === 'email' && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(r.to.target)) out.push(`route \"${r.id}\" sends to \"${r.to.target}\", which is not an email address`);\n   190      if (r.to.kind === 'webhook' && !/^https:\\/\\//i.test(r.to.target)) out.push(`route \"${r.id}\" posts to \"${r.to.target}\": webhooks must be https`);\n\nTest file style (intent/blocks/form-builder/form-builder.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { fieldErrors } from '../validate/index.ts';\nimport { checkForm, confirmation, evaluate, FormError, nextPage, prefill, previousPage, route, submit, validateForm, validatePage, visiblePages, type FormDef } from './index.ts';\n\nconst seats = [{ value: 'front', label: 'Front' }, { value: 'back', label: 'Back' }];\nconst form: FormDef = {\n  id: 'signup',\n  version: 3,\n  title: 'Event signup',\n  pages: [\n    {\n      id: 'about',\n      title: 'About you',\n      fields: [\n        { id: 'name', type: 'text', label: 'Full name', required: true, max: 40 },\n        { id: 'email', type: 'email', label: 'Email', required: true },\n        { id: 'age', type: 'integer', label: 'Age', required: true, min: 0, max: 120 },\n        { id: 'guardian', type: 'text', label: 'Parent or guardian', required: '{age} < 18', visibleWhen: '{age} < 18' },\n        { id: 'note', type: 'longtext', label: 'Note for the guardian', visibleWhen: '{guardian} <> \"\"' },\n      ],\n    },\n    {\n      id: 'tickets',\n      title: 'Tickets',\n      fields: [\n        { id: 'kind', type: 'select', label: 'Ticket', required: true, options: [{ value: 'std', label: 'Standard' }, { value: 'vip', label: 'VIP' }] },\n        { id: 'qty', type: 'integer', label: 'How many', required: true, min: 1, max: 10, default: 1 },\n        { id: 'price', type: 'calculated', label: 'Price', formula: 'IF({kind}=\"vip\",150,60)' },\n        { id: 'total', type: 'calculated', label: 'Total', formula: '{price}*{qty}' },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/form-builder-243.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.367Z"
+}

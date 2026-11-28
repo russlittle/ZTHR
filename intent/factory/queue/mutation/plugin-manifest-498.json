@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "plugin-manifest",
+  "mutant": {
+    "id": "498",
+    "line": 203,
+    "column": 106,
+    "endLine": 203,
+    "endColumn": 127,
+    "mutator": "ConditionalExpression",
+    "original": "c.v.major === v.major",
+    "replacement": "true",
+    "lineText": "if (v.prerelease.length && !o.includePrerelease) return set.some((c) => c.v.prerelease.length > 0 && c.v.major === v.major && c.v.minor === v.minor && c.v.patch === v.patch);",
+    "prevText": "if (!set.every((c) => holds(c, v))) return false;",
+    "nextText": "return true;"
+  },
+  "mayEdit": [
+    "intent/blocks/plugin-manifest/plugin-manifest.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/plugin-manifest-498.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"plugin-manifest\". Mutant: line 203:106-203:127, mutator ConditionalExpression: \"c.v.major === v.major\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/plugin-manifest/index.ts (> marks the mutated line):\n   197  /** Whether a version is in a range. A pre-release counts only when the range names a pre-release of the same x.y.z. */\n   198  export function satisfies(version: string | Version, range: string | Range, o: { includePrerelease?: boolean } = {}): boolean {\n   199    const v = typeof version === 'string' ? parseVersion(version) : version;\n   200    const r = typeof range === 'string' ? parseRange(range) : range;\n   201    return r.some((set) => {\n   202      if (!set.every((c) => holds(c, v))) return false;\n>  203      if (v.prerelease.length && !o.includePrerelease) return set.some((c) => c.v.prerelease.length > 0 && c.v.major === v.major && c.v.minor === v.minor && c.v.patch === v.patch);\n   204      return true;\n   205    });\n   206  }\n   207  \n   208  export function maxSatisfying(versions: readonly string[], range: string, o: { includePrerelease?: boolean } = {}): string | undefined {\n   209    const r = parseRange(range);\n\nTest file style (intent/blocks/plugin-manifest/plugin-manifest.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, verify } from 'node:crypto';\nimport { test } from 'node:test';\nimport {\n  BadPackage, BadVersion, ManifestError, bumpKind, canonicalJson, compareVersions, dependencyOrder, manifestProblems, maxSatisfying, parseVersion,\n  planInstall, planUpdates, publicKeyOf, readManifest, reviewPermissions, satisfies, signPackage, verifyPackage,\n} from './index.ts';\nimport type { Manifest, PackageEnvelope, TrustStore } from './index.ts';\n\nconst manifest = (o: Partial<Record<keyof Manifest, unknown>> = {}): Manifest =>\n  ({\n    name: 'acme-seo',\n    version: '1.2.3',\n    title: 'Acme SEO',\n    description: 'Search engine helpers',\n    author: { name: 'Acme', url: 'https://acme.example' },\n    license: 'GPL-2.0-or-later',\n    requires: { host: '>=4.2 <6' },\n    permissions: ['content:read'],\n    entry: 'main.js',\n    ...o,\n  }) as Manifest;\n\n// ------------------------------------------------------------ semantic versions\n\ntest('precedence follows the specification chain, ignores build metadata, and compares numbers as numbers', () => {\n  const chain = ['1.0.0-alpha', '1.0.0-alpha.1', '1.0.0-alpha.beta', '1.0.0-beta', '1.0.0-beta.2', '1.0.0-beta.11', '1.0.0-rc.1', '1.0.0', '1.0.1', '1.1.0', '2.0.0'];\n  for (let i = 0; i + 1 < chain.length; i++) {\n    assert.equal(compareVersions(chain[i]!, chain[i + 1]!), -1, `${chain[i]} < ${chain[i + 1]}`);\n    assert.equal(compareVersions(chain[i + 1]!, chain[i]!), 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/plugin-manifest-498.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.204Z"
+}

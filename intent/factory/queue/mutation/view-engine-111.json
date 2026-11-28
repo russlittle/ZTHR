@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "view-engine",
+  "mutant": {
+    "id": "111",
+    "line": 151,
+    "column": 18,
+    "endLine": 151,
+    "endColumn": 30,
+    "mutator": "OptionalChaining",
+    "original": "i.name?.trim",
+    "replacement": "i.name.trim",
+    "lineText": "const name = i.name?.trim();",
+    "prevText": "const known = new Set(t.fields.map((f) => f.name));",
+    "nextText": "if (!name || name.length > 80) throw new ViewError('a view needs a name of 1 to 80 characters');"
+  },
+  "mayEdit": [
+    "intent/blocks/view-engine/view-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/view-engine-111.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"view-engine\". Mutant: line 151:18-151:30, mutator OptionalChaining: \"i.name?.trim\" becomes \"i.name.trim\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/view-engine/index.ts (> marks the mutated line):\n   145      return { name, ...(p.filter ? { filter: p.filter } : {}), sort: p.sort, ...(p.populate.fields !== '*' ? { hidden: this.table(table).fields.map((f) => f.name).filter((f) => !(p.populate.fields as readonly string[]).includes(f)) } : {}) };\n   146    }\n   147  \n   148    #check(table: string, i: ViewInput): void {\n   149      const t = this.table(table);\n   150      const known = new Set(t.fields.map((f) => f.name));\n>  151      const name = i.name?.trim();\n   152      if (!name || name.length > 80) throw new ViewError('a view needs a name of 1 to 80 characters');\n   153      if (/[\\u0000-\\u001f<>]/.test(name)) throw new ViewError('a view name cannot hold control characters or angle brackets');\n   154      const bad = [...fieldsIn(i.filter), ...(i.sort ?? []).map((s) => s.path[0]!), ...(i.groupBy ?? []), ...(i.hidden ?? [])].filter((f) => !known.has(f));\n   155      if ([...(i.sort ?? [])].some((s) => s.path.length !== 1)) throw new ViewError('a view can sort only by this table\\'s own fields');\n   156      if (bad.length) throw new ViewError(`${table} has no field ${[...new Set(bad)].join(', ')}`);\n   157      if ((i.groupBy ?? []).length > (this.#o.maxGroupBy ?? 3)) throw new ViewError(`a view may group by at most ${this.#o.maxGroupBy ?? 3} fields`);\n\nTest file style (intent/blocks/view-engine/view-engine.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { FieldDenied, NotAllowed, NotFound, VersionConflict, ViewEngine, ViewError } from './index.ts';\nimport type { Node, Person, TableDef } from './index.ts';\n\nconst TASKS: TableDef = { name: 'tasks', fields: [{ name: 'id', type: 'number' }, { name: 'title', type: 'text' }, { name: 'status', type: 'select' }, { name: 'owner', type: 'text' }, { name: 'due', type: 'date' }, { name: 'points', type: 'number' }, { name: 'salary', type: 'number', sensitive: true }] };\nconst ana: Person = { id: 'ana', canPublish: true };\nconst ben: Person = { id: 'ben' };\nconst cy: Person = { id: 'cy' };\nconst root: Person = { id: 'root', admin: true, canPublish: true };\n\nconst rows = [\n  { id: 1, title: 'Write spec', status: 'open', owner: 'ana', due: '2026-06-01', points: 3, salary: 100 },\n  { id: 2, title: 'Review spec', status: 'open', owner: 'ben', due: '2026-06-02', points: 5, salary: 200 },\n  { id: 3, title: 'Ship', status: 'done', owner: 'ana', due: null, points: 8, salary: 300 },\n  { id: 4, title: 'Retro', status: 'done', owner: 'cy', due: '2026-05-01', points: 1, salary: 400 },\n];\n\nconst make = (denied: Record<string, string[]> = { cy: ['salary'], ben: ['salary'] }) => {\n  let n = 0;\n  return new ViewEngine({ tables: [TASKS], access: { canRead: (who, _t, f) => !(denied[who]?.includes(f)) }, id: () => `v${++n}`, now: () => new Date('2026-06-15T12:00:00Z') });\n};\nconst eq = (path: string, value: unknown): Node => ({ kind: 'cmp', path: [path], op: 'eq', value });\n\ntest('a new view is private to its owner and invisible to everyone else', () => {\n  const e = make();\n  const v = e.create(ana, 'tasks', { name: 'Mine', filter: eq('owner', 'ana') });\n  assert.deepEqual([v.id, v.owner, v.visibility, v.version], ['v1', 'ana', 'private', 1]);\n  assert.equal(e.get('v1').name, 'Mine');\n  assert.equal(e.see(ana, 'v1').id, 'v1');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/view-engine-111.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:13.036Z"
+}

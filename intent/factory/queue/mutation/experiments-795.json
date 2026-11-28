@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "experiments",
+  "mutant": {
+    "id": "795",
+    "line": 480,
+    "column": 25,
+    "endLine": 480,
+    "endColumn": 54,
+    "mutator": "ConditionalExpression",
+    "original": "o.minPerVariant !== undefined",
+    "replacement": "true",
+    "lineText": "const ropts = { ...(o.minPerVariant !== undefined ? { minPerVariant: o.minPerVariant } : {}), ...(o.alpha !== undefined ? { alpha: o.alpha } : {}) };",
+    "prevText": "check(key: string, o: { primary: string; guardrails: readonly Guardrail[]; minPerVariant?: number; alpha?: number; better?: 'higher' | 'lower' }) {",
+    "nextText": "const srm = this.srm(key);"
+  },
+  "mayEdit": [
+    "intent/blocks/experiments/experiments.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/experiments-795.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"experiments\". Mutant: line 480:25-480:54, mutator ConditionalExpression: \"o.minPerVariant !== undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/experiments/index.ts (> marks the mutated line):\n   474      const p = total > 0 ? chiSquareSf(chi2, s.weights.length - 1) : 1;\n   475      return { counts, expected, chi2, p, mismatch: p < 0.001 && !s.reweighted, reweighted: s.reweighted };\n   476    }\n   477  \n   478    /** Put it all together: is the data sound, did anything break, and is there a winner? */\n   479    check(key: string, o: { primary: string; guardrails: readonly Guardrail[]; minPerVariant?: number; alpha?: number; better?: 'higher' | 'lower' }) {\n>  480      const ropts = { ...(o.minPerVariant !== undefined ? { minPerVariant: o.minPerVariant } : {}), ...(o.alpha !== undefined ? { alpha: o.alpha } : {}) };\n   481      const srm = this.srm(key);\n   482      const primary = this.results(key, o.primary, ropts);\n   483      const guardrails: { metric: string; variant: string; status: 'ok' | 'breached' | 'not enough data'; relative: number | null }[] = [];\n   484      for (const g of o.guardrails) {\n   485        const r = this.results(key, g.metric, ropts);\n   486        const cm = r.arms[0]!.mean;\n\nTest file style (intent/blocks/experiments/experiments.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Flags, type Who } from '../flags/index.ts';\nimport { chiSquareSf, ExperimentError, Experiments, normCdf, normQuantile, SequentialTest, studentTwoSided, studentQuantile, type ExperimentDef } from './index.ts';\n\nconst near = (a: number, b: number, tol = 1e-6) => assert.ok(Math.abs(a - b) <= tol, `${a} is not within ${tol} of ${b}`);\nconst T0 = Date.UTC(2026, 5, 1);\nconst def = (o: Partial<ExperimentDef> = {}): ExperimentDef => ({ key: 'checkout-button', variants: [{ id: 'control' }, { id: 'big' }], traffic: 100, ...o });\nfunction rig(flagList: ConstructorParameters<typeof Flags>[0] = []) {\n  const clock = { now: T0 };\n  const flags = new Flags(flagList);\n  const ex = new Experiments({ flags, now: () => clock.now });\n  return { clock, flags, ex };\n}\nconst who = (i: number | string): Who => ({ id: `u${i}` });\nfunction mulberry32(seed: number) {\n  return () => {\n    seed = (seed + 0x6d2b79f5) | 0;\n    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);\n    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;\n    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;\n  };\n}\n\ntest('the special functions agree with reference values', () => {\n  near(normCdf(1.96), 0.9750021048517795);\n  near(normCdf(0), 0.5);\n  near(normCdf(-1.96), 1 - 0.9750021048517795);\n  near(normQuantile(0.975), 1.959963984540054, 1e-6);\n  near(studentTwoSided(2.0, 10), 0.07338803477074037);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/experiments-795.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.617Z"
+}

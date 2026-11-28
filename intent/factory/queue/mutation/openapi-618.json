@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "openapi",
+  "mutant": {
+    "id": "618",
+    "line": 169,
+    "column": 22,
+    "endLine": 169,
+    "endColumn": 29,
+    "mutator": "EqualityOperator",
+    "original": "n === 0",
+    "replacement": "n !== 0",
+    "lineText": "if (n !== 1) bad(n === 0 ? 'must match one of the allowed shapes' : `matches ${n} of the allowed shapes; it must match exactly one`);",
+    "prevText": "const n = (s['oneOf'] as Schema[]).filter((sub) => validateValue(sub, value, resolve, path, depth + 1, []).length === 0).length;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/openapi/openapi.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/openapi-618.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"openapi\". Mutant: line 169:22-169:29, mutator EqualityOperator: \"n === 0\" becomes \"n !== 0\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/openapi/index.ts (> marks the mutated line):\n   163      }\n   164    }\n   165    if (Array.isArray(s['allOf'])) for (const sub of s['allOf'] as Schema[]) validateValue(sub, value, resolve, path, depth + 1, out);\n   166    if (Array.isArray(s['anyOf']) && !(s['anyOf'] as Schema[]).some((sub) => validateValue(sub, value, resolve, path, depth + 1, []).length === 0)) bad('must match at least one of the allowed shapes');\n   167    if (Array.isArray(s['oneOf'])) {\n   168      const n = (s['oneOf'] as Schema[]).filter((sub) => validateValue(sub, value, resolve, path, depth + 1, []).length === 0).length;\n>  169      if (n !== 1) bad(n === 0 ? 'must match one of the allowed shapes' : `matches ${n} of the allowed shapes; it must match exactly one`);\n   170    }\n   171    if (s['not'] !== undefined && validateValue(s['not'] as Schema, value, resolve, path, depth + 1, []).length === 0) bad('must not match the excluded shape');\n   172    return out;\n   173  }\n   174  \n   175  /** A sample value that fits the schema: a declared example or default if there is one, else the simplest valid value. */\n\nTest file style (intent/blocks/openapi/openapi.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Versions } from '../apiver/index.ts';\nimport { InvalidApi, arr, bool, build, check, contract, diff, enumOf, exampleFor, int, isBackwardCompatible, nullable, obj, ref, str, validateValue, verifyResponse } from './index.ts';\nimport type { OpenApiDocument, RouteDecl } from './index.ts';\n\nconst User = obj({ id: int({ minimum: 1 }), name: str({ minLength: 1 }), role: enumOf(['admin', 'member']), email: nullable(str({ format: 'email' })) }, { required: ['id', 'name', 'role'] });\n\nconst routes = (): RouteDecl[] => [\n  { method: 'get', path: '/users/{id}', operationId: 'getUser', pathParams: { id: int({ minimum: 1 }) }, responses: { '200': { description: 'The user', schema: ref('User'), example: { id: 1, name: 'Ada', role: 'admin', email: null } }, '404': { description: 'Missing' } } },\n  { method: 'post', path: '/users', operationId: 'createUser', body: { schema: obj({ name: str({ minLength: 1 }), role: enumOf(['admin', 'member']) }, { required: ['name'] }) }, responses: { '201': { description: 'Created', schema: ref('User'), headers: { Location: { schema: str(), required: true } } } }, security: 'none' },\n  { method: 'get', path: '/users', operationId: 'listUsers', query: { limit: { schema: int({ minimum: 1, maximum: 100 }) }, q: { schema: str(), required: true } }, responses: { '200': { description: 'Users', schema: arr(ref('User')) } } },\n];\n\nconst make = (r = routes(), extra: Partial<Parameters<typeof build>[0]> = {}): OpenApiDocument =>\n  build({ info: { title: 'Users', version: '1.0.0' }, routes: r, schemas: { User }, securitySchemes: { bearer: { type: 'http', scheme: 'bearer' } }, security: ['bearer'], ...extra });\nconst clone = <T>(x: T): T => structuredClone(x);\n\ntest('build makes a 3.1 document that passes its own check', () => {\n  const d = make();\n  assert.equal(d.openapi, '3.1.0');\n  assert.deepEqual(Object.keys(d.paths).sort(), ['/users', '/users/{id}']);\n  assert.deepEqual(check(d).errors, []);\n  assert.deepEqual(d.paths['/users']!['post']!['security'], []);\n  assert.deepEqual(d.paths['/users/{id}']!['get']!['parameters'], [{ name: 'id', in: 'path', required: true, schema: { type: 'integer', minimum: 1 } }]);\n});\n\ntest('build lists every problem in one InvalidApi', () => {\n  const bad = routes();\n  bad.push({ method: 'get', path: '/x/{a}', operationId: 'getUser', responses: { '200': { description: 'ok', schema: ref('Nope') } } });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/openapi-618.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:52.469Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "theme-resolver",
+  "mutant": {
+    "id": "148",
+    "line": 157,
+    "column": 57,
+    "endLine": 157,
+    "endColumn": 76,
+    "mutator": "ConditionalExpression",
+    "original": "child === undefined",
+    "replacement": "false",
+    "lineText": "if (!isPlain(parent) || !isPlain(child)) return clean(child === undefined ? parent : child);",
+    "prevText": "export function mergeSettings(parent: unknown, child: unknown): unknown {",
+    "nextText": "const out: Record<string, unknown> = {};"
+  },
+  "mayEdit": [
+    "intent/blocks/theme-resolver/theme-resolver.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/theme-resolver-148.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"theme-resolver\". Mutant: line 157:57-157:76, mutator ConditionalExpression: \"child === undefined\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/theme-resolver/index.ts (> marks the mutated line):\n   151  }\n   152  \n   153  const FORBIDDEN = new Set(['__proto__', 'constructor', 'prototype']);\n   154  \n   155  /** Deep merge for theme.json: objects merge, everything else (arrays included) is replaced. */\n   156  export function mergeSettings(parent: unknown, child: unknown): unknown {\n>  157    if (!isPlain(parent) || !isPlain(child)) return clean(child === undefined ? parent : child);\n   158    const out: Record<string, unknown> = {};\n   159    for (const k of new Set([...Object.keys(parent), ...Object.keys(child)])) {\n   160      if (FORBIDDEN.has(k)) continue;\n   161      out[k] = k in child ? (k in parent ? mergeSettings(parent[k], child[k]) : clean(child[k])) : clean(parent[k]);\n   162    }\n   163    return out;\n\nTest file style (intent/blocks/theme-resolver/theme-resolver.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  BadAssetPath, Resolver, TemplateLimitError, TemplateNotFound, TemplateSyntaxError, ThemeChainError, ThemeError,\n  escapeHtml, hierarchy, mergeSettings, slugPart, type Theme,\n} from './index.ts';\n\nconst parent: Theme = {\n  id: 'parent',\n  files: { 'index.html': 'P-index', 'single.html': 'P-single', 'page.html': 'P-page', 'parts/header.html': '<h1>{{ site }}</h1>', 'parts/footer.html': 'P-footer', 'layout.html': '[{% block body %}default{% endblock %}]' },\n  assets: { 'css/site.css': 'body{}', 'js/app.js': 'alert(1)' },\n  themeJson: { settings: { color: { palette: ['red'], link: 'blue' }, layout: { wide: '1200px' } } },\n};\nconst child: Theme = {\n  id: 'child',\n  parent: 'parent',\n  files: { 'single.html': 'C-single', 'parts/footer.html': 'C-footer', 'page.html': '{% extends \"layout\" %}{% block body %}C-page {{ title }}{% endblock %}' },\n  assets: { 'css/site.css': 'body{color:red}' },\n  themeJson: { settings: { color: { palette: ['green', 'pink'] }, layout: { narrow: '600px' } } },\n};\nconst R = () => new Resolver([parent, child], 'child');\n\ntest('hierarchy for posts, pages, terms, authors, search, 404 and attachments', () => {\n  assert.deepEqual(hierarchy({ kind: 'single', postType: 'post', slug: 'Hello World!' }), ['single-post-hello-world', 'single-post', 'single', 'singular', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'single', postType: 'product', slug: 'mug' }), ['single-product-mug', 'single-product', 'single', 'singular', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'page', slug: 'about', id: 7, template: 'wide.php' }), ['wide', 'page-about', 'page-7', 'page', 'singular', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'taxonomy', taxonomy: 'category', term: 'news', id: 3 }), ['category-news', 'category-3', 'category', 'archive', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'taxonomy', taxonomy: 'genre', term: 'jazz' }), ['taxonomy-genre-jazz', 'taxonomy-genre', 'taxonomy', 'archive', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'author', nicename: 'ann', id: 2 }), ['author-ann', 'author-2', 'author', 'archive', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'search' }), ['search', 'index']);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/theme-resolver-148.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:08.845Z"
+}

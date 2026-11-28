@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "outbound",
+  "mutant": {
+    "id": "296",
+    "line": 272,
+    "column": 24,
+    "endLine": 272,
+    "endColumn": 55,
+    "mutator": "ArrowFunction",
+    "original": "(url, init) => fetch(url, init)",
+    "replacement": "() => undefined",
+    "lineText": "fetch: o.fetch ?? ((url, init) => fetch(url, init)),",
+    "prevText": "allow,",
+    "nextText": "resolve: o.resolve ?? (async (h) => (await (await import('node:dns/promises')).lookup(h, { all: true })).map((a) => a.address)),"
+  },
+  "mayEdit": [
+    "intent/blocks/outbound/outbound.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/outbound-296.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"outbound\". Mutant: line 272:24-272:55, mutator ArrowFunction: \"(url, init) => fetch(url, init)\" becomes \"() => undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/outbound/index.ts (> marks the mutated line):\n   266  }\n   267  \n   268  /** The real door: Node's fetch behind the allow-list, with names resolved by the system resolver and checked. */\n   269  export function realEgress(allow: Readonly<Record<string, HostRule>>, o: Partial<Omit<EgressOptions, 'allow'>> = {}): Egress {\n   270    return door({\n   271      allow,\n>  272      fetch: o.fetch ?? ((url, init) => fetch(url, init)),\n   273      resolve: o.resolve ?? (async (h) => (await (await import('node:dns/promises')).lookup(h, { all: true })).map((a) => a.address)),\n   274      ...o,\n   275    });\n   276  }\n   277  \n   278  /** Services run in-process behind the same door: a host name maps to a handler instead of the network. */\n\nTest file style (intent/blocks/outbound/outbound.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { EgressRefused, EgressTwin, allowed, door, routedEgress } from './index.ts';\n\nconst allow = {\n  'api.weather.example': { purposes: ['weather.forecast'] },\n  '*.hooks.example': { purposes: ['webhook.deliver'], methods: ['POST'] },\n  'files.example': { purposes: ['*'], ports: [8443] },\n};\nconst PUBLIC = async () => ['93.184.216.34'];\n\nfunction mk(handler: (url: string, init: RequestInit) => Response | Promise<Response>, extra: Record<string, unknown> = {}) {\n  const calls: { url: string; init: RequestInit }[] = [];\n  let t = 1000;\n  const egress = door({\n    allow,\n    resolve: PUBLIC,\n    now: () => (t += 5),\n    fetch: async (url, init) => {\n      calls.push({ url, init });\n      return handler(url, init);\n    },\n    ...extra,\n  });\n  return { egress, calls };\n}\n\ntest('a call to an allowed host for its declared purpose goes through and is recorded without query values', async () => {\n  const { egress, calls } = mk(() => new Response('{\"temp\":21}', { status: 200 }));\n  const r = await egress.request({ purpose: 'weather.forecast', url: 'https://api.weather.example/v1/f?city=Dayton&apikey=hunter2' });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/outbound-296.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:53.078Z"
+}

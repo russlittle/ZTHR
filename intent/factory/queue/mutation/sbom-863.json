@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "sbom",
+  "mutant": {
+    "id": "863",
+    "line": 464,
+    "column": 34,
+    "endLine": 464,
+    "endColumn": 148,
+    "mutator": "ObjectLiteral",
+    "original": "{ type: v.package.type, ...(v.package.namespace ? { namespace: v.package.namespace } : {}), name: v.package.name }",
+    "replacement": "{}",
+    "lineText": "const nk = purlKey(normalise({ type: v.package.type, ...(v.package.namespace ? { namespace: v.package.namespace } : {}), name: v.package.name }));",
+    "prevText": "const k = purlKey({ type: v.package.type, ...(v.package.namespace ? { namespace: v.package.namespace } : {}), name: v.package.name });",
+    "nextText": "for (const key of new Set([k, nk])) (byPkg.get(key) ?? byPkg.set(key, []).get(key)!).push(v);"
+  },
+  "mayEdit": [
+    "intent/blocks/sbom/sbom.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sbom-863.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sbom\". Mutant: line 464:34-464:148, mutator ObjectLiteral: \"{ type: v.package.type, ...(v.package.namespace ? { namespace: v.package.namespace } : {}), name: v.package.name }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sbom/index.ts (> marks the mutated line):\n   458  }\n   459  \n   460  export function matchAdvisories(s: Sbom, vulns: readonly Vuln[]): Finding[] {\n   461    const byPkg = new Map<string, Vuln[]>();\n   462    for (const v of vulns) {\n   463      const k = purlKey({ type: v.package.type, ...(v.package.namespace ? { namespace: v.package.namespace } : {}), name: v.package.name });\n>  464      const nk = purlKey(normalise({ type: v.package.type, ...(v.package.namespace ? { namespace: v.package.namespace } : {}), name: v.package.name }));\n   465      for (const key of new Set([k, nk])) (byPkg.get(key) ?? byPkg.set(key, []).get(key)!).push(v);\n   466    }\n   467    const paths = pathsFromRoot(s);\n   468    const out: Finding[] = [];\n   469    for (const c of s.components) {\n   470      if (!c.purl || !c.version) continue;\n\nTest file style (intent/blocks/sbom/sbom.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { parsePurl, formatPurl, parseCycloneDx, writeCycloneDx, parseSpdx, writeSpdx, matchAdvisories, applyVex, parseVex, writeVex, diffSboms, failing, fromUpkeep, inRanges, SbomError } from './index.ts';\nimport type { Vuln } from './index.ts';\n\nconst sha = createHash('sha256').update('lodash').digest('hex');\nconst cdx = () => ({\n  bomFormat: 'CycloneDX',\n  specVersion: '1.5',\n  serialNumber: 'urn:uuid:3e671687-395b-41f5-a30f-a58921a69b79',\n  metadata: { timestamp: '2026-01-02T03:04:05Z', tools: { components: [{ type: 'application', name: 'scanner' }] }, component: { type: 'application', 'bom-ref': 'app', name: 'shop', version: '1.0.0' } },\n  components: [\n    { type: 'library', 'bom-ref': 'lodash', name: 'lodash', version: '4.17.20', purl: 'pkg:npm/lodash@4.17.20', licenses: [{ license: { id: 'MIT' } }], hashes: [{ alg: 'SHA-256', content: sha.toUpperCase() }], components: [{ type: 'library', 'bom-ref': 'nested', name: 'inner', version: '1.0.0', purl: 'pkg:npm/%40scope/inner@1.0.0' }] },\n    { type: 'library', 'bom-ref': 'express', name: 'express', version: '4.18.0', purl: 'pkg:npm/express@4.18.0', licenses: [{ expression: 'MIT OR Apache-2.0' }] },\n  ],\n  dependencies: [{ ref: 'app', dependsOn: ['express'] }, { ref: 'express', dependsOn: ['lodash'] }, { ref: 'lodash', dependsOn: ['nested'] }],\n});\n\ntest('purl parse and format round trip with encoding and normalisation', () => {\n  const p = parsePurl('pkg:npm/%40Scope/Name@1.2.3?Arch=x86&os=linux#src/a b');\n  assert.deepEqual(p, { type: 'npm', namespace: '@scope', name: 'name', version: '1.2.3', qualifiers: { arch: 'x86', os: 'linux' }, subpath: 'src/a b' });\n  assert.equal(formatPurl(p), 'pkg:npm/%40scope/name@1.2.3?arch=x86&os=linux#src/a%20b');\n  assert.equal(formatPurl(parsePurl(formatPurl(p))), formatPurl(p));\n});\n\ntest('purl tolerates an unencoded npm scope and lower-cases pypi names', () => {\n  assert.equal(formatPurl(parsePurl('pkg:npm/@angular/core@16.0.0')), 'pkg:npm/%40angular/core@16.0.0');\n  assert.equal(parsePurl('pkg:pypi/Django_Rest@3.0').name, 'django-rest');\n  assert.equal(parsePurl('pkg:maven/org.apache/commons-lang3@3.12.0').namespace, 'org.apache');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sbom-863.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:01.007Z"
+}

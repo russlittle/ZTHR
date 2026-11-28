@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "call-rooms",
+  "mutant": {
+    "id": "339",
+    "line": 223,
+    "column": 145,
+    "endLine": 223,
+    "endColumn": 157,
+    "mutator": "StringLiteral",
+    "original": "'self-muted'",
+    "replacement": "\"\"",
+    "lineText": "#selfMute(m: Member, k: { audio?: boolean; video?: boolean }) { if (k.audio) m.audioMuted = true; if (k.video) m.videoMuted = true; this.#log('self-muted', m.user, m.user, { ...k }); }",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/call-rooms/call-rooms.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/call-rooms-339.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"call-rooms\". Mutant: line 223:145-223:157, mutator StringLiteral: \"'self-muted'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/call-rooms/index.ts (> marks the mutated line):\n   217      const out: string[] = [];\n   218      for (const t of this.present()) if (RANK[t.role] < RANK.moderator) { t.audioMuted = true; t.hardMuted = true; out.push(t.user); }\n   219      this.#log('muted-all', by, undefined, { count: out.length });\n   220      return out;\n   221    }\n   222  \n>  223    #selfMute(m: Member, k: { audio?: boolean; video?: boolean }) { if (k.audio) m.audioMuted = true; if (k.video) m.videoMuted = true; this.#log('self-muted', m.user, m.user, { ...k }); }\n   224  \n   225    /** A person turns their own microphone or camera on. A hard mute stands until a moderator allows it. */\n   226    unmute(user: string, kinds: { audio?: boolean; video?: boolean } = { audio: true }): void {\n   227      this.#open();\n   228      const m = this.#actor(user, 'guest');\n   229      if (kinds.audio) {\n\nTest file style (intent/blocks/call-rooms/call-rooms.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Signaling, verifyJwt } from '../webrtc-signaling/index.ts';\nimport { NotFound, Room, RoomClosed, joinToken } from './index.ts';\nimport type { Role, RoomConfig } from './index.ts';\n\nconst SECRET = 'call-rooms-0123456';\nconst T0 = 1_800_000_000_000;\n\nconst make = (c: Partial<RoomConfig> = {}) => {\n  let now = T0;\n  const room = new Room({ id: 'standup', title: 'Standup', host: 'hana', ...c }, { secrets: [SECRET], now: () => now });\n  const tok = (user: string, role: Role = 'participant', o: { ttl?: number; room?: string } = {}) => joinToken(SECRET, { room: o.room ?? 'standup', user, name: user.toUpperCase(), role, ttlSeconds: o.ttl ?? 300, now });\n  const join = (user: string, role: Role = 'participant') => room.join(tok(user, role));\n  return { room, tok, join, tick: (ms: number) => void (now += ms) };\n};\n\nconst crowd = (c: Partial<RoomConfig> = {}) => {\n  const r = make({ lobby: 'guests', ...c });\n  r.join('hana', 'host'); r.join('mo', 'moderator'); r.join('pat', 'participant'); r.join('pia', 'participant');\n  return r;\n};\n\ntest('a token carries the room, person and role, expires, and also opens the signalling socket', () => {\n  const { tok } = make();\n  const c = verifyJwt(SECRET, tok('ana'), { now: T0 });\n  assert.deepEqual([c.room, c.sub, c.name, c.role], ['standup', 'ana', 'ANA', 'participant']);\n  assert.equal(c.exp, T0 / 1000 + 300);\n  const sent: string[] = [];\n  const sig = new Signaling({ secrets: [SECRET], now: () => T0 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/call-rooms-339.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.495Z"
+}

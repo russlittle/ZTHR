@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crud-from-schema",
+  "mutant": {
+    "id": "469",
+    "line": 346,
+    "column": 24,
+    "endLine": 346,
+    "endColumn": 44,
+    "mutator": "LogicalOperator",
+    "original": "o.defaultLimit ?? 20",
+    "replacement": "o.defaultLimit && 20",
+    "lineText": "const defaultLimit = o.defaultLimit ?? 20;",
+    "prevText": "const prefix = o.prefix ?? '';",
+    "nextText": "const maxLimit = o.maxLimit ?? 100;"
+  },
+  "mayEdit": [
+    "intent/blocks/crud-from-schema/crud-from-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crud-from-schema-469.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crud-from-schema\". Mutant: line 346:24-346:44, mutator LogicalOperator: \"o.defaultLimit ?? 20\" becomes \"o.defaultLimit && 20\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crud-from-schema/index.ts (> marks the mutated line):\n   340    readonly entities: readonly Entity[];\n   341  }\n   342  \n   343  export function crud(o: Options): Crud {\n   344    const entities = declare(o.entities);\n   345    const prefix = o.prefix ?? '';\n>  346    const defaultLimit = o.defaultLimit ?? 20;\n   347    const maxLimit = o.maxLimit ?? 100;\n   348    const expandLimit = o.expandLimit ?? 25;\n   349    const byName = new Map(entities.map((e) => [e.name, e]));\n   350    const can = (s: Subject, action: string, kind: string, r: Rec) => decide(o.policy, s, action, kind, r).allowed;\n   351    const ops = (e: Entity) => e.operations ?? (['list', 'get', 'create', 'update', 'delete'] as const);\n   352  \n\nTest file style (intent/blocks/crud-from-schema/crud-from-schema.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { BadSchema, StoreConflict, crud, declare, memoryStore } from './index.ts';\nimport type { Entity, Req } from './index.ts';\nimport type { Policy, Subject } from '../rbac/index.ts';\nimport { check, contract, verifyResponse } from '../openapi/index.ts';\n\nconst User: Entity = {\n  name: 'User', plural: 'users',\n  fields: {\n    name: { type: 'string', required: true, minLength: 1, maxLength: 50, filterable: true, sortable: true },\n    email: { type: 'string', required: true, format: 'email', unique: true, filterable: true },\n    salary: { type: 'integer', nullable: true, readAction: 'read-salary', writeAction: 'write-salary', filterable: true, sortable: true },\n  },\n};\nconst Post: Entity = {\n  name: 'Post', plural: 'posts',\n  fields: {\n    title: { type: 'string', required: true, maxLength: 80, filterable: true, sortable: true },\n    status: { type: 'string', enum: ['draft', 'published'], default: 'draft', filterable: true },\n    views: { type: 'integer', default: 0, minimum: 0, filterable: true, sortable: true },\n    authorId: { type: 'string', required: true, filterable: true },\n    meta: { type: 'json' },\n  },\n  relations: { author: { entity: 'User', kind: 'one', field: 'authorId' }, comments: { entity: 'Comment', kind: 'many', field: 'postId' } },\n};\nconst Comment: Entity = { name: 'Comment', plural: 'comments', fields: { postId: { type: 'string', required: true, filterable: true }, text: { type: 'string', required: true } }, operations: ['list', 'get', 'create'] };\n\nconst policy: Policy = {\n  roles: { member: { label: 'Member' }, admin: { label: 'Admin', inherits: ['member'] } },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crud-from-schema-469.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.512Z"
+}

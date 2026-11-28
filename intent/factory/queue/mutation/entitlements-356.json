@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "entitlements",
+  "mutant": {
+    "id": "356",
+    "line": 250,
+    "column": 101,
+    "endLine": 250,
+    "endColumn": 106,
+    "mutator": "EqualityOperator",
+    "original": "x > y",
+    "replacement": "x >= y",
+    "lineText": "const better = (x: number | null, y: number | null) => x !== y && (x === null || (y !== null && x > y));",
+    "prevText": "// The better of plan and trial: unlimited beats any number, a larger number beats a smaller.",
+    "nextText": "if (t && better(t.included, limit)) {"
+  },
+  "mayEdit": [
+    "intent/blocks/entitlements/entitlements.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/entitlements-356.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"entitlements\". Mutant: line 250:101-250:106, mutator EqualityOperator: \"x > y\" becomes \"x >= y\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/entitlements/index.ts (> marks the mutated line):\n   244      const spec = p ?? t;\n   245      if (!spec) continue;\n   246      const sources: string[] = [];\n   247      let limit: number | null = p ? p.included : 0;\n   248      if (p) sources.push(`${a.plan}: ${p.included === null ? 'unlimited' : p.included}`);\n   249      // The better of plan and trial: unlimited beats any number, a larger number beats a smaller.\n>  250      const better = (x: number | null, y: number | null) => x !== y && (x === null || (y !== null && x > y));\n   251      if (t && better(t.included, limit)) {\n   252        limit = t.included;\n   253        sources.push(`trial of ${a.trial!.plan}: ${t.included === null ? 'unlimited' : t.included}`);\n   254      }\n   255      if (limit !== null) {\n   256        for (const ad of a.addons ?? []) if (ad.limit === l) {\n\nTest file style (intent/blocks/entitlements/entitlements.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Flags } from '../flags/index.ts';\nimport { EntitlementError, Entitlements, Ledger, checkCatalog, flatten, periodOf, resolve } from './index.ts';\nimport type { Account, Catalog } from './index.ts';\n\nconst D = 86_400_000;\nconst at = (s: string) => Date.parse(s);\nconst T = at('2026-03-10T12:00:00Z');\n\nconst catalog: Catalog = {\n  features: ['sso', 'audit-log', 'api', 'beta-editor'],\n  limits: ['seats', 'emails', 'storage', 'exports'],\n  plans: {\n    free: { name: 'free', features: { api: false }, limits: { seats: { included: 3, period: 'gauge' }, emails: { included: 100, period: 'month', overage: { mode: 'block' } }, exports: { included: 5, period: 'day' } } },\n    pro: {\n      name: 'pro',\n      extends: 'free',\n      trialDays: 14,\n      features: { api: true, 'audit-log': true, 'beta-editor': { enabled: true, flag: 'beta-editor' } },\n      limits: { seats: { included: 10, period: 'gauge' }, emails: { included: 1000, period: 'month', overage: { mode: 'charge', price: 200, perUnits: 500, cap: 5000 } }, storage: { included: 50, period: 'lifetime', overage: { mode: 'allow' } } },\n    },\n    team: { name: 'team', extends: 'pro', features: { sso: true }, limits: { seats: { included: null, period: 'gauge' } } },\n  },\n};\n\nconst acct = (over: Partial<Account> = {}): Account => ({ id: 'acme', plan: 'pro', anchorDay: 15, ...over });\nconst make = (flags?: Flags) => new Entitlements(catalog, new Ledger(), flags);\n\ntest('a catalog is checked as a whole: unknown names, loops, bad numbers and prices that do not add up', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/entitlements-356.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.847Z"
+}

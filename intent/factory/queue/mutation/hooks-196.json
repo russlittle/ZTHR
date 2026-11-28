@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "hooks",
+  "mutant": {
+    "id": "196",
+    "line": 183,
+    "column": 265,
+    "endLine": 183,
+    "endColumn": 291,
+    "mutator": "StringLiteral",
+    "original": "` ${d.deprecated.message}`",
+    "replacement": "``",
+    "lineText": "out.push(`## \\`${d.name}\\``, '', `${d.kind === 'filter' ? 'Filter' : 'Action'}, since ${d.since}.${d.deprecated ? ` **Deprecated since ${d.deprecated.since}.**${d.deprecated.replacement ? ` Use \\`${d.deprecated.replacement}\\`.` : ''}${d.deprecated.message ? ` ${d.deprecated.message}` : ''}` : ''}`, '', d.description.trim(), '');",
+    "prevText": "for (const d of this.catalogue()) {",
+    "nextText": "if (d.args.length) {"
+  },
+  "mayEdit": [
+    "intent/blocks/hooks/hooks.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/hooks-196.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"hooks\". Mutant: line 183:265-183:291, mutator StringLiteral: \"` ${d.deprecated.message}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/hooks/index.ts (> marks the mutated line):\n   177    }\n   178  \n   179    /** The catalogue as Markdown for plugin authors: one section per hook with its arguments and any deprecation. */\n   180    toMarkdown(): string {\n   181      const out: string[] = ['# Hooks', ''];\n   182      for (const d of this.catalogue()) {\n>  183        out.push(`## \\`${d.name}\\``, '', `${d.kind === 'filter' ? 'Filter' : 'Action'}, since ${d.since}.${d.deprecated ? ` **Deprecated since ${d.deprecated.since}.**${d.deprecated.replacement ? ` Use \\`${d.deprecated.replacement}\\`.` : ''}${d.deprecated.message ? ` ${d.deprecated.message}` : ''}` : ''}`, '', d.description.trim(), '');\n   184        if (d.args.length) {\n   185          out.push('| Argument | Type | Description |', '| --- | --- | --- |');\n   186          for (const a of d.args) out.push(`| \\`${a.name}\\` | \\`${a.type.replace(/\\|/g, '\\\\|')}\\` | ${(a.description ?? '').replace(/\\|/g, '\\\\|')} |`);\n   187          out.push('');\n   188        }\n   189        if (d.returns) out.push(`Returns: ${d.returns}`, '');\n\nTest file style (intent/blocks/hooks/hooks.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { HookError, Hooks } from './index.ts';\nimport type { Warning } from './index.ts';\n\n// ------------------------------------------------------------ order and arguments\n\ntest('listeners run lowest priority first, and ties run in the order they were added', () => {\n  const h = new Hooks();\n  const seen: string[] = [];\n  h.addAction('boot', () => seen.push('ten-a'));\n  h.addAction('boot', () => seen.push('five'), { priority: 5 });\n  h.addAction('boot', () => seen.push('ten-b'));\n  h.addAction('boot', () => seen.push('minus'), { priority: -3 });\n  h.addAction('boot', () => seen.push('twenty'), { priority: 20 });\n  assert.equal(h.doAction('boot'), 5);\n  assert.deepEqual(seen, ['minus', 'five', 'ten-a', 'ten-b', 'twenty']);\n  assert.deepEqual(h.listeners('boot').map((l) => l.priority), [-3, 5, 10, 10, 20]);\n});\n\ntest('a filter passes the value along the chain, and a listener gets only as many arguments as it asked for', () => {\n  const h = new Hooks();\n  const args: unknown[][] = [];\n  h.addFilter('title', (t: string, ...rest: unknown[]) => (args.push([t, ...rest]), `${t}!`));\n  h.addFilter('title', (t: string, post: { id: number }, flag: boolean) => (args.push([t, post, flag]), `${t}?`), { args: 3, priority: 11 });\n  assert.equal(h.applyFilters('title', 'Hi', { id: 7 }, true), 'Hi!?');\n  assert.deepEqual(args, [['Hi'], ['Hi!', { id: 7 }, true]]);\n  assert.equal(h.applyFilters('nobody-listens', 42), 42);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/hooks-196.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.193Z"
+}

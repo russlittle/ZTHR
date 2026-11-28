@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "semver",
+  "mutant": {
+    "id": "169",
+    "line": 113,
+    "column": 53,
+    "endLine": 113,
+    "endColumn": 58,
+    "mutator": "ConditionalExpression",
+    "original": "a < b",
+    "replacement": "true",
+    "lineText": "return [...list].sort((a, b) => compare(a, b) || (a < b ? -1 : a > b ? 1 : 0));",
+    "prevText": "export function sort(list: readonly string[]): string[] {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/semver/semver.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/semver-169.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"semver\". Mutant: line 113:53-113:58, mutator ConditionalExpression: \"a < b\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/semver/index.ts (> marks the mutated line):\n   107  \n   108  export const gt = (a: string | SemVer, b: string | SemVer) => compare(a, b) > 0;\n   109  export const lt = (a: string | SemVer, b: string | SemVer) => compare(a, b) < 0;\n   110  export const eq = (a: string | SemVer, b: string | SemVer) => compare(a, b) === 0;\n   111  \n   112  export function sort(list: readonly string[]): string[] {\n>  113    return [...list].sort((a, b) => compare(a, b) || (a < b ? -1 : a > b ? 1 : 0));\n   114  }\n   115  export function rsort(list: readonly string[]): string[] {\n   116    return sort(list).reverse();\n   117  }\n   118  \n   119  export type Release = 'major' | 'minor' | 'patch' | 'prerelease';\n\nTest file style (intent/blocks/semver/semver.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { calver, compare, diff, format, inc, InvalidRange, InvalidVersion, isValid, maxSatisfying, minSatisfying, parse, parseRange, rsort, satisfies, solve, sort, TooComplex, validRange } from './index.ts';\n\ntest('the SemVer 2.0.0 precedence example sorts exactly as the specification lists it', () => {\n  const ordered = ['1.0.0-alpha', '1.0.0-alpha.1', '1.0.0-alpha.beta', '1.0.0-beta', '1.0.0-beta.2', '1.0.0-beta.11', '1.0.0-rc.1', '1.0.0'];\n  assert.deepEqual(sort([...ordered].reverse()), ordered);\n  assert.deepEqual(rsort(ordered), [...ordered].reverse());\n  assert.equal(compare('1.0.0-beta.2', '1.0.0-beta.11'), -1, 'numeric identifiers compare as numbers');\n  assert.equal(compare('2.1.1', '2.0.9'), 1);\n  assert.equal(compare('1.9.0', '1.10.0'), -1, 'not as text');\n});\n\ntest('build metadata is ignored in precedence but kept in the parse', () => {\n  assert.equal(compare('1.0.0+20130313144700', '1.0.0+other'), 0);\n  const v = parse('1.2.3-rc.1+build.5');\n  assert.deepEqual(v, { major: 1, minor: 2, patch: 3, prerelease: ['rc', 1], build: ['build', '5'] });\n  assert.equal(format(v), '1.2.3-rc.1+build.5');\n});\n\ntest('strict parsing refuses what the specification refuses', () => {\n  for (const bad of ['1.2', '1', '01.1.1', '1.01.1', '1.1.01', '1.1.1-01', '1.1.1-', '1.1.1+', 'v1.2.3', ' 1.2.3', '1.2.3.4', '1.2.3-a..b', '1.2.3-a_b', '', '9007199254740993.0.0'])\n    assert.throws(() => parse(bad), InvalidVersion, bad);\n  assert.equal(isValid('0.0.0'), true);\n  assert.equal(isValid('1.0.0-0A.is.legal'), true);\n  assert.equal(isValid('1.0.0-x-y-z.--'), true);\n  assert.throws(() => parse('1.0.0-' + 'a'.repeat(300)), /longer than 256/);\n});\n\ntest('inc and diff', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/semver-169.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:01.858Z"
+}

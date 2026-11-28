@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "redirects",
+  "mutant": {
+    "id": "1342",
+    "line": 720,
+    "column": 96,
+    "endLine": 720,
+    "endColumn": 101,
+    "mutator": "StringLiteral",
+    "original": "'new'",
+    "replacement": "\"\"",
+    "lineText": "const HEADER = new Set(['from', 'source', 'old', 'url', 'path', 'to', 'target', 'destination', 'new', 'status', 'code', 'type', 'kind']);",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/redirects/redirects.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/redirects-1342.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"redirects\". Mutant: line 720:96-720:101, mutator StringLiteral: \"'new'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/redirects/index.ts (> marks the mutated line):\n   714  \n   715  export interface ImportResult {\n   716    readonly rules: Rule[];\n   717    readonly errors: { line: number; message: string }[];\n   718  }\n   719  \n>  720  const HEADER = new Set(['from', 'source', 'old', 'url', 'path', 'to', 'target', 'destination', 'new', 'status', 'code', 'type', 'kind']);\n   721  \n   722  /** Rules from CSV text: from, to, then optional status and kind, with or without a header row. Bad rows are listed, not fatal. */\n   723  export function importCsv(text: string, set: RuleSet = new RuleSet()): ImportResult {\n   724    const rows = parseCsv(text);\n   725    const errors: ImportResult['errors'] = [];\n   726    const rules: Rule[] = [];\n\nTest file style (intent/blocks/redirects/redirects.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { CsvError, RedirectRuleError, RuleSet, exportCsv, importCsv, normalizePath, parseCsv, regexRisk, safeLocation, type Rule } from './index.ts';\n\nconst set = (rules: Rule[], o = {}) => new RuleSet(rules, o);\nconst loc = (s: RuleSet, path: string, q = '', method = 'GET') => s.match({ path, query: q, method }, { record: false })?.location;\n\ntest('exact rules: case-insensitive, trailing slash and repeated slashes ignored, dot segments resolved', () => {\n  const s = set([{ from: '/Old-Page', to: '/new' }]);\n  for (const p of ['/old-page', '/OLD-PAGE/', '//old-page', '/a/../old-page', '/./old-page', '/old%2Dpage']) assert.equal(loc(s, p), '/new', p);\n  assert.equal(loc(s, '/old-page2'), undefined);\n  assert.equal(loc(s, '/x/old-page'), undefined);\n  const cs = set([{ from: '/Old', to: '/n', caseSensitive: true }]);\n  assert.equal(loc(cs, '/Old'), '/n');\n  assert.equal(loc(cs, '/old'), undefined);\n});\n\ntest('paths that are malformed match nothing and never throw', () => {\n  const s = set([{ from: '/a', to: '/b' }, { from: '^/.*$', to: '/c' }]);\n  for (const p of ['', 'a', '/a\\u0000', '/a%zz', '/a%', '/a\\\\b', '/' + 'x'.repeat(3000), '/a\\nb']) assert.equal(s.match({ path: p }), undefined, JSON.stringify(p.slice(0, 20)));\n  assert.equal(normalizePath('/a%41%2fb')?.path, '/aA%2Fb', 'only unreserved characters are decoded');\n});\n\ntest('glob rules fill placeholders and a trailing splat', () => {\n  const s = set([\n    { from: '/blog/:year/:slug', to: '/posts/:year-:slug' },\n    { from: '/docs/*', to: '/manual/:splat' },\n    { from: '/shop/:cat', to: '/store/:cat/all' },\n  ]);\n  assert.equal(loc(s, '/blog/2020/hello'), '/posts/2020-hello');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/redirects-1342.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:58.895Z"
+}

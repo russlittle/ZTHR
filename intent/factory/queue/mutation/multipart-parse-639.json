@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "multipart-parse",
+  "mutant": {
+    "id": "639",
+    "line": 363,
+    "column": 11,
+    "endLine": 363,
+    "endColumn": 28,
+    "mutator": "ConditionalExpression",
+    "original": "!TOKEN.test(name)",
+    "replacement": "false",
+    "lineText": "if (!TOKEN.test(name)) this.fail('bad-headers', 'a part header has a bad name');",
+    "prevText": "const name = line.slice(0, c).toLowerCase();",
+    "nextText": "if (++count > this.lim.maxHeaders) this.fail('limit-headers', `a part may have at most ${this.lim.maxHeaders} headers`);"
+  },
+  "mayEdit": [
+    "intent/blocks/multipart-parse/multipart-parse.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/multipart-parse-639.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"multipart-parse\". Mutant: line 363:11-363:28, mutator ConditionalExpression: \"!TOKEN.test(name)\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/multipart-parse/index.ts (> marks the mutated line):\n   357      if (text !== '') for (const line of text.split('\\r\\n')) {\n   358        if (/^[ \\t]/.test(line)) this.fail('bad-headers', 'folded header lines are not accepted');\n   359        if (/[\\r\\n\\0]/.test(line)) this.fail('bad-headers', 'a header line contains a stray line end or NUL');\n   360        const c = line.indexOf(':');\n   361        if (c <= 0) this.fail('bad-headers', 'a part header line has no name');\n   362        const name = line.slice(0, c).toLowerCase();\n>  363        if (!TOKEN.test(name)) this.fail('bad-headers', 'a part header has a bad name');\n   364        if (++count > this.lim.maxHeaders) this.fail('limit-headers', `a part may have at most ${this.lim.maxHeaders} headers`);\n   365        if (name in headers) this.fail('bad-headers', `the header ${name} is given twice`);\n   366        headers[name] = line.slice(c + 1).trim();\n   367      }\n   368      const disp = headers['content-disposition'];\n   369      if (disp === undefined) this.fail('bad-headers', 'a part has no Content-Disposition');\n\nTest file style (intent/blocks/multipart-parse/multipart-parse.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { MultipartParser, MultipartError, parse, parseStream, collect, build, parseContentType, parseHeaderValue, decodeExtValue, sanitizeFilename } from './index.ts';\n\nconst CT = 'multipart/form-data; boundary=AaB03x';\nconst enc = (s: string) => new TextEncoder().encode(s);\nconst PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52, 1, 2, 3]);\nconst EXE = new Uint8Array([0x4d, 0x5a, ...new Array(30).fill(0x90)]);\nconst code = (f: () => unknown): string | undefined => { try { f(); return undefined; } catch (e) { return e instanceof MultipartError ? e.code : `other:${String(e)}`; } };\nconst file = (name: string, filename: string, bytes: Uint8Array, contentType?: string) => ({ name, filename, bytes, ...(contentType ? { contentType } : {}) });\n\n// RFC 7578 section 4.3 style example\nconst RFC = enc('--AaB03x\\r\\nContent-Disposition: form-data; name=\"submit-name\"\\r\\n\\r\\nLarry\\r\\n--AaB03x\\r\\nContent-Disposition: form-data; name=\"files\"; filename=\"file1.txt\"\\r\\nContent-Type: text/plain\\r\\n\\r\\n... contents of file1.txt ...\\r\\n--AaB03x--\\r\\n');\n\ntest('RFC 7578 example: a field and a file', () => {\n  const r = parse(RFC, CT);\n  assert.deepEqual(r.fields, [{ name: 'submit-name', value: 'Larry' }]);\n  assert.equal(r.files.length, 1);\n  const f = r.files[0]!;\n  assert.equal(f.name, 'files');\n  assert.equal(f.filename, 'file1.txt');\n  assert.equal(f.contentType, 'text/plain');\n  assert.equal(new TextDecoder().decode(f.bytes), '... contents of file1.txt ...');\n  assert.equal(f.size, 29);\n});\n\ntest('every way of splitting the body into two chunks gives the same result', () => {\n  const body = build('AaB03x', [{ name: 'a', value: 'x\\r\\n--AaB03 not a boundary' }, file('f', 'p.png', PNG, 'image/png'), { name: 'b', value: '' }]);\n  const whole = parse(body, CT);\n  for (let i = 0; i <= body.length; i++) {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/multipart-parse-639.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.498Z"
+}

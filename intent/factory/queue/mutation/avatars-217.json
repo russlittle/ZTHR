@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "avatars",
+  "mutant": {
+    "id": "217",
+    "line": 123,
+    "column": 10,
+    "endLine": 123,
+    "endColumn": 60,
+    "mutator": "EqualityOperator",
+    "original": "contrast(bg, '#ffffff') >= contrast(bg, '#000000')",
+    "replacement": "contrast(bg, '#ffffff') > contrast(bg, '#000000')",
+    "lineText": "return contrast(bg, '#ffffff') >= contrast(bg, '#000000') ? '#ffffff' : '#000000';",
+    "prevText": "function textOn(bg: string): '#ffffff' | '#000000' {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/avatars/avatars.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/avatars-217.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"avatars\". Mutant: line 123:10-123:60, mutator EqualityOperator: \"contrast(bg, '#ffffff') >= contrast(bg, '#000000')\" becomes \"contrast(bg, '#ffffff') > contrast(bg, '#000000')\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/avatars/index.ts (> marks the mutated line):\n   117  }\n   118  \n   119  /** Twelve backgrounds, each readable with white text at WCAG AA. */\n   120  export const PALETTE: readonly string[] = ['#b3261e', '#a1306b', '#7b3fa0', '#5a4bb0', '#3a5bb5', '#1f6a9a', '#0f6b73', '#1f7a4d', '#587a1c', '#8a6a00', '#a35200', '#7a4a3a'];\n   121  \n   122  function textOn(bg: string): '#ffffff' | '#000000' {\n>  123    return contrast(bg, '#ffffff') >= contrast(bg, '#000000') ? '#ffffff' : '#000000';\n   124  }\n   125  \n   126  const sha = (s: string) => createHash('sha256').update(s, 'utf8').digest();\n   127  \n   128  // ================================================================== identicons\n   129  \n\nTest file style (intent/blocks/avatars/avatars.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  AvatarError, Directory, PALETTE, SIZE_SET, colorForName, contrast, emailHash, gravatarUrl, hexToRgb, identicon, identiconCells, identiconColor, initials,\n  initialsAvatar, isAvatarHash, luminance, serveAvatar, silhouette, sizeFor, srcset,\n} from './index.ts';\n\n// ------------------------------------------------------------ hashing and addresses\n\ntest('the published Gravatar example hashes to its published MD5, whatever the case and spaces', () => {\n  assert.equal(emailHash(' MyEmailAddress@example.com ', 'md5'), '0bc83cb571cd1c50ba6f3e8a78ef1346');\n  assert.equal(emailHash('myemailaddress@example.com', 'md5'), '0bc83cb571cd1c50ba6f3e8a78ef1346');\n  assert.match(emailHash('myemailaddress@example.com'), /^[0-9a-f]{64}$/);\n  assert.notEqual(emailHash('a@example.com'), emailHash('b@example.com'));\n});\n\ntest('anything that is not an email address is refused', () => {\n  for (const bad of ['', '  ', 'nobody', 'a b@c.d', '@x.y', 'x@', `${'a'.repeat(320)}@x.y`]) assert.throws(() => emailHash(bad), AvatarError, bad.slice(0, 20));\n});\n\ntest('avatar addresses carry a checked size, default, rating and host', () => {\n  const md5 = '0bc83cb571cd1c50ba6f3e8a78ef1346';\n  assert.equal(gravatarUrl('MyEmailAddress@example.com', { algorithm: 'md5', size: 200, fallback: 'identicon', rating: 'pg' }), `https://www.gravatar.com/avatar/${md5}?s=200&d=identicon&r=pg`);\n  assert.equal(gravatarUrl('a@b.co', { algorithm: 'md5', forceDefault: true }), `https://www.gravatar.com/avatar/${emailHash('a@b.co', 'md5')}?s=80&f=y`);\n  assert.match(gravatarUrl('a@b.co', { fallback: 'https://cdn.example/a b.png' }), /d=https%3A%2F%2Fcdn\\.example%2Fa%20b\\.png$/);\n  assert.match(gravatarUrl('a@b.co', { host: 'avatars.example:8443' }), /^https:\\/\\/avatars\\.example:8443\\/avatar\\//);\n  for (const size of [0, 2049, 1.5, NaN]) assert.throws(() => gravatarUrl('a@b.co', { size }), /1 to 2048/);\n  assert.throws(() => gravatarUrl('a@b.co', { fallback: 'javascript:alert(1)' }), /named style or an https/);\n  assert.throws(() => gravatarUrl('a@b.co', { fallback: 'http://x.example/a.png' }), /named style or an https/);\n  assert.throws(() => gravatarUrl('a@b.co', { rating: 'z' as 'g' }), /rating/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/avatars-217.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.984Z"
+}

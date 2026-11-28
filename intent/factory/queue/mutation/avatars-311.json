@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "avatars",
+  "mutant": {
+    "id": "311",
+    "line": 182,
+    "column": 28,
+    "endLine": 182,
+    "endColumn": 36,
+    "mutator": "StringLiteral",
+    "original": "'circle'",
+    "replacement": "\"\"",
+    "lineText": "const clip = o.shape === 'circle' ? ` clip-path=\"url(#${id})\"` : '';",
+    "prevText": "cells.forEach((row, r) => row.forEach((on, c) => on && rects.push(`<rect x=\"${10 + c * 10}\" y=\"${10 + r * 10}\" width=\"10\" height=\"10\"/>`)));",
+    "nextText": "const defs = o.shape === 'circle' ? `<defs><clipPath id=\"${id}\"><circle cx=\"35\" cy=\"35\" r=\"35\"/></clipPath></defs>` : '';"
+  },
+  "mayEdit": [
+    "intent/blocks/avatars/avatars.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/avatars-311.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"avatars\". Mutant: line 182:28-182:36, mutator StringLiteral: \"'circle'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/avatars/index.ts (> marks the mutated line):\n   176    hexToRgb(bg);\n   177    const fg = identiconColor(seed);\n   178    const cells = identiconCells(seed);\n   179    const id = `av-${sha(seed).toString('hex').slice(0, 8)}`;\n   180    const rects: string[] = [];\n   181    cells.forEach((row, r) => row.forEach((on, c) => on && rects.push(`<rect x=\"${10 + c * 10}\" y=\"${10 + r * 10}\" width=\"10\" height=\"10\"/>`)));\n>  182    const clip = o.shape === 'circle' ? ` clip-path=\"url(#${id})\"` : '';\n   183    const defs = o.shape === 'circle' ? `<defs><clipPath id=\"${id}\"><circle cx=\"35\" cy=\"35\" r=\"35\"/></clipPath></defs>` : '';\n   184    return `<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 70 70\" width=\"${size}\" height=\"${size}\" role=\"img\" aria-label=\"${escapeXml(o.label ?? 'Avatar')}\">${defs}<g${clip}><rect width=\"70\" height=\"70\" fill=\"${bg}\"/><g fill=\"${fg}\">${rects.join('')}</g></g></svg>`;\n   185  }\n   186  \n   187  // ================================================================== initials\n   188  \n\nTest file style (intent/blocks/avatars/avatars.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  AvatarError, Directory, PALETTE, SIZE_SET, colorForName, contrast, emailHash, gravatarUrl, hexToRgb, identicon, identiconCells, identiconColor, initials,\n  initialsAvatar, isAvatarHash, luminance, serveAvatar, silhouette, sizeFor, srcset,\n} from './index.ts';\n\n// ------------------------------------------------------------ hashing and addresses\n\ntest('the published Gravatar example hashes to its published MD5, whatever the case and spaces', () => {\n  assert.equal(emailHash(' MyEmailAddress@example.com ', 'md5'), '0bc83cb571cd1c50ba6f3e8a78ef1346');\n  assert.equal(emailHash('myemailaddress@example.com', 'md5'), '0bc83cb571cd1c50ba6f3e8a78ef1346');\n  assert.match(emailHash('myemailaddress@example.com'), /^[0-9a-f]{64}$/);\n  assert.notEqual(emailHash('a@example.com'), emailHash('b@example.com'));\n});\n\ntest('anything that is not an email address is refused', () => {\n  for (const bad of ['', '  ', 'nobody', 'a b@c.d', '@x.y', 'x@', `${'a'.repeat(320)}@x.y`]) assert.throws(() => emailHash(bad), AvatarError, bad.slice(0, 20));\n});\n\ntest('avatar addresses carry a checked size, default, rating and host', () => {\n  const md5 = '0bc83cb571cd1c50ba6f3e8a78ef1346';\n  assert.equal(gravatarUrl('MyEmailAddress@example.com', { algorithm: 'md5', size: 200, fallback: 'identicon', rating: 'pg' }), `https://www.gravatar.com/avatar/${md5}?s=200&d=identicon&r=pg`);\n  assert.equal(gravatarUrl('a@b.co', { algorithm: 'md5', forceDefault: true }), `https://www.gravatar.com/avatar/${emailHash('a@b.co', 'md5')}?s=80&f=y`);\n  assert.match(gravatarUrl('a@b.co', { fallback: 'https://cdn.example/a b.png' }), /d=https%3A%2F%2Fcdn\\.example%2Fa%20b\\.png$/);\n  assert.match(gravatarUrl('a@b.co', { host: 'avatars.example:8443' }), /^https:\\/\\/avatars\\.example:8443\\/avatar\\//);\n  for (const size of [0, 2049, 1.5, NaN]) assert.throws(() => gravatarUrl('a@b.co', { size }), /1 to 2048/);\n  assert.throws(() => gravatarUrl('a@b.co', { fallback: 'javascript:alert(1)' }), /named style or an https/);\n  assert.throws(() => gravatarUrl('a@b.co', { fallback: 'http://x.example/a.png' }), /named style or an https/);\n  assert.throws(() => gravatarUrl('a@b.co', { rating: 'z' as 'g' }), /rating/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/avatars-311.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.989Z"
+}

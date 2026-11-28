@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "form-builder",
+  "mutant": {
+    "id": "701",
+    "line": 338,
+    "column": 34,
+    "endLine": 338,
+    "endColumn": 44,
+    "mutator": "Regex",
+    "original": "/\\[\\d+\\]$/",
+    "replacement": "/\\[\\d\\]$/",
+    "lineText": "const lead = `${p.path.replace(/\\[\\d+\\]$/, '')} `;",
+    "prevText": "const label = (f: Field, p: Problem): Problem => {",
+    "nextText": "return { ...p, path: p.path, message: p.message.startsWith(lead) ? `${f.label}${p.message.slice(lead.length - 1)}` : p.message };"
+  },
+  "mayEdit": [
+    "intent/blocks/form-builder/form-builder.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/form-builder-701.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"form-builder\". Mutant: line 338:34-338:44, mutator Regex: \"/\\\\[\\\\d+\\\\]$/\" becomes \"/\\\\[\\\\d\\\\]$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/form-builder/index.ts (> marks the mutated line):\n   332      default:\n   333        return text();\n   334    }\n   335  }\n   336  \n   337  const label = (f: Field, p: Problem): Problem => {\n>  338    const lead = `${p.path.replace(/\\[\\d+\\]$/, '')} `;\n   339    return { ...p, path: p.path, message: p.message.startsWith(lead) ? `${f.label}${p.message.slice(lead.length - 1)}` : p.message };\n   340  };\n   341  \n   342  export type Checked = { readonly ok: true; readonly values: Cleaned; readonly state: State } | { readonly ok: false; readonly problems: readonly Problem[]; readonly state: State };\n   343  \n   344  /** Check answers for some fields (a page, or the whole form) and return the cleaned values of what is shown. */\n\nTest file style (intent/blocks/form-builder/form-builder.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { fieldErrors } from '../validate/index.ts';\nimport { checkForm, confirmation, evaluate, FormError, nextPage, prefill, previousPage, route, submit, validateForm, validatePage, visiblePages, type FormDef } from './index.ts';\n\nconst seats = [{ value: 'front', label: 'Front' }, { value: 'back', label: 'Back' }];\nconst form: FormDef = {\n  id: 'signup',\n  version: 3,\n  title: 'Event signup',\n  pages: [\n    {\n      id: 'about',\n      title: 'About you',\n      fields: [\n        { id: 'name', type: 'text', label: 'Full name', required: true, max: 40 },\n        { id: 'email', type: 'email', label: 'Email', required: true },\n        { id: 'age', type: 'integer', label: 'Age', required: true, min: 0, max: 120 },\n        { id: 'guardian', type: 'text', label: 'Parent or guardian', required: '{age} < 18', visibleWhen: '{age} < 18' },\n        { id: 'note', type: 'longtext', label: 'Note for the guardian', visibleWhen: '{guardian} <> \"\"' },\n      ],\n    },\n    {\n      id: 'tickets',\n      title: 'Tickets',\n      fields: [\n        { id: 'kind', type: 'select', label: 'Ticket', required: true, options: [{ value: 'std', label: 'Standard' }, { value: 'vip', label: 'VIP' }] },\n        { id: 'qty', type: 'integer', label: 'How many', required: true, min: 1, max: 10, default: 1 },\n        { id: 'price', type: 'calculated', label: 'Price', formula: 'IF({kind}=\"vip\",150,60)' },\n        { id: 'total', type: 'calculated', label: 'Total', formula: '{price}*{qty}' },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/form-builder-701.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.393Z"
+}

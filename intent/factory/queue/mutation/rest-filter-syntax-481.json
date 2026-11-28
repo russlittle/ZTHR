@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "rest-filter-syntax",
+  "mutant": {
+    "id": "481",
+    "line": 211,
+    "column": 73,
+    "endLine": 211,
+    "endColumn": 86,
+    "mutator": "EqualityOperator",
+    "original": "s.length >= 2",
+    "replacement": "s.length > 2",
+    "lineText": "const unquote = (s: string) => (s.startsWith('\"') && s.endsWith('\"') && s.length >= 2 ? s.slice(1, -1).replace(/\\\\([\"\\\\])/g, '$1') : s);",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/rest-filter-syntax/rest-filter-syntax.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/rest-filter-syntax-481.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"rest-filter-syntax\". Mutant: line 211:73-211:86, mutator EqualityOperator: \"s.length >= 2\" becomes \"s.length > 2\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/rest-filter-syntax/index.ts (> marks the mutated line):\n   205      if (ch === '\"') { q = true; cur += ch; } else if (ch === '(') { depth++; cur += ch; } else if (ch === ')') { depth--; cur += ch; } else if (ch === ',' && depth === 0) { out.push(cur); cur = ''; } else cur += ch;\n   206    }\n   207    out.push(cur);\n   208    return out;\n   209  }\n   210  \n>  211  const unquote = (s: string) => (s.startsWith('\"') && s.endsWith('\"') && s.length >= 2 ? s.slice(1, -1).replace(/\\\\([\"\\\\])/g, '$1') : s);\n   212  \n   213  function pgLeaf(c: Ctx, col: string, rest: string, where: string): Node | undefined {\n   214    const path = fieldPath(c, col.split('.'), where);\n   215    let not = false;\n   216    let r = rest;\n   217    if (r.startsWith('not.')) { not = true; r = r.slice(4); }\n\nTest file style (intent/blocks/rest-filter-syntax/rest-filter-syntax.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadFilter, OPERATORS, canonical, detectStyle, matches, parseDirectus, parsePostgrest, parseQuery, parseRangeHeader, parseStrapi, toPagingQuery } from './index.ts';\nimport type { Node } from './index.ts';\n\nconst cmp = (path: string, op: string, value: unknown): Node => ({ kind: 'cmp', path: path.split('.'), op, value }) as Node;\nconst problems = (fn: () => unknown) => { try { fn(); } catch (e) { if (e instanceof BadFilter) return e.problems; throw e; } assert.fail('expected the query to be refused'); };\nconst codes = (fn: () => unknown) => problems(fn).map((p) => p.code);\n\ntest('PostgREST: plain comparisons and is.true combine with and', () => {\n  const p = parsePostgrest('age=gte.18&student=is.true&name=eq.Ana');\n  assert.deepEqual(p.filter, { kind: 'and', children: [cmp('age', 'gte', '18'), cmp('student', 'eq', true), cmp('name', 'eq', 'Ana')] });\n  assert.deepEqual([p.limit, p.offset, p.sort], [25, 0, []]);\n  assert.deepEqual(parsePostgrest('age=gte.18&age=lt.65').filter, { kind: 'and', children: [cmp('age', 'gte', '18'), cmp('age', 'lt', '65')] }, 'the same column twice is an and');\n  assert.equal(parsePostgrest('').filter, undefined);\n});\n\ntest('PostgREST: or and nested and/or groups, as in the PostgREST documentation', () => {\n  assert.deepEqual(parsePostgrest('or=(age.lt.18,age.gt.21)').filter, { kind: 'or', children: [cmp('age', 'lt', '18'), cmp('age', 'gt', '21')] });\n  const n = parsePostgrest('and=(grade.gte.90,student.is.true,or(age.gte.14,age.is.null))').filter;\n  assert.deepEqual(n, { kind: 'and', children: [cmp('grade', 'gte', '90'), cmp('student', 'eq', true), { kind: 'or', children: [cmp('age', 'gte', '14'), cmp('age', 'null', true)] }] });\n  assert.deepEqual(parsePostgrest('not.or=(a.eq.1,b.eq.2)').filter, { kind: 'not', child: { kind: 'or', children: [cmp('a', 'eq', '1'), cmp('b', 'eq', '2')] } });\n  assert.deepEqual(parsePostgrest('or=(a.eq.1,not.and(b.eq.2,c.eq.3))').filter, { kind: 'or', children: [cmp('a', 'eq', '1'), { kind: 'not', child: { kind: 'and', children: [cmp('b', 'eq', '2'), cmp('c', 'eq', '3')] } }] });\n});\n\ntest('PostgREST: negations fold into their positive twins, and the value keeps its dots', () => {\n  assert.deepEqual(parsePostgrest('a=not.eq.x&b=not.in.(1,2)&c=not.is.null&d=not.gt.5&e=not.like.*foo*&f=not.is.true').filter, { kind: 'and', children: [cmp('a', 'ne', 'x'), cmp('b', 'nin', ['1', '2']), cmp('c', 'null', false), cmp('d', 'lte', '5'), { kind: 'not', child: cmp('e', 'contains', 'foo') }, cmp('f', 'ne', true)] });\n  assert.deepEqual(parsePostgrest('version=eq.1.2.3&at=gte.2026-01-01T10:00:00.000Z').filter, { kind: 'and', children: [cmp('version', 'eq', '1.2.3'), cmp('at', 'gte', '2026-01-01T10:00:00.000Z')] });\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/rest-filter-syntax-481.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:59.486Z"
+}

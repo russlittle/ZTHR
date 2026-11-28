@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "carddav",
+  "mutant": {
+    "id": "1130",
+    "line": 556,
+    "column": 31,
+    "endLine": 556,
+    "endColumn": 49,
+    "mutator": "ConditionalExpression",
+    "original": "r.name !== 'mkcol'",
+    "replacement": "false",
+    "lineText": "if (r.ns !== DAV || r.name !== 'mkcol') throw new DavError(400, 'the body is not a mkcol');",
+    "prevText": "const r = parseXml(req.body);",
+    "nextText": "const set = child(r, DAV, 'set');"
+  },
+  "mayEdit": [
+    "intent/blocks/carddav/carddav.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/carddav-1130.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"carddav\". Mutant: line 556:31-556:49, mutator ConditionalExpression: \"r.name !== 'mkcol'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/carddav/index.ts (> marks the mutated line):\n   550        case 'MKCOL': {\n   551          const p = this.#bookPath(req.path);\n   552          let name: string | undefined;\n   553          let desc: string | undefined;\n   554          if (req.body.trim()) {\n   555            const r = parseXml(req.body);\n>  556            if (r.ns !== DAV || r.name !== 'mkcol') throw new DavError(400, 'the body is not a mkcol');\n   557            const set = child(r, DAV, 'set');\n   558            const pr = set && child(set, DAV, 'prop');\n   559            const rt = pr && child(pr, DAV, 'resourcetype');\n   560            if (!rt || !child(rt, CARDDAV, 'addressbook')) throw new DavError(403, 'only address books can be made here', { ns: DAV, name: 'valid-resourcetype' });\n   561            name = pr && child(pr, DAV, 'displayname')?.text.trim();\n   562            desc = pr && child(pr, CARDDAV, 'addressbook-description')?.text.trim();\n\nTest file style (intent/blocks/carddav/carddav.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { child, children, parseXml } from '../dav/index.ts';\nimport { BadVCard, CardDav, makeCard, parseVCard, textOf, writeVCard } from './index.ts';\nimport type { Reply } from './index.ts';\n\nconst NS = 'xmlns:d=\"DAV:\" xmlns:c=\"urn:ietf:params:xml:ns:carddav\" xmlns:cs=\"http://calendarserver.org/ns/\"';\nconst BOOK = '/addressbooks/ana/contacts/';\n\nconst setup = (o: ConstructorParameters<typeof CardDav>[0] = {}) => {\n  const dav = new CardDav({ now: () => 1_800_000_000_000, ...o });\n  dav.create(BOOK, { displayName: 'Contacts' });\n  const req = (method: string, path: string, body = '', headers: Record<string, string> = {}): Reply => dav.handle({ method, path, headers, body });\n  const put = (name: string, text: string, h: Record<string, string> = {}) => req('PUT', `${BOOK}${name}`, text, { 'content-type': 'text/vcard; charset=utf-8', ...h });\n  return { dav, req, put };\n};\nconst responses = (r: Reply) => children(parseXml(r.body), 'DAV:', 'response').map((x) => ({ href: child(x, 'DAV:', 'href')!.text, status: child(x, 'DAV:', 'status')?.text, el: x }));\nconst names = (r: Reply) => responses(r).map((x) => x.href.replace(BOOK, ''));\nconst query = (filter: string, attrs = '', extra = '', prop = '<d:getetag/>') => `<c:addressbook-query ${NS}><d:prop>${prop}</d:prop><c:filter${attrs}>${filter}</c:filter>${extra}</c:addressbook-query>`;\n\nconst ana = makeCard({ uid: 'u-ana', fn: 'Ana Álvarez', n: ['Álvarez', 'Ana'], emails: ['ana@example.org', 'a.alvarez@work.example'], tels: ['+1 555 0100'], org: 'Acme, Inc.' });\nconst bo = makeCard({ uid: 'u-bo', fn: 'Bo Straße', n: ['Straße', 'Bo'], emails: ['bo@example.org'], org: 'Globex' });\nconst cy = makeCard({ uid: 'u-cy', fn: 'Cy Jones', version: '3.0', n: ['Jones', 'Cy'], emails: ['cy@elsewhere.test'] });\n\ntest('a vCard is read with groups, parameters, folded lines and escapes, and written back the same', () => {\n  const text = ['BEGIN:VCARD', 'VERSION:4.0', 'FN:Ana', ' María', 'item1.EMAIL;TYPE=\"work,home\";PREF=1:ana@example.org', 'NOTE:one\\\\, two\\; three\\\\nfour', 'ADR;TYPE=home:;;1 Main St;Dayton;OH;45402;USA', 'UID:abc', 'END:VCARD', ''].join('\\r\\n');\n  const c = parseVCard(text);\n  assert.equal(c.props.length, 6);\n  assert.equal(textOf(c.props[1]!), 'AnaMaría', 'a fold continues the line');\n  const email = c.props[2]!;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/carddav-1130.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.682Z"
+}

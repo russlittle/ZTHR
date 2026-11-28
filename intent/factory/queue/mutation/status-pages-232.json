@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "status-pages",
+  "mutant": {
+    "id": "232",
+    "line": 202,
+    "column": 116,
+    "endLine": 202,
+    "endColumn": 118,
+    "mutator": "UnaryOperator",
+    "original": "-1",
+    "replacement": "+1",
+    "lineText": "const sorted = [...incidents].filter((i) => i.updates.length).sort((a, b) => b.updates.at(-1)!.at - a.updates.at(-1)!.at);",
+    "prevText": "export function jsonFeed(o: { title: string; baseUrl: string }, incidents: readonly Incident[]): string {",
+    "nextText": "return JSON.stringify({"
+  },
+  "mayEdit": [
+    "intent/blocks/status-pages/status-pages.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/status-pages-232.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"status-pages\". Mutant: line 202:116-202:118, mutator UnaryOperator: \"-1\" becomes \"+1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/status-pages/index.ts (> marks the mutated line):\n   196    });\n   197    return `<?xml version=\"1.0\" encoding=\"utf-8\"?><feed xmlns=\"http://www.w3.org/2005/Atom\"><id>${escapeXml(o.id)}</id><title>${escapeXml(o.title)}</title><link rel=\"self\" href=\"${escapeXml(`${o.baseUrl}/feed.atom`)}\"/><updated>${updated}</updated>${entries.join('')}</feed>`;\n   198  }\n   199  \n   200  /** A JSON Feed 1.1 document of the same incidents. */\n   201  export function jsonFeed(o: { title: string; baseUrl: string }, incidents: readonly Incident[]): string {\n>  202    const sorted = [...incidents].filter((i) => i.updates.length).sort((a, b) => b.updates.at(-1)!.at - a.updates.at(-1)!.at);\n   203    return JSON.stringify({\n   204      version: 'https://jsonfeed.org/version/1.1',\n   205      title: o.title,\n   206      home_page_url: o.baseUrl,\n   207      items: sorted.map((i) => ({ id: i.id, url: `${o.baseUrl}/incidents/${i.id}`, title: i.title, content_text: [...i.updates].reverse().map((u) => `${u.state}: ${u.text}`).join('\\n'), date_published: iso(i.updates[0]!.at), date_modified: iso(i.updates.at(-1)!.at) })),\n   208    });\n\nTest file style (intent/blocks/status-pages/status-pages.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Subscribers, StatusPageError, atomFeed, badge, badgeKeyOk, dailyBars, escapeXml, jsonFeed, monitorStatus, pageView, uptime } from './index.ts';\nimport type { Beat, Group, Incident, Monitor } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T = Date.UTC(2026, 5, 10, 12, 0, 0);\nconst beats = (...ups: boolean[]): Beat[] => ups.map((up, i) => ({ at: T - (ups.length - i) * 60_000, up, ms: 100 }));\nconst groups: Group[] = [\n  { name: 'Core', components: [{ id: 'api', name: 'API', monitors: ['m-api'] }, { id: 'web', name: 'Website', monitors: ['m-web'] }] },\n  { name: 'Extras', components: [{ id: 'mail', name: 'Email', monitors: ['m-mail'] }] },\n];\nconst inc = (over: Partial<Incident> = {}): Incident => ({ id: 'i1', title: 'API errors', components: ['api'], impact: 'degraded', updates: [{ at: T - 1000, state: 'investigating', text: 'Looking into it' }], ...over });\n\ntest('three failures in a row are down, one is degraded, and a pass after them clears it', () => {\n  assert.equal(monitorStatus(beats(true, true, false, false, false)), 'down');\n  assert.equal(monitorStatus(beats(true, true, true, false)), 'degraded');\n  assert.equal(monitorStatus(beats(false, false, false, true)), 'ok');\n  assert.equal(monitorStatus([]), 'ok');\n});\n\ntest('a slow newest answer is degraded', () => {\n  const b: Beat[] = [{ at: 1, up: true, ms: 5000 }];\n  assert.equal(monitorStatus(b), 'degraded');\n  assert.equal(monitorStatus(b, { downAfter: 3, slowMs: 6000 }), 'ok');\n});\n\ntest('beats are read newest first whatever order they arrive in', () => {\n  const b = beats(false, false, false, true).reverse();\n  assert.equal(monitorStatus(b), 'ok');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/status-pages-232.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.485Z"
+}

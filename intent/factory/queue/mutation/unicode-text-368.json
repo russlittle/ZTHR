@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "unicode-text",
+  "mutant": {
+    "id": "368",
+    "line": 180,
+    "column": 76,
+    "endLine": 180,
+    "endColumn": 112,
+    "mutator": "StringLiteral",
+    "original": "'it is not in normalised form (NFC)'",
+    "replacement": "\"\"",
+    "lineText": "if (!isNormalised(t, 'NFC')) out.push({ code: 'not-normalised', message: 'it is not in normalised form (NFC)' });",
+    "prevText": "if (graphemeLength(t) > (o.maxGraphemes ?? 64)) out.push({ code: 'too-long', message: `it is longer than ${o.maxGraphemes ?? 64} characters` });",
+    "nextText": "if (BIDI.test(t)) out.push({ code: 'bidi-control', message: 'it has text-direction controls' });"
+  },
+  "mayEdit": [
+    "intent/blocks/unicode-text/unicode-text.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/unicode-text-368.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"unicode-text\". Mutant: line 180:76-180:112, mutator StringLiteral: \"'it is not in normalised form (NFC)'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/unicode-text/index.ts (> marks the mutated line):\n   174  /** Everything wrong with a proposed name or handle, so a form can show it all at once. */\n   175  export function checkIdentifier(s: string, o: { maxGraphemes?: number } = {}): IdentifierProblem[] {\n   176    const out: IdentifierProblem[] = [];\n   177    const t = guard(s);\n   178    if (t.length === 0) return [{ code: 'empty', message: 'it is empty' }];\n   179    if (graphemeLength(t) > (o.maxGraphemes ?? 64)) out.push({ code: 'too-long', message: `it is longer than ${o.maxGraphemes ?? 64} characters` });\n>  180    if (!isNormalised(t, 'NFC')) out.push({ code: 'not-normalised', message: 'it is not in normalised form (NFC)' });\n   181    if (BIDI.test(t)) out.push({ code: 'bidi-control', message: 'it has text-direction controls' });\n   182    else if (/[\\p{Default_Ignorable_Code_Point}\\p{Cf}]/u.test(t)) out.push({ code: 'invisible', message: 'it has characters that do not show' });\n   183    if (/[\\p{Z}\\p{Cc}]/u.test(t)) out.push({ code: 'whitespace', message: 'it has spaces or control characters' });\n   184    if (/[\\p{Co}\\p{Cn}\\p{Cs}]/u.test(t)) out.push({ code: 'unassigned-or-private', message: 'it has unassigned or private-use characters' });\n   185    if (isMixedScript(t)) out.push({ code: 'mixed-script', message: `it mixes scripts (${scriptsOf(t).join(', ')}), which is how look-alike names are made` });\n   186    if (/^\\p{M}/u.test(t)) out.push({ code: 'starts-with-mark', message: 'it starts with a combining mark' });\n\nTest file style (intent/blocks/unicode-text/unicode-text.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadText, checkIdentifier, collator, confusable, equalFolded, fold, graphemeLength, graphemes, isMixedScript, isNormalised, lookalikes, normalise, reverse, scriptsOf, skeleton, sortedFor, truncate } from './index.ts';\n\nconst cps = (s: string) => [...s].map((c) => c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')).join(' ');\nconst from = (hex: string) => String.fromCodePoint(...hex.split(' ').map((h) => parseInt(h, 16)));\n\ntest('UCD NormalizationTest: U+1E9B U+0323 in all four forms', () => {\n  const s = from('1E9B 0323');\n  assert.equal(cps(normalise(s, 'NFC')), '1E9B 0323');\n  assert.equal(cps(normalise(s, 'NFD')), '017F 0323 0307');\n  assert.equal(cps(normalise(s, 'NFKC')), '1E69');\n  assert.equal(cps(normalise(s, 'NFKD')), '0073 0323 0307');\n});\n\ntest('NFC composes and NFD decomposes; a precomposed and a combined e-acute differ until normalised', () => {\n  assert.notEqual('é', 'é');\n  assert.equal(normalise('é'), 'é');\n  assert.equal(normalise('é', 'NFD'), 'é');\n  assert.equal(isNormalised('é'), false);\n  assert.equal(isNormalised('é'), true);\n  assert.equal(normalise('Ａﬁ', 'NFKC'), 'Afi', 'full-width A and the fi ligature');\n  assert.equal(cps(normalise('한', 'NFD')), '1112 1161 11AB', 'Hangul syllable to jamo');\n});\n\ntest('ill-formed and oversized text is refused', () => {\n  assert.throws(() => normalise('a\\uD800b'), /lone surrogate/);\n  assert.throws(() => graphemes('\\uDC00'), BadText);\n  assert.throws(() => fold('x'.repeat(1_000_001)), /million/);\n  assert.throws(() => normalise(5 as never), /not text/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/unicode-text-368.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:11.553Z"
+}

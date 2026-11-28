@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "reading-time",
+  "mutant": {
+    "id": "293",
+    "line": 209,
+    "column": 9,
+    "endLine": 209,
+    "endColumn": 19,
+    "mutator": "EqualityOperator",
+    "original": "end <= cut",
+    "replacement": "end < cut",
+    "lineText": "if (end <= cut && end >= from && end > 0) sentenceEnd = end;",
+    "prevText": "const end = s.index + s.segment.trimEnd().length;",
+    "nextText": "if (s.index > cut) break;"
+  },
+  "mayEdit": [
+    "intent/blocks/reading-time/reading-time.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/reading-time-293.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"reading-time\". Mutant: line 209:9-209:19, mutator EqualityOperator: \"end <= cut\" becomes \"end < cut\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/reading-time/index.ts (> marks the mutated line):\n   203  \n   204    // 1. A sentence end inside the head, late enough to be worth it.\n   205    const from = Math.floor(cut * (o.sentenceFrom ?? 0.5));\n   206    let sentenceEnd = -1;\n   207    for (const s of new Intl.Segmenter(o.locale, { granularity: 'sentence' }).segment(plain)) {\n   208      const end = s.index + s.segment.trimEnd().length;\n>  209      if (end <= cut && end >= from && end > 0) sentenceEnd = end;\n   210      if (s.index > cut) break;\n   211    }\n   212    if (sentenceEnd > 0) {\n   213      const t = plain.slice(0, sentenceEnd);\n   214      const wholeSentenceFits = sentenceEnd < plain.length;\n   215      return { text: wholeSentenceFits ? t + ellipsis : t, truncated: wholeSentenceFits, cutAt: 'sentence' };\n\nTest file style (intent/blocks/reading-time/reading-time.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { count, excerpt, imageSeconds, InvalidInput, label, listeningTime, readingTime, speedFor, stripHtml } from './index.ts';\n\nconst words = (n: number, w = 'word') => Array.from({ length: n }, () => w).join(' ');\n\ntest('English words are counted by word, with contractions, numbers and hyphens handled', () => {\n  assert.equal(count('The quick brown fox').words, 4);\n  assert.equal(count(\"Don't stop, it's 3.5 o'clock\").words, 5);\n  assert.equal(count('well-known fact').words, 3, 'a hyphenated word is two words by the Unicode rules');\n  assert.equal(count('').words, 0);\n  assert.equal(count('   \\n\\t ').words, 0);\n  assert.equal(count('... --- !!!').words, 0, 'punctuation is not a word');\n});\n\ntest('Chinese and Japanese are counted in characters, Thai in words', () => {\n  const zh = count('我喜欢读书，也喜欢写作。');\n  assert.equal(zh.cjk, 10);\n  assert.equal(zh.words, 0);\n  const ja = count('私は本を読みます');\n  assert.equal(ja.cjk, 8);\n  const mixed = count('Hello 世界 and 你好 friends');\n  assert.deepEqual({ w: mixed.words, c: mixed.cjk }, { w: 3, c: 4 });\n  const th = count('ฉันรักภาษาไทย', { locale: 'th' });\n  assert.ok(th.words >= 2 && th.words <= 4, `Thai words found by dictionary, got ${th.words}`);\n  assert.equal(th.cjk, 0);\n  assert.equal(count('한국어 문장').cjk, 5, 'Hangul syllables count as characters');\n});\n\ntest('reading time follows the language speed and rounds to whole minutes, never zero for something', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/reading-time-293.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:58.404Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "iam-policy",
+  "mutant": {
+    "id": "777",
+    "line": 374,
+    "column": 140,
+    "endLine": 374,
+    "endColumn": 155,
+    "mutator": "ConditionalExpression",
+    "original": "reason === null",
+    "replacement": "false",
+    "lineText": "const e: TraceEntry = { source: `${source}[${pi}]`, statement: si, ...(st.Sid ? { sid: st.Sid } : {}), effect: st.Effect, matched: reason === null, why: reason ?? `${st.Effect.toLowerCase()} applies` };",
+    "prevText": "const reason = why(st, req, ctx);",
+    "nextText": "trace.push(e);"
+  },
+  "mayEdit": [
+    "intent/blocks/iam-policy/iam-policy.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/iam-policy-777.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"iam-policy\". Mutant: line 374:140-374:155, mutator ConditionalExpression: \"reason === null\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/iam-policy/index.ts (> marks the mutated line):\n   368    const trace: TraceEntry[] = [];\n   369    const run = (source: string, policies: readonly Policy[]) => {\n   370      const hits: TraceEntry[] = [];\n   371      policies.forEach((p, pi) =>\n   372        statementList(p).forEach((st, si) => {\n   373          const reason = why(st, req, ctx);\n>  374          const e: TraceEntry = { source: `${source}[${pi}]`, statement: si, ...(st.Sid ? { sid: st.Sid } : {}), effect: st.Effect, matched: reason === null, why: reason ?? `${st.Effect.toLowerCase()} applies` };\n   375          trace.push(e);\n   376          if (reason === null) hits.push(e);\n   377        }),\n   378      );\n   379      return hits;\n   380    };\n\nTest file style (intent/blocks/iam-policy/iam-policy.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CONDITION_OPERATORS, PolicyError, evaluate, evaluateMany, ipInCidr, validatePolicy, wildcardMatch } from './index.ts';\nimport type { Policy, Request, Statement } from './index.ts';\n\nconst allow = (s: Partial<Statement> & Pick<Statement, 'Action'>): Policy => ({ Version: '2012-10-17', Statement: { Effect: 'Allow', Resource: '*', ...s } });\nconst deny = (s: Partial<Statement> & Pick<Statement, 'Action'>): Policy => ({ Version: '2012-10-17', Statement: { Effect: 'Deny', Resource: '*', ...s } });\nconst ok = (policies: Policy[], req: Request, boundaries?: Policy[][]) => evaluate({ policies, ...(boundaries ? { boundaries } : {}) }, req).allowed;\nconst get = (resource: string, context: Request['context'] = {}): Request => ({ action: 's3:GetObject', resource, context });\n\ntest('everything is denied until a statement allows it, and the reason says so', () => {\n  const d = evaluate({ policies: [] }, get('arn:aws:s3:::b/k'));\n  assert.equal(d.allowed, false);\n  assert.equal(d.reason, 'implicit-deny');\n  assert.match(d.explanation, /no statement allows s3:GetObject on arn:aws:s3:::b\\/k/);\n  const other = evaluate({ policies: [allow({ Action: 's3:PutObject' })] }, get('arn:aws:s3:::b/k'));\n  assert.equal(other.reason, 'implicit-deny');\n  assert.equal(other.trace[0]!.why, 'action did not match');\n});\n\ntest('an allow matches by wildcard action and resource; actions ignore case, resources do not', () => {\n  const p = allow({ Action: ['s3:Get*', 'ec2:Describe?nstances'], Resource: 'arn:aws:s3:::reports/*' });\n  assert.equal(ok([p], get('arn:aws:s3:::reports/2024/q1.csv')), true);\n  assert.equal(ok([p], { action: 'S3:getobject', resource: 'arn:aws:s3:::reports/x' }), true, 'service and action names are case-insensitive');\n  assert.equal(ok([p], get('arn:aws:s3:::Reports/x')), false, 'resources are case-sensitive');\n  assert.equal(ok([p], get('arn:aws:s3:::other/x')), false);\n  assert.equal(ok([p], { action: 'ec2:DescribeInstances', resource: 'arn:aws:s3:::reports/x' }), true, '? matches one character');\n  assert.equal(ok([allow({ Action: '*' })], get('anything')), true);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/iam-policy-777.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.872Z"
+}

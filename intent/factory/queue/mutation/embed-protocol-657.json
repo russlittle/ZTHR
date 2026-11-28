@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "embed-protocol",
+  "mutant": {
+    "id": "657",
+    "line": 228,
+    "column": 75,
+    "endLine": 228,
+    "endColumn": 99,
+    "mutator": "Regex",
+    "original": "/^[A-Za-z0-9_-]{16,64}$/",
+    "replacement": "/^[A-Za-z0-9_-]{16,64}/",
+    "lineText": "if (data.channel !== undefined && !(typeof data.channel === 'string' && /^[A-Za-z0-9_-]{16,64}$/.test(data.channel))) return { ok: false, reason: 'channel is 16 to 64 URL-safe characters' };",
+    "prevText": "if (!isInt(data.seq, 1, Number.MAX_SAFE_INTEGER)) return { ok: false, reason: 'seq is a whole number from 1' };",
+    "nextText": "const payload = data.payload === undefined ? {} : data.payload;"
+  },
+  "mayEdit": [
+    "intent/blocks/embed-protocol/embed-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/embed-protocol-657.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"embed-protocol\". Mutant: line 228:75-228:99, mutator Regex: \"/^[A-Za-z0-9_-]{16,64}$/\" becomes \"/^[A-Za-z0-9_-]{16,64}/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/embed-protocol/index.ts (> marks the mutated line):\n   222    const extra = only(data, ['ns', 'v', 'type', 'channel', 'seq', 'payload']);\n   223    if (extra) return { ok: false, reason: `unknown field ${extra}` };\n   224    const schema = typeof data.type === 'string' && Object.hasOwn(SCHEMAS, data.type) ? SCHEMAS[data.type]! : undefined;\n   225    if (!schema) return { ok: false, reason: 'unknown message type' };\n   226    if (!schema.from.includes(from)) return { ok: false, reason: `${data.type} is not sent by the ${from}` };\n   227    if (!isInt(data.seq, 1, Number.MAX_SAFE_INTEGER)) return { ok: false, reason: 'seq is a whole number from 1' };\n>  228    if (data.channel !== undefined && !(typeof data.channel === 'string' && /^[A-Za-z0-9_-]{16,64}$/.test(data.channel))) return { ok: false, reason: 'channel is 16 to 64 URL-safe characters' };\n   229    const payload = data.payload === undefined ? {} : data.payload;\n   230    if (!isObj(payload)) return { ok: false, reason: 'payload is an object' };\n   231    const why = schema.check(payload);\n   232    if (why) return { ok: false, reason: `${data.type}: ${why}` };\n   233    return { ok: true, msg: { ns: 'zthr-embed', v: 1, type: data.type as string, ...(data.channel !== undefined ? { channel: data.channel as string } : {}), seq: data.seq as number, payload } };\n   234  }\n\nTest file style (intent/blocks/embed-protocol/embed-protocol.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  checkEmbedRequest, embeddableHeaders, embedUrl, Endpoint, EmbedRefused, frameCookie, hostPageNeeds, normalizeOrigin, originAllowed, parseMessage, pickHostOrigin, popupFeatures, ResizeController, snippet,\n  type Envelope, type Incoming,\n} from './index.ts';\n\nconst HOST = 'https://shop.example.com';\nconst FRAME = 'https://app.example.org';\n\n/** Two endpoints wired through fake windows; messages are queued so tests control delivery. */\nfunction pair() {\n  const hostWin = { name: 'host-window' };\n  const frameWin = { name: 'frame-window' };\n  const toHost: { m: Envelope; target: string }[] = [];\n  const toFrame: { m: Envelope; target: string }[] = [];\n  let n = 0;\n  const random = (len: number) => `chan${String(++n).padStart(len - 4, '0')}`;\n  const host = new Endpoint({ role: 'host', peerOrigin: FRAME, peerWindow: frameWin, post: (m, t) => toFrame.push({ m, target: t }), random });\n  const frame = new Endpoint({ role: 'frame', peerOrigin: HOST, peerWindow: hostWin, post: (m, t) => toHost.push({ m, target: t }), random });\n  const atHost = (m: unknown): Incoming => ({ origin: FRAME, source: frameWin, data: m });\n  const atFrame = (m: unknown): Incoming => ({ origin: HOST, source: hostWin, data: m });\n  return { host, frame, toHost, toFrame, atHost, atFrame, hostWin, frameWin };\n}\nfunction opened() {\n  const p = pair();\n  const ready = p.frame.send('ready');\n  p.host.receive(p.atHost(ready));\n  const init = p.host.send('init', { theme: 'dark' });\n  p.frame.receive(p.atFrame(init));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/embed-protocol-657.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.559Z"
+}

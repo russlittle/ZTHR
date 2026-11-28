@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "avatars",
+  "mutant": {
+    "id": "375",
+    "line": 193,
+    "column": 33,
+    "endLine": 193,
+    "endColumn": 49,
+    "mutator": "Regex",
+    "original": "/^[\\p{L}\\p{N}]/u",
+    "replacement": "/[\\p{L}\\p{N}]/u",
+    "lineText": "const isLetter = (g: string) => /^[\\p{L}\\p{N}]/u.test(g);",
+    "prevText": "const graphemes = (s: string): string[] => [...new Intl.Segmenter('und', { granularity: 'grapheme' }).segment(s)].map((x) => x.segment);",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/avatars/avatars.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/avatars-375.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"avatars\". Mutant: line 193:33-193:49, mutator Regex: \"/^[\\\\p{L}\\\\p{N}]/u\" becomes \"/[\\\\p{L}\\\\p{N}]/u\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/avatars/index.ts (> marks the mutated line):\n   187  // ================================================================== initials\n   188  \n   189  const TITLES = new Set(['mr', 'mrs', 'ms', 'miss', 'mx', 'dr', 'prof', 'sir', 'dame', 'rev', 'jr', 'sr', 'ii', 'iii', 'iv', 'phd', 'md']);\n   190  const PARTICLES = new Set(['van', 'von', 'der', 'den', 'de', 'del', 'della', 'di', 'da', 'du', 'la', 'le', 'bin', 'ibn', 'al', 'el', 'st', 'ter', 'ten', 'af']);\n   191  const CJK = /[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Hangul}]/u;\n   192  const graphemes = (s: string): string[] => [...new Intl.Segmenter('und', { granularity: 'grapheme' }).segment(s)].map((x) => x.segment);\n>  193  const isLetter = (g: string) => /^[\\p{L}\\p{N}]/u.test(g);\n   194  \n   195  /** The one or two letters a name stands for, in capitals. Returns \"?\" when the name holds no letters. */\n   196  export function initials(name: string): string {\n   197    let n = name.normalize('NFC').trim();\n   198    if (n.length > 200) n = n.slice(0, 200);\n   199    const at = n.indexOf('@');\n\nTest file style (intent/blocks/avatars/avatars.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  AvatarError, Directory, PALETTE, SIZE_SET, colorForName, contrast, emailHash, gravatarUrl, hexToRgb, identicon, identiconCells, identiconColor, initials,\n  initialsAvatar, isAvatarHash, luminance, serveAvatar, silhouette, sizeFor, srcset,\n} from './index.ts';\n\n// ------------------------------------------------------------ hashing and addresses\n\ntest('the published Gravatar example hashes to its published MD5, whatever the case and spaces', () => {\n  assert.equal(emailHash(' MyEmailAddress@example.com ', 'md5'), '0bc83cb571cd1c50ba6f3e8a78ef1346');\n  assert.equal(emailHash('myemailaddress@example.com', 'md5'), '0bc83cb571cd1c50ba6f3e8a78ef1346');\n  assert.match(emailHash('myemailaddress@example.com'), /^[0-9a-f]{64}$/);\n  assert.notEqual(emailHash('a@example.com'), emailHash('b@example.com'));\n});\n\ntest('anything that is not an email address is refused', () => {\n  for (const bad of ['', '  ', 'nobody', 'a b@c.d', '@x.y', 'x@', `${'a'.repeat(320)}@x.y`]) assert.throws(() => emailHash(bad), AvatarError, bad.slice(0, 20));\n});\n\ntest('avatar addresses carry a checked size, default, rating and host', () => {\n  const md5 = '0bc83cb571cd1c50ba6f3e8a78ef1346';\n  assert.equal(gravatarUrl('MyEmailAddress@example.com', { algorithm: 'md5', size: 200, fallback: 'identicon', rating: 'pg' }), `https://www.gravatar.com/avatar/${md5}?s=200&d=identicon&r=pg`);\n  assert.equal(gravatarUrl('a@b.co', { algorithm: 'md5', forceDefault: true }), `https://www.gravatar.com/avatar/${emailHash('a@b.co', 'md5')}?s=80&f=y`);\n  assert.match(gravatarUrl('a@b.co', { fallback: 'https://cdn.example/a b.png' }), /d=https%3A%2F%2Fcdn\\.example%2Fa%20b\\.png$/);\n  assert.match(gravatarUrl('a@b.co', { host: 'avatars.example:8443' }), /^https:\\/\\/avatars\\.example:8443\\/avatar\\//);\n  for (const size of [0, 2049, 1.5, NaN]) assert.throws(() => gravatarUrl('a@b.co', { size }), /1 to 2048/);\n  assert.throws(() => gravatarUrl('a@b.co', { fallback: 'javascript:alert(1)' }), /named style or an https/);\n  assert.throws(() => gravatarUrl('a@b.co', { fallback: 'http://x.example/a.png' }), /named style or an https/);\n  assert.throws(() => gravatarUrl('a@b.co', { rating: 'z' as 'g' }), /rating/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/avatars-375.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.996Z"
+}

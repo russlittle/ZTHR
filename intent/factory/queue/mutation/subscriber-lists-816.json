@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "subscriber-lists",
+  "mutant": {
+    "id": "816",
+    "line": 570,
+    "column": 68,
+    "endLine": 570,
+    "endColumn": 70,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "if (change.frequency !== undefined && !(r.l.cfg.frequencies ?? []).includes(change.frequency)) throw new ListError(`unknown frequency \"${change.frequency}\"`);",
+    "prevText": "for (const k of Object.keys(change.topics ?? {})) if (!known.has(k)) throw new ListError(`unknown topic \"${k}\"`);",
+    "nextText": "if (r.s.state !== 'subscribed') throw new ListError('preferences can only be changed by a confirmed subscriber');"
+  },
+  "mayEdit": [
+    "intent/blocks/subscriber-lists/subscriber-lists.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/subscriber-lists-816.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"subscriber-lists\". Mutant: line 570:68-570:70, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/subscriber-lists/index.ts (> marks the mutated line):\n   564    /** Change topics and frequency. Unknown topics or frequencies are an error, not silently ignored. Turning every topic off keeps the subscription. */\n   565    setPreferences(token: string, change: { topics?: Readonly<Record<string, boolean>>; frequency?: string }): boolean {\n   566      const r = this.readPrefs(token);\n   567      if (!r) return false;\n   568      const known = new Set((r.l.cfg.topics ?? []).map((t) => t.id));\n   569      for (const k of Object.keys(change.topics ?? {})) if (!known.has(k)) throw new ListError(`unknown topic \"${k}\"`);\n>  570      if (change.frequency !== undefined && !(r.l.cfg.frequencies ?? []).includes(change.frequency)) throw new ListError(`unknown frequency \"${change.frequency}\"`);\n   571      if (r.s.state !== 'subscribed') throw new ListError('preferences can only be changed by a confirmed subscriber');\n   572      for (const [k, v] of Object.entries(change.topics ?? {})) r.s.topics.set(k, v === true);\n   573      if (change.frequency !== undefined) r.s.frequency = change.frequency;\n   574      r.s.evidence.push(this.evidence(r.l, 'preference-centre', 'preference centre', {}));\n   575      this.note(r.s, 'preferences-changed', JSON.stringify(change));\n   576      return true;\n\nTest file style (intent/blocks/subscriber-lists/subscriber-lists.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ListError, SubscriberLists, addressFingerprint, csvCell, isRoleAddress, normalizeEmail, parseCsv } from './index.ts';\nimport type { ListsOptions } from './index.ts';\nimport type { Message } from '../notify/index.ts';\nimport type { Record_ } from '../consent/index.ts';\n\nconst T0 = Date.UTC(2026, 5, 1, 9, 0, 0);\nconst DAY = 86_400_000;\n\ninterface Rig {\n  readonly lists: SubscriberLists;\n  readonly sent: Message[];\n  readonly consents: Record_[];\n  clock: { t: number };\n}\n\nfunction rig(over: Partial<ListsOptions> = {}, double = true): Rig {\n  const sent: Message[] = [];\n  const consents: Record_[] = [];\n  const clock = { t: T0 };\n  const lists = new SubscriberLists({\n    secret: 'test-secret-01234', now: () => clock.t, send: async (m) => { sent.push(m); }, onConsent: (r) => consents.push(r),\n    confirmUrl: 'https://example.org/confirm', unsubscribeUrl: 'https://example.org/unsub?src=mail', preferencesUrl: 'https://example.org/prefs',\n    ...over,\n  });\n  lists.createList({ id: 'news', name: 'Monthly news', doubleOptIn: double, consentText: 'Send me the monthly news by email.', topics: [{ id: 'product', name: 'Product', defaultOn: true }, { id: 'events', name: 'Events', defaultOn: false }], frequencies: ['weekly', 'monthly'] });\n  return { lists, sent, consents, clock };\n}\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/subscriber-lists-816.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:06.024Z"
+}

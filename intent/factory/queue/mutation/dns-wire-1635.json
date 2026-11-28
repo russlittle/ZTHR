@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "dns-wire",
+  "mutant": {
+    "id": "1635",
+    "line": 846,
+    "column": 39,
+    "endLine": 846,
+    "endColumn": 58,
+    "mutator": "ConditionalExpression",
+    "original": "data.type === 'SOA'",
+    "replacement": "true",
+    "lineText": "ttl = defaultTtl ?? lastTtl ?? (data.type === 'SOA' ? data.minimum : undefined);",
+    "prevText": "if (ttl === undefined) {",
+    "nextText": "if (ttl === undefined) throw new ZoneError('no TTL: give one, or set $TTL first', line);"
+  },
+  "mayEdit": [
+    "intent/blocks/dns-wire/dns-wire.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/dns-wire-1635.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"dns-wire\". Mutant: line 846:39-846:58, mutator ConditionalExpression: \"data.type === 'SOA'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/dns-wire/index.ts (> marks the mutated line):\n   840      if (!typeTok) throw new ZoneError('a record needs a type', line);\n   841      let code: number;\n   842      try { code = typeCode(typeTok.text); } catch (e) { throw new ZoneError((e as Error).message, line); }\n   843      let data: Rdata;\n   844      try { data = parseRdata(code, toks, absolute, line); } catch (e) { if (e instanceof ZoneError) throw e; throw new ZoneError((e as Error).message, line); }\n   845      if (ttl === undefined) {\n>  846        ttl = defaultTtl ?? lastTtl ?? (data.type === 'SOA' ? data.minimum : undefined);\n   847        if (ttl === undefined) throw new ZoneError('no TTL: give one, or set $TTL first', line);\n   848      }\n   849      lastTtl = ttl;\n   850      if (records.length >= maxRecords) throw new ZoneError(`more than ${maxRecords} records`, line);\n   851      const rec: DnsRecord = { name: owner, ttl, cls: cls ?? 1, data };\n   852      try { validateRecord(rec); } catch (e) { throw new ZoneError((e as Error).message, line); }\n\nTest file style (intent/blocks/dns-wire/dns-wire.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  DnsError, NameError, RecordError, WireError, ZoneError, ageRecords, canonicalName, checkResponse, clampTtl, decode, encode, formatIPv6, formatRecord, formatTtl, formatZone,\n  isSubdomain, labelsToName, makeQuery, nameToLabels, negativeTtl, nextSerial, parseIPv6, parseTtl, parseZone, sameName, serialCompare, serialGt, ttlRemaining, validateZone,\n} from './index.ts';\nimport type { DnsRecord, Message } from './index.ts';\n\nconst hex = (b: Uint8Array): string => Buffer.from(b).toString('hex');\nconst bytes = (h: string): Uint8Array => Uint8Array.from(Buffer.from(h.replace(/\\s+/g, ''), 'hex'));\nconst rec = (name: string, ttl: number, data: DnsRecord['data']): DnsRecord => ({ name, ttl, cls: 1, data });\nconst empty = { qr: true, opcode: 0, aa: false, tc: false, rd: true, ra: true, ad: false, cd: false, rcode: 0, questions: [], answers: [], authority: [], additional: [] };\n\ntest('a plain query encodes to the well-known bytes for example.com A', () => {\n  const q = makeQuery('example.com.', 'A', { id: 1 });\n  assert.equal(hex(encode(q)), '000101000001000000000000076578616d706c6503636f6d0000010001');\n});\n\ntest('a response with a compression pointer decodes to its answer', () => {\n  const m = decode(bytes('1234 8180 0001 0001 0000 0000 076578616d706c6503636f6d00 0001 0001 c00c 0001 0001 00000e10 0004 5db8d822'));\n  assert.deepEqual([m.id, m.qr, m.rd, m.ra, m.rcode], [0x1234, true, true, true, 0]);\n  assert.deepEqual(m.questions, [{ name: 'example.com.', qtype: 1, qclass: 1 }]);\n  assert.deepEqual(m.answers, [{ name: 'example.com.', ttl: 3600, cls: 1, data: { type: 'A', address: '93.184.216.34' } }]);\n});\n\ntest('names are compressed as in RFC 1035 section 4.1.4, matching without regard to case', () => {\n  const m: Message = { ...empty, id: 5, questions: [{ name: 'F.ISI.ARPA.', qtype: 1, qclass: 1 }], answers: [rec('FOO.F.ISI.ARPA.', 60, { type: 'A', address: '1.2.3.4' }), rec('arpa.', 60, { type: 'NS', target: 'F.ISI.ARPA.' })] };\n  const wire = encode(m);\n  const h = hex(wire);\n  assert.ok(h.includes('03464f4fc00c'), 'FOO then a pointer to F.ISI.ARPA at offset 12');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/dns-wire-1635.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.447Z"
+}

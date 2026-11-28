@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "feed-write",
+  "mutant": {
+    "id": "704",
+    "line": 331,
+    "column": 48,
+    "endLine": 331,
+    "endColumn": 74,
+    "mutator": "OptionalChaining",
+    "original": "f.podcast?.funding?.length",
+    "replacement": "f.podcast?.funding.length",
+    "lineText": "const usesPodcast = !!f.podcast?.locked || !!f.podcast?.funding?.length || f.items.some((i) => i.podcast?.transcript || i.podcast?.chapters);",
+    "prevText": "const usesMedia = f.items.some((i) => i.media);",
+    "nextText": "const usesContent = f.items.some((i) => i.contentHtml);"
+  },
+  "mayEdit": [
+    "intent/blocks/feed-write/feed-write.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/feed-write-704.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"feed-write\". Mutant: line 331:48-331:74, mutator OptionalChaining: \"f.podcast?.funding?.length\" becomes \"f.podcast?.funding.length\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/feed-write/index.ts (> marks the mutated line):\n   325  // ================================================================== RSS 2.0\n   326  \n   327  export function writeRss(feed: Feed, o: WriteOptions = {}): string {\n   328    const f = prepare(feed, o);\n   329    const usesItunes = !!f.podcast || f.items.some((i) => i.podcast);\n   330    const usesMedia = f.items.some((i) => i.media);\n>  331    const usesPodcast = !!f.podcast?.locked || !!f.podcast?.funding?.length || f.items.some((i) => i.podcast?.transcript || i.podcast?.chapters);\n   332    const usesContent = f.items.some((i) => i.contentHtml);\n   333    const usesAtom = !!f.selfUrl;\n   334    const usesDc = f.items.some((i) => i.authors?.length && !i.authors[0]!.email);\n   335    const ns = [\n   336      usesAtom ? ' xmlns:atom=\"http://www.w3.org/2005/Atom\"' : '',\n   337      usesContent ? ' xmlns:content=\"http://purl.org/rss/1.0/modules/content/\"' : '',\n\nTest file style (intent/blocks/feed-write/feed-write.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { parseXml, type El } from '../dav/index.ts';\nimport {\n  FeedError, cdata, durationSeconds, escapeAttr, escapeText, etagOf, feedProblems, itunesDuration, rfc3339, rfc822,\n  respond, toDate, write, writeAtom, writeJsonFeed, writeRss, xmlSafe, type Feed,\n} from './index.ts';\n\nconst T0 = Date.UTC(2024, 4, 6, 12, 30, 5);\ntype Mut<T> = { -readonly [K in keyof T]: T[K] };\nconst base = (): Mut<Feed> => ({\n  title: 'Notes & Things',\n  link: 'https://example.com/',\n  selfUrl: 'https://example.com/feed.xml',\n  description: 'Writing <on> the web',\n  language: 'en-GB',\n  updated: T0,\n  items: [\n    { id: 'https://example.com/a', link: 'https://example.com/a', title: 'First', published: T0 - 86_400_000, contentHtml: '<p>Hello</p>', summary: 'Hi', authors: [{ name: 'Ann' }], categories: ['x', 'y'] },\n    { id: 'https://example.com/b', link: 'https://example.com/b', title: 'Second', published: T0, updated: T0 + 1000 },\n  ],\n});\nconst find = (e: El, name: string): El[] => [...(e.name === name ? [e] : []), ...e.children.flatMap((c) => find(c, name))];\n\ntest('RFC 822 and RFC 3339 dates match the specs examples', () => {\n  assert.equal(rfc822(new Date(Date.UTC(2002, 8, 7, 0, 0, 1))), 'Sat, 07 Sep 2002 00:00:01 GMT');\n  assert.equal(rfc3339(new Date(Date.UTC(2003, 11, 13, 18, 30, 2, 900))), '2003-12-13T18:30:02Z');\n});\n\ntest('toDate takes dates, numbers and ISO strings and refuses nonsense', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/feed-write-704.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.160Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mqtt",
+  "mutant": {
+    "id": "942",
+    "line": 523,
+    "column": 13,
+    "endLine": 523,
+    "endColumn": 19,
+    "mutator": "ConditionalExpression",
+    "original": "r.left",
+    "replacement": "false",
+    "lineText": "if (r.left) p = decodeProps(r);",
+    "prevText": "code = r.u8();",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/mqtt/mqtt.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mqtt-942.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mqtt\". Mutant: line 523:13-523:19, mutator ConditionalExpression: \"r.left\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mqtt/index.ts (> marks the mutated line):\n   517        const packetId = r.u16();\n   518        if (!packetId) throw new MqttError('a packet identifier is not 0');\n   519        let code: number | undefined;\n   520        let p: Props | undefined;\n   521        if (v === 5 && r.left) {\n   522          code = r.u8();\n>  523          if (r.left) p = decodeProps(r);\n   524        }\n   525        done();\n   526        return withProps({ type, packetId, ...(code !== undefined ? { code } : {}) } as Packet, p);\n   527      }\n   528      case 'subscribe': {\n   529        const packetId = r.u16();\n\nTest file style (intent/blocks/mqtt/mqtt.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MqttError, PacketStream, RetainedStore, Session, SubscriptionTree, decode, decodeVarInt, encode, encodeVarInt, shared, topicMatches, validateTopicFilter, validateTopicName } from './index.ts';\nimport type { Packet } from './index.ts';\n\nconst hex = (s: string) => Buffer.from(s.replace(/\\s+/g, ''), 'hex');\nconst h = (b: Buffer) => b.toString('hex');\n\ntest('MQTT 3.1.1 section 2.2.3: variable-length integers at every boundary', () => {\n  const v: [number, string][] = [[0, '00'], [127, '7f'], [128, '8001'], [16383, 'ff7f'], [16384, '808001'], [2097151, 'ffff7f'], [2097152, '80808001'], [268435455, 'ffffff7f']];\n  for (const [n, e] of v) {\n    assert.equal(h(encodeVarInt(n)), e);\n    assert.deepEqual(decodeVarInt(hex(e)), { value: n, length: e.length / 2 });\n  }\n  assert.throws(() => encodeVarInt(268435456), /0 to 268435455/);\n  assert.throws(() => encodeVarInt(-1), MqttError);\n  assert.throws(() => decodeVarInt(hex('ffffffff7f')), /longer than four bytes/);\n  assert.throws(() => decodeVarInt(hex('8000')), /shortest form/);\n  assert.equal(decodeVarInt(hex('80')), undefined, 'incomplete is not an error');\n});\n\ntest('3.1.1 CONNECT, CONNACK, PINGREQ, DISCONNECT bytes', () => {\n  const c: Packet = { type: 'connect', protocolLevel: 4, clean: true, keepAlive: 60, clientId: '' };\n  assert.equal(h(encode(c, 4)), '100c00044d5154540402003c0000');\n  assert.deepEqual(decode(encode(c, 4), 4), c);\n  assert.equal(h(encode({ type: 'connack', sessionPresent: false, code: 0 }, 4)), '20020000');\n  assert.equal(h(encode({ type: 'pingreq' }, 4)), 'c000');\n  assert.equal(h(encode({ type: 'pingresp' }, 4)), 'd000');\n  assert.equal(h(encode({ type: 'disconnect' }, 4)), 'e000');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mqtt-942.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.349Z"
+}

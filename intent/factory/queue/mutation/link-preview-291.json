@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "link-preview",
+  "mutant": {
+    "id": "291",
+    "line": 165,
+    "column": 51,
+    "endLine": 165,
+    "endColumn": 107,
+    "mutator": "StringLiteral",
+    "original": "'addresses with a user name or password are not fetched'",
+    "replacement": "\"\"",
+    "lineText": "if (u.username || u.password) throw new Blocked('addresses with a user name or password are not fetched');",
+    "prevText": "if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Blocked(`${u.protocol.replace(':', '')} addresses are not fetched`);",
+    "nextText": "const port = u.port ? Number(u.port) : u.protocol === 'https:' ? 443 : 80;"
+  },
+  "mayEdit": [
+    "intent/blocks/link-preview/link-preview.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/link-preview-291.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"link-preview\". Mutant: line 165:51-165:107, mutator StringLiteral: \"'addresses with a user name or password are not fetched'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/link-preview/index.ts (> marks the mutated line):\n   159    try {\n   160      u = new URL(input.trim());\n   161    } catch {\n   162      throw new Blocked('not a valid address');\n   163    }\n   164    if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Blocked(`${u.protocol.replace(':', '')} addresses are not fetched`);\n>  165    if (u.username || u.password) throw new Blocked('addresses with a user name or password are not fetched');\n   166    const port = u.port ? Number(u.port) : u.protocol === 'https:' ? 443 : 80;\n   167    if (!ports.includes(port)) throw new Blocked(`port ${port} is not allowed`);\n   168    const host = u.hostname.replace(/\\.$/, '').toLowerCase();\n   169    if (!host) throw new Blocked('no host');\n   170    if (DENIED_NAMES.test(host)) throw new Blocked(`${host} is an internal name`);\n   171    if (host.startsWith('[')) {\n\nTest file style (intent/blocks/link-preview/link-preview.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Blocked, checkUrl, clean, cleanUrl, embedIframe, FetchFailed, InvalidOEmbed, isPublicAddress, matchProvider, oembedRequestUrl, parseOEmbed, readCard, safeFetch, withOEmbed } from './index.ts';\nimport type { Deps, Response } from './index.ts';\n\nconst page = (head: string) => `<!doctype html><html><head>${head}</head><body>x</body></html>`;\nconst enc = (s: string) => new TextEncoder().encode(s);\nasync function* chunks(...parts: Uint8Array[]) {\n  for (const p of parts) yield p;\n}\nconst ok = (body: string | Uint8Array[], headers: Record<string, string> = {}): Response => ({\n  status: 200,\n  headers: { 'content-type': 'text/html; charset=utf-8', ...headers },\n  body: chunks(...(typeof body === 'string' ? [enc(body)] : body)),\n});\n\ntest('Open Graph fields are read, with structured image properties attached to the image they follow', () => {\n  const c = readCard(\n    page(`<meta property=\"og:title\" content=\"  The Title  \"><meta property=\"og:description\" content=\"A &amp; B\">\n      <meta property=\"og:site_name\" content=\"Example\"><meta property=\"og:type\" content=\"article\">\n      <meta property=\"og:image\" content=\"/a.png\"><meta property=\"og:image:width\" content=\"1200\"><meta property=\"og:image:height\" content=\"630\"><meta property=\"og:image:alt\" content=\"First\">\n      <meta property=\"og:image\" content=\"https://cdn.example.com/b.png\"><meta property=\"og:image:width\" content=\"800\">\n      <meta property=\"article:published_time\" content=\"2026-11-01T10:00:00Z\"><meta property=\"og:locale\" content=\"en_GB\"><meta property=\"og:url\" content=\"https://example.com/post\">`),\n    'https://example.com/post?utm=1',\n  );\n  assert.deepEqual(c.images, [\n    { url: 'https://example.com/a.png', width: 1200, height: 630, alt: 'First' },\n    { url: 'https://cdn.example.com/b.png', width: 800 },\n  ]);\n  assert.equal(c.title, 'The Title');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/link-preview-291.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.003Z"
+}

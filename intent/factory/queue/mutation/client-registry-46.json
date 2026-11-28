@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "client-registry",
+  "mutant": {
+    "id": "46",
+    "line": 110,
+    "column": 7,
+    "endLine": 110,
+    "endColumn": 30,
+    "mutator": "ConditionalExpression",
+    "original": "typeof uri !== 'string'",
+    "replacement": "false",
+    "lineText": "if (typeof uri !== 'string' || uri === '') throw new ClientError('invalid_redirect_uri', 'a redirect URI must be a non-empty string');",
+    "prevText": "export function checkRedirectUri(uri: unknown, appType: AppType = 'web', o: { allowLocalhostHost?: boolean } = {}): string {",
+    "nextText": "if (uri.length > 2048) throw new ClientError('invalid_redirect_uri', 'a redirect URI may not be longer than 2048 characters');"
+  },
+  "mayEdit": [
+    "intent/blocks/client-registry/client-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-46.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"client-registry\". Mutant: line 110:7-110:30, mutator ConditionalExpression: \"typeof uri !== 'string'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/client-registry/index.ts (> marks the mutated line):\n   104  const DANGEROUS_SCHEMES = new Set(['javascript', 'data', 'vbscript', 'file', 'about', 'blob', 'ftp', 'ws', 'wss']);\n   105  \n   106  const isLoopbackIp = (host: string) => /^127(\\.\\d{1,3}){3}$/.test(host) || host === '[::1]';\n   107  \n   108  /** Throws ClientError(invalid_redirect_uri) with the reason when a redirect URI could not safely be registered. */\n   109  export function checkRedirectUri(uri: unknown, appType: AppType = 'web', o: { allowLocalhostHost?: boolean } = {}): string {\n>  110    if (typeof uri !== 'string' || uri === '') throw new ClientError('invalid_redirect_uri', 'a redirect URI must be a non-empty string');\n   111    if (uri.length > 2048) throw new ClientError('invalid_redirect_uri', 'a redirect URI may not be longer than 2048 characters');\n   112    if (/[\\s\\u0000-\\u001f\\u007f]/.test(uri)) throw new ClientError('invalid_redirect_uri', 'a redirect URI may not contain spaces or control characters');\n   113    if (uri.includes('#')) throw new ClientError('invalid_redirect_uri', 'a redirect URI may not contain a fragment');\n   114    if (uri.includes('*')) throw new ClientError('invalid_redirect_uri', 'a redirect URI may not contain a wildcard; every redirect is registered exactly');\n   115    let u: URL;\n   116    try {\n\nTest file style (intent/blocks/client-registry/client-registry.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ClientError, ClientRegistry, checkRedirectUri, matchRedirectUri, parseBasicAuthorization } from './index.ts';\n\n/** Deterministic randomness: each call yields bytes counting up from a seed. */\nfunction counter() {\n  let n = 0;\n  return (len: number) => {\n    n += 1;\n    return Uint8Array.from({ length: len }, (_, i) => (n * 31 + i) & 0xff);\n  };\n}\nconst make = (o: { t?: { v: number }; policy?: object } = {}) => {\n  const t = o.t ?? { v: 1_800_000_000_000 };\n  return { t, reg: new ClientRegistry({ now: () => t.v, randomBytes: counter(), registrationEndpoint: 'https://as.example.org/register', ...(o.policy ? { policy: o.policy } : {}) }) };\n};\nconst code = (fn: () => unknown) => {\n  try {\n    fn();\n  } catch (e) {\n    assert.ok(e instanceof ClientError, String(e));\n    return e.code;\n  }\n  assert.fail('expected a ClientError');\n};\n\ntest('redirect URIs match exactly: no prefix, case, trailing-slash or query-parameter leniency', () => {\n  const reg = ['https://app.example.org/cb', 'https://app.example.org/cb2?x=1'];\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb'), true);\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb/'), false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-46.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.258Z"
+}

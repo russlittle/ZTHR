@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "analytics",
+  "mutant": {
+    "id": "137",
+    "line": 118,
+    "column": 38,
+    "endLine": 118,
+    "endColumn": 53,
+    "mutator": "ConditionalExpression",
+    "original": "e.name === from",
+    "replacement": "true",
+    "lineText": "const i = evs.findIndex((e) => e.name === from);",
+    "prevText": "for (const evs of this.byPerson().values()) {",
+    "nextText": "if (i < 0) continue;"
+  },
+  "mayEdit": [
+    "intent/blocks/analytics/analytics.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/analytics-137.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"analytics\". Mutant: line 118:38-118:53, mutator ConditionalExpression: \"e.name === from\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/analytics/index.ts (> marks the mutated line):\n   112    }\n   113  \n   114    /** The most common paths of up to `length` events, from a starting event. */\n   115    journeys(from: string, length: number, min = 5, top = 10): { path: string; people: number }[] {\n   116      const counts = new Map<string, number>();\n   117      for (const evs of this.byPerson().values()) {\n>  118        const i = evs.findIndex((e) => e.name === from);\n   119        if (i < 0) continue;\n   120        const path = evs.slice(i, i + length).map((e) => e.name).filter((n, j, a) => j === 0 || n !== a[j - 1]).join(' → ');\n   121        counts.set(path, (counts.get(path) ?? 0) + 1);\n   122      }\n   123      return [...counts].filter(([, n]) => n >= min).map(([path, people]) => ({ path, people })).sort((a, b) => b.people - a.people || a.path.localeCompare(b.path)).slice(0, top);\n   124    }\n\nTest file style (intent/blocks/analytics/analytics.test.ts):\n5 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Analytics } from './index.ts';\n\nconst make = () => {\n  let t = 0;\n  const a = new Analytics({ consented: (id) => !id.startsWith('no'), key: 'k', events: ['open', 'visit', 'signup', 'upload', 'constructor'], allow: { '*': ['plan'], upload: ['size'] }, now: () => t });\n  return { a, at: (n: number) => (t = n) };\n};\n\ntest('nothing is kept without consent, ids are pseudonymous, and only allowed properties survive', () => {\n  const { a } = make();\n  assert.equal(a.track('no-ana', 'open'), false);\n  a.track('u1', 'upload', { size: 3, plan: 'pro', email: 'ana@x.org', note: { x: 1 } });\n  assert.deepEqual(a.events[0]!.props, { size: 3, plan: 'pro' });\n  assert.notEqual(a.events[0]!.who, 'u1');\n  assert.equal(a.events[0]!.who, a.pseudonym('u1'));\n  assert.deepEqual(a.dropped, { noConsent: 1, props: 2 });\n  assert.equal(a.forget('u1'), 1);\n  assert.equal(a.events.length, 0);\n});\n\ntest('funnels count steps in order within a time limit, suppress small counts, and journeys show common paths', () => {\n  const { a, at } = make();\n  for (let i = 0; i < 10; i++) {\n    at(i * 1000);\n    a.track(`p${i}`, 'visit');\n    if (i < 8) at(i * 1000 + 100), a.track(`p${i}`, 'signup');\n    if (i < 5) at(i * 1000 + 200), a.track(`p${i}`, 'upload');\n    if (i === 9) at(i * 1000 + 999_999), a.track(`p${i}`, 'signup');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/analytics-137.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.067Z"
+}

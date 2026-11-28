@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf-parse",
+  "mutant": {
+    "id": "1666",
+    "line": 1009,
+    "column": 113,
+    "endLine": 1009,
+    "endColumn": 121,
+    "mutator": "ConditionalExpression",
+    "original": "b === 32",
+    "replacement": "false",
+    "lineText": "else for (const b of bytes) adv += ((font.widths?.get(b) ?? font.defaultWidth) / 1000) * size + charSp + (b === 32 ? wordSp : 0);",
+    "prevText": "if (font.twoByte) adv = (bytes.length / 2) * (font.defaultWidth / 1000) * size;",
+    "nextText": "adv *= hScale;"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf-parse/pdf-parse.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-parse-1666.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf-parse\". Mutant: line 1009:113-1009:121, mutator ConditionalExpression: \"b === 32\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf-parse/index.ts (> marks the mutated line):\n  1003      const show = (bytes: Buffer) => {\n  1004        if (!font) return;\n  1005        const text = decodeText(font, bytes);\n  1006        const trm = mul(tm, ctm);\n  1007        let adv = 0;\n  1008        if (font.twoByte) adv = (bytes.length / 2) * (font.defaultWidth / 1000) * size;\n> 1009        else for (const b of bytes) adv += ((font.widths?.get(b) ?? font.defaultWidth) / 1000) * size + charSp + (b === 32 ? wordSp : 0);\n  1010        adv *= hScale;\n  1011        const unit = Math.hypot(ctm[0], ctm[1]) || 1;\n  1012        if (text.length) items.push({ text, x: trm[4], y: trm[5], size: Math.abs(size * Math.hypot(trm[2], trm[3])) || size, font: font.name, page: page.index, x2: trm[4] + adv * unit });\n  1013        tm = mul([1, 0, 0, 1, adv, 0], tm);\n  1014      };\n  1015      for (;;) {\n\nTest file style (intent/blocks/pdf-parse/pdf-parse.test.ts):\n25 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { deflateSync } from 'node:zlib';\nimport { pdf } from '../pdf/index.ts';\nimport { Encrypted, Name, PdfDocument, PdfError, PdfString, Ref, UnsupportedFilter, decodeStream, execute, itemsToText, mergePlan, parseObjectText, parseRanges, parseToUnicode, rotatePlan, splitPlan } from './index.ts';\nimport type { Dict, Stream } from './index.ts';\n\nconst lat = (s: string) => Buffer.from(s, 'latin1');\n\n/** A small PDF written by hand: numbered object bodies, a classic cross-reference table, and the given trailer entries. */\nconst handmade = (objs: Record<number, string | Buffer>, trailer = '/Root 1 0 R', o: { header?: string } = {}): Buffer => {\n  const parts: Buffer[] = [lat(o.header ?? '%PDF-1.7\\n')];\n  let len = parts[0]!.length;\n  const offs: Record<number, number> = {};\n  const max = Math.max(...Object.keys(objs).map(Number));\n  for (const n of Object.keys(objs).map(Number)) {\n    offs[n] = len;\n    const b = Buffer.concat([lat(`${n} 0 obj\\n`), Buffer.isBuffer(objs[n]) ? (objs[n] as Buffer) : lat(objs[n] as string), lat('\\nendobj\\n')]);\n    parts.push(b);\n    len += b.length;\n  }\n  let x = `xref\\n0 ${max + 1}\\n0000000000 65535 f \\n`;\n  for (let n = 1; n <= max; n++) x += n in offs ? `${String(offs[n]).padStart(10, '0')} 00000 n \\n` : '0000000000 00000 f \\n';\n  parts.push(lat(`${x}trailer\\n<< /Size ${max + 1} ${trailer} >>\\nstartxref\\n${len}\\n%%EOF\\n`));\n  return Buffer.concat(parts);\n};\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-parse-1666.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:54.571Z"
+}

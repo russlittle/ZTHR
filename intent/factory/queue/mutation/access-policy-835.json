@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "access-policy",
+  "mutant": {
+    "id": "835",
+    "line": 429,
+    "column": 153,
+    "endLine": 429,
+    "endColumn": 175,
+    "mutator": "EqualityOperator",
+    "original": "e.host === filter.host",
+    "replacement": "e.host !== filter.host",
+    "lineText": "return this.entries.filter((e) => (!filter?.action || e.action === filter.action) && (!filter?.user || e.user === filter.user) && (!filter?.host || e.host === filter.host)).slice(-n).reverse();",
+    "prevText": "recent(n = 50, filter?: { action?: Action; user?: string; host?: string }): LogEntry[] {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/access-policy/access-policy.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/access-policy-835.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"access-policy\". Mutant: line 429:153-429:175, mutator EqualityOperator: \"e.host === filter.host\" becomes \"e.host !== filter.host\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/access-policy/index.ts (> marks the mutated line):\n   423    }\n   424    record(d: Decision): void {\n   425      this.entries.push(d.log);\n   426      if (this.entries.length > this.max) this.entries.shift();\n   427    }\n   428    recent(n = 50, filter?: { action?: Action; user?: string; host?: string }): LogEntry[] {\n>  429      return this.entries.filter((e) => (!filter?.action || e.action === filter.action) && (!filter?.user || e.user === filter.user) && (!filter?.host || e.host === filter.host)).slice(-n).reverse();\n   430    }\n   431    get size(): number {\n   432      return this.entries.length;\n   433    }\n   434  }\n   435  \n\nTest file style (intent/blocks/access-policy/access-policy.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AccessPolicy, AccessPolicyError, DecisionLog, checkRegex, clientIp, inCidr, normalizeHost, normalizePath } from './index.ts';\nimport type { AccessRequest, Config, Subject } from './index.ts';\n\nconst cfg: Config = {\n  networks: { office: ['203.0.113.0/24', '2001:db8:1::/48'] },\n  rules: [\n    { id: 'public', domain: 'www.example.com', path: '/public/*', policy: 'bypass' },\n    { id: 'health', path: '/healthz', methods: ['GET'], policy: 'bypass' },\n    { id: 'admin-from-office', domain: 'admin.example.com', networks: ['office'], subject: [['group:admins'], ['user:root']], policy: 'two_factor', maxAgeSec: 3600 },\n    { id: 'admin-closed', domain: 'admin.example.com', policy: 'deny' },\n    { id: 'app-read', domain: 'app.example.com', path: ['/api/*', '/static/*'], methods: ['GET', 'HEAD'], policy: 'one_factor' },\n    { id: 'app-write', domain: 'app.example.com', path: '/api/*', methods: ['POST', 'PUT', 'DELETE'], policy: 'two_factor' },\n    { id: 'reports', domain: '*.example.com', pathRegex: '/reports/[0-9]{4}/[a-z-]+', policy: 'one_factor' },\n  ],\n  domains: [{ domain: '*.example.com', policy: 'one_factor' }, { domain: 'locked.example.net', policy: 'deny' }],\n  defaultPolicy: 'deny',\n};\nconst engine = new AccessPolicy(cfg);\nconst NOW = 1_800_000_000_000;\nconst alice = (over: Partial<Subject> = {}): Subject => ({ user: 'alice', groups: ['staff'], level: 'one_factor', authenticatedAt: NOW - 60_000, ...over });\nconst req = (host: string, path: string, over: Partial<AccessRequest> = {}): AccessRequest => ({ host, path, method: 'GET', remoteIp: '198.51.100.9', subject: null, ...over });\nconst decide = (r: AccessRequest) => engine.decide(r, NOW);\n\ntest('a bypass rule lets an anonymous request through, and the decision names the rule and says why', () => {\n  const d = decide(req('www.example.com', '/public/logo.png'));\n  assert.equal(d.action, 'allow');\n  assert.equal(d.policy, 'bypass');\n  assert.equal(d.required, 'none');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/access-policy-835.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:33.493Z"
+}

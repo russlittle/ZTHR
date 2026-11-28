@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "client-registry",
+  "mutant": {
+    "id": "549",
+    "line": 420,
+    "column": 9,
+    "endLine": 420,
+    "endColumn": 30,
+    "mutator": "ConditionalExpression",
+    "original": "authMethod === 'none'",
+    "replacement": "true",
+    "lineText": "if (authMethod === 'none' && grantTypes.includes(GRANT_CLIENT_CREDENTIALS)) throw metaError('a public client cannot use client_credentials');",
+    "prevText": "if (grantTypes.includes(GRANT_AUTHORIZATION_CODE) && redirectUris.length === 0) throw new ClientError('invalid_redirect_uri', 'a client using authorization_code needs a redirect URI');",
+    "nextText": "const id = input.clientId ?? `c_${this.token(16)}`;"
+  },
+  "mayEdit": [
+    "intent/blocks/client-registry/client-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-549.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"client-registry\". Mutant: line 420:9-420:30, mutator ConditionalExpression: \"authMethod === 'none'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/client-registry/index.ts (> marks the mutated line):\n   414      const authMethod = input.authMethod ?? 'client_secret_basic';\n   415      const applicationType = input.applicationType ?? 'web';\n   416      const grantTypes = [...(input.grantTypes ?? [GRANT_AUTHORIZATION_CODE])];\n   417      const redirectUris = [...(input.redirectUris ?? [])];\n   418      for (const u of redirectUris) checkRedirectUri(u, applicationType, { allowLocalhostHost: this.policy.allowLocalhostHost });\n   419      if (grantTypes.includes(GRANT_AUTHORIZATION_CODE) && redirectUris.length === 0) throw new ClientError('invalid_redirect_uri', 'a client using authorization_code needs a redirect URI');\n>  420      if (authMethod === 'none' && grantTypes.includes(GRANT_CLIENT_CREDENTIALS)) throw metaError('a public client cannot use client_credentials');\n   421      const id = input.clientId ?? `c_${this.token(16)}`;\n   422      if (this.clients.has(id)) throw metaError(`a client with the id ${id} already exists`);\n   423      const secret = authMethod === 'none' ? undefined : this.makeSecret();\n   424      const client: ClientRecord = {\n   425        clientId: id,\n   426        name: input.name,\n\nTest file style (intent/blocks/client-registry/client-registry.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ClientError, ClientRegistry, checkRedirectUri, matchRedirectUri, parseBasicAuthorization } from './index.ts';\n\n/** Deterministic randomness: each call yields bytes counting up from a seed. */\nfunction counter() {\n  let n = 0;\n  return (len: number) => {\n    n += 1;\n    return Uint8Array.from({ length: len }, (_, i) => (n * 31 + i) & 0xff);\n  };\n}\nconst make = (o: { t?: { v: number }; policy?: object } = {}) => {\n  const t = o.t ?? { v: 1_800_000_000_000 };\n  return { t, reg: new ClientRegistry({ now: () => t.v, randomBytes: counter(), registrationEndpoint: 'https://as.example.org/register', ...(o.policy ? { policy: o.policy } : {}) }) };\n};\nconst code = (fn: () => unknown) => {\n  try {\n    fn();\n  } catch (e) {\n    assert.ok(e instanceof ClientError, String(e));\n    return e.code;\n  }\n  assert.fail('expected a ClientError');\n};\n\ntest('redirect URIs match exactly: no prefix, case, trailing-slash or query-parameter leniency', () => {\n  const reg = ['https://app.example.org/cb', 'https://app.example.org/cb2?x=1'];\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb'), true);\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb/'), false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-549.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.279Z"
+}

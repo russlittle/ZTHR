@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "structured-query",
+  "mutant": {
+    "id": "48",
+    "line": 158,
+    "column": 14,
+    "endLine": 158,
+    "endColumn": 20,
+    "mutator": "StringLiteral",
+    "original": "'hour'",
+    "replacement": "\"\"",
+    "lineText": "case 'hour': return `DATE_FORMAT(${s}, '%Y-%m-%d %H:00:00')`;",
+    "prevText": "case 'minute': return `DATE_FORMAT(${s}, '%Y-%m-%d %H:%i:00')`;",
+    "nextText": "case 'day': return `DATE(${s})`;"
+  },
+  "mayEdit": [
+    "intent/blocks/structured-query/structured-query.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/structured-query-48.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"structured-query\". Mutant: line 158:14-158:20, mutator StringLiteral: \"'hour'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/structured-query/index.ts (> marks the mutated line):\n   152      name: 'mysql',\n   153      quote: q('`'),\n   154      placeholder: () => '?',\n   155      truncate: (unit, s) => {\n   156        switch (unit) {\n   157          case 'minute': return `DATE_FORMAT(${s}, '%Y-%m-%d %H:%i:00')`;\n>  158          case 'hour': return `DATE_FORMAT(${s}, '%Y-%m-%d %H:00:00')`;\n   159          case 'day': return `DATE(${s})`;\n   160          case 'week': return `DATE(DATE_SUB(${s}, INTERVAL WEEKDAY(${s}) DAY))`;\n   161          case 'month': return `DATE_FORMAT(${s}, '%Y-%m-01')`;\n   162          case 'quarter': return `MAKEDATE(YEAR(${s}), 1) + INTERVAL (QUARTER(${s}) - 1) QUARTER`;\n   163          case 'year': return `DATE_FORMAT(${s}, '%Y-01-01')`;\n   164        }\n\nTest file style (intent/blocks/structured-query/structured-query.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { DatabaseSync } from 'node:sqlite';\nimport { compile, DIALECTS, QueryModelError } from './index.ts';\nimport type { StructuredQuery } from './index.ts';\n\nconst schema = {\n  orders: ['id', 'customer_id', 'total', 'status', 'created_at', 'note'],\n  customers: ['id', 'name', 'country'],\n};\n\nfunction db(): DatabaseSync {\n  const d = new DatabaseSync(':memory:');\n  d.exec(`\n    create table customers (id integer primary key, name text, country text);\n    create table orders (id integer primary key, customer_id integer, total real, status text, created_at text, note text);\n    insert into customers values (1,'Ada','UK'),(2,'Grace','US'),(3,'Linus','FI'),(4,'Nobody','US');\n    insert into orders values\n      (1,1,10,'paid','2026-01-05 10:00:00','50% off'),\n      (2,1,35,'paid','2026-01-20 11:30:00',null),\n      (3,2,5,'open','2026-02-02 09:00:00','a_b'),\n      (4,2,95,'paid','2026-02-14 23:59:00',null),\n      (5,3,0,'void','2026-04-01 00:00:00',null);\n  `);\n  return d;\n}\nconst run = (q: StructuredQuery, values?: Record<string, never>) => {\n  const c = compile(q, { dialect: 'sqlite', schema, ...(values ? { values } : {}) });\n  return db().prepare(c.sql).all(...(c.params as never[])) as Record<string, unknown>[];\n};\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/structured-query-48.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.802Z"
+}

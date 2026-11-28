@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "fractional-index",
+  "mutant": {
+    "id": "245",
+    "line": 145,
+    "column": 9,
+    "endLine": 145,
+    "endColumn": 21,
+    "mutator": "ConditionalExpression",
+    "original": "res === null",
+    "replacement": "false",
+    "lineText": "if (res === null) throw new NoRoom('cannot go lower than the smallest key');",
+    "prevText": "const res = decrement(ib);",
+    "nextText": "// The smallest integer is not itself a key; the room below the next one is its fractions."
+  },
+  "mayEdit": [
+    "intent/blocks/fractional-index/fractional-index.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/fractional-index-245.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"fractional-index\". Mutant: line 145:9-145:21, mutator ConditionalExpression: \"res === null\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/fractional-index/index.ts (> marks the mutated line):\n   139      if (b === null) return `a${ZERO}`;\n   140      const ib = integerPart(b);\n   141      const fb = b.slice(ib.length);\n   142      if (ib === SMALLEST_INTEGER) return ib + midpoint('', fb, BASE62);\n   143      if (ib < b) return ib;\n   144      const res = decrement(ib);\n>  145      if (res === null) throw new NoRoom('cannot go lower than the smallest key');\n   146      // The smallest integer is not itself a key; the room below the next one is its fractions.\n   147      return res === SMALLEST_INTEGER ? res + midpoint('', null, BASE62) : res;\n   148    }\n   149    if (b === null) {\n   150      const ia = integerPart(a);\n   151      const fa = a.slice(ia.length);\n\nTest file style (intent/blocks/fractional-index/fractional-index.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadKey, NoRoom, between, betweenMany, checkOrder, isKey, jitteredBetween, keyAt, needsRebalance, orderItems, rebalance, repairDuplicates } from './index.ts';\n\ntest('published vectors of the fractional-indexing scheme: single keys', () => {\n  const v: [string | null, string | null, string][] = [\n    [null, null, 'a0'],\n    ['a0', null, 'a1'],\n    ['a1', null, 'a2'],\n    ['a0', 'a1', 'a0V'],\n    ['a1', 'a2', 'a1V'],\n    ['a0V', 'a1', 'a0l'],\n    ['Zz', 'a0', 'ZzV'],\n    ['Zz', 'a1', 'a0'],\n    [null, 'Y00', 'Xzzz'],\n    ['bzz', null, 'c000'],\n    ['a0', 'a0V', 'a0G'],\n    ['a0', 'a0G', 'a08'],\n    ['b125', 'b129', 'b127'],\n    ['a0', 'a1V', 'a1'],\n    ['Zz', 'a01', 'a0'],\n    [null, 'a0V', 'a0'],\n    [null, 'b999', 'b99'],\n  ];\n  for (const [a, b, want] of v) assert.equal(between(a, b), want, `between(${a}, ${b})`);\n});\n\ntest('published vectors: many keys at once', () => {\n  assert.deepEqual(betweenMany(null, null, 5), ['a0', 'a1', 'a2', 'a3', 'a4']);\n  assert.deepEqual(betweenMany('a4', null, 10), ['a5', 'a6', 'a7', 'a8', 'a9', 'aA', 'aB', 'aC', 'aD', 'aE']);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/fractional-index-245.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.739Z"
+}

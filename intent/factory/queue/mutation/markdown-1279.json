@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "markdown",
+  "mutant": {
+    "id": "1279",
+    "line": 539,
+    "column": 10,
+    "endLine": 539,
+    "endColumn": 22,
+    "mutator": "EqualityOperator",
+    "original": "i < s.length",
+    "replacement": "i <= s.length",
+    "lineText": "while (i < s.length && /[ \\t\\n]/.test(s[i]!)) i++;",
+    "prevText": "let i = at;",
+    "nextText": "let url = '';"
+  },
+  "mayEdit": [
+    "intent/blocks/markdown/markdown.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/markdown-1279.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"markdown\". Mutant: line 539:10-539:22, mutator EqualityOperator: \"i < s.length\" becomes \"i <= s.length\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/markdown/index.ts (> marks the mutated line):\n   533  const isWs = (c: string | undefined) => c === undefined || /\\s/u.test(c);\n   534  const isPunct = (c: string | undefined) => c !== undefined && /[\\p{P}\\p{S}]/u.test(c);\n   535  const MAX_DELIMS = 3000;\n   536  \n   537  function parseDest(s: string, at: number): { url: string; title?: string; end: number } | undefined {\n   538    let i = at;\n>  539    while (i < s.length && /[ \\t\\n]/.test(s[i]!)) i++;\n   540    let url = '';\n   541    if (s[i] === '<') {\n   542      const e = s.indexOf('>', i);\n   543      if (e < 0 || s.slice(i, e).includes('\\n')) return undefined;\n   544      url = s.slice(i + 1, e);\n   545      if (/(^|[^\\\\])(\\\\\\\\)*</.test(url.replace(/^/, ' '))) return undefined;\n\nTest file style (intent/blocks/markdown/markdown.test.ts):\n11 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MarkdownError, collect, escapeHtml, frontMatter, headingIds, parse, parseWithFrontMatter, render, safeUrl, slugify, textContent, toHtml, walk } from './index.ts';\n\nconst cases = (title: string, rows: [string, string][], o: Parameters<typeof toHtml>[1] = {}) =>\n  test(title, () => {\n    for (const [md, html] of rows) assert.equal(toHtml(md, o), html, JSON.stringify(md));\n  });\n\ncases('CommonMark spec: headings, thematic breaks and code', [\n  ['# foo\\n## foo\\n### foo', '<h1>foo</h1>\\n<h2>foo</h2>\\n<h3>foo</h3>\\n'],\n  ['####### foo', '<p>####### foo</p>\\n'],\n  ['#5 bolt', '<p>#5 bolt</p>\\n'],\n  ['# foo ##\\n## foo #####   \\n### foo ### b', '<h1>foo</h1>\\n<h2>foo</h2>\\n<h3>foo ### b</h3>\\n'],\n  ['## \\n#\\n### ###', '<h2></h2>\\n<h1></h1>\\n<h3></h3>\\n'],\n  ['Foo *bar*\\n=========\\n\\nFoo *bar*\\n---------', '<h1>Foo <em>bar</em></h1>\\n<h2>Foo <em>bar</em></h2>\\n'],\n  ['***\\n---\\n___', '<hr />\\n<hr />\\n<hr />\\n'],\n  ['--\\n**\\n__', '<p>--\\n**\\n__</p>\\n'],\n  ['    a simple\\n      indented code block', '<pre><code>a simple\\n  indented code block\\n</code></pre>\\n'],\n  ['```\\n<\\n >\\n```', '<pre><code>&lt;\\n &gt;\\n</code></pre>\\n'],\n  ['~~~\\naaa\\n```\\n~~~', '<pre><code>aaa\\n```\\n</code></pre>\\n'],\n  ['```ruby\\ndef foo(x)\\n  return 3\\nend\\n```', '<pre><code class=\"language-ruby\">def foo(x)\\n  return 3\\nend\\n</code></pre>\\n'],\n  ['```\\naaa', '<pre><code>aaa\\n</code></pre>\\n'],\n  ['```\\n```', '<pre><code></code></pre>\\n'],\n  ['``` aa ```\\nfoo', '<p><code>aa</code>\\nfoo</p>\\n'],\n]);\n\ncases('CommonMark spec: paragraphs, quotes and lists', [\n  ['aaa\\n\\nbbb', '<p>aaa</p>\\n<p>bbb</p>\\n'],\n  ['aaa\\n bbb\\n    ccc', '<p>aaa\\nbbb\\nccc</p>\\n'],\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/markdown-1279.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:48.249Z"
+}

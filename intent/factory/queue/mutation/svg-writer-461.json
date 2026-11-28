@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "svg-writer",
+  "mutant": {
+    "id": "461",
+    "line": 202,
+    "column": 29,
+    "endLine": 202,
+    "endColumn": 36,
+    "mutator": "ConditionalExpression",
+    "original": "k === 3",
+    "replacement": "false",
+    "lineText": "if (lower === 'a' && (k === 3 || k === 4) && a !== 0 && a !== 1) throw new SvgError('an arc flag must be 0 or 1');",
+    "prevText": "seg.args.forEach((a, k) => {",
+    "nextText": "const n = num(a, precision);"
+  },
+  "mayEdit": [
+    "intent/blocks/svg-writer/svg-writer.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/svg-writer-461.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"svg-writer\". Mutant: line 202:29-202:36, mutator ConditionalExpression: \"k === 3\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/svg-writer/index.ts (> marks the mutated line):\n   196    let s = '';\n   197    for (const seg of segments) {\n   198      const lower = seg.command.toLowerCase();\n   199      if (seg.args.length !== ARITY[lower]) throw new SvgError(`${seg.command} takes ${ARITY[lower]} numbers, not ${seg.args.length}`);\n   200      s += seg.command;\n   201      seg.args.forEach((a, k) => {\n>  202        if (lower === 'a' && (k === 3 || k === 4) && a !== 0 && a !== 1) throw new SvgError('an arc flag must be 0 or 1');\n   203        const n = num(a, precision);\n   204        s += k === 0 || n.startsWith('-') ? n : ` ${n}`;\n   205      });\n   206    }\n   207    return s;\n   208  }\n\nTest file style (intent/blocks/svg-writer/svg-writer.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Path, Svg, SvgError, circle, el, escapeAttr, escapeText, estimateTextWidth, group, labelled, line, num, paint, parsePath, pathEl, polygon, polyline, rect, serializePath, text, write } from './index.ts';\n\n/** A small well-formedness check: tags nest and close, attributes are quoted and unique, and no stray \"<\" or \"&\" remains. */\nfunction wellFormed(xml: string): void {\n  const body = xml.replace(/^<\\?xml[^>]*\\?>\\s*/, '');\n  const stack: string[] = [];\n  const re = /<(\\/?)([A-Za-z][\\w:-]*)((?:\\s+[\\w:-]+=\"[^\"<]*\")*)\\s*(\\/?)>|([^<]+)/g;\n  let m: RegExpExecArray | null;\n  let consumed = 0;\n  while ((m = re.exec(body))) {\n    consumed += m[0].length;\n    if (m[5] !== undefined) {\n      assert.ok(!/&(?!amp;|lt;|gt;|quot;|apos;|#\\d+;)/.test(m[5]), `bare ampersand in text: ${m[5]}`);\n      continue;\n    }\n    const names = [...m[3]!.matchAll(/\\s+([\\w:-]+)=/g)].map((x) => x[1]);\n    assert.equal(new Set(names).size, names.length, `duplicate attribute in ${m[0]}`);\n    if (m[1]) assert.equal(stack.pop(), m[2], `mismatched </${m[2]}>`);\n    else if (!m[4]) stack.push(m[2]!);\n  }\n  assert.equal(consumed, body.length, 'unparsed content left in the document');\n  assert.deepEqual(stack, [], 'unclosed elements');\n}\n\ntest('numbers: bounded precision, no trailing zeros, no -0, never NaN or infinity', () => {\n  assert.equal(num(1), '1');\n  assert.equal(num(1.5), '1.5');\n  assert.equal(num(1 / 3), '0.333');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/svg-writer-461.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:06.820Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webauthn",
+  "mutant": {
+    "id": "628",
+    "line": 440,
+    "column": 108,
+    "endLine": 440,
+    "endColumn": 121,
+    "mutator": "StringLiteral",
+    "original": "'attestation'",
+    "replacement": "\"\"",
+    "lineText": "if (typeof fmt !== 'string' || !(stmt instanceof Map) || !Buffer.isBuffer(rawAuth)) throw new Rejected('attestation', 'the attestation object is missing parts');",
+    "prevText": "const rawAuth = ao.get('authData');",
+    "nextText": "const auth = parseAuthData(rawAuth);"
+  },
+  "mayEdit": [
+    "intent/blocks/webauthn/webauthn.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webauthn-628.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webauthn\". Mutant: line 440:108-440:121, mutator StringLiteral: \"'attestation'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webauthn/index.ts (> marks the mutated line):\n   434        throw new Rejected('attestation', (e as Error).message);\n   435      }\n   436      if (!(ao instanceof Map)) throw new Rejected('attestation', 'the attestation object is not a map');\n   437      const fmt = ao.get('fmt');\n   438      const stmt = ao.get('attStmt');\n   439      const rawAuth = ao.get('authData');\n>  440      if (typeof fmt !== 'string' || !(stmt instanceof Map) || !Buffer.isBuffer(rawAuth)) throw new Rejected('attestation', 'the attestation object is missing parts');\n   441      const auth = parseAuthData(rawAuth);\n   442      this.checkAuthData(auth, true);\n   443      if (!auth.attested) throw new Rejected('attestation', 'a registration carries the new credential');\n   444      if (auth.attested.credentialId.toString('base64url') !== r.id) throw new Rejected('attestation', 'the credential id does not match the one reported');\n   445      if (this.credentials.get(r.id)) throw new Rejected('duplicate', 'that credential is already registered');\n   446      const { key, alg } = coseMapToKey(auth.attested.key);\n\nTest file style (intent/blocks/webauthn/webauthn.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, generateKeyPairSync, randomBytes, sign as cryptoSign, X509Certificate } from 'node:crypto';\nimport type { KeyObject } from 'node:crypto';\nimport { test } from 'node:test';\nimport { bitString, boolean, explicit, integer, octetString, oid, oidOf, sequence, set, time, toPem, utf8String } from '../asn1-der/index.ts';\nimport { BadCbor, Challenges, coseToKey, FLAG, MemoryCredentials, Rejected, WebAuthn, decodeCbor, encodeCbor, parseAuthData, parseCbor } from './index.ts';\nimport type { Alg, AttestationPolicy, Cbor, RelyingParty } from './index.ts';\n\n// A throwaway attestation CA and authenticator certificate (EC P-256, valid for a century), made fresh for each run.\n/** A throwaway certificate made at run time: DER from the asn1-der writers, signed with node:crypto (ECDSA P-256 / SHA-256). */\nconst certName = (cn: string) => sequence(set(sequence(oid(oidOf('CN')), utf8String(cn))));\nfunction makeCert(o: { subject: string; publicKey: KeyObject; issuer?: string; issuerKey: KeyObject; ca?: boolean }): string {\n  const algId = sequence(oid(oidOf('ecdsa-with-SHA256')));\n  const exts = o.ca ? [explicit(3, sequence(sequence(oid(oidOf('basicConstraints')), boolean(true), octetString(sequence(boolean(true))))))] : [];\n  const tbs = sequence(\n    explicit(0, integer(2)), integer(BigInt(`0x${randomBytes(12).toString('hex')}`)), algId, certName(o.issuer ?? o.subject),\n    sequence(time(new Date(Date.UTC(2020, 0, 1))), time(new Date(Date.UTC(2120, 0, 1)))),\n    certName(o.subject), Buffer.from(o.publicKey.export({ type: 'spki', format: 'der' })), ...exts,\n  );\n  return toPem('CERTIFICATE', sequence(tbs, algId, bitString(cryptoSign('sha256', tbs, o.issuerKey)))).trim();\n}\nconst rootPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst leafPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst foreignPair = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst ROOT_PEM = `${makeCert({ subject: 'Test Attestation Root', publicKey: rootPair.publicKey, issuerKey: rootPair.privateKey, ca: true })}\\n`;\nconst LEAF_PEM = `${makeCert({ subject: 'Test Authenticator', issuer: 'Test Attestation Root', publicKey: leafPair.publicKey, issuerKey: rootPair.privateKey })}\\n`;\nconst FOREIGN_PEM = `${makeCert({ subject: 'Some Other Root', publicKey: foreignPair.publicKey, issuerKey: foreignPair.privateKey, ca: true })}\\n`;\nconst LEAF_KEY = leafPair.privateKey;\n\nconst ORIGIN = 'https://app.example.org';\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webauthn-628.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:13.733Z"
+}

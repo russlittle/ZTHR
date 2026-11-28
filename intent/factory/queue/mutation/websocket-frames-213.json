@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "websocket-frames",
+  "mutant": {
+    "id": "213",
+    "line": 163,
+    "column": 21,
+    "endLine": 163,
+    "endColumn": 28,
+    "mutator": "ConditionalExpression",
+    "original": "n > 125",
+    "replacement": "false",
+    "lineText": "if (isControl && (n > 125 || !fin)) throw new RangeError('a control frame is at most 125 bytes and is never fragmented');",
+    "prevText": "if (![0, 1, 2, 8, 9, 10].includes(f.opcode)) throw new RangeError(`opcode ${f.opcode} is not defined`);",
+    "nextText": "const head: number[] = [(fin ? 0x80 : 0) | f.opcode];"
+  },
+  "mayEdit": [
+    "intent/blocks/websocket-frames/websocket-frames.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/websocket-frames-213.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"websocket-frames\". Mutant: line 163:21-163:28, mutator ConditionalExpression: \"n > 125\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/websocket-frames/index.ts (> marks the mutated line):\n   157  /** Encodes a frame; give a 4-byte `mask` for frames a client sends (they must all be masked). */\n   158  export function encodeFrame(f: { fin?: boolean; opcode: number; payload: Uint8Array; mask?: Uint8Array }): Buffer {\n   159    const fin = f.fin ?? true;\n   160    const n = f.payload.length;\n   161    const isControl = (f.opcode & 0x8) !== 0;\n   162    if (![0, 1, 2, 8, 9, 10].includes(f.opcode)) throw new RangeError(`opcode ${f.opcode} is not defined`);\n>  163    if (isControl && (n > 125 || !fin)) throw new RangeError('a control frame is at most 125 bytes and is never fragmented');\n   164    const head: number[] = [(fin ? 0x80 : 0) | f.opcode];\n   165    const m = f.mask ? 0x80 : 0;\n   166    let ext = Buffer.alloc(0);\n   167    if (n < 126) head.push(m | n);\n   168    else if (n <= 0xffff) {\n   169      head.push(m | 126);\n\nTest file style (intent/blocks/websocket-frames/websocket-frames.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { FrameDecoder, OP, Session, WsHandshakeRefused, WsProtocolError, WsSendRefused, acceptKey, applyMask, checkUpgrade, decodeClosePayload, encodeClosePayload, encodeFrame, upgradeResponse, validCloseCode } from './index.ts';\nimport type { SessionEvent } from './index.ts';\n\nconst hex = (s: string) => Buffer.from(s.replace(/\\s+/g, ''), 'hex');\nconst KEY = hex('37fa213d');\n\ntest('the accept key is the RFC 6455 example', () => {\n  assert.equal(acceptKey('dGhlIHNhbXBsZSBub25jZQ=='), 's3pPLMBiTxaQ9kYGzzhZRbK+xOo=');\n});\n\ntest('RFC 6455 5.7 examples encode byte for byte', () => {\n  assert.deepEqual(encodeFrame({ opcode: OP.text, payload: Buffer.from('Hello') }), hex('81 05 48 65 6c 6c 6f'));\n  assert.deepEqual(encodeFrame({ opcode: OP.text, payload: Buffer.from('Hello'), mask: KEY }), hex('81 85 37 fa 21 3d 7f 9f 4d 51 58'));\n  assert.deepEqual(encodeFrame({ fin: false, opcode: OP.text, payload: Buffer.from('Hel') }), hex('01 03 48 65 6c'));\n  assert.deepEqual(encodeFrame({ opcode: OP.continuation, payload: Buffer.from('lo') }), hex('80 02 6c 6f'));\n  assert.deepEqual(encodeFrame({ opcode: OP.ping, payload: Buffer.from('Hello') }), hex('89 05 48 65 6c 6c 6f'));\n  assert.deepEqual(encodeFrame({ opcode: OP.pong, payload: Buffer.from('Hello'), mask: KEY }), hex('8a 85 37 fa 21 3d 7f 9f 4d 51 58'));\n  const b256 = encodeFrame({ opcode: OP.binary, payload: Buffer.alloc(256) });\n  assert.deepEqual(b256.subarray(0, 4), hex('82 7e 01 00'));\n  assert.equal(b256.length, 4 + 256);\n  const b64k = encodeFrame({ opcode: OP.binary, payload: Buffer.alloc(65536) });\n  assert.deepEqual(b64k.subarray(0, 10), hex('82 7f 00 00 00 00 00 01 00 00'));\n});\n\ntest('the decoder reads the RFC examples, masked and not, and unmasks the payload', () => {\n  const server = new FrameDecoder({ role: 'server' });\n  const [f] = server.push(hex('81 85 37 fa 21 3d 7f 9f 4d 51 58'));\n  assert.equal(f!.payload.toString(), 'Hello');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/websocket-frames-213.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.280Z"
+}

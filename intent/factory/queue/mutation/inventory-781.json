@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "inventory",
+  "mutant": {
+    "id": "781",
+    "line": 433,
+    "column": 56,
+    "endLine": 433,
+    "endColumn": 81,
+    "mutator": "ConditionalExpression",
+    "original": "r.expiresAt !== undefined",
+    "replacement": "true",
+    "lineText": "const gone = [...this.held.values()].filter((r) => r.expiresAt !== undefined && r.expiresAt <= now).map((r) => r.ref);",
+    "prevText": "const now = this.o.now().getTime();",
+    "nextText": "for (const g of gone) this.held.delete(g);"
+  },
+  "mayEdit": [
+    "intent/blocks/inventory/inventory.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/inventory-781.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"inventory\". Mutant: line 433:56-433:81, mutator ConditionalExpression: \"r.expiresAt !== undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/inventory/index.ts (> marks the mutated line):\n   427    release(ref: string): boolean {\n   428      return this.held.delete(ref);\n   429    }\n   430    /** Release every reservation whose time has passed; returns their references. */\n   431    sweep(): string[] {\n   432      const now = this.o.now().getTime();\n>  433      const gone = [...this.held.values()].filter((r) => r.expiresAt !== undefined && r.expiresAt <= now).map((r) => r.ref);\n   434      for (const g of gone) this.held.delete(g);\n   435      return gone;\n   436    }\n   437    /** Turn a reservation into moves to an outside place (an issue) or to another of your places (a transfer). */\n   438    fulfil(ref: string, to: string): Move[] {\n   439      const r = this.held.get(ref);\n\nTest file style (intent/blocks/inventory/inventory.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Ledger } from '../ledger/index.ts';\nimport { money } from '../money/index.ts';\nimport { Inventory, StockError } from './index.ts';\n\nconst usd = (n: number) => money(n, 'USD');\nlet clock = new Date('2026-03-10T10:00:00Z');\nconst make = (valuation: 'fifo' | 'average' = 'fifo', tracking: 'none' | 'lot' | 'serial' = 'none') => {\n  clock = new Date('2026-03-10T10:00:00Z');\n  const inv = new Inventory({ now: () => clock, currency: 'USD' });\n  inv.addPlace({ id: 'supplier', kind: 'supplier' });\n  inv.addPlace({ id: 'customer', kind: 'customer' });\n  inv.addPlace({ id: 'loss', kind: 'loss' });\n  inv.addPlace({ id: 'main', kind: 'internal' });\n  inv.addPlace({ id: 'shop', kind: 'internal' });\n  inv.addPlace({ id: 'van', kind: 'transit' });\n  inv.addProduct({ sku: 'W', tracking, valuation });\n  return inv;\n};\nconst code = (f: () => unknown) => {\n  try {\n    f();\n    return 'no error';\n  } catch (e) {\n    return e instanceof StockError ? e.code : `other: ${(e as Error).message}`;\n  }\n};\n\ntest('quantity is the sum of moves; every receipt and issue is on record', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/inventory-781.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:44.776Z"
+}

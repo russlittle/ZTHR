@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "openapi",
+  "mutant": {
+    "id": "1990",
+    "line": 663,
+    "column": 42,
+    "endLine": 668,
+    "endColumn": 8,
+    "mutator": "BlockStatement",
+    "original": "{\n        const n = /^#\\/components\\/parameters\\/(.+)$/.exec(q['$ref'])?.[1];\n        const t = n && Object.hasOwn(doc.components?.parameters ?? {}, n) ? doc.components!.parameters![n] : undefined;\n        if (!t) continue;\n        q = t as Obj;\n      }",
+    "replacement": "{}",
+    "lineText": "if (typeof q['$ref'] === 'string') {",
+    "prevText": "let q = p as Obj;",
+    "nextText": "const n = /^#\\/components\\/parameters\\/(.+)$/.exec(q['$ref'])?.[1];"
+  },
+  "mayEdit": [
+    "intent/blocks/openapi/openapi.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/openapi-1990.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"openapi\". Mutant: line 663:42-668:8, mutator BlockStatement: \"{\\n        const n = /^#\\\\/components\\\\/parameters\\\\/(.+)$/.exec(q['$ref'])?.[1];\\n        const t = n && Object.hasOwn(doc.components?.parameters ?? {}, n) ? doc.components!.parameters![n] : undefined;\\n        if (!t) continue;\\n        q = t as Obj;\\n      }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/openapi/index.ts (> marks the mutated line):\n   657  \n   658  function paramsOf(op: Obj, item: Obj, doc: OpenApiDocument): Map<string, Obj> {\n   659    const m = new Map<string, Obj>();\n   660    const take = (list: unknown) => {\n   661      for (const p of Array.isArray(list) ? list : []) {\n   662        let q = p as Obj;\n>  663        if (typeof q['$ref'] === 'string') {\n   664          const n = /^#\\/components\\/parameters\\/(.+)$/.exec(q['$ref'])?.[1];\n   665          const t = n && Object.hasOwn(doc.components?.parameters ?? {}, n) ? doc.components!.parameters![n] : undefined;\n   666          if (!t) continue;\n   667          q = t as Obj;\n   668        }\n   669        m.set(`${String(q['in'])}:${String(q['name'])}`, q);\n\nTest file style (intent/blocks/openapi/openapi.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Versions } from '../apiver/index.ts';\nimport { InvalidApi, arr, bool, build, check, contract, diff, enumOf, exampleFor, int, isBackwardCompatible, nullable, obj, ref, str, validateValue, verifyResponse } from './index.ts';\nimport type { OpenApiDocument, RouteDecl } from './index.ts';\n\nconst User = obj({ id: int({ minimum: 1 }), name: str({ minLength: 1 }), role: enumOf(['admin', 'member']), email: nullable(str({ format: 'email' })) }, { required: ['id', 'name', 'role'] });\n\nconst routes = (): RouteDecl[] => [\n  { method: 'get', path: '/users/{id}', operationId: 'getUser', pathParams: { id: int({ minimum: 1 }) }, responses: { '200': { description: 'The user', schema: ref('User'), example: { id: 1, name: 'Ada', role: 'admin', email: null } }, '404': { description: 'Missing' } } },\n  { method: 'post', path: '/users', operationId: 'createUser', body: { schema: obj({ name: str({ minLength: 1 }), role: enumOf(['admin', 'member']) }, { required: ['name'] }) }, responses: { '201': { description: 'Created', schema: ref('User'), headers: { Location: { schema: str(), required: true } } } }, security: 'none' },\n  { method: 'get', path: '/users', operationId: 'listUsers', query: { limit: { schema: int({ minimum: 1, maximum: 100 }) }, q: { schema: str(), required: true } }, responses: { '200': { description: 'Users', schema: arr(ref('User')) } } },\n];\n\nconst make = (r = routes(), extra: Partial<Parameters<typeof build>[0]> = {}): OpenApiDocument =>\n  build({ info: { title: 'Users', version: '1.0.0' }, routes: r, schemas: { User }, securitySchemes: { bearer: { type: 'http', scheme: 'bearer' } }, security: ['bearer'], ...extra });\nconst clone = <T>(x: T): T => structuredClone(x);\n\ntest('build makes a 3.1 document that passes its own check', () => {\n  const d = make();\n  assert.equal(d.openapi, '3.1.0');\n  assert.deepEqual(Object.keys(d.paths).sort(), ['/users', '/users/{id}']);\n  assert.deepEqual(check(d).errors, []);\n  assert.deepEqual(d.paths['/users']!['post']!['security'], []);\n  assert.deepEqual(d.paths['/users/{id}']!['get']!['parameters'], [{ name: 'id', in: 'path', required: true, schema: { type: 'integer', minimum: 1 } }]);\n});\n\ntest('build lists every problem in one InvalidApi', () => {\n  const bad = routes();\n  bad.push({ method: 'get', path: '/x/{a}', operationId: 'getUser', responses: { '200': { description: 'ok', schema: ref('Nope') } } });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/openapi-1990.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:52.602Z"
+}

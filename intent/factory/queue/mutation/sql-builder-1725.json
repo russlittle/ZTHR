@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "sql-builder",
+  "mutant": {
+    "id": "1725",
+    "line": 675,
+    "column": 29,
+    "endLine": 675,
+    "endColumn": 47,
+    "mutator": "ConditionalExpression",
+    "original": "w(next) === 'join'",
+    "replacement": "true",
+    "lineText": "if (lw === 'cross' && w(next) === 'join' && !policy.allowCrossJoin) problems.push('cross joins are not allowed');",
+    "prevText": "if (lw === 'for' && ['update', 'share', 'no', 'key'].includes(w(next) ?? '')) problems.push('locking clauses are not allowed');",
+    "nextText": "if (lw === 'with' && i > 0 && prev?.v !== '(') problems.push('WITH is only allowed at the start');"
+  },
+  "mayEdit": [
+    "intent/blocks/sql-builder/sql-builder.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sql-builder-1725.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sql-builder\". Mutant: line 675:29-675:47, mutator ConditionalExpression: \"w(next) === 'join'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sql-builder/index.ts (> marks the mutated line):\n   669      if (t.k === 'qid' && denied.has(t.v.toLowerCase())) problems.push(`the column ${t.v} may not be used`);\n   670      if (lw !== undefined) {\n   671        if (DENY_KEYWORDS.has(lw) && !(lw === 'set' && false)) {\n   672          if (!(lw === 'do' && false)) problems.push(`${lw.toUpperCase()} is not allowed`);\n   673        }\n   674        if (lw === 'for' && ['update', 'share', 'no', 'key'].includes(w(next) ?? '')) problems.push('locking clauses are not allowed');\n>  675        if (lw === 'cross' && w(next) === 'join' && !policy.allowCrossJoin) problems.push('cross joins are not allowed');\n   676        if (lw === 'with' && i > 0 && prev?.v !== '(') problems.push('WITH is only allowed at the start');\n   677        if (denied.has(lw)) problems.push(`the column ${lw} may not be used`);\n   678      }\n   679      if (t.k === 'punct' && t.v === '(') {\n   680        const before = prev && (prev.k === 'word' || prev.k === 'qid') ? prev : undefined;\n   681        const isSub = ['select', 'with', 'values'].includes(w(next) ?? '');\n\nTest file style (intent/blocks/sql-builder/sql-builder.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { selectSql, insertSql, updateSql, deleteSql, planToSql, placeholdersMatch, checkReadOnly, assertReadOnly, policyFor, limitTo, checkExplain, SqlError, UnsafeSql } from './index.ts';\nimport type { Collection } from '../query/index.ts';\n\nconst cols: Collection[] = [\n  { name: 'customers', fields: { id: { type: 'number' }, name: { type: 'string' }, email: { type: 'string', sensitive: true }, created: { type: 'date' }, vip: { type: 'boolean' } } },\n  { name: 'orders', fields: { id: { type: 'number' }, customer_id: { type: 'number' }, total: { type: 'number' }, status: { type: 'string' } } },\n];\nconst policy = policyFor(cols, { maxLimit: 500 });\n\ntest('select quotes names and binds every value (pg)', () => {\n  const b = selectSql({ from: 'orders', columns: ['id', 'total'], where: { and: [{ column: 'status', op: '=', value: 'open' }, { column: 'total', op: '>=', value: 10 }] }, limit: 20 }, cols);\n  assert.equal(b.text, 'SELECT \"orders\".\"id\", \"orders\".\"total\" FROM \"orders\" WHERE (\"orders\".\"status\" = $1 AND \"orders\".\"total\" >= $2) LIMIT $3');\n  assert.deepEqual(b.params, ['open', 10, 20]);\n  assert.ok(placeholdersMatch(b));\n});\n\ntest('mysql and sqlite use ? and their quoting', () => {\n  const b = selectSql({ from: 'orders', columns: ['id'], where: { column: 'id', op: 'in', value: [1, 2, 3] } }, cols, { dialect: 'mysql' });\n  assert.match(b.text, /^SELECT `orders`\\.`id` FROM `orders` WHERE `orders`\\.`id` IN \\(\\?, \\?, \\?\\) LIMIT \\?$/);\n  assert.deepEqual(b.params, [1, 2, 3, 100]);\n  assert.ok(placeholdersMatch(b, 'mysql'));\n});\n\ntest('injection text stays in the parameters', () => {\n  const evil = \"x'; DROP TABLE orders; --\";\n  const b = selectSql({ from: 'orders', columns: ['id'], where: { column: 'status', op: '=', value: evil } }, cols);\n  assert.ok(!b.text.includes('DROP'));\n  assert.deepEqual(b.params[0], evil);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sql-builder-1725.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:04.879Z"
+}

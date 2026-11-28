@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "rich-text-doc",
+  "mutant": {
+    "id": "51",
+    "line": 142,
+    "column": 102,
+    "endLine": 142,
+    "endColumn": 126,
+    "mutator": "ArrayDeclaration",
+    "original": "[...this.compiled.names]",
+    "replacement": "[]",
+    "lineText": "return !this.isLeaf && !this.isText && this.compiled !== null && this.compiled.names.size > 0 && [...this.compiled.names].every((n) => this.schema.nodes.get(n)?.isInline);",
+    "prevText": "get isTextblock(): boolean {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/rich-text-doc/rich-text-doc.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-doc-51.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"rich-text-doc\". Mutant: line 142:102-142:126, mutator ArrayDeclaration: \"[...this.compiled.names]\" becomes \"[]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/rich-text-doc/index.ts (> marks the mutated line):\n   136      this.isLeaf = !this.isText && (spec.content === undefined || spec.content.trim() === '');\n   137    }\n   138    get isBlock(): boolean {\n   139      return !this.isInline;\n   140    }\n   141    get isTextblock(): boolean {\n>  142      return !this.isLeaf && !this.isText && this.compiled !== null && this.compiled.names.size > 0 && [...this.compiled.names].every((n) => this.schema.nodes.get(n)?.isInline);\n   143    }\n   144    schema!: Schema;\n   145    /** Whether a child of this type name may appear at all in this type's content. */\n   146    allows(child: string): boolean {\n   147      return this.compiled?.names.has(child) ?? false;\n   148    }\n\nTest file style (intent/blocks/rich-text-doc/rich-text-doc.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AddMarkStep, AttrStep, InvalidContent, Mapping, ReplaceAroundStep, ReplaceError, ReplaceStep, RemoveMarkStep, Schema, StepMap, Transform, TransformError, basicSchema as S, cut, emptySlice, fragSize, fromHTML, nodeSize, nodesBetween, replace, resolve, slice, sliceOf, stepFromJSON, textBetween, textContent, toHTML } from './index.ts';\nimport type { Node, Step } from './index.ts';\n\nconst t = (s: string, marks?: Parameters<typeof S.text>[1]) => S.text(s, marks);\nconst p = (...c: Node[]) => S.node('paragraph', undefined, c);\nconst h = (level: number, ...c: Node[]) => S.node('heading', { level }, c);\nconst doc = (...c: Node[]) => S.node('doc', undefined, c);\nconst li = (...c: Node[]) => S.node('list_item', undefined, c);\nconst ul = (...c: Node[]) => S.node('bullet_list', undefined, c);\nconst bq = (...c: Node[]) => S.node('blockquote', undefined, c);\nconst strong = S.mark('strong');\nconst em = S.mark('em');\nconst link = (href: string) => S.mark('link', { href });\nconst same = (a: Node, b: Node) => assert.deepEqual(a, b);\nconst valid = (d: Node) => assert.deepEqual(S.check(d), []);\n\nfunction run(d: Node, f: (tr: Transform) => void): Transform {\n  const tr = new Transform(S, d);\n  f(tr);\n  valid(tr.doc);\n  return tr;\n}\nfunction undo(tr: Transform): Node {\n  const back = new Transform(S, tr.doc);\n  for (const s of tr.inverted()) back.step(s);\n  return back.doc;\n}\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-doc-51.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.009Z"
+}

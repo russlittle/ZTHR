@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "media-assets",
+  "mutant": {
+    "id": "47",
+    "line": 50,
+    "column": 25,
+    "endLine": 50,
+    "endColumn": 46,
+    "mutator": "EqualityOperator",
+    "original": "w > MAX_DIMENSION * 4",
+    "replacement": "w >= MAX_DIMENSION * 4",
+    "lineText": "if (w < 1 || h < 1 || w > MAX_DIMENSION * 4 || h > MAX_DIMENSION * 4) return { mime, ext };",
+    "prevText": "function sized(mime: string, ext: string, w: number, h: number): Sniffed {",
+    "nextText": "return { mime, ext, width: w, height: h };"
+  },
+  "mayEdit": [
+    "intent/blocks/media-assets/media-assets.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/media-assets-47.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"media-assets\". Mutant: line 50:25-50:46, mutator EqualityOperator: \"w > MAX_DIMENSION * 4\" becomes \"w >= MAX_DIMENSION * 4\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/media-assets/index.ts (> marks the mutated line):\n    44  const u24le = (b: Uint8Array, i: number) => (b[i] ?? 0) | ((b[i + 1] ?? 0) << 8) | ((b[i + 2] ?? 0) << 16);\n    45  const u32be = (b: Uint8Array, i: number) => (((b[i] ?? 0) * 2 ** 24) + (((b[i + 1] ?? 0) << 16) | ((b[i + 2] ?? 0) << 8) | (b[i + 3] ?? 0)));\n    46  const ascii = (b: Uint8Array, i: number, n: number) => String.fromCharCode(...b.subarray(i, i + n));\n    47  const MAX_DIMENSION = 65_535;\n    48  \n    49  function sized(mime: string, ext: string, w: number, h: number): Sniffed {\n>   50    if (w < 1 || h < 1 || w > MAX_DIMENSION * 4 || h > MAX_DIMENSION * 4) return { mime, ext };\n    51    return { mime, ext, width: w, height: h };\n    52  }\n    53  \n    54  /** What the bytes really are, from their start. Returns undefined for anything not recognised. */\n    55  export function sniff(bytes: Uint8Array): Sniffed | undefined {\n    56    const b = bytes;\n\nTest file style (intent/blocks/media-assets/media-assets.test.ts):\n25 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { test } from 'node:test';\nimport { InUse, Library, MediaError, altProblem, cleanName, planDerivative, sniff, srcsetWidths, svgDanger } from './index.ts';\n\n// ------------------------------------------------------------ fixtures built byte by byte\n\nconst be32 = (n: number) => [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255];\nconst le16 = (n: number) => [n & 255, (n >> 8) & 255];\nconst le24 = (n: number) => [n & 255, (n >> 8) & 255, (n >> 16) & 255];\nconst text = (s: string) => [...Buffer.from(s, 'latin1')];\nconst png = (w: number, h: number, pad = 0) => Uint8Array.from([0x89, ...text('PNG'), 0x0d, 0x0a, 0x1a, 0x0a, ...be32(13), ...text('IHDR'), ...be32(w), ...be32(h), 8, 6, 0, 0, 0, 0, 0, 0, 0, ...Array(pad).fill(7)]);\nconst gif = (w: number, h: number) => Uint8Array.from([...text('GIF89a'), ...le16(w), ...le16(h), 0, 0, 0, 0, 0]);\nconst jpeg = (w: number, h: number) =>\n  Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, ...text('JFIF'), 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0xff, 0xdb, 0, 4, 1, 2, 0xff, 0xc0, 0, 17, 8, (h >> 8) & 255, h & 255, (w >> 8) & 255, w & 255, 3, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1, 0xff, 0xda, 0, 2]);\nconst riff = (chunk: string, data: number[]) => Uint8Array.from([...text('RIFF'), ...le16(0), 0, 0, ...text('WEBP'), ...text(chunk), ...le16(data.length), 0, 0, ...data]);\nconst webpX = (w: number, h: number) => riff('VP8X', [0, 0, 0, 0, ...le24(w - 1), ...le24(h - 1)]);\nconst webpL = (w: number, h: number) => {\n  const bits = ((w - 1) | ((h - 1) << 14)) >>> 0;\n  return riff('VP8L', [0x2f, bits & 255, (bits >>> 8) & 255, (bits >>> 16) & 255, (bits >>> 24) & 255]);\n};\nconst webpLossy = (w: number, h: number) => riff('VP8 ', [0, 0, 0, 0x9d, 0x01, 0x2a, ...le16(w), ...le16(h), 0, 0]);\nconst avif = (w: number, h: number) => Uint8Array.from([...be32(28), ...text('ftyp'), ...text('avif'), 0, 0, 0, 0, ...text('avifmif1'), ...be32(20), ...text('ispe'), 0, 0, 0, 0, ...be32(w), ...be32(h)]);\nconst svg = (body = '<rect width=\"10\" height=\"10\"/>', attrs = 'width=\"120\" height=\"80\"') => Buffer.from(`<?xml version=\"1.0\"?>\\n<svg xmlns=\"http://www.w3.org/2000/svg\" ${attrs}>${body}</svg>`);\n\nconst make = (o: Partial<ConstructorParameters<typeof Library>[0]> = {}) => {\n  let n = 0;\n  return new Library({ newId: () => `id${++n}`, now: () => 1000 + n, ...o });\n};\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/media-assets-47.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:48.951Z"
+}

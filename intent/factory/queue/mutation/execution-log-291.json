@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "execution-log",
+  "mutant": {
+    "id": "291",
+    "line": 255,
+    "column": 117,
+    "endLine": 255,
+    "endColumn": 145,
+    "mutator": "ObjectLiteral",
+    "original": "{ newRun: run.id, fromStep }",
+    "replacement": "{}",
+    "lineText": "await this.#audit?.record({ actor: o.actor ?? 'system', action: 'run.replay', target: `run/${orig.id}`, detail: { newRun: run.id, fromStep } });",
+    "prevText": "this.store.put({ ...this.#need(run.id), replayOf: { run: orig.id, fromStep } });",
+    "nextText": "for (const s of orig.steps.slice(0, fromStep)) {"
+  },
+  "mayEdit": [
+    "intent/blocks/execution-log/execution-log.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/execution-log-291.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"execution-log\". Mutant: line 255:117-255:145, mutator ObjectLiteral: \"{ newRun: run.id, fromStep }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/execution-log/index.ts (> marks the mutated line):\n   249      if (orig.status === 'running') throw new NotReplayable(`run ${runId} is still running`);\n   250      const first = orig.steps[fromStep];\n   251      if (!Number.isInteger(fromStep) || !first) throw new NotReplayable(`run ${runId} has no step ${fromStep}`);\n   252      if (first.inputAltered && o.input === undefined) throw new NotReplayable(`step ${fromStep} (${first.name}) had its input redacted or cut, so it cannot be replayed as it was; supply the input`);\n   253      const run = await this.start(orig.flow, `replay of ${orig.id}`, o.actor ?? 'system');\n   254      this.store.put({ ...this.#need(run.id), replayOf: { run: orig.id, fromStep } });\n>  255      await this.#audit?.record({ actor: o.actor ?? 'system', action: 'run.replay', target: `run/${orig.id}`, detail: { newRun: run.id, fromStep } });\n   256      for (const s of orig.steps.slice(0, fromStep)) {\n   257        this.step(run.id, { name: s.name, input: s.input, output: s.output, startedAt: new Date(s.startedAt), finishedAt: new Date(s.finishedAt), reused: true });\n   258      }\n   259      let input: unknown = o.input !== undefined ? o.input : first.input;\n   260      for (const s of orig.steps.slice(fromStep)) {\n   261        const started = this.#now();\n\nTest file style (intent/blocks/execution-log/execution-log.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Audit, memoryAudit } from '../audit/index.ts';\nimport { ExecutionLog, NotFound, NotReplayable, REDACTED, redact } from './index.ts';\n\nconst clock = (start = '2026-11-01T00:00:00Z') => {\n  let t = new Date(start).getTime();\n  return { now: () => new Date(t), advance: (ms: number) => void (t += ms) };\n};\nconst ids = () => { let n = 0; return () => `r${++n}`; };\n\ntest('sensitive keys are redacted at any depth, other values are kept', () => {\n  const r = redact({ user: 'ana', password: 'hunter2', nested: { Authorization: 'Bearer abc', list: [{ apiKey: 'k', ok: 1 }] }, 'X-Api-Key': 'z' });\n  assert.deepEqual(r.value, { user: 'ana', password: REDACTED, nested: { Authorization: REDACTED, list: [{ apiKey: REDACTED, ok: 1 }] }, 'X-Api-Key': REDACTED });\n  assert.equal(r.altered, true);\n  assert.deepEqual(redact({ a: 1 }), { value: { a: 1 }, altered: false });\n});\n\ntest('declared secret values are removed from inside strings, longest first', () => {\n  const r = redact({ url: 'https://x/?k=supersecret123&z=1', note: 'supersecret123456 and supersecret123' }, { secrets: ['supersecret123', 'supersecret123456'] });\n  assert.deepEqual(r.value, { url: `https://x/?k=${REDACTED}&z=1`, note: `${REDACTED} and ${REDACTED}` });\n  assert.equal(redact('abc', { secrets: ['abc'] }).altered, false, 'a secret shorter than 4 characters is ignored, not scrubbed everywhere');\n});\n\ntest('long strings, long arrays, deep nesting and cycles are cut with a marker', () => {\n  const r = redact({ s: 'x'.repeat(30), a: [1, 2, 3, 4] }, { maxString: 10, maxItems: 2 });\n  assert.deepEqual(r.value, { s: `${'x'.repeat(10)}…[cut 20 characters]`, a: [1, 2, '[cut 2 more items]'] });\n  const cyc: Record<string, unknown> = { name: 'c' };\n  cyc.self = cyc;\n  assert.deepEqual(redact(cyc).value, { name: 'c', self: '[circular]' });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/execution-log-291.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.303Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "outbound",
+  "mutant": {
+    "id": "329",
+    "line": 316,
+    "column": 29,
+    "endLine": 316,
+    "endColumn": 36,
+    "mutator": "OptionalChaining",
+    "original": "c?.body",
+    "replacement": "c.body",
+    "lineText": "return new Response(c?.body ?? '', { status: c?.status ?? 200, headers: c?.headers ?? {} });",
+    "prevText": "const c = this.canned.get(`${init.method} ${url}`) ?? this.canned.get(`* ${new URL(url).host}`);",
+    "nextText": "},"
+  },
+  "mayEdit": [
+    "intent/blocks/outbound/outbound.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/outbound-329.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"outbound\". Mutant: line 316:29-316:36, mutator OptionalChaining: \"c?.body\" becomes \"c.body\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/outbound/index.ts (> marks the mutated line):\n   310        resolve: async () => ['93.184.216.34'],\n   311        ...o,\n   312        fetch: async (url, init) => {\n   313          const h = (init.headers ?? {}) as Record<string, string>;\n   314          this.calls.push({ purpose: '', method: String(init.method), url, headers: h, body: init.body === undefined ? '' : String(init.body) });\n   315          const c = this.canned.get(`${init.method} ${url}`) ?? this.canned.get(`* ${new URL(url).host}`);\n>  316          return new Response(c?.body ?? '', { status: c?.status ?? 200, headers: c?.headers ?? {} });\n   317        },\n   318      });\n   319    }\n   320  \n   321    /** Answers `method url` with this response; `reply('*', 'host', ...)` answers anything to a host. */\n   322    reply(method: string, urlOrHost: string, status: number, body = '', headers: Record<string, string> = {}): this {\n\nTest file style (intent/blocks/outbound/outbound.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { EgressRefused, EgressTwin, allowed, door, routedEgress } from './index.ts';\n\nconst allow = {\n  'api.weather.example': { purposes: ['weather.forecast'] },\n  '*.hooks.example': { purposes: ['webhook.deliver'], methods: ['POST'] },\n  'files.example': { purposes: ['*'], ports: [8443] },\n};\nconst PUBLIC = async () => ['93.184.216.34'];\n\nfunction mk(handler: (url: string, init: RequestInit) => Response | Promise<Response>, extra: Record<string, unknown> = {}) {\n  const calls: { url: string; init: RequestInit }[] = [];\n  let t = 1000;\n  const egress = door({\n    allow,\n    resolve: PUBLIC,\n    now: () => (t += 5),\n    fetch: async (url, init) => {\n      calls.push({ url, init });\n      return handler(url, init);\n    },\n    ...extra,\n  });\n  return { egress, calls };\n}\n\ntest('a call to an allowed host for its declared purpose goes through and is recorded without query values', async () => {\n  const { egress, calls } = mk(() => new Response('{\"temp\":21}', { status: 200 }));\n  const r = await egress.request({ purpose: 'weather.forecast', url: 'https://api.weather.example/v1/f?city=Dayton&apikey=hunter2' });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/outbound-329.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:53.080Z"
+}

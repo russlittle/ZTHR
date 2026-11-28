@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "state-store",
+  "mutant": {
+    "id": "431",
+    "line": 319,
+    "column": 38,
+    "endLine": 319,
+    "endColumn": 64,
+    "mutator": "ConditionalExpression",
+    "original": "e.type === 'state.changed'",
+    "replacement": "true",
+    "lineText": "return this.hub.subscribe((e) => e.type === 'state.changed', (e) => {",
+    "prevText": "const match = typeof filter === 'function' ? filter : filter.endsWith('.*') ? (s: State) => domainOf(s.entityId) === filter.slice(0, -2) : (s: State) => s.entityId === filter;",
+    "nextText": "const d = e.data as { new_state: State; old_state?: State };"
+  },
+  "mayEdit": [
+    "intent/blocks/state-store/state-store.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/state-store-431.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"state-store\". Mutant: line 319:38-319:64, mutator ConditionalExpression: \"e.type === 'state.changed'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/state-store/index.ts (> marks the mutated line):\n   313      return this.all(domain).length;\n   314    }\n   315  \n   316    /** Calls `fn` for each change to entities matching the filter (an id, a domain with \".*\", or a function). */\n   317    onChange(filter: string | ((s: State) => boolean), fn: (e: { entityId: string; old?: State; next: State }) => void): () => void {\n   318      const match = typeof filter === 'function' ? filter : filter.endsWith('.*') ? (s: State) => domainOf(s.entityId) === filter.slice(0, -2) : (s: State) => s.entityId === filter;\n>  319      return this.hub.subscribe((e) => e.type === 'state.changed', (e) => {\n   320        const d = e.data as { new_state: State; old_state?: State };\n   321        if (match(d.new_state)) fn({ entityId: d.new_state.entityId, ...(d.old_state ? { old: d.old_state } : {}), next: d.new_state });\n   322      }).stop;\n   323    }\n   324  \n   325    /** Numeric statistics for an entity from its history. */\n\nTest file style (intent/blocks/state-store/state-store.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { StateMachine, StateError, Timeseries, History, statistics, domainOf, MAX_STATE, type State } from './index.ts';\nimport { Hub } from '../events/index.ts';\n\nconst H = 3_600_000;\nlet t = 10 * H;\nconst mk = () => new StateMachine({ now: () => t });\ntest.beforeEach(() => { t = 10 * H; });\n\ntest('setting a new entity creates it with all three times equal', () => {\n  const m = mk();\n  const r = m.set('sensor.kitchen_temp', '21.5', { unit: 'C' });\n  assert.equal(r.changed, true);\n  assert.deepEqual({ ...r.state }, { entityId: 'sensor.kitchen_temp', state: '21.5', attributes: { unit: 'C' }, lastChanged: t, lastUpdated: t, lastReported: t });\n  assert.equal(m.get('sensor.kitchen_temp')!.state, '21.5');\n  assert.equal(m.count(), 1);\n});\n\ntest('the same state and attributes again moves only last_reported and publishes nothing', () => {\n  const m = mk();\n  m.set('light.hall', 'on');\n  const seen: unknown[] = [];\n  m.hub.subscribe(() => true, (e) => seen.push(e));\n  t += 5000;\n  const r = m.set('light.hall', 'on');\n  assert.equal(r.changed, false);\n  assert.equal(r.updated, false);\n  const s = m.get('light.hall')!;\n  assert.equal(s.lastReported, t);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/state-store-431.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.140Z"
+}

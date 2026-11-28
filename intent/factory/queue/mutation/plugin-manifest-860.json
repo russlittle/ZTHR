@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "plugin-manifest",
+  "mutant": {
+    "id": "860",
+    "line": 399,
+    "column": 32,
+    "endLine": 399,
+    "endColumn": 53,
+    "mutator": "EqualityOperator",
+    "original": "typeof b === 'string'",
+    "replacement": "typeof b !== 'string'",
+    "lineText": "const bytesOf = (b: Bytes) => (typeof b === 'string' ? Buffer.from(b, 'utf8') : Buffer.from(b));",
+    "prevText": "export type Bytes = string | Uint8Array;",
+    "nextText": "const sha256 = (b: Bytes) => createHash('sha256').update(bytesOf(b)).digest('hex');"
+  },
+  "mayEdit": [
+    "intent/blocks/plugin-manifest/plugin-manifest.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/plugin-manifest-860.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"plugin-manifest\". Mutant: line 399:32-399:53, mutator EqualityOperator: \"typeof b === 'string'\" becomes \"typeof b !== 'string'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/plugin-manifest/index.ts (> marks the mutated line):\n   393    readonly manifest: Manifest;\n   394    readonly files: Readonly<Record<string, { readonly sha256: string; readonly size: number }>>;\n   395    readonly signature: { readonly alg: string; readonly keyId: string; readonly signedAt: number; readonly value: string };\n   396  }\n   397  \n   398  export type Bytes = string | Uint8Array;\n>  399  const bytesOf = (b: Bytes) => (typeof b === 'string' ? Buffer.from(b, 'utf8') : Buffer.from(b));\n   400  const sha256 = (b: Bytes) => createHash('sha256').update(bytesOf(b)).digest('hex');\n   401  \n   402  /** JSON with object keys in a fixed order, so the signed bytes never depend on how a file was written. */\n   403  export function canonicalJson(v: unknown): string {\n   404    if (v === null || typeof v !== 'object') return JSON.stringify(v);\n   405    if (Array.isArray(v)) return `[${v.map(canonicalJson).join(',')}]`;\n\nTest file style (intent/blocks/plugin-manifest/plugin-manifest.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, verify } from 'node:crypto';\nimport { test } from 'node:test';\nimport {\n  BadPackage, BadVersion, ManifestError, bumpKind, canonicalJson, compareVersions, dependencyOrder, manifestProblems, maxSatisfying, parseVersion,\n  planInstall, planUpdates, publicKeyOf, readManifest, reviewPermissions, satisfies, signPackage, verifyPackage,\n} from './index.ts';\nimport type { Manifest, PackageEnvelope, TrustStore } from './index.ts';\n\nconst manifest = (o: Partial<Record<keyof Manifest, unknown>> = {}): Manifest =>\n  ({\n    name: 'acme-seo',\n    version: '1.2.3',\n    title: 'Acme SEO',\n    description: 'Search engine helpers',\n    author: { name: 'Acme', url: 'https://acme.example' },\n    license: 'GPL-2.0-or-later',\n    requires: { host: '>=4.2 <6' },\n    permissions: ['content:read'],\n    entry: 'main.js',\n    ...o,\n  }) as Manifest;\n\n// ------------------------------------------------------------ semantic versions\n\ntest('precedence follows the specification chain, ignores build metadata, and compares numbers as numbers', () => {\n  const chain = ['1.0.0-alpha', '1.0.0-alpha.1', '1.0.0-alpha.beta', '1.0.0-beta', '1.0.0-beta.2', '1.0.0-beta.11', '1.0.0-rc.1', '1.0.0', '1.0.1', '1.1.0', '2.0.0'];\n  for (let i = 0; i + 1 < chain.length; i++) {\n    assert.equal(compareVersions(chain[i]!, chain[i + 1]!), -1, `${chain[i]} < ${chain[i + 1]}`);\n    assert.equal(compareVersions(chain[i + 1]!, chain[i]!), 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/plugin-manifest-860.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.218Z"
+}

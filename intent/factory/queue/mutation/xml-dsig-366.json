@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "xml-dsig",
+  "mutant": {
+    "id": "366",
+    "line": 220,
+    "column": 14,
+    "endLine": 220,
+    "endColumn": 30,
+    "mutator": "EqualityOperator",
+    "original": "n < inner.length",
+    "replacement": "n <= inner.length",
+    "lineText": "while (n < inner.length && !isWs(inner[n])) n++;",
+    "prevText": "let n = 0;",
+    "nextText": "const qname = inner.slice(0, n);"
+  },
+  "mayEdit": [
+    "intent/blocks/xml-dsig/xml-dsig.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/xml-dsig-366.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"xml-dsig\". Mutant: line 220:14-220:30, mutator EqualityOperator: \"n < inner.length\" becomes \"n <= inner.length\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/xml-dsig/index.ts (> marks the mutated line):\n   214        }\n   215        if (j >= src.length) throw new XmlDsigError('unclosed start tag');\n   216        let inner = src.slice(lt + 1, j);\n   217        const selfClose = inner.endsWith('/');\n   218        if (selfClose) inner = inner.slice(0, -1);\n   219        let n = 0;\n>  220        while (n < inner.length && !isWs(inner[n])) n++;\n   221        const qname = inner.slice(0, n);\n   222        const raw: [string, string][] = [];\n   223        let p = n;\n   224        const seen = new Set<string>();\n   225        for (;;) {\n   226          while (isWs(inner[p])) p++;\n\nTest file style (intent/blocks/xml-dsig/xml-dsig.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, createPublicKey, randomBytes, sign as nodeSign, type KeyObject } from 'node:crypto';\nimport { bitString, boolean, explicit, integer, octetString, oid, oidOf, sequence, set, time, toPem, utf8String } from '../asn1-der/index.ts';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, writeFileSync, rmSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { readXml, exclusiveC14n, sign, verifyDocument, verifyElement, childNamed, childEls, textOf, NS_DSIG, ALG, XmlDsigError } from './index.ts';\n\n/** A throwaway certificate made at run time: DER from the asn1-der writers, signed with node:crypto (ECDSA P-256 / SHA-256). */\nconst certName = (cn: string) => sequence(set(sequence(oid(oidOf('CN')), utf8String(cn))));\nfunction makeCert(o: { subject: string; publicKey: KeyObject; issuer?: string; issuerKey: KeyObject; ca?: boolean }): string {\n  const algId = sequence(oid(oidOf('ecdsa-with-SHA256')));\n  const exts = o.ca ? [explicit(3, sequence(sequence(oid(oidOf('basicConstraints')), boolean(true), octetString(sequence(boolean(true))))))] : [];\n  const tbs = sequence(\n    explicit(0, integer(2)), integer(BigInt(`0x${randomBytes(12).toString('hex')}`)), algId, certName(o.issuer ?? o.subject),\n    sequence(time(new Date(Date.UTC(2020, 0, 1))), time(new Date(Date.UTC(2120, 0, 1)))),\n    certName(o.subject), Buffer.from(o.publicKey.export({ type: 'spki', format: 'der' })), ...exts,\n  );\n  return toPem('CERTIFICATE', sequence(tbs, algId, bitString(nodeSign('sha256', tbs, o.issuerKey)))).trim();\n}\n// A fresh key pair and a self-signed certificate for it, made for each run.\nconst KEY_PAIR = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst KEY = KEY_PAIR.privateKey.export({ type: 'pkcs8', format: 'pem' }) as string;\nconst CERT = makeCert({ subject: 'example.org', publicKey: KEY_PAIR.publicKey, issuerKey: KEY_PAIR.privateKey });\nconst rsa = generateKeyPairSync('rsa', { modulusLength: 2048 });\nconst ec = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst SAML = 'urn:s';\nconst DOC = `<r:Response xmlns:r=\"urn:r\" xmlns:s=\"urn:s\" ID=\"_resp\"><s:Issuer>idp</s:Issuer><s:Assertion ID=\"_a1\"><s:Subject>alice</s:Subject></s:Assertion></r:Response>`;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/xml-dsig-366.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:16.444Z"
+}

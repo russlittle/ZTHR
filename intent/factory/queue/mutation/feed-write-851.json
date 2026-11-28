@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "feed-write",
+  "mutant": {
+    "id": "851",
+    "line": 380,
+    "column": 32,
+    "endLine": 380,
+    "endColumn": 79,
+    "mutator": "LogicalOperator",
+    "original": "/^https?:\\/\\//.test(it.id) && it.id === it.link",
+    "replacement": "/^https?:\\/\\//.test(it.id) || it.id === it.link",
+    "lineText": "L.push(`<guid isPermaLink=\"${/^https?:\\/\\//.test(it.id) && it.id === it.link ? 'true' : 'false'}\">${escapeText(it.id)}</guid>`);",
+    "prevText": "if (it.link) L.push(tag('link', it.link));",
+    "nextText": "if (it.summary) L.push(tag('description', it.summary));"
+  },
+  "mayEdit": [
+    "intent/blocks/feed-write/feed-write.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/feed-write-851.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"feed-write\". Mutant: line 380:32-380:79, mutator LogicalOperator: \"/^https?:\\\\/\\\\//.test(it.id) && it.id === it.link\" becomes \"/^https?:\\\\/\\\\//.test(it.id) || it.id === it.link\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/feed-write/index.ts (> marks the mutated line):\n   374    return L.join('\\n');\n   375  }\n   376  \n   377  function rssItem(it: Item): string {\n   378    const L: string[] = ['<item>', tag('title', it.title)];\n   379    if (it.link) L.push(tag('link', it.link));\n>  380    L.push(`<guid isPermaLink=\"${/^https?:\\/\\//.test(it.id) && it.id === it.link ? 'true' : 'false'}\">${escapeText(it.id)}</guid>`);\n   381    if (it.summary) L.push(tag('description', it.summary));\n   382    else if (it.contentHtml) L.push(`<description>${cdata(it.contentHtml)}</description>`);\n   383    if (it.contentHtml && it.summary) L.push(`<content:encoded>${cdata(it.contentHtml)}</content:encoded>`);\n   384    else if (it.contentHtml && !it.summary) L.push(`<content:encoded>${cdata(it.contentHtml)}</content:encoded>`);\n   385    const pub = it.published !== undefined ? toDate(it.published) : it.updated !== undefined ? toDate(it.updated) : undefined;\n   386    if (pub) L.push(tag('pubDate', rfc822(pub)));\n\nTest file style (intent/blocks/feed-write/feed-write.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { parseXml, type El } from '../dav/index.ts';\nimport {\n  FeedError, cdata, durationSeconds, escapeAttr, escapeText, etagOf, feedProblems, itunesDuration, rfc3339, rfc822,\n  respond, toDate, write, writeAtom, writeJsonFeed, writeRss, xmlSafe, type Feed,\n} from './index.ts';\n\nconst T0 = Date.UTC(2024, 4, 6, 12, 30, 5);\ntype Mut<T> = { -readonly [K in keyof T]: T[K] };\nconst base = (): Mut<Feed> => ({\n  title: 'Notes & Things',\n  link: 'https://example.com/',\n  selfUrl: 'https://example.com/feed.xml',\n  description: 'Writing <on> the web',\n  language: 'en-GB',\n  updated: T0,\n  items: [\n    { id: 'https://example.com/a', link: 'https://example.com/a', title: 'First', published: T0 - 86_400_000, contentHtml: '<p>Hello</p>', summary: 'Hi', authors: [{ name: 'Ann' }], categories: ['x', 'y'] },\n    { id: 'https://example.com/b', link: 'https://example.com/b', title: 'Second', published: T0, updated: T0 + 1000 },\n  ],\n});\nconst find = (e: El, name: string): El[] => [...(e.name === name ? [e] : []), ...e.children.flatMap((c) => find(c, name))];\n\ntest('RFC 822 and RFC 3339 dates match the specs examples', () => {\n  assert.equal(rfc822(new Date(Date.UTC(2002, 8, 7, 0, 0, 1))), 'Sat, 07 Sep 2002 00:00:01 GMT');\n  assert.equal(rfc3339(new Date(Date.UTC(2003, 11, 13, 18, 30, 2, 900))), '2003-12-13T18:30:02Z');\n});\n\ntest('toDate takes dates, numbers and ISO strings and refuses nonsense', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/feed-write-851.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.170Z"
+}

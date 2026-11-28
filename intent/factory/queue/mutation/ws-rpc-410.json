@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "ws-rpc",
+  "mutant": {
+    "id": "410",
+    "line": 371,
+    "column": 51,
+    "endLine": 371,
+    "endColumn": 91,
+    "mutator": "StringLiteral",
+    "original": "'the connection closed before an answer'",
+    "replacement": "\"\"",
+    "lineText": "p.reject(new RpcFailed('connection_lost', 'the connection closed before an answer'));",
+    "prevText": "this.pending.delete(id);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/ws-rpc/ws-rpc.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ws-rpc-410.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ws-rpc\". Mutant: line 371:51-371:91, mutator StringLiteral: \"'the connection closed before an answer'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ws-rpc/index.ts (> marks the mutated line):\n   365    onClose(): void {\n   366      this.set('closed');\n   367      for (const s of this.subs.values()) s.live = false;\n   368      for (const [id, p] of [...this.pending]) {\n   369        if (p.sent) {\n   370          this.pending.delete(id);\n>  371          p.reject(new RpcFailed('connection_lost', 'the connection closed before an answer'));\n   372        }\n   373      }\n   374    }\n   375  \n   376    private id(prefix: string): string {\n   377      return `${prefix}${++this.n}`;\n\nTest file style (intent/blocks/ws-rpc/ws-rpc.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Catalogue, Hub } from '../events/index.ts';\nimport type { CloudEvent } from '../events/index.ts';\nimport { Failures } from '../ratelimit/index.ts';\nimport { Connection, RpcClient, RpcError, RpcFailed } from './index.ts';\nimport type { ConnectionOptions, Principal } from './index.ts';\n\nconst cat = new Catalogue([\n  { type: 'files.file.created', version: 1, owner: 'files', description: 'a file was made', fields: { id: 'string', owner: 'string' } },\n  { type: 'files.file.deleted', version: 1, owner: 'files', description: 'a file was removed', fields: { id: 'string', owner: 'string' } },\n  { type: 'chat.message.sent', version: 1, owner: 'chat', description: 'a message', fields: { id: 'string', owner: 'string' } },\n]);\nconst ev = (type: string, id: string, owner = 'ana') => cat.make('urn:test', type, { id, owner }, { now: new Date(0) });\n\nconst people: Record<string, Principal> = { 'tok-ana': { id: 'ana' }, 'tok-bo': { id: 'bo' } };\n\ninterface Rig {\n  hub: Hub;\n  t: { now: number };\n  toClient: string[];\n  toServer: string[];\n  closed: { code: number; reason: string }[];\n  conn: () => Connection;\n  client: RpcClient;\n  server: Connection;\n  pump: () => Promise<void>;\n  newServer: (o?: Partial<ConnectionOptions>) => Connection;\n  resyncs: string[];\n}\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ws-rpc-410.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:16.249Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "document-seal",
+  "mutant": {
+    "id": "283",
+    "line": 206,
+    "column": 196,
+    "endLine": 206,
+    "endColumn": 205,
+    "mutator": "StringLiteral",
+    "original": "'Signers'",
+    "replacement": "\"\"",
+    "lineText": "const lines = ['CERTIFICATE OF COMPLETION', '', `Document: ${m.title}`, `Seal id: ${m.id}`, `Completed: ${m.completedAt}`, `Size: ${m.documentBytes} bytes`, `SHA-256: ${m.documentSha256}`, '', 'Signers'];",
+    "prevText": "const m = r.manifest;",
+    "nextText": "for (const s of m.signers) lines.push(`  ${s.name}${s.email ? ` <${s.email}>` : ''}`, `    signed ${s.signedAt} (${s.method})${s.ip ? ` from ${s.ip}` : ''}`, `    evidence ${s.evidenceSha256}`);"
+  },
+  "mayEdit": [
+    "intent/blocks/document-seal/document-seal.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/document-seal-283.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"document-seal\". Mutant: line 206:196-206:205, mutator StringLiteral: \"'Signers'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/document-seal/index.ts (> marks the mutated line):\n   200  \n   201  const esc = (s: string) => s.replace(/[&<>\"']/g, (c) => `&#${c.charCodeAt(0)};`);\n   202  \n   203  /** The certificate as text lines (also the content of the PDF). */\n   204  export function certificateLines(r: SealRecord): string[] {\n   205    const m = r.manifest;\n>  206    const lines = ['CERTIFICATE OF COMPLETION', '', `Document: ${m.title}`, `Seal id: ${m.id}`, `Completed: ${m.completedAt}`, `Size: ${m.documentBytes} bytes`, `SHA-256: ${m.documentSha256}`, '', 'Signers'];\n   207    for (const s of m.signers) lines.push(`  ${s.name}${s.email ? ` <${s.email}>` : ''}`, `    signed ${s.signedAt} (${s.method})${s.ip ? ` from ${s.ip}` : ''}`, `    evidence ${s.evidenceSha256}`);\n   208    lines.push('', `Seal: ${r.manifestSha256}`);\n   209    if (r.timestamp) lines.push(`Timestamp: ${r.timestamp.genTime} by ${r.timestamp.tsa}, serial ${r.timestamp.serial}`);\n   210    else lines.push('Timestamp: none (the date rests on this service alone)');\n   211    lines.push('', 'Verify this document:', r.link);\n   212    return lines;\n\nTest file style (intent/blocks/document-seal/document-seal.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, generateKeyPairSync, randomBytes } from 'node:crypto';\nimport { test } from 'node:test';\nimport { Consent } from '../consent/index.ts';\nimport { SignatureCapture, intentStatement } from '../signature-capture/index.ts';\nimport { createCertificate, issue } from '../trusted-timestamp/index.ts';\nimport { SealRefused, Sealer, certificateHtml, certificateLines, certificatePdf, sealIdFromLink, verifyHtml } from './index.ts';\nimport type { SealRecord, SignerEntry } from './index.ts';\n\nconst T0 = new Date('2025-06-01T12:00:00Z');\nconst key = randomBytes(24).toString('hex');\nconst doc = Buffer.from('%PDF-1.7\\nthe lease, every page\\n%%EOF');\nconst ev = (c: string) => createHash('sha256').update(c).digest('hex');\nconst signers: SignerEntry[] = [\n  { id: 'u2', name: 'Bo Chen', email: 'bo@example.org', method: 'typed', signedAt: '2025-06-01T11:30:00Z', evidenceSha256: ev('bo') },\n  { id: 'u1', name: 'Ana Silva', method: 'drawn', signedAt: '2025-06-01T11:00:00Z', evidenceSha256: ev('ana'), ip: '203.0.113.7' },\n];\n\nconst tsa = () => {\n  const ca = generateKeyPairSync('ec', { namedCurve: 'P-256' });\n  const k = generateKeyPairSync('ec', { namedCurve: 'P-256' });\n  const nb = new Date('2025-01-01T00:00:00Z');\n  const na = new Date('2035-01-01T00:00:00Z');\n  const caCert = createCertificate({ subject: { commonName: 'Seal Test CA' }, publicKey: ca.publicKey, signingKey: ca.privateKey, serial: 1n, notBefore: nb, notAfter: na, kind: 'ca' });\n  const cert = createCertificate({ subject: { commonName: 'Seal Test TSA' }, issuer: { commonName: 'Seal Test CA' }, publicKey: k.publicKey, signingKey: ca.privateKey, serial: 2n, notBefore: nb, notAfter: na, kind: 'tsa' });\n  let n = 1n;\n  return { ca: caCert, at: (when: string) => async (req: Buffer) => issue(req, { certificate: cert, privateKey: k.privateKey, policy: '1.2.3.4', now: () => new Date(when), nextSerial: () => n++ }) };\n};\n\nconst make = (o: Partial<ConstructorParameters<typeof Sealer>[0]> = {}) => new Sealer({ sealKey: key, baseUrl: 'https://sign.example.com', now: () => new Date('2025-06-01T12:05:00Z'), ...o });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/document-seal-283.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.694Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "i18n-content",
+  "mutant": {
+    "id": "23",
+    "line": 120,
+    "column": 9,
+    "endLine": 120,
+    "endColumn": 31,
+    "mutator": "ConditionalExpression",
+    "original": "c.length === 1 && c[0]",
+    "replacement": "true",
+    "lineText": "if (c.length === 1 && c[0] && !/[_\\s]/.test(tag)) return c[0];",
+    "prevText": "const c = Intl.getCanonicalLocales(tag);",
+    "nextText": "} catch {"
+  },
+  "mayEdit": [
+    "intent/blocks/i18n-content/i18n-content.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/i18n-content-23.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"i18n-content\". Mutant: line 120:9-120:31, mutator ConditionalExpression: \"c.length === 1 && c[0]\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/i18n-content/index.ts (> marks the mutated line):\n   114  const MAX_LOG = 50;\n   115  \n   116  /** A language tag in canonical form (fr-ca becomes fr-CA), or an error. */\n   117  export function canonicalLocale(tag: string): string {\n   118    try {\n   119      const c = Intl.getCanonicalLocales(tag);\n>  120      if (c.length === 1 && c[0] && !/[_\\s]/.test(tag)) return c[0];\n   121    } catch {\n   122      // fall through\n   123    }\n   124    throw new ContentError(`\"${tag.slice(0, 30)}\" is not a language tag`);\n   125  }\n   126  \n\nTest file style (intent/blocks/i18n-content/i18n-content.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Content, ContentError, canonicalLocale, maskPlaceholders, unmaskPlaceholders } from './index.ts';\nimport type { Options, Translator } from './index.ts';\n\nconst schema = {\n  fields: [\n    { name: 'title', translatable: true, required: true, maxLength: 40 },\n    { name: 'slug', translatable: true },\n    { name: 'body', translatable: true },\n    { name: 'price', translatable: false },\n  ],\n  slugField: 'slug',\n} as const;\n\nconst make = (o: Partial<Options> = {}) => {\n  let t = 100;\n  return new Content({ schema, sourceLocale: 'en', locales: ['fr', 'fr-CA', 'es', 'ar', 'nb', 'no'], now: () => ++t, ...o });\n};\n\nconst seeded = (o: Partial<Options> = {}) => {\n  const c = make(o);\n  c.create('a1', { title: 'Hello world', slug: 'hello-world', body: 'Welcome, {name}! See <b>this</b> at https://x.example/a?b=1.', price: '10' });\n  return c;\n};\n\nconst publish = (c: Content, id: string, locale: string, values: Record<string, string>, by = 'tara', reviewer = 'rex') => {\n  c.setTranslation(id, locale, values, by);\n  c.submit(id, locale, by);\n  c.approve(id, locale, reviewer);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/i18n-content-23.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.657Z"
+}

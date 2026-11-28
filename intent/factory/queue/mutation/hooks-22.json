@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "hooks",
+  "mutant": {
+    "id": "22",
+    "line": 92,
+    "column": 68,
+    "endLine": 92,
+    "endColumn": 91,
+    "mutator": "ArrayDeclaration",
+    "original": "Array<number>(b.length)",
+    "replacement": "Array()",
+    "lineText": "const d = Array.from({ length: a.length + 1 }, (_v, i) => [i, ...Array<number>(b.length).fill(0)]);",
+    "prevText": "function distance(a: string, b: string): number {",
+    "nextText": "for (let j = 1; j <= b.length; j++) d[0]![j] = j;"
+  },
+  "mayEdit": [
+    "intent/blocks/hooks/hooks.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/hooks-22.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"hooks\". Mutant: line 92:68-92:91, mutator ArrayDeclaration: \"Array<number>(b.length)\" becomes \"Array()\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/hooks/index.ts (> marks the mutated line):\n    86  }\n    87  \n    88  const NAME = /^[a-z][a-z0-9_.:-]{0,99}$/;\n    89  const PATTERN = /^[a-z][a-z0-9_.:-]{0,60}(?:\\{[a-z_][a-z0-9_]*\\}[a-z0-9_.:-]*)+$/;\n    90  \n    91  function distance(a: string, b: string): number {\n>   92    const d = Array.from({ length: a.length + 1 }, (_v, i) => [i, ...Array<number>(b.length).fill(0)]);\n    93    for (let j = 1; j <= b.length; j++) d[0]![j] = j;\n    94    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i]![j] = Math.min(d[i - 1]![j]! + 1, d[i]![j - 1]! + 1, d[i - 1]![j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1));\n    95    return d[a.length]![b.length]!;\n    96  }\n    97  \n    98  const patternRegex = (p: string) => new RegExp(`^${p.replace(/[.*+?^$()|[\\]\\\\]/g, '\\\\$&').replace(/\\{[a-z_][a-z0-9_]*\\}/g, '[a-z0-9_.:-]+')}$`);\n\nTest file style (intent/blocks/hooks/hooks.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { HookError, Hooks } from './index.ts';\nimport type { Warning } from './index.ts';\n\n// ------------------------------------------------------------ order and arguments\n\ntest('listeners run lowest priority first, and ties run in the order they were added', () => {\n  const h = new Hooks();\n  const seen: string[] = [];\n  h.addAction('boot', () => seen.push('ten-a'));\n  h.addAction('boot', () => seen.push('five'), { priority: 5 });\n  h.addAction('boot', () => seen.push('ten-b'));\n  h.addAction('boot', () => seen.push('minus'), { priority: -3 });\n  h.addAction('boot', () => seen.push('twenty'), { priority: 20 });\n  assert.equal(h.doAction('boot'), 5);\n  assert.deepEqual(seen, ['minus', 'five', 'ten-a', 'ten-b', 'twenty']);\n  assert.deepEqual(h.listeners('boot').map((l) => l.priority), [-3, 5, 10, 10, 20]);\n});\n\ntest('a filter passes the value along the chain, and a listener gets only as many arguments as it asked for', () => {\n  const h = new Hooks();\n  const args: unknown[][] = [];\n  h.addFilter('title', (t: string, ...rest: unknown[]) => (args.push([t, ...rest]), `${t}!`));\n  h.addFilter('title', (t: string, post: { id: number }, flag: boolean) => (args.push([t, post, flag]), `${t}?`), { args: 3, priority: 11 });\n  assert.equal(h.applyFilters('title', 'Hi', { id: 7 }, true), 'Hi!?');\n  assert.deepEqual(args, [['Hi'], ['Hi!', { id: 7 }, true]]);\n  assert.equal(h.applyFilters('nobody-listens', 42), 42);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/hooks-22.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.190Z"
+}

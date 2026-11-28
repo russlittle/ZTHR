@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "document-templates",
+  "mutant": {
+    "id": "1007",
+    "line": 494,
+    "column": 77,
+    "endLine": 494,
+    "endColumn": 81,
+    "mutator": "BooleanLiteral",
+    "original": "true",
+    "replacement": "false",
+    "lineText": "const bytes = pdf(blocks, { title: merge(t.name, [data], { ...o, draft: true }, 'title', []), ...(o.author ? { author: o.author } : {}), ...(o.size ? { size: o.size } : {}), footer: (p, n) => `${tag} - page ${p} of ${n}` });",
+    "prevText": "const tag = `${t.id} v${t.version} ${t.hash.slice(0, 8)}${o.draft ? ' DRAFT' : ''}`;",
+    "nextText": "return { pdf: bytes, stamp: { template: t.id, version: t.version, templateHash: t.hash, dataHash, renderedAt: this.now() } };"
+  },
+  "mayEdit": [
+    "intent/blocks/document-templates/document-templates.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/document-templates-1007.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"document-templates\". Mutant: line 494:77-494:81, mutator BooleanLiteral: \"true\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/document-templates/index.ts (> marks the mutated line):\n   488    /** Renders a version (the latest by default) to a PDF with a footer naming the template, version and hash. */\n   489    render(id: string, data: Data, o: RenderOptions & { version?: number; author?: string; size?: 'A4' | 'Letter' } = {}): Rendered {\n   490      const t = this.get(id, o.version);\n   491      const blocks = renderBlocks(t, data, o);\n   492      const dataHash = createHash('sha256').update(canonical(data)).digest('hex');\n   493      const tag = `${t.id} v${t.version} ${t.hash.slice(0, 8)}${o.draft ? ' DRAFT' : ''}`;\n>  494      const bytes = pdf(blocks, { title: merge(t.name, [data], { ...o, draft: true }, 'title', []), ...(o.author ? { author: o.author } : {}), ...(o.size ? { size: o.size } : {}), footer: (p, n) => `${tag} - page ${p} of ${n}` });\n   495      return { pdf: bytes, stamp: { template: t.id, version: t.version, templateHash: t.hash, dataHash, renderedAt: this.now() } };\n   496    }\n   497  \n   498    /** What each role still has to fill in, for a signing flow that goes from person to person. */\n   499    progress(t: Template, data: Data): { role: string; label: string; missing: string[]; done: boolean }[] {\n   500      return t.roles.map((r) => {\n\nTest file style (intent/blocks/document-templates/document-templates.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { TemplateLibrary, TemplateProblems, checkData, checkTemplate, fillRole, hashTemplate, lookup, merge, parseMerge, renderBlocks } from './index.ts';\nimport type { Problem, Template } from './index.ts';\n\nconst invoice: Template = {\n  id: 'invoice',\n  name: 'Invoice {{number}}',\n  roles: [{ id: 'issuer', label: 'Issuer' }, { id: 'client', label: 'Client' }],\n  fields: [\n    { name: 'number', type: 'text', label: 'Invoice number', role: 'issuer', required: true },\n    { name: 'date', type: 'date', label: 'Date', role: 'issuer', required: true },\n    { name: 'client', type: 'text', label: 'Client name', role: 'issuer', required: true },\n    { name: 'note', type: 'text', label: 'Note', role: 'issuer' },\n    { name: 'terms', type: 'choice', label: 'Terms', role: 'issuer', choices: ['net15', 'net30'] },\n    { name: 'total', type: 'money', label: 'Total', role: 'issuer', required: true },\n    { name: 'items', type: 'list', label: 'Line items', role: 'issuer', required: true, item: [{ name: 'description', type: 'text', label: 'Description', required: true }, { name: 'qty', type: 'number', label: 'Quantity', required: true }, { name: 'price', type: 'money', label: 'Price', required: true }] },\n    { name: 'signedBy', type: 'text', label: 'Signed by', role: 'client', required: true },\n  ],\n  body: [\n    { h: 'Invoice {{number}}' },\n    { p: 'Billed to {{client | upper}} on {{date | date:\"long\"}}.' },\n    { if: { exists: 'note' }, then: [{ p: 'Note: {{note}}' }] },\n    { table: { header: ['#', 'Description', 'Qty', 'Price'], widths: [1, 6, 1, 2], repeat: { over: 'items', as: 'item', cells: ['{{loop.index}}', '{{item.description}}', '{{item.qty | number:0}}', '{{item.price | money}}'] } } },\n    { p: 'Total due: {{total | money}}' },\n    { if: { eq: ['terms', 'net30'] }, then: [{ p: 'Payable within 30 days.' }], else: [{ p: 'Payable within 15 days.' }] },\n    { p: 'Signed: {{signedBy | default:\"(unsigned)\"}}' },\n  ],\n};\nconst money = (minor: number, currency = 'USD') => ({ minor, currency });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/document-templates-1007.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.812Z"
+}

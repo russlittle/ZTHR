@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webmention",
+  "mutant": {
+    "id": "459",
+    "line": 174,
+    "column": 9,
+    "endLine": 174,
+    "endColumn": 32,
+    "mutator": "EqualityOperator",
+    "original": "stack.length < maxDepth",
+    "replacement": "stack.length <= maxDepth",
+    "lineText": "if (stack.length < maxDepth) stack.push(el);",
+    "prevText": "}",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/webmention/webmention.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webmention-459.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webmention\". Mutant: line 174:9-174:32, mutator EqualityOperator: \"stack.length < maxDepth\" becomes \"stack.length <= maxDepth\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webmention/index.ts (> marks the mutated line):\n   168        const e = end.exec(src);\n   169        const stop = e ? e.index : src.length;\n   170        if (tag === 'textarea' || tag === 'title') el.kids.push(decodeEntities(src.slice(TAG.lastIndex, stop)));\n   171        TAG.lastIndex = last = e ? e.index + e[0].length : src.length;\n   172        continue;\n   173      }\n>  174      if (stack.length < maxDepth) stack.push(el);\n   175    }\n   176    text(src.slice(last));\n   177    return root;\n   178  }\n   179  \n   180  const walkEls = (el: HEl, f: (e: HEl) => void): void => {\n\nTest file style (intent/blocks/webmention/webmention.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  Inbox, WebmentionRejected, checkUrl, decodeEntities, discover, findEndpoint, interpret, isPrivateHost, linksTo,\n  normalize, outgoingTargets, parseLinkHeader, parseMf2, send, type Fetch, type FetchInit, type FetchResult,\n} from './index.ts';\n\ntype Reply = Partial<FetchResult> & { status?: number };\nconst html = (body: string, extra: Reply = {}): Reply => ({ status: 200, headers: { 'content-type': 'text/html; charset=utf-8' }, body, ...extra });\nfunction world(pages: Record<string, Reply | ((i: FetchInit) => Reply)>) {\n  const calls: { url: string; init: FetchInit }[] = [];\n  const fetch: Fetch = async (url, init) => {\n    calls.push({ url, init });\n    const p = pages[url];\n    if (!p) return { status: 404, headers: {}, body: '' };\n    const r = typeof p === 'function' ? p(init) : p;\n    return { status: r.status ?? 200, headers: r.headers ?? {}, body: r.body ?? '' };\n  };\n  return { fetch, calls };\n}\nconst T0 = Date.UTC(2024, 4, 6, 12, 0, 0);\nconst ours = (u: URL) => u.hostname === 'me.example';\n\ntest('Link header parsing handles several links, commas in URLs and quoted rels', () => {\n  const l = parseLinkHeader('<https://a.example/x,y>; rel=\"webmention\", <https://b.example/>; rel=\"stylesheet preload\"; title=\"a, b\", </wm>; REL=webmention');\n  assert.deepEqual(l.map((x) => x.url), ['https://a.example/x,y', 'https://b.example/', '/wm']);\n  assert.deepEqual(l[1]!.rels, ['stylesheet', 'preload']);\n  assert.deepEqual(l[2]!.rels, ['webmention']);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webmention-459.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:14.543Z"
+}

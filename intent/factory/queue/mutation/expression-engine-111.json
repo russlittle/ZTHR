@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "expression-engine",
+  "mutant": {
+    "id": "111",
+    "line": 79,
+    "column": 15,
+    "endLine": 79,
+    "endColumn": 45,
+    "mutator": "ConditionalExpression",
+    "original": "e === undefined || !(e in map)",
+    "replacement": "false",
+    "lineText": "if (e === undefined || !(e in map)) throw new ExpressionSyntaxError('a bad escape', j);",
+    "prevText": "if (e === 'u') { const h = src.slice(j + 2, j + 6); if (!/^[0-9a-fA-F]{4}$/.test(h)) throw new ExpressionSyntaxError('a bad \\\\u escape', j); v += String.fromCharCode(parseInt(h, 16)); j += 6; continue; }",
+    "nextText": "v += map[e]; j += 2; continue;"
+  },
+  "mayEdit": [
+    "intent/blocks/expression-engine/expression-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-111.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"expression-engine\". Mutant: line 79:15-79:45, mutator ConditionalExpression: \"e === undefined || !(e in map)\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/expression-engine/index.ts (> marks the mutated line):\n    73        let v = '';\n    74        while (j < src.length && src[j] !== c) {\n    75          if (src[j] === '\\\\') {\n    76            const e = src[j + 1];\n    77            const map: Record<string, string> = { n: '\\n', t: '\\t', r: '\\r', '\\\\': '\\\\', '\"': '\"', \"'\": \"'\", '0': '\\0' };\n    78            if (e === 'u') { const h = src.slice(j + 2, j + 6); if (!/^[0-9a-fA-F]{4}$/.test(h)) throw new ExpressionSyntaxError('a bad \\\\u escape', j); v += String.fromCharCode(parseInt(h, 16)); j += 6; continue; }\n>   79            if (e === undefined || !(e in map)) throw new ExpressionSyntaxError('a bad escape', j);\n    80            v += map[e]; j += 2; continue;\n    81          }\n    82          v += src[j++];\n    83        }\n    84        if (j >= src.length) throw new ExpressionSyntaxError('an unterminated string', i);\n    85        out.push({ k: 'str', v, at: i });\n\nTest file style (intent/blocks/expression-engine/expression-engine.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  compile, evaluate, references, render, resolve, resolveDeep, compileTemplate,\n  ExpressionSyntaxError, ExpressionRuntimeError, ExpressionLimitError, ExpressionForbidden,\n} from './index.ts';\n\nconst ev = (s: string, ctx: unknown = {}) => evaluate(s, ctx);\n\ntest('arithmetic and precedence', () => {\n  assert.equal(ev('1 + 2 * 3'), 7);\n  assert.equal(ev('(1 + 2) * 3'), 9);\n  assert.equal(ev('2 ** 3 ** 2'), 512);\n  assert.equal(ev('10 % 4'), 2);\n  assert.equal(ev('-3 + 5'), 2);\n});\n\ntest('strings, concatenation and comparison', () => {\n  assert.equal(ev('\"a\" + \"b\" + 1'), 'ab1');\n  assert.equal(ev('\"abc\" < \"abd\"'), true);\n  assert.equal(ev('1 === 1 && 2 !== 3'), true);\n});\n\ntest('logic operators return operands', () => {\n  assert.equal(ev('0 || \"x\"'), 'x');\n  assert.equal(ev('\"a\" && \"b\"'), 'b');\n  assert.equal(ev('null ?? 5'), 5);\n  assert.equal(ev('0 ?? 5'), 0);\n  assert.equal(ev('true ? 1 : 2'), 1);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-111.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.764Z"
+}

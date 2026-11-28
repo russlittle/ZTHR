@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "accessibility-checks",
+  "mutant": {
+    "id": "2131",
+    "line": 491,
+    "column": 9,
+    "endLine": 491,
+    "endColumn": 14,
+    "mutator": "BooleanLiteral",
+    "original": "!bold",
+    "replacement": "bold",
+    "lineText": "if (!bold && (n.tag === 'b' || n.tag === 'strong' || /^h[1-6]$/.test(n.tag)) && el === n) bold = true;",
+    "prevText": "if (!bold && fw && (fw === 'bold' || fw === 'bolder' || Number(fw) >= 700)) bold = true;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/accessibility-checks/accessibility-checks.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/accessibility-checks-2131.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"accessibility-checks\". Mutant: line 491:9-491:14, mutator BooleanLiteral: \"!bold\" becomes \"bold\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/accessibility-checks/index.ts (> marks the mutated line):\n   485      if (size === undefined && st.has('font-size')) {\n   486        const m = /^([\\d.]+)(px|pt)$/.exec(st.get('font-size')!);\n   487        if (m) size = Number(m[1]) * (m[2] === 'pt' ? 4 / 3 : 1);\n   488      }\n   489      const fw = st.get('font-weight');\n   490      if (!bold && fw && (fw === 'bold' || fw === 'bolder' || Number(fw) >= 700)) bold = true;\n>  491      if (!bold && (n.tag === 'b' || n.tag === 'strong' || /^h[1-6]$/.test(n.tag)) && el === n) bold = true;\n   492    }\n   493    if (!anyColor) return null;\n   494    let bg = defBg;\n   495    for (let i = layers.length - 1; i >= 0; i--) bg = composite(layers[i]!, bg);\n   496    const top = composite(fg ?? defFg, bg);\n   497    const px = size ?? DEFAULT_SIZE[el.tag] ?? 16;\n\nTest file style (intent/blocks/accessibility-checks/accessibility-checks.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { accessibleName, check, composite, contrastRatio, focusOrder, formatReport, luminance, parseColor } from './index.ts';\nimport { parse, query } from '../html-parse/index.ts';\n\nconst rules = (html: string, o = {}) => check(html, o).findings.map((f) => f.rule);\nconst only = (html: string, rule: string, o = {}) => check(html, o).findings.filter((f) => f.rule === rule);\n\ntest('contrast ratios match the WCAG definition at its known points', () => {\n  const white = { r: 255, g: 255, b: 255 };\n  assert.equal(contrastRatio({ r: 0, g: 0, b: 0 }, white), 21);\n  assert.equal(contrastRatio(white, white), 1);\n  assert.equal(contrastRatio(parseColor('#767676')!, white).toFixed(2), '4.54');\n  assert.equal(contrastRatio(parseColor('#777777')!, white).toFixed(2), '4.48');\n  assert.equal(contrastRatio(parseColor('#ff0000')!, white).toFixed(2), '4.00');\n  assert.equal(contrastRatio(parseColor('#595959')!, white).toFixed(2), '7.00');\n  assert.equal(luminance({ r: 255, g: 255, b: 255 }), 1);\n  assert.equal(luminance({ r: 0, g: 0, b: 0 }), 0);\n  assert.equal(contrastRatio(white, parseColor('#767676')!), contrastRatio(parseColor('#767676')!, white), 'order does not matter');\n});\n\ntest('colours read in every common form, and unknown ones are not guessed', () => {\n  assert.deepEqual(parseColor('#fff'), { r: 255, g: 255, b: 255, a: 1 });\n  assert.deepEqual(parseColor('#336699'), { r: 51, g: 102, b: 153, a: 1 });\n  assert.deepEqual(parseColor('#33669980'), { r: 51, g: 102, b: 153, a: 128 / 255 });\n  assert.deepEqual(parseColor('rgb(10, 20, 30)'), { r: 10, g: 20, b: 30, a: 1 });\n  assert.deepEqual(parseColor('rgba(10 20 30 / 50%)'), { r: 10, g: 20, b: 30, a: 0.5 });\n  assert.deepEqual(parseColor('rgb(100%, 0%, 0%)'), { r: 255, g: 0, b: 0, a: 1 });\n  assert.deepEqual(parseColor('hsl(0, 100%, 50%)'), { r: 255, g: 0, b: 0, a: 1 });\n  assert.deepEqual(parseColor('hsl(120 100% 25%)'), { r: 0, g: 128, b: 0, a: 1 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/accessibility-checks-2131.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:33.682Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "web-analytics",
+  "mutant": {
+    "id": "2",
+    "line": 61,
+    "column": 17,
+    "endLine": 61,
+    "endColumn": 30,
+    "mutator": "StringLiteral",
+    "original": "'UnknownSite'",
+    "replacement": "\"\"",
+    "lineText": "this.name = 'UnknownSite';",
+    "prevText": "super(`unknown site: ${id}`);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/web-analytics/web-analytics.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/web-analytics-2.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"web-analytics\". Mutant: line 61:17-61:30, mutator StringLiteral: \"'UnknownSite'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/web-analytics/index.ts (> marks the mutated line):\n    55    readonly signals?: { readonly gpc?: string; readonly dnt?: string };\n    56  }\n    57  \n    58  export class UnknownSite extends Error {\n    59    constructor(id: string) {\n    60      super(`unknown site: ${id}`);\n>   61      this.name = 'UnknownSite';\n    62    }\n    63  }\n    64  \n    65  /** Daily salts: random, fresh each UTC day, kept for the day and the day before, then gone. */\n    66  export class SaltBook {\n    67    private readonly salts = new Map<string, Buffer>();\n\nTest file style (intent/blocks/web-analytics/web-analytics.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { test } from 'node:test';\nimport { isBot, parseLanding, SaltBook, sourceOf, UnknownSite, WebAnalytics, type Hit, type Options } from './index.ts';\n\nconst MIN = 60_000;\nconst T0 = Date.parse('2026-03-10T10:00:00Z');\nconst DAY = 86_400_000;\nconst seeded = () => {\n  let n = 0;\n  return (len: number) => createHash('sha256').update(`seed-${n++}`).digest().subarray(0, len > 32 ? 32 : len);\n};\nconst site = { id: 's1', domains: ['example.com'] };\nconst make = (extra: Partial<Options> = {}) => new WebAnalytics({ sites: [site], salts: new SaltBook(seeded()), events: ['signup', 'purchase'], ...extra });\nconst hit = (o: Partial<Hit> = {}): Hit => ({ site: 's1', url: 'https://example.com/', userAgent: 'Mozilla/5.0 (X11; Linux) Firefox/130', ip: '203.0.113.7', at: T0, ...o });\n\ntest('the same visitor and day give the same id; another day, site, address or browser do not', () => {\n  const a = make();\n  const id = a.visitorId('s1', '203.0.113.7', 'UA', T0);\n  assert.equal(id.length, 22);\n  assert.equal(a.visitorId('s1', '203.0.113.7', 'UA', T0 + 5 * MIN), id);\n  assert.notEqual(a.visitorId('s1', '203.0.113.7', 'UA', T0 + DAY), id, 'a new day, a new salt');\n  assert.notEqual(a.visitorId('s2', '203.0.113.7', 'UA', T0), id);\n  assert.notEqual(a.visitorId('s1', '203.0.113.8', 'UA', T0), id);\n  assert.notEqual(a.visitorId('s1', '203.0.113.7', 'UA2', T0), id);\n});\n\ntest('salts older than yesterday are forgotten, so old ids cannot be recomputed', () => {\n  const salts = new SaltBook(seeded());\n  salts.forDay('2026-03-10');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/web-analytics-2.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:13.526Z"
+}

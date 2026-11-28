@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "delta-sync",
+  "mutant": {
+    "id": "623",
+    "line": 414,
+    "column": 37,
+    "endLine": 414,
+    "endColumn": 39,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "let line = raw.replace(/\\r$/, '');",
+    "prevText": "for (const raw of patterns) {",
+    "nextText": "if (!line.trim() || line.startsWith('#')) continue;"
+  },
+  "mayEdit": [
+    "intent/blocks/delta-sync/delta-sync.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/delta-sync-623.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"delta-sync\". Mutant: line 414:37-414:39, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/delta-sync/index.ts (> marks the mutated line):\n   408  /** Ignore patterns in .gitignore syntax. The last matching pattern decides; a file in an ignored folder stays ignored. */\n   409  export class Ignore {\n   410    private readonly rules: Rule[] = [];\n   411  \n   412    constructor(patterns: readonly string[]) {\n   413      for (const raw of patterns) {\n>  414        let line = raw.replace(/\\r$/, '');\n   415        if (!line.trim() || line.startsWith('#')) continue;\n   416        line = line.replace(/(?<!\\\\)\\s+$/, '');\n   417        let negate = false;\n   418        if (line.startsWith('!')) {\n   419          negate = true;\n   420          line = line.slice(1);\n\nTest file style (intent/blocks/delta-sync/delta-sync.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { apply, buildIndex, chooseBlockSize, compare, conflictName, CorruptPlan, Ignore, InvalidInput, nameClashes, plan, Rolling, weakChecksum } from './index.ts';\n\n/** A repeatable stream of bytes that does not repeat itself in blocks (xorshift32). */\nfunction bytes(n: number, seed = 1): Uint8Array {\n  const out = new Uint8Array(n);\n  let x = seed >>> 0 || 1;\n  for (let i = 0; i < n; i++) {\n    x ^= x << 13;\n    x >>>= 0;\n    x ^= x >>> 17;\n    x ^= x << 5;\n    x >>>= 0;\n    out[i] = x & 255;\n  }\n  return out;\n}\nconst cat = (...parts: Uint8Array[]) => {\n  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));\n  let at = 0;\n  for (const p of parts) {\n    out.set(p, at);\n    at += p.length;\n  }\n  return out;\n};\nconst sync = (oldData: Uint8Array, newData: Uint8Array, bs = 256) => {\n  const p = plan(buildIndex(oldData, bs), newData);\n  const rebuilt = apply(oldData, p);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/delta-sync-623.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.096Z"
+}

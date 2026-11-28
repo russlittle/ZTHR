@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "log-shipping",
+  "mutant": {
+    "id": "87",
+    "line": 125,
+    "column": 17,
+    "endLine": 125,
+    "endColumn": 29,
+    "mutator": "StringLiteral",
+    "original": "'queue-full'",
+    "replacement": "\"\"",
+    "lineText": "this.drop('queue-full');",
+    "prevText": "if (full() && this.o.dropPolicy === 'newest') {",
+    "nextText": "return false;"
+  },
+  "mayEdit": [
+    "intent/blocks/log-shipping/log-shipping.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/log-shipping-87.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"log-shipping\". Mutant: line 125:17-125:29, mutator StringLiteral: \"'queue-full'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/log-shipping/index.ts (> marks the mutated line):\n   119      if (bytes > this.o.maxItemBytes || bytes > this.o.maxBatchBytes) {\n   120        this.drop('too-large');\n   121        return false;\n   122      }\n   123      const full = () => this.q.length >= this.o.maxQueueItems || this.queuedBytes + bytes > this.o.maxQueueBytes;\n   124      if (full() && this.o.dropPolicy === 'newest') {\n>  125        this.drop('queue-full');\n   126        return false;\n   127      }\n   128      while (full() && this.q.length) {\n   129        const old = this.q.shift()!;\n   130        this.queuedBytes -= old.bytes;\n   131        this.drop('queue-full');\n\nTest file style (intent/blocks/log-shipping/log-shipping.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Batcher, LabelGuard, lokiPush, otlpLogs, otlpSpans, anyValue, severityNumber, ShipError } from './index.ts';\nimport type { LogEntry } from './index.ts';\nimport type { SpanRecord } from '../observe/index.ts';\n\nconst e = (time: number, message = 'm', extra: Partial<LogEntry> = {}): LogEntry => ({ time, severity: 'INFO', message, ...extra });\nconst ok = async () => {};\n\ntest('a batch is due by count, by bytes and by age, not before', () => {\n  const b = new Batcher<number>({ maxBatchItems: 3, maxAgeMs: 1000, maxBatchBytes: 1000 }, () => 10);\n  b.add(1, 0);\n  assert.equal(b.due(500), false);\n  assert.equal(b.due(1000), true);\n  const c = new Batcher<number>({ maxBatchItems: 3, maxAgeMs: 99999 }, () => 1);\n  c.add(1, 0), c.add(2, 0);\n  assert.equal(c.due(1), false);\n  c.add(3, 0);\n  assert.equal(c.due(1), true);\n  const d = new Batcher<number>({ maxBatchBytes: 25, maxAgeMs: 99999 }, () => 10);\n  d.add(1, 0), d.add(2, 0);\n  assert.equal(d.due(0), false);\n  d.add(3, 0);\n  assert.equal(d.due(0), true);\n});\n\ntest('flush sends in order, respects batch size, and counts sent', async () => {\n  const b = new Batcher<number>({ maxBatchItems: 2, maxAgeMs: 0 }, () => 1);\n  [1, 2, 3, 4, 5].forEach((n) => b.add(n, 0));\n  const got: number[][] = [];\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/log-shipping-87.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.579Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "status-pages",
+  "mutant": {
+    "id": "254",
+    "line": 228,
+    "column": 15,
+    "endLine": 228,
+    "endColumn": 135,
+    "mutator": "Regex",
+    "original": "/^[^\\s@<>\"',;]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/",
+    "replacement": "/^[^\\s@<>\"',;]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)$/",
+    "lineText": "const EMAIL = /^[^\\s@<>\"',;]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/status-pages/status-pages.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/status-pages-254.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"status-pages\". Mutant: line 228:15-228:135, mutator Regex: \"/^[^\\\\s@<>\\\"',;]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/\" becomes \"/^[^\\\\s@<>\\\"',;]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/status-pages/index.ts (> marks the mutated line):\n   222    readonly subject: string;\n   223    readonly text: string;\n   224    /** One-click unsubscribe link for this person. */\n   225    readonly unsubscribe: string;\n   226  }\n   227  \n>  228  const EMAIL = /^[^\\s@<>\"',;]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;\n   229  \n   230  export class Subscribers {\n   231    private readonly subs = new Map<string, Subscriber>();\n   232    private readonly sent = new Set<string>();\n   233    private readonly secret: string;\n   234    private readonly baseUrl: string;\n\nTest file style (intent/blocks/status-pages/status-pages.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Subscribers, StatusPageError, atomFeed, badge, badgeKeyOk, dailyBars, escapeXml, jsonFeed, monitorStatus, pageView, uptime } from './index.ts';\nimport type { Beat, Group, Incident, Monitor } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T = Date.UTC(2026, 5, 10, 12, 0, 0);\nconst beats = (...ups: boolean[]): Beat[] => ups.map((up, i) => ({ at: T - (ups.length - i) * 60_000, up, ms: 100 }));\nconst groups: Group[] = [\n  { name: 'Core', components: [{ id: 'api', name: 'API', monitors: ['m-api'] }, { id: 'web', name: 'Website', monitors: ['m-web'] }] },\n  { name: 'Extras', components: [{ id: 'mail', name: 'Email', monitors: ['m-mail'] }] },\n];\nconst inc = (over: Partial<Incident> = {}): Incident => ({ id: 'i1', title: 'API errors', components: ['api'], impact: 'degraded', updates: [{ at: T - 1000, state: 'investigating', text: 'Looking into it' }], ...over });\n\ntest('three failures in a row are down, one is degraded, and a pass after them clears it', () => {\n  assert.equal(monitorStatus(beats(true, true, false, false, false)), 'down');\n  assert.equal(monitorStatus(beats(true, true, true, false)), 'degraded');\n  assert.equal(monitorStatus(beats(false, false, false, true)), 'ok');\n  assert.equal(monitorStatus([]), 'ok');\n});\n\ntest('a slow newest answer is degraded', () => {\n  const b: Beat[] = [{ at: 1, up: true, ms: 5000 }];\n  assert.equal(monitorStatus(b), 'degraded');\n  assert.equal(monitorStatus(b, { downAfter: 3, slowMs: 6000 }), 'ok');\n});\n\ntest('beats are read newest first whatever order they arrive in', () => {\n  const b = beats(false, false, false, true).reverse();\n  assert.equal(monitorStatus(b), 'ok');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/status-pages-254.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.486Z"
+}

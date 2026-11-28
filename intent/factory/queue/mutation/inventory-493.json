@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "inventory",
+  "mutant": {
+    "id": "493",
+    "line": 315,
+    "column": 141,
+    "endLine": 315,
+    "endColumn": 187,
+    "mutator": "StringLiteral",
+    "original": "`${o.qty} different serial numbers are needed`",
+    "replacement": "``",
+    "lineText": "if (!o.serials || o.serials.length !== o.qty || new Set(o.serials).size !== o.serials.length) throw new StockError('serial-required', `${o.qty} different serial numbers are needed`);",
+    "prevText": "if (p.tracking === 'serial') {",
+    "nextText": "return this.atomically(() => o.serials!.map((serial) => this.move({ sku: o.sku, qty: 1, from, to: o.to, serial, kind: 'receipt', unitCost: o.unitCost.minor, ...(o.ref !== undefined ? { ref: o.ref } : {}), ...(o.date ? { date: o.date } : {}) })));"
+  },
+  "mayEdit": [
+    "intent/blocks/inventory/inventory.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/inventory-493.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"inventory\". Mutant: line 315:141-315:187, mutator StringLiteral: \"`${o.qty} different serial numbers are needed`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/inventory/index.ts (> marks the mutated line):\n   309      if (o.unitCost.currency !== this.o.currency) throw new StockError('bad-cost', `costs are in ${this.o.currency}`);\n   310      const from = o.from ?? [...this.places.values()].find((x) => x.kind === 'supplier')?.id;\n   311      if (!from) throw new StockError('unknown-place', 'there is no supplier place');\n   312      if (this.place(from).kind === 'internal' || this.place(from).kind === 'transit') throw new StockError('not-outside', 'a receipt comes from outside');\n   313      if (o.expiry !== undefined && !/^\\d{4}-\\d{2}-\\d{2}$/.test(o.expiry)) throw new StockError('bad-date', 'an expiry is YYYY-MM-DD');\n   314      if (p.tracking === 'serial') {\n>  315        if (!o.serials || o.serials.length !== o.qty || new Set(o.serials).size !== o.serials.length) throw new StockError('serial-required', `${o.qty} different serial numbers are needed`);\n   316        return this.atomically(() => o.serials!.map((serial) => this.move({ sku: o.sku, qty: 1, from, to: o.to, serial, kind: 'receipt', unitCost: o.unitCost.minor, ...(o.ref !== undefined ? { ref: o.ref } : {}), ...(o.date ? { date: o.date } : {}) })));\n   317      }\n   318      if (p.tracking === 'lot' && o.lot) {\n   319        const lk = `${o.sku}${SEP}${o.lot}`;\n   320        const known = this.lots.get(lk);\n   321        if (known && (known.expiry ?? '') !== (o.expiry ?? '')) throw new StockError('lot-conflict', `lot ${o.lot} already has expiry ${known.expiry ?? 'none'}`);\n\nTest file style (intent/blocks/inventory/inventory.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Ledger } from '../ledger/index.ts';\nimport { money } from '../money/index.ts';\nimport { Inventory, StockError } from './index.ts';\n\nconst usd = (n: number) => money(n, 'USD');\nlet clock = new Date('2026-03-10T10:00:00Z');\nconst make = (valuation: 'fifo' | 'average' = 'fifo', tracking: 'none' | 'lot' | 'serial' = 'none') => {\n  clock = new Date('2026-03-10T10:00:00Z');\n  const inv = new Inventory({ now: () => clock, currency: 'USD' });\n  inv.addPlace({ id: 'supplier', kind: 'supplier' });\n  inv.addPlace({ id: 'customer', kind: 'customer' });\n  inv.addPlace({ id: 'loss', kind: 'loss' });\n  inv.addPlace({ id: 'main', kind: 'internal' });\n  inv.addPlace({ id: 'shop', kind: 'internal' });\n  inv.addPlace({ id: 'van', kind: 'transit' });\n  inv.addProduct({ sku: 'W', tracking, valuation });\n  return inv;\n};\nconst code = (f: () => unknown) => {\n  try {\n    f();\n    return 'no error';\n  } catch (e) {\n    return e instanceof StockError ? e.code : `other: ${(e as Error).message}`;\n  }\n};\n\ntest('quantity is the sum of moves; every receipt and issue is on record', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/inventory-493.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:44.764Z"
+}

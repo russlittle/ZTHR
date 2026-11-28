@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "table-schema",
+  "mutant": {
+    "id": "468",
+    "line": 129,
+    "column": 55,
+    "endLine": 129,
+    "endColumn": 68,
+    "mutator": "EqualityOperator",
+    "original": "f.min > f.max",
+    "replacement": "f.min >= f.max",
+    "lineText": "if (f.min !== undefined && f.max !== undefined && f.min > f.max) out.push(`${where}: min is above max`);",
+    "prevText": "if (f.maxLength !== undefined && (!Number.isInteger(f.maxLength) || f.maxLength < 1 || f.maxLength > (f.type === 'text' ? 4000 : 1_000_000))) out.push(`${where}: maxLength is out of range`);",
+    "nextText": "if (f.scale !== undefined && (!Number.isInteger(f.scale) || f.scale < 0 || f.scale > 10)) out.push(`${where}: scale is 0 to 10`);"
+  },
+  "mayEdit": [
+    "intent/blocks/table-schema/table-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/table-schema-468.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"table-schema\". Mutant: line 129:55-129:68, mutator EqualityOperator: \"f.min > f.max\" becomes \"f.min >= f.max\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/table-schema/index.ts (> marks the mutated line):\n   123      if (!td) {\n   124        out.push(`${where}: unknown type ${JSON.stringify(String(f.type).slice(0, 20))}`);\n   125        continue;\n   126      }\n   127      for (const k of ['maxLength', 'min', 'max', 'options', 'scale', 'default'] as const) if (f[k] !== undefined && !td.allows.includes(k)) out.push(`${where}: ${k} does not apply to ${f.type}`);\n   128      if (f.maxLength !== undefined && (!Number.isInteger(f.maxLength) || f.maxLength < 1 || f.maxLength > (f.type === 'text' ? 4000 : 1_000_000))) out.push(`${where}: maxLength is out of range`);\n>  129      if (f.min !== undefined && f.max !== undefined && f.min > f.max) out.push(`${where}: min is above max`);\n   130      if (f.scale !== undefined && (!Number.isInteger(f.scale) || f.scale < 0 || f.scale > 10)) out.push(`${where}: scale is 0 to 10`);\n   131      if (f.type === 'select' || f.type === 'multiselect') {\n   132        const o = f.options;\n   133        if (!o || o.length === 0 || o.length > 200) out.push(`${where}: options are 1 to 200 choices`);\n   134        else {\n   135          if (new Set(o).size !== o.length) out.push(`${where}: two options are the same`);\n\nTest file style (intent/blocks/table-schema/table-schema.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { checkTable, checkRow, findDuplicates, conversion, convertValue, previewConversion, createTable, dropTable, diff, toMigration, needsApproval, fieldTypes, SchemaError } from './index.ts';\nimport type { Table, Field } from './index.ts';\nimport { plan } from '../migrations/index.ts';\n\nconst f = (o: Partial<Field> & Pick<Field, 'id' | 'name' | 'type'>): Field => o;\nconst contacts: Table = {\n  name: 'contacts',\n  fields: [\n    f({ id: 'a', name: 'full_name', type: 'text', required: true, maxLength: 80 }),\n    f({ id: 'b', name: 'email', type: 'email', unique: true }),\n    f({ id: 'c', name: 'age', type: 'integer', min: 0, max: 150 }),\n    f({ id: 'd', name: 'stage', type: 'select', options: ['lead', 'won', \"it's lost\"], default: 'lead' }),\n    f({ id: 'e', name: 'tags', type: 'multiselect', options: ['x', 'y'] }),\n  ],\n};\n\ntest('registry covers the documented types', () => {\n  assert.deepEqual(fieldTypes().sort(), ['boolean', 'date', 'datetime', 'decimal', 'email', 'integer', 'json', 'longtext', 'multiselect', 'select', 'text', 'url', 'uuid']);\n});\n\ntest('a sound table has no problems', () => assert.deepEqual(checkTable(contacts), []));\n\ntest('bad names, reserved words, duplicates and misplaced options are reported', () => {\n  const bad: Table = { name: 'Users;', fields: [f({ id: 'a', name: 'select', type: 'text' }), f({ id: 'a', name: 'x', type: 'text', options: ['a'] }), f({ id: 'c', name: 'x', type: 'weird' as never }), f({ id: 'd', name: 'p', type: 'select' }), f({ id: 'e', name: 'j', type: 'json', unique: true })] };\n  const p = checkTable(bad).join('\\n');\n  for (const s of ['table name', 'not allowed', 'two fields have id a', 'two fields have this name', 'unknown type', 'options are 1 to 200', 'cannot be unique', 'options does not apply']) assert.match(p, new RegExp(s));\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/table-schema-468.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:07.184Z"
+}
