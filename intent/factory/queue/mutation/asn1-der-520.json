@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "asn1-der",
+  "mutant": {
+    "id": "520",
+    "line": 284,
+    "column": 14,
+    "endLine": 284,
+    "endColumn": 21,
+    "mutator": "ConditionalExpression",
+    "original": "n < -1n",
+    "replacement": "false",
+    "lineText": "} while (n < -1n || (out[0]! & 0x80) === 0);",
+    "prevText": "n >>= 8n;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/asn1-der/asn1-der.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/asn1-der-520.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"asn1-der\". Mutant: line 284:14-284:21, mutator ConditionalExpression: \"n < -1n\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/asn1-der/index.ts (> marks the mutated line):\n   278      } while (n > 0n);\n   279      if (out[0]! & 0x80) out.unshift(0);\n   280    } else {\n   281      do {\n   282        out.unshift(Number(n & 0xffn));\n   283        n >>= 8n;\n>  284      } while (n < -1n || (out[0]! & 0x80) === 0);\n   285    }\n   286    return univ(UT.integer, false, Buffer.from(out));\n   287  }\n   288  \n   289  export function oid(dotted: string): Buffer {\n   290    const arcs = dotted.split('.').map((x) => {\n\nTest file style (intent/blocks/asn1-der/asn1-der.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync } from 'node:crypto';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { DerError, UT, asBits, asBoolean, asInteger, asOid, asString, asTime, bitString, boolean, buildCsr, explicit, fromPem, generalNames, ia5String, implicit, integer, matchesHostname, nameToString, nullValue, octetString, oid, oidName, oidOf, parseAll, parseCertificate, parseCsr, parseDer, parseSpki, printableString, sanExtension, sequence, set, signedBy, time, tlv, toPem, utf8String, validAt } from './index.ts';\nimport type { Der } from './index.ts';\n\n// Made with OpenSSL for these tests: a root, a server certificate it signed (SAN, key usage, EKU), and a self-signed Ed25519 certificate.\nconst ROOT = `-----BEGIN CERTIFICATE-----\nMIIBvDCCAWGgAwIBAgIUZ+gke9PhlRiiEM92FYa3KyKtMNcwCgYIKoZIzj0EAwIw\nMjEeMBwGA1UEAwwVVGVzdCBBdHRlc3RhdGlvbiBSb290MRAwDgYDVQQKDAdFeGFt\ncGxlMCAXDTI2MTEyODA1NTMyOVoYDzIxMjYxMTA0MDU1MzI5WjAyMR4wHAYDVQQD\nDBVUZXN0IEF0dGVzdGF0aW9uIFJvb3QxEDAOBgNVBAoMB0V4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAARUZQDumQ7QAf1EvzzU8RPnLx1et7vmCeDCAcv3\nXv13VLK9ZQZX9vKZEZzqIZtJac1JJNomZF5oEumt6GdRQLzuo1MwUTAdBgNVHQ4E\nFgQUaEjkGdoZ/KvUZcsBsihfJX7qq1kwHwYDVR0jBBgwFoAUaEjkGdoZ/KvUZcsB\nsihfJX7qq1kwDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAgNJADBGAiEA7FDz\nbLwiEfFSQE167DkcHmHARg1UKLttn+Q3OcwAlfsCIQDPCyLcFSmaplhuBfn5CoXq\nDGahgBWU86o3N97hxpsTCw==\n-----END CERTIFICATE-----\n`;\nconst SERVER = `-----BEGIN CERTIFICATE-----\nMIICejCCAiCgAwIBAgIURvhxSDLWZiKYHY7EHgT92yUR7JkwCgYIKoZIzj0EAwIw\nMjEeMBwGA1UEAwwVVGVzdCBBdHRlc3RhdGlvbiBSb290MRAwDgYDVQQKDAdFeGFt\ncGxlMCAXDTI2MTEyODA2MjEyOVoYDzIxMjYxMTA0MDYyMTI5WjBbMQswCQYDVQQG\nEwJVUzENMAsGA1UECAwET2hpbzEPMA0GA1UEBwwGRGF5dG9uMRYwFAYDVQQKDA1F\neGFtcGxlLCBJbmMuMRQwEgYDVQQDDAtleGFtcGxlLm9yZzBZMBMGByqGSM49AgEG\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/asn1-der-520.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "28b7438d611c0d8c29f845ee9ba46542cc933df5"
+  },
+  "createdAt": "2026-11-28T08:55:58.339Z"
+}

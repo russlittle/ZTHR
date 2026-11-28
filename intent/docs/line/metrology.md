@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 84 of 235 blocks calibrated; 0 certified, 82 with survivors still to close, 2 capable but not yet checked for repeatability and reproducibility.
+QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 85 of 235 blocks calibrated; 0 certified, 83 with survivors still to close, 2 capable but not yet checked for repeatability and reproducibility.
 
 ```mermaid
 flowchart LR
@@ -72,7 +72,7 @@ flowchart LR
   k -.->|the block changes: calibrate again| x
 ```
 
-The 84 blocks calibrated so far, of 235:
+The 85 blocks calibrated so far, of 235:
 
 | Block | Certificate | Capability | Survivors | Ruled equivalent | Issued |
 | --- | --- | --- | --- | --- | --- |
@@ -160,6 +160,7 @@ The 84 blocks calibrated so far, of 235:
 | `factoryreports` | not certified: 6 planted defects not rejected, and not ruled equivalent | 99.3% | 6 | 0 | 2026-11-28 |
 | `walkthrough` | not certified: 12 planted defects not rejected, and not ruled equivalent | 93.9% | 12 | 0 | 2026-11-28 |
 | `speech` | not certified: 327 planted defects not rejected, and not ruled equivalent | 71.2% | 327 | 0 | 2026-11-28 |
+| `asn1-der` | not certified: 291 planted defects not rejected, and not ruled equivalent | 77.8% | 291 | 0 | 2026-11-28 |
 
 ### Control charts
 

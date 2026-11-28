@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "asn1-der",
+  "mutant": {
+    "id": "720",
+    "line": 429,
+    "column": 26,
+    "endLine": 429,
+    "endColumn": 34,
+    "mutator": "StringLiteral",
+    "original": "'a Name'",
+    "replacement": "\"\"",
+    "lineText": "expect(n, UT.sequence, 'a Name');",
+    "prevText": "export function nameToString(n: Der): string {",
+    "nextText": "const rdns = n.children.map((rdn) => {"
+  },
+  "mayEdit": [
+    "intent/blocks/asn1-der/asn1-der.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/asn1-der-720.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"asn1-der\". Mutant: line 429:26-429:34, mutator StringLiteral: \"'a Name'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/asn1-der/index.ts (> marks the mutated line):\n   423  const KU = ['digitalSignature', 'nonRepudiation', 'keyEncipherment', 'dataEncipherment', 'keyAgreement', 'keyCertSign', 'cRLSign', 'encipherOnly', 'decipherOnly'];\n   424  const hex = (b: Uint8Array) => Buffer.from(b).toString('hex');\n   425  const colon = (b: Uint8Array) => (hex(b).match(/../g) ?? []).join(':');\n   426  \n   427  /** A distinguished name as RFC 4514 writes it: most specific first, special characters escaped. */\n   428  export function nameToString(n: Der): string {\n>  429    expect(n, UT.sequence, 'a Name');\n   430    const rdns = n.children.map((rdn) => {\n   431      expect(rdn, UT.set, 'an RDN');\n   432      return rdn.children\n   433        .map((atv) => {\n   434          const [t, v] = expect(atv, UT.sequence, 'an AttributeTypeAndValue').children as [Der, Der];\n   435          const key = oidName(asOid(t));\n\nTest file style (intent/blocks/asn1-der/asn1-der.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync } from 'node:crypto';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { DerError, UT, asBits, asBoolean, asInteger, asOid, asString, asTime, bitString, boolean, buildCsr, explicit, fromPem, generalNames, ia5String, implicit, integer, matchesHostname, nameToString, nullValue, octetString, oid, oidName, oidOf, parseAll, parseCertificate, parseCsr, parseDer, parseSpki, printableString, sanExtension, sequence, set, signedBy, time, tlv, toPem, utf8String, validAt } from './index.ts';\nimport type { Der } from './index.ts';\n\n// Made with OpenSSL for these tests: a root, a server certificate it signed (SAN, key usage, EKU), and a self-signed Ed25519 certificate.\nconst ROOT = `-----BEGIN CERTIFICATE-----\nMIIBvDCCAWGgAwIBAgIUZ+gke9PhlRiiEM92FYa3KyKtMNcwCgYIKoZIzj0EAwIw\nMjEeMBwGA1UEAwwVVGVzdCBBdHRlc3RhdGlvbiBSb290MRAwDgYDVQQKDAdFeGFt\ncGxlMCAXDTI2MTEyODA1NTMyOVoYDzIxMjYxMTA0MDU1MzI5WjAyMR4wHAYDVQQD\nDBVUZXN0IEF0dGVzdGF0aW9uIFJvb3QxEDAOBgNVBAoMB0V4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAARUZQDumQ7QAf1EvzzU8RPnLx1et7vmCeDCAcv3\nXv13VLK9ZQZX9vKZEZzqIZtJac1JJNomZF5oEumt6GdRQLzuo1MwUTAdBgNVHQ4E\nFgQUaEjkGdoZ/KvUZcsBsihfJX7qq1kwHwYDVR0jBBgwFoAUaEjkGdoZ/KvUZcsB\nsihfJX7qq1kwDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAgNJADBGAiEA7FDz\nbLwiEfFSQE167DkcHmHARg1UKLttn+Q3OcwAlfsCIQDPCyLcFSmaplhuBfn5CoXq\nDGahgBWU86o3N97hxpsTCw==\n-----END CERTIFICATE-----\n`;\nconst SERVER = `-----BEGIN CERTIFICATE-----\nMIICejCCAiCgAwIBAgIURvhxSDLWZiKYHY7EHgT92yUR7JkwCgYIKoZIzj0EAwIw\nMjEeMBwGA1UEAwwVVGVzdCBBdHRlc3RhdGlvbiBSb290MRAwDgYDVQQKDAdFeGFt\ncGxlMCAXDTI2MTEyODA2MjEyOVoYDzIxMjYxMTA0MDYyMTI5WjBbMQswCQYDVQQG\nEwJVUzENMAsGA1UECAwET2hpbzEPMA0GA1UEBwwGRGF5dG9uMRYwFAYDVQQKDA1F\neGFtcGxlLCBJbmMuMRQwEgYDVQQDDAtleGFtcGxlLm9yZzBZMBMGByqGSM49AgEG\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/asn1-der-720.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "28b7438d611c0d8c29f845ee9ba46542cc933df5"
+  },
+  "createdAt": "2026-11-28T08:55:58.967Z"
+}
