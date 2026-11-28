@@ -1,7 +1,7 @@
 {
  "schema": "zthr-oracle/1",
  "reference": "Nextcloud 32.0.15",
- "recorded": "2026-11-28T00:45:20.768Z",
+ "recorded": "2026-11-28T01:11:51.495Z",
  "steps": [
   {
    "name": "status",
@@ -508,7 +508,7 @@
         "publicKey": null,
         "resourceTypes": [
          {
-          "name": "file",
+          "name": "<text>",
           "protocols": {
            "webdav": "/public.php/webdav/"
           },
@@ -558,17 +558,17 @@
         "background-default": true,
         "background-plain": false,
         "background-text": "#ffffff",
-        "color": "#00679e",
-        "color-element": "#00679e",
-        "color-element-bright": "#00679e",
-        "color-element-dark": "#00679e",
+        "color": "<text>",
+        "color-element": "<text>",
+        "color-element-bright": "<text>",
+        "color-element-dark": "<text>",
         "color-text": "#ffffff",
         "favicon": "{base}/core/img/logo/logo.svg?v=0",
         "logo": "{base}/core/img/logo/logo.svg?v=0",
         "logoheader": "{base}/core/img/logo/logo.svg?v=0",
-        "name": "Nextcloud",
-        "productName": "Nextcloud",
-        "slogan": "a safe home for all your data",
+        "name": "<text>",
+        "productName": "<text>",
+        "slogan": "<text>",
         "url": "<text>"
        },
        "user_status": {
@@ -1554,7 +1554,14 @@
    "free",
    "total",
    "relative",
-   "storageLocation"
+   "storageLocation",
+   "name",
+   "productName",
+   "slogan",
+   "color",
+   "color-element",
+   "color-element-bright",
+   "color-element-dark"
   ],
   "maskHeaders": [
    "etag",
