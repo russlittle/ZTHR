@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "message-search",
+  "mutant": {
+    "id": "131",
+    "line": 134,
+    "column": 7,
+    "endLine": 134,
+    "endColumn": 29,
+    "mutator": "EqualityOperator",
+    "original": "src.length > MAX_QUERY",
+    "replacement": "src.length >= MAX_QUERY",
+    "lineText": "if (src.length > MAX_QUERY) throw new MessageSearchError(`a query over ${MAX_QUERY} characters`);",
+    "prevText": "const warnings: string[] = [];",
+    "nextText": "const toks = tokenize(src);"
+  },
+  "mayEdit": [
+    "intent/blocks/message-search/message-search.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/message-search-131.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"message-search\". Mutant: line 134:7-134:29, mutator EqualityOperator: \"src.length > MAX_QUERY\" becomes \"src.length >= MAX_QUERY\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/message-search/index.ts (> marks the mutated line):\n   128  const HAS: readonly string[] = ['link', 'file', 'image', 'reaction', 'pin', 'thread'];\n   129  const IS: readonly string[] = ['pinned', 'thread', 'reply', 'edited'];\n   130  \n   131  /** Read a query string. Never throws on odd input: problems become `warnings`, and a restriction that cannot be met makes the query `impossible`. */\n   132  export function parseQuery(src: string, now: number, offsetMin = 0): Query {\n   133    const warnings: string[] = [];\n>  134    if (src.length > MAX_QUERY) throw new MessageSearchError(`a query over ${MAX_QUERY} characters`);\n   135    const toks = tokenize(src);\n   136    if (toks.length > MAX_TOKENS) throw new MessageSearchError(`a query of more than ${MAX_TOKENS} parts`);\n   137    const terms: string[] = [];\n   138    const prefixes: string[] = [];\n   139    const phrases: string[][] = [];\n   140    const notTerms: string[] = [];\n\nTest file style (intent/blocks/message-search/message-search.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MessageSearch, MessageSearchError, parseDay, parseQuery, type Channel, type Message } from './index.ts';\n\nconst NOW = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst DAY = 86_400_000;\nconst CH: Record<string, Channel & { members: string[]; secret?: boolean; joinedAfter?: Record<string, number> }> = {\n  general: { id: 'c1', name: 'general', members: ['u1', 'u2', 'u3'] },\n  eng: { id: 'c2', name: 'eng', members: ['u1', 'u2'] },\n  leads: { id: 'c3', name: 'leads', members: ['u1'], secret: true },\n  late: { id: 'c4', name: 'late', members: ['u1', 'u3'], joinedAfter: { u3: Date.UTC(2026, 10, 20) } },\n};\nconst USERS: Record<string, string> = { alice: 'u1', bob: 'u2', carol: 'u3' };\n\nfunction make() {\n  const byId = new Map(Object.values(CH).map((c) => [c.id, c]));\n  const s = new MessageSearch({\n    now: () => NOW,\n    channelByName: (n) => CH[n],\n    userByHandle: (h) => USERS[h],\n    canSeeChannel: (v, id) => byId.get(id)!.members.includes(v),\n    canRead: (v, id, m) => {\n      const c = byId.get(id)!;\n      if (!c.members.includes(v)) return false;\n      const j = c.joinedAfter?.[v];\n      return j === undefined || m.ts >= j;\n    },\n  });\n  return s;\n}\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/message-search-131.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:47.780Z"
+}

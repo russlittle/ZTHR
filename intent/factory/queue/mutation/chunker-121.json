@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "chunker",
+  "mutant": {
+    "id": "121",
+    "line": 133,
+    "column": 11,
+    "endLine": 133,
+    "endColumn": 28,
+    "mutator": "ConditionalExpression",
+    "original": "cut < unit.length",
+    "replacement": "true",
+    "lineText": "if (cut < unit.length) {",
+    "prevText": "if (cut <= off) cut = Math.min(unit.length, off + 2);",
+    "nextText": "const sp = unit.lastIndexOf(' ', cut - 1);"
+  },
+  "mayEdit": [
+    "intent/blocks/chunker/chunker.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/chunker-121.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"chunker\". Mutant: line 133:11-133:28, mutator ConditionalExpression: \"cut < unit.length\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/chunker/index.ts (> marks the mutated line):\n   127          const mid = Math.ceil((lo + hi) / 2);\n   128          if (count(unit.slice(off, cpSafe(unit, off + mid))) <= max) lo = mid;\n   129          else hi = mid - 1;\n   130        }\n   131        let cut = cpSafe(unit, off + lo);\n   132        if (cut <= off) cut = Math.min(unit.length, off + 2);\n>  133        if (cut < unit.length) {\n   134          const sp = unit.lastIndexOf(' ', cut - 1);\n   135          if (sp > off + (cut - off) / 2) cut = sp + 1;\n   136        }\n   137        out.push([start + from + off, start + from + cut]);\n   138        off = cut;\n   139      }\n\nTest file style (intent/blocks/chunker/chunker.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ChunkError, chunk, chunkAt, cite, defaultCounter, locateQuote, verifyAnchor } from './index.ts';\n\nconst bytes = (t: string) => new TextEncoder().encode(t).length;\nconst doc = `---\ntitle: Guide\n---\n# Guide\n\nIntro paragraph about the guide.\n\n## Install\n\nRun the installer. It takes a minute.\n\n\\`\\`\\`sh\nnpm install thing\nnpm run setup\n\\`\\`\\`\n\n## Usage\n\nCall the function. It returns a value.\n\n### Options\n\n- one\n- two\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/chunker-121.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:41.951Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "message-search",
+  "mutant": {
+    "id": "276",
+    "line": 207,
+    "column": 37,
+    "endLine": 207,
+    "endColumn": 49,
+    "mutator": "ConditionalExpression",
+    "original": "t.length > 1",
+    "replacement": "true",
+    "lineText": "const star = t.endsWith('*') && t.length > 1;",
+    "prevText": "}",
+    "nextText": "for (const w of words(star ? t.slice(0, -1) : t)) {"
+  },
+  "mayEdit": [
+    "intent/blocks/message-search/message-search.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/message-search-276.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"message-search\". Mutant: line 207:37-207:49, mutator ConditionalExpression: \"t.length > 1\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/message-search/index.ts (> marks the mutated line):\n   201            else if (name === 'after') narrow(d.end, undefined);\n   202            else narrow(d.start, d.end);\n   203          }\n   204        }\n   205        continue;\n   206      }\n>  207      const star = t.endsWith('*') && t.length > 1;\n   208      for (const w of words(star ? t.slice(0, -1) : t)) {\n   209        if (neg) notTerms.push(stem(w));\n   210        else if (star) prefixes.push(w);\n   211        else terms.push(stem(w));\n   212      }\n   213    }\n\nTest file style (intent/blocks/message-search/message-search.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MessageSearch, MessageSearchError, parseDay, parseQuery, type Channel, type Message } from './index.ts';\n\nconst NOW = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst DAY = 86_400_000;\nconst CH: Record<string, Channel & { members: string[]; secret?: boolean; joinedAfter?: Record<string, number> }> = {\n  general: { id: 'c1', name: 'general', members: ['u1', 'u2', 'u3'] },\n  eng: { id: 'c2', name: 'eng', members: ['u1', 'u2'] },\n  leads: { id: 'c3', name: 'leads', members: ['u1'], secret: true },\n  late: { id: 'c4', name: 'late', members: ['u1', 'u3'], joinedAfter: { u3: Date.UTC(2026, 10, 20) } },\n};\nconst USERS: Record<string, string> = { alice: 'u1', bob: 'u2', carol: 'u3' };\n\nfunction make() {\n  const byId = new Map(Object.values(CH).map((c) => [c.id, c]));\n  const s = new MessageSearch({\n    now: () => NOW,\n    channelByName: (n) => CH[n],\n    userByHandle: (h) => USERS[h],\n    canSeeChannel: (v, id) => byId.get(id)!.members.includes(v),\n    canRead: (v, id, m) => {\n      const c = byId.get(id)!;\n      if (!c.members.includes(v)) return false;\n      const j = c.joinedAfter?.[v];\n      return j === undefined || m.ts >= j;\n    },\n  });\n  return s;\n}\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/message-search-276.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:48.282Z"
+}

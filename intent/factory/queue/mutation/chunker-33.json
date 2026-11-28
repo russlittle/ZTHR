@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "chunker",
+  "mutant": {
+    "id": "33",
+    "line": 86,
+    "column": 67,
+    "endLine": 86,
+    "endColumn": 72,
+    "mutator": "ArithmeticOperator",
+    "original": "i + 1",
+    "replacement": "i - 1",
+    "lineText": "for (let i = 0; i < text.length; i++) if (text[i] === '\\n' && i + 1 < text.length) out.push(i + 1);",
+    "prevText": "if (mode === 'code') {",
+    "nextText": "return out;"
+  },
+  "mayEdit": [
+    "intent/blocks/chunker/chunker.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/chunker-33.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"chunker\". Mutant: line 86:67-86:72, mutator ArithmeticOperator: \"i + 1\" becomes \"i - 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/chunker/index.ts (> marks the mutated line):\n    80  const SENTENCE_END = /(?<=[.!?。！？][\"'”’)\\]]*)\\s+(?=\\S)|\\n+/g;\n    81  \n    82  /** Offsets where a new sentence (or line) starts inside text, always beginning with 0. */\n    83  function boundaries(text: string, mode: 'prose' | 'code'): number[] {\n    84    const out = [0];\n    85    if (mode === 'code') {\n>   86      for (let i = 0; i < text.length; i++) if (text[i] === '\\n' && i + 1 < text.length) out.push(i + 1);\n    87      return out;\n    88    }\n    89    for (const m of text.matchAll(SENTENCE_END)) {\n    90      const at = m.index + m[0].length;\n    91      if (at < text.length) out.push(at);\n    92    }\n\nTest file style (intent/blocks/chunker/chunker.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ChunkError, chunk, chunkAt, cite, defaultCounter, locateQuote, verifyAnchor } from './index.ts';\n\nconst bytes = (t: string) => new TextEncoder().encode(t).length;\nconst doc = `---\ntitle: Guide\n---\n# Guide\n\nIntro paragraph about the guide.\n\n## Install\n\nRun the installer. It takes a minute.\n\n\\`\\`\\`sh\nnpm install thing\nnpm run setup\n\\`\\`\\`\n\n## Usage\n\nCall the function. It returns a value.\n\n### Options\n\n- one\n- two\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/chunker-33.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:41.333Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "wiki-links",
+  "mutant": {
+    "id": "280",
+    "line": 235,
+    "column": 29,
+    "endLine": 235,
+    "endColumn": 40,
+    "mutator": "ArithmeticOperator",
+    "original": "a[1] - b[1]",
+    "replacement": "a[1] + b[1]",
+    "lineText": ".sort((a, b) => a[1] - b[1] || (a[0] < b[0] ? -1 : 1))",
+    "prevText": ".filter(([, d]) => d <= 2)",
+    "nextText": ".map(([t]) => t);"
+  },
+  "mayEdit": [
+    "intent/blocks/wiki-links/wiki-links.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/wiki-links-280.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"wiki-links\". Mutant: line 235:29-235:40, mutator ArithmeticOperator: \"a[1] - b[1]\" becomes \"a[1] + b[1]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/wiki-links/index.ts (> marks the mutated line):\n   229          const base = { from, line: r.link.line, raw: r.link.raw };\n   230          if (r.resolution.status === 'missing') {\n   231            const key = titleKey(r.link.target);\n   232            const suggestions = titles\n   233              .map((t) => [t, distance(key, titleKey(t))] as const)\n   234              .filter(([, d]) => d <= 2)\n>  235              .sort((a, b) => a[1] - b[1] || (a[0] < b[0] ? -1 : 1))\n   236              .map(([t]) => t);\n   237            out.push({ ...base, reason: 'missing page', suggestions });\n   238          } else if (r.resolution.status === 'ambiguous') out.push({ ...base, reason: 'ambiguous title', suggestions: [] });\n   239          else if (r.anchorOk === false) out.push({ ...base, reason: 'missing heading', suggestions: [] });\n   240        }\n   241      }\n\nTest file style (intent/blocks/wiki-links/wiki-links.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { LinkGraph, MAX_PAGE, WikiLinkError, applyRename, parseLinks, planRename, titleKey, type Page } from './index.ts';\n\ntest('every link form parses with its target, heading, label, embed flag and line', () => {\n  const l = parseLinks('See [[Home]], [[Home|the start]], [[Home#Setup]], [[Home#Setup|setup]], [[#Local]].\\n![[Diagram]]');\n  assert.deepEqual(l.map((x) => [x.target, x.heading, x.label, x.embed, x.line]), [\n    ['Home', undefined, undefined, false, 1],\n    ['Home', undefined, 'the start', false, 1],\n    ['Home', 'Setup', undefined, false, 1],\n    ['Home', 'Setup', 'setup', false, 1],\n    ['', 'Local', undefined, false, 1],\n    ['Diagram', undefined, undefined, true, 2],\n  ]);\n  assert.equal(l[0]!.raw, '[[Home]]');\n  assert.equal('See [[Home]]'.slice(l[0]!.start, l[0]!.end), '[[Home]]');\n});\n\ntest('escaped, empty, multi-line and code links are not links', () => {\n  assert.deepEqual(parseLinks('\\\\[[Nope]] and [[]] and [[ | x ]] and [[a\\nb]]'), []);\n  assert.equal(parseLinks('\\\\\\\\[[Double]]').length, 1, 'an escaped backslash does not escape the bracket');\n  const src = 'Real [[One]].\\n\\n```\\n[[Fenced]]\\n```\\n\\n    [[Indented]]\\n\\nInline `[[Span]]` and ``[[Two ` ticks]]`` end [[Two]].';\n  assert.deepEqual(parseLinks(src).map((x) => x.target), ['One', 'Two']);\n});\n\ntest('hostile input: oversized pages, huge links and bracket floods stay bounded', () => {\n  assert.throws(() => parseLinks('x'.repeat(MAX_PAGE + 1)), WikiLinkError);\n  assert.deepEqual(parseLinks(`[[${'a'.repeat(301)}]]`), []);\n  assert.equal(parseLinks(`[[${'a'.repeat(300)}]]`).length, 1);\n  const t = Date.now();\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/wiki-links-280.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T10:00:26.201Z"
+}

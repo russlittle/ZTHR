@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "prompt-store",
+  "mutant": {
+    "id": "485",
+    "line": 297,
+    "column": 10,
+    "endLine": 297,
+    "endColumn": 34,
+    "mutator": "Regex",
+    "original": "/^[a-z][a-z0-9-]{0,31}$/",
+    "replacement": "/^[a-z][a-z0-9-]{0,31}/",
+    "lineText": "if (!/^[a-z][a-z0-9-]{0,31}$/.test(label) || label === 'latest') throw new PromptStoreError('invalid', 'a label is lower case letters, digits and -');",
+    "prevText": "setLabel(name: string, label: string, version: number): void {",
+    "nextText": "this.get(name, version);"
+  },
+  "mayEdit": [
+    "intent/blocks/prompt-store/prompt-store.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/prompt-store-485.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"prompt-store\". Mutant: line 297:10-297:34, mutator Regex: \"/^[a-z][a-z0-9-]{0,31}$/\" becomes \"/^[a-z][a-z0-9-]{0,31}/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/prompt-store/index.ts (> marks the mutated line):\n   291      if (!l) throw new PromptStoreError('not-found', `no prompt ${name}`);\n   292      return l;\n   293    }\n   294  \n   295    /** Point a label (production, staging) at a version. Moving a label is how a rollback is done. */\n   296    setLabel(name: string, label: string, version: number): void {\n>  297      if (!/^[a-z][a-z0-9-]{0,31}$/.test(label) || label === 'latest') throw new PromptStoreError('invalid', 'a label is lower case letters, digits and -');\n   298      this.get(name, version);\n   299      const m = this.#labels.get(name) ?? new Map<string, number>();\n   300      m.set(label, version);\n   301      this.#labels.set(name, m);\n   302    }\n   303  \n\nTest file style (intent/blocks/prompt-store/prompt-store.test.ts):\n12 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { PromptStore, PromptStoreError, checkDraft, compareRuns, gate, parseTemplate, render, runCheck, runEval, type Draft, type EvalSet, type Model } from './index.ts';\n\nconst T0 = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst base: Draft = {\n  messages: [\n    { role: 'system', template: 'You are a support agent for {{product}}.\\nBe brief.' },\n    { role: 'user', template: '{{#if history}}Earlier:\\n{{history}}\\n{{else}}This is a new conversation.\\n{{/if}}Customer says: {{question}}' },\n  ],\n  variables: [\n    { name: 'product', type: 'string', required: true, maxLength: 40 },\n    { name: 'question', type: 'string', required: true, untrusted: true, maxLength: 500 },\n    { name: 'history', type: 'string' },\n  ],\n  model: { name: 'model-a', temperature: 0.2, maxTokens: 300 },\n};\n\nfunction store() {\n  let t = T0;\n  return new PromptStore(() => (t += 1000));\n}\n\ntest('templates: variables, conditions with else, escaped braces; syntax errors are refused', () => {\n  const out = render(base, { product: 'Acme', question: 'Where is my order?' });\n  assert.equal(out[0]!.content, 'You are a support agent for Acme.\\nBe brief.');\n  assert.equal(out[1]!.content, 'This is a new conversation.\\nCustomer says: <question>\\nWhere is my order?\\n</question>');\n  const withHistory = render(base, { product: 'Acme', question: 'Hi', history: 'Order 5 late' });\n  assert.match(withHistory[1]!.content, /^Earlier:\\nOrder 5 late\\nCustomer says:/);\n  assert.equal(render({ messages: [{ role: 'user', template: 'Use \\\\{{braces}} like {{x}}' }], variables: [{ name: 'x', type: 'string', required: true }] }, { x: 'this' })[0]!.content, 'Use {{braces}} like this');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/prompt-store-485.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T10:00:00.267Z"
+}

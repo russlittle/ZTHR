@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "tax-engine",
+  "mutant": {
+    "id": "224",
+    "line": 295,
+    "column": 7,
+    "endLine": 295,
+    "endColumn": 74,
+    "mutator": "ConditionalExpression",
+    "original": "!p || typeof p.country !== 'string' || !COUNTRY.test(up(p.country))",
+    "replacement": "false",
+    "lineText": "if (!p || typeof p.country !== 'string' || !COUNTRY.test(up(p.country))) bad(`${what} needs a two-letter country code`);",
+    "prevText": "function normalizePlace(p: Place, what: string): Place {",
+    "nextText": "return {"
+  },
+  "mayEdit": [
+    "intent/blocks/tax-engine/tax-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/tax-engine-224.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"tax-engine\". Mutant: line 295:7-295:74, mutator ConditionalExpression: \"!p || typeof p.country !== 'string' || !COUNTRY.test(up(p.country))\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/tax-engine/index.ts (> marks the mutated line):\n   289  \n   290  function bad(message: string): never {\n   291    throw new TaxError('bad-input', message);\n   292  }\n   293  \n   294  function normalizePlace(p: Place, what: string): Place {\n>  295    if (!p || typeof p.country !== 'string' || !COUNTRY.test(up(p.country))) bad(`${what} needs a two-letter country code`);\n   296    return {\n   297      country: up(p.country),\n   298      ...(p.region ? { region: up(p.region) } : {}),\n   299      ...(p.city ? { city: p.city.trim().toLowerCase() } : {}),\n   300      ...(p.postal ? { postal: postalKey(p.postal) } : {}),\n   301    };\n\nTest file style (intent/blocks/tax-engine/tax-engine.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { format, money, parse, type Money } from '../money/index.ts';\nimport { RefData } from '../refdata/index.ts';\nimport { TaxEngine, TaxError, divide, parseRate, type TaxRule } from './index.ts';\n\nconst usd = (s: string): Money => parse(s, 'USD');\nconst f = (m: Money): string => format(m);\nconst DAY = '2026-06-15';\n\nconst base = (id: string, over: Partial<TaxRule> = {}): TaxRule => ({ id, name: id, level: 'region', where: { country: 'US', region: 'CA' }, rate: '7.25', from: '2020-01-01', ...over });\n\nfunction us(extra: { rounding?: 'half-even' | 'half-up' | 'down'; roundAt?: 'line' | 'invoice'; cashIncrement?: number } = {}): TaxEngine {\n  const e = new TaxEngine({ seller: { country: 'US', region: 'CA' }, ...extra });\n  e.addRules([\n    base('ca-state', { name: 'California', rate: '7.25' }),\n    base('la-local', { name: 'Los Angeles', level: 'local', where: { country: 'US', region: 'CA', city: 'Los Angeles' }, rate: '2.25' }),\n    base('ca-food', { name: 'California food', rate: '0', exempt: true, categories: ['food'] }),\n    base('tx-state', { name: 'Texas', where: { country: 'US', region: 'TX' }, rate: '6.25' }),\n  ]);\n  return e;\n}\nconst la = { country: 'US', region: 'CA', city: 'Los Angeles' };\n\ntest('rates are exact percentages of up to four decimals and nothing else', () => {\n  assert.equal(parseRate('8.25').n, 82_500n);\n  assert.equal(parseRate('0').n, 0n);\n  assert.equal(parseRate('100').n, 1_000_000n);\n  assert.equal(parseRate('9.975').n, 99_750n);\n  for (const t of ['-1', '100.0001', '8.12345', 'abc', '', '1e2', '8,25']) assert.throws(() => parseRate(t), (e: unknown) => e instanceof TaxError && e.code === 'bad-rate', t);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/tax-engine-224.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T10:00:15.575Z"
+}

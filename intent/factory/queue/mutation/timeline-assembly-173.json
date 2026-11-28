@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "timeline-assembly",
+  "mutant": {
+    "id": "173",
+    "line": 204,
+    "column": 9,
+    "endLine": 204,
+    "endColumn": 29,
+    "mutator": "EqualityOperator",
+    "original": "this.mode === 'read'",
+    "replacement": "this.mode !== 'read'",
+    "lineText": "if (this.mode === 'read') for (const e of this.#byAuthor.get(viewer) ?? []) out.set(e.id, e);",
+    "prevText": "for (const a of pulled) for (const e of this.#byAuthor.get(a) ?? []) out.set(e.id, e);",
+    "nextText": "return [...out.values()].filter((e) => e.author === viewer || follows.has(e.author)).sort(byNewest);"
+  },
+  "mayEdit": [
+    "intent/blocks/timeline-assembly/timeline-assembly.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/timeline-assembly-173.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"timeline-assembly\". Mutant: line 204:9-204:29, mutator EqualityOperator: \"this.mode === 'read'\" becomes \"this.mode !== 'read'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/timeline-assembly/index.ts (> marks the mutated line):\n   198      const out = new Map<string, Entry>((f?.entries ?? []).map((e) => [e.id, e]));\n   199      const follows = new Set([...this.#o.graph.followingOf(viewer)]);\n   200      const pulled = new Set<string>();\n   201      for (const a of follows) if (this.mode === 'read' || (this.mode === 'hybrid' && this.#isCelebrity(a))) pulled.add(a);\n   202      if (this.mode === 'write' || this.mode === 'hybrid') if (f?.oldestKept !== undefined) for (const a of follows) pulled.add(a);\n   203      for (const a of pulled) for (const e of this.#byAuthor.get(a) ?? []) out.set(e.id, e);\n>  204      if (this.mode === 'read') for (const e of this.#byAuthor.get(viewer) ?? []) out.set(e.id, e);\n   205      return [...out.values()].filter((e) => e.author === viewer || follows.has(e.author)).sort(byNewest);\n   206    }\n   207  \n   208    #muted(viewer: string, actor: string): boolean {\n   209      const until = this.#settings.get(viewer)?.mutedAccounts?.[actor];\n   210      return until !== undefined && (until === null || this.#o.now() < until);\n\nTest file style (intent/blocks/timeline-assembly/timeline-assembly.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Microblog, type NewStatus, type Status } from '../microblog/index.ts';\nimport { TimelineError, Timelines, mergeItems, type Mode, type TimelineKind } from './index.ts';\n\nconst A = 'https://a.example/users/alice';\nconst B = 'https://b.example/users/bob';\nconst C = 'https://c.example/users/carol';\nconst D = 'https://a.example/users/dan';\nconst E = 'https://e.example/users/eve';\nconst HOME: TimelineKind = { kind: 'home' };\n\nfunction world(mode: Mode, o: { celebrity?: number; maxFeed?: number } = {}) {\n  let t = Date.UTC(2026, 10, 28, 12, 0, 0);\n  let n = 0;\n  const follows = new Map<string, Set<string>>();\n  const blocks = new Set<string>();\n  const graph = {\n    followersOf: (a: string) => [...follows].filter(([, s]) => s.has(a)).map(([u]) => u),\n    followingOf: (u: string) => [...(follows.get(u) ?? [])],\n  };\n  const mb = new Microblog({\n    now: () => t,\n    newId: () => `s${String(++n).padStart(4, '0')}`,\n    relations: { follows: (a, b) => follows.get(a)?.has(b) ?? false, blocks: (a, b) => blocks.has(`${a}>${b}`) },\n    resolveMention: () => undefined,\n  });\n  const tl = new Timelines({ mb, graph, isLocal: (a) => a.startsWith('https://a.example/'), domainOf: (a) => new URL(a).host, now: () => t, mode, ...(o.celebrity ? { celebrityFollowers: o.celebrity } : {}), ...(o.maxFeed ? { maxFeed: o.maxFeed } : {}) });\n  const w = {\n    mb, tl,\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/timeline-assembly-173.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T10:00:20.584Z"
+}

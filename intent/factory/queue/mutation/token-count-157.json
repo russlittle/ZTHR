@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "token-count",
+  "mutant": {
+    "id": "157",
+    "line": 134,
+    "column": 30,
+    "endLine": 134,
+    "endColumn": 105,
+    "mutator": "Regex",
+    "original": "/'(?:[sdmt]|ll|ve|re)| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+/gu",
+    "replacement": "/'(?:[sdmt]|ll|ve|re)| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?=\\S)|\\s+/gu",
+    "lineText": "export const DEFAULT_SPLIT = /'(?:[sdmt]|ll|ve|re)| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+/gu;",
+    "prevText": "/** GPT-2 style pre-tokenising pattern: contractions, words, numbers, punctuation, and whitespace runs. */",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/token-count/token-count.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/token-count-157.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"token-count\". Mutant: line 134:30-134:105, mutator Regex: \"/'(?:[sdmt]|ll|ve|re)| ?\\\\p{L}+| ?\\\\p{N}+| ?[^\\\\s\\\\p{L}\\\\p{N}]+|\\\\s+(?!\\\\S)|\\\\s+/gu\" becomes \"/'(?:[sdmt]|ll|ve|re)| ?\\\\p{L}+| ?\\\\p{N}+| ?[^\\\\s\\\\p{L}\\\\p{N}]+|\\\\s+(?=\\\\S)|\\\\s+/gu\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/token-count/index.ts (> marks the mutated line):\n   128      ranks.set(key, Number(m[2]));\n   129    });\n   130    return ranks;\n   131  }\n   132  \n   133  /** GPT-2 style pre-tokenising pattern: contractions, words, numbers, punctuation, and whitespace runs. */\n>  134  export const DEFAULT_SPLIT = /'(?:[sdmt]|ll|ve|re)| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+/gu;\n   135  \n   136  export interface BpeOptions {\n   137    /** Special tokens such as an end-of-text marker, by text. They must not collide with ordinary ranks. */\n   138    readonly special?: Readonly<Record<string, number>>;\n   139    readonly split?: RegExp;\n   140  }\n\nTest file style (intent/blocks/token-count/token-count.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BpeTokenizer, TokenCountError, VENDORS, countMessages, estimate, estimator, fitMessages, parseTiktokenRanks, promptBudget, truncate, upperBound } from './index.ts';\n\nconst bytesKey = (s: string) => String.fromCharCode(...new TextEncoder().encode(s));\nconst vocabText = (merges: string[]) => {\n  const lines: string[] = [];\n  for (let b = 0; b < 256; b++) lines.push(`${Buffer.from([b]).toString('base64')} ${b}`);\n  merges.forEach((m, i) => lines.push(`${Buffer.from(m).toString('base64')} ${256 + i}`));\n  return lines.join('\\n');\n};\nconst ranks = (merges: string[]) => parseTiktokenRanks(vocabText(merges));\n\ntest('the byte bound is the UTF-8 length and no estimate exceeds it', () => {\n  assert.equal(upperBound(''), 0);\n  assert.equal(upperBound('abc'), 3);\n  assert.equal(upperBound('é'), 2);\n  assert.equal(upperBound('日本'), 6);\n  assert.equal(upperBound('😀'), 4);\n  for (const t of ['a', 'hello world', '日本語のテキスト', '😀😀😀', '12345678901234567890', '\\n\\n\\n']) {\n    for (const v of Object.keys(VENDORS)) assert.ok(estimate(t, v) <= upperBound(t), `${v} on ${JSON.stringify(t)}`);\n  }\n});\n\ntest('estimates for plain English land near four characters a token and grow with the text', () => {\n  const sentence = 'The quick brown fox jumps over the lazy dog while the rain keeps falling on the quiet town.';\n  const n = estimate(sentence, 'openai-o200k');\n  assert.ok(n >= 15 && n <= 25, `got ${n}`);\n  assert.equal(estimate('', 'anthropic'), 0);\n  assert.equal(estimate('a', 'anthropic'), 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/token-count-157.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T10:00:23.159Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "moderation-model",
+  "mutant": {
+    "id": "432",
+    "line": 356,
+    "column": 9,
+    "endLine": 356,
+    "endColumn": 57,
+    "mutator": "EqualityOperator",
+    "original": "this.#now() - d.at > this.#policy.appealWindowMs",
+    "replacement": "this.#now() - d.at >= this.#policy.appealWindowMs",
+    "lineText": "if (this.#now() - d.at > this.#policy.appealWindowMs) throw new ModerationError('invalid', 'the appeal window has closed');",
+    "prevText": "if (eff.effective !== 'hold' && eff.effective !== 'block') throw new ModerationError('invalid', 'only a hold or a block can be appealed');",
+    "nextText": "if ([...this.#appeals.values()].some((a) => a.decisionId === d.id)) throw new ModerationError('conflict', 'this decision was already appealed');"
+  },
+  "mayEdit": [
+    "intent/blocks/moderation-model/moderation-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/moderation-model-432.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"moderation-model\". Mutant: line 356:9-356:57, mutator EqualityOperator: \"this.#now() - d.at > this.#policy.appealWindowMs\" becomes \"this.#now() - d.at >= this.#policy.appealWindowMs\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/moderation-model/index.ts (> marks the mutated line):\n   350    appeal(decisionId: string, by: string, reason: string): Appeal {\n   351      const d = this.decision(decisionId);\n   352      if (d.authorId !== by) throw new ModerationError('forbidden', 'only the author can appeal');\n   353      const eff = this.current(d.itemId)!;\n   354      if (eff.decision.id !== d.id) throw new ModerationError('conflict', 'that decision has been replaced by a newer one');\n   355      if (eff.effective !== 'hold' && eff.effective !== 'block') throw new ModerationError('invalid', 'only a hold or a block can be appealed');\n>  356      if (this.#now() - d.at > this.#policy.appealWindowMs) throw new ModerationError('invalid', 'the appeal window has closed');\n   357      if ([...this.#appeals.values()].some((a) => a.decisionId === d.id)) throw new ModerationError('conflict', 'this decision was already appealed');\n   358      if (reason.trim() === '' || reason.length > 2000) throw new ModerationError('invalid', 'an appeal needs a reason of up to 2000 characters');\n   359      const a: Appeal = { id: `a${++this.#aseq}`, decisionId: d.id, by, reason, at: this.#now(), status: 'open', reviewer: undefined, note: undefined };\n   360      this.#appeals.set(a.id, a);\n   361      return a;\n   362    }\n\nTest file style (intent/blocks/moderation-model/moderation-model.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Moderator, ModerationError, decideAction, lexiconClassifier, llmClassifier, normalizeText, policyHash, validatePolicy, type Classifier, type Policy } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst policy: Policy = {\n  id: 'community',\n  version: 1,\n  categories: {\n    harassment: { flag: 0.4, hold: 0.7, block: 0.9 },\n    violence: { flag: 0.5, block: 0.9 },\n    sexual_minors: { flag: 0.05, block: 0.2, zeroTolerance: true },\n  },\n  contexts: { kids: { harassment: { flag: 0.1, hold: 0.3, block: 0.6 } } },\n  onError: 'hold',\n  maxChars: 200,\n  appealWindowMs: 7 * DAY,\n  trustedAuthors: ['trusted'],\n};\nconst lexicon = {\n  harassment: ['idiot', 'loser', 'moron', 'worthless'],\n  violence: ['kill', 'stab'],\n  sexual_minors: ['csamword'],\n};\n\nfunction mod(opts: { classifier?: Classifier; p?: Policy } = {}) {\n  let t = T0;\n  const calls: string[] = [];\n  const base = lexiconClassifier(lexicon);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/moderation-model-432.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:57.765Z"
+}

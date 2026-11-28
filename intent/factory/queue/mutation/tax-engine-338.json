@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "tax-engine",
+  "mutant": {
+    "id": "338",
+    "line": 379,
+    "column": 36,
+    "endLine": 379,
+    "endColumn": 57,
+    "mutator": "StringLiteral",
+    "original": "'a rule needs a name'",
+    "replacement": "\"\"",
+    "lineText": "if (!rule?.name) problems.push('a rule needs a name');",
+    "prevText": "if (!rule || typeof rule.id !== 'string' || !rule.id.trim()) problems.push('a rule needs an id');",
+    "nextText": "if (!LEVELS.includes(rule?.level as Level)) problems.push(`level must be one of ${LEVELS.join(', ')}`);"
+  },
+  "mayEdit": [
+    "intent/blocks/tax-engine/tax-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/tax-engine-338.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"tax-engine\". Mutant: line 379:36-379:57, mutator StringLiteral: \"'a rule needs a name'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/tax-engine/index.ts (> marks the mutated line):\n   373      this.cash = o.cashIncrement;\n   374    }\n   375  \n   376    addRule(rule: TaxRule): void {\n   377      const problems: string[] = [];\n   378      if (!rule || typeof rule.id !== 'string' || !rule.id.trim()) problems.push('a rule needs an id');\n>  379      if (!rule?.name) problems.push('a rule needs a name');\n   380      if (!LEVELS.includes(rule?.level as Level)) problems.push(`level must be one of ${LEVELS.join(', ')}`);\n   381      if (!rule?.where || !COUNTRY.test(up(rule.where.country ?? ''))) problems.push('where needs a two-letter country');\n   382      if (!isDay(rule?.from)) problems.push('from must be a day like 2026-01-31');\n   383      if (rule?.until !== undefined && (!isDay(rule.until) || rule.until <= (rule.from ?? ''))) problems.push('until must be a day after from');\n   384      if (rule?.customer !== undefined && rule.customer !== 'b2b' && rule.customer !== 'b2c') problems.push('customer must be b2b or b2c');\n   385      if (rule?.categories !== undefined && (!rule.categories.length || rule.categories.some((c) => typeof c !== 'string' || !c))) problems.push('categories, when given, are a list of names');\n\nTest file style (intent/blocks/tax-engine/tax-engine.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { format, money, parse, type Money } from '../money/index.ts';\nimport { RefData } from '../refdata/index.ts';\nimport { TaxEngine, TaxError, divide, parseRate, type TaxRule } from './index.ts';\n\nconst usd = (s: string): Money => parse(s, 'USD');\nconst f = (m: Money): string => format(m);\nconst DAY = '2026-06-15';\n\nconst base = (id: string, over: Partial<TaxRule> = {}): TaxRule => ({ id, name: id, level: 'region', where: { country: 'US', region: 'CA' }, rate: '7.25', from: '2020-01-01', ...over });\n\nfunction us(extra: { rounding?: 'half-even' | 'half-up' | 'down'; roundAt?: 'line' | 'invoice'; cashIncrement?: number } = {}): TaxEngine {\n  const e = new TaxEngine({ seller: { country: 'US', region: 'CA' }, ...extra });\n  e.addRules([\n    base('ca-state', { name: 'California', rate: '7.25' }),\n    base('la-local', { name: 'Los Angeles', level: 'local', where: { country: 'US', region: 'CA', city: 'Los Angeles' }, rate: '2.25' }),\n    base('ca-food', { name: 'California food', rate: '0', exempt: true, categories: ['food'] }),\n    base('tx-state', { name: 'Texas', where: { country: 'US', region: 'TX' }, rate: '6.25' }),\n  ]);\n  return e;\n}\nconst la = { country: 'US', region: 'CA', city: 'Los Angeles' };\n\ntest('rates are exact percentages of up to four decimals and nothing else', () => {\n  assert.equal(parseRate('8.25').n, 82_500n);\n  assert.equal(parseRate('0').n, 0n);\n  assert.equal(parseRate('100').n, 1_000_000n);\n  assert.equal(parseRate('9.975').n, 99_750n);\n  for (const t of ['-1', '100.0001', '8.12345', 'abc', '', '1e2', '8,25']) assert.throws(() => parseRate(t), (e: unknown) => e instanceof TaxError && e.code === 'bad-rate', t);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/tax-engine-338.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T10:00:16.092Z"
+}

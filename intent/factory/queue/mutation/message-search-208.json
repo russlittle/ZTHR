@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "message-search",
+  "mutant": {
+    "id": "208",
+    "line": 162,
+    "column": 34,
+    "endLine": 162,
+    "endColumn": 42,
+    "mutator": "Regex",
+    "original": "/^\"|\"$/g",
+    "replacement": "/^\"|\"/g",
+    "lineText": "const val = op[2]!.replace(/^\"|\"$/g, '').trim();",
+    "prevText": "const name = op[1]!.toLowerCase();",
+    "nextText": "const side = (c: { include: unknown[]; exclude: unknown[] }) => (neg ? c.exclude : c.include);"
+  },
+  "mayEdit": [
+    "intent/blocks/message-search/message-search.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/message-search-208.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"message-search\". Mutant: line 162:34-162:42, mutator Regex: \"/^\\\"|\\\"$/g\" becomes \"/^\\\"|\\\"/g\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/message-search/index.ts (> marks the mutated line):\n   156        const ws = words(t.replace(/^\"|\"$/g, ''));\n   157        if (ws.length) (neg ? notPhrases : phrases).push(ws.map(stem));\n   158        continue;\n   159      }\n   160      if (op && ['from', 'in', 'before', 'after', 'on', 'during', 'has', 'is', 'filename', 'ext'].includes(op[1]!.toLowerCase())) {\n   161        const name = op[1]!.toLowerCase();\n>  162        const val = op[2]!.replace(/^\"|\"$/g, '').trim();\n   163        const side = (c: { include: unknown[]; exclude: unknown[] }) => (neg ? c.exclude : c.include);\n   164        if (val === '') {\n   165          warnings.push(`${name}: needs a value`);\n   166          continue;\n   167        }\n   168        switch (name) {\n\nTest file style (intent/blocks/message-search/message-search.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MessageSearch, MessageSearchError, parseDay, parseQuery, type Channel, type Message } from './index.ts';\n\nconst NOW = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst DAY = 86_400_000;\nconst CH: Record<string, Channel & { members: string[]; secret?: boolean; joinedAfter?: Record<string, number> }> = {\n  general: { id: 'c1', name: 'general', members: ['u1', 'u2', 'u3'] },\n  eng: { id: 'c2', name: 'eng', members: ['u1', 'u2'] },\n  leads: { id: 'c3', name: 'leads', members: ['u1'], secret: true },\n  late: { id: 'c4', name: 'late', members: ['u1', 'u3'], joinedAfter: { u3: Date.UTC(2026, 10, 20) } },\n};\nconst USERS: Record<string, string> = { alice: 'u1', bob: 'u2', carol: 'u3' };\n\nfunction make() {\n  const byId = new Map(Object.values(CH).map((c) => [c.id, c]));\n  const s = new MessageSearch({\n    now: () => NOW,\n    channelByName: (n) => CH[n],\n    userByHandle: (h) => USERS[h],\n    canSeeChannel: (v, id) => byId.get(id)!.members.includes(v),\n    canRead: (v, id, m) => {\n      const c = byId.get(id)!;\n      if (!c.members.includes(v)) return false;\n      const j = c.joinedAfter?.[v];\n      return j === undefined || m.ts >= j;\n    },\n  });\n  return s;\n}\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/message-search-208.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:48.090Z"
+}

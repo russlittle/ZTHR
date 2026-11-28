@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "timeline-assembly",
+  "mutant": {
+    "id": "405",
+    "line": 326,
+    "column": 69,
+    "endLine": 326,
+    "endColumn": 94,
+    "mutator": "ArithmeticOperator",
+    "original": "pos.get(a)! - pos.get(b)!",
+    "replacement": "pos.get(a)! + pos.get(b)!",
+    "lineText": "const known = loaded.filter((id) => pos.has(id)).sort((a, b) => pos.get(a)! - pos.get(b)!);",
+    "prevText": "const pos = new Map(full.map((id, i) => [id, i]));",
+    "nextText": "const gaps: Gap[] = [];"
+  },
+  "mayEdit": [
+    "intent/blocks/timeline-assembly/timeline-assembly.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/timeline-assembly-405.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"timeline-assembly\". Mutant: line 326:69-326:94, mutator ArithmeticOperator: \"pos.get(a)! - pos.get(b)!\" becomes \"pos.get(a)! + pos.get(b)!\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/timeline-assembly/index.ts (> marks the mutated line):\n   320    }\n   321  \n   322    /** Name the holes between what a client has loaded (newest first) and the timeline as it is now. */\n   323    detectGaps(viewer: string | undefined, t: TimelineKind, loaded: readonly string[]): Gap[] {\n   324      const full = this.ids(viewer, t);\n   325      const pos = new Map(full.map((id, i) => [id, i]));\n>  326      const known = loaded.filter((id) => pos.has(id)).sort((a, b) => pos.get(a)! - pos.get(b)!);\n   327      const gaps: Gap[] = [];\n   328      if (known.length === 0) return [];\n   329      if (pos.get(known[0]!)! > 0) gaps.push({ above: undefined, below: known[0]!, missing: pos.get(known[0]!)! });\n   330      for (let i = 0; i + 1 < known.length; i++) {\n   331        const d = pos.get(known[i + 1]!)! - pos.get(known[i]!)! - 1;\n   332        if (d > 0) gaps.push({ above: known[i]!, below: known[i + 1]!, missing: d });\n\nTest file style (intent/blocks/timeline-assembly/timeline-assembly.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Microblog, type NewStatus, type Status } from '../microblog/index.ts';\nimport { TimelineError, Timelines, mergeItems, type Mode, type TimelineKind } from './index.ts';\n\nconst A = 'https://a.example/users/alice';\nconst B = 'https://b.example/users/bob';\nconst C = 'https://c.example/users/carol';\nconst D = 'https://a.example/users/dan';\nconst E = 'https://e.example/users/eve';\nconst HOME: TimelineKind = { kind: 'home' };\n\nfunction world(mode: Mode, o: { celebrity?: number; maxFeed?: number } = {}) {\n  let t = Date.UTC(2026, 10, 28, 12, 0, 0);\n  let n = 0;\n  const follows = new Map<string, Set<string>>();\n  const blocks = new Set<string>();\n  const graph = {\n    followersOf: (a: string) => [...follows].filter(([, s]) => s.has(a)).map(([u]) => u),\n    followingOf: (u: string) => [...(follows.get(u) ?? [])],\n  };\n  const mb = new Microblog({\n    now: () => t,\n    newId: () => `s${String(++n).padStart(4, '0')}`,\n    relations: { follows: (a, b) => follows.get(a)?.has(b) ?? false, blocks: (a, b) => blocks.has(`${a}>${b}`) },\n    resolveMention: () => undefined,\n  });\n  const tl = new Timelines({ mb, graph, isLocal: (a) => a.startsWith('https://a.example/'), domainOf: (a) => new URL(a).host, now: () => t, mode, ...(o.celebrity ? { celebrityFollowers: o.celebrity } : {}), ...(o.maxFeed ? { maxFeed: o.maxFeed } : {}) });\n  const w = {\n    mb, tl,\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/timeline-assembly-405.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T10:00:21.433Z"
+}

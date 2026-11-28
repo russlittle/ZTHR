@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "moderation-model",
+  "mutant": {
+    "id": "363",
+    "line": 336,
+    "column": 12,
+    "endLine": 336,
+    "endColumn": 188,
+    "mutator": "MethodExpression",
+    "original": "[...this.#latest.values()].map((id) => this.decision(id)).filter((d) => (d.action === 'flag' || d.action === 'hold') && !this.#reviewed.has(d.id)).sort((a, b) => a.seq - b.seq)",
+    "replacement": "[...this.#latest.values()].map(id => this.decision(id)).filter(d => (d.action === 'flag' || d.action === 'hold') && !this.#reviewed.has(d.id))",
+    "lineText": "return [...this.#latest.values()].map((id) => this.decision(id)).filter((d) => (d.action === 'flag' || d.action === 'hold') && !this.#reviewed.has(d.id)).sort((a, b) => a.seq - b.seq);",
+    "prevText": "queue(): Decision[] {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/moderation-model/moderation-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/moderation-model-363.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"moderation-model\". Mutant: line 336:12-336:188, mutator MethodExpression: \"[...this.#latest.values()].map((id) => this.decision(id)).filter((d) => (d.action === 'flag' || d.action === 'hold') && !this.#reviewed.has(d.id)).sort((a, b) => a.seq - b.seq)\" becomes \"[...this.#latest.values()].map(id => this.decision(id)).filter(d => (d.action === 'flag' || d.action === 'hold') && !this.#reviewed.has(d.id))\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/moderation-model/index.ts (> marks the mutated line):\n   330      const r = this.#reviewed.get(id);\n   331      return { decision: d, effective: r === 'approve' ? 'allow' : r === 'remove' ? 'block' : d.action };\n   332    }\n   333  \n   334    /** Items waiting for a person: flagged or held, not yet reviewed, oldest first. */\n   335    queue(): Decision[] {\n>  336      return [...this.#latest.values()].map((id) => this.decision(id)).filter((d) => (d.action === 'flag' || d.action === 'hold') && !this.#reviewed.has(d.id)).sort((a, b) => a.seq - b.seq);\n   337    }\n   338  \n   339    /** A person's call on a queued item. The author of the item cannot review it. */\n   340    review(decisionId: string, reviewer: string, outcome: 'approve' | 'remove'): void {\n   341      const d = this.decision(decisionId);\n   342      if (d.authorId === reviewer) throw new ModerationError('forbidden', 'an author cannot review their own content');\n\nTest file style (intent/blocks/moderation-model/moderation-model.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Moderator, ModerationError, decideAction, lexiconClassifier, llmClassifier, normalizeText, policyHash, validatePolicy, type Classifier, type Policy } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst policy: Policy = {\n  id: 'community',\n  version: 1,\n  categories: {\n    harassment: { flag: 0.4, hold: 0.7, block: 0.9 },\n    violence: { flag: 0.5, block: 0.9 },\n    sexual_minors: { flag: 0.05, block: 0.2, zeroTolerance: true },\n  },\n  contexts: { kids: { harassment: { flag: 0.1, hold: 0.3, block: 0.6 } } },\n  onError: 'hold',\n  maxChars: 200,\n  appealWindowMs: 7 * DAY,\n  trustedAuthors: ['trusted'],\n};\nconst lexicon = {\n  harassment: ['idiot', 'loser', 'moron', 'worthless'],\n  violence: ['kill', 'stab'],\n  sexual_minors: ['csamword'],\n};\n\nfunction mod(opts: { classifier?: Classifier; p?: Policy } = {}) {\n  let t = T0;\n  const calls: string[] = [];\n  const base = lexiconClassifier(lexicon);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/moderation-model-363.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:57.522Z"
+}

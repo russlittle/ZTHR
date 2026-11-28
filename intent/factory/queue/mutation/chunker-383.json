@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "chunker",
+  "mutant": {
+    "id": "383",
+    "line": 236,
+    "column": 37,
+    "endLine": 236,
+    "endColumn": 45,
+    "mutator": "EqualityOperator",
+    "original": "c > from",
+    "replacement": "c >= from",
+    "lineText": "return [...cands].filter((c) => c > from && count(source.slice(c, to)) <= overlap).sort((a, b) => a - b)[0];",
+    "prevText": "for (const a of atoms) if (a.start > from && a.start < to) cands.add(a.start);",
+    "nextText": "};"
+  },
+  "mayEdit": [
+    "intent/blocks/chunker/chunker.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/chunker-383.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"chunker\". Mutant: line 236:37-236:45, mutator EqualityOperator: \"c > from\" becomes \"c >= from\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/chunker/index.ts (> marks the mutated line):\n   230    };\n   231    const overlapStart = (from: number, to: number): number | undefined => {\n   232      if (overlap === 0) return undefined;\n   233      const cands = new Set<number>();\n   234      for (const b of boundaries(source.slice(from, to), 'prose')) cands.add(from + b);\n   235      for (const a of atoms) if (a.start > from && a.start < to) cands.add(a.start);\n>  236      return [...cands].filter((c) => c > from && count(source.slice(c, to)) <= overlap).sort((a, b) => a - b)[0];\n   237    };\n   238    let i = 0;\n   239    while (i < atoms.length) {\n   240      const first = atoms[i]!;\n   241      let start = first.start;\n   242      let coreStart = first.start;\n\nTest file style (intent/blocks/chunker/chunker.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ChunkError, chunk, chunkAt, cite, defaultCounter, locateQuote, verifyAnchor } from './index.ts';\n\nconst bytes = (t: string) => new TextEncoder().encode(t).length;\nconst doc = `---\ntitle: Guide\n---\n# Guide\n\nIntro paragraph about the guide.\n\n## Install\n\nRun the installer. It takes a minute.\n\n\\`\\`\\`sh\nnpm install thing\nnpm run setup\n\\`\\`\\`\n\n## Usage\n\nCall the function. It returns a value.\n\n### Options\n\n- one\n- two\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/chunker-383.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:43.492Z"
+}

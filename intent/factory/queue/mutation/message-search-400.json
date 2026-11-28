@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "message-search",
+  "mutant": {
+    "id": "400",
+    "line": 340,
+    "column": 17,
+    "endLine": 340,
+    "endColumn": 35,
+    "mutator": "ArithmeticOperator",
+    "original": "this.#totalLen / n",
+    "replacement": "this.#totalLen * n",
+    "lineText": "const avg = this.#totalLen / n || 1;",
+    "prevText": "const n = this.#docs.size || 1;",
+    "nextText": "const idf = (t: string) => {"
+  },
+  "mayEdit": [
+    "intent/blocks/message-search/message-search.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/message-search-400.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"message-search\". Mutant: line 340:17-340:35, mutator ArithmeticOperator: \"this.#totalLen / n\" becomes \"this.#totalLen * n\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/message-search/index.ts (> marks the mutated line):\n   334      if (lists.length) {\n   335        const sorted = (lists as Set<string>[]).sort((a, b) => a.size - b.size);\n   336        cand = [...sorted[0]!].filter((id) => sorted.every((s) => s.has(id)));\n   337      } else cand = this.#docs.keys();\n   338  \n   339      const n = this.#docs.size || 1;\n>  340      const avg = this.#totalLen / n || 1;\n   341      const idf = (t: string) => {\n   342        const df = this.#post.get(t)?.size ?? 0;\n   343        return Math.log(1 + (n - df + 0.5) / (df + 0.5));\n   344      };\n   345      const now = h.now();\n   346      const rows: { d: Doc; score: number }[] = [];\n\nTest file style (intent/blocks/message-search/message-search.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MessageSearch, MessageSearchError, parseDay, parseQuery, type Channel, type Message } from './index.ts';\n\nconst NOW = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst DAY = 86_400_000;\nconst CH: Record<string, Channel & { members: string[]; secret?: boolean; joinedAfter?: Record<string, number> }> = {\n  general: { id: 'c1', name: 'general', members: ['u1', 'u2', 'u3'] },\n  eng: { id: 'c2', name: 'eng', members: ['u1', 'u2'] },\n  leads: { id: 'c3', name: 'leads', members: ['u1'], secret: true },\n  late: { id: 'c4', name: 'late', members: ['u1', 'u3'], joinedAfter: { u3: Date.UTC(2026, 10, 20) } },\n};\nconst USERS: Record<string, string> = { alice: 'u1', bob: 'u2', carol: 'u3' };\n\nfunction make() {\n  const byId = new Map(Object.values(CH).map((c) => [c.id, c]));\n  const s = new MessageSearch({\n    now: () => NOW,\n    channelByName: (n) => CH[n],\n    userByHandle: (h) => USERS[h],\n    canSeeChannel: (v, id) => byId.get(id)!.members.includes(v),\n    canRead: (v, id, m) => {\n      const c = byId.get(id)!;\n      if (!c.members.includes(v)) return false;\n      const j = c.joinedAfter?.[v];\n      return j === undefined || m.ts >= j;\n    },\n  });\n  return s;\n}\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/message-search-400.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:48.931Z"
+}

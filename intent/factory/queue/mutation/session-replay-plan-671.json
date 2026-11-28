@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "session-replay-plan",
+  "mutant": {
+    "id": "671",
+    "line": 369,
+    "column": 9,
+    "endLine": 369,
+    "endColumn": 28,
+    "mutator": "UpdateOperator",
+    "original": "this.stats.masked++",
+    "replacement": "this.stats.masked--",
+    "lineText": "this.stats.masked++;",
+    "prevText": "out[k] = maskString(v);",
+    "nextText": "continue;"
+  },
+  "mayEdit": [
+    "intent/blocks/session-replay-plan/session-replay-plan.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/session-replay-plan-671.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"session-replay-plan\". Mutant: line 369:9-369:28, mutator UpdateOperator: \"this.stats.masked++\" becomes \"this.stats.masked--\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/session-replay-plan/index.ts (> marks the mutated line):\n   363          out[k] = st.input || st.mask || st.ignore ? maskString(v) : this.#scrub(v);\n   364          if (out[k] !== v) this.stats.masked++;\n   365          continue;\n   366        }\n   367        if ((k === 'alt' || k === 'title' || k === 'aria-label') && st.mask) {\n   368          out[k] = maskString(v);\n>  369          this.stats.masked++;\n   370          continue;\n   371        }\n   372        out[k] = v;\n   373      }\n   374      const children = (n.children ?? []).map((c) => this.#node(c, n.id));\n   375      return { id: n.id, type: n.type, ...(n.tag !== undefined ? { tag: n.tag } : {}), attrs: out, children };\n\nTest file style (intent/blocks/session-replay-plan/session-replay-plan.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  EventType, ReplayPlanError, Redactor, RollingBuffer, SessionRecorder, chunkSession, decideRecording, parseSelectors, projectStorage, scrubText, scrubUrl, sessionBucket, sweep, tierFor,\n  type ReplayEvent, type SNode, type StoredSession, type TierPlan,\n} from './index.ts';\n\nlet nid = 0;\nconst el = (tag: string, attrs: Record<string, string> = {}, ...children: SNode[]): SNode => ({ id: ++nid, type: 'element', tag, attrs, children });\nconst tx = (text: string): SNode => ({ id: ++nid, type: 'text', text });\nconst snap = (root: SNode, ts = 1000): ReplayEvent => ({ type: 2, ts, data: { node: { id: 0, type: 'document', children: [root] } } });\nconst meta = (href: string, ts = 900): ReplayEvent => ({ type: 4, ts, data: { href, width: 1280, height: 800 } });\n\nconst find = (n: SNode, pred: (n: SNode) => boolean): SNode | undefined => (pred(n) ? n : n.children?.map((c) => find(c, pred)).find(Boolean));\nconst snapNode = (e: ReplayEvent | undefined): SNode => (e as Extract<ReplayEvent, { type: 2 }>).data.node.children![0]!;\n\ntest('selectors: tag, class, id, attributes, compound, descendant and child; anything else is refused', () => {\n  const c = parseSelectors(['div.card > p', '#main [data-x^=ab]', 'input[type=password], .a.b']);\n  assert.equal(c.length, 4);\n  for (const bad of ['', 'div:hover', 'a + b', '::before', 'div[', '>']) assert.throws(() => parseSelectors([bad]), ReplayPlanError, bad);\n  assert.throws(() => parseSelectors(['a'.repeat(201)]), /over 200/);\n});\n\ntest('text inside mask selectors becomes asterisks of the same length; spaces and other text stay', () => {\n  const root = el('body', {}, el('p', { class: 'public' }, tx('Hello world')), el('div', { class: 'secret' }, el('span', {}, tx('Jane Doe, 12 Elm St'))));\n  const r = new Redactor({ maskSelectors: ['.secret'] });\n  const out = snapNode(r.event(snap(root)));\n  assert.equal(find(out, (n) => n.text === 'Hello world')?.text, 'Hello world');\n  assert.equal(find(out, (n) => n.type === 'text' && n.text!.includes('*'))?.text, '**** **** ** *** **');\n  assert.equal(r.stats.masked, 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/session-replay-plan-671.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T10:00:12.328Z"
+}

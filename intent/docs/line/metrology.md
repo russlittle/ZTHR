@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 85 of 310 blocks calibrated; 0 certified, 82 with survivors still to close, 3 capable but not yet checked for repeatability and reproducibility.
+QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 100 of 310 blocks calibrated; 0 certified, 97 with survivors still to close, 3 capable but not yet checked for repeatability and reproducibility.
 
 ```mermaid
 flowchart LR
@@ -72,7 +72,7 @@ flowchart LR
   k -.->|the block changes: calibrate again| x
 ```
 
-The 85 blocks calibrated so far, of 310:
+The 100 blocks calibrated so far, of 310:
 
 | Block | Certificate | Capability | Survivors | Ruled equivalent | Issued |
 | --- | --- | --- | --- | --- | --- |
@@ -161,6 +161,21 @@ The 85 blocks calibrated so far, of 310:
 | `walkthrough` | not certified: 12 planted defects not rejected, and not ruled equivalent | 93.9% | 12 | 0 | 2026-11-28 |
 | `speech` | not certified: 327 planted defects not rejected, and not ruled equivalent | 71.2% | 327 | 0 | 2026-11-28 |
 | `asn1-der` | not certified: 291 planted defects not rejected, and not ruled equivalent | 77.8% | 291 | 0 | 2026-11-28 |
+| `activitypub` | not certified: 342 planted defects not rejected, and not ruled equivalent | 69.5% | 342 | 0 | 2026-11-28 |
+| `microblog` | not certified: 313 planted defects not rejected, and not ruled equivalent | 69.0% | 313 | 0 | 2026-11-28 |
+| `timeline-assembly` | not certified: 120 planted defects not rejected, and not ruled equivalent | 76.9% | 120 | 0 | 2026-11-28 |
+| `session-replay-plan` | not certified: 348 planted defects not rejected, and not ruled equivalent | 69.5% | 348 | 0 | 2026-11-28 |
+| `dns-filter` | not certified: 189 planted defects not rejected, and not ruled equivalent | 72.0% | 189 | 0 | 2026-11-28 |
+| `adblock-rules` | not certified: 133 planted defects not rejected, and not ruled equivalent | 77.2% | 133 | 0 | 2026-11-28 |
+| `chunker` | not certified: 182 planted defects not rejected, and not ruled equivalent | 64.9% | 182 | 0 | 2026-11-28 |
+| `rag` | not certified: 251 planted defects not rejected, and not ruled equivalent | 59.2% | 251 | 0 | 2026-11-28 |
+| `message-search` | not certified: 223 planted defects not rejected, and not ruled equivalent | 71.2% | 223 | 0 | 2026-11-28 |
+| `token-count` | not certified: 171 planted defects not rejected, and not ruled equivalent | 70.3% | 171 | 0 | 2026-11-28 |
+| `prompt-store` | not certified: 155 planted defects not rejected, and not ruled equivalent | 80.4% | 155 | 0 | 2026-11-28 |
+| `moderation-model` | not certified: 137 planted defects not rejected, and not ruled equivalent | 77.9% | 137 | 0 | 2026-11-28 |
+| `rate-plans` | not certified: 123 planted defects not rejected, and not ruled equivalent | 76.3% | 123 | 0 | 2026-11-28 |
+| `wiki-links` | not certified: 69 planted defects not rejected, and not ruled equivalent | 84.4% | 69 | 0 | 2026-11-28 |
+| `tax-engine` | not certified: 282 planted defects not rejected, and not ruled equivalent | 71.6% | 282 | 0 | 2026-11-28 |
 
 ### Control charts
 

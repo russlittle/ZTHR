@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "rate-plans",
+  "mutant": {
+    "id": "486",
+    "line": 361,
+    "column": 38,
+    "endLine": 361,
+    "endColumn": 40,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "const windows = (plan.windows ?? []).map((w) => {",
+    "prevText": "if (!plan) throw new RatePlanError(`no rate plan named ${a.plan}`);",
+    "nextText": "const s = this.#window(a.id, w, now);"
+  },
+  "mayEdit": [
+    "intent/blocks/rate-plans/rate-plans.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/rate-plans-486.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"rate-plans\". Mutant: line 361:38-361:40, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/rate-plans/index.ts (> marks the mutated line):\n   355  \n   356    /** What an account has used and has left, for a dashboard or a headers endpoint. */\n   357    usage(a: Account): { burstLeft: number; windows: { name: string; limit: number; used: number; remaining: number; resetsAt: number }[]; quota: { limit: number | null; used: number; remaining: number | null } | undefined; inFlight: number; coolingUntil: number | undefined } {\n   358      const now = this.#o.now();\n   359      const plan = this.#plans.get(a.plan);\n   360      if (!plan) throw new RatePlanError(`no rate plan named ${a.plan}`);\n>  361      const windows = (plan.windows ?? []).map((w) => {\n   362        const s = this.#window(a.id, w, now);\n   363        return { name: w.name, limit: w.limit, used: s.used, remaining: Math.max(0, w.limit - s.used), resetsAt: s.start + w.seconds * 1000 };\n   364      });\n   365      let quota: { limit: number | null; used: number; remaining: number | null } | undefined;\n   366      if (plan.quota && this.#o.entitlements) {\n   367        const d = this.#o.entitlements.check(a, plan.quota, 0, now);\n\nTest file style (intent/blocks/rate-plans/rate-plans.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Entitlements, type Account, type Catalog } from '../entitlements/index.ts';\nimport { RatePlanError, RatePlans, checkPlans, type RatePlan } from './index.ts';\n\nconst T0 = Date.UTC(2026, 10, 28, 12, 0, 0);\n\nconst catalog: Catalog = {\n  plans: {\n    free: { name: 'free', limits: { 'api.calls': { included: 200, period: 'month', overage: { mode: 'block' } } } },\n    pro: { name: 'pro', limits: { 'api.calls': { included: 100, period: 'month', overage: { mode: 'charge', price: 100, perUnits: 50 } } } },\n    open: { name: 'open', limits: { 'api.calls': { included: 10, period: 'month', overage: { mode: 'allow' } } } },\n  },\n  features: [],\n  limits: ['api.calls'],\n};\nconst acct = (id: string, plan: string): Account => ({ id, plan, anchorDay: 1 });\n\nfunction make(plans: RatePlan[], o: { pool?: { capacityPerSecond: number; windowSeconds?: number; highWatermark?: number; shareFactor?: number }; leaseMs?: number } = {}) {\n  let t = T0;\n  const ent = new Entitlements(catalog);\n  const rp = new RatePlans({ plans, now: () => t, entitlements: ent, ...o });\n  let n = 0;\n  return { rp, ent, tick: (ms: number) => (t += ms), now: () => t, id: () => `req-${++n}` };\n}\n\nconst FREE: RatePlan = { name: 'free', rate: { perSecond: 2, burst: 5 }, windows: [{ name: 'minute', seconds: 60, limit: 60 }], quota: 'api.calls' };\n\ntest('burst then sustained: five at once, the sixth waits half a second, and refills continuously', () => {\n  const { rp, tick, id } = make([FREE]);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/rate-plans-486.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T10:00:07.957Z"
+}

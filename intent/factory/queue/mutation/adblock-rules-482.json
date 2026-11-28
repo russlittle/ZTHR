@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "adblock-rules",
+  "mutant": {
+    "id": "482",
+    "line": 331,
+    "column": 68,
+    "endLine": 331,
+    "endColumn": 73,
+    "mutator": "BooleanLiteral",
+    "original": "false",
+    "replacement": "true",
+    "lineText": "if (!host) return { blocked: false, rule: undefined, excepted: false };",
+    "prevText": "const host = hostOf(req.url);",
+    "nextText": "const pageHost = req.page ? hostOf(req.page) : '';"
+  },
+  "mayEdit": [
+    "intent/blocks/adblock-rules/adblock-rules.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/adblock-rules-482.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"adblock-rules\". Mutant: line 331:68-331:73, mutator BooleanLiteral: \"false\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/adblock-rules/index.ts (> marks the mutated line):\n   325      return r.re.test(req.url);\n   326    }\n   327  \n   328    /** Decide one request. */\n   329    match(req: Request): Decision {\n   330      const host = hostOf(req.url);\n>  331      if (!host) return { blocked: false, rule: undefined, excepted: false };\n   332      const pageHost = req.page ? hostOf(req.page) : '';\n   333      const third = pageHost !== '' && this.#registrable(host) !== this.#registrable(pageHost);\n   334      const candidates: NetworkRule[] = [];\n   335      const labels = host.split('.');\n   336      for (let i = 0; i < labels.length; i++) {\n   337        const hit = this.#byHost.get(labels.slice(i).join('.'));\n\nTest file style (intent/blocks/adblock-rules/adblock-rules.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Matcher, MAX_LINE, RuleError, cosmeticSelectors, parseList, parseRule, registrableDomain, type NetworkRule } from './index.ts';\n\nconst net = (l: string) => parseRule(l) as NetworkRule;\nconst m = (...lines: string[]) => new Matcher(parseList(lines.join('\\n')).rules);\n\ntest('comments, blank lines and the list header are not rules', () => {\n  assert.equal(parseRule('! Title: Example'), undefined);\n  assert.equal(parseRule('   '), undefined);\n  assert.equal(parseRule('[Adblock Plus 2.0]'), undefined);\n  const l = parseList('[Adblock Plus 2.0]\\n! note\\n||a.com^\\n\\n||b.com^');\n  assert.equal(l.rules.length, 2);\n  assert.equal(l.comments, 2);\n  assert.deepEqual(l.errors, []);\n});\n\ntest('||domain^ blocks the domain and its subdomains but not look-alikes', () => {\n  const x = m('||ads.example.com^');\n  assert.equal(x.match({ url: 'https://ads.example.com/banner.js' }).blocked, true);\n  assert.equal(x.match({ url: 'https://eu.ads.example.com/x' }).blocked, true);\n  assert.equal(x.match({ url: 'https://notads.example.com/x' }).blocked, false);\n  assert.equal(x.match({ url: 'https://ads.example.com.evil.net/x' }).blocked, false, '^ needs a separator after the host');\n  assert.equal(x.match({ url: 'https://example.com/ads.example.com/' }).blocked, false);\n});\n\ntest('anchors and wildcards: |start, end|, * and the ^ separator', () => {\n  const x = m('|https://track.', '/pixel.gif|', '/ad*/banner^');\n  assert.equal(x.match({ url: 'https://track.site.org/a' }).blocked, true);\n  assert.equal(x.match({ url: 'http://track.site.org/a' }).blocked, false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/adblock-rules-482.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:40.836Z"
+}

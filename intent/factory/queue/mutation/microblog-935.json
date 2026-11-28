@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "microblog",
+  "mutant": {
+    "id": "935",
+    "line": 574,
+    "column": 61,
+    "endLine": 574,
+    "endColumn": 72,
+    "mutator": "StringLiteral",
+    "original": "'published'",
+    "replacement": "\"\"",
+    "lineText": "published: typeof note['published'] === 'string' ? note['published'] : undefined,",
+    "prevText": "visibility: visibilityFrom(strs(note['to']), strs(note['cc']), followersOf(author)),",
+    "nextText": "inReplyTo: idOf(note['inReplyTo'] as never),"
+  },
+  "mayEdit": [
+    "intent/blocks/microblog/microblog.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/microblog-935.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"microblog\". Mutant: line 574:61-574:72, mutator StringLiteral: \"'published'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/microblog/index.ts (> marks the mutated line):\n   568      url,\n   569      author,\n   570      text: content,\n   571      spoilerText: typeof note['summary'] === 'string' ? note['summary'] : '',\n   572      sensitive: note['sensitive'] === true,\n   573      visibility: visibilityFrom(strs(note['to']), strs(note['cc']), followersOf(author)),\n>  574      published: typeof note['published'] === 'string' ? note['published'] : undefined,\n   575      inReplyTo: idOf(note['inReplyTo'] as never),\n   576      mentions: tags.filter((t) => t['type'] === 'Mention' && typeof t['href'] === 'string').map((t) => t['href'] as string),\n   577      tags: tags.filter((t) => t['type'] === 'Hashtag' && typeof t['name'] === 'string').map((t) => (t['name'] as string).replace(/^#/, '').toLowerCase()),\n   578      media: asArray(note['attachment'] as never).filter((a): a is Doc => typeof a === 'object' && a !== null && !Array.isArray(a) && typeof a['url'] === 'string' && /^https:\\/\\//.test(a['url'])).slice(0, 4).map((a) => ({\n   579        kind: a['type'] === 'Audio' ? 'audio' as const : a['type'] === 'Video' ? 'video' as const : 'image' as const,\n   580        url: a['url'] as string,\n\nTest file style (intent/blocks/microblog/microblog.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { PUBLIC } from '../activitypub/index.ts';\nimport { MicroblogError, Microblog, addressing, fromNote, parseText, renderHtml, toActivity, visibilityFrom, type Relations, type Status } from './index.ts';\n\nconst A = 'https://a.example/users/alice';\nconst B = 'https://b.example/users/bob';\nconst C = 'https://c.example/users/carol';\nconst D = 'https://d.example/users/dan';\n\nfunction setup(follows: [string, string][] = [], blocks: [string, string][] = []) {\n  let t = Date.UTC(2026, 10, 28, 12, 0, 0);\n  let n = 0;\n  const f = new Set(follows.map(([a, b]) => `${a}>${b}`));\n  const bl = new Set(blocks.map(([a, b]) => `${a}>${b}`));\n  const relations: Relations = { follows: (a, b) => f.has(`${a}>${b}`), blocks: (a, b) => bl.has(`${a}>${b}`) };\n  const handles: Record<string, string> = { alice: A, bob: B, carol: C, dan: D };\n  const mb = new Microblog({ now: () => t, newId: () => `s${++n}`, relations, resolveMention: (u) => handles[u] });\n  return { mb, tick: (ms: number) => (t += ms), now: () => t, follow: (a: string, b: string) => f.add(`${a}>${b}`) };\n}\n\ntest('mentions and hashtags are found in text; tags are lower-cased and unique; e-mail addresses and urls are not mentions', () => {\n  const p = parseText('Hi @bob and @carol@c.example! #Fediverse #fediverse #日本語 mail me@x.org http://x.org/@nobody#frag');\n  assert.deepEqual(p.mentions, [{ user: 'bob', host: undefined }, { user: 'carol', host: 'c.example' }]);\n  assert.deepEqual(p.tags, ['fediverse', '日本語']);\n});\n\ntest('html rendering escapes everything, then links urls, mentions and tags, and keeps line breaks', () => {\n  const html = renderHtml('<b>x</b> & @bob see https://x.example/a?b=1&c=2. #Tag\\nnext @ghost', {\n    tagUrl: (t) => `https://a.example/tags/${t}`,\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/microblog-935.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:55.314Z"
+}

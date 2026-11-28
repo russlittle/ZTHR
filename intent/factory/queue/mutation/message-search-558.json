@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "message-search",
+  "mutant": {
+    "id": "558",
+    "line": 383,
+    "column": 51,
+    "endLine": 383,
+    "endColumn": 62,
+    "mutator": "StringLiteral",
+    "original": "'relevance'",
+    "replacement": "\"\"",
+    "lineText": "const idx = rows.findIndex((r) => (sort === 'relevance' ? r.score < c.score || (r.score === c.score && (r.d.m.ts < c.ts || (r.d.m.ts === c.ts && r.d.m.id > c.id))) : sort === 'newest' ? r.d.m.ts < c.ts || (r.d.m.ts === c.ts && r.d.m.id > c.id) : r.d.m.ts > c.ts || (r.d.m.ts === c.ts && r.d.m.id > c.id)));",
+    "prevText": "const c = decodeCursor(o.cursor, sort);",
+    "nextText": "start = idx < 0 ? rows.length : idx;"
+  },
+  "mayEdit": [
+    "intent/blocks/message-search/message-search.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/message-search-558.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"message-search\". Mutant: line 383:51-383:62, mutator StringLiteral: \"'relevance'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/message-search/index.ts (> marks the mutated line):\n   377        return b.score - a.score || b.d.m.ts - a.d.m.ts || (a.d.m.id < b.d.m.id ? -1 : 1);\n   378      };\n   379      rows.sort(cmp);\n   380      let start = 0;\n   381      if (o.cursor) {\n   382        const c = decodeCursor(o.cursor, sort);\n>  383        const idx = rows.findIndex((r) => (sort === 'relevance' ? r.score < c.score || (r.score === c.score && (r.d.m.ts < c.ts || (r.d.m.ts === c.ts && r.d.m.id > c.id))) : sort === 'newest' ? r.d.m.ts < c.ts || (r.d.m.ts === c.ts && r.d.m.id > c.id) : r.d.m.ts > c.ts || (r.d.m.ts === c.ts && r.d.m.id > c.id)));\n   384        start = idx < 0 ? rows.length : idx;\n   385      }\n   386      const page = rows.slice(start, start + limit);\n   387      const marks = new Set([...q.terms, ...q.phrases.flat()]);\n   388      const lastPrefix = q.prefixes.at(-1);\n   389      const hits: Hit[] = page.map((r) => ({\n\nTest file style (intent/blocks/message-search/message-search.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MessageSearch, MessageSearchError, parseDay, parseQuery, type Channel, type Message } from './index.ts';\n\nconst NOW = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst DAY = 86_400_000;\nconst CH: Record<string, Channel & { members: string[]; secret?: boolean; joinedAfter?: Record<string, number> }> = {\n  general: { id: 'c1', name: 'general', members: ['u1', 'u2', 'u3'] },\n  eng: { id: 'c2', name: 'eng', members: ['u1', 'u2'] },\n  leads: { id: 'c3', name: 'leads', members: ['u1'], secret: true },\n  late: { id: 'c4', name: 'late', members: ['u1', 'u3'], joinedAfter: { u3: Date.UTC(2026, 10, 20) } },\n};\nconst USERS: Record<string, string> = { alice: 'u1', bob: 'u2', carol: 'u3' };\n\nfunction make() {\n  const byId = new Map(Object.values(CH).map((c) => [c.id, c]));\n  const s = new MessageSearch({\n    now: () => NOW,\n    channelByName: (n) => CH[n],\n    userByHandle: (h) => USERS[h],\n    canSeeChannel: (v, id) => byId.get(id)!.members.includes(v),\n    canRead: (v, id, m) => {\n      const c = byId.get(id)!;\n      if (!c.members.includes(v)) return false;\n      const j = c.joinedAfter?.[v];\n      return j === undefined || m.ts >= j;\n    },\n  });\n  return s;\n}\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/message-search-558.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:49.713Z"
+}
