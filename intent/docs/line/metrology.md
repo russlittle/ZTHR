@@ -121,7 +121,7 @@ The 85 blocks calibrated so far, of 235:
 | `costmeter` | not certified: 28 planted defects not rejected, and not ruled equivalent | 79.1% | 28 | 0 | 2026-11-28 |
 | `tabular` | not certified: 113 planted defects not rejected, and not ruled equivalent | 74.8% | 113 | 0 | 2026-11-28 |
 | `reports` | not certified: 41 planted defects not rejected, and not ruled equivalent | 81.9% | 41 | 0 | 2026-11-28 |
-| `search` | not certified: 99 planted defects not rejected, and not ruled equivalent | 66.3% | 99 | 0 | 2026-11-28 |
+| `search` | not certified: 16 planted defects not rejected, and not ruled equivalent | 95.3% | 16 | 0 | 2026-11-28 |
 | `i18n` | not certified: 4 planted defects not rejected, and not ruled equivalent | 98.2% | 4 | 0 | 2026-11-28 |
 | `time` | not certified: 144 planted defects not rejected, and not ruled equivalent | 71.1% | 144 | 0 | 2026-11-28 |
 | `booking` | not certified: 43 planted defects not rejected, and not ruled equivalent | 80.0% | 43 | 0 | 2026-11-28 |
@@ -139,7 +139,7 @@ The 85 blocks calibrated so far, of 235:
 | `testdata` | capability only: every planted defect rejected; repeatability and reproducibility not measured yet | 100.0% | 0 | 0 | 2026-11-28 |
 | `privacy` | not certified: 22 planted defects not rejected, and not ruled equivalent | 78.0% | 22 | 0 | 2026-11-28 |
 | `surfaces` | not certified: 64 planted defects not rejected, and not ruled equivalent | 66.3% | 64 | 0 | 2026-11-28 |
-| `upkeep` | not certified: 96 planted defects not rejected, and not ruled equivalent | 66.7% | 96 | 0 | 2026-11-28 |
+| `upkeep` | not certified: 8 planted defects not rejected, and not ruled equivalent | 97.6% | 8 | 0 | 2026-11-28 |
 | `backups` | not certified: 33 planted defects not rejected, and not ruled equivalent | 79.3% | 33 | 0 | 2026-11-28 |
 | `loadsoak` | not certified: 56 planted defects not rejected, and not ruled equivalent | 68.9% | 56 | 0 | 2026-11-28 |
 | `datagate` | not certified: 42 planted defects not rejected, and not ruled equivalent | 80.5% | 42 | 0 | 2026-11-28 |

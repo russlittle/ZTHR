@@ -180,7 +180,7 @@ Scores per block, from metrology's certificates (85 blocks scored, 3 with no sur
 | `reports` | 81.9% | none | 41 | 0 |
 | `resilience` | 78.7% | none | 19 | 0 |
 | `retention` | 70.8% | none | 28 | 0 |
-| `search` | 66.3% | none | 99 | 0 |
+| `search` | 95.3% | none | 16 | 0 |
 | `secheaders` | 66.2% | none | 50 | 0 |
 | `sessions` | 78.2% | none | 64 | 0 |
 | `sitemap` | 68.2% | none | 71 | 0 |
@@ -193,7 +193,7 @@ Scores per block, from metrology's certificates (85 blocks scored, 3 with no sur
 | `time` | 71.1% | none | 144 | 0 |
 | `tree` | 65.0% | none | 130 | 0 |
 | `uat` | 75.2% | none | 58 | 0 |
-| `upkeep` | 66.7% | none | 96 | 0 |
+| `upkeep` | 97.6% | none | 8 | 0 |
 | `uploads` | 64.7% | none | 65 | 0 |
 | `uploadsafe` | 64.4% | none | 69 | 0 |
 | `ux` | 69.5% | none | 117 | 0 |
