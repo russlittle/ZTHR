@@ -349,7 +349,8 @@ export class Explorer {
         const raw = score(query, text);
         const whole = text.toLowerCase().includes(q);
         // Letters scattered across a long sentence are not a match: the query must appear whole, or score well.
-        if (raw < 0 || (!whole && raw < q.replace(/\s+/g, '').length * 7)) continue;
+        // A whole match always counts: score() is negative for a long text however well it matches, so only a scattered one is judged by it.
+        if (!whole && raw < q.replace(/\s+/g, '').length * 7) continue;
         const s = raw + (whole ? 20 : 0) - penalty;
         if (!best || s > best.s) best = { s, m: text };
       }
