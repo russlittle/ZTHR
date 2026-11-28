@@ -1,1 +1,1 @@
-nextcloud:32-apache
+nextcloud:32-apache@sha256:7032779c2121b26919ad36dc7bcb68b94ef37c451bfede06926e8b03b5caa1fc
