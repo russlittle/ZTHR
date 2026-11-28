@@ -5,29 +5,35 @@
  *   intent agents guide --role r                                                              the guide for a role
  *   intent agents tools --role r                                                              tool definitions, for APIs without MCP
  *   intent agents proposals --workspace d                                                     what waits on a person
- *   intent agents sign|decline <proposal> --workspace d --by email [--note text]               a person decides
+ *   intent agents sign|decline <proposal> --workspace d --by email --signature act.sig [--note]   a person decides
  *   intent agents call <tool> --json '{...}' --workspace d --role r --family f --agent name     one call, for scripts and the pipeline
- *   intent agents verify --workspace d                                                        whether the log's chain holds
- *   intent agents delegate --workspace d --by email --class-ii on|off [--attempts n]           what the factory may revise without asking
- *   intent agents budget --workspace d --by email --daily usd [--case usd]                    where spending stops
+ *        [--provider p --model m --response id]                                               the model call it came from
+ *   intent agents verify --workspace d [--factory checkout]                                   the log against its key and anchors
+ *   intent agents anchor --workspace d --factory checkout                                     publish the log's head as a tag
+ *   intent agents delegate --workspace d --by email --class-ii on|off [--attempts n] --signature act.sig
+ *   intent agents budget --workspace d --by email --daily usd [--case usd] --signature act.sig
  *   intent agents agenda --workspace d                                                        what waits on every role
  *   intent agents drive --workspace d [--factory checkout] [--rounds n]                       wake the seats with work, on the cheap plan
  *   intent agents hook --workspace d --factory checkout                                       install the pre-push hook in the checkout
  *   intent agents prepush --workspace d                                                       the hook: refuse a push the API has not seen pass
  *
- * sign and decline are a person's commands. The server has no tool that reaches them, and they refuse anyone not
- * listed in agents/people.json, which only a person edits.
+ * sign, decline, delegate and budget are a person's acts. The server has no tool that reaches them, and naming a
+ * person is not enough: each needs that person's SSH signature, by a key listed for them in agents/people.json, over
+ * the exact act. Run the command without --signature to print the act and the ssh-keygen line that signs it.
  */
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { writeDelegation } from './correct.ts';
 import { join } from 'node:path';
 import { DUTIES, type Role } from './duties.ts';
 import { guide } from './guide.ts';
-import { append, decisionOn, ledgerOf, proposals, signers, verifyLog, type Signature } from './ledger.ts';
+import { append, checkAct, decisionOn, decisionText, keysOf, ledgerOf, NAMESPACE, proposals, recordAct, releaseAnchors, tagAnchor, tagAnchors, verifyLog, type Act, type Signature } from './ledger.ts';
 import { supervise } from './driver.ts';
 import { serve } from './mcp.ts';
-import { applySigned, call, prepushGaps, toolDefinitions } from './tools.ts';
+import { applySigned, call, prepushGaps, toolDefinitions, type ModelCall } from './tools.ts';
+
+/** How a person signs an act the command printed. */
+const howToSign = (cmd: string) =>
+  `The act is on standard output. Save it exactly (run this again with > act.txt), sign it with your own key:\n  ssh-keygen -Y sign -n ${NAMESPACE} -f ~/.ssh/zthr_signing act.txt\nthen run the same ${cmd} command again with --signature act.txt.sig.`;
 
 export function agentsCli(args: readonly string[]): number {
   const [cmd, ...rest] = args;
@@ -45,6 +51,16 @@ export function agentsCli(args: readonly string[]): number {
     return true;
   };
   const ws = flag('workspace');
+  const sig = () => {
+    const f = flag('signature');
+    return f ? readFileSync(f, 'utf8') : undefined;
+  };
+  const answer = (): ModelCall | undefined => {
+    const provider = flag('provider');
+    const model = flag('model');
+    const response = flag('response');
+    return provider && model ? { provider, model, ...(response ? { response } : {}) } : undefined;
+  };
   if (cmd === 'guide') return needRole() ? (process.stdout.write(guide(role!)), 0) : 2;
   if (cmd === 'tools') return needRole() ? (process.stdout.write(`${JSON.stringify(toolDefinitions(role!), null, 2)}\n`), 0) : 2;
   if (!ws) {
@@ -61,7 +77,8 @@ export function agentsCli(args: readonly string[]): number {
       return 2;
     }
     const factory = flag('factory');
-    serve({ workspace: ws, session: { role: role!, family, agent }, ...(factory ? { factory } : {}) });
+    const a = answer();
+    serve({ workspace: ws, session: { role: role!, family, agent }, ...(factory ? { factory } : {}), ...(a ? { answer: a } : {}) });
     return -1;
   }
   if (cmd === 'call') {
@@ -73,7 +90,8 @@ export function agentsCli(args: readonly string[]): number {
       return 2;
     }
     const factory = flag('factory');
-    const r = call({ workspace: ws, ledger: l, session: { role: role!, family, agent }, ...(factory ? { factory } : {}) }, tool, JSON.parse(flag('json') ?? '{}') as Record<string, unknown>);
+    const a = answer();
+    const r = call({ workspace: ws, ledger: l, session: { role: role!, family, agent }, ...(factory ? { factory } : {}), ...(a ? { answer: a } : {}) }, tool, JSON.parse(flag('json') ?? '{}') as Record<string, unknown>);
     console.log(JSON.stringify(r.ok ? r.value : r.refused ? { refused: r.why, instead: r.instead } : { error: r.why }, null, 2));
     return r.ok ? 0 : 1;
   }
@@ -89,42 +107,64 @@ export function agentsCli(args: readonly string[]): number {
       console.error(`no proposal ${id ?? ''}`);
       return 2;
     }
-    if (!by || !signers(l).includes(by)) {
-      console.error(`${by ?? 'nobody'} is not listed in ${join(ws, 'agents', 'people.json')} as someone who may sign`);
-      return 1;
+    if (!by) {
+      console.error('--by is required: the person deciding');
+      return 2;
     }
     if (decisionOn(l, p.id)) {
       console.error(`${p.id} is already decided`);
       return 1;
     }
+    const decision = cmd === 'sign' ? 'signed' : 'declined';
+    const text = decisionText(p, decision, by);
+    const signature = sig();
+    const v = checkAct(l, by, text, signature);
+    if (!v.ok) {
+      console.error(`refused: ${v.why}`);
+      if (!signature && keysOf(l, by).length) {
+        process.stdout.write(text);
+        console.error(howToSign(cmd));
+      }
+      return 1;
+    }
     const note = flag('note');
-    append(l, 'signatures.jsonl', { proposal: p.id, decision: cmd === 'sign' ? 'signed' : 'declined', by, at: l.now(), ...(note ? { note } : {}) } satisfies Signature);
+    append(l, 'signatures.jsonl', { proposal: p.id, decision, by, at: l.now(), ...(note ? { note } : {}), signature: signature! } satisfies Signature);
     console.log(`${p.id} ${cmd === 'sign' ? `signed: ${applySigned(ws, p)}` : 'declined'}`);
     return 0;
   }
   if (cmd === 'delegate' || cmd === 'budget') {
     const by = flag('by');
-    if (!by || !signers(l).includes(by)) {
-      console.error(`${by ?? 'nobody'} is not listed in ${join(ws, 'agents', 'people.json')} as someone who may sign`);
-      return 1;
+    if (!by) {
+      console.error('--by is required: the person acting');
+      return 2;
     }
+    let fields: Act['fields'];
     if (cmd === 'delegate') {
       const on = flag('class-ii');
       if (on !== 'on' && on !== 'off') {
         console.error('--class-ii on|off');
         return 2;
       }
-      writeDelegation(l, { classII: on === 'on', attempts: Number(flag('attempts') ?? 5), by, at: l.now() });
-      console.log(`the factory ${on === 'on' ? 'may' : 'may not'} issue Class II revisions on its own; ${flag('attempts') ?? 5} attempts a case before it asks`);
+      fields = { classII: on === 'on', attempts: Number(flag('attempts') ?? 5) };
     } else {
       const daily = Number(flag('daily'));
       if (!(daily > 0)) {
         console.error('--daily must be dollars a day, more than 0');
         return 2;
       }
-      writeFileSync(join(l.dir, 'budget.json'), `${JSON.stringify({ dailyUSD: daily, caseUSD: Number(flag('case') ?? daily / 4), by, at: l.now() }, null, 2)}\n`);
-      console.log(`spending stops at $${daily} a day and $${flag('case') ?? daily / 4} a case`);
+      fields = { dailyUSD: daily, caseUSD: Number(flag('case') ?? daily / 4) };
     }
+    const signature = sig();
+    const r = recordAct(l, cmd, fields, by, signature);
+    if (!r.ok) {
+      console.error(`refused: ${r.why}`);
+      if (!signature && keysOf(l, by).length) {
+        process.stdout.write(r.text);
+        console.error(howToSign(cmd));
+      }
+      return 1;
+    }
+    console.log(cmd === 'delegate' ? `the factory ${fields['classII'] ? 'may' : 'may not'} issue Class II revisions on its own; ${String(fields['attempts'])} attempts a case before it asks` : `spending stops at $${String(fields['dailyUSD'])} a day and $${String(fields['caseUSD'])} a case`);
     return 0;
   }
   if (cmd === 'drive') {
@@ -167,10 +207,27 @@ export function agentsCli(args: readonly string[]): number {
     return 0;
   }
   if (cmd === 'verify') {
-    const v = verifyLog(l);
-    console.log(v.ok ? `the log holds: ${v.lines} entries` : `the log is broken at entry ${v.at}`);
+    const factory = flag('factory');
+    const anchors = [...releaseAnchors(ws), ...(factory ? tagAnchors(factory) : [])];
+    const v = verifyLog(l, anchors);
+    console.log(v.ok ? `the log holds: ${v.lines} entries, keyed, ${anchors.length} anchor(s) up to entry ${v.anchored}` : `the log does not hold${v.at ? ` at entry ${v.at}` : ''}: ${v.why}`);
     return v.ok ? 0 : 1;
   }
-  console.error(readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(2, 10).map((x) => x.replace(/^ \* ?/, '')).join('\n'));
+  if (cmd === 'anchor') {
+    const factory = flag('factory');
+    if (!factory) {
+      console.error('--factory is required: the checkout the tag goes into');
+      return 2;
+    }
+    const v = verifyLog(l, [...releaseAnchors(ws), ...tagAnchors(factory)]);
+    if (!v.ok) {
+      console.error(`not anchored: the log does not hold${v.at ? ` at entry ${v.at}` : ''}: ${v.why}`);
+      return 1;
+    }
+    const t = tagAnchor(l, factory);
+    console.log(`${t.tag} at entry ${t.seq} (${t.hash.slice(0, 12)}); push it: git -C ${factory} push origin refs/tags/${t.tag}`);
+    return 0;
+  }
+  console.error(readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(2, 20).map((x) => x.replace(/^ \* ?/, '')).join('\n'));
   return 2;
 }

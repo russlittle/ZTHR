@@ -1,0 +1,4 @@
+[
+  {"type":"deletion","ruleset_source_type":"Repository","ruleset_source":"russlittle/zthr","ruleset_id":102},
+  {"type":"non_fast_forward","ruleset_source_type":"Repository","ruleset_source":"russlittle/zthr","ruleset_id":102}
+]

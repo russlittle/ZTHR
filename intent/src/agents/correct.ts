@@ -21,14 +21,12 @@
  * A case that does not converge, within the attempts the delegation allows, also goes to the person: a fix that
  * keeps failing is evidence the intent and the work disagree about something nobody has written down.
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { sha256 } from '../hash.ts';
 import type { Ballooned } from '../frame.ts';
 import { changes as schemaChanges, type Schema as InformationSchema } from '../schema.ts';
 import { rangeOf } from '../tolerance.ts';
 import { budgetState } from './cost.ts';
-import { append, changes, propose, readLines, type Ledger, type Session } from './ledger.ts';
+import { append, changes, propose, readLines, validActs, type Ledger, type Session } from './ledger.ts';
 
 // ------------------------------------------------------------------ Class I or Class II
 
@@ -138,13 +136,14 @@ export interface Delegation {
   readonly at: string;
 }
 
-/** The person's standing delegation. Without one, every revision the factory would make is asked for instead. */
+/**
+ * The person's standing delegation: the last one they signed (agents/acts.jsonl). Without one, every revision the
+ * factory would make is asked for instead. A delegation written any other way is not read at all.
+ */
 export function delegation(l: Ledger): Delegation {
-  const p = join(l.dir, 'delegation.json');
-  return existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as Delegation) : { classII: false, attempts: 5, by: 'nobody', at: '' };
+  const a = validActs(l, 'delegate').at(-1);
+  return a ? { classII: a.fields['classII'] === true, attempts: Math.max(1, Math.floor(Number(a.fields['attempts']) || 5)), by: a.by, at: a.at } : { classII: false, attempts: 5, by: 'nobody', at: '' };
 }
-
-export const writeDelegation = (l: Ledger, d: Delegation) => writeFileSync(join(l.dir, 'delegation.json'), `${JSON.stringify(d, null, 2)}\n`);
 
 export function cases(l: Ledger): Case[] {
   const by = new Map<string, CaseEvent[]>();

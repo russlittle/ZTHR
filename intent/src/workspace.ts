@@ -7,7 +7,8 @@
  *   readings/           readings from model families, one file each
  *   answers.json        every answer so far; a later answer to the same question replaces the earlier one
  *   releases/rev-N/     each issued revision, and rev-N.zip beside it
- *   history.jsonl       one line per revision: its number, package hash, reason and readiness
+ *   history.jsonl       one line per revision: its number, package hash, reason, readiness, and the agents'
+ *                       ledger head at that moment (an anchor for the log)
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
@@ -46,6 +47,8 @@ export interface History {
   readonly reason: string | null;
   readonly ready: boolean;
   readonly openQuestions: number;
+  /** The head of the agents' ledger when this revision was issued: an anchor a truncated log cannot match. */
+  readonly ledger?: { readonly seq: number; readonly hash: string };
 }
 
 export const history = (ws: Workspace): History[] =>
@@ -64,7 +67,7 @@ export function load(ws: Workspace): Prepared {
 }
 
 /** Issue the next revision. After the first, a reason is required; the release is refused without one. */
-export function issue(ws: Workspace, reason?: string): { release: Release; revision: number; path: string; zipPath: string } {
+export function issue(ws: Workspace, reason?: string, ledger?: History['ledger']): { release: Release; revision: number; path: string; zipPath: string } {
   const p = load(ws);
   const last = history(ws).at(-1);
   const revision = (last?.revision ?? 0) + 1;
@@ -80,6 +83,6 @@ export function issue(ws: Workspace, reason?: string): { release: Release; revis
   const zipPath = `${path}.zip`;
   writeFileSync(zipPath, zip(r.files, `${p.model.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-rev-${revision}`));
   const m = JSON.parse(r.files['manifest.json']!) as { package: string; ready: boolean; openQuestions: number };
-  appendFileSync(join(ws.dir, 'history.jsonl'), `${JSON.stringify({ revision, package: m.package, reason: reason ?? null, ready: m.ready, openQuestions: m.openQuestions } satisfies History)}\n`);
+  appendFileSync(join(ws.dir, 'history.jsonl'), `${JSON.stringify({ revision, package: m.package, reason: reason ?? null, ready: m.ready, openQuestions: m.openQuestions, ...(ledger ? { ledger } : {}) } satisfies History)}\n`);
   return { release: r, revision, path, zipPath };
 }

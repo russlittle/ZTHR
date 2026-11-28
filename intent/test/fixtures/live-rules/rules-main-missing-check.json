@@ -1,0 +1,50 @@
+[
+ {
+  "type": "deletion",
+  "ruleset_source_type": "Repository",
+  "ruleset_source": "russlittle/zthr",
+  "ruleset_id": 101
+ },
+ {
+  "type": "non_fast_forward",
+  "ruleset_source_type": "Repository",
+  "ruleset_source": "russlittle/zthr",
+  "ruleset_id": 101
+ },
+ {
+  "type": "pull_request",
+  "ruleset_source_type": "Repository",
+  "ruleset_source": "russlittle/zthr",
+  "ruleset_id": 101,
+  "parameters": {
+   "required_approving_review_count": 0,
+   "dismiss_stale_reviews_on_push": true,
+   "require_code_owner_review": false,
+   "require_last_push_approval": false,
+   "required_review_thread_resolution": false,
+   "allowed_merge_methods": [
+    "merge"
+   ]
+  }
+ },
+ {
+  "type": "required_status_checks",
+  "ruleset_source_type": "Repository",
+  "ruleset_source": "russlittle/zthr",
+  "ruleset_id": 101,
+  "parameters": {
+   "strict_required_status_checks_policy": true,
+   "do_not_enforce_on_create": false,
+   "required_status_checks": [
+    {
+     "context": "Intent",
+     "integration_id": 15368
+    },
+    {
+     "context": "Files",
+     "integration_id": 15368
+    }
+   ]
+  }
+ }
+]

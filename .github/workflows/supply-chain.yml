@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   evidence:
+    name: Supply chain
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:

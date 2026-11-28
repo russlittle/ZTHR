@@ -7,7 +7,8 @@ import { test } from 'node:test';
 import { agentsCli } from '../src/agents/cli.ts';
 import { DUTIES, PERSON_ONLY, REQUIRED_CHECKS } from '../src/agents/duties.ts';
 import { reference } from '../src/agents/guide.ts';
-import { fileTicket, ledgerOf, proposals, verifyLog, type Session } from '../src/agents/ledger.ts';
+import { actTextOf, decisionText, fileTicket, ledgerOf, nextPrev, proposals, verifyLog, type Act, type Session } from '../src/agents/ledger.ts';
+import { testKey, type TestKey } from './governance-kit.ts';
 import { call, toolsFor, TOOLS, type Context, type Result } from '../src/agents/tools.ts';
 import { CLARIFICATIONS, prepare } from '../src/pipeline.ts';
 import { release } from '../src/release.ts';
@@ -34,6 +35,39 @@ function released() {
   const r = call(w.as('steward', 'anthropic'), 'release_issue', {});
   assert.ok(r.ok, JSON.stringify(r));
   return w;
+}
+
+/** The models reviewers run on, by family, as a provider names them. */
+const MODELS: Record<string, string> = { google: 'google/gemini-4-hydrogen', openai: 'gpt-5', deepseek: 'deepseek-ai/deepseek-v4.1-flash-maas', llama: 'llama3.3', qwen: 'qwen3-coder', anthropic: 'claude-sonnet-5' };
+let responses = 0;
+/** A reviewer whose verdicts carry the model call they came from, as the driver records it. */
+const reviewerOf = (w: { as: (role: Session['role'], family: string, agent?: string, extra?: Partial<Context>) => Context }, family: string, agent = `reviewer-${family}`) =>
+  w.as('reviewer', family, agent, { answer: { provider: 'vertex', model: MODELS[family]!, response: `resp-${++responses}` } });
+
+/** A listed person with a signing key, and how they sign a proposal or a standing act on the command line. */
+function person(ws: string, email = 'russ@example.com', key: TestKey = testKey()) {
+  writeFileSync(join(ws, 'agents', 'people.json'), JSON.stringify({ signers: [email], keys: { [email]: [key.line] } }));
+  const sigFile = (text: string, signer = key) => {
+    const f = join(mkdtempSync(join(tmpdir(), 'zthr-act-')), 'act.txt.sig');
+    writeFileSync(f, signer.sign(text, 'zthr-intent'));
+    return f;
+  };
+  const quietly = <T>(f: () => T): T => {
+    const [log, err] = [console.log, console.error];
+    console.log = () => {};
+    console.error = () => {};
+    try {
+      return f();
+    } finally {
+      [console.log, console.error] = [log, err];
+    }
+  };
+  const decide = (id: string, decision: 'signed' | 'declined' = 'signed', signer = key) => {
+    const p = proposals(ledgerOf(ws)).find((x) => x.id === id)!;
+    return quietly(() => agentsCli([decision === 'signed' ? 'sign' : 'decline', id, '--workspace', ws, '--by', email, '--signature', sigFile(decisionText(p, decision, email), signer)]));
+  };
+  const act = (kind: Act['kind'], fields: Act['fields'], args: string[]) => quietly(() => agentsCli([kind, '--workspace', ws, '--by', email, ...args, '--signature', sigFile(actTextOf({ kind, fields, by: email, prev: nextPrev(ledgerOf(ws), kind) }))]));
+  return { email, key, decide, act, quietly };
 }
 
 /** A git checkout of a stand-in factory, on one clean commit. */
@@ -71,7 +105,7 @@ function admitted(w: ReturnType<typeof released>) {
   assert.ok(o.ok);
   const change = (v(o) as { change: string }).change;
   assert.ok(call(b, 'checks_run', { change }).ok);
-  for (const fam of ['google', 'openai']) assert.ok(call(w.as('reviewer', fam), 'review_submit', { change, verdict: 'pass', checked: ['gauge bills-on-time'], findings: [] }).ok);
+  for (const fam of ['google', 'openai']) assert.ok(call(reviewerOf(w, fam), 'review_submit', { change, verdict: 'pass', checked: ['gauge bills-on-time'], findings: [] }).ok);
   return { change, f, b };
 }
 
@@ -123,16 +157,13 @@ test('a steward drafts answers; only a listed person signs them into the intent'
     assert.equal(agentsCli(['sign', id, '--workspace', w.ws, '--by', 'someone@example.com']), 1, 'nobody signs until a person lists who may');
     writeFileSync(join(w.ws, 'agents', 'people.json'), JSON.stringify({ signers: ['russ@example.com'] }));
     assert.equal(agentsCli(['sign', id, '--workspace', w.ws, '--by', 'agent@example.com']), 1, 'someone not listed is refused');
+    assert.equal(agentsCli(['sign', id, '--workspace', w.ws, '--by', 'russ@example.com']), 1, 'a listed name with no key cannot sign');
   } finally {
     console.error = quiet;
   }
-  const log = console.log;
-  console.log = () => {};
-  try {
-    assert.equal(agentsCli(['sign', id, '--workspace', w.ws, '--by', 'russ@example.com']), 0);
-  } finally {
-    console.log = log;
-  }
+  const russ = person(w.ws);
+  assert.equal(russ.quietly(() => agentsCli(['sign', id, '--workspace', w.ws, '--by', 'russ@example.com'])), 1, 'a listed person’s name without their signature is refused');
+  assert.equal(russ.decide(id), 0);
   assert.ok(JSON.parse(readFileSync(join(w.ws, 'answers.json'), 'utf8'))[q.id], 'once signed, it is the person’s answer');
 });
 
@@ -210,14 +241,14 @@ test('reviews come from other families, say what was checked, and admission is c
   refusedWith(call(b, 'review_submit', { change, verdict: 'pass', checked: ['all'], findings: [] }), /a builder does not review_submit/);
   refusedWith(call(w.as('reviewer', 'anthropic', 'other'), 'review_submit', { change, verdict: 'pass', checked: ['all'], findings: [] }), /anthropic wrote this change/);
   refusedWith(call(w.as('reviewer', 'anthropic', 'builder-1'), 'review_submit', { change, verdict: 'pass', checked: ['all'], findings: [] }), /you wrote this change/);
-  const g = w.as('reviewer', 'google');
+  const g = reviewerOf(w, 'google');
   refusedWith(call(g, 'review_submit', { change, verdict: 'pass', checked: [], findings: [] }), /not a review/);
   refusedWith(call(g, 'review_submit', { change, verdict: 'block', checked: ['x'], findings: [{ what: 'nit', severity: 'minor' }] }), /blocking finding/);
   assert.ok(call(g, 'review_submit', { change, verdict: 'pass', checked: ['the bills gauge'], findings: [] }).ok);
-  refusedWith(call(w.as('reviewer', 'google', 'g2'), 'review_submit', { change, verdict: 'pass', checked: ['x'], findings: [] }), /already reviewed/);
+  refusedWith(call(reviewerOf(w, 'google', 'g2'), 'review_submit', { change, verdict: 'pass', checked: ['x'], findings: [] }), /already reviewed/);
   assert.equal((v(call(g, 'admission', { change })) as { admitted: boolean }).admitted, false, 'one family is not enough');
   assert.deepEqual(toolsFor('reviewer').map((t) => t.name).includes('review_queue'), true);
-  assert.ok(call(w.as('reviewer', 'openai'), 'review_submit', { change, verdict: 'pass', checked: ['the schema migration'], findings: [] }).ok);
+  assert.ok(call(reviewerOf(w, 'openai'), 'review_submit', { change, verdict: 'pass', checked: ['the schema migration'], findings: [] }).ok);
   assert.equal((v(call(g, 'admission', { change })) as { admitted: boolean }).admitted, true);
   assert.ok(!TOOLS.some((t) => /admit/.test(t.name) && t.kind !== 'read'), 'no tool admits');
 });
@@ -245,14 +276,7 @@ test('delivery goes stage by stage, results come from the pipeline, and release 
   refusedWith(call(op, 'deploy_advance', { change, stage: 'release' }), /named person/);
   const pr = call(op, 'production_request', { change, evidence: '5% for 2 hours; availability 99.97%, latency 98.2% under budget' });
   assert.ok(pr.ok);
-  writeFileSync(join(w.ws, 'agents', 'people.json'), JSON.stringify({ signers: ['russ@example.com'] }));
-  const log = console.log;
-  console.log = () => {};
-  try {
-    assert.equal(agentsCli(['sign', (v(pr) as { proposal: string }).proposal, '--workspace', w.ws, '--by', 'russ@example.com']), 0);
-  } finally {
-    console.log = log;
-  }
+  assert.equal(person(w.ws).decide((v(pr) as { proposal: string }).proposal), 0);
   assert.ok(call(op, 'deploy_advance', { change, stage: 'release' }).ok);
   assert.ok(call(op, 'deploy_rollback', { change, why: 'availability burning at 14x' }).ok, 'going back is always allowed');
   refusedWith(call(op, 'deploy_advance', { change, stage: 'release' }), /next stage .* is build/);
@@ -282,18 +306,21 @@ test('a triager sorts reports but cannot rewrite them, resolve without evidence,
 });
 
 test('nothing credential-shaped gets in, and every call goes into a chain that shows tampering', () => {
-  const w = world();
+  const w0 = world();
+  const w = { ...w0, ledger: ledgerOf(w0.ws, clock, Buffer.alloc(32, 7)) };
+  w.as = (role, family, agent = `${role}-${family}`, extra = {}) => ({ workspace: w.ws, ledger: w.ledger, session: { role, family, agent }, ...extra });
   const s = w.as('steward', 'anthropic');
   refusedWith(call(s, 'answer_suggest', { question: 'q', answer: { other: ['sk', 'ant', 'api03', 'abcdefghijklmnopqrstuvwxyz'].join('-') }, source: 'x' }), /Anthropic key/);
   call(s, 'status');
   call(s, 'nonexistent');
   const v = verifyLog(w.ledger);
-  assert.deepEqual(v, { ok: true, lines: 3 });
+  assert.equal(v.ok && v.lines, 3);
   const p = join(w.ledger.dir, 'log.jsonl');
   const lines = readFileSync(p, 'utf8').split('\n');
   lines[0] = lines[0]!.replace('"refused"', '"ok"');
   writeFileSync(p, lines.join('\n'));
-  assert.deepEqual(verifyLog(w.ledger), { ok: false, at: 1 }, 'a refusal rewritten as allowed breaks the chain');
+  const broken = verifyLog(w.ledger);
+  assert.ok(!broken.ok && broken.at === 1, 'a refusal rewritten as allowed breaks the chain');
   writeFileSync(p, readFileSync(p, 'utf8').split('\n').slice(1).join('\n'));
   assert.equal(verifyLog(w.ledger).ok, false, 'so does a removed line');
 });
@@ -340,7 +367,7 @@ test('the API speaks MCP on standard input and output, with the session fixed by
 
 // ------------------------------------------------------------------ correction without asking
 
-import { cases, classify, writeDelegation, type DatumLike } from '../src/agents/correct.ts';
+import { cases, classify, delegation, type DatumLike } from '../src/agents/correct.ts';
 import { budgetState, dollars, meter, PLAN, seatModels } from '../src/agents/cost.ts';
 
 /** A world with a released revision, a factory checkout, and a runner whose results the test sets. */
@@ -385,7 +412,7 @@ test('a bug goes round the loop and closes without anyone being asked', () => {
   const sha = x.commit(1);
   const fix = v(call(x.b, 'change_open', { title: 'Stop reminders once paid', commit: sha, base: x.f.head, case: k, paths: ['apps/a.ts'] })) as { change: string };
   assert.ok(call(x.b, 'checks_run', { change: fix.change }).ok);
-  for (const fam of ['deepseek', 'llama']) assert.ok(call(x.as('reviewer', fam), 'review_submit', { change: fix.change, verdict: 'pass', checked: ['the bills gauge'], findings: [] }).ok);
+  for (const fam of ['deepseek', 'llama']) assert.ok(call(reviewerOf(x, fam), 'review_submit', { change: fix.change, verdict: 'pass', checked: ['the bills gauge'], findings: [] }).ok);
   const after = cases(x.ledger).find((c) => c.id === k)!;
   assert.equal(after.status, 'closed');
   assert.equal(proposals(x.ledger).length, 0, 'nothing went to a person');
@@ -433,7 +460,11 @@ test('a Class II clarification is issued by the factory under delegation, as its
   const k2 = openCase(x);
   call(x.b, 'case_diagnose', { case: k2, cause: 'intent', balloons: [1], evidence: 'cash payments are not covered' });
   call(x.as('reviewer', 'deepseek'), 'case_confirm', { case: k2, agree: true, why: 'same' });
-  writeDelegation(x.ledger, { classII: true, attempts: 5, by: 'russ@example.com', at: '2026-11-26' });
+  writeFileSync(join(x.ledger.dir, 'delegation.json'), JSON.stringify({ classII: true, attempts: 5, by: 'russ@example.com', at: '2026-11-26' }));
+  assert.equal(delegation(x.ledger).classII, false, 'a delegation written without the person’s signature is not read');
+  const russ = person(x.ws);
+  assert.equal(russ.act('delegate', { classII: true, attempts: 5 }, ['--class-ii', 'on', '--attempts', '5']), 0);
+  assert.equal(delegation(x.ledger).classII, true);
   const done = v(call(s, 'clarify', { case: k2, ...example })) as { class: string; issued: number };
   assert.equal(done.class, 'II');
   assert.equal(done.issued, 2);

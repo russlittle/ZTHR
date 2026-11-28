@@ -10,7 +10,7 @@ import { createInterface } from 'node:readline';
 import { DUTIES, type Role } from './duties.ts';
 import { guide, reference } from './guide.ts';
 import { ledgerOf, type Session } from './ledger.ts';
-import { call, toolsFor, type Context } from './tools.ts';
+import { call, toolsFor, type Context, type ModelCall } from './tools.ts';
 
 export const PROTOCOLS = ['2026-07-28', '2025-11-25', '2025-06-18', '2025-03-26'] as const;
 
@@ -75,8 +75,10 @@ export function handle(c: Context, m: Rpc): object | null {
   }
 }
 
-export function serve(opts: { workspace: string; factory?: string; session: Session }): void {
-  const c: Context = { workspace: opts.workspace, session: opts.session, ledger: ledgerOf(opts.workspace), ...(opts.factory ? { factory: opts.factory } : {}) };
+export function serve(opts: { workspace: string; factory?: string; session: Session; answer?: ModelCall }): void {
+  // A server started for a model records which model it serves; it has no provider response id, so its reviews are
+  // recorded but do not count toward admission. Counted reviews come from a driver that made the call itself.
+  const c: Context = { workspace: opts.workspace, session: opts.session, ledger: ledgerOf(opts.workspace), ...(opts.factory ? { factory: opts.factory } : {}), ...(opts.answer ? { answer: { provider: opts.answer.provider, model: opts.answer.model } } : {}) };
   const rl = createInterface({ input: process.stdin });
   rl.on('line', (line) => {
     if (!line.trim()) return;

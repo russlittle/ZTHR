@@ -28,9 +28,10 @@ import { history, issue, load } from '../workspace.ts';
 import { REQUIRED_CHECKS, REVIEW_FAMILIES, TIERS, tierOf, UNWRITABLE, type Role, type Tier } from './duties.ts';
 import { caseOf, cases, classify, closeFixed, delegation, event, failure, type Cause, type DatumLike } from './correct.ts';
 import { budgetState } from './cost.ts';
+import { familyOfModel } from './families.ts';
 import {
-  append, changeOf, changes, decisionOn, fileTicket, ledgerOf, log, openChange, propose, proposals, readLines, tickets,
-  type CheckRun, type DeployRecord, type Ledger, type ReviewRecord, type Session, type TicketEvent,
+  append, changeOf, changes, decisionOn, fileTicket, head, ledgerOf, log, openChange, propose, proposals, readLines, tickets,
+  type CheckRun, type DeployRecord, type Ledger, type ReviewEvidence, type ReviewRecord, type Session, type TicketEvent,
 } from './ledger.ts';
 
 export { fileTicket };
@@ -43,6 +44,18 @@ export interface Context {
   readonly ledger: Ledger;
   /** Runs one required check in the factory checkout. Replaced only in tests. */
   readonly run?: (step: string, cwd: string) => { exit: number | null; out: string };
+  /**
+   * The model call this tool call came from, as the driver that made it saw it: never the agent's own input. A
+   * review counts toward admission only with all of it.
+   */
+  readonly answer?: ModelCall;
+}
+
+/** Who served a model call, the model id it answered as, and the provider's id for the response. */
+export interface ModelCall {
+  readonly provider: string;
+  readonly model: string;
+  readonly response?: string;
 }
 
 type Schema = {
@@ -105,12 +118,36 @@ function factoryTiers(c: Context): readonly Tier[] {
   return y.tiers;
 }
 
-const familiesOf = (rs: readonly { by: Session }[]) => [...new Set(rs.map((r) => r.by.family))];
+/** The family a review counts for: read from the model it came from when there is one, else the session's flag. */
+const familyOfReview = (r: ReviewRecord) => (r.evidence ? familyOfModel(r.evidence.model) : null) ?? r.by.family;
 
-/** Whether a change is admitted. Computed from what the API recorded; no role can set it. */
-export function admission(l: Ledger, id: string): { admitted: boolean; missing: string[]; blocking: string[] } {
+/** The tree the API's checks ran on for a change: what every review must have been shown. */
+export const treeOfChange = (l: Ledger, id: string): string | undefined =>
+  readLines<CheckRun>(l, 'checks.jsonl')
+    .filter((r) => r.change === id && r.tree)
+    .at(-1)?.tree;
+
+/** Why a passing review does not count toward independence, or null when it does. */
+export function uncounted(r: ReviewRecord, tree: string | undefined, authorFamily: string): string | null {
+  const e = r.evidence;
+  if (!e || !e.provider || !e.model || !e.response || !e.tree) return `the ${r.by.family} review carries no record of the model call (provider, model, response id and tree), so its family is only a flag`;
+  const fam = familyOfModel(e.model);
+  if (!fam) return `the ${r.by.family} review came from ${e.model}, a model whose family is not known`;
+  if (fam !== r.by.family) return `the ${r.by.family} review came from ${e.model}, a ${fam} model`;
+  if (fam === authorFamily) return `the review came from ${e.model}, of the author's family`;
+  if (!tree) return 'no tree is recorded for the change’s checks, so no review can be tied to what was checked';
+  if (e.tree !== tree) return `the ${fam} review was of tree ${e.tree.slice(0, 12)}, not the checked tree ${tree.slice(0, 12)}`;
+  return null;
+}
+
+/**
+ * Whether a change is admitted. Computed from what the API recorded; no role can set it. Independence is counted by
+ * the family of the model each verdict came from: two verdicts from one family, or one response recorded twice,
+ * count once, and a verdict without the record of its model call does not count at all. A block always blocks.
+ */
+export function admission(l: Ledger, id: string): { admitted: boolean; missing: string[]; blocking: string[]; uncounted: string[] } {
   const ch = changeOf(l, id);
-  if (!ch) return { admitted: false, missing: [`no change ${id}`], blocking: [] };
+  if (!ch) return { admitted: false, missing: [`no change ${id}`], blocking: [], uncounted: [] };
   const runs = readLines<CheckRun>(l, 'checks.jsonl').filter((r) => r.change === id);
   const missing: string[] = [];
   const blocking: string[] = [];
@@ -119,12 +156,30 @@ export function admission(l: Ledger, id: string): { admitted: boolean; missing: 
     if (!last) missing.push(`check not run: ${rc.check}`);
     else if (!last.ok) blocking.push(`check failed: ${rc.check}`);
   }
-  const reviews = readLines<ReviewRecord>(l, 'reviews.jsonl').filter((r) => r.change === id && r.by.family !== ch.author.family);
-  const latest = familiesOf(reviews).map((f) => reviews.filter((r) => r.by.family === f).at(-1)!);
-  for (const r of latest) if (r.verdict === 'block') blocking.push(`blocked by the ${r.by.family} review: ${r.findings.map((f) => f.what).join('; ')}`);
-  const passes = latest.filter((r) => r.verdict === 'pass').length;
-  if (passes < REVIEW_FAMILIES) missing.push(`${REVIEW_FAMILIES - passes} more passing review(s), each from a family other than ${ch.author.family} and the others`);
-  return { admitted: missing.length === 0 && blocking.length === 0, missing, blocking };
+  const tree = treeOfChange(l, id);
+  const reviews = readLines<ReviewRecord>(l, 'reviews.jsonl').filter((r) => r.change === id && familyOfReview(r) !== ch.author.family);
+  const fams = [...new Set(reviews.map(familyOfReview))];
+  const latest = fams.map((f) => reviews.filter((r) => familyOfReview(r) === f).at(-1)!);
+  for (const r of latest) if (r.verdict === 'block') blocking.push(`blocked by the ${familyOfReview(r)} review: ${r.findings.map((f) => f.what).join('; ')}`);
+  const seen = new Set<string>();
+  const counted = new Set<string>();
+  const notCounted: string[] = [];
+  for (const r of latest.filter((x) => x.verdict === 'pass')) {
+    const why = uncounted(r, tree, ch.author.family);
+    if (why) {
+      notCounted.push(`not counted: ${why}`);
+      continue;
+    }
+    const call = `${r.evidence!.provider}:${r.evidence!.response}`;
+    if (seen.has(call)) {
+      notCounted.push(`not counted: response ${r.evidence!.response} from ${r.evidence!.provider} is already counted for another verdict`);
+      continue;
+    }
+    seen.add(call);
+    counted.add(familyOfModel(r.evidence!.model)!);
+  }
+  if (counted.size < REVIEW_FAMILIES) missing.push(`${REVIEW_FAMILIES - counted.size} more passing review(s), each from a model of a family other than ${ch.author.family} and the others`, ...notCounted);
+  return { admitted: missing.length === 0 && blocking.length === 0, missing, blocking, uncounted: notCounted };
 }
 
 const STAGE_IDS = STAGES.map((s) => s.id);
@@ -346,7 +401,7 @@ export const TOOLS: readonly Tool[] = [
     input: obj({ reason: text('Why this revision is made. Required after the first.', 1000) }),
     handle: (c, i) => {
       try {
-        const r = issue({ dir: c.workspace }, i['reason'] as string | undefined);
+        const r = issue({ dir: c.workspace }, i['reason'] as string | undefined, head(c.ledger));
         const m = JSON.parse(r.release.files['manifest.json']!) as { ready: boolean; package: string; openQuestions: number };
         return { revision: r.revision, ready: m.ready, package: m.package.slice(0, 12), openQuestions: m.openQuestions, problems: r.release.problems.slice(0, 20) };
       } catch (e) {
@@ -571,12 +626,16 @@ export const TOOLS: readonly Tool[] = [
       const ch = changeOf(c.ledger, String(i['change'])) ?? refuse(`no change ${String(i['change'])}`, 'Call review_queue.');
       if (ch.author.agent === c.session.agent) return refuse('you wrote this change', 'Another agent, of another family, reviews it.');
       if (ch.author.family === c.session.family) return refuse(`${c.session.family} wrote this change`, 'A reviewer from another family reviews it; your family shares its blind spots.');
-      if (readLines<ReviewRecord>(c.ledger, 'reviews.jsonl').some((r) => r.change === ch.id && r.by.family === c.session.family)) return refuse(`${c.session.family} has already reviewed this change`, 'If something new turned up, block on the next change, or tell the builder.');
+      const fam = c.answer ? familyOfModel(c.answer.model) : null;
+      if (c.answer && fam !== c.session.family) return refuse(`this session reviews for ${c.session.family}, but the call came from ${c.answer.model}${fam ? `, a ${fam} model` : ', whose family is not known'}`, 'Start the reviewer with the family of the model it runs.');
+      if (readLines<ReviewRecord>(c.ledger, 'reviews.jsonl').some((r) => r.change === ch.id && familyOfReview(r) === c.session.family)) return refuse(`${c.session.family} has already reviewed this change`, 'If something new turned up, block on the next change, or tell the builder.');
+      const tree = (c.factory ? git(c, 'rev-parse', `${ch.commit}^{tree}`).stdout.trim() : '') || treeOfChange(c.ledger, ch.id);
+      const evidence: ReviewEvidence | undefined = c.answer?.response && tree ? { provider: c.answer.provider, model: c.answer.model, response: c.answer.response, tree } : undefined;
       const checked = i['checked'] as string[];
       const findings = i['findings'] as ReviewRecord['findings'];
       if (i['verdict'] === 'pass' && !checked.length) return refuse('a pass that says nothing about what was checked is not a review', 'List what you verified.');
       if (i['verdict'] === 'block' && !findings.some((f) => f.severity === 'blocking')) return refuse('a block needs a blocking finding', 'Name it, or pass with the findings as major or minor.');
-      append(c.ledger, 'reviews.jsonl', { change: ch.id, verdict: i['verdict'] as 'pass' | 'block', checked, findings, by: c.session, at: c.ledger.now() } satisfies ReviewRecord);
+      append(c.ledger, 'reviews.jsonl', { change: ch.id, verdict: i['verdict'] as 'pass' | 'block', checked, findings, by: c.session, at: c.ledger.now(), ...(evidence ? { evidence } : {}) } satisfies ReviewRecord);
       const blocking = findings.filter((f) => f.severity === 'blocking');
       const kase = i['verdict'] === 'block' ? failure(c.ledger, { kind: 'review', ref: c.session.family, change: ch.id }, `blocked by ${c.session.family}: ${blocking.map((f) => f.what).join('; ')}`, blocking.length, ch.revision, ch.case, c.session) : null;
       closeFixed(c.ledger, (id) => admission(c.ledger, id).admitted);
@@ -865,7 +924,7 @@ export const TOOLS: readonly Tool[] = [
       }
       const d = delegation(c.ledger);
       if (verdict.klass === 'II' && d.classII) {
-        const r = issue({ dir: c.workspace }, `Class II clarification for case ${k.id}: ${verdict.made.join('; ') || 'examples and notes'}`);
+        const r = issue({ dir: c.workspace }, `Class II clarification for case ${k.id}: ${verdict.made.join('; ') || 'examples and notes'}`, head(c.ledger));
         event(c.ledger, { case: k.id, event: 'clarified', by: c.session, revision: r.revision, why: verdict.made.join('; ') });
         return { class: 'II', issued: r.revision, made: verdict.made, waiting: 'builder: fix' };
       }
@@ -1021,8 +1080,9 @@ export function applySigned(workspace: string, proposal: { kind: string; body: R
   if (proposal.kind === 'clarification') {
     const path = join(workspace, 'sources', CLARIFICATIONS);
     writeFileSync(path, `${existsSync(path) ? readFileSync(path, 'utf8') : ''}${String(proposal.body['append'])}`);
-    const r = issue({ dir: workspace }, `Clarification for case ${String(proposal.body['case'])}, signed by a person`);
-    event(ledgerOf(workspace), { case: String(proposal.body['case']), event: 'clarified', by: 'the factory', revision: r.revision, why: 'signed by a person' });
+    const l = ledgerOf(workspace);
+    const r = issue({ dir: workspace }, `Clarification for case ${String(proposal.body['case'])}, signed by a person`, head(l));
+    event(l, { case: String(proposal.body['case']), event: 'clarified', by: 'the factory', revision: r.revision, why: 'signed by a person' });
     return `issued as revision ${r.revision}; the builder goes again`;
   }
   return 'signed';

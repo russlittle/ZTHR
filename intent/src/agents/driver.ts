@@ -76,7 +76,7 @@ export async function wake(c: Context, key: string, f: Fetch, env: Env): Promise
       return { turns: 0, usd, stopped: `unreachable: ${(err as Error).message}` };
     }
     if (!res.ok) return { turns: turn, usd, stopped: `model answered ${res.status}: ${(await res.text()).slice(0, 200)}` };
-    const body = (await res.json()) as { choices: { message: Msg; finish_reason: string }[]; usage?: { prompt_tokens: number; completion_tokens: number; prompt_tokens_details?: { cached_tokens?: number } } };
+    const body = (await res.json()) as { id?: string; choices: { message: Msg; finish_reason: string }[]; usage?: { prompt_tokens: number; completion_tokens: number; prompt_tokens_details?: { cached_tokens?: number } } };
     const u = body.usage;
     if (u) usd += meter(c.ledger, role, key, { in: u.prompt_tokens, cachedIn: u.prompt_tokens_details?.cached_tokens ?? 0, out: u.completion_tokens }).usd;
     const msg = body.choices[0]!.message;
@@ -90,7 +90,8 @@ export async function wake(c: Context, key: string, f: Fetch, env: Env): Promise
         messages.push({ role: 'tool', tool_call_id: tc.id, content: '{"refused":"arguments were not JSON","instead":"send one JSON object"}' });
         continue;
       }
-      const r = call(c, tc.function.name, args);
+      // The API records the model call a verdict came from: the provider, the model it answered as, and its response id.
+      const r = call({ ...c, answer: { provider: spec.provider, model: spec.model, ...(body.id ? { response: body.id } : {}) } }, tc.function.name, args);
       const out = JSON.stringify(r.ok ? r.value : r.refused ? { refused: r.why, instead: r.instead } : { error: r.why });
       messages.push({ role: 'tool', tool_call_id: tc.id, content: out.length > CAP ? `${out.slice(0, CAP)}…(cut)` : out });
     }

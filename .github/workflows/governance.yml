@@ -1,0 +1,95 @@
+name: Governance
+
+# The rules that hold the line, checked where they live. Three jobs, each failing closed:
+#   live-rules      GitHub's live branch protection and rulesets for main and intent-surface, read with the plain
+#                   token and compared with control/live-rules.json. Until that file is adopted from
+#                   control/proposals/live-rules/, the job compares with the proposal and fails.
+#   stop-the-line   On push: fails when the branch's previous commit is red on a check the line stops on, unless a
+#                   commit in the push carries a "Fixes-red: <check>" trailer naming it.
+#   person-signed   Every commit since the base that touches what only a person changes is signed by a person's SSH
+#                   key. Keys come from the repository variable ZTHR_PERSON_KEYS (set only by an administrator).
+#                   The base is the commit before the push, or the zthr-anchor tag on a schedule; the judge's code is
+#                   taken from the base, so a change cannot rewrite the rule that judges it.
+# A schedule only runs from the default branch, so the nightly run starts once this file is merged to main.
+on:
+  push:
+    branches: [main, intent-surface]
+  schedule:
+    - cron: '41 5 * * *' # 05:41 UTC, clear of the 06:30-08:30 no-push window
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  checks: read
+
+jobs:
+  live-rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Live rules against the expectation
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f control/live-rules.json ]; then
+            node intent/tools/live-rules.ts --expect control/live-rules.json --repo "$GITHUB_REPOSITORY"
+          else
+            node intent/tools/live-rules.ts --expect control/proposals/live-rules/expected.json --repo "$GITHUB_REPOSITORY" || true
+            echo "::error::control/live-rules.json is not adopted: the expectation is still a proposal (control/proposals/live-rules/README.md), so the live rules are not proven"
+            exit 1
+          fi
+
+  stop-the-line:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Is the previous commit red?
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          EXPECT=control/live-rules.json
+          if [ ! -f "$EXPECT" ]; then
+            EXPECT=control/proposals/live-rules/expected.json
+            echo "::warning::control/live-rules.json is not adopted; stopping on the checks the proposal names"
+          fi
+          node intent/tools/stop-line.ts --repo "$GITHUB_REPOSITORY" --branch "$BRANCH" --before "$BEFORE" --after "$GITHUB_SHA" --expect "$EXPECT"
+
+  person-signed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: What only a person changes is signed by a person
+        env:
+          ZTHR_PERSON_KEYS: ${{ vars.ZTHR_PERSON_KEYS }}
+          BEFORE: ${{ github.event_name == 'push' && github.event.before || '' }}
+        run: |
+          BASE="$BEFORE"
+          if [ -z "$BASE" ] || [ -z "${BASE//0/}" ]; then BASE=$(git rev-parse -q --verify 'refs/tags/zthr-anchor^{commit}' || true); fi
+          JUDGE=intent/tools/goalposts.ts
+          if [ -n "$BASE" ] && git cat-file -e "$BASE:intent/tools/goalposts.ts" 2>/dev/null; then
+            git worktree add --detach /tmp/judge "$BASE" >/dev/null
+            JUDGE=/tmp/judge/intent/tools/goalposts.ts
+            echo "judging with the rule as it stood at ${BASE:0:12}"
+          fi
+          node "$JUDGE" --repo "$PWD" --base "$BASE" --head "$GITHUB_SHA"

@@ -3,14 +3,15 @@
  * not by the model, so each seat runs the cheapest model that can do its job, and every token is metered against a
  * ceiling the person sets. When the ceiling is reached the agenda pauses: nothing is skipped, it waits.
  *
- *   agents/budget.json   the person's ceiling: dollars a day, and dollars a case. Changed only by a person.
+ *   agents/acts.jsonl    the person's signed ceiling: dollars a day, and dollars a case. Raised only by a person.
+ *   agents/budget.json   a lower ceiling anyone may set; it never raises the signed one
  *   agents/spend.jsonl   every model call the driver made: seat, model, tokens, dollars
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import plan from '../../catalog/models.json' with { type: 'json' };
 import type { Role } from './duties.ts';
-import { append, readLines, type Ledger } from './ledger.ts';
+import { append, readLines, validActs, type Ledger } from './ledger.ts';
 
 export interface ModelSpec {
   readonly provider: 'vertex' | 'ollama';
@@ -69,9 +70,18 @@ export interface Budget {
 /** Without a ceiling set by a person, the factory spends a dollar a day: enough to prove the loop, not to hurt. */
 export const DEFAULT_BUDGET: Budget = { dailyUSD: 1, caseUSD: 0.25 };
 
+/**
+ * The ceiling: the last one a person signed (agents/acts.jsonl), or the default. A lower ceiling is always safe, so
+ * agents/budget.json, written by anyone, can only lower it; raising it is a person's signed act.
+ */
 export function budget(l: Ledger): Budget {
+  const a = validActs(l, 'budget').at(-1);
+  const signed: Budget = a ? { dailyUSD: Number(a.fields['dailyUSD']), caseUSD: Number(a.fields['caseUSD']) } : DEFAULT_BUDGET;
   const p = join(l.dir, 'budget.json');
-  return existsSync(p) ? { ...DEFAULT_BUDGET, ...(JSON.parse(readFileSync(p, 'utf8')) as Partial<Budget>) } : DEFAULT_BUDGET;
+  if (!existsSync(p)) return signed;
+  const local = JSON.parse(readFileSync(p, 'utf8')) as Partial<Budget>;
+  const lower = (x: unknown, y: number) => (typeof x === 'number' && x >= 0 ? Math.min(x, y) : y);
+  return { dailyUSD: lower(local.dailyUSD, signed.dailyUSD), caseUSD: lower(local.caseUSD, signed.caseUSD) };
 }
 
 export function budgetState(l: Ledger, kase?: string) {
