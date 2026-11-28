@@ -155,7 +155,7 @@ Scores per block, from metrology's certificates (85 blocks scored, 3 with no sur
 | `idempotency` | 86.4% | none | 8 | 0 |
 | `imagemeta` | 63.8% | none | 135 | 0 |
 | `importer` | 78.1% | none | 223 | 0 |
-| `jobs` | 78.7% | none | 73 | 0 |
+| `jobs` | 99.4% | none | 2 | 0 |
 | `leases` | 83.7% | none | 21 | 0 |
 | `loadsoak` | 68.9% | none | 56 | 0 |
 | `mcp` | 69.3% | none | 109 | 0 |
@@ -183,7 +183,7 @@ Scores per block, from metrology's certificates (85 blocks scored, 3 with no sur
 | `search` | 95.3% | none | 16 | 0 |
 | `secheaders` | 66.2% | none | 50 | 0 |
 | `sessions` | 78.2% | none | 64 | 0 |
-| `sitemap` | 68.2% | none | 71 | 0 |
+| `sitemap` | 96.9% | none | 7 | 0 |
 | `slo` | 78.2% | none | 29 | 0 |
 | `speech` | 71.2% | none | 327 | 0 |
 | `surfaces` | 66.3% | none | 64 | 0 |

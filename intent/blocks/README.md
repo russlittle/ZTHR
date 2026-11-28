@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->235<!-- /fact --> blocks, <!-- fact:blocks.tests -->4037<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->310<!-- /fact --> blocks, <!-- fact:blocks.tests -->5346<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -244,6 +244,81 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [campaigns](campaigns/index.ts) | Email campaigns: segments, escaped templates, scheduling, throttled sending with retries, A/B variants, unsubscribe headers and reports | 17 |
 | [experiments](experiments/index.ts) | Experiments: stable assignment behind flags, exposures logged, tests that stay valid while you watch, ratio checks, guardrails and a verdict | 17 |
 | [uptime-probes](uptime-probes/index.ts) | Uptime probes over HTTP, keywords, JSON, TCP, DNS and certificates, with retries, flap damping, maintenance windows and private addresses refused | 22 |
+| [activitypub](activitypub/index.ts) | ActivityPub: actors, WebFinger, activities built and checked, inboxes that refuse spoofing, delivery plans, and HTTP signatures with digests | 18 |
+| [microblog](microblog/index.ts) | Posts with visibility and addressing, mentions and tags, safe HTML, and conversion to and from ActivityPub notes | 15 |
+| [timeline-assembly](timeline-assembly/index.ts) | Home and list timelines by fan-out on write, read or both, with keyset paging and gaps found and repaired | 14 |
+| [session-replay-plan](session-replay-plan/index.ts) | Session replay recorded safely: masking, scrubbing and sampling rules, rolling buffers led by snapshots, chunks and storage tiers | 16 |
+| [dns-filter](dns-filter/index.ts) | DNS filtering: blocklists in hosts, domain and adblock forms, client groups, answers built, CNAME cloaking caught, snooze and a log | 15 |
+| [adblock-rules](adblock-rules/index.ts) | Adblock filter lists parsed and matched by host, cosmetic selectors, and registrable domains | 14 |
+| [chunker](chunker/index.ts) | Documents split into chunks along headings, each anchored to its exact source text for citations | 13 |
+| [rag](rag/index.ts) | Retrieval for answers: keyword and embedding search fused, an evidence check that refuses weak answers, context fitted and citations checked | 17 |
+| [message-search](message-search/index.ts) | Message search with operators, snippets, cursors and results trimmed to what the person may see | 13 |
+| [token-count](token-count/index.ts) | Token counts per model vendor with an upper bound, BPE from tiktoken vocabularies, truncation and budgets | 14 |
+| [prompt-store](prompt-store/index.ts) | Prompts versioned with labels and diffs, rolled out behind flags, evaluated, and promoted only through a gate | 12 |
+| [moderation-model](moderation-model/index.ts) | Moderation: word lists and model classifiers under a checked policy, actions, review and appeals, calibration and a hash-chained log | 15 |
+| [rate-plans](rate-plans/index.ts) | Rate limits by plan: bursts, route costs, windows, concurrency, cooldowns, fair shares and quota overage | 14 |
+| [wiki-links](wiki-links/index.ts) | Wiki links read into a graph with backlinks, orphans and broken links, and renames planned and rewritten | 13 |
+| [tax-engine](tax-engine/index.ts) | Tax by dated rules for place, category and customer: stacking levels, inclusive or exclusive prices, reverse charge, exemptions, rounding and withholding | 17 |
+| [ocs-share-api](ocs-share-api/index.ts) | Nextcloud's sharing API (OCS v1 and v2, XML or JSON) over grants, with permissions held to what a file or link may carry | 16 |
+| [carddav](carddav/index.ts) | A CardDAV server (RFC 6352): vCards read and written, address book queries and multiget | 16 |
+| [rich-text-doc](rich-text-doc/index.ts) | A rich-text document model as ProseMirror has it: schemas, positions, steps that map and invert, and HTML in and out | 21 |
+| [rich-text-collab](rich-text-collab/index.ts) | Collaborative rich-text editing: a central authority, steps rebased, selections mapped, and undo and redo per person | 15 |
+| [fractional-index](fractional-index/index.ts) | Ordering keys that always fit between two others, with jitter, repair and rebalancing | 13 |
+| [kanban](kanban/index.ts) | Kanban boards: cards ordered by fractional keys, WIP limits, blockers and tasks, merged by last writer wins | 16 |
+| [vector-index](vector-index/index.ts) | Vector search, exact or HNSW, by cosine, dot or distance, with metadata filters and a checksummed save | 15 |
+| [embeddings](embeddings/index.ts) | Embeddings behind one interface: batched, cached once per input, retried with a breaker, and dimensions checked | 15 |
+| [sql-builder](sql-builder/index.ts) | SQL built with parameters for Postgres, SQLite and MySQL, and a read-only checker with allow-lists, hidden columns and cost caps | 22 |
+| [table-schema](table-schema/index.ts) | Tables defined at run time: field types, constraints, conversions previewed, and migrations diffed for three dialects | 18 |
+| [log-shipping](log-shipping/index.ts) | Logs and spans shipped in batches with backpressure and loss accounting, as Loki and OTLP bodies, redacted, with label limits | 18 |
+| [change-feed](change-feed/index.ts) | Row changes as an ordered feed with transactions, signed resume tokens, filters, hidden columns, backpressure and CloudEvents | 18 |
+| [sbom](sbom/index.ts) | Software bills of materials: package URLs, CycloneDX and SPDX read and written, advisories matched by path, VEX and diffs | 17 |
+| [crm-pipeline](crm-pipeline/index.ts) | A sales pipeline: leads, deals and stages, scoring that decays, ownership rules, activities, rotting deals and a forecast | 15 |
+| [datasource-queries](datasource-queries/index.ts) | Saved queries for no-code apps: typed parameters, paging, a cache scoped by role and person, and table, column and row permissions | 13 |
+| [content-chunking](content-chunking/index.ts) | Content-defined chunking (FastCDC) with salted gears, keyed chunk ids, and a deduplicating chunk store with reference counts | 15 |
+| [sigv4](sigv4/index.ts) | AWS Signature Version 4: signing, presigned links, verification with skew and scope checks, and signed streaming bodies | 15 |
+| [graphql-schema](graphql-schema/index.ts) | GraphQL: schemas and queries parsed and validated, depth, alias and cost limits, introspection switched, and execution | 20 |
+| [qr-barcode](qr-barcode/index.ts) | QR codes, Code 128, EAN and UPC, and Data Matrix encoded and decoded with Reed-Solomon, drawn as SVG or text | 20 |
+| [png-codec](png-codec/index.ts) | PNG in every colour type and depth, interlaced, with checksums and a decompression-bomb ceiling; BMP and GIF too | 19 |
+| [channels](channels/index.ts) | Chat channels, public, private and direct, with roles, threads, mentions, mutes, read markers, pins and retention | 17 |
+| [exif-full](exif-full/index.ts) | Photo metadata, EXIF, GPS, IPTC and XMP, read safely from JPEG, PNG, WebP and TIFF, capture time and zone inferred, and location removed | 23 |
+| [tasks](tasks/index.ts) | Shared tasks with subtasks, status by workflow, recurrence in the person's zone, reminders, progress rolled up and ranking | 15 |
+| [notifications-inbox](notifications-inbox/index.ts) | A notifications inbox per person: grouped, deduplicated, safe links, read and archive, unread counts, paging and digests | 14 |
+| [s3-api](s3-api/index.ts) | An S3-compatible API over any object store: buckets, objects with ranges and conditions, listing and multipart uploads, signed by SigV4 | 18 |
+| [crdt-text](crdt-text/index.ts) | Collaborative text as a YATA sequence CRDT: state vectors, compact binary updates, out-of-order delivery and stable positions | 17 |
+| [object-versioning](object-versioning/index.ts) | Object versions and delete markers, restore, object lock with legal hold and retention, and lifecycle rules | 16 |
+| [webdav-props](webdav-props/index.ts) | WebDAV properties and search: PROPFIND, atomic PROPPATCH, COPY and MOVE with depth and quota, and DASL search | 18 |
+| [vcard](vcard/index.ts) | vCard 3.0 and 4.0 read and written with folding, escapes and groups, photos checked, converted and merged three ways | 13 |
+| [outbound](outbound/index.ts) | The one door out to the internet for app code: allowed hosts with named purposes, internal and resolved addresses refused, redirects re-checked, byte caps and a redacted log | 16 |
+| [structured-query](structured-query/index.ts) | Structured queries as Metabase builds them, compiled to parameterised SQL for Postgres, MySQL, SQLite and BigQuery, within a schema allow-list | 22 |
+| [trace-store](trace-store/index.ts) | Traces assembled from spans with self time, the critical path and orphans, a service graph, and tail sampling | 21 |
+| [promql-lite](promql-lite/index.ts) | A PromQL subset parsed and evaluated over a series store | 28 |
+| [lifecycle-hooks](lifecycle-hooks/index.ts) | Before and after hooks on create, update and delete, run inside the transaction with a depth limit | 24 |
+| [content-types](content-types/index.ts) | Content types with components and dynamic zones, locales, draft and publish, and slug fields | 24 |
+| [hls-dash](hls-dash/index.ts) | HLS and DASH playlists written and read, live playlists, and bitrate ladders | 24 |
+| [iso-bmff-probe](iso-bmff-probe/index.ts) | MP4, MOV and HEIF boxes read for codecs, rotation, location, motion photos and fragments | 20 |
+| [transcode-plan](transcode-plan/index.ts) | Direct play, remux or transcode decided with reasons, and ffmpeg arguments built safely | 18 |
+| [blurhash](blurhash/index.ts) | Blurhash encoded and decoded against published examples, and Thumbhash | 16 |
+| [image-plan](image-plan/index.ts) | Responsive images: srcset and sizes, picture markup, focal-point crops, metadata stripped, and formats by Accept | 18 |
+| [photo-library](photo-library/index.ts) | A photo library: files placed by template, albums shared by grants, stacks, trash with retention and a timeline | 18 |
+| [perceptual-hash](perceptual-hash/index.ts) | Perceptual hashes (aHash, dHash, pHash) compared across orientations and grouped for near duplicates | 15 |
+| [face-cluster](face-cluster/index.ts) | Faces clustered, named people kept through merges, splits and re-clustering, and recognition with a confidence margin | 15 |
+| [http-signatures](http-signatures/index.ts) | HTTP message signatures (RFC 9421 and the cavage draft) with digests, key caches, replay, skew and a signing policy | 24 |
+| [jsonld](jsonld/index.ts) | JSON-LD expanded, compacted and normalised for federation, with allowed contexts only and limits on size | 18 |
+| [invoices](invoices/index.ts) | Invoices and credit notes: exact money, tax rounded per rate, numbering with gaps found, terms and discounts, PDF, and UBL 2.1 / Peppol e-invoices | 16 |
+| [recurring-billing](recurring-billing/index.ts) | Subscriptions billed on anniversaries, prorated to the second, paused, changed between plans, and dunned, with charges never doubled | 17 |
+| [crdt-map](crdt-map/index.ts) | A map CRDT on a dot kernel: registers, observed-remove sets, counters and nested maps, causal delivery, and the merge laws tested | 15 |
+| [slash-commands](slash-commands/index.ts) | Slash commands and chat apps: a registry, signed requests and actions, response URLs, Block Kit checked, modals and bot tokens | 16 |
+| [crdt-awareness](crdt-awareness/index.ts) | Presence for collaborative editing, compatible with y-protocols: states that time out, identities bound, colours checked for contrast, cursors | 15 |
+| [playback-state](playback-state/index.ts) | Playback state across devices: resume points, play counts, watched thresholds, and a queue with stable shuffle | 15 |
+| [metadata-match](metadata-match/index.ts) | Media matched to catalogue entries: candidates scored, decided automatically or for review, choices locked, and providers behind a twin | 14 |
+| [library-scan](library-scan/index.ts) | Library scans diffed against the catalogue with moves found by id, hash or fingerprint, ignore rules, a guard on suspicious scans, and a watcher | 15 |
+| [audio-tags](audio-tags/index.ts) | Audio tags read and written: ID3 in every version, FLAC, MP4 and Vorbis comments, ReplayGain and cover art | 18 |
+| [playlists](playlists/index.ts) | Playlists, manual and smart: versioned edits, typed rules, natural sort, fair shuffles, share links with passwords, and M3U | 22 |
+| [opds-epub](opds-epub/index.ts) | EPUB read and written with paths checked and sizes capped, and OPDS catalogues in 1.2 and 2.0 with search and facets | 18 |
+| [subtitles](subtitles/index.ts) | Subtitles in SRT, WebVTT, ASS and TTML on one model: converted, shifted, stretched, synced, repaired and merged | 22 |
+| [xmltv-epg](xmltv-epg/index.ts) | TV guides in XMLTV read and written, channels mapped with time shifts, several sources merged, and recordings planned for the tuners | 17 |
+| [media-name-parse](media-name-parse/index.ts) | Movie, episode, track and extra identities read from file and folder names, with quality, ids and subtitle languages, safe on hostile names | 18 |
+| [matroska-probe](matroska-probe/index.ts) | Matroska and WebM headers read: tracks, HDR, profiles and levels, chapters, tags, attachments, duration, and what a partial read is missing | 18 |
 <!-- /gen -->
 
 ```mermaid

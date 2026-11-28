@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 85 of 235 blocks calibrated; 0 certified, 82 with survivors still to close, 3 capable but not yet checked for repeatability and reproducibility.
+QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 85 of 310 blocks calibrated; 0 certified, 82 with survivors still to close, 3 capable but not yet checked for repeatability and reproducibility.
 
 ```mermaid
 flowchart LR
@@ -72,7 +72,7 @@ flowchart LR
   k -.->|the block changes: calibrate again| x
 ```
 
-The 85 blocks calibrated so far, of 235:
+The 85 blocks calibrated so far, of 310:
 
 | Block | Certificate | Capability | Survivors | Ruled equivalent | Issued |
 | --- | --- | --- | --- | --- | --- |
@@ -98,7 +98,7 @@ The 85 blocks calibrated so far, of 235:
 | `config` | not certified: 46 planted defects not rejected, and not ruled equivalent | 71.1% | 46 | 0 | 2026-11-28 |
 | `observe` | not certified: 137 planted defects not rejected, and not ruled equivalent | 64.1% | 137 | 0 | 2026-11-28 |
 | `health` | not certified: 37 planted defects not rejected, and not ruled equivalent | 75.8% | 37 | 0 | 2026-11-28 |
-| `jobs` | not certified: 73 planted defects not rejected, and not ruled equivalent | 78.7% | 73 | 0 | 2026-11-28 |
+| `jobs` | not certified: 2 planted defects not rejected, and not ruled equivalent | 99.4% | 2 | 0 | 2026-11-28 |
 | `audit` | not certified: 32 planted defects not rejected, and not ruled equivalent | 75.0% | 32 | 0 | 2026-11-28 |
 | `crypto` | not certified: 14 planted defects not rejected, and not ruled equivalent | 89.2% | 14 | 0 | 2026-11-28 |
 | `rbac` | not certified: 58 planted defects not rejected, and not ruled equivalent | 70.0% | 58 | 0 | 2026-11-28 |
@@ -132,7 +132,7 @@ The 85 blocks calibrated so far, of 235:
 | `docparse` | not certified: 50 planted defects not rejected, and not ruled equivalent | 92.8% | 50 | 0 | 2026-11-28 |
 | `imagemeta` | not certified: 135 planted defects not rejected, and not ruled equivalent | 63.8% | 135 | 0 | 2026-11-28 |
 | `geo` | not certified: 44 planted defects not rejected, and not ruled equivalent | 78.8% | 44 | 0 | 2026-11-28 |
-| `sitemap` | not certified: 71 planted defects not rejected, and not ruled equivalent | 68.2% | 71 | 0 | 2026-11-28 |
+| `sitemap` | not certified: 7 planted defects not rejected, and not ruled equivalent | 96.9% | 7 | 0 | 2026-11-28 |
 | `apiver` | not certified: 15 planted defects not rejected, and not ruled equivalent | 87.4% | 15 | 0 | 2026-11-28 |
 | `drafts` | not certified: 15 planted defects not rejected, and not ruled equivalent | 82.1% | 15 | 0 | 2026-11-28 |
 | `palette` | not certified: 48 planted defects not rejected, and not ruled equivalent | 66.4% | 48 | 0 | 2026-11-28 |
