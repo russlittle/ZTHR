@@ -44,6 +44,8 @@ flowchart LR
 
 Every department of the line has a place in the order work moves through: each receives something from the one before and hands something to the one after. Maintenance does not, and neither does metrology, the lab that certifies the gauges it repairs. It receives tags from every department and returns fixes to every department, and its report goes to mission control. Putting it at the end of the line, after the fleet, would say it handles only what is in service; putting it anywhere else would say the same of whatever came before it. Both would be false.
 
+Maintenance is not ordered in, and its work never outranks the line's. No one dispatches the crew to a particular repair: the line's work goes first, and the crew works the backlog on its own budget, as far as each night's budget reaches, in the order the queue sets (defects a test has exposed, then the most critical gauges, then the weakest). The backlog is visible and shrinks over time; what one night cannot reach waits for the next.
+
 So maintenance is drawn beneath the line, beside metrology: a crew that serves every station, as a plant's maintenance department serves every machine without being one of them. On zthr.ai both appear after the numbered departments, unnumbered, with no handoff of their own.
 
 ```mermaid

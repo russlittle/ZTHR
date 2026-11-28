@@ -152,7 +152,9 @@ export function parseXml(src: string, o: { maxBytes?: number; maxDepth?: number 
     } else if (src.startsWith('<![CDATA[', lt)) {
       const e = src.indexOf(']]>', lt);
       if (e < 0) throw new BadXml('unclosed CDATA');
-      if (stack.length) stack[stack.length - 1]!.text += src.slice(lt + 9, e);
+      // Character data, like text: only inside the root element.
+      if (!stack.length) throw new BadXml('text outside the root element');
+      stack[stack.length - 1]!.text += src.slice(lt + 9, e);
       i = e + 3;
     } else if (src[lt + 1] === '/') {
       const e = src.indexOf('>', lt);
