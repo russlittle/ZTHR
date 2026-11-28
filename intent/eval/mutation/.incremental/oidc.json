@@ -3911,6 +3911,190 @@
           }
         },
         {
+          "id": "176",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n  ---\n  duration_ms: 2.44975\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 158.414741\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n  ---\n  duration_ms: 1.040269\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'this sign-in was not started here'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:295)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n  ---\n  duration_ms: 4.044321\n  type: 'test'\n  ...\n# Subtest: an azp naming another party is refused even with a single audience\nok 5 - an azp naming another party is refused even with a single audience\n  ---\n  duration_ms: 1.952563\n  type: 'test'\n  ...\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.969496\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 1.557417\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + undefined\n    - true\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:94:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n\n# tests 7\n\n# suites 0\n\n# pass 5\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 550.073335\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 2,
+              "line": 133
+            },
+            "start": {
+              "column": 70,
+              "line": 129
+            }
+          }
+        },
+        {
+          "id": "177",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n  ---\n  duration_ms: 2.513821\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 175.078279\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n  ---\n  duration_ms: 1.014916\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'this sign-in was not started here'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:295)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 3.812202\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.491017\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\n  ---\n  duration_ms: 1.907133\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n  ---\n  duration_ms: 1.398857\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    false !== true\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  actual: false\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:94:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n\n# tests 7\n\n# suites 0\n\n# pass 5\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 475.068663\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 19,
+              "line": 130
+            },
+            "start": {
+              "column": 7,
+              "line": 130
+            }
+          }
+        },
+        {
+          "id": "178",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n  ---\n  duration_ms: 2.130301\n  type: 'test'\n  ...\n\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 149.890316\n  type: 'test'\n  ...\n\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 17.304942\n  type: 'test'\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 5.374089\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.565388\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\n  ---\n  duration_ms: 7.656601\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 3.846096\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: 'The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received null'\n  code: 'ERR_INVALID_ARG_TYPE'\n  name: 'TypeError'\n  stack: |-\n    Hash.update (node:internal/crypto/hash:140:11)\n    d (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:262:108)\n    sameState (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:265:28)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:95:16)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n# tests 7\n# suites 0\n# pass 6\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 489.809539\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 19,
+              "line": 130
+            },
+            "start": {
+              "column": 7,
+              "line": 130
+            }
+          }
+        },
+        {
+          "id": "179",
+          "mutatorName": "EqualityOperator",
+          "replacement": "got !== null",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 5.532827\n  type: 'test'\n  ...\n\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 102.716605\n  type: 'test'\n  ...\n\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 1.900909\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'this sign-in was not started here'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:295)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n  ---\n  duration_ms: 3.531096\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.470855\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.89659\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n  ---\n  duration_ms: 1.455955\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    false !== true\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  actual: false\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:94:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n# tests 7\n# suites 0\n# pass 5\n# fail 2\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 522.547949\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 19,
+              "line": 130
+            },
+            "start": {
+              "column": 7,
+              "line": 130
+            }
+          }
+        },
+        {
+          "id": "180",
+          "mutatorName": "BooleanLiteral",
+          "replacement": "true",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 5.406144\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 249.488705\n  type: 'test'\n  ...\n\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 8.295866\n  type: 'test'\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n  ---\n  duration_ms: 7.159851\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\nok 5 - an azp naming another party is refused even with a single audience\n  ---\n  duration_ms: 4.490563\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.737168\n  type: 'test'\n  ...\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n  ---\n  duration_ms: 4.633722\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    true !== false\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: false\n  actual: true\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:95:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n\n# tests 7\n\n# suites 0\n\n# pass 6\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 716.179883\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 33,
+              "line": 130
+            },
+            "start": {
+              "column": 28,
+              "line": 130
+            }
+          }
+        },
+        {
+          "id": "181",
+          "mutatorName": "ArrowFunction",
+          "replacement": "() => undefined",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 2.16953\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 115.593834\n  type: 'test'\n  ...\n\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 1.072554\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'The \"buf1\" argument must be an instance of ArrayBuffer, Buffer, TypedArray, or DataView.'\n  code: 'ERR_INVALID_ARG_TYPE'\n  name: 'TypeError'\n  stack: |-\n    sameState (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:265:12)\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:187)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 3.619834\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.50437\n  type: 'test'\n  ...\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.929282\n  type: 'test'\n  ...\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n  ---\n  duration_ms: 0.503276\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: 'The \"buf1\" argument must be an instance of ArrayBuffer, Buffer, TypedArray, or DataView.'\n  code: 'ERR_INVALID_ARG_TYPE'\n  name: 'TypeError'\n  stack: |-\n    sameState (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:265:12)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:94:16)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n\n# tests 7\n# suites 0\n# pass 5\n# fail 2\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 446.582299\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 67,
+              "line": 131
+            },
+            "start": {
+              "column": 13,
+              "line": 131
+            }
+          }
+        },
+        {
+          "id": "182",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n  ---\n  duration_ms: 5.843774\n  type: 'test'\n  ...\n\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 353.086755\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n  ---\n  duration_ms: 1.023437\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'Digest method not supported'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    new Hash (node:internal/crypto/hash:101:19)\n    createHash (node:crypto:139:10)\n    d (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:262:32)\n    sameState (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:265:28)\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:187)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n  ...\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n  ---\n  duration_ms: 3.493893\n  type: 'test'\n  ...\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.453253\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\n  ---\n  duration_ms: 1.77984\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 1.334105\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: 'Digest method not supported'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    new Hash (node:internal/crypto/hash:101:19)\n    createHash (node:crypto:139:10)\n    d (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:262:32)\n    sameState (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:265:28)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:94:16)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n  ...\n\n1..7\n\n# tests 7\n# suites 0\n# pass 5\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n# duration_ms 1044.515556\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 47,
+              "line": 131
+            },
+            "start": {
+              "column": 39,
+              "line": 131
+            }
+          }
+        },
+        {
+          "id": "183",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 2.501572\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n\n  ---\n  duration_ms: 86.969642\n  type: 'test'\n  ...\n\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 1.10712\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'sub')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:60:18)\n    async Test.run (node:internal/test_runner/test:1054:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 3.849695\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.558285\n  type: 'test'\n  ...\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.918383\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 0.874269\n  type: 'test'\n  ...\n\n1..7\n# tests 7\n# suites 0\n# pass 6\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 418.657425\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 2,
+              "line": 150
+            },
+            "start": {
+              "column": 183,
+              "line": 136
+            }
+          }
+        },
+        {
           "id": "184",
           "mutatorName": "LogicalOperator",
           "replacement": "o.now && Date.now()",
@@ -4073,6 +4257,75 @@
             "start": {
               "column": 119,
               "line": 138
+            }
+          }
+        },
+        {
+          "id": "192",
+          "mutatorName": "BooleanLiteral",
+          "replacement": "sameState(query.get('state'), started.state)",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 5.069144\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 81.669804\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n  ---\n  duration_ms: 1.213896\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'this sign-in was not started here'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:295)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n  ---\n  duration_ms: 3.362616\n  type: 'test'\n  ...\n# Subtest: an azp naming another party is refused even with a single audience\nok 5 - an azp naming another party is refused even with a single audience\n  ---\n  duration_ms: 1.543227\n  type: 'test'\n  ...\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.795628\n  type: 'test'\n  ...\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\nok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n  ---\n  duration_ms: 0.684515\n  type: 'test'\n  ...\n\n1..7\n\n# tests 7\n\n# suites 0\n\n# pass 6\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 489.028982\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 52,
+              "line": 139
+            },
+            "start": {
+              "column": 7,
+              "line": 139
+            }
+          }
+        },
+        {
+          "id": "193",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n  ---\n  duration_ms: 2.202942\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 95.382827\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 2.032513\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'this sign-in was not started here'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:295)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 6.517324\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.4323\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\n  ---\n  duration_ms: 3.361442\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\nok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 0.742133\n  type: 'test'\n  ...\n\n1..7\n# tests 7\n# suites 0\n# pass 6\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 347.772826\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 52,
+              "line": 139
+            },
+            "start": {
+              "column": 7,
+              "line": 139
+            }
+          }
+        },
+        {
+          "id": "194",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 2.682434\n  type: 'test'\n  ...\n\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 83.315043\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 3.861756\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected rejection.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n  operator: 'rejects'\n  stack: |-\n    async TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:62:3)\n    async Test.run (node:internal/test_runner/test:1054:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 2.553333\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.150601\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\n  ---\n  duration_ms: 1.469169\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 0.615701\n  type: 'test'\n  ...\n\n1..7\n\n# tests 7\n# suites 0\n\n# pass 6\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 399.537928\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "static": false,
+          "killedBy": [
+            "0"
+          ],
+          "coveredBy": [],
+          "location": {
+            "end": {
+              "column": 52,
+              "line": 139
+            },
+            "start": {
+              "column": 7,
+              "line": 139
             }
           }
         },
@@ -4792,237 +5045,6 @@
               "line": 149
             }
           }
-        },
-        {
-          "id": "177",
-          "mutatorName": "ConditionalExpression",
-          "replacement": "true",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n  ---\n  duration_ms: 2.513821\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 175.078279\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n  ---\n  duration_ms: 1.014916\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'this sign-in was not started here'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:295)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 3.812202\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.491017\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\n  ---\n  duration_ms: 1.907133\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n  ---\n  duration_ms: 1.398857\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    false !== true\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  actual: false\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:94:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n\n# tests 7\n\n# suites 0\n\n# pass 5\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 475.068663\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 19,
-              "line": 130
-            },
-            "start": {
-              "column": 7,
-              "line": 130
-            }
-          }
-        },
-        {
-          "id": "178",
-          "mutatorName": "ConditionalExpression",
-          "replacement": "false",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n  ---\n  duration_ms: 2.130301\n  type: 'test'\n  ...\n\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 149.890316\n  type: 'test'\n  ...\n\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 17.304942\n  type: 'test'\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 5.374089\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.565388\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\n  ---\n  duration_ms: 7.656601\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 3.846096\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: 'The \"data\" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received null'\n  code: 'ERR_INVALID_ARG_TYPE'\n  name: 'TypeError'\n  stack: |-\n    Hash.update (node:internal/crypto/hash:140:11)\n    d (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:262:108)\n    sameState (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:265:28)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:95:16)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n# tests 7\n# suites 0\n# pass 6\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 489.809539\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 19,
-              "line": 130
-            },
-            "start": {
-              "column": 7,
-              "line": 130
-            }
-          }
-        },
-        {
-          "id": "179",
-          "mutatorName": "EqualityOperator",
-          "replacement": "got !== null",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 5.532827\n  type: 'test'\n  ...\n\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 102.716605\n  type: 'test'\n  ...\n\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 1.900909\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'this sign-in was not started here'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:295)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n  ---\n  duration_ms: 3.531096\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.470855\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.89659\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n  ---\n  duration_ms: 1.455955\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    false !== true\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  actual: false\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:94:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n# tests 7\n# suites 0\n# pass 5\n# fail 2\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 522.547949\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 19,
-              "line": 130
-            },
-            "start": {
-              "column": 7,
-              "line": 130
-            }
-          }
-        },
-        {
-          "id": "176",
-          "mutatorName": "BlockStatement",
-          "replacement": "{}",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n  ---\n  duration_ms: 2.44975\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 158.414741\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n  ---\n  duration_ms: 1.040269\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'this sign-in was not started here'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:295)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n  ---\n  duration_ms: 4.044321\n  type: 'test'\n  ...\n# Subtest: an azp naming another party is refused even with a single audience\nok 5 - an azp naming another party is refused even with a single audience\n  ---\n  duration_ms: 1.952563\n  type: 'test'\n  ...\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.969496\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 1.557417\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    + actual - expected\n    \n    + undefined\n    - true\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:94:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n\n# tests 7\n\n# suites 0\n\n# pass 5\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 550.073335\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 2,
-              "line": 133
-            },
-            "start": {
-              "column": 70,
-              "line": 129
-            }
-          }
-        },
-        {
-          "id": "181",
-          "mutatorName": "ArrowFunction",
-          "replacement": "() => undefined",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 2.16953\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 115.593834\n  type: 'test'\n  ...\n\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 1.072554\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'The \"buf1\" argument must be an instance of ArrayBuffer, Buffer, TypedArray, or DataView.'\n  code: 'ERR_INVALID_ARG_TYPE'\n  name: 'TypeError'\n  stack: |-\n    sameState (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:265:12)\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:187)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 3.619834\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.50437\n  type: 'test'\n  ...\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.929282\n  type: 'test'\n  ...\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n  ---\n  duration_ms: 0.503276\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: 'The \"buf1\" argument must be an instance of ArrayBuffer, Buffer, TypedArray, or DataView.'\n  code: 'ERR_INVALID_ARG_TYPE'\n  name: 'TypeError'\n  stack: |-\n    sameState (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:265:12)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:94:16)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n\n# tests 7\n# suites 0\n# pass 5\n# fail 2\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 446.582299\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 67,
-              "line": 131
-            },
-            "start": {
-              "column": 13,
-              "line": 131
-            }
-          }
-        },
-        {
-          "id": "183",
-          "mutatorName": "BlockStatement",
-          "replacement": "{}",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 2.501572\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n\n  ---\n  duration_ms: 86.969642\n  type: 'test'\n  ...\n\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 1.10712\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'sub')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:60:18)\n    async Test.run (node:internal/test_runner/test:1054:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 3.849695\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.558285\n  type: 'test'\n  ...\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.918383\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 0.874269\n  type: 'test'\n  ...\n\n1..7\n# tests 7\n# suites 0\n# pass 6\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 418.657425\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 2,
-              "line": 150
-            },
-            "start": {
-              "column": 183,
-              "line": 136
-            }
-          }
-        },
-        {
-          "id": "180",
-          "mutatorName": "BooleanLiteral",
-          "replacement": "true",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 5.406144\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 249.488705\n  type: 'test'\n  ...\n\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 8.295866\n  type: 'test'\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n  ---\n  duration_ms: 7.159851\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\nok 5 - an azp naming another party is refused even with a single audience\n  ---\n  duration_ms: 4.490563\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.737168\n  type: 'test'\n  ...\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n  ---\n  duration_ms: 4.633722\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    true !== false\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: false\n  actual: true\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:95:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..7\n\n# tests 7\n\n# suites 0\n\n# pass 6\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 716.179883\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 33,
-              "line": 130
-            },
-            "start": {
-              "column": 28,
-              "line": 130
-            }
-          }
-        },
-        {
-          "id": "193",
-          "mutatorName": "ConditionalExpression",
-          "replacement": "true",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n  ---\n  duration_ms: 2.202942\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 95.382827\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 2.032513\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'this sign-in was not started here'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:295)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 6.517324\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.4323\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\n  ---\n  duration_ms: 3.361442\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\nok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 0.742133\n  type: 'test'\n  ...\n\n1..7\n# tests 7\n# suites 0\n# pass 6\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 347.772826\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 52,
-              "line": 139
-            },
-            "start": {
-              "column": 7,
-              "line": 139
-            }
-          }
-        },
-        {
-          "id": "192",
-          "mutatorName": "BooleanLiteral",
-          "replacement": "sameState(query.get('state'), started.state)",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 5.069144\n  type: 'test'\n  ...\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 81.669804\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n  ---\n  duration_ms: 1.213896\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'this sign-in was not started here'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:295)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n  ---\n  duration_ms: 3.362616\n  type: 'test'\n  ...\n# Subtest: an azp naming another party is refused even with a single audience\nok 5 - an azp naming another party is refused even with a single audience\n  ---\n  duration_ms: 1.543227\n  type: 'test'\n  ...\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n  ---\n  duration_ms: 1.795628\n  type: 'test'\n  ...\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\nok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n  ---\n  duration_ms: 0.684515\n  type: 'test'\n  ...\n\n1..7\n\n# tests 7\n\n# suites 0\n\n# pass 6\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 489.028982\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 52,
-              "line": 139
-            },
-            "start": {
-              "column": 7,
-              "line": 139
-            }
-          }
-        },
-        {
-          "id": "182",
-          "mutatorName": "StringLiteral",
-          "replacement": "\"\"",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n  ---\n  duration_ms: 5.843774\n  type: 'test'\n  ...\n\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 353.086755\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n  ---\n  duration_ms: 1.023437\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'Digest method not supported'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    new Hash (node:internal/crypto/hash:101:19)\n    createHash (node:crypto:139:10)\n    d (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:262:32)\n    sameState (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:265:28)\n    callback (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:281:187)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:59:19)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n  ...\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n  ---\n  duration_ms: 3.493893\n  type: 'test'\n  ...\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.453253\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\n  ---\n  duration_ms: 1.77984\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nnot ok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 1.334105\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:92:1'\n  failureType: 'testCodeFailure'\n  error: 'Digest method not supported'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    new Hash (node:internal/crypto/hash:101:19)\n    createHash (node:crypto:139:10)\n    d (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:262:32)\n    sameState (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/index.ts:265:28)\n    TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:94:16)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n  ...\n\n1..7\n\n# tests 7\n# suites 0\n# pass 5\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n# duration_ms 1044.515556\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 47,
-              "line": 131
-            },
-            "start": {
-              "column": 39,
-              "line": 131
-            }
-          }
-        },
-        {
-          "id": "194",
-          "mutatorName": "ConditionalExpression",
-          "replacement": "false",
-          "statusReason": "TAP version 13\n\n# Subtest: a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\nok 1 - a sign-in link carries state, a nonce and a PKCE challenge that matches its verifier\n\n  ---\n  duration_ms: 2.682434\n  type: 'test'\n  ...\n\n# Subtest: an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n\nok 2 - an ID token is believed only when signed by a published key, for this app, unexpired, answering this sign-in\n  ---\n  duration_ms: 83.315043\n  type: 'test'\n  ...\n# Subtest: the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\nnot ok 3 - the callback checks state, exchanges the code with the PKCE verifier, and verifies the token\n\n  ---\n  duration_ms: 3.861756\n  type: 'test'\n  location: '/tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:50:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected rejection.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n  operator: 'rejects'\n  stack: |-\n    async TestContext.<anonymous> (file:///tmp/mutation-oidc-OOwZqe/sandbox/sandbox-On0JXM/blocks/oidc/oidc.test.ts:62:3)\n    async Test.run (node:internal/test_runner/test:1054:7)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\nok 4 - an ID token without an expiry or issue time is refused (OIDC Core 3.1.3.7 requires both)\n\n  ---\n  duration_ms: 2.553333\n  type: 'test'\n  ...\n\n# Subtest: an azp naming another party is refused even with a single audience\n\nok 5 - an azp naming another party is refused even with a single audience\n\n  ---\n  duration_ms: 1.150601\n  type: 'test'\n  ...\n\n# Subtest: the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\nok 6 - the header alg must fit the key: an RSA key is never used for ES256, nor an EC key for RS256\n\n  ---\n  duration_ms: 1.469169\n  type: 'test'\n  ...\n\n# Subtest: the state is compared in constant time: equal only when identical, whatever the lengths\n\nok 7 - the state is compared in constant time: equal only when identical, whatever the lengths\n\n  ---\n  duration_ms: 0.615701\n  type: 'test'\n  ...\n\n1..7\n\n# tests 7\n# suites 0\n\n# pass 6\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 399.537928\n",
-          "status": "Killed",
-          "testsCompleted": 1,
-          "killedBy": [
-            "0"
-          ],
-          "location": {
-            "end": {
-              "column": 52,
-              "line": 139
-            },
-            "start": {
-              "column": 7,
-              "line": 139
-            }
-          }
         }
       ],
       "source": "/**\n * Single sign-on with OpenID Connect (Google, Microsoft, Okta and any certified provider): a sign-in link that\n * carries state, a nonce and a PKCE challenge; the callback that checks the state, exchanges the code, and\n * verifies the ID token's signature against the provider's published keys and its issuer, audience, expiry and\n * nonce before anything in it is believed. Keys are fetched once and refreshed when an unknown key id appears,\n * which is how providers rotate them.\n */\nimport { createHash, createPublicKey, randomBytes, timingSafeEqual, verify as verifySig, type JsonWebKey } from 'node:crypto';\n\nexport interface Provider {\n  readonly issuer: string;\n  readonly authorizationEndpoint: string;\n  readonly tokenEndpoint: string;\n  readonly jwksUri: string;\n  readonly clientId: string;\n  readonly clientSecret?: string;\n  readonly redirectUri: string;\n  readonly scopes?: readonly string[];\n}\n\nexport class SignInFailed extends Error {\n  constructor(why: string) {\n    super(why);\n  }\n}\n\nconst b64u = (b: Buffer) => b.toString('base64url');\n\nexport interface Started {\n  readonly url: string;\n  /** Kept server-side (or in an encrypted cookie) until the callback. */\n  readonly state: string;\n  readonly nonce: string;\n  readonly verifier: string;\n  readonly at: number;\n}\n\nexport function start(p: Provider, now = Date.now()): Started {\n  const state = b64u(randomBytes(24));\n  const nonce = b64u(randomBytes(24));\n  const verifier = b64u(randomBytes(32));\n  const challenge = b64u(createHash('sha256').update(verifier).digest());\n  const u = new URL(p.authorizationEndpoint);\n  u.search = new URLSearchParams({ response_type: 'code', client_id: p.clientId, redirect_uri: p.redirectUri, scope: (p.scopes ?? ['openid', 'email', 'profile']).join(' '), state, nonce, code_challenge: challenge, code_challenge_method: 'S256' }).toString();\n  return { url: u.toString(), state, nonce, verifier, at: now };\n}\n\nexport interface Claims {\n  readonly iss: string;\n  readonly sub: string;\n  readonly aud: string | readonly string[];\n  readonly exp: number;\n  readonly iat: number;\n  readonly nonce?: string;\n  readonly email?: string;\n  readonly email_verified?: boolean;\n  readonly name?: string;\n  readonly [k: string]: unknown;\n}\n\ntype Jwk = JsonWebKey & { kid?: string; alg?: string; use?: string };\n\n/** The key type and curve each accepted algorithm must be verified with, so a key is never used for another. */\nconst FITS: Readonly<Record<string, (k: Jwk) => boolean>> = { RS256: (k) => k.kty === 'RSA', ES256: (k) => k.kty === 'EC' && k.crv === 'P-256' };\n\nconst part = <T>(s: string, what: string): T => {\n  try {\n    return JSON.parse(Buffer.from(s, 'base64url').toString()) as T;\n  } catch {\n    throw new SignInFailed(`the ID token's ${what} is not JSON`);\n  }\n};\n\nexport class Keys {\n  private keys: Jwk[] = [];\n  private fetched = 0;\n  private readonly f: typeof fetch;\n  private readonly uri: string;\n  constructor(uri: string, f: typeof fetch = fetch) {\n    this.uri = uri;\n    this.f = f;\n  }\n  async get(kid: string | undefined, now = Date.now()): Promise<Jwk | undefined> {\n    const find = () => this.keys.find((k) => (kid ? k.kid === kid : true));\n    // Refresh when the key is unknown (the provider rotated), but no more than once a minute.\n    if (!find() && now - this.fetched > 60_000) {\n      const r = await this.f(this.uri);\n      if (!r.ok) throw new SignInFailed(`the provider's keys could not be fetched (${r.status})`);\n      this.keys = ((await r.json()) as { keys: Jwk[] }).keys;\n      this.fetched = now;\n    }\n    return find();\n  }\n}\n\n/**\n * Verifies an ID token: signature by a published key of the type its algorithm needs, then issuer, audience (and\n * the authorised party, when one is named or there are several audiences), expiry, issue time and nonce; a token\n * without an expiry or issue time is refused.\n */\nexport async function verifyIdToken(token: string, p: Provider, keys: Keys, o: { nonce: string; now?: number; skewSec?: number }): Promise<Claims> {\n  const parts = token.split('.');\n  if (parts.length !== 3) throw new SignInFailed('the ID token is not a JWT');\n  const [h, b, s] = parts as [string, string, string];\n  const header = part<{ alg: string; kid?: string }>(h, 'header');\n  if (header.alg !== 'RS256' && header.alg !== 'ES256') throw new SignInFailed(`the ID token is signed with ${header.alg}, which is not accepted`);\n  const jwk = await keys.get(header.kid, o.now);\n  if (!jwk) throw new SignInFailed('the ID token is signed with a key the provider does not publish');\n  if (!FITS[header.alg]!(jwk) || (jwk.alg && jwk.alg !== header.alg) || (jwk.use && jwk.use !== 'sig')) throw new SignInFailed(`the provider's key ${jwk.kid ?? ''} is not one for ${header.alg} signatures`);\n  const key = createPublicKey({ key: jwk, format: 'jwk' });\n  const ok = verifySig('sha256', Buffer.from(`${h}.${b}`), header.alg === 'ES256' ? { key, dsaEncoding: 'ieee-p1363' } : key, Buffer.from(s, 'base64url'));\n  if (!ok) throw new SignInFailed('the ID token signature does not verify');\n  const c = part<Claims>(b, 'body');\n  const now = Math.floor((o.now ?? Date.now()) / 1000);\n  const skew = o.skewSec ?? 60;\n  if (c.iss !== p.issuer) throw new SignInFailed('the ID token is from another issuer');\n  const aud = typeof c.aud === 'string' ? [c.aud] : Array.isArray(c.aud) ? c.aud : [];\n  if (!aud.includes(p.clientId)) throw new SignInFailed('the ID token is for another application');\n  if ((aud.length > 1 || c['azp'] !== undefined) && c['azp'] !== p.clientId) throw new SignInFailed('the ID token names another authorised party');\n  if (typeof c.exp !== 'number' || !Number.isFinite(c.exp)) throw new SignInFailed('the ID token carries no expiry');\n  if (typeof c.iat !== 'number' || !Number.isFinite(c.iat)) throw new SignInFailed('the ID token carries no issue time');\n  if (c.exp + skew < now) throw new SignInFailed('the ID token has expired');\n  if (c.iat - skew > now) throw new SignInFailed('the ID token was issued in the future');\n  if (c.nonce !== o.nonce) throw new SignInFailed('the ID token does not answer this sign-in');\n  return c;\n}\n\n/** Whether the state sent back is the one started, compared in constant time (as digests, so lengths may differ). */\nexport function sameState(got: string | null, want: string): boolean {\n  if (got === null) return false;\n  const d = (x: string) => createHash('sha256').update(x).digest();\n  return timingSafeEqual(d(got), d(want));\n}\n\n/** The callback: the state must match the one started, then the code is exchanged and the ID token verified. */\nexport async function callback(p: Provider, keys: Keys, started: Started, query: URLSearchParams, o: { fetch?: typeof fetch; now?: number; maxAgeMs?: number } = {}): Promise<Claims> {\n  const now = o.now ?? Date.now();\n  if (query.get('error')) throw new SignInFailed(`the provider refused: ${query.get('error_description') ?? query.get('error')}`);\n  if (!sameState(query.get('state'), started.state)) throw new SignInFailed('this sign-in was not started here');\n  if (now - started.at > (o.maxAgeMs ?? 10 * 60_000)) throw new SignInFailed('the sign-in took too long; start again');\n  const code = query.get('code');\n  if (!code) throw new SignInFailed('the provider sent no code');\n  const f = o.fetch ?? fetch;\n  const body = new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: p.redirectUri, client_id: p.clientId, code_verifier: started.verifier, ...(p.clientSecret ? { client_secret: p.clientSecret } : {}) });\n  const r = await f(p.tokenEndpoint, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' }, body });\n  if (!r.ok) throw new SignInFailed(`the provider refused the code (${r.status})`);\n  const t = (await r.json()) as { id_token?: string };\n  if (!t.id_token) throw new SignInFailed('the provider sent no ID token');\n  return verifyIdToken(t.id_token, p, keys, { nonce: started.nonce, now });\n}\n"
@@ -5058,9 +5080,9 @@
       "json"
     ],
     "jsonReporter": {
-      "fileName": "/tmp/mutation-oidc-OOwZqe/report.json"
+      "fileName": "/tmp/mutation-oidc-lF9LwB/report.json"
     },
-    "tempDirName": "/tmp/mutation-oidc-OOwZqe/sandbox",
+    "tempDirName": "/tmp/mutation-oidc-lF9LwB/sandbox",
     "concurrency": 4,
     "timeoutMS": 20000,
     "ignorePatterns": [
@@ -5076,7 +5098,7 @@
     "logLevel": "error",
     "incremental": true,
     "incrementalFile": "/home/runner/work/ZTHR/ZTHR/intent/eval/mutation/.incremental/oidc.json",
-    "configFile": "/tmp/mutation-oidc-OOwZqe/stryker.conf.json",
+    "configFile": "/tmp/mutation-oidc-lF9LwB/stryker.conf.json",
     "allowConsoleColors": true,
     "checkers": [],
     "checkerNodeArgs": [],
