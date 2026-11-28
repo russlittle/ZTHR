@@ -1,16 +1,16 @@
 # Intent studio
 
-> Say what a product must do, in your own words; settle the few questions that change what gets built; sign the schematic as what you mean.
+> Say what a product must do, in your own words; settle the few questions that change what gets built; sign the schematic as what you mean. What you sign is the signed intent package.
 
 ## TL;DR
 
-The person who knows the work writes rough lines. Two model families read them, apart; a deterministic engine reads them back as a numbered schematic, says where every statement came from, and asks only the questions whose answers change what gets built. The holder signs it. Their words are kept on every artifact, and nothing anyone else wrote passes as theirs.
+The person who knows the work writes rough lines. Two model families read them, apart; a deterministic engine reads them back as a numbered schematic, says where every statement came from, and asks only the questions whose answers change what gets built. The holder signs it, and the signed intent package goes to product engineering. Each product line has its own intent studio, and the studio sits inside it. Their words are kept on every artifact, and nothing anyone else wrote passes as theirs.
 
 {{diagram:intent}}
 
 ## Explain it simply
 
-You tell a tailor what you want: *something warm for winter, not too heavy, with pockets I can reach on a bike*. The tailor reads it back as a list, each line numbered: *1. warm for winter; 2. light; 3. pockets reachable while cycling*. Then they ask only what changes the cut: *how cold is your winter?* They do not ask your favourite colour unless it matters. When the list says what you mean, you sign it, and that list is what the coat is measured against.
+You tell a tailor what you want: *something warm for winter, not too heavy, with pockets I can reach on a bike*. The tailor reads it back as a list, each line numbered: *1. warm for winter; 2. light; 3. pockets reachable while cycling*. Then they ask only what changes the cut: *how cold is your winter?* They do not ask your favourite colour unless it matters. When the list says what you mean, you sign it, and that signed list is what the coat is measured against.
 
 ## Engineer
 
@@ -40,6 +40,6 @@ The studio's job is fidelity: the holder's meaning, intact, in a form a machine 
 - **Determinism is the default.** Given the same words, readings and answers, the engine produces the same schematic and package bytes. That makes every change of meaning visible as a diff, and lets the same intent be rebuilt anywhere.
 - **Disagreement is the ambiguity detector.** Two families reading apart find the places the holder's words support more than one reading, which is exactly where a single reader would guess.
 - **The question budget is a design constraint.** A question is worth asking only if it changes the build; ranking by consequence keeps the holder's time for the questions only they can answer.
-- **The signature is narrow on purpose.** It says the schematic means what the holder means. It does not approve code, and it cannot be carried over to content it did not see.
+- **The signature is narrow on purpose.** It says the schematic means what the holder means. It does not approve code, and it cannot be carried over to content it did not see. The signed intent package is the first thing product engineering takes in.
 
 See [Intent as the Datum](../../PAPER.md), patterns 1 to 11 and 16.

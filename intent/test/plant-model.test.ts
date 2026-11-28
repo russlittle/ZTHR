@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { AREAS, FLOWS, GROUPS, area } from '../src/console/plant-model.ts';
+import { AREAS, CHECKS, FLOWS, GROUPS, area, standingOf, type Facts } from '../src/console/plant-model.ts';
+import { plantFacts } from '../tools/plant-facts.ts';
 
 test('every area belongs to a group, and every reference names an area that exists', () => {
   const keys = new Set(AREAS.map((a) => a.key));
@@ -41,12 +42,40 @@ test('mission control runs the plant rather than standing in the flow, and suppo
   assert.throws(() => area('nowhere'), /no area/);
 });
 
-test('every area has a standing, with one met-or-not per need', async () => {
-  const { STANDING } = await import('../src/console/plant-model.ts');
+test('every area has a standing computed from the repository, with one met-or-not per need and one check per need', () => {
+  const facts = plantFacts();
+  const standing = standingOf(facts);
   for (const a of AREAS) {
-    const s = STANDING[a.key];
+    const s = standing[a.key];
     assert.ok(s, `${a.key} has a standing`);
+    assert.equal(CHECKS[a.key].length, a.needs.length, `${a.key}: one check per need`);
     assert.equal(s.met.length, a.needs.length, `${a.key}: one answer per need`);
-    if (s.lamp === 'go') assert.ok(s.met.filter((m) => !m).length <= 1, `${a.key} is lit green with at most one need unmet`);
+    if (s.lamp === 'go') assert.ok(s.met.every(Boolean), `${a.key} is lit green only with every need met`);
+    if (s.lamp === 'off') assert.ok(!s.met.some(Boolean), `${a.key} is off only with nothing met`);
   }
+});
+
+test('the standing is counted, never typed: it follows the repository', () => {
+  const facts = plantFacts();
+  const here = standingOf(facts);
+  const fact = (area: keyof typeof here, label: string) => here[area].facts.find(([k]) => k === label)?.[1];
+  assert.equal(fact('maintenance', 'Work orders waiting'), facts.queue.workOrders.toLocaleString('en-US'), 'work orders are the files in factory/queue');
+  assert.equal(fact('metrology', 'Surviving planted defects'), facts.blocks.survivors.toLocaleString('en-US'), 'survivors are summed from the calibration certificates');
+  assert.match(fact('design', 'Blocks built') ?? '', new RegExp(`^${facts.blocks.own}, plus ${facts.blocks.plant} that run the plant`));
+  assert.match(fact('design', 'Block tests') ?? '', new RegExp(String(facts.blocks.tests.toLocaleString('en-US'))));
+  assert.ok(facts.asOf.revision === null || /^[0-9a-f]{7,}$/.test(facts.asOf.revision), 'the revision is read from git');
+  // A different repository gives a different standing.
+  const none: Facts = { ...facts, queue: { workOrders: 0, done: 0 }, blocks: { ...facts.blocks, survivors: 0, certified: facts.blocks.own, calibrated: facts.blocks.own } };
+  assert.equal(standingOf(none).maintenance.facts.find(([k]) => k === 'Work orders waiting')?.[1], '0');
+  assert.notEqual(standingOf(none).metrology.lamp, 'stop', 'a certified lab is not stopped');
+});
+
+test('the fleet is not lit unless something is in service, and no area claims what has no record', () => {
+  const facts = plantFacts();
+  assert.equal(facts.inService, 0, 'nothing from the line is in service in this repository');
+  assert.equal(standingOf(facts).fleet.lamp, 'off');
+  const live: Facts = { ...facts, inService: 1, has: (p) => facts.has(p) || p === 'intent/factory/fleet/ota.json' };
+  assert.notEqual(standingOf(live).fleet.lamp, 'off', 'something in service lights it');
+  assert.equal(standingOf(facts).shipping.met[3], false, 'a person approving production needs a release to approve');
+  assert.equal(standingOf(facts).process.met[2], false, 'required checks are enforced on the branch only where the live rules are recorded');
 });

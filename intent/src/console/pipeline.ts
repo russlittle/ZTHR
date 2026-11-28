@@ -1,6 +1,6 @@
 /**
- * The platform as one system: intent in, software out. Every intent moves through the same five stages the factory
- * runs (intent, design, build, QA, release), and each stage reports only what was measured for it: the factory's own
+ * The platform as one system: intent in, software out. Every intent moves through the same stations the plant model
+ * names (intent, design, process, build, QA, rework, release and fleet), and each reports only what was measured for it: the factory's own
  * feed for what it built, the studio's schematic and build manifest for what is still on the desk. Nothing is inferred
  * across stages; a stage with nothing measured says so.
  */
@@ -15,20 +15,27 @@ import { prepare, type Given } from '../pipeline.ts';
 import type { OwnJourney } from '../journeys.ts';
 import { gauges } from '../release.ts';
 import { statusOf, type Feed, type Status } from './feed.ts';
+import { AREAS, pageHref, stepOf, type Station } from './plant-model.ts';
 import catalogData from '../../catalog/catalog.json' with { type: 'json' };
 import groupsData from '../../catalog/groups.json' with { type: 'json' };
 import baselineData from '../../catalog/baseline.json' with { type: 'json' };
 
-export type StageKey = 'intent' | 'design' | 'build' | 'qa' | 'release';
+export type StageKey = Station;
 export type Light = Status | 'waiting';
 
-export const STAGES: readonly { key: StageKey; label: string; asks: string }[] = [
-  { key: 'intent', label: 'Intent studio', asks: 'What people mean, signed as the datum' },
-  { key: 'design', label: 'Engineering', asks: 'The complete specification: outcomes, data, compliance, measures and tests, and the build manifest' },
-  { key: 'build', label: 'Factory', asks: 'What the factory has made, feature by feature' },
-  { key: 'qa', label: 'QA', asks: 'Journeys walked, gates proven, attacks held' },
-  { key: 'release', label: 'Shipping', asks: 'Phases certified and shipped to the fleet' },
-];
+const ASKS: Record<Station, string> = {
+  intent: 'What people mean, signed as the intent package',
+  design: 'The product spec: outcomes, data, compliance, measures and tests, and the build manifest',
+  process: 'The build package: routing, fixtures, gates and required checks',
+  build: 'What the factory floor has made, feature by feature',
+  qa: 'Journeys walked, gates proven, attacks held',
+  rework: 'What failed inspection, fixed from a failing test and sent back to QA',
+  release: 'Phases certified and shipped as a signed release',
+  fleet: 'What is in service, updated over the air',
+};
+
+/** The stations a product's flow reports on: one for each area of the plant model that has one, in the model's order. */
+export const STAGES: readonly { key: StageKey; label: string; asks: string; step: number | null; href: string }[] = AREAS.filter((a) => a.station).map((a) => ({ key: a.station!, label: a.label, asks: ASKS[a.station!], step: stepOf(a.key), href: pageHref(a) }));
 
 export interface Reading {
   readonly label: string;
@@ -161,9 +168,12 @@ export function factoryFlow(f: Feed): Flow {
     stages: [
       { key: 'intent', light: 'pass', headline: `${j.length} journeys locked in ${f.phases.length} phases`, readings: [{ label: 'Journeys locked by a person', value: j.length, of: j.length, light: 'pass', href: '/reference/factory/intent.html' }, { label: 'Phases', value: f.phases.length, of: f.phases.length, light: 'pass' }] },
       { key: 'design', light: 'pass', headline: `${features.length} features, each proved by named journeys`, readings: [{ label: 'Features designed', value: features.length, of: features.length, light: 'pass', href: '/reference/factory/features.html' }, { label: 'Features with at least one journey', value: features.filter((x) => x.journeys.length).length, of: features.length, light: lightOf(features.filter((x) => x.journeys.length).length, features.length) }] },
+      { key: 'process', light: qa[1]!.light, headline: qa[1]!.value === null ? 'Gates and process capability not measured in this build' : `${qa[1]!.value} of ${qa[1]!.of} gates proven able to fail`, readings: [qa[1]!, { label: 'Process capability', value: null, of: null, light: 'not measured', note: 'not measured from the line yet' }] },
       { key: 'build', light: lightOf(built, features.length), headline: `${built} of ${features.length} features built`, readings: [{ label: 'Features built', value: built, of: features.length, light: lightOf(built, features.length), href: '/reference/factory/features.html' }] },
       { key: 'qa', light: worst(qa.map((x) => x.light)), headline: qa[0]!.value === null ? 'Journeys not measured in this build' : `${pass} of ${j.length} journeys pass`, readings: qa },
+      { key: 'rework', light: (fail ? 'fail' : pass === j.length && j.length ? 'pass' : 'not measured') as Light, headline: fail ? `${fail} journey${fail === 1 ? '' : 's'} failing: returned to rework with the failing evidence` : pass === j.length && j.length ? 'Nothing returned to rework' : 'No returns recorded in this build', readings: [{ label: 'Journeys returned to rework', value: j.some((x) => x.s !== 'not measured') ? fail : null, of: j.length, light: fail ? 'fail' : j.some((x) => x.s !== 'not measured') ? 'pass' : 'not measured' }] },
       { key: 'release', light: anyCert ? lightOf(certified, f.phases.length) : 'not measured', headline: anyCert ? `${certified} of ${f.phases.length} phases certified` : 'No certificates in this build', readings: [{ label: 'Phases certified', value: anyCert ? certified : null, of: f.phases.length, light: anyCert ? lightOf(certified, f.phases.length) : 'not measured', href: '/reference/factory/index.html' }, { label: 'Build', value: null, of: null, light: 'pass', note: f.commit.slice(0, 7) }] },
+      { key: 'fleet', light: (anyCert && certified === f.phases.length && f.app.href ? 'pass' : anyCert && certified === f.phases.length ? 'not measured' : 'waiting') as Light, headline: anyCert && certified === f.phases.length && f.app.href ? `In service at ${f.app.href}` : 'Nothing from this product is in service yet', readings: [{ label: 'In service', value: anyCert && certified === f.phases.length && f.app.href ? 1 : 0, of: 1, light: anyCert && certified === f.phases.length && f.app.href ? 'pass' : 'waiting' }] },
     ],
     items: j.map((x) => {
       const feat = featureOf(x.id);
@@ -178,9 +188,12 @@ export function factoryFlow(f: Feed): Flow {
         trail: {
           intent: { light: 'pass' as Light, text: `Locked: ${x.goal}` },
           design: feat ? { light: 'pass' as Light, text: `Proves the feature "${feat.name}"` } : { light: 'waiting' as Light, text: 'Not yet tied to a feature' },
+          process: feat ? { light: 'pass' as Light, text: 'Built to the build package' } : { light: 'waiting' as Light, text: 'No build package for it yet' },
           build: feat ? { light: (feat.status === 'built' ? 'pass' : 'waiting') as Light, text: `Feature ${feat.status}` } : { light: 'waiting' as Light, text: 'Nothing to build yet' },
           qa: { light: x.s as Light, text: x.s === 'pass' ? 'Walked and passing' : x.s === 'fail' ? 'Walked and failing' : 'Not walked in this build' },
+          rework: { light: (x.s === 'fail' ? 'fail' : x.s === 'pass' ? 'pass' : 'not measured') as Light, text: x.s === 'fail' ? 'Returned to rework with its failing evidence' : x.s === 'pass' ? 'Nothing to rework' : 'Not walked, so nothing returned' },
           release: { light: (cert === true ? 'pass' : cert === false ? 'fail' : 'not measured') as Light, text: cert === true ? `Phase ${x.phase} certified` : cert === false ? `Phase ${x.phase} not certified` : `Phase ${x.phase}: no certificate in this build` },
+          fleet: { light: 'waiting' as Light, text: cert === true ? 'Certified; in service once the release reaches the field' : 'Not in service' },
         },
       };
     }),
@@ -269,9 +282,12 @@ export function studioFlow(raw: string | null, f: Feed | null): Flow | null {
     stages: [
       { key: 'intent', light: released ? 'pass' : q ? 'fail' : 'waiting', headline: released ? `Revision ${last!.revision} released` : q ? `${q} redline${q === 1 ? '' : 's'} open` : 'Ready to sign and release', readings: [{ label: 'Statements on the schematic', value: p.statements.length, of: p.statements.length, light: 'pass', href: '/intent' }, { label: 'Redlines settled', value: q ? 0 : 1, of: 1, light: q ? 'fail' : 'pass', note: q ? `${q} open` : 'none open' }, { label: 'Journeys that will judge it', value: gs.length, of: gs.length, light: gs.length ? 'pass' : 'fail' }] },
       { key: 'design', light: released ? 'pass' : s.signed && m.gaps.length ? 'fail' : 'waiting', headline: `${m.lines.length} lines: ${m.counts.stock + m.counts.modify} standard assemblies, ${toMake} parts to make, ${custom.length} custom`, readings: [{ label: 'Standard assemblies from the library', value: m.counts.stock + m.counts.modify, of: m.lines.length, light: 'pass' }, { label: 'Catalogued parts the library lacks', value: toMake, of: m.lines.length, light: 'waiting' }, { label: 'Custom assemblies, maintained by your team', value: custom.length, of: m.lines.length, light: 'waiting' }, { label: 'Balloons nothing builds', value: m.gaps.length, of: 0, light: m.gaps.length ? 'fail' : 'pass' }] },
-      { key: 'build', light: 'waiting', headline: released ? 'Waiting for the factory to take the package' : 'Waiting for a release', readings: [{ label: 'Custom assemblies built', value: null, of: custom.length, light: 'waiting', note: 'the factory has not reported on this intent' }] },
+      { key: 'process', light: 'waiting', headline: released ? 'The build package is made from the released spec' : 'Waiting for a release', readings: [] },
+      { key: 'build', light: 'waiting', headline: released ? 'Waiting for the factory to take the build package' : 'Waiting for a release', readings: [{ label: 'Custom assemblies built', value: null, of: custom.length, light: 'waiting', note: 'the factory has not reported on this intent' }] },
       { key: 'qa', light: pass + fail ? (fail ? 'fail' : pass === gs.length ? 'pass' : 'not measured') : 'waiting', headline: pass + fail ? `${pass} of ${gs.length} journeys pass` : `${gs.length} journey${gs.length === 1 ? '' : 's'} waiting to be walked`, readings: [{ label: 'Journeys walked and passing', value: pass + fail ? pass : null, of: gs.length, light: pass + fail ? (fail ? 'fail' : 'pass') : 'waiting' }] },
+      { key: 'rework', light: fail ? 'fail' : 'waiting', headline: fail ? `${fail} journey${fail === 1 ? '' : 's'} failing: returned to rework` : 'Nothing returned', readings: [] },
       { key: 'release', light: 'waiting', headline: 'Not built yet', readings: [] },
+      { key: 'fleet', light: 'waiting', headline: 'Not in service', readings: [] },
     ],
     items: gs.map((g) => {
       const st = statusFor(g.id);
@@ -285,9 +301,12 @@ export function studioFlow(raw: string | null, f: Feed | null): Flow | null {
         trail: {
           intent: { light: (released ? 'pass' : 'waiting') as Light, text: released ? `In revision ${last!.revision}` : 'On the schematic, not released yet' },
           design: { light: 'pass' as Light, text: 'On the build manifest' },
+          process: { light: 'waiting' as Light, text: 'Waiting for the build package' },
           build: { light: 'waiting' as Light, text: 'Waiting for the factory' },
           qa: { light: (st === 'not measured' ? 'waiting' : st) as Light, text: st === 'pass' ? 'Walked and passing' : st === 'fail' ? 'Walked and failing' : 'Not walked yet' },
+          rework: { light: (st === 'fail' ? 'fail' : 'waiting') as Light, text: st === 'fail' ? 'Returned to rework with its failing evidence' : 'Nothing returned' },
           release: { light: 'waiting' as Light, text: 'Not released by the factory yet' },
+          fleet: { light: 'waiting' as Light, text: 'Not in service' },
         },
       };
     }),

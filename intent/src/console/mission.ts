@@ -6,7 +6,7 @@
 import { loadFeed, type Feed } from './feed.ts';
 import { factoryFlows, library, studioFlow, type Flow, type StageKey } from './pipeline.ts';
 import { along, intent, platform, product, trail, waiting } from './missionViews.ts';
-import { flowInFocus, handoff, paintLine, setFocus } from './line.ts';
+import { flowInFocus, paintLine, setFocus } from './line.ts';
 import { lines, products as productRows } from './products.ts';
 import { preparedFrom } from './pipeline.ts';
 import { esc } from './views.ts';
@@ -34,7 +34,7 @@ function crumbs(): string {
   const parts = [`<li>${level === 'platform' ? '<span aria-current="page">Platform</span>' : '<button type="button" class="linklike" data-level="platform">Platform</button>'}</li>`];
   if (level !== 'platform' && prod) parts.push(`<li>${level === 'product' ? `<span aria-current="page">${esc(prod)}</span>` : `<button type="button" class="linklike" data-product="${esc(prod)}">${esc(prod)}</button>`}</li>`);
   if (level === 'intent' && f) parts.push(`<li><span aria-current="page">${esc(f.title)}</span></li>`);
-  return `<ol class="crumbs">${parts.join('')}</ol><div class="levels" role="group" aria-label="Level">${(['platform', 'product', 'intent'] as const).map((l) => `<button type="button" class="chip${level === l ? ' on' : ''}" aria-pressed="${level === l}" data-level="${l}"${l !== 'platform' && !flows.length ? ' disabled' : ''}>${l === 'platform' ? 'The platform' : l === 'product' ? 'One product' : 'One intent'}</button>`).join('')}<span class="muted small">Select any journey for its trail through every department.</span></div>`;
+  return `<ol class="crumbs">${parts.join('')}</ol><div class="levels" role="group" aria-label="Level">${(['platform', 'product', 'intent'] as const).map((l) => `<button type="button" class="chip${level === l ? ' on' : ''}" aria-pressed="${level === l}" data-level="${l}"${l !== 'platform' && !flows.length ? ' disabled' : ''}>${l === 'platform' ? 'The platform' : l === 'product' ? 'One product' : 'One intent'}</button>`).join('')}<span class="muted small">Select any journey for its trail through every area.</span></div>`;
 }
 
 /** What waits on a person, as far as this browser knows: the studio's work and the products kept beside it. */
@@ -57,7 +57,7 @@ function waitingItems(): { what: string; href: string; act: string }[] {
 function front(): string {
   const ls = lines();
   return `<section class="sheet" aria-labelledby="h-wait"><h2 id="h-wait">Waiting on you</h2>${waiting(waitingItems())}<p class="small muted">The factory's own decisions for a person (clarifications it may not make, production approvals, cases that stopped converging) are read with <code>intent agents proposals</code>.</p></section>
-<section class="sheet" aria-labelledby="h-along"><h2 id="h-along">Products along the line</h2><p class="muted">${ls.length ? `${ls.length} product line${ls.length === 1 ? '' : 's'}: ${ls.map((l) => esc(l.name)).join(', ')}. ` : ''}Each product, and where it stands in each department. Select a lamp to go to that department with the product in focus.</p>${along(flows, ls)}<p><a class="btn" href="/lines">Product lines</a></p></section>`;
+<section class="sheet" aria-labelledby="h-along"><h2 id="h-along">Products along the line</h2><p class="muted">${ls.length ? `${ls.length} product line${ls.length === 1 ? '' : 's'}: ${ls.map((l) => esc(l.name)).join(', ')}. ` : ''}Each product, and where it stands in each area. Select a lamp to go to that area with the product in focus.</p>${along(flows, ls)}<p><a class="btn" href="/lines">Product lines</a></p></section>`;
 }
 
 function render() {
@@ -89,7 +89,7 @@ async function start() {
   }
   render();
   paintLine(flowInFocus(flows));
-  $('handoff-slot').innerHTML = handoff('mission', true, lines().length ? 'Open a product line to start a product, or pick one up where it stands.' : 'Define a product line: who it serves and the defaults its products start from.');
+  $('handoff-slot').innerHTML = `<section class="handoff" aria-label="Where to start"><p>${lines().length ? 'Open a product line to start a product, or pick one up where it stands.' : 'Define a product line: who it serves and the defaults its products start from.'}</p><a class="btn primary" href="/lines">${lines().length ? 'Open a product line' : 'Define a product line'}</a></section>`;
   document.body.addEventListener('click', (e) => {
     const f = (e.target as HTMLElement).closest<HTMLElement>('[data-focus]');
     if (f) setFocus(f.dataset['focus']!);

@@ -2,11 +2,11 @@
 
 # Architecture
 
-> One deterministic engine, the surfaces that use it, the package it releases, and the records that keep every department honest.
+> One deterministic engine, the surfaces that use it, the package it releases, and the records that keep every area honest.
 
 ## TL;DR
 
-The engine reads intent by rule, prepares a numbered schematic, specifies it in full, and releases a hashed package. The surfaces (intent studio, engineering, the consoles) are views over that engine. The agent API runs the factory over the same engine, with roles defined by what they are denied and a hash-chained record of every call. Everything is plain TypeScript with no server of its own; the site is static and the engine runs in the browser.
+The engine reads intent by rule, prepares a numbered schematic, specifies it in full, and releases a hashed package. The surfaces (intent studio, product engineering, the consoles) are views over that engine; the bar, the pages and these docs are drawn from one model of the plant (`src/console/plant-model.ts`). The agent API runs the factory over the same engine, with roles defined by what they are denied and a hash-chained record of every call. Everything is plain TypeScript with no server of its own; the site is static and the engine runs in the browser.
 
 ```mermaid
 flowchart LR
@@ -26,7 +26,7 @@ flowchart LR
 
 ## Explain it simply
 
-There is one rulebook, and everyone uses the same copy. The customer's words go in one end; a numbered drawing comes out; a sealed packet of everything the shop needs comes out of that. Every department reads from the same rulebook and writes only in its own logbook, and every page of every logbook is numbered so a torn-out page shows.
+There is one rulebook, and everyone uses the same copy. The customer's words go in one end; a numbered drawing comes out; a sealed packet of everything the shop needs comes out of that. Every area reads from the same rulebook and writes only in its own logbook, and every page of every logbook is numbered so a torn-out page shows.
 
 ## Engineer
 
@@ -45,7 +45,8 @@ There is one rulebook, and everyone uses the same copy. The customer's words go 
 | `src/delivery.ts`, `src/reports.ts` | Delivery stages, service levels, runbook; reports and use tracking |
 | `src/release.ts` | The hashed package, its change notice and its agents' brief |
 | `src/agents/` | The agent API: roles, ledger, tools, correction cases, cost, MCP server, supervisor |
-| `src/studio`, `src/console` | The intent studio and engineering; mission control, lines, factory, QA, shipping, fleet; metrology (`src/console/lab.ts`) and maintenance with its crew's router and dated price table (`src/console/crew.ts`) |
+| `src/studio`, `src/console` | The intent studio and product engineering; mission control, product lines, manufacturing engineering, the factory floor, QA, rework, shipping, the fleet and deployment engineering; metrology (`src/console/lab.ts`) and maintenance with its crew's router and dated price table (`src/console/crew.ts`) |
+| `src/console/plant-model.ts` | The plant model: every area, its discipline, what it takes and gives and needs, and the flows between them. The bar, the pages, these docs and the plant view are drawn from it, and where each area stands is counted from the repository |
 | `blocks/` | Housekeeping blocks: tested code every product starts from |
 
 ### The package
@@ -117,7 +118,7 @@ erDiagram
 
 ### Testing the system itself
 
-1,113 tests cover the engine, the agent API, the generated SQL (run in DuckDB), the information pipeline (run on PostgreSQL), the compliance set (validated against NIST's schema), the Rego policy, the Prisma output and the blocks. Every page of the site is walked in a real browser and checked against WCAG 2.2 A and AA, and these docs are regenerated and compared on every run.
+1,181 tests cover the engine, the agent API, the generated SQL (run in DuckDB), the information pipeline (run on PostgreSQL), the compliance set (validated against NIST's schema), the Rego policy, the Prisma output and the blocks. Every page of the site is walked in a real browser and checked against WCAG 2.2 A and AA, and these docs are regenerated and compared on every run.
 
 ## Architect
 

@@ -1,4 +1,4 @@
-/* The bar every ZTHR surface shares: the line of departments, in the order work moves through them. */
+/* The bar every ZTHR surface shares: the areas of the plant, by group. */
 .zbar { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 10px max(4vw, 16px); background: var(--ink); color: var(--sheet); }
 .zbar .brand { font: 700 19px/1 var(--letter); color: var(--sheet); text-decoration: none; letter-spacing: .02em; }
 .zbar nav { display: flex; gap: 2px; flex-wrap: wrap; }
@@ -7,15 +7,23 @@
 .zbar nav a[aria-current=page] { color: var(--ink); background: var(--sheet); }
 .zbar a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .zbar nav { flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: thin; scroll-padding-inline: 24px; }
-.zline { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; counter-reset: none; }
+.zline { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; }
 .zline li { flex: none; position: relative; }
 .zline li + li::before { content: ""; position: absolute; left: -2px; top: 50%; width: 2px; height: 12px; margin-top: -6px; background: color-mix(in srgb, var(--sheet) 25%, transparent); }
 .zbar nav .zline a { gap: 7px; padding: 8px 10px; font-size: 14.5px; }
-/* Beneath the line: the functions that serve every department, drawn under it, unnumbered, set off by a dashed rule. */
-.zbar nav:has(.zl-beneath) { flex-direction: column; align-items: flex-start; gap: 0; }
-.zl-beneath { flex: none; display: flex; gap: 2px; align-items: center; margin: 2px 0 0; padding-top: 2px; border-top: 1.5px dashed color-mix(in srgb, var(--sheet) 45%, transparent); }
-.zbar nav .zl-beneath a { gap: 7px; padding: 8px 10px; font-size: 14.5px; }
-.zl-beneath .zl-n { border-style: dashed; font-size: 13px; }
+/* The areas of the plant, grouped as the plant model groups them: the front office, engineering, the line, the field and support. */
+.zgroups { list-style: none; margin: 0; padding: 0; display: flex; gap: 12px; align-items: stretch; }
+.zg { flex: none; display: flex; flex-direction: column; gap: 2px; padding-left: 12px; border-left: 1.5px solid color-mix(in srgb, var(--sheet) 28%, transparent); }
+.zg:first-child { padding-left: 0; border-left: 0; }
+.zg-h { font: 600 13px/1 var(--letter); color: color-mix(in srgb, var(--sheet) 62%, transparent); padding: 1px 10px 0; }
+.zg[data-group=support] .zline { border-top: 1.5px dashed color-mix(in srgb, var(--sheet) 40%, transparent); }
+.zbar nav .zline a { gap: 7px; padding: 8px 10px; font-size: 14.5px; }
+.zl-loop { border-style: dashed; }
+.zl-in { font: 700 13px/1 var(--letter); opacity: .75; margin-right: -2px; }
+.zbar .zl-plant { flex: none; color: var(--sheet); text-decoration: none; border: 1.5px solid color-mix(in srgb, var(--sheet) 55%, transparent); border-radius: 6px; padding: 7px 11px; min-height: 36px; display: inline-flex; align-items: center; font: 600 14.5px/1 var(--letter); }
+.zbar .zl-plant:hover { background: color-mix(in srgb, var(--sheet) 12%, transparent); }
+.zbar .zl-plant[aria-current=page] { background: var(--sheet); color: var(--ink); border-color: var(--sheet); }
+.zl-n { border-style: dashed; font-size: 13px; }
 .zl-n { font: 700 12px/1 var(--letter); width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; border: 1.5px solid currentColor; opacity: .85; }
 .zl-lamp { width: 9px; height: 9px; border-radius: 50%; display: none; }
 .zl-lamp.l-pass { display: inline-block; background: #7ad49a; }
@@ -36,7 +44,7 @@
 .zbar .sr, .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 1180px) { .zbar nav .zline a[aria-current=page] ~ * { } .zl-name { font-size: 13.5px; } }
 
-/* The handoff: the one action that sends the work on to the next department. */
+/* The handoff: the one action that sends the work on to the next area. */
 .handoff { margin: 8px max(4vw, 16px) 40px; padding: 16px 20px; border: 2px solid var(--ink); border-radius: 6px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; background: color-mix(in srgb, var(--sheet) 92%, var(--ink)); }
 .handoff p { margin: 0; max-width: 62ch; font: 400 16px/1.5 var(--letter); }
 .handoff .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 18px; border-radius: 8px; font: 600 16px/1 var(--letter, system-ui); text-decoration: none; }

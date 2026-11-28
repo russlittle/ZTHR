@@ -63,7 +63,7 @@ test('planted: hostile text from a feed is escaped', () => {
   assert.doesNotMatch(journeyDetail(factoryIntent(bad), 'a')!.html, /<img/);
 });
 
-test('the platform: every intent gets five stations, and each item a trail through all five', async () => {
+test('the platform: every intent gets a station for each area that reports, and each item a trail through all of them', async () => {
   const { factoryFlow, studioFlow, STAGES } = await import('../src/console/pipeline.ts');
   const f = factoryFlow(feed);
   assert.deepEqual(f.stages.map((s) => s.key), STAGES.map((s) => s.key));

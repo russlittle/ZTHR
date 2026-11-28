@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The plant · ZTHR</title>
 <meta name="description" content="The ZTHR software factory as a plant: the front office, engineering, the production hall, QA, shipping and the field, with the crews that keep them running, and where each stands today.">
+<link rel="stylesheet" href="/console/bar.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%227%22 fill=%22%231f7a4d%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,6 +22,7 @@
   color-scheme: light dark;
   --board: light-dark(#cfd8cc, #0f1713);
   --paper: light-dark(#fbfcfa, #18221d);
+  --sheet: var(--paper);
   --ink: light-dark(#16201c, #e6ede8);
   --muted: light-dark(#46544d, #aab9b0);
   --rule: light-dark(#9fb0a6, #3d4d44);
@@ -127,11 +129,13 @@ a { color: var(--blue); }
 </style>
 </head>
 <body>
-<main class="wrap">
+<a class="skip" href="#main">Skip to content</a>
+<header class="zbar"></header>
+<main class="wrap" id="main">
   <div class="head">
     <div>
       <h1>The plant</h1>
-      <p>A factory that takes in what a person means and puts out production code, running on a working surface. Around it, an ecosystem of crews and tools, each coupled at arm’s length: every area hands the next something it can check. Pick any area to see what it takes, what it gives, what it needs and where it stands, or read <a id="how-line" href="/line/">how the line works</a>.</p>
+      <p>A factory that takes in what a person means and puts out production code, running on a working surface. Around it, an ecosystem of crews and tools, each coupled at arm’s length: every area hands the next something it can check. Pick any area to see what it takes, what it gives, what it needs and where it stands, or read <a id="how-line" href="/line/">how the plant works</a>.</p>
     </div>
     <div class="shift" role="group" aria-label="Shift">
       <button type="button" id="day" aria-pressed="true">Day shift</button>
@@ -172,21 +176,21 @@ a { color: var(--blue); }
 
 <script>
 {
-// Every figure is the factory's own, read from the repository at the revision below. Where an area has nothing to
-// show, it says so rather than showing a zero that looks like a measurement.
-// The plant model and where each area stands, written in by the build from src/console/plant-model.ts.
+// Every figure is counted from the repository when the site is built. Where an area has nothing to show, it says so
+// rather than showing a zero that looks like a measurement. The plant model and where each area stands is written in
+// by the build from src/console/plant-model.ts and tools/plant-facts.ts.
 const MODEL = /*MODEL*/null/*END*/;
 const AREAS = MODEL.areas;
 const GROUP = Object.fromEntries(MODEL.groups.map((g) => [g.key, g.label]));
 const LABEL = Object.fromEntries(AREAS.map((a) => [a.key, a.label]));
 const list = (xs) => xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
-for (const a of AREAS) a.where = a.inside ? `Inside ${LABEL[a.inside]}` : a.serves && a.group === 'support' ? `Support: keeps ${list(a.serves.map((k) => LABEL[k]))} working` : GROUP[a.group];
+for (const a of AREAS) a.where = a.inside ? `Inside ${LABEL[a.inside]}` : a.group === 'support' ? `Support: ${a.serving}` : GROUP[a.group];
 
 const live = /(^|\.)zthr\.ai$/.test(location.hostname) || location.hostname === 'localhost';
-const SRC = 'https://github.com/russlittle/ZTHR/blob/intent-surface/intent';
-const hrefOpen = (p) => (live ? `/${p}/` : `${SRC}/site/${p}.html`);
-const hrefHow = (p) => (live ? `/line/${p}/` : `${SRC}/docs/line/${p}.md`);
-if (!live) document.getElementById('how-line').href = `${SRC}/docs/line/README.md`;
+// Where an area opens, and where its doc is, come from the model: on zthr.ai the pages, anywhere else their source in the repository.
+const hrefOpen = (a) => (live ? a.open : a.srcOpen);
+const hrefHow = (a) => (live ? a.how : a.srcHow);
+if (!live) document.getElementById('how-line').href = MODEL.areas[0].srcIndex;
 
 // ---------------------------------------------------------------- isometric drawing
 const svg = document.getElementById('plant');
@@ -368,8 +372,10 @@ for (const a of AREAS) {
 
 // ---------------------------------------------------------------- shifts
 const yard = document.getElementById('yard'), caption = document.getElementById('caption');
-const DAY = 'Day shift: Files failed two sync steps at QA and went back down the rework lane; both are fixed from failing tests and back in QA.';
-const NIGHT = 'Night shift: the hall is quiet and the maintenance crew works the queue of 5,659 work orders, as far as tonight’s budget goes.';
+const fmt = (n) => n.toLocaleString('en-US');
+const qa = AREAS.find((x) => x.key === 'qa'), mt = AREAS.find((x) => x.key === 'maintenance'), fl = AREAS.find((x) => x.key === 'fleet');
+const DAY = `Day shift: ${qa.state} ${fl.state}`;
+const NIGHT = MODEL.shifts ? `Night shift: ${fmt(MODEL.shifts)} shifts are logged, and ${fmt(MODEL.queue.workOrders)} work orders wait for the crew.` : `Night shift: the hall is quiet. No shift has run yet; ${fmt(MODEL.queue.workOrders)} work orders wait for the maintenance crew, as far as a night's budget goes.`;
 const setShift = (n) => {
   night = n; yard.classList.toggle('night', n);
   document.getElementById('day').setAttribute('aria-pressed', String(!n));
@@ -399,14 +405,14 @@ function select(k, fromUser) {
     li.append(m, document.createTextNode(n));
     return li;
   }));
-  $('t-open').href = hrefOpen(a.page); $('t-open').textContent = `Open ${a.label}`;
-  $('t-how').href = hrefHow(a.page);
+  $('t-open').href = hrefOpen(a); $('t-open').textContent = `Open ${a.label}`;
+  $('t-how').href = hrefHow(a);
   if (fromUser) history.replaceState(null, '', `#${k}`);
 }
 const first = location.hash.slice(1);
 select(order.includes(first) ? first : 'qa', false);
 const unmet = AREAS.reduce((n, a) => n + a.met.filter((m) => !m).length, 0), needs = AREAS.reduce((n, a) => n + a.needs.length, 0);
-$('foot').textContent = `${needs - unmet} of ${needs} needs met across the plant. Every figure is the factory's own, read from the repository at revision ${MODEL.asOf.revision} on ${MODEL.asOf.date}.`;
+$('foot').textContent = `${needs - unmet} of ${needs} needs met across the plant. Every figure is counted from the repository${MODEL.asOf.revision ? ` at revision ${MODEL.asOf.revision}${MODEL.asOf.date ? ` of ${MODEL.asOf.date}` : ''}` : ' (the build had no history to name a revision)'}.`;
 }
 </script>
 </body>

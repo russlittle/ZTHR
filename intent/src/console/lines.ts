@@ -6,7 +6,7 @@ import { FRAMEWORKS } from '../compliance.ts';
 import { byKind } from '../connectors.ts';
 import type { Options } from '../interfaces.ts';
 import { loadFeed, type Feed } from './feed.ts';
-import { flowInFocus, handoff, paintLine, setFocus } from './line.ts';
+import { flowInFocus, paintLine, setFocus } from './line.ts';
 import { factoryFlows, STAGES, studioFlow, type Flow } from './pipeline.ts';
 import { addToLine, lines, openProduct, products, saveLine, startProduct, type Line } from './products.ts';
 import { $ } from './shell.ts';
@@ -76,9 +76,9 @@ function render(flows: readonly Flow[]) {
   $('lines-body').innerHTML = `<p class="status" role="status" id="lines-status">${esc(say)}</p>
 ${ls.map((l) => lineCard(l, flows)).join('')}
 ${loose.length ? `<section class="sheet" aria-labelledby="h-loose"><h2 id="h-loose">Products not in a line</h2><ul class="plist">${loose.map((p) => `<li><span class="pname">${esc(p.name)}</span><button class="btn" type="button" data-open="${esc(p.name)}">${p.open ? 'Continue in the studio' : 'Open in the studio'}</button>${ls.length ? `<label class="small">Add to a line <select data-addto="${esc(p.name)}"><option value="">Choose…</option>${ls.map((l) => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('')}</select></label>` : ''}</li>`).join('')}</ul></section>` : ''}
-<section class="sheet" aria-labelledby="h-def"><h2 id="h-def">${ls.length ? 'Define another product line' : 'Define your first product line'}</h2><p class="muted">The choices here are where every product in the line starts. Each product can still change its own on the spec sheet in engineering.</p>${form()}</section>
+<section class="sheet" aria-labelledby="h-def"><h2 id="h-def">${ls.length ? 'Define another product line' : 'Define your first product line'}</h2><p class="muted">The choices here are where every product in the line starts. Each product can still change its own on the spec sheet in product engineering.</p>${form()}</section>
 ${ref}`;
-  $('handoff-slot').innerHTML = handoff('lines', ls.some((l) => l.products.length > 0) || products().length > 0, ls.length ? 'Start a product in a line, or open one, and say what it must do.' : 'Define a line, start a product in it, and say what it must do.');
+  $('handoff-slot').innerHTML = `<section class="handoff" aria-label="Start a product"><p>${ls.length ? 'Start a product in a product line, or open one, and say what it must do in its intent studio.' : 'Define a product line, start a product in it, and say what it must do in its intent studio.'}</p><a class="btn ${ls.some((l) => l.products.length > 0) || products().length > 0 ? 'primary' : 'secondary'}" href="/intent">Open the intent studio</a></section>`;
 }
 
 function readForm(f: HTMLFormElement): Omit<Line, 'id' | 'at' | 'products'> & { id?: string } {

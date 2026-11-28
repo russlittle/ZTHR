@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { checker, judge, PRICES, route, usd, type Perf } from '../src/console/crew.ts';
 import { certificate, limits, westernElectric } from '../src/console/lab.ts';
-import { BENEATH, DEPARTMENTS, LINE, lineBar, nextDept } from '../src/console/line.ts';
+import { DEPARTMENTS, lineBar, nextDept } from '../src/console/line.ts';
 import { costPerAccepted, emptyNight, headline, nightBody, parseNight, performance, queue, report, scoreLight, status, tagToFix, type Night } from '../src/console/night.ts';
 
 const night = (over: Partial<Night> = {}): Night => ({ ...emptyNight(), ...over });
@@ -115,14 +115,19 @@ test('control charts: limits from the moving range, drift read by the Western El
   assert.equal(limits([1]), null);
 });
 
-test('metrology and maintenance sit beneath the line: unnumbered, no handoff, listed in every enumeration', () => {
-  assert.deepEqual(BENEATH.map((d) => d.key), ['metrology', 'maintenance']);
-  assert.equal(LINE.length + BENEATH.length, DEPARTMENTS.length);
+test('metrology and maintenance are support crews: unnumbered, no handoff, each under the area it serves', () => {
+  const crews = DEPARTMENTS.filter((d) => d.group === 'support');
+  assert.deepEqual(crews.map((d) => d.key), ['maintenance', 'metrology', 'deploy']);
+  assert.ok(crews.every((d) => d.step === null && d.serves && d.serves.length > 0), 'a crew has no step and serves something');
   assert.equal(nextDept('fleet'), null, 'the line ends at the fleet');
   assert.equal(nextDept('maintenance'), null);
+  assert.equal(nextDept('metrology'), null);
   const bar = lineBar('maintenance');
-  assert.match(bar, /<ol class="zline">(?:(?!maintenance).)*<\/ol><p class="zl-beneath">.*href="\/metrology".*href="\/maintenance" aria-current="page"/s);
-  assert.doesNotMatch(bar, /zl-n" aria-hidden="true">9</, 'nothing beneath the line is numbered');
+  assert.match(bar, /data-group="support"><span class="zg-h">Support<\/span><ul class="zline">.*href="\/maintenance" aria-current="page".*href="\/metrology".*href="\/deployment"/s);
+  assert.match(bar, /keeps the factory floor running/, 'maintenance says what it serves');
+  assert.match(bar, /keeps QA’s gauges and process true/, 'metrology says what it serves');
+  assert.doesNotMatch(bar, /zl-n" aria-hidden="true">(?:7|8|9|10|11)</, 'nothing in support is numbered');
+  assert.doesNotMatch(bar, /beneath the line|serving every department/);
 });
 
 test('planted: hostile text in a record is escaped', () => {

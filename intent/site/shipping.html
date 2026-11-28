@@ -10,15 +10,17 @@
 <link rel="stylesheet" href="/console/console.css">
 <link rel="stylesheet" href="/console/bar.css">
 <title>Shipping · ZTHR</title>
-<meta name="description" content="Moving a certified build to the people it is for, stage by stage, with a person approving production.">
+<meta name="description" content="Packaging a signed release, publishing it to the repository and the sites, and deploying it to production with a person approving.">
 </head>
 <body data-dept="shipping">
 <a class="skip" href="#main">Skip to content</a>
 <header class="zbar"></header>
-<div class="page-h"><div><h1>Shipping</h1><p>A certified build goes to people stage by stage: packaged and signed, deployed with no traffic, tried by a few, then released to everyone. Each stage has a gate, a person approves production, and going back is always one step.</p></div><p class="muted" id="stamp"></p></div>
+<div class="page-h"><div><h1>Shipping</h1><p>Packages the code, the tests, the docs and the version history into a signed release, publishes it to the repository and the sites, and deploys it to production with a person approving. A certified build goes to people stage by stage: packaged and signed, deployed with no traffic, tried by a few, then released to everyone. Each stage has a gate, and going back is always one step.</p></div><p class="muted" id="stamp"></p></div>
 <main id="main">
+<div class="area-standing"><!--evidence--></div>
   <div id="ship-body"><section class="sheet"><p class="muted">Reading the factory&#39;s latest build…</p></section></div>
 </main>
+<div class="area-standing"><!--standing--></div>
 <div id="handoff-slot"></div>
 <aside class="drawer" id="drawer" hidden aria-labelledby="dr-title">
   <div class="dr-head"><h2 id="dr-title">Detail</h2><button class="btn quiet" type="button" id="dr-close">Close</button></div>

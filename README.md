@@ -30,6 +30,8 @@ Three ways in, by depth:
 | The brief, five pages | [BRIEF.md](BRIEF.md) | [PDF](pdf/ZTHR-brief.pdf) |
 | The full paper, all thirty-three patterns | [PAPER.md](PAPER.md) | [PDF](pdf/ZTHR-paper.pdf) |
 
+See it as a working plant: [zthr.ai/plant](https://zthr.ai/plant/) lays out the front office, engineering, the line and the field, with each area's standing counted from this repository, and [how it works](intent/docs/line/README.md) explains each area at four depths.
+
 Building agents or tooling? [`zthr-patterns.json`](zthr-patterns.json) holds all thirty-three patterns as data: problem, forces, pattern, consequences, family and related patterns.
 
 Thirty-three patterns in six families, from construction through runtime:

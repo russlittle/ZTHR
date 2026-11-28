@@ -10,7 +10,7 @@ import { esc } from './views.ts';
 /** What is not working, where, how it is known, and the test that will prove it fixed. Raised instead of stopping the line. */
 export interface Tag {
   readonly id: string;
-  /** The department, gate, reviewer, run or report that raised it. */
+  /** The area, gate, reviewer, run or report that raised it. */
   readonly raisedBy: string;
   readonly station: Station;
   readonly where: string;
@@ -161,7 +161,7 @@ export function scoreLight(s: BlockScore): ScoreLight {
   return s.survived === 0 ? 'pass' : 'waiting';
 }
 
-/** One line for the department: what the night shift has done, or that it has not run. */
+/** One line for the area: what the night shift has done, or that it has not run. */
 export function status(n: Night): string {
   const s = lastShift(n);
   if (!s) return n.runner === 'live' ? 'No shift has run yet.' : 'No shift has run yet: the crew’s runner is not live yet.';

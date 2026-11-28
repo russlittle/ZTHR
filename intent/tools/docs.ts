@@ -22,11 +22,12 @@ import { PLAN } from '../src/agents/cost.ts';
 import { CLASSES, FRAMEWORKS } from '../src/compliance.ts';
 import { LINE_CHOICES } from '../src/console/products.ts';
 import { CONNECTORS } from '../src/connectors.ts';
-import { BENEATH, DEPARTMENTS, LINE, type Dept } from '../src/console/line.ts';
+import { AREAS, FLOWS, GLOSSARY, GROUPS, WORK_PATH, area, crewsFor, depthOf, docHref, pageHref, stepOf, type AreaKey } from '../src/console/plant-model.ts';
+import { GATES } from './gates.ts';
 import { KINDS, PRICES, STATIONS, usd } from '../src/console/crew.ts';
 import { costPerAccepted, performance, scoreLight, status as nightStatus, tagToFix } from '../src/console/night.ts';
 import { readNight } from './night.ts';
-import { PLANT } from './plant.ts';
+import { PLANT, plantByArea } from './plant.ts';
 import { BLOCKS, CLAIMS_AUDIT, MEASURES, MIN_POINTS, REFERENCES, certificates } from '../src/console/lab.ts';
 import { objectives, STAGES as DELIVERY } from '../src/delivery.ts';
 import { RULES } from '../src/derive.ts';
@@ -88,10 +89,13 @@ const list = (xs: readonly string[]) => (xs.length < 2 ? xs.join('') : `${xs.sli
 
 /** Every figure a doc may state. Each is computed; none is typed. */
 export const FACTS: Record<string, () => string> = {
-  'dept.count': () => String(DEPARTMENTS.length),
-  'dept.names': () => list(DEPARTMENTS.map((d) => d.label)),
-  'line.count': () => String(LINE.length),
-  'line.names': () => list(LINE.map((d) => d.label)),
+  'area.count': () => String(AREAS.length),
+  'area.names': () => list(AREAS.map((a) => a.label)),
+  'group.count': () => String(GROUPS.length),
+  'group.names': () => list(GROUPS.map((g) => g.label.toLowerCase())),
+  'path.count': () => String(WORK_PATH.length),
+  'path.names': () => list(WORK_PATH.map((k) => area(k).label)),
+  'gates.count': () => String(GATES.length),
   'night.stations': () => String(STATIONS.length),
   'night.stationNames': () => list(STATIONS.map((s) => s.label.toLowerCase())),
   'night.kinds': () => String(KINDS.length),
@@ -123,7 +127,7 @@ export const FACTS: Record<string, () => string> = {
   'lab.minPoints': () => String(MIN_POINTS),
   'audit.checked': () => CLAIMS_AUDIT.checked,
   'audit.summary': () => `${CLAIMS_AUDIT.claims} claims: ${CLAIMS_AUDIT.proven} proven, ${CLAIMS_AUDIT.partial} partial, ${CLAIMS_AUDIT.unproven} unproven`,
-  'plant.summary': () => `${PLANT.length} functions: ${PLANT.filter((x) => x.standing === 'built and proven').length} built and proven, ${PLANT.filter((x) => x.standing === 'partial').length} partial, ${PLANT.filter((x) => x.standing === 'missing').length} missing`,
+  'standards.summary': () => `${PLANT.length} functions: ${PLANT.filter((x) => x.standing === 'built and proven').length} built and proven, ${PLANT.filter((x) => x.standing === 'partial').length} partial, ${PLANT.filter((x) => x.standing === 'missing').length} missing`,
   'crew.models': () => String(PRICES.models.length),
   'crew.checked': () => PRICES.checked,
   'crew.where': () => PRICES.where,
@@ -174,24 +178,43 @@ export const FACTS: Record<string, () => string> = {
 const table = (head: readonly string[], rows: readonly (readonly (string | number)[])[]) =>
   `| ${head.join(' | ')} |\n| ${head.map(() => '---').join(' | ')} |\n${rows.map((r) => `| ${r.map((c) => String(c).replace(/\|/g, '\\|')).join(' | ')} |`).join('\n')}`;
 
-/** What each department adds that every later product inherits, counted from the code. */
-export const COMPOUND: readonly { dept: Dept; adds: string; count: number }[] = [
-  { dept: 'mission', adds: 'one view of every product, and what waits on a person', count: 0 },
-  { dept: 'lines', adds: 'spec-sheet defaults a line hands every product in it', count: LINE_CHOICES.length },
-  { dept: 'intent', adds: 'intake forms, design-lexicon terms and derivation rules', count: 7 + loadLexicon().terms.length + RULES.length },
-  { dept: 'engineering', adds: 'catalogued parts, information patterns, compliance controls and platform outcomes', count: parts + catalog.patterns + controls + catalog.outcomes },
-  { dept: 'factory', adds: 'library blocks, agent tools and required checks', count: catalog.library.length + TOOLS.length + REQUIRED_CHECKS.length },
-  { dept: 'qa', adds: 'gauges generated from every intent, and the review families', count: example.g.length + REVIEW_FAMILIES + 1 },
-  { dept: 'shipping', adds: 'delivery stages, each with its gate, and the service levels the example is held to', count: DELIVERY.length + objectives(example.p).list.length },
-  { dept: 'fleet', adds: 'connectors and the sensitive-data classes every app is governed by', count: CONNECTORS.length + CLASSES.length },
-  { dept: 'metrology', adds: 'measures defined once, and the reference standards they trace to', count: MEASURES.length + REFERENCES.length },
-  { dept: 'maintenance', adds: 'maintenance stations and task kinds, each with what it must prove before a change is accepted', count: STATIONS.length + KINDS.length },
+/** What each area adds that every later product inherits, counted from the code. */
+export const COMPOUND: readonly { area: AreaKey; adds: string; count: number }[] = [
+  { area: 'mission', adds: 'one view of every product, and what waits on a person', count: 0 },
+  { area: 'lines', adds: 'spec-sheet defaults a product line hands every product in it', count: LINE_CHOICES.length },
+  { area: 'intent', adds: 'intake forms, design-lexicon terms and derivation rules', count: 7 + loadLexicon().terms.length + RULES.length },
+  { area: 'design', adds: 'catalogued parts, information patterns, compliance controls, platform outcomes and library blocks', count: parts + catalog.patterns + controls + catalog.outcomes + catalog.library.length },
+  { area: 'process', adds: 'required checks and proven gates in the control plan', count: REQUIRED_CHECKS.length + GATES.length },
+  { area: 'factory', adds: 'agent tools and the models the router chooses between', count: TOOLS.length + Object.keys(PLAN.models).length },
+  { area: 'qa', adds: 'gauges generated from every intent, and the review families', count: example.g.length + REVIEW_FAMILIES + 1 },
+  { area: 'shipping', adds: 'delivery stages, each with its gate, and the service levels the example is held to', count: DELIVERY.length + objectives(example.p).list.length },
+  { area: 'fleet', adds: 'connectors and the sensitive-data classes every app is governed by', count: CONNECTORS.length + CLASSES.length },
+  { area: 'metrology', adds: 'measures defined once, and the reference standards they trace to', count: MEASURES.length + REFERENCES.length },
+  { area: 'maintenance', adds: 'maintenance stations and task kinds, each with what it must prove before a change is accepted', count: STATIONS.length + KINDS.length },
 ];
 const cumulative = COMPOUND.reduce<number[]>((a, c) => [...a, (a.at(-1) ?? 0) + c.count], []);
 
+/** Every area, from the plant model: its step on the work path, what it does, and where to open it and read how it works. */
+const areaTable = (docsAt: string) =>
+  table(['Step', 'Area', 'Group', 'What it does', 'Open it', 'How it works'], AREAS.map((a) => [stepOf(a.key) ?? (a.key === 'rework' ? 'loop' : '-'), `${'\u00a0\u00a0'.repeat(depthOf(a.key))}${a.label}`, GROUPS.find((g) => g.key === a.group)!.label, a.does, `[${pageHref(a)}](https://zthr.ai${pageHref(a)})`, `[${a.label}](${docsAt}${a.page}.md)`]));
+
+/** What the worked example's release holds, by top-level folder, with the file count of each. */
+export function packageTop(): [string, number][] {
+  const top = Object.keys(example.r.files).reduce<Record<string, number>>((a, f) => {
+    const k = f.includes('/') ? `${f.split('/')[0]}/` : f;
+    return { ...a, [k]: (a[k] ?? 0) + 1 };
+  }, {});
+  return Object.entries(top).sort(([a], [b]) => a.localeCompare(b));
+}
+
 export const TABLES: Record<string, () => string> = {
-  departments: () => table(['#', 'Department', 'What it does', 'Open it', 'How it works'], DEPARTMENTS.map((d, i) => [d.beneath ? 'beneath' : i + 1, d.label, d.does, `[${d.href}](https://zthr.ai${d.href})`, `[${d.label}](${d.key}.md)`])),
-  'departments-root': () => table(['#', 'Department', 'What it does', 'Open it', 'How it works'], DEPARTMENTS.map((d, i) => [d.beneath ? 'beneath' : i + 1, d.label, d.does, `[${d.href}](https://zthr.ai${d.href})`, `[${d.label}](docs/line/${d.key}.md)`])),
+  areas: () => areaTable('../'),
+  'areas-root': () => areaTable('docs/line/'),
+  handoffs: () => table(['From', 'To', 'What is handed over', 'How it travels'], FLOWS.map((f) => [area(f.from).label, area(f.to).label, f.carries, ({ work: 'Forward, as the work', rework: 'Back for rework', report: 'Back to the office as a report', air: 'Out to the field, over the air' })[f.kind]])),
+  support: () => table(['Crew', 'Serves', 'What it does for them'], AREAS.filter((a) => a.group === 'support').map((a) => [a.label, list(a.serves!.map((k) => area(k).label)), a.serving ?? ''])),
+  'standards-areas': () => table(['Area', 'Discipline', 'Standard', 'Who does the work', 'Takes', 'Gives'], AREAS.map((a) => [a.label, a.discipline, a.standard, a.who, a.takes, a.gives])),
+  'standards-map': () => table(['Area', 'Plant function', 'Method or standard', 'In the software factory', 'Where it stands', 'Evidence'], plantByArea().map((x) => [area(x.area).label, x.plant, x.standard, x.factory, x.standing, x.evidence])),
+  glossary: () => table(['Term', 'What it means', 'Never called'], GLOSSARY.map((g) => [`**${g.term}**`, g.means, g.never.length ? g.never.join(', ') : 'nothing else'])),
   stations: () => table(['Station', 'What it checks', 'Tagged by'], STATIONS.map((x) => [x.label, x.checks, x.tags])),
   'task-kinds': () => table(['Kind, in round order', 'Stations', 'The task', 'Accepted when', 'Lowest tier'], KINDS.map((k) => [`\`${k.key}\``, k.station.map((st) => STATIONS.find((y) => y.key === st)!.label).join(', '), k.does, k.accepted, k.from])),
   crew: () => table(['Model', 'Tier', 'Family', 'Input', 'Output', `A typical \`fix-bug\` task`], PRICES.models.map((m) => [m.name, m.tier, m.family, m.price.in.toFixed(2), `${m.price.out.toFixed(2)}${m.price.longContext ? ` (${m.price.longContext.in.toFixed(2)} in, ${m.price.longContext.out.toFixed(2)} out, from ${m.price.longContext.from / 1000}K input)` : ''}`, `$${usd(m.price, KINDS[0]!.tokens).toFixed(4)}`])),
@@ -210,7 +233,7 @@ export const TABLES: Record<string, () => string> = {
     return p.length ? table(['Model', 'Kind', 'Attempts', 'Accepted', 'Pass rate'], p.map((r) => [PRICES.models.find((m) => m.key === r.model)?.name ?? r.model, `\`${r.kind}\``, r.attempts, r.accepted, pct(r.accepted, r.attempts)])) : table(['Model', 'Pass rate'], [['No shift has run yet: every model starts on trial', 'not measured']]);
   },
   'blocks-here': () => table(['Block', 'What it holds', 'Tests'], ownBlocks.map((b) => [`[${b.name}](${b.name}/index.ts)`, b.purpose, b.tests ?? 0])),
-  compounding: () => table(['Department', 'What it adds that every later product inherits', 'Fixtures', 'In all, so far'], COMPOUND.map((c, i) => [DEPARTMENTS.find((d) => d.key === c.dept)!.label, c.adds, c.count || 'none', n(cumulative[i]!)])),
+  compounding: () => table(['Area', 'What it adds that every later product inherits', 'Fixtures', 'In all, so far'], COMPOUND.map((c, i) => [area(c.area).label, c.adds, c.count || 'none', n(cumulative[i]!)])),
   'catalog-groups': () => table(['Group', 'Parts'], Object.entries(catalog.groups).map(([g, ps]) => [g, ps.length])),
   blocks: () => table(['Block', 'What it holds', 'Tests'], ownBlocks.map((b) => [`[${b.name}](../../blocks/${b.name}/index.ts)`, b.purpose, b.tests ?? 0])),
   frameworks: () => table(['Framework', 'Controls mapped'], FRAMEWORKS.frameworks.map((f) => [f.name, f.controls.length])),
@@ -219,13 +242,7 @@ export const TABLES: Record<string, () => string> = {
   roles: () => table(['Role', 'Does', 'Tools'], DUTIES.map((d) => [d.role, d.does, TOOLS.filter((t) => t.roles === 'all' || t.roles.includes(d.role)).length])),
   models: () => table(['Seat', 'Models, cheapest that fits first'], Object.entries(PLAN.seats).filter(([, m]) => m.length).map(([s, m]) => [s, m.map((k) => `${k} (${PLAN.models[k]!.family})`).join(', ')])),
   checks: () => table(['#', 'Required check', 'Step'], REQUIRED_CHECKS.map((c, i) => [i + 1, c.check, `npm run ${c.step}`])),
-  package: () => {
-    const top = Object.keys(example.r.files).reduce<Record<string, number>>((a, f) => {
-      const k = f.includes('/') ? `${f.split('/')[0]}/` : f;
-      return { ...a, [k]: (a[k] ?? 0) + 1 };
-    }, {});
-    return table(['In the package', 'Files'], Object.entries(top).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [`\`${k}\``, v]));
-  },
+  package: () => table(['In the package', 'Files'], packageTop().map(([k, v]) => [`\`${k}\``, v])),
   'example-sources': () => table(['Where a line of the example’s manifest comes from', 'Lines'], [['Standard assembly, used as is', src['stock'] ?? 0], ['Standard assembly, extended', src['modify'] ?? 0], ['Catalogued part, still to make', src['make: catalogued'] ?? 0], ['Custom, designed new', src['make: new'] ?? 0]]),
 };
 
@@ -251,22 +268,16 @@ interface Beneath {
   /** Between the boxes beneath, left to right. */
   readonly across?: string;
 }
-type Diagram = { kind: 'flow'; caption: string; nodes: readonly FlowNode[]; edges: readonly FlowEdge[]; beneath?: Beneath } | { kind: 'bars'; caption: string; unit: string; bars: readonly { label: string; value: number }[] } | { kind: 'erd'; caption: string; mermaid: string; relations: readonly string[] };
+type Diagram = { kind: 'plant'; caption: string } | { kind: 'flow'; caption: string; nodes: readonly FlowNode[]; edges: readonly FlowEdge[]; beneath?: Beneath } | { kind: 'bars'; caption: string; unit: string; bars: readonly { label: string; value: number }[] } | { kind: 'erd'; caption: string; mermaid: string; relations: readonly string[] };
 
 const chain = (ids: readonly string[]): FlowEdge[] => ids.slice(1).map((id, i) => ({ from: ids[i]!, to: id }));
 
 export const DIAGRAMS: Record<string, () => Diagram> = {
-  line: () => ({
-    kind: 'flow',
-    caption: 'The line: work moves left to right, what is learned in service comes back to the start, and metrology and maintenance work beneath every department.',
-    nodes: LINE.map((d, i) => ({ id: d.key, label: `${i + 1} ${d.label}` })),
-    edges: [...chain(LINE.map((d) => d.key)), { from: 'qa', to: 'factory', label: 'failing journeys become cases', back: true }, { from: 'engineering', to: 'intent', label: 'Class I clarifications', back: true }, { from: 'fleet', to: 'mission', label: 'reports and alerts', back: true }],
-    beneath: { nodes: BENEATH.map((d) => ({ id: d.key, label: d.key === 'metrology' ? 'Metrology: the lab' : 'Maintenance: the night shift', sub: d.key === 'metrology' ? 'defines the measures, certifies every gauge' : 'works every tag through the same gates' })), down: 'tags, from every department', up: 'certificates and the morning report', across: 'tags' },
-  }),
+  'plant-flow': () => ({ kind: 'plant', caption: 'The plant: work moves from the front office through engineering and the line to the field. QA sends what fails to rework and takes it back fixed, the field reports to mission control, releases go out over the air, and each support crew serves the areas it keeps working.' }),
   maintenance: () => ({
     kind: 'flow',
     caption: 'Two shifts: the day shift builds and tags what is not working; the night shift works the tags and reports in the morning.',
-    nodes: [{ id: 'd', label: 'Day shift', sub: 'every department builds' }, { id: 't', label: 'Tag', sub: 'what, where, evidence, proving test' }, { id: 'q', label: 'The list', sub: 'by station and kind' }, { id: 'c', label: 'Night crew', sub: 'cheapest proven model' }, { id: 'g', label: 'Same gates', sub: 'failing test first, another family checks' }, { id: 'r', label: 'Morning report', sub: 'fixed, escalated, new' }],
+    nodes: [{ id: 'd', label: 'Day shift', sub: 'every area builds' }, { id: 't', label: 'Tag', sub: 'what, where, evidence, proving test' }, { id: 'q', label: 'The list', sub: 'by station and kind' }, { id: 'c', label: 'Night crew', sub: 'cheapest proven model' }, { id: 'g', label: 'Same gates', sub: 'failing test first, another family checks' }, { id: 'r', label: 'Morning report', sub: 'fixed, escalated, new' }],
     edges: [...chain(['d', 't', 'q', 'c', 'g', 'r']), { from: 'g', to: 'c', label: 'not accepted: a tier up', back: true }, { from: 'r', to: 'd', label: 'the next day starts from it', back: true }],
   }),
   metrology: () => ({
@@ -444,15 +455,18 @@ export const DIAGRAMS: Record<string, () => Diagram> = {
   }`,
     relations: ['A tag names what is wrong, where, how it is known and the test that will prove it fixed; it is worked as one or more tasks.', 'A shift log lists the tasks it ran, and the tags it fixed, escalated and raised: the morning report is read from it.', 'Each task is taken by one model and checked by a model of another family; settled tasks are counted, per model and kind, as its performance.', 'A ruling records who claimed an equivalence, who judged it, the verdict and the reasoning; only an agreeing judge of another family counts it against a block’s score.', 'Every model is priced by a dated row of the list the router reads.'],
   }),
-  compounding: () => ({ kind: 'bars', caption: 'Fixtures every later product inherits, in all, as each department joins the line.', unit: 'fixtures', bars: COMPOUND.map((c, i) => ({ label: DEPARTMENTS.find((d) => d.key === c.dept)!.label, value: cumulative[i]! })) }),
-  mission: () => ({ kind: 'flow', caption: 'Mission control reads every department, and sends a person where they are needed.', nodes: [{ id: 'f', label: 'Feed and studio', sub: 'what each department measured' }, { id: 'a', label: 'Products along the line', sub: 'a lamp per department' }, { id: 'w', label: 'Waiting on you', sub: 'questions, signatures, releases' }, { id: 'd', label: 'The department', sub: 'with the product in focus' }], edges: chain(['f', 'a', 'w', 'd']) }),
-  lines: () => ({ kind: 'flow', caption: 'A line is defined once; every product in it starts from its choices.', nodes: [{ id: 'l', label: 'Product line', sub: 'who it serves, its end' }, { id: 'd', label: 'Defaults', sub: 'compliance, sign-in, reports, API' }, { id: 'p', label: 'New product', sub: 'starts from them' }, { id: 's', label: 'Intent studio', sub: 'only the delta is said' }], edges: chain(['l', 'd', 'p', 's']) }),
-  intent: () => ({ kind: 'flow', caption: 'The intent studio: rough words in, a signed schematic out.', nodes: [{ id: 'w', label: 'The expert’s words', sub: 'any form' }, { id: 'r', label: 'Two readings', sub: 'two families, apart' }, { id: 's', label: 'Schematic', sub: 'balloons, sources, tolerances' }, { id: 'q', label: 'Questions', sub: 'only what changes the build' }, { id: 'g', label: 'Signed', sub: 'by the holder' }], edges: [...chain(['w', 'r', 's', 'q', 'g']), { from: 'q', to: 's', label: 'answers', back: true }] }),
-  engineering: () => ({ kind: 'flow', caption: 'Engineering: the signed schematic completed into a specification, then released.', nodes: [{ id: 's', label: 'Signed schematic' }, { id: 'o', label: 'Outcomes', sub: 'assessment, criteria, target' }, { id: 'i', label: 'Information', sub: 'records, rules, migrations' }, { id: 'c', label: 'Compliance', sub: 'controls and evidence' }, { id: 'm', label: 'Measures and tests', sub: 'gauges, ranges, ratchets' }, { id: 'p', label: 'Released package', sub: 'the datum' }], edges: chain(['s', 'o', 'i', 'c', 'm', 'p']) }),
-  factory: () => ({ kind: 'flow', caption: 'The factory: every change tested before it is pushed, admitted only on evidence.', nodes: [{ id: 'p', label: 'Package', sub: 'and its brief' }, { id: 'b', label: 'Builder', sub: 'a change on a commit' }, { id: 't', label: 'Tests', sub: 'on the base, then the commit' }, { id: 'c', label: 'Required checks', sub: 'run by the API' }, { id: 'r', label: 'Reviews', sub: 'two other families' }, { id: 'a', label: 'Admitted', sub: 'computed' }], edges: [...chain(['p', 'b', 't', 'c', 'r', 'a']), { from: 'c', to: 'b', label: 'a failure opens a case', back: true }] }),
-  qa: () => ({ kind: 'flow', caption: 'QA: judged as a person would judge it, by gauges that have been shown to fail.', nodes: [{ id: 'b', label: 'Build' }, { id: 'j', label: 'Journeys walked', sub: 'as a person, every mode' }, { id: 'g', label: 'Gates', sub: 'proven able to fail' }, { id: 'r', label: 'Ratchets', sub: 'only tighten' }, { id: 'c', label: 'Certified phase' }], edges: [...chain(['b', 'j', 'g', 'r', 'c']), { from: 'j', to: 'b', label: 'a failing journey is a case', back: true }] }),
-  shipping: () => ({ kind: 'flow', caption: 'Shipping: stage by stage, a person approving production, one step back always.', nodes: DELIVERY.map((s) => ({ id: s.id, label: s.name })), edges: [...chain(DELIVERY.map((s) => s.id)), { from: DELIVERY.at(-1)!.id, to: DELIVERY[0]!.id, label: 'roll back, then start again', back: true }] }),
-  fleet: () => ({ kind: 'flow', caption: 'The fleet: one library, one governance, and everything learned in service sent back.', nodes: [{ id: 's', label: 'In service', sub: 'watched against its levels' }, { id: 'l', label: 'Shared library', sub: 'a fix reaches every app' }, { id: 'd', label: 'Sensitive data', sub: 'gated the same way' }, { id: 'r', label: 'Reports and alerts' }, { id: 'c', label: 'Cases', sub: 'bugs, ideas, incidents' }], edges: [...chain(['s', 'l', 'd', 'r', 'c']), { from: 'c', to: 's', label: 'fixed and shipped again', back: true }] }),
+  compounding: () => ({ kind: 'bars', caption: 'Fixtures every later product inherits, in all, as each area joins the plant.', unit: 'fixtures', bars: COMPOUND.map((c, i) => ({ label: area(c.area).label, value: cumulative[i]! })) }),
+  mission: () => ({ kind: 'flow', caption: 'Mission control runs the plant: it reads every area, and sets priorities, gives approvals, stops the line and holds the spend.', nodes: [{ id: 'f', label: 'Every area’s feed', sub: 'what each measured, and what the field shows' }, { id: 'a', label: 'Products along the line', sub: 'a lamp per area' }, { id: 'w', label: 'Waiting on you', sub: 'questions, signatures, releases' }, { id: 'd', label: 'Priorities and approvals', sub: 'stop-the-line, spend' }], edges: [...chain(['f', 'a', 'w', 'd']), { from: 'd', to: 'f', label: 'every area works to them', back: true }] }),
+  lines: () => ({ kind: 'flow', caption: 'A product line is defined once; every product in it starts from its choices, and each has its own intent studio.', nodes: [{ id: 'l', label: 'Product line', sub: 'who it serves, its end' }, { id: 'd', label: 'Defaults', sub: 'compliance, sign-in, reports, API' }, { id: 'p', label: 'New product', sub: 'starts from them' }, { id: 's', label: 'Intent studio', sub: 'only the delta is said' }], edges: chain(['l', 'd', 'p', 's']) }),
+  intent: () => ({ kind: 'flow', caption: 'The intent studio: rough words in, a signed intent package out.', nodes: [{ id: 'w', label: 'The expert’s words', sub: 'any form' }, { id: 'r', label: 'Two readings', sub: 'two families, apart' }, { id: 's', label: 'Schematic', sub: 'balloons, sources, tolerances' }, { id: 'q', label: 'Questions', sub: 'only what changes the build' }, { id: 'g', label: 'Signed intent package', sub: 'by the holder' }], edges: [...chain(['w', 'r', 's', 'q', 'g']), { from: 'q', to: 's', label: 'answers', back: true }] }),
+  engineering: () => ({ kind: 'flow', caption: 'Product engineering: the signed intent package completed into the product spec, then released to manufacturing engineering.', nodes: [{ id: 's', label: 'Signed intent package' }, { id: 'o', label: 'Outcomes', sub: 'assessment, criteria, target' }, { id: 'i', label: 'Information', sub: 'records, rules, migrations' }, { id: 'c', label: 'Compliance', sub: 'controls and evidence' }, { id: 'm', label: 'Measures and tests', sub: 'gauges, ranges, ratchets' }, { id: 'p', label: 'Product spec', sub: 'released, hashed' }], edges: chain(['s', 'o', 'i', 'c', 'm', 'p']) }),
+  process: () => ({ kind: 'flow', caption: 'Manufacturing engineering: the product spec becomes the build package, the line is set up to build it, and what the line measures improves both.', nodes: [{ id: 's', label: 'Product spec' }, { id: 'r', label: 'Routing', sub: 'the delivery stages in order' }, { id: 'f', label: 'Fixtures', sub: 'gauges, ranges, starting ratchets' }, { id: 'g', label: 'Gates and required checks', sub: 'proven able to fail' }, { id: 'b', label: 'Build package', sub: 'to the factory floor' }], edges: [...chain(['s', 'r', 'f', 'g', 'b']), { from: 'b', to: 'r', label: 'what the line measures improves the routing', back: true }] }),
+  factory: () => ({ kind: 'flow', caption: 'The factory floor: an operator agent drives each product down the line, and every change is tested before it is pushed and admitted only on evidence.', nodes: [{ id: 'p', label: 'Build package', sub: 'and its brief' }, { id: 'b', label: 'Builder', sub: 'a change on a commit' }, { id: 't', label: 'Tests', sub: 'on the base, then the commit' }, { id: 'c', label: 'Required checks', sub: 'run by the API' }, { id: 'r', label: 'Reviews', sub: 'two other families' }, { id: 'a', label: 'Built product', sub: 'admitted, computed' }], edges: [...chain(['p', 'b', 't', 'c', 'r', 'a']), { from: 'c', to: 'b', label: 'a failure opens a case', back: true }] }),
+  qa: () => ({ kind: 'flow', caption: 'QA: judged as a person would judge it, by gauges that have been shown to fail; what fails goes to rework and comes back to be inspected again.', nodes: [{ id: 'b', label: 'Built product' }, { id: 'j', label: 'Journeys walked', sub: 'as a person, every mode' }, { id: 'g', label: 'Gates', sub: 'proven able to fail' }, { id: 'r', label: 'Ratchets', sub: 'only tighten' }, { id: 'c', label: 'Passed product', sub: 'a certified phase' }], edges: [...chain(['b', 'j', 'g', 'r', 'c']), { from: 'j', to: 'b', label: 'a failing journey is a return, to rework', back: true }] }),
+  rework: () => ({ kind: 'flow', caption: 'Rework: a return carries its failing evidence, the fix starts from a failing test, and QA inspects the whole product again.', nodes: [{ id: 'f', label: 'Failed product', sub: 'with its failing journey' }, { id: 't', label: 'Failing test', sub: 'written first' }, { id: 'x', label: 'Fix', sub: 'through the same gates' }, { id: 'q', label: 'QA, again', sub: 'the whole product' }, { id: 'p', label: 'Passed product', sub: 'on to shipping' }], edges: [...chain(['f', 't', 'x', 'q', 'p']), { from: 'q', to: 'f', label: 'still failing: back to rework', back: true }] }),
+  shipping: () => ({ kind: 'flow', caption: 'Shipping: the release is packaged and signed, published to the repository and the sites, then deployed stage by stage, a person approving production, one step back always.', nodes: DELIVERY.map((s) => ({ id: s.id, label: s.name })), edges: [...chain(DELIVERY.map((s) => s.id)), { from: DELIVERY.at(-1)!.id, to: DELIVERY[0]!.id, label: 'roll back, then start again', back: true }] }),
+  fleet: () => ({ kind: 'flow', caption: 'The fleet: releases arrive over the air with rollback, one governance covers every app, and what the field shows goes back to mission control.', nodes: [{ id: 'o', label: 'Update over the air', sub: 'staged, with rollback' }, { id: 's', label: 'In service', sub: 'watched against its levels' }, { id: 'l', label: 'Where the library is used', sub: 'which apps run which version' }, { id: 'd', label: 'Sensitive data', sub: 'gated the same way' }, { id: 'r', label: 'Reports to mission control', sub: 'bugs, ideas, alerts' }], edges: [...chain(['o', 's', 'l', 'd', 'r']), { from: 'r', to: 'o', label: 'fixed and sent again', back: true }] }),
+  deployment: () => ({ kind: 'flow', caption: 'Deployment engineering: environments written as code, deploys a person approves, updates over the air with rollback, and everything in service watched.', nodes: [{ id: 'e', label: 'Environments as code', sub: 'where products run' }, { id: 'd', label: 'Deploys', sub: 'a person approves production' }, { id: 'o', label: 'Updates over the air', sub: 'with rollback' }, { id: 'm', label: 'Monitoring', sub: 'service levels, walks, scans' }, { id: 'r', label: 'What the field shows', sub: 'back to mission control' }], edges: [...chain(['e', 'd', 'o', 'm', 'r']), { from: 'm', to: 'o', label: 'a fast burn: roll back', back: true }] }),
   architecture: () => ({
     kind: 'flow',
     caption: 'The system: one deterministic engine, the surfaces that use it, and the agent API that runs the factory.',
@@ -483,7 +497,7 @@ export const DIAGRAMS: Record<string, () => Diagram> = {
   waiting: () => ({
     kind: 'flow',
     caption: 'What waits on a person: only the acts no agent role has a tool for.',
-    nodes: [{ id: 'r', label: 'Raised by a department' }, { id: 'w', label: 'Waiting on you', sub: 'one action clears it' }, { id: 'h', label: 'Holder', sub: 'sign, release, clarify' }, { id: 'a', label: 'Approver', sub: 'production' }, { id: 'l', label: 'Ledger', sub: 'the signed act, recorded' }],
+    nodes: [{ id: 'r', label: 'Raised by an area' }, { id: 'w', label: 'Waiting on you', sub: 'one action clears it' }, { id: 'h', label: 'Holder', sub: 'sign, release, clarify' }, { id: 'a', label: 'Approver', sub: 'production' }, { id: 'l', label: 'Ledger', sub: 'the signed act, recorded' }],
     edges: chain(['r', 'w', 'h', 'a', 'l']),
   }),
   'files-manifest': () => ({ kind: 'bars', caption: `Files, the first product through the whole line: where each of its ${files.lines.length} manifest lines comes from.`, unit: 'lines', bars: [{ label: 'Standard, as is', value: files.counts.stock }, { label: 'Standard, extended', value: files.counts.modify }, { label: 'Catalogued, to make', value: files.counts['make: catalogued'] }, { label: 'Custom to Files', value: files.counts['make: new'] }] }),
@@ -522,7 +536,63 @@ const wrap = (s: string, max: number): string[] => {
 };
 const x = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+
+/** The plant as a Mermaid flowchart, drawn from the model: groups, what is inside what, the flows, and what each crew serves. */
+function plantMermaid(): string {
+  const kids = (k: AreaKey) => AREAS.filter((a) => a.inside === k);
+  const ep = (k: AreaKey) => (kids(k).length ? `${k}_g` : k);
+  const label = (a: (typeof AREAS)[number]) => `${a.label}${a.group === 'support' && a.serving ? `<br><small>${a.serving}</small>` : ''}`;
+  const emit = (a: (typeof AREAS)[number], ind: string): string => (kids(a.key).length ? `${ind}subgraph ${a.key}_g["${a.label}"]\n${kids(a.key).map((c) => emit(c, `${ind}  `)).join('\n')}\n${ind}end` : `${ind}${a.key}["${label(a)}"]`);
+  const groups = GROUPS.map((g) => `  subgraph grp_${g.key}["${g.label}"]\n${AREAS.filter((a) => a.group === g.key && !a.inside).map((a) => emit(a, '    ')).join('\n')}\n  end`).join('\n');
+  const arrow = { work: '-->', rework: '-.->', report: '-.->', air: '==>' } as const;
+  const flows = FLOWS.map((f) => `  ${ep(f.from)} ${arrow[f.kind]}|${f.kind === 'air' ? 'over the air: ' : ''}${f.carries}| ${ep(f.to)}`).join('\n');
+  const serves = AREAS.filter((a) => a.group === 'support').flatMap((a) => a.serves!.map((k) => `  ${a.key} -.- ${ep(k)}`)).join('\n');
+  return `\`\`\`mermaid\nflowchart LR\n${groups}\n${flows}\n${serves}\n\`\`\``;
+}
+
+/** The same plant as an SVG: the areas along one row under their groups, rework beside QA, the crews beneath what they serve. */
+function plantSvg(title: string, caption: string): string {
+  const order: AreaKey[] = ['mission', 'lines', 'intent', 'design', 'process', 'factory', 'qa', 'rework', 'shipping', 'fleet'];
+  const BW = 92, BH = 64, G = 10, PAD = 14, y0 = 100, y2 = y0 + BH + 84, SH = 68;
+  const W = PAD * 2 + order.length * BW + (order.length - 1) * G, H = y2 + SH + PAD;
+  const bx = (k: AreaKey) => PAD + order.indexOf(k) * (BW + G);
+  const cx = (k: AreaKey) => bx(k) + BW / 2;
+  const dash = 'stroke="var(--ink-2, #555)" stroke-width="1.3" stroke-dasharray="5 4" fill="none"';
+  const solid = 'stroke="var(--ink)" stroke-width="1.5" fill="none"';
+  const mk = `marker-end="url(#${title}-a)"`;
+  const text = (xp: number, y: number, t: string, size: number, bold: boolean, anchor = 'middle') => `<text x="${xp}" y="${y}" text-anchor="${anchor}" font-size="${size}" font-weight="${bold ? 700 : 400}" fill="${bold ? 'var(--ink)' : 'var(--ink-2, #555)'}">${x(t)}</text>`;
+  const box = (k: AreaKey) => {
+    const a = area(k);
+    const lines = [...wrap(a.label, 13).slice(0, 2).map((t) => ({ t, b: true })), ...(a.inside ? wrap(`inside ${area(a.inside).label}`, 16).slice(0, 2).map((t) => ({ t, b: false })) : [])];
+    const top = y0 + BH / 2 - (lines.length * 14) / 2 + 11;
+    return `<rect x="${bx(k)}" y="${y0}" width="${BW}" height="${BH}" rx="4" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1.5"/>${lines.map((l, i) => text(cx(k), top + i * 14, l.t, l.b ? 12 : 10, l.b)).join('')}`;
+  };
+  const bands = GROUPS.filter((g) => g.key !== 'support').map((g) => {
+    const ks = order.filter((k) => area(k).group === g.key);
+    const x1 = bx(ks[0]!), x2 = bx(ks.at(-1)!) + BW;
+    return `<path d="M${x1} 28 H${x2}" ${solid}/>${text((x1 + x2) / 2, 20, g.label, 13, true)}`;
+  });
+  const hop = (a: AreaKey, b: AreaKey, style: string) => `<path d="M${bx(a) + BW} ${y0 + BH / 2} H${bx(b) - 3}" ${style} ${mk}/>`;
+  const arrows = [hop('intent', 'design', solid), hop('design', 'process', solid), hop('process', 'factory', solid), hop('factory', 'qa', solid), hop('qa', 'rework', dash), hop('shipping', 'fleet', 'stroke="var(--blue, #1b4fa8)" stroke-width="3" fill="none"')];
+  // QA's pass goes to shipping over the top of rework; rework hands the fixed product back to QA beneath the row.
+  const over = `<path d="M${cx('qa') + 12} ${y0} V${y0 - 24} H${cx('shipping') - 12} V${y0 - 3}" ${solid} ${mk}/>${text((cx('qa') + cx('shipping')) / 2, y0 - 30, 'passed product', 11, false)}`;
+  const report = `<path d="M${cx('fleet')} ${y0} V${y0 - 52} H${cx('mission')} V${y0 - 3}" ${dash} ${mk}/>${text((cx('mission') + cx('fleet')) / 2, y0 - 58, 'what the field shows, back to mission control', 11, false)}`;
+  const back = `<path d="M${cx('rework') - 8} ${y0 + BH} V${y0 + BH + 22} H${cx('qa') + 8} V${y0 + BH + 3}" ${dash} ${mk}/>${text(cx('qa') + 12, y0 + BH + 38, 'fixed, inspected again', 11, false, 'start')}`;
+  const air = text(bx('fleet') + BW / 2 + 20, y0 + BH + 16, 'over the air', 11, false, 'end');
+  const crews = AREAS.filter((a) => a.group === 'support').flatMap((a) => {
+    const served = a.serves!;
+    const w = served.length > 1 ? 2 * BW + G : BW;
+    const left = Math.min(Math.max(PAD, served.reduce((t, k) => t + cx(k), 0) / served.length - w / 2), W - PAD - w);
+    const lines = wrap(a.label, served.length > 1 ? 30 : 13).slice(0, 2);
+    const sub = wrap(a.serving ?? '', served.length > 1 ? 40 : 17).slice(0, 3);
+    const ticks = served.map((k) => `<path d="M${Math.min(Math.max(k === 'qa' ? cx(k) - 22 : cx(k), left + 10), left + w - 10)} ${y2} V${y0 + BH + 3}" ${dash} ${mk}/>`);
+    return [...ticks, `<rect x="${left}" y="${y2}" width="${w}" height="${SH}" rx="4" fill="var(--sheet)" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="7 4"/>`, ...lines.map((l, i) => text(left + w / 2, y2 + 15 + i * 13, l, 12, true)), ...sub.map((l, i) => text(left + w / 2, y2 + 17 + lines.length * 13 + i * 11, l, 10, false))];
+  });
+  return `<figure class="fig"><svg viewBox="0 0 ${W} ${H}" role="img" aria-labelledby="${title}-t"><title id="${title}-t">${x(caption)}</title><defs><marker id="${title}-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--ink)"/></marker></defs>${bands.join('')}${arrows.join('')}${over}${report}${back}${air}${order.map(box).join('')}${text(PAD, y2 - 10, 'Support', 13, true, 'start')}${crews.join('')}</svg><figcaption>${x(caption)}</figcaption></figure>`;
+}
+
 export function mermaid(d: Diagram): string {
+  if (d.kind === 'plant') return plantMermaid();
   if (d.kind === 'erd') return `\`\`\`mermaid\n${d.mermaid}\n\`\`\``;
   if (d.kind === 'bars') return `\`\`\`mermaid\nxychart-beta\n  title "${d.caption.replace(/"/g, "'")}"\n  x-axis [${d.bars.map((b) => `"${b.label}"`).join(', ')}]\n  y-axis "${d.unit}" 0 --> ${Math.ceil(Math.max(...d.bars.map((b) => b.value)) / 50) * 50}\n  bar [${d.bars.map((b) => b.value).join(', ')}]\n\`\`\``;
   const node = (f: FlowNode) => `  ${f.id.replace(/[^a-z0-9]/gi, '_')}["${f.label.replace(/"/g, "'")}${f.sub ? `<br><small>${f.sub.replace(/"/g, "'")}</small>` : ''}"]`;
@@ -534,6 +604,7 @@ export function mermaid(d: Diagram): string {
 
 /** The same diagram as an SVG the site can show without a script: nodes in rows, loops drawn dashed underneath. */
 export function svg(d: Diagram, title: string): string {
+  if (d.kind === 'plant') return plantSvg(title, d.caption);
   if (d.kind === 'erd') return `<ul class="erd">${d.relations.map((r) => `<li>${x(r)}</li>`).join('')}</ul>`;
   if (d.kind === 'bars') {
     const W = 760, H = Math.min(300, 30 + d.bars.length * 34), L = 150, max = Math.max(...d.bars.map((b) => b.value)), bh = (H - 30) / d.bars.length;
@@ -640,8 +711,9 @@ export function fill(text: string, where: string): string {
 
 // ---------------------------------------------------------------- the line's own docs
 
-export const LINE_DOCS = ['index', ...DEPARTMENTS.map((d) => d.key), 'architecture', 'plant'] as const;
-export type LineDoc = (typeof LINE_DOCS)[number];
+/** One doc per area, under the key of the area's page, with the index in front and the architecture and standards behind. */
+export const LINE_DOCS = ['index', ...[...new Set(AREAS.map((a) => a.page))], 'architecture', 'standards'] as ['index', ...string[]];
+export type LineDoc = string;
 const SRC = 'docs/src/line';
 const OUT = 'docs/line';
 const outName = (k: LineDoc) => (k === 'index' ? 'README.md' : `${k}.md`);
@@ -777,7 +849,7 @@ const siteLink = (h: string): string => {
 
 export interface SitePage {
   readonly doc: LineDoc;
-  readonly dept: Dept | null;
+  readonly dept: AreaKey | null;
   readonly title: string;
   readonly lede: string;
   readonly body: string;
@@ -806,7 +878,7 @@ export function sitePages(): SitePage[] {
       return `<a class="rung" href="#${d.id}"><span class="depth"><span>Depth ${i + 1}</span><span>${minutes} min</span></span><span class="rung-t">${x(d.key)}</span><span class="rung-b">${x(d.blurb)}</span><span class="gauge"><span style="width:${[12, 32, 64, 100][i]}%"></span></span></a>`;
     }).join('');
     const content = html(md.replace(/^# .+$/m, '').replace(/^> .+$/m, ''), siteLink, slug);
-    const dept = (DEPARTMENTS.find((d) => d.key === k)?.key ?? null) as Dept | null;
+    const dept = (AREAS.find((a) => a.page === k)?.key ?? null) as AreaKey | null;
     return { doc: k, dept, title, lede, body: `<nav class="ladder" aria-label="Choose your depth">${ladder}</nav>\n<article class="prose">${content}</article>` };
   });
 }

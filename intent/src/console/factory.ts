@@ -43,7 +43,7 @@ function render() {
   put('handoff-slot', () =>
     DEPT === 'factory'
       ? handoff('factory', true, `Build ${feed!.commit.slice(0, 7)} is made. QA walks its ${row.journeys.length} journeys as a person would, and checks every gate and ratchet.`)
-      : handoff('qa', walked > 0 && failing === 0, walked ? (failing ? `${failing} journey${failing === 1 ? '' : 's'} failing: those go back to the factory as cases, and only certified phases ship.` : 'Every walked journey passes. Certified phases go to shipping.') : 'Nothing walked in this build yet. Shipping takes only phases QA has certified.'),
+      : handoff('qa', walked > 0 && failing === 0, walked ? (failing ? `${failing} journey${failing === 1 ? '' : 's'} failing: those go to rework with their failing evidence and come back to QA, and only certified phases ship.` : 'Every walked journey passes. Certified phases go to shipping.') : 'Nothing walked in this build yet. Shipping takes only phases QA has certified.'),
   );
   $('stamp').innerHTML = `Build <code>${esc(feed.commit.slice(0, 7))}</code>, ${esc(when(feed.builtAt))}`;
 }

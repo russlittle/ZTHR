@@ -1,5 +1,5 @@
 /**
- * Maintenance: the night shift beneath the line. What every department tagged, what the crew fixed and escalated,
+ * Maintenance: the night shift that keeps the factory floor running. What every area tagged, what the crew fixed and escalated,
  * each block's gauge scores, and what the work cost, read from the records the crew and the mutation runs write.
  * Until a shift has run, the page says so.
  */
