@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 84 of 235 blocks calibrated; 0 certified, 82 with survivors still to close, 2 capable but not yet checked for repeatability and reproducibility.
+QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 85 of 235 blocks calibrated; 0 certified, 82 with survivors still to close, 3 capable but not yet checked for repeatability and reproducibility.
 
 ```mermaid
 flowchart LR
@@ -72,7 +72,7 @@ flowchart LR
   k -.->|the block changes: calibrate again| x
 ```
 
-The 84 blocks calibrated so far, of 235:
+The 85 blocks calibrated so far, of 235:
 
 | Block | Certificate | Capability | Survivors | Ruled equivalent | Issued |
 | --- | --- | --- | --- | --- | --- |
@@ -121,15 +121,15 @@ The 84 blocks calibrated so far, of 235:
 | `costmeter` | not certified: 28 planted defects not rejected, and not ruled equivalent | 79.1% | 28 | 0 | 2026-11-28 |
 | `tabular` | not certified: 113 planted defects not rejected, and not ruled equivalent | 74.8% | 113 | 0 | 2026-11-28 |
 | `reports` | not certified: 41 planted defects not rejected, and not ruled equivalent | 81.9% | 41 | 0 | 2026-11-28 |
-| `search` | not certified: 99 planted defects not rejected, and not ruled equivalent | 66.3% | 99 | 0 | 2026-11-28 |
-| `i18n` | not certified: 94 planted defects not rejected, and not ruled equivalent | 58.6% | 94 | 0 | 2026-11-28 |
+| `search` | not certified: 16 planted defects not rejected, and not ruled equivalent | 95.3% | 16 | 0 | 2026-11-28 |
+| `i18n` | not certified: 4 planted defects not rejected, and not ruled equivalent | 98.2% | 4 | 0 | 2026-11-28 |
 | `time` | not certified: 144 planted defects not rejected, and not ruled equivalent | 71.1% | 144 | 0 | 2026-11-28 |
 | `booking` | not certified: 43 planted defects not rejected, and not ruled equivalent | 80.0% | 43 | 0 | 2026-11-28 |
 | `contact` | not certified: 10 planted defects not rejected, and not ruled equivalent | 97.5% | 10 | 0 | 2026-11-28 |
 | `analytics` | not certified: 41 planted defects not rejected, and not ruled equivalent | 75.9% | 41 | 0 | 2026-11-28 |
 | `payments` | not certified: 70 planted defects not rejected, and not ruled equivalent | 77.8% | 70 | 0 | 2026-11-28 |
 | `pdf` | not certified: 9 planted defects not rejected, and not ruled equivalent | 96.8% | 9 | 0 | 2026-11-28 |
-| `docparse` | not certified: 165 planted defects not rejected, and not ruled equivalent | 66.6% | 165 | 0 | 2026-11-28 |
+| `docparse` | not certified: 50 planted defects not rejected, and not ruled equivalent | 92.8% | 50 | 0 | 2026-11-28 |
 | `imagemeta` | not certified: 135 planted defects not rejected, and not ruled equivalent | 63.8% | 135 | 0 | 2026-11-28 |
 | `geo` | not certified: 44 planted defects not rejected, and not ruled equivalent | 78.8% | 44 | 0 | 2026-11-28 |
 | `sitemap` | not certified: 71 planted defects not rejected, and not ruled equivalent | 68.2% | 71 | 0 | 2026-11-28 |
@@ -139,13 +139,13 @@ The 84 blocks calibrated so far, of 235:
 | `testdata` | capability only: every planted defect rejected; repeatability and reproducibility not measured yet | 100.0% | 0 | 0 | 2026-11-28 |
 | `privacy` | not certified: 22 planted defects not rejected, and not ruled equivalent | 78.0% | 22 | 0 | 2026-11-28 |
 | `surfaces` | not certified: 64 planted defects not rejected, and not ruled equivalent | 66.3% | 64 | 0 | 2026-11-28 |
-| `upkeep` | not certified: 96 planted defects not rejected, and not ruled equivalent | 66.7% | 96 | 0 | 2026-11-28 |
+| `upkeep` | not certified: 8 planted defects not rejected, and not ruled equivalent | 97.6% | 8 | 0 | 2026-11-28 |
 | `backups` | not certified: 33 planted defects not rejected, and not ruled equivalent | 79.3% | 33 | 0 | 2026-11-28 |
 | `loadsoak` | not certified: 56 planted defects not rejected, and not ruled equivalent | 68.9% | 56 | 0 | 2026-11-28 |
 | `datagate` | not certified: 42 planted defects not rejected, and not ruled equivalent | 80.5% | 42 | 0 | 2026-11-28 |
 | `pipeline` | not certified: 71 planted defects not rejected, and not ruled equivalent | 73.2% | 71 | 0 | 2026-11-28 |
 | `sync` | not certified: 43 planted defects not rejected, and not ruled equivalent | 73.9% | 43 | 0 | 2026-11-28 |
-| `feedback` | not certified: 91 planted defects not rejected, and not ruled equivalent | 63.3% | 91 | 0 | 2026-11-28 |
+| `feedback` | capability only: every planted defect rejected; repeatability and reproducibility not measured yet | 100.0% | 0 | 0 | 2026-11-28 |
 | `cmi5` | not certified: 60 planted defects not rejected, and not ruled equivalent | 70.4% | 60 | 0 | 2026-11-28 |
 | `pwa` | not certified: 34 planted defects not rejected, and not ruled equivalent | 73.8% | 34 | 0 | 2026-11-28 |
 | `ux` | not certified: 117 planted defects not rejected, and not ruled equivalent | 69.5% | 117 | 0 | 2026-11-28 |
@@ -157,9 +157,10 @@ The 84 blocks calibrated so far, of 235:
 | `ask` | not certified: 16 planted defects not rejected, and not ruled equivalent | 98.2% | 16 | 0 | 2026-11-28 |
 | `etl` | not certified: 102 planted defects not rejected, and not ruled equivalent | 83.1% | 102 | 0 | 2026-11-28 |
 | `console` | not certified: 12 planted defects not rejected, and not ruled equivalent | 98.3% | 12 | 0 | 2026-11-28 |
-| `factoryreports` | not certified: 256 planted defects not rejected, and not ruled equivalent | 70.3% | 256 | 0 | 2026-11-28 |
+| `factoryreports` | not certified: 6 planted defects not rejected, and not ruled equivalent | 99.3% | 6 | 0 | 2026-11-28 |
 | `walkthrough` | not certified: 12 planted defects not rejected, and not ruled equivalent | 93.9% | 12 | 0 | 2026-11-28 |
 | `speech` | not certified: 327 planted defects not rejected, and not ruled equivalent | 71.2% | 327 | 0 | 2026-11-28 |
+| `asn1-der` | not certified: 291 planted defects not rejected, and not ruled equivalent | 77.8% | 291 | 0 | 2026-11-28 |
 
 ### Control charts
 

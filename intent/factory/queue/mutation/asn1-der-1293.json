@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "asn1-der",
+  "mutant": {
+    "id": "1293",
+    "line": 753,
+    "column": 38,
+    "endLine": 753,
+    "endColumn": 40,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "for (const a of attrs?.children ?? []) {",
+    "prevText": "const san: GeneralName[] = [];",
+    "nextText": "const [type, values] = a.children as [Der, Der];"
+  },
+  "mayEdit": [
+    "intent/blocks/asn1-der/asn1-der.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/asn1-der-1293.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"asn1-der\". Mutant: line 753:38-753:40, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/asn1-der/index.ts (> marks the mutated line):\n   747    const top = parseDer(buf);\n   748    const [info, algId, sig] = expect(top, UT.sequence, 'a CertificationRequest').children as [Der, Der, Der];\n   749    if (!info || !algId || !sig || top.children.length !== 3) throw new DerError('a CertificationRequest has three parts');\n   750    const [ver, subject, spki, attrs] = expect(info, UT.sequence, 'CertificationRequestInfo').children as [Der, Der, Der, Der | undefined];\n   751    if (asInteger(ver) !== 0n) throw new DerError('an unknown request version');\n   752    const san: GeneralName[] = [];\n>  753    for (const a of attrs?.children ?? []) {\n   754      const [type, values] = a.children as [Der, Der];\n   755      if (asOid(type) !== '1.2.840.113549.1.9.14') continue;\n   756      for (const ext of values.children[0]?.children ?? []) {\n   757        const [o, ...rest] = ext.children as [Der, ...Der[]];\n   758        if (asOid(o) === '2.5.29.17') san.push(...generalNames(parseDer(asOctets(rest.at(-1)!))));\n   759      }\n\nTest file style (intent/blocks/asn1-der/asn1-der.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync } from 'node:crypto';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { DerError, UT, asBits, asBoolean, asInteger, asOid, asString, asTime, bitString, boolean, buildCsr, explicit, fromPem, generalNames, ia5String, implicit, integer, matchesHostname, nameToString, nullValue, octetString, oid, oidName, oidOf, parseAll, parseCertificate, parseCsr, parseDer, parseSpki, printableString, sanExtension, sequence, set, signedBy, time, tlv, toPem, utf8String, validAt } from './index.ts';\nimport type { Der } from './index.ts';\n\n// Made with OpenSSL for these tests: a root, a server certificate it signed (SAN, key usage, EKU), and a self-signed Ed25519 certificate.\nconst ROOT = `-----BEGIN CERTIFICATE-----\nMIIBvDCCAWGgAwIBAgIUZ+gke9PhlRiiEM92FYa3KyKtMNcwCgYIKoZIzj0EAwIw\nMjEeMBwGA1UEAwwVVGVzdCBBdHRlc3RhdGlvbiBSb290MRAwDgYDVQQKDAdFeGFt\ncGxlMCAXDTI2MTEyODA1NTMyOVoYDzIxMjYxMTA0MDU1MzI5WjAyMR4wHAYDVQQD\nDBVUZXN0IEF0dGVzdGF0aW9uIFJvb3QxEDAOBgNVBAoMB0V4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAARUZQDumQ7QAf1EvzzU8RPnLx1et7vmCeDCAcv3\nXv13VLK9ZQZX9vKZEZzqIZtJac1JJNomZF5oEumt6GdRQLzuo1MwUTAdBgNVHQ4E\nFgQUaEjkGdoZ/KvUZcsBsihfJX7qq1kwHwYDVR0jBBgwFoAUaEjkGdoZ/KvUZcsB\nsihfJX7qq1kwDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAgNJADBGAiEA7FDz\nbLwiEfFSQE167DkcHmHARg1UKLttn+Q3OcwAlfsCIQDPCyLcFSmaplhuBfn5CoXq\nDGahgBWU86o3N97hxpsTCw==\n-----END CERTIFICATE-----\n`;\nconst SERVER = `-----BEGIN CERTIFICATE-----\nMIICejCCAiCgAwIBAgIURvhxSDLWZiKYHY7EHgT92yUR7JkwCgYIKoZIzj0EAwIw\nMjEeMBwGA1UEAwwVVGVzdCBBdHRlc3RhdGlvbiBSb290MRAwDgYDVQQKDAdFeGFt\ncGxlMCAXDTI2MTEyODA2MjEyOVoYDzIxMjYxMTA0MDYyMTI5WjBbMQswCQYDVQQG\nEwJVUzENMAsGA1UECAwET2hpbzEPMA0GA1UEBwwGRGF5dG9uMRYwFAYDVQQKDA1F\neGFtcGxlLCBJbmMuMRQwEgYDVQQDDAtleGFtcGxlLm9yZzBZMBMGByqGSM49AgEG\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/asn1-der-1293.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "28b7438d611c0d8c29f845ee9ba46542cc933df5"
+  },
+  "createdAt": "2026-11-28T08:56:01.146Z"
+}

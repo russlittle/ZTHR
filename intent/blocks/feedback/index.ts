@@ -31,7 +31,7 @@ export interface Ticket {
 const scrub = (s: string) =>
   s
     .replace(/[^\s@]{1,64}@[^\s@]{1,255}\.[a-z]{2,63}/gi, '[email]')
-    .replace(/\b(?:\d[ -]?){13,19}\b/g, '[number]')
+    .replace(/\b\d(?:[ -]?\d){12,18}\b/g, '[number]')
     .replace(/\b([\w-]*?(?:bearer|token|key|password|passwd|secret))\b[=: ]+(?:bearer\s+)?\S+/gi, '$1=[hidden]');
 
 const words = (s: string) => new Set(s.toLowerCase().match(/[a-z0-9]{3,}/g) ?? []);

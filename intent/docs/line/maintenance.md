@@ -113,7 +113,7 @@ flowchart LR
   r -.->|next round, until no survivors but recorded equivalents| m
 ```
 
-Scores per block, from metrology's certificates (84 blocks scored, 2 with no survivors but recorded equivalents):
+Scores per block, from metrology's certificates (85 blocks scored, 3 with no survivors but recorded equivalents):
 
 | Block | Score | Floor | Survived | Recorded equivalent |
 | --- | --- | --- | --- | --- |
@@ -122,6 +122,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 2 with no sur
 | `apikeys` | 79.9% | none | 32 | 0 |
 | `apiver` | 87.4% | none | 15 | 0 |
 | `ask` | 98.2% | none | 16 | 0 |
+| `asn1-der` | 77.8% | none | 291 | 0 |
 | `audit` | 75.0% | none | 32 | 0 |
 | `backups` | 79.3% | none | 33 | 0 |
 | `booking` | 80.0% | none | 43 | 0 |
@@ -138,19 +139,19 @@ Scores per block, from metrology's certificates (84 blocks scored, 2 with no sur
 | `datagate` | 80.5% | none | 42 | 0 |
 | `dav` | 100.0% | none | 0 | 0 |
 | `devices` | 77.6% | none | 32 | 0 |
-| `docparse` | 66.6% | none | 165 | 0 |
+| `docparse` | 92.8% | none | 50 | 0 |
 | `drafts` | 82.1% | none | 15 | 0 |
 | `etl` | 83.1% | none | 102 | 0 |
 | `events` | 72.9% | none | 39 | 0 |
 | `expiry` | 72.3% | none | 18 | 0 |
-| `factoryreports` | 70.3% | none | 256 | 0 |
-| `feedback` | 63.3% | none | 91 | 0 |
+| `factoryreports` | 99.3% | none | 6 | 0 |
+| `feedback` | 100.0% | none | 0 | 0 |
 | `flags` | 77.7% | none | 21 | 0 |
 | `geo` | 78.8% | none | 44 | 0 |
 | `grants` | 60.5% | none | 123 | 0 |
 | `health` | 75.8% | none | 37 | 0 |
 | `history` | 81.6% | none | 18 | 0 |
-| `i18n` | 58.6% | none | 94 | 0 |
+| `i18n` | 98.2% | none | 4 | 0 |
 | `idempotency` | 86.4% | none | 8 | 0 |
 | `imagemeta` | 63.8% | none | 135 | 0 |
 | `importer` | 78.1% | none | 223 | 0 |
@@ -179,7 +180,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 2 with no sur
 | `reports` | 81.9% | none | 41 | 0 |
 | `resilience` | 78.7% | none | 19 | 0 |
 | `retention` | 70.8% | none | 28 | 0 |
-| `search` | 66.3% | none | 99 | 0 |
+| `search` | 95.3% | none | 16 | 0 |
 | `secheaders` | 66.2% | none | 50 | 0 |
 | `sessions` | 78.2% | none | 64 | 0 |
 | `sitemap` | 68.2% | none | 71 | 0 |
@@ -192,7 +193,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 2 with no sur
 | `time` | 71.1% | none | 144 | 0 |
 | `tree` | 65.0% | none | 130 | 0 |
 | `uat` | 75.2% | none | 58 | 0 |
-| `upkeep` | 66.7% | none | 96 | 0 |
+| `upkeep` | 97.6% | none | 8 | 0 |
 | `uploads` | 64.7% | none | 65 | 0 |
 | `uploadsafe` | 64.4% | none | 69 | 0 |
 | `ux` | 69.5% | none | 117 | 0 |

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "asn1-der",
+  "mutant": {
+    "id": "580",
+    "line": 311,
+    "column": 7,
+    "endLine": 311,
+    "endColumn": 16,
+    "mutator": "EqualityOperator",
+    "original": "y >= 1950",
+    "replacement": "y > 1950",
+    "lineText": "if (y >= 1950 && y <= 2049) return univ(UT.utcTime, false, Buffer.from(`${two(y % 100)}${rest}`, 'latin1'));",
+    "prevText": "const rest = `${two(d.getUTCMonth() + 1)}${two(d.getUTCDate())}${two(d.getUTCHours())}${two(d.getUTCMinutes())}${two(d.getUTCSeconds())}Z`;",
+    "nextText": "return univ(UT.genTime, false, Buffer.from(`${String(y).padStart(4, '0')}${rest}`, 'latin1'));"
+  },
+  "mayEdit": [
+    "intent/blocks/asn1-der/asn1-der.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/asn1-der-580.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"asn1-der\". Mutant: line 311:7-311:16, mutator EqualityOperator: \"y >= 1950\" becomes \"y > 1950\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/asn1-der/index.ts (> marks the mutated line):\n   305  \n   306  const two = (n: number) => String(n).padStart(2, '0');\n   307  /** UTCTime for 1950 to 2049, GeneralizedTime outside it, as RFC 5280 requires. */\n   308  export function time(d: Date): Buffer {\n   309    const y = d.getUTCFullYear();\n   310    const rest = `${two(d.getUTCMonth() + 1)}${two(d.getUTCDate())}${two(d.getUTCHours())}${two(d.getUTCMinutes())}${two(d.getUTCSeconds())}Z`;\n>  311    if (y >= 1950 && y <= 2049) return univ(UT.utcTime, false, Buffer.from(`${two(y % 100)}${rest}`, 'latin1'));\n   312    return univ(UT.genTime, false, Buffer.from(`${String(y).padStart(4, '0')}${rest}`, 'latin1'));\n   313  }\n   314  \n   315  /** [n] EXPLICIT: the value wrapped in a context tag. */\n   316  export const explicit = (n: number, inner: Uint8Array): Buffer => tlv(2, true, n, inner);\n   317  /** [n] IMPLICIT primitive: the tag replaced, the content kept. */\n\nTest file style (intent/blocks/asn1-der/asn1-der.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync } from 'node:crypto';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { DerError, UT, asBits, asBoolean, asInteger, asOid, asString, asTime, bitString, boolean, buildCsr, explicit, fromPem, generalNames, ia5String, implicit, integer, matchesHostname, nameToString, nullValue, octetString, oid, oidName, oidOf, parseAll, parseCertificate, parseCsr, parseDer, parseSpki, printableString, sanExtension, sequence, set, signedBy, time, tlv, toPem, utf8String, validAt } from './index.ts';\nimport type { Der } from './index.ts';\n\n// Made with OpenSSL for these tests: a root, a server certificate it signed (SAN, key usage, EKU), and a self-signed Ed25519 certificate.\nconst ROOT = `-----BEGIN CERTIFICATE-----\nMIIBvDCCAWGgAwIBAgIUZ+gke9PhlRiiEM92FYa3KyKtMNcwCgYIKoZIzj0EAwIw\nMjEeMBwGA1UEAwwVVGVzdCBBdHRlc3RhdGlvbiBSb290MRAwDgYDVQQKDAdFeGFt\ncGxlMCAXDTI2MTEyODA1NTMyOVoYDzIxMjYxMTA0MDU1MzI5WjAyMR4wHAYDVQQD\nDBVUZXN0IEF0dGVzdGF0aW9uIFJvb3QxEDAOBgNVBAoMB0V4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAARUZQDumQ7QAf1EvzzU8RPnLx1et7vmCeDCAcv3\nXv13VLK9ZQZX9vKZEZzqIZtJac1JJNomZF5oEumt6GdRQLzuo1MwUTAdBgNVHQ4E\nFgQUaEjkGdoZ/KvUZcsBsihfJX7qq1kwHwYDVR0jBBgwFoAUaEjkGdoZ/KvUZcsB\nsihfJX7qq1kwDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAgNJADBGAiEA7FDz\nbLwiEfFSQE167DkcHmHARg1UKLttn+Q3OcwAlfsCIQDPCyLcFSmaplhuBfn5CoXq\nDGahgBWU86o3N97hxpsTCw==\n-----END CERTIFICATE-----\n`;\nconst SERVER = `-----BEGIN CERTIFICATE-----\nMIICejCCAiCgAwIBAgIURvhxSDLWZiKYHY7EHgT92yUR7JkwCgYIKoZIzj0EAwIw\nMjEeMBwGA1UEAwwVVGVzdCBBdHRlc3RhdGlvbiBSb290MRAwDgYDVQQKDAdFeGFt\ncGxlMCAXDTI2MTEyODA2MjEyOVoYDzIxMjYxMTA0MDYyMTI5WjBbMQswCQYDVQQG\nEwJVUzENMAsGA1UECAwET2hpbzEPMA0GA1UEBwwGRGF5dG9uMRYwFAYDVQQKDA1F\neGFtcGxlLCBJbmMuMRQwEgYDVQQDDAtleGFtcGxlLm9yZzBZMBMGByqGSM49AgEG\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/asn1-der-580.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "28b7438d611c0d8c29f845ee9ba46542cc933df5"
+  },
+  "createdAt": "2026-11-28T08:55:58.402Z"
+}
