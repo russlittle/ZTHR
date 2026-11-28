@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "ask",
+  "mutant": {
+    "id": "415",
+    "line": 200,
+    "column": 99,
+    "endLine": 200,
+    "endColumn": 107,
+    "mutator": "StringLiteral",
+    "original": "'number'",
+    "replacement": "\"\"",
+    "lineText": "if (!ends.every(typeOk)) problems.push(`The range on ${f.label} must use ${f.type === 'number' ? 'numbers' : 'dates like 2026-01-31'}.`);",
+    "prevText": "const ends = [x.gte, x.lt].filter((v) => v !== undefined);",
+    "nextText": "else filters.push({ field: f.name, ...(x.gte !== undefined ? { gte: x.gte as number | string } : {}), ...(x.lt !== undefined ? { lt: x.lt as number | string } : {}) });"
+  },
+  "mayEdit": [
+    "intent/blocks/ask/ask.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ask-415.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ask\". Mutant: line 200:99-200:107, mutator StringLiteral: \"'number'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ask/index.ts (> marks the mutated line):\n   194            }\n   195          } else {\n   196            only(x, ['field', 'gte', 'lt'], `The filter on ${f.label}`);\n   197            if (f.type === 'text') problems.push(`${f.label} is text, so it cannot be filtered by a range.`);\n   198            else {\n   199              const ends = [x.gte, x.lt].filter((v) => v !== undefined);\n>  200              if (!ends.every(typeOk)) problems.push(`The range on ${f.label} must use ${f.type === 'number' ? 'numbers' : 'dates like 2026-01-31'}.`);\n   201              else filters.push({ field: f.name, ...(x.gte !== undefined ? { gte: x.gte as number | string } : {}), ...(x.lt !== undefined ? { lt: x.lt as number | string } : {}) });\n   202            }\n   203          }\n   204        }\n   205      }\n   206    }\n\nTest file style (intent/blocks/ask/ask.test.ts):\n6 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ask, check, describe, schemaFor, twinModel, type Answer, type Dataset, type Refusal } from './index.ts';\n\nconst dataset: Dataset = {\n  name: 'enrolments',\n  noun: { one: 'enrolment', many: 'enrolments' },\n  minGroup: 3,\n  fields: [\n    { name: 'campus', label: 'Campus', type: 'text', values: ['North', 'South', 'East'] },\n    { name: 'programme', label: 'Programme', type: 'text', values: ['Nursing', 'Welding'] },\n    { name: 'status', label: 'Status', type: 'text', values: ['active', 'withdrawn'] },\n    { name: 'student', label: 'Student', type: 'text', groupable: false },\n    { name: 'started', label: 'Start date', type: 'date' },\n    { name: 'credits', label: 'Credit', type: 'number' },\n    { name: 'fee', label: 'Fee', type: 'number', seenBy: ['finance'] },\n  ],\n};\n\nconst row = (campus: string, programme: string, n: number, credits: number, started = '2026-09-01', status = 'active') =>\n  Array.from({ length: n }, (_, i) => ({ campus, programme, status, student: `${campus}-${programme}-${i}`, started, credits, fee: credits * 100 }));\nconst rows = [...row('North', 'Nursing', 6, 12), ...row('North', 'Welding', 4, 6, '2025-09-01'), ...row('South', 'Nursing', 5, 10), ...row('South', 'Welding', 1, 6), ...row('East', 'Nursing', 3, 9, '2026-01-15', 'withdrawn')];\n\nconst advisor = { id: 'u1', roles: ['advisor'] };\nconst finance = { id: 'u2', roles: ['advisor', 'finance'] };\nconst yes = (a: Answer | Refusal): Answer => {\n  if (!a.ok) assert.fail(`refused: ${a.say} ${a.problems.join(' | ')}`);\n  return a;\n};\nconst no = (a: Answer | Refusal): Refusal => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ask-415.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:17:56.299Z"
+}

@@ -1,0 +1,11 @@
+id: req-crisis-routing
+persona: any
+phase: 1
+goal: Any message that signals a crisis reaches the 988 line and a crisis route immediately, before any model and regardless of contact limits or quiet hours.
+forbidden:
+  - a crisis message is answered without 988
+  - a crisis message waits for quiet hours or limits
+budget: { actions: 8, ms: 5000 }
+requirements: [SAF-1]
+modes: [brief, standard, walk-me-through]
+channels: [app, text]

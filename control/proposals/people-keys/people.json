@@ -1,0 +1,7 @@
+{
+  "people": ["russ"],
+  "keys": {
+    "russ": ["ssh-ed25519 REPLACE-WITH-THE-CONTENTS-OF-zthr_signing.pub russ zthr signing"]
+  },
+  "note": "Listed people sign destructive changes only: loosening or removing a locked journey card, lowering a ratchet floor, weakening or removing a gate, and deleting data. Everything else is certified by the factory when every check passes (docs/adr/0004-who-admits-what.md). Each person's keys are the SSH signing keys their commits and acts are verified against; a person with no key here can sign nothing."
+}

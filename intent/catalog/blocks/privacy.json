@@ -1,0 +1,39 @@
+{
+  "name": "privacy",
+  "purpose": "Canary tracing of sensitive fields and small-cell suppression",
+  "provides": [
+    "Canary",
+    "Finding",
+    "FlowPolicy",
+    "MIN_CELL",
+    "Sensitivity",
+    "canary",
+    "leaks",
+    "matrix",
+    "safeCount",
+    "safeRate",
+    "tooSmall",
+    "trace",
+    "unexercised"
+  ],
+  "requires": [],
+  "externalRequires": [],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "Proving, on every build, that sensitive facts reach only the places their class allows, and finding the field that leaked and where. `safeRate` and `safeCount` suppress any figure about fewer than five people.",
+  "notFor": "Detecting sensitive data you did not plant (it traces declared fields, not free text a person types into a note), encryption (the runtime block seals facts), or access control (the app's sign-in and roles decide who sees what).",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/privacy/test/privacy.test.ts`](../../packages/privacy/test/privacy.test.ts) (6 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 85,
+  "tests": 6,
+  "source": {
+    "path": "packages/privacy",
+    "sha256": "153698c8fa5b3a7134d04f9232286eb00c43528948b837afd6f67eda123b118a"
+  }
+}

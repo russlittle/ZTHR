@@ -1,0 +1,12 @@
+id: persona-7b-money-and-shifts
+persona: destiny
+delight: 7b
+phase: 1
+goal: Destiny sees the money she likely qualifies for and a day that fits her two job schedules around her classes.
+forbidden:
+  - a resource is offered that is stale or the student is ineligible for
+  - a study block is placed on top of a class or a shift
+budget: { actions: 4, ms: 5000 }
+requirements: [NAV-1, NAV-5, DAY-1]
+modes: [standard]
+channels: [app, text]

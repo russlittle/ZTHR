@@ -1,0 +1,8 @@
+{
+  "name": "anchors: ledger heads and the goalposts anchor are never moved or deleted; only an admin sets the anchor",
+  "target": "tag",
+  "enforcement": "active",
+  "bypass_actors": [],
+  "conditions": { "ref_name": { "include": ["refs/tags/zthr-ledger/*", "refs/tags/zthr-anchor"], "exclude": [] } },
+  "rules": [{ "type": "deletion" }, { "type": "update" }]
+}

@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "observe",
+  "mutant": {
+    "id": "112",
+    "line": 100,
+    "column": 13,
+    "endLine": 100,
+    "endColumn": 61,
+    "mutator": "Regex",
+    "original": "/^00-([0-9a-f]{32})-([0-9a-f]{16})-[0-9a-f]{2}$/",
+    "replacement": "/00-([0-9a-f]{32})-([0-9a-f]{16})-[0-9a-f]{2}$/",
+    "lineText": "const m = /^00-([0-9a-f]{32})-([0-9a-f]{16})-[0-9a-f]{2}$/.exec(header ?? '');",
+    "prevText": "export function traceFrom(header: string | undefined): { trace: string; parent?: string } {",
+    "nextText": "return m && !/^0+$/.test(m[1]!) && !/^0+$/.test(m[2]!) ? { trace: m[1]!, parent: m[2]! } : { trace: hex(16) };"
+  },
+  "mayEdit": [
+    "intent/blocks/observe/observe.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/observe-112.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"observe\". Mutant: line 100:13-100:61, mutator Regex: \"/^00-([0-9a-f]{32})-([0-9a-f]{16})-[0-9a-f]{2}$/\" becomes \"/00-([0-9a-f]{32})-([0-9a-f]{16})-[0-9a-f]{2}$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/observe/index.ts (> marks the mutated line):\n    94      this.log('ERROR', m, f);\n    95    }\n    96  }\n    97  \n    98  /** The trace id from a W3C traceparent header, or a new one (an all-zero trace or parent id is invalid there). */\n    99  export function traceFrom(header: string | undefined): { trace: string; parent?: string } {\n>  100    const m = /^00-([0-9a-f]{32})-([0-9a-f]{16})-[0-9a-f]{2}$/.exec(header ?? '');\n   101    return m && !/^0+$/.test(m[1]!) && !/^0+$/.test(m[2]!) ? { trace: m[1]!, parent: m[2]! } : { trace: hex(16) };\n   102  }\n   103  \n   104  /** Runs a request's work in a trace; everything logged or spanned inside carries its id. */\n   105  export function withTrace<T>(o: { traceparent?: string; feature?: string; name: string }, run: () => Promise<T>): Promise<{ result: T; spans: SpanRecord[] }> {\n   106    const t = traceFrom(o.traceparent);\n\nTest file style (intent/blocks/observe/observe.test.ts):\n10 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Errors, Logger, Metrics, keepDays, redact, span, traceparent, withTrace } from './index.ts';\n\ntest('sensitive keys and secret-shaped values never reach a log line', () => {\n  const lines: string[] = [];\n  const log = new Logger({ write: (l) => lines.push(l), build: 'abc123', extraSensitive: ['diagnosis'] });\n  log.info('charged card 4242 4242 4242 4242 for ana', { password: 'hunter2', user: { name: 'Ana', token: 'x', diagnosis: 'flu' }, header: 'Bearer eyJhbGciOi.eyJzdWIiOjF9.c2ln', note: 'ssn 123-45-6789' });\n  const l = JSON.parse(lines[0]!);\n  assert.equal(l.password, '[redacted]');\n  assert.equal(l.user.token, '[redacted]');\n  assert.equal(l.user.diagnosis, '[redacted]');\n  assert.equal(l.user.name, 'Ana');\n  assert.match(l.message, /\\[card\\]/);\n  assert.equal(l.header, 'Bearer [redacted]');\n  assert.equal(l.note, 'ssn [ssn]');\n  assert.equal(l.build, 'abc123');\n  assert.equal(JSON.stringify(redact({ a: [{ secret: 1 }] })), '{\"a\":[{\"secret\":\"[redacted]\"}]}');\n});\n\ntest('a trace follows a request through every step, and every line written inside carries it', async () => {\n  const lines: string[] = [];\n  const log = new Logger({ write: (l) => lines.push(l), project: 'p' });\n  const incoming = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';\n  const { spans } = await withTrace({ traceparent: incoming, feature: 'upload', name: 'PUT /file' }, async () => {\n    await span('store', async () => {\n      log.info('stored');\n      assert.match(traceparent()!, /^00-4bf92f3577b34da6a3ce929d0e0e4736-[0-9a-f]{16}-01$/);\n    });\n    await span('index', async () => undefined, { rows: 3 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/observe-112.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:19:49.616Z"
+}

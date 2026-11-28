@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "slo",
+  "mutant": {
+    "id": "115",
+    "line": 115,
+    "column": 36,
+    "endLine": 115,
+    "endColumn": 59,
+    "mutator": "ConditionalExpression",
+    "original": "i.status === 'resolved'",
+    "replacement": "true",
+    "lineText": "return this.list.filter((i) => i.status === 'resolved' && i.severity <= 2 && !i.postmortem);",
+    "prevText": "owed(): Incident[] {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/slo/slo.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/slo-115.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"slo\". Mutant: line 115:36-115:59, mutator ConditionalExpression: \"i.status === 'resolved'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/slo/index.ts (> marks the mutated line):\n   109      const missing = [!p.cause.trim() && 'a cause', !p.impact.trim() && 'the impact', !p.actions.length && 'at least one action', ...p.actions.filter((a) => !a.owner?.trim()).map((a) => `an owner for \"${a.what}\"`)].filter(Boolean);\n   110      if (missing.length) throw new Error(`a postmortem needs ${missing.join(', ')}`);\n   111      i.postmortem = p;\n   112    }\n   113    /** Resolved severity 1 and 2 incidents still without a postmortem. */\n   114    owed(): Incident[] {\n>  115      return this.list.filter((i) => i.status === 'resolved' && i.severity <= 2 && !i.postmortem);\n   116    }\n   117    /** What the public status page shows: only the public notes. */\n   118    publicView(): { title: string; status: Status; updates: { at: string; note: string }[] }[] {\n   119      return this.list.filter((i) => i.timeline.some((t) => t.publicNote)).map((i) => ({ title: i.title, status: i.status, updates: i.timeline.filter((t) => t.publicNote).map((t) => ({ at: t.at, note: t.publicNote! })) }));\n   120    }\n   121  }\n\nTest file style (intent/blocks/slo/slo.test.ts):\n5 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Incidents, alerts, budget, burnRate } from './index.ts';\n\nconst o = { name: 'requests succeed', target: 0.999, windowDays: 30 };\n\ntest('error budget and burn rate', () => {\n  assert.deepEqual(budget(o, { good: 999_500, total: 1_000_000 }), { allowedBad: 1000.0000000000009, bad: 500, remaining: 500.0000000000009, spent: 0.49999999999999956 });\n  assert.ok(Math.abs(burnRate(o, { good: 98_560, total: 100_000 }) - 14.4) < 1e-6);\n  assert.equal(burnRate(o, { good: 0, total: 0 }), 0);\n});\n\ntest('a short blip does not page; an outage seen in both windows does', () => {\n  const ok = { good: 100_000, total: 100_000 };\n  const bad = { good: 90_000, total: 100_000 };\n  assert.deepEqual(alerts(o, { '1h': ok, '5m': bad }), [], 'the 5-minute spike alone is not enough');\n  const a = alerts(o, { '1h': bad, '5m': bad, '6h': bad, '30m': bad });\n  assert.deepEqual(a.map((x) => x.severity), ['page', 'page']);\n  assert.match(a[0]!.because, /burning 100\\.0x over 1h/);\n  assert.deepEqual(alerts(o, { '3d': { good: 99_850, total: 100_000 }, '6h': { good: 99_800, total: 100_000 } }).map((x) => x.severity), ['ticket']);\n});\n\ntest('incidents keep a timeline, show only public notes, and are owed a postmortem with owned actions', () => {\n  let t = Date.parse('2026-11-26T10:00:00Z');\n  const inc = new Incidents(() => new Date(t));\n  const i = inc.open('Uploads failing', 1, 'We are looking into failed uploads.');\n  t += 20 * 60_000;\n  inc.update(i.id, 'identified', 'bad deploy 4c1e, rolling back', 'We found the cause and are fixing it.');\n  t += 25 * 60_000;\n  inc.update(i.id, 'resolved', 'rolled back', 'Uploads are working again.');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/slo-115.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:21:24.581Z"
+}

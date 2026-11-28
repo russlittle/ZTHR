@@ -1,0 +1,378 @@
+{
+ "name": "ZTHR team minimum",
+ "what": "The starting point every app from this team inherits, whatever its intent says: what the title block, the evidence and the people who run the app need. A team defines it once; the fleet maintains it, and every app that inherits it gets each update.",
+ "parts": [
+  {
+   "part": "Locked datum",
+   "why": "Every journey on the drawing is locked by hash and walked by the factory"
+  },
+  {
+   "part": "Intent completion from the state graph",
+   "why": "Every journey on the drawing is locked by hash and walked by the factory"
+  },
+  {
+   "part": "Audit log",
+   "why": "The factory records what the app did, and reports intents first"
+  },
+  {
+   "part": "Evidence, intents first",
+   "why": "The factory records what the app did, and reports intents first"
+  },
+  {
+   "part": "Error monitoring",
+   "why": "The people who run the app see what went wrong, with the build and feature it belongs to"
+  },
+  {
+   "part": "Health and readiness",
+   "why": "The people who run the app know it is up"
+  },
+  {
+   "part": "Logging",
+   "why": "The people who run the app can follow what happened, with sensitive values redacted"
+  },
+  {
+   "part": "HTTP API and routing",
+   "why": "Every app answers requests"
+  },
+  {
+   "part": "Validation",
+   "why": "Every input is checked against a declared shape"
+  },
+  {
+   "part": "Security headers and CSRF",
+   "why": "Safe browser defaults on every page"
+  },
+  {
+   "part": "Configuration and secrets",
+   "why": "Settings are typed and secrets are named, and the app refuses to start when unsafe"
+  },
+  {
+   "part": "Data store and migrations",
+   "why": "Every app keeps its records, owner-scoped"
+  },
+  {
+   "part": "Data dictionary",
+   "why": "Every field says what it means and how sensitive it is"
+  },
+  {
+   "part": "Admin console",
+   "why": "The people who support the app can find and fix a record"
+  },
+  {
+   "part": "Record inspector",
+   "why": "Support can open any record with its history and who has read it"
+  },
+  {
+   "part": "Environment badge",
+   "why": "Nobody mistakes a test copy for the real one"
+  },
+  {
+   "part": "Feature registry console",
+   "why": "Every feature, its journeys and whether it is proven, in one place"
+  },
+  {
+   "part": "Configuration and secrets inventory",
+   "why": "Every setting and secret by name, where it is used, and when it last changed"
+  },
+  {
+   "part": "UI kit and accessibility",
+   "why": "Title block: WCAG 2.2 AA, themed, accessible components"
+  },
+  {
+   "part": "Accessibility conformance",
+   "why": "Title block: WCAG 2.2 AA on every surface, in every mode"
+  },
+  {
+   "part": "Readability for the audience",
+   "why": "Title block: plain words"
+  },
+  {
+   "part": "Content registry",
+   "why": "Every piece of text has one controlled home"
+  },
+  {
+   "part": "Surface registry",
+   "why": "Every screen, dialog and email is registered"
+  },
+  {
+   "part": "Contextual help",
+   "why": "Help for the surface you are on"
+  },
+  {
+   "part": "Light and dark modes",
+   "why": "Title block: follows the device or the person's choice"
+  },
+  {
+   "part": "High contrast",
+   "why": "Title block: high contrast available"
+  },
+  {
+   "part": "Low vision mode",
+   "why": "Title block: low vision available"
+  },
+  {
+   "part": "Layouts",
+   "why": "Title block: adapts from a 320-pixel phone to a desktop"
+  },
+  {
+   "part": "Reading comfort",
+   "why": "Title block: reduced motion when the system asks"
+  },
+  {
+   "part": "Generated documentation",
+   "why": "Documentation for two audiences: a guide for each person who uses it, and a reference for the people who run and change it"
+  },
+  {
+   "part": "API contracts",
+   "why": "Every feature's API is defined, secured and documented, and closed until the spec sheet switches it on"
+  },
+  {
+   "part": "Training modules",
+   "why": "Every feature has a lesson written from its journeys, held back until the spec sheet publishes it"
+  },
+  {
+   "part": "Feature explorer",
+   "why": "Admin suite: anyone supporting the app can open any feature and see its parts, data, permissions, audit, history and changes"
+  },
+  {
+   "part": "Object viewer",
+   "why": "Admin suite: browse any collection with its declared fields and live counts"
+  },
+  {
+   "part": "Field provenance",
+   "why": "Admin suite: for any value, what it means, how sensitive it is, and what wrote it"
+  },
+  {
+   "part": "Permission explainer",
+   "why": "Admin suite: why this person can or cannot do this, from the evaluator that enforces it"
+  },
+  {
+   "part": "Tamper-evident audit chain",
+   "why": "Admin suite: every change, and every read of sensitive data, in a hash-chained log"
+  },
+  {
+   "part": "Request tracer",
+   "why": "Admin suite: follow one request through every part it touched"
+  },
+  {
+   "part": "Act as a user",
+   "why": "Admin suite: reproduce a problem as the person who had it, with every action recorded"
+  },
+  {
+   "part": "Query console",
+   "why": "Admin suite: query the app in SQL through the same access rules; switched on per environment, out of production by default"
+  },
+  {
+   "part": "Test data generator",
+   "why": "Admin suite: synthetic records for any feature and person, refused by production"
+  },
+  {
+   "part": "UAT overrides",
+   "why": "Admin suite: set up any case in UAT, recorded and reset in one step"
+  },
+  {
+   "part": "What-if editing",
+   "why": "Admin suite: change a field and watch what the app does with it, for this session only"
+  },
+  {
+   "part": "Confidence walkthrough",
+   "why": "Admin suite: watch each feature's journeys run on test records, step by step"
+  },
+  {
+   "part": "Report builder",
+   "why": "Reports: anyone with access builds their own from the data dictionary, through the same access rules"
+  },
+  {
+   "part": "Report templates",
+   "why": "Reports: ready-made ones to start from"
+  },
+  {
+   "part": "Feature reports",
+   "why": "Reports: every feature reports its use and health, written from the datum"
+  },
+  {
+   "part": "Operations reports",
+   "why": "Reports: the people who run it see availability, speed, errors, runs, access and cost every day"
+  },
+  {
+   "part": "Journey analytics",
+   "why": "Reports: real walks are measured against the journey cards, as the spec sheet's use tracking allows"
+  },
+  {
+   "part": "Product analytics",
+   "why": "Reports: use is counted as the spec sheet allows, never naming anyone without their consent"
+  },
+  {
+   "part": "Metrics and tracing",
+   "why": "Reports: every request is timed against the feedback budget"
+  },
+  {
+   "part": "Report delivery",
+   "why": "Reports: each goes to its audience on a schedule"
+  },
+  {
+   "part": "Improvement brief",
+   "why": "Reports: what people do comes back to the intent as proposals a person decides on"
+  },
+  {
+   "part": "Data pipeline",
+   "why": "The records are carried, never rebuilt: every schema revision is rehearsed, checked for loss and drift, and promoted with a ledger"
+  },
+  {
+   "part": "Compliance evidence",
+   "why": "Compliance is decided on the schematic and proved on every release"
+  },
+  {
+   "part": "Sensitive data inventory",
+   "why": "Every app reports its sensitive data the same way, so the fleet is governed as one"
+  },
+  {
+   "part": "Data gate",
+   "why": "A central gateway decides access by data class, the same way for every app"
+  },
+  {
+   "part": "Delivery pipeline",
+   "why": "Every release reaches people through the same gated pipeline"
+  },
+  {
+   "part": "Service levels and alerts",
+   "why": "The schematic's measures are watched in production, with a runbook for every alert"
+  },
+  {
+   "part": "Lists: paging, sorting and filters",
+   "why": "Housekeeping every app needs: without it, lists that load everything, reorder on refresh, or lose the filter on the way back."
+  },
+  {
+   "part": "Edit conflicts",
+   "why": "Housekeeping every app needs: without it, last write silently wins, and a colleague's change disappears."
+  },
+  {
+   "part": "Trash and restore",
+   "why": "Housekeeping every app needs: without it, deleted by mistake with no way back, or deletions that leave broken references."
+  },
+  {
+   "part": "Reference data",
+   "why": "Housekeeping every app needs: without it, adding one option to a list needs a release."
+  },
+  {
+   "part": "Data retention sweeper",
+   "why": "Housekeeping every app needs: without it, data kept forever by default, and a compliance finding."
+  },
+  {
+   "part": "Backfills",
+   "why": "Housekeeping every app needs: without it, a migration that times out halfway and leaves records in two shapes."
+  },
+  {
+   "part": "Backup restore drills",
+   "why": "Housekeeping every app needs: without it, backups nobody ever restored, found unusable on the worst day."
+  },
+  {
+   "part": "Timeouts, retries and circuit breakers",
+   "why": "Housekeeping every app needs: without it, one slow service hangs every request, and retries pile on until it falls over."
+  },
+  {
+   "part": "Idempotent requests",
+   "why": "Housekeeping every app needs: without it, double clicks and retries make two payments, two records and two emails."
+  },
+  {
+   "part": "Dead letters and replay",
+   "why": "Housekeeping every app needs: without it, failed jobs vanish, or retry forever."
+  },
+  {
+   "part": "Cron watchdog",
+   "why": "Housekeeping every app needs: without it, the nightly job stopped three weeks ago and nobody knew."
+  },
+  {
+   "part": "Long tasks with progress",
+   "why": "Housekeeping every app needs: without it, spinners that time out, and work lost when the page reloads."
+  },
+  {
+   "part": "Graceful shutdown",
+   "why": "Housekeeping every app needs: without it, requests cut off mid-write on every deploy."
+  },
+  {
+   "part": "Account lifecycle",
+   "why": "Housekeeping every app needs: without it, accounts of people long gone, still working."
+  },
+  {
+   "part": "Session expiry warning",
+   "why": "Housekeeping every app needs: without it, a long form lost to a silent timeout."
+  },
+  {
+   "part": "Secret rotation",
+   "why": "Housekeeping every app needs: without it, keys from years ago that nobody dares rotate."
+  },
+  {
+   "part": "Break-glass access",
+   "why": "Housekeeping every app needs: without it, shared admin passwords kept for emergencies."
+  },
+  {
+   "part": "Dependency upkeep",
+   "why": "Housekeeping every app needs: without it, two years of upgrades at once, under pressure."
+  },
+  {
+   "part": "Expiry watch",
+   "why": "Housekeeping every app needs: without it, the certificate expired on a Saturday."
+  },
+  {
+   "part": "Cost meter and budgets",
+   "why": "Housekeeping every app needs: without it, a surprise bill."
+  },
+  {
+   "part": "Configuration drift check",
+   "why": "Housekeeping every app needs: without it, works in test, fails in production, and nobody can say why."
+  },
+  {
+   "part": "Status page",
+   "why": "Housekeeping every app needs: without it, support flooded during an outage, and people guessing."
+  },
+  {
+   "part": "Incidents and postmortems",
+   "why": "Housekeeping every app needs: without it, the same outage, again."
+  },
+  {
+   "part": "Load and soak checks",
+   "why": "Housekeeping every app needs: without it, fine with ten people, down with a thousand."
+  },
+  {
+   "part": "Security scanning",
+   "why": "Housekeeping every app needs: without it, known holes shipped."
+  },
+  {
+   "part": "Log retention and redaction",
+   "why": "Housekeeping every app needs: without it, personal data in logs, kept forever."
+  },
+  {
+   "part": "Housekeeping console",
+   "why": "Housekeeping every app needs: without it, housekeeping that silently stopped."
+  },
+  {
+   "part": "Friendly error pages",
+   "why": "Housekeeping every app needs: without it, raw errors, or a blank page."
+  },
+  {
+   "part": "Loading, empty and error states",
+   "why": "Housekeeping every app needs: without it, blank screens, and spinners that never stop."
+  },
+  {
+   "part": "First run",
+   "why": "Housekeeping every app needs: without it, people who never find the one thing they came for."
+  },
+  {
+   "part": "Maintenance mode and notices",
+   "why": "Housekeeping every app needs: without it, people caught mid-task by a planned outage."
+  },
+  {
+   "part": "Print and save as PDF",
+   "why": "Housekeeping every app needs: without it, screenshots as the only way to keep a copy."
+  },
+  {
+   "part": "What's new",
+   "why": "Housekeeping every app needs: without it, changes that surprise the people who rely on them."
+  },
+  {
+   "part": "Leaving with your data",
+   "why": "Housekeeping every app needs: without it, locked in, with no way out."
+  }
+ ]
+}

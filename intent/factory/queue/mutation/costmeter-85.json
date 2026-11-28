@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "costmeter",
+  "mutant": {
+    "id": "85",
+    "line": 99,
+    "column": 12,
+    "endLine": 99,
+    "endColumn": 138,
+    "mutator": "MethodExpression",
+    "original": "[...out.values()].map(({ micro, ...l }) => ({ ...l, cents: Math.round(micro / 1e4) / 100 })).sort((a, b) => b.cents - a.cents)",
+    "replacement": "[...out.values()].map(({\n  micro,\n  ...l\n}) => ({\n  ...l,\n  cents: Math.round(micro / 1e4) / 100\n}))",
+    "lineText": "return [...out.values()].map(({ micro, ...l }) => ({ ...l, cents: Math.round(micro / 1e4) / 100 })).sort((a, b) => b.cents - a.cents);",
+    "prevText": "}",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/costmeter/costmeter.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/costmeter-85.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"costmeter\". Mutant: line 99:12-99:138, mutator MethodExpression: \"[...out.values()].map(({ micro, ...l }) => ({ ...l, cents: Math.round(micro / 1e4) / 100 })).sort((a, b) => b.cents - a.cents)\" becomes \"[...out.values()].map(({\\n  micro,\\n  ...l\\n}) => ({\\n  ...l,\\n  cents: Math.round(micro / 1e4) / 100\\n}))\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/costmeter/index.ts (> marks the mutated line):\n    93      const last = m.lastAt.get(u.meter);\n    94      // Moving free units can raise what other scopes spent, so after a rebuild every budget is checked.\n    95      const rebuilt = last !== undefined && u.at < last && (this.rates.get(u.meter)!.free ?? 0) > 0;\n    96      if (rebuilt) this.rebuild(m);\n    97      else this.add(m, u);\n    98      for (const b of this.budgets) {\n>   99        if (!rebuilt && !covers(b, u.feature, u.tenant)) continue;\n   100        const cents = this.budgetSpent(month, b);\n   101        for (const f of b.warnAt ?? [0.5, 0.8, 1]) {\n   102          const key = `${b.name}\\n${month}\\n${f}`;\n   103          if (cents >= b.cents * f && !this.warned.has(key)) {\n   104            this.warned.add(key);\n   105            this.onWarn(b, f, cents);\n\nTest file style (intent/blocks/costmeter/costmeter.test.ts):\n6 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Meter } from './index.ts';\n\nconst rates = [\n  { meter: 'tokens', unit: 'token', microCentsPerUnit: 300, free: 1000 },\n  { meter: 'emails', unit: 'email', microCentsPerUnit: 10_000 },\n];\n\ntest('a bill line per meter, feature and tenant, free units first, exact for tiny rates', () => {\n  const m = new Meter(rates);\n  m.record({ meter: 'tokens', units: 1000, feature: 'summaries', tenant: 'acme', at: '2026-11-01T00:00:00Z' });\n  m.record({ meter: 'tokens', units: 2_000_000, feature: 'summaries', tenant: 'acme', at: '2026-11-02T00:00:00Z' });\n  m.record({ meter: 'emails', units: 300, feature: 'digests', tenant: 'beta', at: '2026-11-02T00:00:00Z' });\n  m.record({ meter: 'tokens', units: 5, feature: 'summaries', tenant: 'acme', at: '2026-10-31T00:00:00Z' });\n  assert.deepEqual(m.bill('2026-11'), [{ meter: 'tokens', feature: 'summaries', tenant: 'acme', units: 2_001_000, cents: 600 }, { meter: 'emails', feature: 'digests', tenant: 'beta', units: 300, cents: 3 }]);\n  assert.equal(m.spent('2026-11', { tenant: 'beta' }), 3);\n  assert.throws(() => m.record({ meter: 'gpu', units: 1, feature: 'x', tenant: 'y', at: '2026-11-01' }), /no rate/);\n  assert.throws(() => m.record({ meter: 'emails', units: -1, feature: 'x', tenant: 'y', at: '2026-11-01' }), /negative/);\n});\n\ntest('budgets warn once at each step, a hard budget stops spending, and the forecast says early', () => {\n  const warned: string[] = [];\n  const m = new Meter(rates, [{ name: 'summaries', cents: 100, feature: 'summaries', hard: true }], (b, f) => void warned.push(`${b.name}@${f}`));\n  const use = (units: number, day: string) => m.record({ meter: 'tokens', units, feature: 'summaries', tenant: 'acme', at: `2026-11-${day}T00:00:00Z` });\n  use(1000 + 100_000, '01');\n  assert.deepEqual(warned, []);\n  use(100_000, '02');\n  assert.deepEqual(warned, ['summaries@0.5']);\n  use(100_000, '02');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/costmeter-85.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:18:13.730Z"
+}

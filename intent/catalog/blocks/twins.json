@@ -1,0 +1,33 @@
+{
+  "name": "twins",
+  "purpose": "Twins of outside services (SMS, mail, calendars) with calibration dates",
+  "provides": [
+    "CalendarFeedTwin",
+    "DriftReport",
+    "Probe",
+    "SmsMessage",
+    "SmsTwin",
+    "Twin",
+    "checkCalibration"
+  ],
+  "requires": [],
+  "externalRequires": [],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "Behavioral clones of services you do not own, fitted to recorded probes, with a calibration check that fails the twin when the real service changes.",
+  "notFor": "Services you own: test those where they live.",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/twins/test/twins-more.test.ts`](../../packages/twins/test/twins-more.test.ts) (5 test definitions)\n- [`packages/twins/test/twins.test.ts`](../../packages/twins/test/twins.test.ts) (3 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 80,
+  "tests": 8,
+  "source": {
+    "path": "packages/twins",
+    "sha256": "ecdd4b0881a2639c1386a6f92c6eabd98af61f2cf8d937d6842be3a751fea8c6"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "importer",
+  "mutant": {
+    "id": "80",
+    "line": 88,
+    "column": 37,
+    "endLine": 88,
+    "endColumn": 61,
+    "mutator": "MethodExpression",
+    "original": "hex.startsWith('ffd8ff')",
+    "replacement": "hex.endsWith('ffd8ff')",
+    "lineText": "if (hex.startsWith('89504e47') || hex.startsWith('ffd8ff') || hex.startsWith('47494638')) throw new Refused('This is an image, not data. Copy the table as text, or save it as CSV, and try again.');",
+    "prevText": "if (hex.startsWith('25504446')) throw new Refused('PDF files cannot be imported. Export the table from the original as CSV or .xlsx and try again.');",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/importer/importer.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/importer-80.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"importer\". Mutant: line 88:37-88:61, mutator MethodExpression: \"hex.startsWith('ffd8ff')\" becomes \"hex.endsWith('ffd8ff')\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/importer/index.ts (> marks the mutated line):\n    82  \n    83  /** Refuses well-known binary formats that are not tables, with what to do instead. */\n    84  function refuseBinary(b: Uint8Array): void {\n    85    const hex = Buffer.from(b.subarray(0, 8)).toString('hex');\n    86    if (hex.startsWith('d0cf11e0')) throw new Refused('This is an older Excel (.xls) or Word (.doc) file, which cannot be read. Save it as .xlsx, .docx or CSV and try again.');\n    87    if (hex.startsWith('25504446')) throw new Refused('PDF files cannot be imported. Export the table from the original as CSV or .xlsx and try again.');\n>   88    if (hex.startsWith('89504e47') || hex.startsWith('ffd8ff') || hex.startsWith('47494638')) throw new Refused('This is an image, not data. Copy the table as text, or save it as CSV, and try again.');\n    89  }\n    90  \n    91  const unfold = (s: string) => s.replace(/\\r\\n|\\r/g, '\\n').replace(/\\n[ \\t]/g, '');\n    92  const unescapeText = (v: string) => v.replace(/\\\\([nN,;\\\\])/g, (_, c: string) => (c === 'n' || c === 'N' ? '\\n' : c));\n    93  \n    94  interface Prop {\n\nTest file style (intent/blocks/importer/importer.test.ts):\n11 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { toXlsx, zip, type Field } from '../tabular/index.ts';\nimport { Refused, decode, importFrom, read } from './index.ts';\n\nconst fields: Field[] = [\n  { name: 'email', label: 'Email', aliases: ['e-mail', 'mail'], required: true, parse: (v) => {\n    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(v)) throw new Error('not an email address');\n    return v.toLowerCase();\n  } },\n  { name: 'name', label: 'Name', aliases: ['full name'], required: true },\n  { name: 'age', label: 'Age', parse: (v) => {\n    const n = Number(v);\n    if (!Number.isInteger(n)) throw new Error('not a whole number');\n    return n;\n  } },\n];\n\nconst bytes = (s: string) => new Uint8Array(Buffer.from(s, 'utf8'));\nconst utf16 = (s: string, be: boolean) => {\n  const b = Buffer.from(s, 'utf16le');\n  if (be) b.swap16();\n  return new Uint8Array(Buffer.concat([Buffer.from(be ? [0xfe, 0xff] : [0xff, 0xfe]), b]));\n};\n\ntest('CSV: columns are matched, good rows kept, and bad rows quarantined by row number with every problem', () => {\n  const r = importFrom({ bytes: bytes('E-mail,Full name,Age,Shoe\\nana@x.org,Ana,40,9\\nnope,,old,\\n,,,\\nben@x.org,Ben,,10\\n'), name: 'people.csv' }, fields);\n  assert.equal(r.kind, 'csv');\n  assert.equal(r.encoding, 'utf-8');\n  assert.deepEqual(r.mapping, { 'E-mail': 'email', 'Full name': 'name', Age: 'age', Shoe: undefined });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/importer-80.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:19:10.531Z"
+}

@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "crypto",
+  "mutant": {
+    "id": "5",
+    "line": 24,
+    "column": 7,
+    "endLine": 24,
+    "endColumn": 34,
+    "mutator": "LogicalOperator",
+    "original": "typeof k !== 'string' || !k",
+    "replacement": "typeof k !== 'string' && !k",
+    "lineText": "if (typeof k !== 'string' || !k) throw new Unopenable(`key ${id} is not in the ring`);",
+    "prevText": "const k = Object.hasOwn(ring.keys, id) ? ring.keys[id] : undefined;",
+    "nextText": "const b = Buffer.from(k, 'base64');"
+  },
+  "mayEdit": [
+    "intent/blocks/crypto/crypto.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crypto-5.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crypto\". Mutant: line 24:7-24:34, mutator LogicalOperator: \"typeof k !== 'string' || !k\" becomes \"typeof k !== 'string' && !k\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crypto/index.ts (> marks the mutated line):\n    18    /** Every key by id, base64 of 32 bytes; old ones stay so old data still opens. */\n    19    readonly keys: Readonly<Record<string, string>>;\n    20  }\n    21  \n    22  const keyOf = (ring: KeyRing, id: string) => {\n    23    const k = Object.hasOwn(ring.keys, id) ? ring.keys[id] : undefined;\n>   24    if (typeof k !== 'string' || !k) throw new Unopenable(`key ${id} is not in the ring`);\n    25    const b = Buffer.from(k, 'base64');\n    26    if (b.length !== 32) throw new Unopenable(`key ${id} is not 32 bytes`);\n    27    return b;\n    28  };\n    29  \n    30  export const newKey = () => randomBytes(32).toString('base64');\n\nTest file style (intent/blocks/crypto/crypto.test.ts):\n10 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadToken, Unopenable, equal, needsReseal, newKey, open, randomId, reseal, seal, sign, verify } from './index.ts';\n\ntest('sealed values open with the ring, only in the place they were sealed for', () => {\n  const ring = { current: 'k1', keys: { k1: newKey() } };\n  const s = seal(ring, 'DOB 1990-01-01', 'students.dob.7');\n  assert.ok(!s.includes('1990'));\n  assert.notEqual(seal(ring, 'x'), seal(ring, 'x'), 'a fresh nonce every time');\n  assert.equal(open(ring, s, 'students.dob.7'), 'DOB 1990-01-01');\n  assert.throws(() => open(ring, s, 'students.dob.8'), Unopenable, 'copied to another record, it does not open');\n  const parts = s.split('.');\n  parts[3] = parts[3]!.slice(0, -2) + (parts[3]!.endsWith('A') ? 'B' : 'A') + parts[3]!.slice(-1);\n  assert.throws(() => open(ring, parts.join('.'), 'students.dob.7'), Unopenable, 'any change is detected');\n});\n\ntest('keys rotate: new data under the new key, old data still opens, and re-sealing moves it over', () => {\n  const k1 = newKey();\n  const old = { current: 'k1', keys: { k1 } };\n  const s = seal(old, 'secret');\n  const ring = { current: 'k2', keys: { k1, k2: newKey() } };\n  assert.equal(open(ring, s), 'secret');\n  assert.equal(needsReseal(ring, s), true);\n  const s2 = reseal(ring, s);\n  assert.equal(needsReseal(ring, s2), false);\n  assert.throws(() => open({ current: 'k2', keys: { k2: ring.keys.k2 } }, s), /key k1 is not in the ring/);\n});\n\ntest('signed tokens carry a purpose and an expiry, and a rotated secret still verifies old tokens', () => {\n  const t = sign('s1', 'reset-password', { user: 'ana' }, 60_000, 1000);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crypto-5.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:18:14.332Z"
+}

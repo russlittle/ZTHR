@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "jobs",
+  "mutant": {
+    "id": "154",
+    "line": 154,
+    "column": 14,
+    "endLine": 154,
+    "endColumn": 18,
+    "mutator": "BooleanLiteral",
+    "original": "true",
+    "replacement": "false",
+    "lineText": "return true;",
+    "prevText": "ac.abort();",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/jobs/jobs.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/jobs-154.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"jobs\". Mutant: line 154:14-154:18, mutator BooleanLiteral: \"true\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/jobs/index.ts (> marks the mutated line):\n   148        j.finished = this.o.now();\n   149        return true;\n   150      }\n   151      const ac = this.running.get(id);\n   152      if (ac) {\n   153        ac.abort();\n>  154        return true;\n   155      }\n   156      return false;\n   157    }\n   158  \n   159    dead(): Job[] {\n   160      return [...this.jobs.values()].filter((j) => j.state === 'dead');\n\nTest file style (intent/blocks/jobs/jobs.test.ts):\n10 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Queue, backfill, cron } from './index.ts';\n\nconst setup = () => {\n  let t = 0;\n  const q = new Queue({ now: () => t, baseMs: 100, maxMs: 1000, random: () => 0.999 });\n  return { q, tick: (ms: number) => (t += ms) };\n};\n\ntest('a failing job retries with backoff, then waits as a dead letter until replayed after a fix', async () => {\n  const { q, tick } = setup();\n  let broken = true;\n  q.handle('send', async () => {\n    if (broken) throw new Error('mail server refused');\n    return 'sent';\n  });\n  const j = q.enqueue('send', { to: 'ana' }, { maxAttempts: 3 });\n  await q.tick();\n  assert.equal(j.state, 'waiting');\n  assert.equal(j.runAt, 99, 'the first retry waits up to the base delay');\n  assert.equal(await q.tick(), 0, 'not due yet');\n  tick(100);\n  await q.tick();\n  assert.equal(j.runAt, 100 + 199);\n  tick(300);\n  await q.tick();\n  assert.equal(j.state, 'dead');\n  assert.equal(j.lastError, 'mail server refused');\n  broken = false;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/jobs-154.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:19:23.975Z"
+}

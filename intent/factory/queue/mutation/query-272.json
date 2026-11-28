@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "query",
+  "mutant": {
+    "id": "272",
+    "line": 160,
+    "column": 36,
+    "endLine": 160,
+    "endColumn": 44,
+    "mutator": "ConditionalExpression",
+    "original": "keep < 1",
+    "replacement": "false",
+    "lineText": "if (!Number.isInteger(keep) || keep < 1) throw new Error('a log keeps a whole number of entries, at least 1');",
+    "prevText": "const keep = o.keep ?? 1000;",
+    "nextText": "this.keep = keep;"
+  },
+  "mayEdit": [
+    "intent/blocks/query/query.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/query-272.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"query\". Mutant: line 160:36-160:44, mutator ConditionalExpression: \"keep < 1\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/query/index.ts (> marks the mutated line):\n   154    sinkFailures = 0;\n   155    /** Entries dropped from memory to stay within `keep`. */\n   156    evicted = 0;\n   157  \n   158    constructor(o: LogOptions<E> = {}) {\n   159      const keep = o.keep ?? 1000;\n>  160      if (!Number.isInteger(keep) || keep < 1) throw new Error('a log keeps a whole number of entries, at least 1');\n   161      this.keep = keep;\n   162      this.sink = o.sink;\n   163    }\n   164  \n   165    /** The most recent entries, oldest first. */\n   166    get entries(): readonly E[] {\n\nTest file style (intent/blocks/query/query.test.ts):\n6 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Console, QueryError, parse, type Collection, type QueryLog } from './index.ts';\n\nconst cols: Collection[] = [{ name: 'files', fields: { name: { type: 'string' }, size: { type: 'number' }, owner: { type: 'string' }, shared: { type: 'boolean' }, email: { type: 'string', sensitive: true } } }];\nconst files = [\n  { name: 'plan.pdf', size: 5000, owner: 'ana', shared: true, email: 'ana@example.org' },\n  { name: 'cat.jpg', size: 200, owner: 'ana', shared: false, email: 'ana@example.org' },\n  { name: 'notes.txt', size: 9000, owner: 'ben', shared: true, email: 'ben@example.org' },\n];\nconst make = () => new Console(cols, () => files, () => new Date('2026-11-26T00:00:00Z'));\n\ntest('a query parses into a plan, runs, masks sensitive fields and is recorded', () => {\n  assert.deepEqual(parse('from files where size > 1000 and owner = \"ana\" order by size desc limit 20 select name, size'), { from: 'files', where: [{ field: 'size', op: '>', value: 1000 }, { field: 'owner', op: '=', value: 'ana' }], order: { field: 'size', desc: true }, limit: 20, select: ['name', 'size'] });\n  const c = make();\n  assert.deepEqual(c.run('ana', 'from files where shared = true order by size desc select name, email').rows, [{ name: 'notes.txt', email: '•••' }, { name: 'plan.pdf', email: '•••' }]);\n  assert.deepEqual(c.run('dpo', 'from files where name contains \"CAT\" select email', { seeSensitive: true }).rows, [{ email: 'ana@example.org' }]);\n  const capped = c.run('ana', 'from files limit 2');\n  assert.equal(capped.capped, true);\n  assert.equal(capped.rows.length, 2);\n  assert.equal(parse('from files limit 100000').limit, 500, 'results are capped');\n  assert.deepEqual(c.log.map((l) => [l.who, l.rows]), [['ana', 2], ['dpo', 1], ['ana', 2]]);\n});\n\ntest('writes do not exist, unknown names and wrong types are refused by name, and failures are recorded', () => {\n  const c = make();\n  assert.throws(() => c.run('x', 'delete from files'), /expected from/);\n  assert.throws(() => c.run('x', 'from files where size > 1 delete'), /only reads/);\n  assert.throws(() => c.run('x', 'from users'), /no collection users; there are files/);\n  assert.throws(() => c.run('x', 'from files where colour = \"red\"'), /files has no field colour/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/query-272.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:20:45.773Z"
+}

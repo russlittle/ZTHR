@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "money",
+  "mutant": {
+    "id": "23",
+    "line": 30,
+    "column": 7,
+    "endLine": 30,
+    "endColumn": 13,
+    "mutator": "EqualityOperator",
+    "original": "d < 0n",
+    "replacement": "d <= 0n",
+    "lineText": "if (d < 0n) return divRound(-n, -d);",
+    "prevText": "if (d === 0n) throw new RangeError('division by zero');",
+    "nextText": "const q = n / d;"
+  },
+  "mayEdit": [
+    "intent/blocks/money/money.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/money-23.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"money\". Mutant: line 30:7-30:13, mutator EqualityOperator: \"d < 0n\" becomes \"d <= 0n\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/money/index.ts (> marks the mutated line):\n    24    return { minor: BigInt(minor), currency };\n    25  };\n    26  \n    27  /** Half-even division of a whole number: ties go to the even neighbour, so rounding does not drift one way. */\n    28  export function divRound(n: bigint, d: bigint): bigint {\n    29    if (d === 0n) throw new RangeError('division by zero');\n>   30    if (d < 0n) return divRound(-n, -d);\n    31    const q = n / d;\n    32    const r = n % d;\n    33    const twice = 2n * (r < 0n ? -r : r);\n    34    if (twice < d) return q;\n    35    if (twice > d) return q + (n < 0n ? -1n : 1n);\n    36    return q % 2n === 0n ? q : q + (n < 0n ? -1n : 1n);\n\nTest file style (intent/blocks/money/money.test.ts):\n4 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { add, allocate, divRound, format, money, parse, sub, sum, times } from './index.ts';\n\ntest('amounts are whole minor units, read and written exactly', () => {\n  assert.equal(parse('19.99', 'USD').minor, 1999n);\n  assert.equal(parse('5', 'USD').minor, 500n);\n  assert.equal(parse('-0.5', 'USD').minor, -50n);\n  assert.equal(parse('1234', 'JPY').minor, 1234n);\n  assert.equal(parse('1.2345', 'KWD').minor, 1234n, 'half-even: 1234.5 rounds to the even 1234');\n  assert.equal(format(money(1999, 'USD')), '19.99');\n  assert.equal(format(money(-5, 'USD')), '-0.05');\n  assert.equal(format(money(1234, 'JPY')), '1234');\n  assert.throws(() => parse('12.3.4', 'USD'), SyntaxError);\n  assert.throws(() => money(1.5, 'USD'), RangeError);\n  assert.throws(() => money(1, 'XYZ'), RangeError, 'an unknown currency is refused, not guessed');\n});\n\ntest('half-even rounding does not drift', () => {\n  assert.deepEqual([divRound(5n, 2n), divRound(7n, 2n), divRound(-5n, 2n), divRound(-7n, 2n), divRound(10n, 3n), divRound(11n, 3n), divRound(5n, -2n)], [2n, 4n, -2n, -4n, 3n, 4n, -2n]);\n  assert.throws(() => divRound(1n, 0n), RangeError);\n  assert.equal(times(money(1000, 'USD'), 825n, 10000n).minor, 82n, 'tax of 8.25% on 10.00 is 0.82');\n});\n\ntest('currencies never mix', () => {\n  assert.equal(add(money(100, 'USD'), money(1, 'USD')).minor, 101n);\n  assert.equal(sub(money(100, 'USD'), money(1, 'USD')).minor, 99n);\n  assert.equal(sum([money(1, 'EUR'), money(2, 'EUR')], 'EUR').minor, 3n);\n  assert.throws(() => add(money(1, 'USD'), money(1, 'EUR')), TypeError);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/money-23.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:19:37.829Z"
+}

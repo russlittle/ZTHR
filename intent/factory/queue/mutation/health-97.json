@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "health",
+  "mutant": {
+    "id": "97",
+    "line": 110,
+    "column": 111,
+    "endLine": 110,
+    "endColumn": 117,
+    "mutator": "StringLiteral",
+    "original": "'HEAD'",
+    "replacement": "\"\"",
+    "lineText": "export const allowedDuring = (state: MaintenanceState, method: string) => state.phase !== 'active' || ['GET', 'HEAD', 'OPTIONS', 'PROPFIND'].includes(method.toUpperCase());",
+    "prevText": "/** During maintenance only reads are served; a change is refused with 503 and when to come back. */",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/health/health.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/health-97.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"health\". Mutant: line 110:111-110:117, mutator StringLiteral: \"'HEAD'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/health/index.ts (> marks the mutated line):\n   104    if (active) return { phase: 'active', message: active.message, from: active.from, to: active.to };\n   105    const soon = windows.filter((w) => now < w.from && now >= w.from - w.noticeMs).sort((a, b) => a.from - b.from)[0];\n   106    return soon ? { phase: 'notice', message: soon.message, from: soon.from, to: soon.to } : { phase: 'none' };\n   107  }\n   108  \n   109  /** During maintenance only reads are served; a change is refused with 503 and when to come back. */\n>  110  export const allowedDuring = (state: MaintenanceState, method: string) => state.phase !== 'active' || ['GET', 'HEAD', 'OPTIONS', 'PROPFIND'].includes(method.toUpperCase());\n   111  \n   112  // ---------------------------------------------------------------- environment badge\n   113  \n   114  export type Environment = 'dev' | 'test' | 'uat' | 'production';\n   115  \n   116  /** The badge every screen shows outside production; production shows none, so a badge always means \"not real\". */\n\nTest file style (intent/blocks/health/health.test.ts):\n5 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Drain, ShuttingDown, allowedDuring, badge, maintenance, readiness, statusPage, version } from './index.ts';\n\ntest('readiness: down when a critical dependency fails, degraded for the rest, and slow is a failure', async () => {\n  const fine = { name: 'db', critical: true, run: async () => undefined };\n  const slow = { name: 'search', critical: false, run: () => new Promise<void>((ok) => setTimeout(ok, 200)) };\n  const broken = { name: 'storage', critical: true, run: async () => Promise.reject(new Error('refused')) };\n  assert.equal((await readiness([fine])).status, 'ok');\n  const d = await readiness([fine, slow], 50);\n  assert.equal(d.status, 'degraded');\n  assert.match(d.checks[1]!.error!, /no answer within 50 ms/);\n  assert.equal((await readiness([fine, broken])).status, 'down');\n  assert.deepEqual(version({ commit: 'abc', built: '2026-11-26' }), { commit: 'abc', built: '2026-11-26' });\n});\n\ntest('a shutdown stops new work, lets work in flight finish, and reports what it had to cut off', async () => {\n  const d = new Drain();\n  let finished = 0;\n  const work = d.track(async () => {\n    await new Promise((ok) => setTimeout(ok, 30));\n    finished++;\n  });\n  const stopping = d.stop(1000);\n  await assert.rejects(d.track(async () => undefined), ShuttingDown);\n  assert.equal(await stopping, 0);\n  await work;\n  assert.equal(finished, 1);\n  const d2 = new Drain();\n  void d2.track(() => new Promise((ok) => setTimeout(ok, 500)));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/health-97.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:18:56.530Z"
+}

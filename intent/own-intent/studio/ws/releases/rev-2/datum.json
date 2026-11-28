@@ -1,0 +1,552 @@
+{
+  "title": "Intent studio",
+  "revision": 2,
+  "end": "Anyone who holds an intent can turn it into a drawing a factory builds to, without losing what they meant, and without needing a developer to translate for them.",
+  "titleBlock": {
+    "language": {
+      "value": "English",
+      "from": "default"
+    },
+    "reading": {
+      "value": "audience level",
+      "from": "\"easy to read\"",
+      "replaces": {
+        "value": "plain words",
+        "from": "default"
+      }
+    },
+    "density": {
+      "value": "spacious",
+      "from": "\"calm\"",
+      "replaces": {
+        "value": "comfortable",
+        "from": "default"
+      }
+    },
+    "palette": {
+      "value": "undecided: soft (\"calm\") or restrained (\"professional\")",
+      "from": "clash"
+    },
+    "motion": {
+      "value": "reduced",
+      "from": "\"calm\"",
+      "replaces": {
+        "value": "full, reduced when the system asks",
+        "from": "default"
+      }
+    },
+    "vision": {
+      "value": "low vision available",
+      "from": "\"easy to read\"",
+      "replaces": {
+        "value": "standard, with low vision and high contrast available",
+        "from": "default"
+      }
+    },
+    "accessibility": {
+      "value": "WCAG 2.2 AA",
+      "from": "default"
+    },
+    "layout": {
+      "value": "works one-handed from a 320-pixel phone up",
+      "from": "\"on a phone\"",
+      "replaces": {
+        "value": "adapts from a 320-pixel phone to a desktop",
+        "from": "default"
+      }
+    },
+    "feedback": {
+      "value": "immediate",
+      "from": "\"snappy\"",
+      "replaces": {
+        "value": "within 1 second",
+        "from": "default"
+      }
+    },
+    "itemsPerScreen": {
+      "value": "few",
+      "from": "\"calm\""
+    },
+    "style": {
+      "value": "consistent",
+      "from": "\"professional\""
+    },
+    "targets": {
+      "value": "large",
+      "from": "\"on a phone\""
+    }
+  },
+  "statements": [
+    {
+      "id": "M1",
+      "slot": "constraints",
+      "text": "Take rough words, a pasted spec, a file or a Claude artifact, and keep the person's words verbatim beside every interpretation",
+      "words": "Take rough words, a pasted spec, a file or a Claude artifact, and keep the person's words verbatim beside every interpretation",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 13
+        }
+      },
+      "balloon": 1
+    },
+    {
+      "id": "M2",
+      "slot": "constraints",
+      "text": "Let the person speak their intent instead of typing it, where the browser allows",
+      "words": "Let the person speak their intent instead of typing it, where the browser allows",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 14
+        }
+      },
+      "balloon": 2
+    },
+    {
+      "id": "M3",
+      "slot": "constraints",
+      "text": "Have two model families read the words independently, and turn every difference into a question, never a guess",
+      "words": "Have two model families read the words independently, and turn every difference into a question, never a guess",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 15
+        }
+      },
+      "balloon": 3
+    },
+    {
+      "id": "M4",
+      "slot": "constraints",
+      "text": "Ask only questions whose answer changes what is built, each answered in a few taps, with Other always available",
+      "words": "Ask only questions whose answer changes what is built, each answered in a few taps, with Other always available",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 16
+        }
+      },
+      "balloon": 4
+    },
+    {
+      "id": "M5",
+      "slot": "constraints",
+      "text": "Show where the person is in the process at all times",
+      "words": "Show where the person is in the process at all times",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 17
+        }
+      },
+      "balloon": 5
+    },
+    {
+      "id": "M6",
+      "slot": "constraints",
+      "text": "Show the drawing: every statement numbered, with its source, its state and its marks",
+      "words": "Show the drawing: every statement numbered, with its source, its state and its marks",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 18
+        }
+      },
+      "balloon": 6
+    },
+    {
+      "id": "M7",
+      "slot": "constraints",
+      "text": "Save the work so the person can come back to it",
+      "words": "Save the work so the person can come back to it",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 19
+        }
+      },
+      "balloon": 7
+    },
+    {
+      "id": "M8",
+      "slot": "constraints",
+      "text": "Release a revision as a package the factory can consume, and let the person download it",
+      "words": "Release a revision as a package the factory can consume, and let the person download it",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 20
+        }
+      },
+      "balloon": 8
+    },
+    {
+      "id": "M9",
+      "slot": "constraints",
+      "text": "A revision after the first must say why it was made",
+      "words": "A revision after the first must say why it was made",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 21
+        }
+      },
+      "balloon": 9
+    },
+    {
+      "id": "L1",
+      "slot": "constraints",
+      "text": "\"calm\", read as soft colours, plenty of space, few things on each screen, and no sudden movement",
+      "words": "calm",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "calm"
+      },
+      "balloon": 10
+    },
+    {
+      "id": "L2",
+      "slot": "constraints",
+      "text": "\"snappy\", read as every tap answers at once and every screen is ready within a second",
+      "words": "snappy",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "snappy"
+      },
+      "balloon": 11
+    },
+    {
+      "id": "L3",
+      "slot": "constraints",
+      "text": "\"professional\", read as restrained colour, consistent type and spacing, and precise wording",
+      "words": "professional",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "professional"
+      },
+      "balloon": 12
+    },
+    {
+      "id": "L4",
+      "slot": "constraints",
+      "text": "\"on a phone\", read as works one-handed on a small phone screen, on a slow connection",
+      "words": "on a phone",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "on a phone"
+      },
+      "balloon": 13
+    },
+    {
+      "id": "L5",
+      "slot": "constraints",
+      "text": "\"easy to read\", read as plain words at the audience's reading level, large text available, and strong contrast",
+      "words": "easy to read",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "easy to read"
+      },
+      "balloon": 14
+    },
+    {
+      "id": "EX1",
+      "slot": "measures",
+      "text": "given rough words with no end stated, when they are read, then the first redline offers the person's own sentence as the end",
+      "words": "given rough words with no end stated, when they are read, then the first redline offers the person's own sentence as the end",
+      "tolerance": "exactly as stated",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 35
+        }
+      },
+      "balloon": 15
+    },
+    {
+      "id": "EX2",
+      "slot": "measures",
+      "text": "given an answer, when it is given, then that redline clears and the statement appears on the drawing with its balloon",
+      "words": "given an answer, when it is given, then that redline clears and the statement appears on the drawing with its balloon",
+      "tolerance": "exactly as stated",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 36
+        }
+      },
+      "balloon": 16
+    },
+    {
+      "id": "EX3",
+      "slot": "measures",
+      "text": "given a revision after the first with no reason, when it is released, then it is refused",
+      "words": "given a revision after the first with no reason, when it is released, then it is refused",
+      "tolerance": "exactly as stated",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 37
+        }
+      },
+      "balloon": 17
+    },
+    {
+      "id": "EX4",
+      "slot": "measures",
+      "text": "given the same intent, when it is released in the studio and with the command line, then the packages are identical",
+      "words": "given the same intent, when it is released in the studio and with the command line, then the packages are identical",
+      "tolerance": "exactly as stated",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 38
+        }
+      },
+      "balloon": 18
+    },
+    {
+      "id": "L1.1",
+      "slot": "measures",
+      "text": "no more than five things to choose on any screen",
+      "tolerance": "at most five",
+      "words": "calm",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "calm"
+      },
+      "balloon": 19
+    },
+    {
+      "id": "L2.1",
+      "slot": "measures",
+      "text": "visible response to every tap",
+      "tolerance": "within 100 milliseconds",
+      "words": "snappy",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "snappy"
+      },
+      "balloon": 20
+    },
+    {
+      "id": "L2.2",
+      "slot": "measures",
+      "text": "each screen ready",
+      "tolerance": "within 1 second on a mid-range phone",
+      "words": "snappy",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "snappy"
+      },
+      "balloon": 21
+    },
+    {
+      "id": "L4.1",
+      "slot": "measures",
+      "text": "works on a screen 320 pixels wide",
+      "tolerance": "no sideways scrolling",
+      "words": "on a phone",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "on a phone"
+      },
+      "balloon": 22
+    },
+    {
+      "id": "L4.2",
+      "slot": "measures",
+      "text": "usable on a slow connection",
+      "tolerance": "first screen within 3 seconds",
+      "words": "on a phone",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "on a phone"
+      },
+      "balloon": 23
+    },
+    {
+      "id": "L5.1",
+      "slot": "measures",
+      "text": "text at or below the audience's reading level",
+      "tolerance": "every message",
+      "words": "easy to read",
+      "state": "assumed",
+      "supplied": {
+        "kind": "lexicon",
+        "term": "easy to read"
+      },
+      "balloon": 24
+    },
+    {
+      "id": "phone.i1",
+      "slot": "implications",
+      "text": "every screen must work one-handed on a small screen and a slow connection",
+      "words": "phone",
+      "state": "default",
+      "supplied": {
+        "kind": "derived",
+        "rule": "phone"
+      },
+      "balloon": 25
+    },
+    {
+      "id": "L1",
+      "slot": "problem",
+      "text": "turn what someone means into a drawing and a package a factory can build to, without a developer translating",
+      "words": "turn what someone means into a drawing and a package a factory can build to, without a developer translating",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 7
+        }
+      },
+      "balloon": 26
+    },
+    {
+      "id": "L3",
+      "slot": "people",
+      "text": "people who hold an intent and are not developers",
+      "words": "people who hold an intent and are not developers",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 9
+        }
+      },
+      "balloon": 27
+    },
+    {
+      "id": "L2",
+      "slot": "measures",
+      "text": "a person with no engineering background releases a package in one sitting, and the factory builds it without asking them anything new",
+      "words": "a person with no engineering background releases a package in one sitting, and the factory builds it without asking them anything new",
+      "state": "confirmed",
+      "supplied": {
+        "kind": "person",
+        "origin": {
+          "path": "intent.md",
+          "line": 8
+        }
+      },
+      "balloon": 28
+    }
+  ],
+  "notes": [
+    {
+      "text": "Runs as a single page in the browser, because the person should need nothing installed",
+      "reason": "the person should need nothing installed",
+      "stance": "practical",
+      "origin": {
+        "path": "intent.md",
+        "line": 25
+      }
+    },
+    {
+      "text": "Uses the same engine as the command line, so a release made here and one made there are identical",
+      "reason": "a release made here and one made there are identical",
+      "stance": "practical",
+      "origin": {
+        "path": "intent.md",
+        "line": 26
+      }
+    },
+    {
+      "text": "Ideally reads with two different model families inside the page once a second family is available there",
+      "reason": "a second family is available there",
+      "stance": "ideal",
+      "origin": {
+        "path": "intent.md",
+        "line": 27
+      }
+    }
+  ],
+  "variants": [],
+  "openQuestions": [
+    {
+      "id": "one:problem",
+      "text": "Is this the problem? (one reading so far, by claude)",
+      "protects": "building the right thing at all"
+    },
+    {
+      "id": "one:why",
+      "text": "Is this what you are ultimately trying to achieve? (one reading so far, by claude)",
+      "protects": "choosing between ways of meeting it"
+    },
+    {
+      "id": "one:outcomes",
+      "text": "What will be true when it works? Pick any it got right (one reading so far, by claude).",
+      "protects": "what counts as done"
+    },
+    {
+      "id": "one:measures",
+      "text": "How will anyone know it worked? Pick any it got right (one reading so far, by claude).",
+      "protects": "how anyone will know it worked"
+    },
+    {
+      "id": "one:constraints",
+      "text": "What must always or never happen? Pick any it got right (one reading so far, by claude).",
+      "protects": "what must always or never happen"
+    },
+    {
+      "id": "one:people",
+      "text": "Who is involved? Pick any it got right (one reading so far, by claude).",
+      "protects": "who it is built for, and who else it reaches"
+    },
+    {
+      "id": "one:nonGoals",
+      "text": "What is left out on purpose? Pick any it got right (one reading so far, by claude).",
+      "protects": "what is left out on purpose"
+    },
+    {
+      "id": "pair:tolerance:L2",
+      "text": "How close is close enough for \"a person with no engineering background releases a package in one sitting, and the factory builds it without asking them anything new\"?",
+      "protects": "that the measure can pass or fail"
+    },
+    {
+      "id": "clash:palette",
+      "text": "\"calm\" and \"professional\" want different things for the palette. Which should win?",
+      "protects": "that the palette is what you meant"
+    }
+  ]
+}

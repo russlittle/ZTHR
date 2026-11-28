@@ -1,0 +1,161 @@
+{
+  "method": "Parts that set the datum, measure against it, secure the chat and serve the people using the application. Coverage marks show what the library parts cover today.",
+  "parts": [
+    {
+      "name": "Spec intake",
+      "gives": "Spec Kit, Kiro, OpenSpec, Gherkin and plain markdown parsed into one canonical structure, with no model",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "intent: journey cards"
+      }
+    },
+    {
+      "name": "Two-family parse and diff",
+      "gives": "Rough intent parsed twice by two model families into the same schema, compared field by field; every difference is a question"
+    },
+    {
+      "name": "Gap checks",
+      "gives": "Decision-table completeness and overlap, state-machine dead ends and unreachable states, and required pairings, each raised as a question naming what it protects"
+    },
+    {
+      "name": "Read-back",
+      "gives": "What will be built, rendered from the structure by templates: confirmed, open, assumed and default, with who supplied each"
+    },
+    {
+      "name": "Assembly preview",
+      "gives": "The chosen parts' wireframes assembled into a clickable skeleton, with each part's documentation as the placeholder for content still to define"
+    },
+    {
+      "name": "Connection graph",
+      "gives": "Outcomes, measures, journeys, parts, surfaces, entities and roles joined by typed edges; unmeasured outcomes and unused parts stand out"
+    },
+    {
+      "name": "Outcomes and measures",
+      "gives": "Each outcome in the user's words, each measure compiled to a journey, a metric with a tolerance, or a signal from people"
+    },
+    {
+      "name": "Locked datum",
+      "gives": "Outcomes, measures, journeys and scenarios pinned by hash; a change to intent cannot change what it judges",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "intent: hash-locked journeys"
+      }
+    },
+    {
+      "name": "Held-out sets",
+      "gives": "Sealed journeys and corpora no generator can read, added to only by a person, failing the build if copied into a rule"
+    },
+    {
+      "name": "Decision tables",
+      "gives": "Rules as data with source and effective dates, run by one evaluator, with boundary tests generated at, below and above every threshold"
+    },
+    {
+      "name": "State machines",
+      "gives": "Flows as data, run by one engine, checked for dead ends, unreachable states and unowned transitions"
+    },
+    {
+      "name": "Independent second implementation",
+      "gives": "A critical calculation written twice by different model families from the same table, compared on generated inputs every build"
+    },
+    {
+      "name": "Intent completion from the state graph",
+      "gives": "Each journey decided by searching the explored state graph for a path within its budget that avoids every forbidden outcome",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "explore: walk to a fixpoint"
+      }
+    },
+    {
+      "name": "Incremental certification",
+      "gives": "Only states touched by a changed handler re-explored, so certification is always for the commit being served"
+    },
+    {
+      "name": "Evidence, intents first",
+      "gives": "The evidence page leads with intents completed by the graph, a cold agent and real users, then delight, then the fail-safes",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "evidence: build-stamped records"
+      }
+    },
+    {
+      "name": "Chat",
+      "gives": "A conversation that routes deterministically first and uses a model only inside the guard, with next steps on every reply",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "runtime: sandwich, safety router"
+      }
+    },
+    {
+      "name": "Model guard",
+      "gives": "Input schema, field allowlist, scrub and classification before every model call; strict output schema, record check and templates after",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "runtime: sandwich"
+      }
+    },
+    {
+      "name": "Safety router",
+      "gives": "Crisis messages routed to a safety reply before any account, setup or model, in every supported language",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "runtime: safety"
+      }
+    },
+    {
+      "name": "Normaliser and phrasing fuzzer",
+      "gives": "Contractions, lookalike characters and misspellings normalised before matching, and variants of every corpus line generated, so a fix closes a class"
+    },
+    {
+      "name": "Red team",
+      "gives": "One test per attack, results to the evidence store, and every attack that got through kept forever; generic corpora ship, domain corpora are configuration"
+    },
+    {
+      "name": "Nightly scanner",
+      "gives": "garak against the deployed endpoint every night, results recorded as pass, fail or unknown"
+    },
+    {
+      "name": "Review panel",
+      "gives": "Model families reviewing each change against the locked datum it touches, unknown on a partial view, scored by unique validated findings",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "review: seats and verdicts"
+      }
+    },
+    {
+      "name": "Knowledge bundle",
+      "gives": "Everything the system knows about itself generated into one Open Knowledge Format bundle in git, with read-back states as trust"
+    },
+    {
+      "name": "Chat context engine",
+      "gives": "Context assembled from fresh concepts the user's role may read, looked up deterministically first, with every factual sentence cited"
+    },
+    {
+      "name": "Audience profile",
+      "gives": "Reading level, languages, devices, assistive technology and conditions of use, confirmed in the read-back and setting every default"
+    },
+    {
+      "name": "Low vision mode",
+      "gives": "Text up to 200%, more spacing, one column, stronger focus and large targets, with every journey walked in it"
+    },
+    {
+      "name": "Readability for the audience",
+      "gives": "Every text checked against the audience's reading level for the reading setting chosen",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "plain-language: reading grade"
+      }
+    },
+    {
+      "name": "Density budget",
+      "gives": "One primary action per surface, ordered headings, short lines, and no more choices than the density allows"
+    },
+    {
+      "name": "Preference signals",
+      "gives": "People's preference between versions of a surface and their delight after a task, reported beside intent completion"
+    },
+    {
+      "name": "Design lexicon",
+      "gives": "Human design terms such as calm, snappy and at a glance mapped to design choices and measures, resolved without a model and grown from every confirmed correction"
+    }
+  ]
+}

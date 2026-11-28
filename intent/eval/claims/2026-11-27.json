@@ -1,0 +1,1046 @@
+[
+ {
+  "id": "Z01",
+  "claim": "ZTHR is in production use for greenfield systems in a regulated industry, where it has proven highly effective.",
+  "source": "PAPER.md:852; SUMMARY.md:126; BRIEF.md:90",
+  "department": "ZTHR core",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "No artifact, metric, baseline or third-party attestation in the repo. 'Highly effective' has no denominator.",
+  "proposedEvidence": "Publish the six standard dimensions the paper itself names (PAPER.md:852) for at least one production application vs its incumbent process, as an anonymised, dated report signed by someone other than the author; or narrow the sentence to 'in use' with no efficacy adjective until then.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "Z02",
+  "claim": "Every change is reviewed by at least three model families before commit, and a fourth in place before promotion.",
+  "source": "PAPER.md:450,975,1011; SUMMARY.md:106; BRIEF.md:60; README control/review.yaml",
+  "department": "ZTHR core",
+  "status": "UNPROVEN",
+  "evidence": [
+   "ref control/review.yaml (4 seats declared)",
+   "ref docs/review.md:47 ('Review by models from other families is designed and switched off')",
+   "intent/factory/review-on-vertex.patch (not applied)",
+   "intent/test/agents.test.ts 'reviews come from other families...' (requires 2, not 3)"
+  ],
+  "gap": "No pipeline step runs model review (ref cloudbuild.yaml has none); no recorded review verdicts exist for any commit; the intent agent API requires two families, not three plus one; the 844f589 'independent review' was same-family sessions.",
+  "proposedEvidence": "Turn review on as a required Cloud Build step that writes one signed verdict record per seat per commit (model id, provider response id, diff hash, verdict). Gate: commit admitted only if >=3 distinct provider families have verdicts on its exact tree hash. Third-party check: script that walks git log and joins each commit to its verdict records; fails on any commit missing one. Until then narrow to 'designed for'.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "Z03",
+  "claim": "Every protected branch carries rules with no bypass actors; live rules are compared against a committed expectation; there is no path that skips admission.",
+  "source": "PAPER.md:280,961; PAPER.md:929",
+  "department": "ZTHR core",
+  "status": "UNPROVEN",
+  "evidence": [
+   "GitHub API /branches/main and /branches/reference-implementation: protected=false, required_status_checks off; /rules/branches/*: [] (queried 2026-11-27)",
+   "ref control/required-checks.yaml + zero-bypass gate compares only with cloudbuild.yaml"
+  ],
+  "gap": "Neither main nor reference-implementation is protected and there are no rulesets; agents push straight to the deploy branch and checks run after the push. The zero-bypass gate compares a YAML list with another YAML file, not with GitHub's live rules.",
+  "proposedEvidence": "Enable a ruleset on main and reference-implementation (no bypass actors, required checks = required-checks.yaml, block force-push/deletion, require PR). Add a scheduled workflow that reads GET /repos/{o}/{r}/rules/branches/{b} and fails if it differs from control/branch-rules.json. Proof of bite: a planted test that feeds the comparator a ruleset missing one check and must fail. Re-runnable by anyone via the public API.",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "Z04",
+  "claim": "AI writes the code; no human writes code.",
+  "source": "SUMMARY.md:94; profile of the pipeline ('zero human code')",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "git log intent-surface: 90 claude-agent + 14 Claude authored, 16 'Russ Little' (all on early main: site/index.html 2,738 lines, deploy.yml, firebase.json, README)",
+   "ref branch: 146/146 commits by Claude/claude-agent"
+  ],
+  "gap": "Authorship is the git author string, which anyone can set. Human-authored commits exist on main (site HTML, deploy workflow). No attestation ties a commit to an agent session.",
+  "proposedEvidence": "Narrow to 'every commit on reference-implementation and intent-surface after <date> is authored by an agent identity'. Make it checkable: agent commits signed by an agent-only SSH key whose public half is in control/allowed-signers; a CI check fails any commit to code paths not signed by that key or (for person-only paths) by a listed person's key; publish allowed-signers so `git log --show-signature` reproduces it.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Z05",
+  "claim": "Every named safety gate is proven to fail on its planted defect, with the proof pinned to the gate's hash; editing a gate makes the proof stale and fails the build.",
+  "source": "PAPER.md:290,962; BRIEF.md:56",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref tools/gates.ts (proveGate, GATES_VERIFY stale-proof check, lines 841-904)",
+   "ref control/proofs.json (gateHash per gate)",
+   "ref docs/review.md:29 (28 gates)",
+   "intent/package.json 'gates': 'node tools/gates.ts' -> intent/tools/gates.ts does not exist"
+  ],
+  "gap": "Mechanism is real in the reference implementation but not re-run here (needs npm ci); every reference Cloud Build since 2026-11-14 has failed, so no current green proof run exists. The intent line (where the papers live) has no gates harness at all and its 'gates' script is broken.",
+  "proposedEvidence": "(1) Restore a green reference build and publish the gates step log as an artifact per commit. (2) Add to CI a meta-test: for one gate, mutate its check function (e.g. replace body with 'return pass') and assert `GATES_VERIFY=1 npm run gates` exits non-zero \u2014 proves staleness detection bites. (3) Either add tools/gates.ts to intent or remove the script and stop claiming gates for the intent line.",
+  "needsOutside": false,
+  "size": "M"
+ },
+ {
+  "id": "Z06",
+  "claim": "Every verdict is pass, fail or unknown; unavailable evidence never becomes pass; dashboards show not measured as its own state.",
+  "source": "PAPER.md:300",
+  "department": "ZTHR core",
+  "status": "PROVEN",
+  "evidence": [
+   "intent/test/console.test.ts 'a verdict is pass or fail only when the build said so; anything else is not measured', 'a reading the build did not take is shown as not measured, not as zero'",
+   "intent/test/frame.test.ts 'planted: a family name that is not a plain name makes the reading unknown'",
+   "intent/test/readback.test.ts 'a reading that breaks the schema counts as unknown'",
+   "ref packages/gates verdicts"
+  ],
+  "gap": "Proven for the console and reading code paths with planted inputs; not proven system-wide (scanner depth floors are not shown in the intent line).",
+  "proposedEvidence": "Extend with a property test: feed every console renderer a fuzzed feed with random nulls/missing keys and assert no green lamp is produced unless an explicit pass for the matching build id is present.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Z07",
+  "claim": "Every ratchet has a reset lever only a person pulls, with a stated reason written to the audit record.",
+  "source": "PAPER.md:320,964; BRIEF.md:70",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref control/ratchet-resets.jsonl (empty)",
+   "ref tools/person-signed.ts protects it",
+   "ref control/authorship.yaml tier 'person'"
+  ],
+  "gap": "Never exercised: zero resets recorded, so nothing shows the lever works or that an agent attempt is refused. Person-signed gate passes vacuously when the served commit predates it (exits 0).",
+  "proposedEvidence": "Planted test: a commit by claude-agent that appends to ratchet-resets.jsonl and lowers a floor; run person-signed on it against a fixture of GitHub API answers; must fail by name. Then one real reset by a person, verified commit, to show the happy path.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Z08",
+  "claim": "Test strength is measured by mutation; scores are held by ratchets that only rise.",
+  "source": "PAPER.md:328; intent/papers/qa.md:78,130",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref stryker.config.json, control/mutation-floors.json, control/mutation-scope.json, cloudbuild 'mutation' step (nightly)",
+   "ref commit series 'Mutation hunt: ...' (daily)"
+  ],
+  "gap": "Reference only, nightly, results kept in a GCS bucket not in the repo; floors in repo are lower than claimed 'tightened' values elsewhere; the 77+ intent blocks and Files have no mutation testing at all.",
+  "proposedEvidence": "Commit each nightly mutation report (score, denominator, survivors) to evidence/ with the commit it measured; add a check that floors in mutation-floors.json are monotone non-decreasing across git history (git log -p; fails on any decrease without a matching reset line). Add Stryker (or a node:test mutator) to intent/blocks and files with a floor.",
+  "needsOutside": false,
+  "size": "M"
+ },
+ {
+  "id": "Z09",
+  "claim": "Documentation is derived from the system: figures are generated, never typed, and a stale figure fails the build.",
+  "source": "PAPER.md:358,968; intent/README.md:151,170",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/tools/docs.ts; intent/test/docs.test.ts 'every generated doc and every marked region is fresh'",
+   "Observed: at commit 3467188 the test FAILS (blocks/README.md and docs/line/fleet.md say 266 block tests, code has 263); GitHub check-run 'verify' = failure on 3467188",
+   "intent/papers/*.md and PAPER.md contain 0 fact markers"
+  ],
+  "gap": "The gate bites (good) but a commit that fails it was committed and pushed anyway, and every number in the eight department papers (fixture counts, 135 manifest lines, 14.1 s, per-block test counts) is typed, not generated, despite the-line.md:196 saying 'generated, not typed'. Factory.md:311 test counts are already stale after 844f589.",
+  "proposedEvidence": "Put fact markers in every number in intent/papers/*.md (and PAPER.md where it states facts about the implementation); extend docs.test to scan papers/; add a lint that fails on any digit sequence in papers outside a marker or an allow-list (dates, pattern numbers). Make Intent CI a required status check so a red freshness gate blocks the branch.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Z10",
+  "claim": "Journeys are hash-locked with an attributable change log; a change altering journey intent cannot in the same change alter the code it judges; a generator cannot move its own goalposts.",
+  "source": "PAPER.md:406,972; BRIEF.md:58",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref control/lock.json, control/journey-changes.jsonl, journey-lock gate",
+   "ref tools/person-signed.ts (since 2026-11-14)",
+   "intent/test/agents.test.ts 'a builder may not touch a locked, person or generated path' and the 'quietly loosen a goal' refusal",
+   "git: 9 commits touching control/journeys + lock.json, all by Claude/claude-agent, all before the person-signed rule"
+  ],
+  "gap": "Agents did edit journey cards and the lock throughout the build (ADR 0004 lets the factory admit additive cards). The person-signed rule has never been exercised on a journey change since it landed, and depends on GitHub account login, not a key the agent lacks.",
+  "proposedEvidence": "Planted end-to-end test: in a scratch clone, an agent-identity commit that loosens one card and updates lock.json; run journey-lock + person-signed; must fail. Publish the list of every journey-card change with author and verification status (script over git log + GitHub API), so 'no agent loosened a card' is a query. Narrow the claim to 'since 2026-11-14' and 'loosening/removal' (additive cards are factory-admitted by design).",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Z11",
+  "claim": "Done means serving: deploy by content hash, rollback target captured, serving equals built, unauthorized callers refused, release record on success and failure.",
+  "source": "PAPER.md:483-494,977",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref cloudbuild.yaml deploy/verify-serving steps",
+   "deploy.yml (zthr.ai: sha256sum -c parts.sha256, writes delivery.json)",
+   "intent/papers/shipping.md:247 (honestly lists missing stages)"
+  ],
+  "gap": "Deploy uses the movable tag advocate:$COMMIT, not a digest; no rollback target is captured; 'serving' is the commit string the app reports about itself; parts.sha256 is fetched from the same server as the parts, so the check proves transport integrity, not build identity. Every reference build since 2026-11-14 failed, so no recent release record exists.",
+  "proposedEvidence": "Deploy by image digest from the build output (gcloud run deploy --image ...@sha256:...), record previous revision before traffic moves, and verify by comparing the running revision's image digest (Cloud Run API) with the built digest, not a self-reported string. Publish a release record JSON per build (digest, revision, previous revision, verify result) to the evidence bucket and mirror it in the repo. Third party re-runs: compare published digest with `crane digest` of the public image tag.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "Z12",
+  "claim": "A persistent operator runs on a fixed cycle, acts under one rule, uses leases, claims once, never deletes, and is bounded by structure.",
+  "source": "PAPER.md:502-554 (Patterns 24-27)",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref packages/operator/src/index.ts, packages/operator/test/operator.test.ts"
+  ],
+  "gap": "Library and unit tests only; no deployed operator, no cycle records, no ledger of actions, no dead-man switch evidence.",
+  "proposedEvidence": "Run the operator against a scratch repository for N cycles in CI with planted states (stalled PR, flaky check, expired lease, live lease) and assert the action ledger: acts only where allowed, refuses re-run without flake evidence, never deletes. Publish its append-only ledger.",
+  "needsOutside": false,
+  "size": "M"
+ },
+ {
+  "id": "Z13",
+  "claim": "The deterministic sandwich: inbound screen, scrub, responder, claim guard, field verifier, independent judge; any layer failing withholds output; each layer measured standalone and end to end.",
+  "source": "PAPER.md:568-577",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref packages/runtime (safety router, sandwich), gates 'safety-router' with planted router",
+   "ref evidence-out/redteam.json (main repo copy)"
+  ],
+  "gap": "Not re-run here; judge model is optional/off; per-layer labelled-corpus scores not published with denominators.",
+  "proposedEvidence": "Publish per-layer confusion matrices on a labelled corpus with N, plus end-to-end results, regenerated by CI; include a judge-timeout injection test asserting withhold.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "Z14",
+  "claim": "Held-out sets are sealed in storage readable only by a measurement identity, pinned by hash, aggregate-only, checked for contamination.",
+  "source": "PAPER.md:617,986; PAPER.md:939 ('Sealed evaluation sets are in use')",
+  "department": "ZTHR core",
+  "status": "UNPROVEN",
+  "evidence": [
+   "ref control/heldout/*.txt (in the public repo)",
+   "ref docs/review.md:46 (5 crisis phrasings, written by an agent)",
+   "intent/eval/README.md (3 'held out' personas graded by the same agent that fixes)"
+  ],
+  "gap": "The held-out phrasings are plain files in a public repository the generator works in, written by an agent; nothing is sealed. Contradicts the pattern and the 'in use' statement.",
+  "proposedEvidence": "Move held-out cases to a bucket readable only by a dedicated service account; commit only their hash list; CI measurement job reads them under that identity and writes aggregate pass rate + set hash. Contamination check: CI fails if any held-out string (or a near duplicate, n-gram overlap) appears in the repo. Cases written by people who do crisis work, not the agent. Until then narrow to 'held-out by convention'.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "Z15",
+  "claim": "External services are twinned and calibrated to the live service as built; drift beyond tolerance fails the twin.",
+  "source": "PAPER.md:627-636,987; BRIEF.md:64",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref packages/twins, twin-service; cloudbuild 'contract' step (21 probes vs recorded fixtures)",
+   "files/test/gcs.test.ts (Cloud Storage against a stand-in)",
+   "files/tools/oracle.ts record mode; files/oracle/nextcloud.json absent"
+  ],
+  "gap": "No recording from any live service is in the repo; campus-service fixtures are not shown to come from a real system; the GCS stand-in is hand-written; no scheduled re-probe exists.",
+  "proposedEvidence": "For each twin, commit a probe corpus recorded from the live service (with date, endpoint, redaction), a CI job replaying it against the twin with tolerance, and a weekly scheduled job that re-records and diffs. For GCS: record against a real bucket once from Cloud Shell and replay in CI.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "Z16",
+  "claim": "The audit trail is chained by a keyed hash, verified by a separate read-only identity, with an external high-water mark that closes tail truncation.",
+  "source": "PAPER.md:677",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/src/agents/ledger.ts:64-80 (unkeyed sha256 chain)",
+   "intent/test/agents.test.ts 'every call goes into a chain that shows tampering' (edits and first-line removal detected)"
+  ],
+  "gap": "Unkeyed: anyone who can write the file can rewrite and recompute it. No high-water mark: deleting the last N lines verifies as ok. No separate verifier identity.",
+  "proposedEvidence": "Add an HMAC key held outside the workspace, and publish the head hash + count to an external append-only place (a git tag, a transparency log, or a GCS object with retention lock) each cycle. Planted tests: truncate tail -> verify fails against high-water mark; recompute chain without key -> fails.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Z17",
+  "claim": "Fixtures make model change a non-event, and one builder or small team can operate at a level conventional teams reach only with far more people.",
+  "source": "PAPER.md:144,146; BRIEF.md:46; SUMMARY.md:114",
+  "department": "ZTHR core",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "Economic/organisational claim with no measurement.",
+  "proposedEvidence": "Swap experiment: run the same released package through the factory with two different model sets (e.g. current vs cheaper/older), same gauges; report pass rate, attempts, cost, escapes. For the scale claim: publish human-hours ledger per application (from calendar/commit time) against a named incumbent baseline.",
+  "needsOutside": true,
+  "size": "L"
+ },
+ {
+  "id": "Z18",
+  "claim": "Intent completion is the headline measure, compared against the incumbent process.",
+  "source": "PAPER.md:809-827",
+  "department": "ZTHR core",
+  "status": "UNPROVEN",
+  "evidence": [
+   "intent/src/console (shows 'not measured')"
+  ],
+  "gap": "No intent-completion figure, and no incumbent baseline, is recorded anywhere.",
+  "proposedEvidence": "Define intent completion = locked journeys passing / locked journeys, per release, from the journeys step; publish it per build with denominator. Separately measure incumbent revision rate/time-to-usable on a comparable app.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "Z19",
+  "claim": "Companion controls are structural: a part that can touch sensitive data cannot be installed without the part that redacts it.",
+  "source": "PAPER.md:217",
+  "department": "ZTHR core",
+  "status": "UNPROVEN",
+  "evidence": [
+   "intent/catalog/catalog.json mentions companions"
+  ],
+  "gap": "No test found that a manifest including a sensitive part without its companion is refused.",
+  "proposedEvidence": "Planted test in intent/test/manifest.test.ts: build a manifest with a sensitive-data part and its companion removed; planner must refuse with a named reason.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Z20",
+  "claim": "Every part is tested inside a temporary application assembled as a real consumer would.",
+  "source": "PAPER.md:227",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref tools/blocks.ts",
+   "intent package.json test runs blocks/**/*.test.ts in place"
+  ],
+  "gap": "The 80+ intent blocks are tested in the catalog's own suite, the exact anti-pattern Pattern 3 names.",
+  "proposedEvidence": "CI job that scaffolds a fresh consumer (template), copies each block as the installer would, and runs its tests there; ratchet on blocks with no failing test = 0.",
+  "needsOutside": false,
+  "size": "M"
+ },
+ {
+  "id": "Z21",
+  "claim": "Any change to the AI itself and any agent request for wider permissions requires a person's sign-off.",
+  "source": "PAPER.md:654-661; BRIEF.md:68; SUMMARY.md:112",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref control/review.yaml header ('needs a listed person's sign-off')",
+   "intent agents: person-only acts are proposals"
+  ],
+  "gap": "control/review.yaml is not in person-signed PROTECTED list; intent-side 'sign' is a CLI flag (--by email) any shell can supply.",
+  "proposedEvidence": "Add review.yaml, model config and IAM-related files to PROTECTED; replace `sign --by` with verification of an SSH/GPG signature over the proposal hash by a key in a person-only allowed-signers file; planted test: agent-run sign with listed email but no key -> refused.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Z22",
+  "claim": "The generation loop records attempts, compute, elapsed time and repeated failure classes, so convergence is a measurement.",
+  "source": "PAPER.md:691-700",
+  "department": "ZTHR core",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/src/agents/cost.ts, correct.ts",
+   "intent/test/agents.test.ts 'every token is metered...', 'a fix that does not converge goes to a person, with the trend'"
+  ],
+  "gap": "Unit-tested logic; no recorded loop run exists (no ledger/log.jsonl anywhere in the repo).",
+  "proposedEvidence": "Run the agent loop on the Files intent end to end in a recorded workspace; commit the ledger; publish median/tail attempts to acceptance and cost per admitted change.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "I01",
+  "claim": "The same input always gives the same bytes; the browser and the command line produce the same package hash.",
+  "source": "intent/README.md:103; intent/PAPER.md:156,402",
+  "department": "Intent studio",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/test/release.test.ts 'the release is the same bytes every time, every file is hashed in the manifest...' (run: pass)",
+   "intent/test/release.test.ts 'the plain SHA-256 matches the platform's, so a browser and a server give the same hashes' (run: pass)",
+   "intent/test/release.test.ts 'the zip is a valid, deterministic archive'"
+  ],
+  "gap": "Determinism proven in Node; browser parity is inferred from a hash-function test in Node, not from building the package in a browser.",
+  "proposedEvidence": "Playwright test: load the studio, paste a fixture intent with fixed readings, export, compare the package hash to the CLI's hash for the same input. Runs in CI.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "I02",
+  "claim": "Two model families read the same words independently; neither sees the other's reading; agreement is recorded as agreed by those families.",
+  "source": "intent/PAPER.md:146; intent/README.md:5",
+  "department": "Intent studio",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/test/frame.test.ts 'two readings from the same family are refused'",
+   "intent/test/agents.test.ts 'a reader reads once, for its own family' and reader tool list excludes other readings",
+   "intent/eval/nextcloud/reading-a.json (family: gemini), reading-b.json (family: deepseek)"
+  ],
+  "gap": "Family is a self-declared label (--family flag / JSON field). The recorded readings carry no model id, provider response id, date or prompt hash, so nothing shows they came from Gemini and DeepSeek rather than one model.",
+  "proposedEvidence": "Record each reading with provider, model id, provider request/response id, timestamp and hash of the exact prompt; have the reader seat obtain the reading itself through the provider API so the label is set by the call, not the caller. Check: a script re-verifies response ids where providers allow, and fails a reading missing provenance.",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "I03",
+  "claim": "Balloon numbers are keyed to meaning, survive rewording of case and punctuation, and are kept across revisions.",
+  "source": "intent/PAPER.md:188",
+  "department": "Intent studio",
+  "status": "PROVEN",
+  "evidence": [
+   "intent/test/readback.test.ts 'balloons keep their numbers across a revision; new statements take the next numbers'"
+  ],
+  "gap": "Case/punctuation-invariance is not separately planted.",
+  "proposedEvidence": "Add a planted case: same statement with changed case and punctuation must keep its balloon; a materially changed statement must get a new one.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "I04",
+  "claim": "A tolerance that cannot be read is raised as a question, never guessed.",
+  "source": "intent/PAPER.md:208",
+  "department": "Intent studio",
+  "status": "PROVEN",
+  "evidence": [
+   "intent/test/release.test.ts 'tolerances read as working ranges, and what names no number is said to, never guessed' (run: pass)",
+   "intent/test/frame.test.ts 'words the lexicon does not know resolve to nothing, never to a guess'"
+  ],
+  "gap": "",
+  "proposedEvidence": "Optional: generated-input test over a corpus of vague phrases asserting zero numeric ranges are invented.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "I05",
+  "claim": "Intent is accepted in any common form (Gherkin, Spec Kit, Kiro, OpenSpec, markdown, HTML), keeping each sentence's file and line.",
+  "source": "intent/PAPER.md:136",
+  "department": "Intent studio",
+  "status": "PROVEN",
+  "evidence": [
+   "intent/test/intake.test.ts (forms speckit, kiro, openspec, gherkin, markdown)",
+   "intent/test/html-sections.test.ts"
+  ],
+  "gap": "Fixture-based: one example per form.",
+  "proposedEvidence": "Add a second, externally sourced real-world example per format (e.g. a published Spec Kit repo) to catch fixture overfitting.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "I06",
+  "claim": "The holder's signature is bound by hash to the exact content signed; change one word and it needs signing again.",
+  "source": "intent/PAPER.md:61,305; the-line.md:91",
+  "department": "Intent studio",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/src/studio/app.ts:62,237 (signed.datum compared with sha256 of datum.json)"
+  ],
+  "gap": "Binding to content is real, but the 'signature' is a browser-state record with an optional name: no identity verification, no cryptographic signature, and it is not carried in the release package, so the factory cannot verify it.",
+  "proposedEvidence": "Sign the datum hash with a WebAuthn/passkey or SSH key of the holder; include signature + public key + datum hash in the package (signature.json); release.test planted cases: altered datum -> verify fails; signature by unlisted key -> refused.",
+  "needsOutside": false,
+  "size": "M"
+ },
+ {
+  "id": "I07",
+  "claim": "Class II clarifications are issued by the factory under delegation; Class I (removed, reworded, loosened, new scope) goes to the holder.",
+  "source": "intent/PAPER.md:325; intent/papers/factory.md:283",
+  "department": "Intent studio",
+  "status": "PROVEN",
+  "evidence": [
+   "intent/test/agents.test.ts 'a Class II clarification is issued by the factory under delegation...', 'what the person signed decides the class: removed, reworded, loosened or new scope is Class I'"
+  ],
+  "gap": "Unit level; classifier coverage of 'loosened' tolerance edge cases is narrow.",
+  "proposedEvidence": "Generated-input test: random pairs of (signed tolerance, proposed tolerance) assert every widening is Class I.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "I08",
+  "claim": "Every package carries a brief for the agents, generated from the package, hashed with it.",
+  "source": "intent/PAPER.md:412",
+  "department": "Intent studio",
+  "status": "PROVEN",
+  "evidence": [
+   "intent/test/agents.test.ts 'every package carries a brief for the factory's agents'"
+  ],
+  "gap": "",
+  "proposedEvidence": "",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "I09",
+  "claim": "A special characteristic with no control in the control plan fails the release.",
+  "source": "intent/PAPER.md:218",
+  "department": "Intent studio",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "No planted test found for a critical mark without a control.",
+  "proposedEvidence": "Planted test in release.test.ts: mark a balloon critical, remove its control-plan line; release must report a blocking problem.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "I10",
+  "claim": "The honest test is a rebuild: hand the same signed package to a second factory on a different technology and measure both against the same journeys.",
+  "source": "intent/PAPER.md:514",
+  "department": "Intent studio",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "Not done.",
+  "proposedEvidence": "Build Files (or a smaller package) a second time from the released package with a different stack and agent set; run the same journeys and oracle; publish both results.",
+  "needsOutside": true,
+  "size": "L"
+ },
+ {
+  "id": "I11",
+  "claim": "The line has 8 departments; the worked example release is 115 files.",
+  "source": "intent/README.md:24,45",
+  "department": "Intent studio",
+  "status": "PROVEN",
+  "evidence": [
+   "intent/test/docs.test.ts 'every fact, table and diagram computes' (facts dept.count, example.files)"
+  ],
+  "gap": "Fresh as of the docs gate; gate currently red at 3467188 for other docs.",
+  "proposedEvidence": "Keep docs gate required.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "I12",
+  "claim": "Personas walked the real pages; held-out personas' rising grades show fixes are general.",
+  "source": "intent/docs/personas.md; intent/eval/README.md",
+  "department": "Intent studio",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/eval/rounds/round-0..2.json"
+  ],
+  "gap": "Personas are simulated by an agent, graded by an agent from the same process that chose the fixes; no real users. 'Held out' graders are not independent.",
+  "proposedEvidence": "Label as simulated in the docs. Then: 5+ real people per role do the task cold, recorded task completion and time, graded by someone outside the build.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "L01",
+  "claim": "A change is admitted only when every required check passed on its exact commit, run by the API, and two reviewers from families other than the author's passed it; admission is computed.",
+  "source": "intent/papers/the-line.md:95; factory.md:216",
+  "department": "Line",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/test/agents.test.ts 'checks run on the change's own commit, by the API; nobody reports a result', 'reviews come from other families, say what was checked, and admission is computed' (run: pass)"
+  ],
+  "gap": "Correct in the agent API's own state machine, with planted refusals. But (a) family is self-declared by whoever starts the session, (b) nothing makes the API the only path to the branch (agents commit and push directly; branches unprotected), (c) no admitted change exists in any recorded ledger.",
+  "proposedEvidence": "Make admission a GitHub required check produced by the API (a status 'zthr/admission' posted only by the API's identity), with branch rules requiring it; seat family proven by the API calling the provider itself. Then a ledger query (script) over real changes.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "L02",
+  "claim": "Acts only a person may perform have no tool; no prompt, error or compromise of an agent role can perform them.",
+  "source": "intent/papers/the-line.md:189-191; factory.md:208-210",
+  "department": "Line",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/test/agents.test.ts 'what only a person does has no tool at all' (name regex over the MCP registry)",
+   "intent/src/agents/cli.ts:84-104 (`sign --by <email>` checks a listed email in a workspace file)"
+  ],
+  "gap": "True of the MCP tool surface only. Any agent with a shell (the normal case for a builder) can run `intent agents sign <p> --by russ@example.com` or edit agents/people.json. 'No compromise can perform them' is false as stated.",
+  "proposedEvidence": "Narrow to 'no MCP tool'. To prove the stronger claim: require a cryptographic signature from a key the agent environment cannot read (hardware key / passkey), verified on accept; planted test runs sign with the listed email and no key and must be refused.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "L03",
+  "claim": "Every act is in an append-only, hash-chained ledger, so the record cannot be edited after the fact.",
+  "source": "intent/papers/the-line.md:192; factory.md:301",
+  "department": "Line",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/src/agents/ledger.ts",
+   "intent/test/agents.test.ts tamper test"
+  ],
+  "gap": "See Z16: unkeyed, no external anchor, tail truncation undetected.",
+  "proposedEvidence": "As Z16.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "L04",
+  "claim": "Fixture totals per department (7, 28, 385, 461, 465, 475, 499) are generated from the line's catalogues, not typed.",
+  "source": "intent/papers/the-line.md:196-214",
+  "department": "Line",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/tools/docs.ts can compute them"
+  ],
+  "gap": "In the paper they are typed (no fact markers in papers/*.md), so nothing fails if they drift.",
+  "proposedEvidence": "Fact-mark them; extend docs.test to papers/.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "L05",
+  "claim": "Compounding, fidelity, separation and cost are testable readings (share inherited per manifest, statements reaching gauges, ledger queries, cheap-vs-dear model runs).",
+  "source": "intent/papers/the-line.md:268-271",
+  "department": "Line",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "Only one product exists; no ledger of real changes; no model-swap run.",
+  "proposedEvidence": "Second product through the line (CalDAV/CardDAV is named); publish inherited share per manifest for both; ship the ledger queries as scripts.",
+  "needsOutside": true,
+  "size": "L"
+ },
+ {
+  "id": "E01",
+  "claim": "The Files intent produces a 135-line manifest: 6 standard, 37 extended, 81 to make, 11 custom.",
+  "source": "intent/papers/the-line.md:228-236; engineering.md:133",
+  "department": "Engineering",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/src/manifest.ts; intent/test/manifest.test.ts"
+  ],
+  "gap": "Typed in the papers; the manifest itself is computed but not tied to the papers' numbers.",
+  "proposedEvidence": "Fact-mark the four numbers, computed from intent/eval/nextcloud/rough.md + readings, in docs.test.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "E02",
+  "claim": "The small-files outcome (25,000 files within ten minutes) is held by a journey, measured on every build.",
+  "source": "intent/papers/engineering.md:137",
+  "department": "Engineering",
+  "status": "PARTIAL",
+  "evidence": [
+   ".github/workflows/files-ci.yml step 'The small-files journey, measured'",
+   "files/tools/load.ts"
+  ],
+  "gap": "Measured, never judged: load.ts has no threshold or non-zero exit, so a build taking an hour passes. Runs only on PR/main for files paths.",
+  "proposedEvidence": "Give load.ts a --budget 600 flag that exits 1 above it and a p95 tolerance from the package's tolerances.json; planted test injects a delay and asserts failure.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "E03",
+  "claim": "A released revision's hash never changes; the factory's build records the hash it built to.",
+  "source": "intent/papers/engineering.md:143",
+  "department": "Engineering",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/test/release.test.ts determinism"
+  ],
+  "gap": "No factory build record carrying a package hash exists.",
+  "proposedEvidence": "Factory writes build-manifest with package hash; CI check recomputes the package from the pinned revision and compares.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "E04",
+  "claim": "Service levels: 99.5% availability from the team minimum.",
+  "source": "intent/papers/engineering.md:137",
+  "department": "Engineering",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "Declared target; nothing measures availability.",
+  "proposedEvidence": "Uptime probe (outside the platform) publishing monthly availability against 99.5% with error budget.",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "F01",
+  "claim": "Cheapest check first, identical trees not re-checked; the builder runs existing tests on the base and then the change before anything is pushed.",
+  "source": "intent/papers/factory.md:231,245",
+  "department": "Factory",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/test/agents.test.ts 'cheap first: identical trees are not checked twice...', 'the builder runs the existing tests on the base, then on its commit, before anything is pushed'"
+  ],
+  "gap": "Holds inside the API. The repo's own commit 3467188 was pushed with a failing test (docs freshness) and Intent CI red, so the rule does not govern how this repo is actually built.",
+  "proposedEvidence": "Route the repo's own agent pushes through the builder API or a pre-push hook that runs `npm test`; required check on PR. Evidence: zero red-at-push commits in a check-run history scan.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "F02",
+  "claim": "Escalation on attempts/trend/cost; every call metered in dollars against a daily budget and per-case ceiling.",
+  "source": "intent/papers/factory.md:289,295",
+  "department": "Factory",
+  "status": "PROVEN",
+  "evidence": [
+   "intent/test/agents.test.ts 'a fix that does not converge goes to a person, with the trend', 'every token is metered, the agenda pauses at the ceiling...', 'the supervisor wakes only seats with work...'"
+  ],
+  "gap": "Unit-level with planted inputs; no real spend record.",
+  "proposedEvidence": "Publish real metered spend per day from a recorded run (ties to Z22).",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "F03",
+  "claim": "Block test counts (12 tree, 10 objects, 8 uploads/grants/dav, 6 leases/devices, 4 oracle/ratelimit/uploadsafe) and 20 Files end-to-end tests.",
+  "source": "intent/papers/factory.md:311",
+  "department": "Factory",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/blocks/*/ *.test.ts",
+   "files/test/*.test.ts (22 at 3467188, +20 review tests at 844f589)"
+  ],
+  "gap": "Typed and already stale.",
+  "proposedEvidence": "Fact-mark them.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "F04",
+  "claim": "An independent review found and fixed 162 block defects and 18 Files defects, each confirmed by a failing test before the fix; no existing test was weakened.",
+  "source": "git 844f589 message",
+  "department": "Factory",
+  "status": "PARTIAL",
+  "evidence": [
+   "Re-run here: files/test/review.test.ts from 844f589 against 3467188 source: 18 fail / 2 pass; at 844f589: 20/20 pass",
+   "intent/blocks/*/ *.test.ts diffs in 844f589"
+  ],
+  "gap": "Files part PROVEN by re-run. Block part (162) not re-run. 'Independent' means other sessions of the same model family; no reviewer records. 'No test weakened' not checked.",
+  "proposedEvidence": "Script: for 844f589, apply new tests to parent source per block and count failing new tests (must be >= claimed defects); diff old test files for removed/relaxed assertions (deleted assert lines, loosened regexes). Record reviewer model/family per finding.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Q01",
+  "claim": "The differential oracle compares Files with a real Nextcloud; the reference's answers are recorded once and every build is compared against the recording.",
+  "source": "intent/papers/the-line.md:242; qa.md:96,126",
+  "department": "QA",
+  "status": "UNPROVEN",
+  "evidence": [
+   "files/tools/oracle.ts (record/compare modes)",
+   "intent/blocks/oracle/oracle.test.ts 'a real change always does' (planted difference)",
+   "files/oracle/nextcloud.json: absent"
+  ],
+  "gap": "No recording from a real Nextcloud exists; no build compares against one.",
+  "proposedEvidence": "From Cloud Shell, run a stock Nextcloud container, `node tools/oracle.ts record` into files/oracle/nextcloud.json (commit it with Nextcloud version), and add `compare` to files-ci against an in-process Files. Expected: a list of real differences to fix or register.",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "Q02",
+  "claim": "Run against two fresh instances of Files the oracle reports no differences, which proves the masks cover every value that rightly varies.",
+  "source": "intent/papers/qa.md:126",
+  "department": "QA",
+  "status": "PARTIAL",
+  "evidence": [
+   "files/test/oracle.test.ts 'two fresh servers answer it identically' (passed alone; failed once in a full-suite run at 3467188)"
+  ],
+  "gap": "Overclaim: self-vs-self shows masks cover what varies between two Files instances, not what varies between Nextcloud instances, and says nothing about over-masking real differences. Observed one flaky failure.",
+  "proposedEvidence": "Narrow the sentence. Add: (a) record two fresh Nextcloud instances and assert zero differences (mask coverage for the reference); (b) planted-difference suite: mutate one unmasked field per step in a Files response and assert each is reported (no over-masking). Investigate the flaky failure (run 50x).",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "Q03",
+  "claim": "The Nextcloud desktop, phone and web apps connect and sync with no change; once deployed the real apps walk the journeys.",
+  "source": "intent/papers/qa.md:124; files/README.md:3",
+  "department": "QA",
+  "status": "UNPROVEN",
+  "evidence": [
+   "files/test/protocol.test.ts (in-process HTTP client imitating the protocol)"
+  ],
+  "gap": "No run of a real Nextcloud client against Files is recorded.",
+  "proposedEvidence": "Scripted run of nextcloudcmd (the official desktop sync CLI) in CI against an in-process Files: sync 25k files, edit-conflict, resume; plus a manual recorded session with the Android/iOS app. Commit logs and results.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "Q04",
+  "claim": "A journey passes only when every declared mode and channel passes.",
+  "source": "intent/papers/qa.md:52",
+  "department": "QA",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "No mode/channel matrix runner in the intent line.",
+  "proposedEvidence": "Runner test with a journey declaring 3 modes x 2 channels where one combination fails; overall must fail.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Q05",
+  "claim": "A phase is certified at one commit only when every gate, walk, journey and floor passes for that commit.",
+  "source": "intent/papers/qa.md:120",
+  "department": "QA",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref tools/certify-phase.ts, cloudbuild 'certify-phase'"
+  ],
+  "gap": "Reference builds all failing since 2026-11-14; no current certificate.",
+  "proposedEvidence": "Publish certificates (commit, inputs, verdicts) per build; planted test mixing evidence from two commits must refuse.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "Q06",
+  "claim": "A walker drives every action from every reachable state to a fixpoint; a walk cut short says so.",
+  "source": "intent/papers/qa.md:84",
+  "department": "QA",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref tools/explore.ts, crawl.ts; ref docs/review.md:43 (push = spot check of four students)"
+  ],
+  "gap": "Push builds walk a bounded sample; full fixpoint only on nightly rotation.",
+  "proposedEvidence": "Already disclosed in ref; publish per-commit walk coverage (states, transitions, cut-short flag).",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "S01",
+  "claim": "A named person approves production after the canary; the approval has no tool.",
+  "source": "intent/papers/shipping.md:229; the-line.md:148",
+  "department": "Shipping",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/test/agents.test.ts 'delivery goes stage by stage... release needs a person'",
+   "ref cloudbuild.yaml (deploys on every push, no approval, no canary)"
+  ],
+  "gap": "Modelled in the agent API only; the one running pipeline deploys straight to production with no canary and no person.",
+  "proposedEvidence": "Cloud Deploy (or a manual-approval Cloud Build trigger) with canary + required approver; release record carries approver identity; check over records.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "S02",
+  "claim": "Rollback is one step and a fast error-budget burn rolls back without waiting.",
+  "source": "intent/papers/shipping.md:235",
+  "department": "Shipping",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "No rollback ever recorded or rehearsed; no burn alerting.",
+  "proposedEvidence": "Scheduled rollback drill: deploy N, roll back to N-1 via the recorded previous revision, measure time and verify serving; publish.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "S03",
+  "claim": "zthr.ai's deploy fetches the served copy, checks every part against the build's own checksums, and records the commit it verified.",
+  "source": "intent/papers/shipping.md:247",
+  "department": "Shipping",
+  "status": "PARTIAL",
+  "evidence": [
+   ".github/workflows/deploy.yml 'Take the reference site...' (sha256sum -c, delivery.json)"
+  ],
+  "gap": "Checksums come from the same server as the parts, so this proves the transfer, not that the parts are what Cloud Build built. delivery.json is written in CI only, never committed; the proxy here blocked zthr.ai so it was not read.",
+  "proposedEvidence": "Have Cloud Build publish parts.sha256 to a separate, write-once location (or sign it with the build's key) and verify against that.",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "S04",
+  "claim": "Files runs as one writer and refuses a second rather than interleave; nothing a client was told is saved can be lost.",
+  "source": "intent/papers/shipping.md:245; files/README.md:134",
+  "department": "Shipping",
+  "status": "PARTIAL",
+  "evidence": [
+   "files/test/gcs.test.ts '...a second writer is refused' (stand-in)",
+   "files/test/state.test.ts 'a line torn by a crash mid-write is dropped...'"
+  ],
+  "gap": "Against a hand-written GCS stand-in; durability under real crashes on Cloud Storage untested.",
+  "proposedEvidence": "Crash-injection test against a real bucket (Cloud Shell): kill the process at random points during writes, restart, check every acknowledged write is present.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "V01",
+  "claim": "A fix to a shared block is made once and reaches every product using it, each proving it with its own journeys.",
+  "source": "intent/papers/fleet.md:301-307,363",
+  "department": "Fleet",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "There is one product.",
+  "proposedEvidence": "Second product sharing devices/grants/dav; record a block fix propagating to both with each product's journeys run.",
+  "needsOutside": false,
+  "size": "L"
+ },
+ {
+  "id": "V02",
+  "claim": "Every incident becomes a defect, a test and a ratchet; recurrence of covered causes is zero.",
+  "source": "intent/papers/fleet.md:327,371",
+  "department": "Fleet",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "No incident record exists.",
+  "proposedEvidence": "Incident ledger format + check that every closed incident links to a test id that fails on the pre-fix commit (same method as F04).",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "V03",
+  "claim": "The nightly sweep (trash, versions, idle uploads, expired links) is planned by the retention block and recorded as a run.",
+  "source": "intent/papers/fleet.md:363",
+  "department": "Fleet",
+  "status": "PARTIAL",
+  "evidence": [
+   "files/test/protocol.test.ts 'the nightly sweep purges the trash after its days, and old versions after theirs'"
+  ],
+  "gap": "Logic proven in process; no scheduled run or run record.",
+  "proposedEvidence": "Cloud Scheduler job + run record; check that a record exists for each of the last 7 nights.",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "M01",
+  "claim": "Every lamp is pass, fail, waiting or not measured; a lamp turns green only from a recorded pass for the exact build in view.",
+  "source": "intent/papers/mission-control.md:45,61",
+  "department": "Mission control",
+  "status": "PROVEN",
+  "evidence": [
+   "intent/test/console.test.ts (verdict, not-measured, delivery-stage tests)"
+  ],
+  "gap": "",
+  "proposedEvidence": "Fuzz as in Z06.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "M02",
+  "claim": "Honesty, attention and reach are checkable by joining lamps to evidence, waiting list to role denials, where-used to manifests.",
+  "source": "intent/papers/mission-control.md:128-130",
+  "department": "Mission control",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "No such join script.",
+  "proposedEvidence": "Ship three scripts that perform these joins on the published factory.json and fail on any violation.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "PL1",
+  "claim": "Every spec-sheet choice of a line is set, none blank; inherited choices are shown as inherited until confirmed.",
+  "source": "intent/papers/product-lines.md:185,252",
+  "department": "Product lines",
+  "status": "PARTIAL",
+  "evidence": [
+   "intent/test/readback.test.ts 'the title block shows each override with the default it replaces'"
+  ],
+  "gap": "No test that a line with a blank choice is refused.",
+  "proposedEvidence": "Planted test: line with one blank choice -> refused; product schematic shows each inherited default as state 'assumed', supplier 'line'.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "FI1",
+  "claim": "25,000 small files written six at a time in 14.1 s (1,779/s, p95 7.3 ms) in process; unchanged check 0.7 ms.",
+  "source": "intent/papers/the-line.md:248; qa.md:124; files/README.md:183",
+  "department": "Files",
+  "status": "PARTIAL",
+  "evidence": [
+   "files/tools/load.ts; files-ci.yml",
+   "Re-run here (2-CPU shared box, 3467188): 28.4 s, 880/s, p95 21.4 ms, recheck 0.7 ms"
+  ],
+  "gap": "Machine-dependent timing with no hardware spec and no threshold; reproducible only in order of magnitude. The 0.7 ms recheck reproduced exactly.",
+  "proposedEvidence": "State the machine with the number (CPU, cores) or publish the CI runner's measurement per commit as the figure; claim the budget (<10 min) as the gated fact and the timing as an observation.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "FI2",
+  "claim": "One small write logs under 2 KB whatever the tree size; a write against a stale etag is refused 412.",
+  "source": "intent/papers/the-line.md:250-251; files/README.md:186",
+  "department": "Files",
+  "status": "PROVEN",
+  "evidence": [
+   "files/test/state.test.ts 'a change writes only the records it touched, however big the tree is'",
+   "files/test/protocol.test.ts 'nothing is lost silently: a write against an old etag is refused...'"
+  ],
+  "gap": "",
+  "proposedEvidence": "",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "FI3",
+  "claim": "Clean-room: written from published protocols and observed behaviour, with no Nextcloud code.",
+  "source": "files/README.md:5",
+  "department": "Files",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "Assertion only.",
+  "proposedEvidence": "Run a code-similarity scan (e.g. token-based clone detection) of files/ against the Nextcloud server and client source; publish the report; record the sources the agents were given.",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "FI4",
+  "claim": "Cloud Run numbers come from the first deployed run.",
+  "source": "files/README.md:188",
+  "department": "Files",
+  "status": "UNPROVEN",
+  "evidence": [],
+  "gap": "No deployed-run numbers appear in the repo.",
+  "proposedEvidence": "Commit the deployed load run output (date, region, revision).",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "FI5",
+  "claim": "Works: login flow v2, app passwords, WebDAV, chunked upload v2, conditional writes, versions, trash, shares, quotas, locks, GCS on Cloud Run.",
+  "source": "files/README.md:192-204",
+  "department": "Files",
+  "status": "PARTIAL",
+  "evidence": [
+   "files/test/protocol.test.ts (13 tests), web.test.ts, gcs.test.ts, review.test.ts @844f589"
+  ],
+  "gap": "Proven against the test's own idea of the protocol, in process; not against real clients or a deployed instance (see Q01, Q03).",
+  "proposedEvidence": "As Q01 and Q03.",
+  "needsOutside": true,
+  "size": "M"
+ },
+ {
+  "id": "C01",
+  "claim": "The zero-bypass gate compares this list with the live pipeline: a missing, allowed-to-fail or skippable step fails.",
+  "source": "ref control/required-checks.yaml:1-3",
+  "department": "Control plane",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref tools/gates.ts zero-bypass gate; cloudbuild.yaml"
+  ],
+  "gap": "'Live pipeline' is the committed cloudbuild.yaml, not the Cloud Build trigger config, which can be edited in the console; and 'mutation' is a no-op on push builds.",
+  "proposedEvidence": "Read the trigger via `gcloud builds triggers describe` (Cloud Shell, read-only) in a scheduled job and compare filename, branch filter, substitutions; fail on drift.",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "C02",
+  "claim": "Locked journeys, held-out phrasings, people, resets, floors and required checks are changed only by a person, in a commit GitHub verifies.",
+  "source": "ref CLAUDE.md:22-23; ref tools/person-signed.ts",
+  "department": "Control plane",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref tools/person-signed.ts (GitHub compare API)",
+   "git: no commit by a listed person on reference-implementation; all 9 journey-card commits by agents, before the rule (2026-11-14)"
+  ],
+  "gap": "Rule has never seen a qualifying change; it exits 0 when the served commit predates it and fails if the app is down; all reference builds since it landed have failed, so it is not known whether it passes or blocks.",
+  "proposedEvidence": "Planted test with recorded GitHub API fixtures (agent-authored commit touching control/journeys must fail; verified russlittle commit must pass), run in unit tests rather than only against the live API.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "C03",
+  "claim": "Each role's denial is structural and names the test that proves it.",
+  "source": "ref control/roles.yaml",
+  "department": "Control plane",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref apps/advocate/test/roles.test.ts, advocate.test.ts, campus.test.ts, api.test.ts, builder.test.ts"
+  ],
+  "gap": "Not re-run here; 'reaching the network except through the egress door' is a source scan (ref docs/review.md:48 says so).",
+  "proposedEvidence": "Re-run in CI per commit (already), and add a runtime egress test with a network namespace that blocks all but the egress host.",
+  "needsOutside": false,
+  "size": "S"
+ },
+ {
+  "id": "C04",
+  "claim": "Every measure is computed from an append-only evidence store; anything not measured is shown as not measured.",
+  "source": "ref README.md:7-9",
+  "department": "Control plane",
+  "status": "PARTIAL",
+  "evidence": [
+   "ref packages/evidence; evidence/build-ledger.jsonl (30 hand-logged lines with timeApproximate:true)"
+  ],
+  "gap": "The repo's build ledger is partly hand-recounted ('The case study's build days, recounted...' commits).",
+  "proposedEvidence": "Mark recounted entries as such; make the store's append-only property testable (object retention lock on the bucket).",
+  "needsOutside": true,
+  "size": "S"
+ },
+ {
+  "id": "C05",
+  "claim": "The reference factory's checks gate what is deployed.",
+  "source": "ref cloudbuild.yaml; ref CLAUDE.md",
+  "department": "Control plane",
+  "status": "PARTIAL",
+  "evidence": [
+   "GitHub check-runs: google-cloud-build = failure on all 25 reference-implementation commits from 2026-11-14 to 2026-11-26"
+  ],
+  "gap": "The factory has been red for 13 days while agents kept committing daily; either the evidence is stale or the red is being ignored, which is the exact failure mode PAPER.md:280 names ('a check that goes red and stops nothing').",
+  "proposedEvidence": "Fix the build; add a stop-the-line rule: the builder refuses new work on a branch whose last build is red (Pattern 'Run the Base First' applied to the repo itself), and publish build status history.",
+  "needsOutside": true,
+  "size": "S"
+ }
+]

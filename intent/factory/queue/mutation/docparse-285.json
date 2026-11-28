@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "docparse",
+  "mutant": {
+    "id": "285",
+    "line": 145,
+    "column": 193,
+    "endLine": 145,
+    "endColumn": 217,
+    "mutator": "MethodExpression",
+    "original": "t[0].startsWith('<w:cr')",
+    "replacement": "t[0].endsWith('<w:cr')",
+    "lineText": "const text = unxml([...p.matchAll(/<w:t(?:\\s[^<>]*)?>([^<]*)<\\/w:t>|<w:tab\\/>|<w:br(?:\\s[^<>]*)?\\/>|<w:cr\\/>/g)].map((t) => (t[0].startsWith('<w:tab') ? '\\t' : t[0].startsWith('<w:br') || t[0].startsWith('<w:cr') ? '\\n' : t[1]!)).join(''));",
+    "prevText": "const p = inner;",
+    "nextText": "const style = /<w:pStyle w:val=\"([^\"]+)\"/.exec(p)?.[1];"
+  },
+  "mayEdit": [
+    "intent/blocks/docparse/docparse.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/docparse-285.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"docparse\". Mutant: line 145:193-145:217, mutator MethodExpression: \"t[0].startsWith('<w:cr')\" becomes \"t[0].endsWith('<w:cr')\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/docparse/index.ts (> marks the mutated line):\n   139  export interface Para {\n   140    readonly text: string;\n   141    readonly heading?: number;\n   142    readonly list?: boolean;\n   143  }\n   144  \n>  145  /** Drops every <mc:Fallback> block, nesting included: it repeats what its <mc:Choice> holds (a text box twice). */\n   146  function withoutFallbacks(xml: string): string {\n   147    const open = '<mc:Fallback';\n   148    const close = '</mc:Fallback>';\n   149    let out = '';\n   150    let i = 0;\n   151    let depth = 0;\n\nTest file style (intent/blocks/docparse/docparse.test.ts):\n12 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { toXlsx, zip } from '../tabular/index.ts';\nimport { Refused, docx, unzip, xlsx } from './index.ts';\n\ntest('xlsx: reads back what the tabular block writes, and shared strings from other writers', () => {\n  const book = toXlsx([['Name', 'Amount', 'Paid'], ['A & B', 12.5, true], ['Ö', -3, false]], 'Q4 & more');\n  assert.deepEqual(xlsx(book), [{ name: 'Q4 & more', rows: [['Name', 'Amount', 'Paid'], ['A & B', 12.5, true], ['Ö', -3, false]] }]);\n  const shared = zip([\n    { name: 'xl/workbook.xml', data: '<workbook><sheets><sheet name=\"S\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>' },\n    { name: 'xl/_rels/workbook.xml.rels', data: '<Relationships><Relationship Id=\"rId1\" Target=\"worksheets/sheet1.xml\"/></Relationships>' },\n    { name: 'xl/sharedStrings.xml', data: '<sst><si><t>hello</t></si><si><r><t>rich </t></r><r><t>text</t></r></si></sst>' },\n    { name: 'xl/worksheets/sheet1.xml', data: '<worksheet><sheetData><row r=\"1\"><c r=\"A1\" t=\"s\"><v>0</v></c><c r=\"C1\" t=\"s\"><v>1</v></c></row><row r=\"3\"><c r=\"B3\"><v>7</v></c></row></sheetData></worksheet>' },\n  ]);\n  assert.deepEqual(xlsx(shared)[0]!.rows, [['hello', null, 'rich text'], [], [null, 7]]);\n});\n\ntest('docx: paragraphs, headings, list items, tabs and entities', () => {\n  const body = '<w:document><w:body>' +\n    '<w:p><w:pPr><w:pStyle w:val=\"Heading1\"/></w:pPr><w:r><w:t>Plan &amp; scope</w:t></w:r></w:p>' +\n    '<w:p><w:r><w:t xml:space=\"preserve\">First </w:t></w:r><w:r><w:t>para</w:t><w:tab/><w:t>tabbed</w:t></w:r></w:p>' +\n    '<w:p/>' +\n    '<w:p><w:pPr><w:numPr><w:ilvl w:val=\"0\"/></w:numPr></w:pPr><w:r><w:t>An item</w:t></w:r></w:p>' +\n    '</w:body></w:document>';\n  assert.deepEqual(docx(zip([{ name: 'word/document.xml', data: body }])), [{ text: 'Plan & scope', heading: 1 }, { text: 'First para\\ttabbed' }, { text: 'An item', list: true }]);\n  assert.throws(() => docx(zip([{ name: 'x.xml', data: '' }])), /not a Word document/);\n});\n\ntest('zip bombs, unsafe paths and junk are refused', () => {\n  assert.throws(() => unzip(zip([{ name: 'big.xml', data: '0'.repeat(5_000_000) }])), Refused);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/docparse-285.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:18:25.047Z"
+}

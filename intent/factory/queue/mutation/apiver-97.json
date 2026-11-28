@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "apiver",
+  "mutant": {
+    "id": "97",
+    "line": 71,
+    "column": 111,
+    "endLine": 71,
+    "endColumn": 190,
+    "mutator": "StringLiteral",
+    "original": "`${version} was retired on ${l.sunset}; move to ${this.latest} (${this.notes})`",
+    "replacement": "``",
+    "lineText": "if (l.sunset && today >= l.sunset) return { problem: { status: 410, title: 'API version retired', detail: `${version} was retired on ${l.sunset}; move to ${this.latest} (${this.notes})` } };",
+    "prevText": "if (!l?.deprecated && !l?.sunset) return { headers: h };",
+    "nextText": "if (l.deprecated) h.deprecation = `@${Math.floor(Date.parse(`${l.deprecated}T00:00:00Z`) / 1000)}`;"
+  },
+  "mayEdit": [
+    "intent/blocks/apiver/apiver.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/apiver-97.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"apiver\". Mutant: line 71:111-71:190, mutator StringLiteral: \"`${version} was retired on ${l.sunset}; move to ${this.latest} (${this.notes})`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/apiver/index.ts (> marks the mutated line):\n    65  \n    66    /** Headers for an answer at this version, or a problem if it is past its sunset. */\n    67    headers(version: string, today: string): { headers: Record<string, string> } | { problem: { status: 410; title: string; detail: string } } {\n    68      const l = this.life.get(version);\n    69      const h: Record<string, string> = { 'api-version': version };\n    70      if (!l?.deprecated && !l?.sunset) return { headers: h };\n>   71      if (l.sunset && today >= l.sunset) return { problem: { status: 410, title: 'API version retired', detail: `${version} was retired on ${l.sunset}; move to ${this.latest} (${this.notes})` } };\n    72      if (l.deprecated) h.deprecation = `@${Math.floor(Date.parse(`${l.deprecated}T00:00:00Z`) / 1000)}`;\n    73      if (l.sunset) h.sunset = new Date(`${l.sunset}T00:00:00Z`).toUTCString();\n    74      h.link = `<${this.notes}>; rel=\"${l.deprecated ? 'deprecation' : 'sunset'}\"; type=\"text/html\"`;\n    75      return { headers: h };\n    76    }\n    77  \n\nTest file style (intent/blocks/apiver/apiver.test.ts):\n4 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Versions } from './index.ts';\n\ntype User = Record<string, unknown>;\nconst v = new Versions(\n  '2025-01-01',\n  [\n    { version: '2026-06-01', description: 'name split into display_name; email moved under contact', down: (b) => {\n      const { display_name, contact, ...rest } = b as User;\n      return { ...rest, name: display_name, email: (contact as User | undefined)?.email };\n    } },\n    { version: '2026-11-01', description: 'amounts are minor units, not decimals', paths: /^\\/invoices/, down: (b) => ({ ...(b as User), amount: ((b as User).amount as number) / 100 }) },\n  ],\n  { lifecycle: [{ version: '2025-01-01', deprecated: '2026-06-01', sunset: '2026-12-31' }], notes: 'https://docs.example.org/changes' },\n);\n\ntest('a pinned client gets the shape it was written for, through each change in turn', () => {\n  const now = { id: 1, display_name: 'Ana', contact: { email: 'a@x.org' } };\n  assert.deepEqual(v.render(now, '/users/1', '2026-11-01'), now);\n  assert.deepEqual(v.render(now, '/users/1', '2025-01-01'), { id: 1, name: 'Ana', email: 'a@x.org' });\n  assert.deepEqual(v.render({ amount: 1250 }, '/invoices/9', '2026-06-01'), { amount: 12.5 });\n  assert.deepEqual(v.render({ amount: 1250 }, '/payouts/9', '2026-06-01'), { amount: 1250 }, 'the change only applies to its paths');\n  assert.deepEqual(v.pick(undefined, '2026-06-01'), { version: '2026-06-01' });\n  assert.deepEqual(v.pick(undefined), { version: '2026-11-01' });\n  const bad = v.pick('2024-13-01');\n  assert.ok('problem' in bad && bad.problem.status === 400);\n});\n\ntest('deprecated versions say so with standard headers, and are refused after sunset; stragglers are listed', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/apiver-97.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:17:54.718Z"
+}

@@ -1,0 +1,1583 @@
+{
+ "schema": "zthr-oracle/1",
+ "reference": "Nextcloud 32.0.15",
+ "recorded": "2026-11-28T01:11:51.495Z",
+ "steps": [
+  {
+   "name": "status",
+   "method": "GET",
+   "path": "/status.php"
+  },
+  {
+   "name": "capabilities: chunking and undelete",
+   "method": "GET",
+   "path": "/ocs/v2.php/cloud/capabilities?format=json"
+  },
+  {
+   "name": "who am I",
+   "method": "GET",
+   "path": "/ocs/v2.php/cloud/user?format=json"
+  },
+  {
+   "name": "the empty root, one level",
+   "method": "PROPFIND",
+   "path": "/remote.php/dav/files/{user}/",
+   "headers": {
+    "depth": "1"
+   },
+   "body": "<?xml version=\"1.0\"?><d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"><d:prop><d:resourcetype/><d:getetag/><d:getcontentlength/><d:getlastmodified/><oc:fileid/><oc:id/><oc:permissions/><oc:size/><oc:share-types/><nc:mount-type/><nc:is-encrypted/><nc:has-preview/></d:prop></d:propfind>"
+  },
+  {
+   "name": "make a folder",
+   "method": "MKCOL",
+   "path": "/remote.php/dav/files/{user}/oracle"
+  },
+  {
+   "name": "make it again",
+   "method": "MKCOL",
+   "path": "/remote.php/dav/files/{user}/oracle"
+  },
+  {
+   "name": "a folder inside a missing one",
+   "method": "MKCOL",
+   "path": "/remote.php/dav/files/{user}/missing/inner"
+  },
+  {
+   "name": "write a file",
+   "method": "PUT",
+   "path": "/remote.php/dav/files/{user}/oracle/a.txt",
+   "headers": {
+    "x-oc-mtime": "1700000000"
+   },
+   "body": "hello"
+  },
+  {
+   "name": "overwrite it",
+   "method": "PUT",
+   "path": "/remote.php/dav/files/{user}/oracle/a.txt",
+   "headers": {
+    "x-oc-mtime": "1700000100"
+   },
+   "body": "hello again"
+  },
+  {
+   "name": "read it",
+   "method": "GET",
+   "path": "/remote.php/dav/files/{user}/oracle/a.txt"
+  },
+  {
+   "name": "read a range",
+   "method": "GET",
+   "path": "/remote.php/dav/files/{user}/oracle/a.txt",
+   "headers": {
+    "range": "bytes=6-"
+   }
+  },
+  {
+   "name": "the folder, one level",
+   "method": "PROPFIND",
+   "path": "/remote.php/dav/files/{user}/oracle/",
+   "headers": {
+    "depth": "1"
+   },
+   "body": "<?xml version=\"1.0\"?><d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"><d:prop><d:resourcetype/><d:getetag/><d:getcontentlength/><d:getlastmodified/><oc:fileid/><oc:id/><oc:permissions/><oc:size/><oc:share-types/><nc:mount-type/><nc:is-encrypted/><nc:has-preview/></d:prop></d:propfind>"
+  },
+  {
+   "name": "the file alone",
+   "method": "PROPFIND",
+   "path": "/remote.php/dav/files/{user}/oracle/a.txt",
+   "headers": {
+    "depth": "0"
+   },
+   "body": "<?xml version=\"1.0\"?><d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"><d:prop><d:resourcetype/><d:getetag/><d:getcontentlength/><d:getlastmodified/><oc:fileid/><oc:id/><oc:permissions/><oc:size/><oc:share-types/><nc:mount-type/><nc:is-encrypted/><nc:has-preview/></d:prop></d:propfind>"
+  },
+  {
+   "name": "something missing",
+   "method": "PROPFIND",
+   "path": "/remote.php/dav/files/{user}/oracle/none.txt",
+   "headers": {
+    "depth": "0"
+   },
+   "body": "<?xml version=\"1.0\"?><d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\" xmlns:nc=\"http://nextcloud.org/ns\"><d:prop><d:resourcetype/><d:getetag/><d:getcontentlength/><d:getlastmodified/><oc:fileid/><oc:id/><oc:permissions/><oc:size/><oc:share-types/><nc:mount-type/><nc:is-encrypted/><nc:has-preview/></d:prop></d:propfind>"
+  },
+  {
+   "name": "rename",
+   "method": "MOVE",
+   "path": "/remote.php/dav/files/{user}/oracle/a.txt",
+   "headers": {
+    "destination": "{base}/remote.php/dav/files/{user}/oracle/b.txt"
+   }
+  },
+  {
+   "name": "copy",
+   "method": "COPY",
+   "path": "/remote.php/dav/files/{user}/oracle/b.txt",
+   "headers": {
+    "destination": "{base}/remote.php/dav/files/{user}/oracle/c.txt"
+   }
+  },
+  {
+   "name": "copy onto it without overwrite",
+   "method": "COPY",
+   "path": "/remote.php/dav/files/{user}/oracle/b.txt",
+   "headers": {
+    "destination": "{base}/remote.php/dav/files/{user}/oracle/c.txt",
+    "overwrite": "F"
+   }
+  },
+  {
+   "name": "favourite it",
+   "method": "PROPPATCH",
+   "path": "/remote.php/dav/files/{user}/oracle/c.txt",
+   "body": "<?xml version=\"1.0\"?><d:propertyupdate xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\"><d:set><d:prop><oc:favorite>1</oc:favorite></d:prop></d:set></d:propertyupdate>"
+  },
+  {
+   "name": "start a chunked upload",
+   "method": "MKCOL",
+   "path": "/remote.php/dav/uploads/{user}/oracle-upload",
+   "headers": {
+    "destination": "{base}/remote.php/dav/files/{user}/oracle/big.bin"
+   }
+  },
+  {
+   "name": "send the last chunk first",
+   "method": "PUT",
+   "path": "/remote.php/dav/uploads/{user}/oracle-upload/00002",
+   "headers": {
+    "destination": "{base}/remote.php/dav/files/{user}/oracle/big.bin"
+   },
+   "body": "tail"
+  },
+  {
+   "name": "assemble with a chunk too small",
+   "method": "MOVE",
+   "path": "/remote.php/dav/uploads/{user}/oracle-upload/.file",
+   "headers": {
+    "destination": "{base}/remote.php/dav/files/{user}/oracle/big.bin"
+   }
+  },
+  {
+   "name": "share by link",
+   "method": "POST",
+   "path": "/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json",
+   "headers": {
+    "content-type": "application/x-www-form-urlencoded"
+   },
+   "body": "path=/oracle/b.txt&shareType=3&permissions=1",
+   "capture": {
+    "share": "ocs.data.id"
+   }
+  },
+  {
+   "name": "read the share back",
+   "method": "GET",
+   "path": "/ocs/v2.php/apps/files_sharing/api/v1/shares/{share}?format=json"
+  },
+  {
+   "name": "shares on the file",
+   "method": "GET",
+   "path": "/ocs/v2.php/apps/files_sharing/api/v1/shares?path=/oracle/b.txt&format=json"
+  },
+  {
+   "name": "take the share back",
+   "method": "DELETE",
+   "path": "/ocs/v2.php/apps/files_sharing/api/v1/shares/{share}?format=json"
+  },
+  {
+   "name": "delete a file",
+   "method": "DELETE",
+   "path": "/remote.php/dav/files/{user}/oracle/c.txt"
+  },
+  {
+   "name": "the trash",
+   "method": "PROPFIND",
+   "path": "/remote.php/dav/trashbin/{user}/trash/",
+   "headers": {
+    "depth": "1"
+   },
+   "body": "<?xml version=\"1.0\"?><d:propfind xmlns:d=\"DAV:\" xmlns:nc=\"http://nextcloud.org/ns\"><d:prop><nc:trashbin-filename/><nc:trashbin-original-location/><d:getcontentlength/><d:resourcetype/></d:prop></d:propfind>"
+  },
+  {
+   "name": "empty the trash",
+   "method": "DELETE",
+   "path": "/remote.php/dav/trashbin/{user}/trash/"
+  },
+  {
+   "name": "clean up",
+   "method": "DELETE",
+   "path": "/remote.php/dav/files/{user}/oracle"
+  },
+  {
+   "name": "empty the trash again",
+   "method": "DELETE",
+   "path": "/remote.php/dav/trashbin/{user}/trash/"
+  }
+ ],
+ "answers": [
+  {
+   "status": 200,
+   "headers": {
+    "content-type": "application/json",
+    "date": "<date>"
+   },
+   "body": {
+    "edition": "<empty>",
+    "extendedSupport": "<bool>",
+    "installed": "<bool>",
+    "maintenance": "<bool>",
+    "needsDbUpgrade": "<bool>",
+    "productname": "<text>",
+    "version": "<text>",
+    "versionstring": "<text>"
+   }
+  },
+  {
+   "status": 200,
+   "headers": {
+    "content-type": "application/json",
+    "etag": "<text>",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "ocs": {
+     "data": {
+      "capabilities": {
+       "activity": {
+        "apiv2": [
+         "filters",
+         "filters-api",
+         "previews",
+         "rich-strings"
+        ]
+       },
+       "app_api": {
+        "loglevel": 2,
+        "version": "<text>"
+       },
+       "bruteforce": {
+        "allow-listed": false,
+        "delay": 0
+       },
+       "circles": {
+        "circle": {
+         "config": {
+          "coreFlags": [
+           1,
+           2,
+           4
+          ],
+          "systemFlags": [
+           512,
+           1024,
+           2048
+          ]
+         },
+         "constants": {
+          "flags": {
+           "1": "Single",
+           "2": "Personal",
+           "4": "System",
+           "8": "Visible",
+           "16": "Open",
+           "32": "Invite",
+           "64": "Join request",
+           "128": "Friends",
+           "256": "Password protected",
+           "512": "No Owner",
+           "1024": "Hidden",
+           "2048": "Backend",
+           "4096": "Local",
+           "8192": "Root",
+           "16384": "Team invite",
+           "32768": "Federated",
+           "65536": "Mount point"
+          },
+          "source": {
+           "core": {
+            "1": "Nextcloud Account",
+            "2": "Nextcloud Group",
+            "4": "Email address",
+            "8": "Contact",
+            "16": "Team",
+            "10000": "Nextcloud App"
+           },
+           "extra": {
+            "10001": "Teams App",
+            "10002": "Admin Command Line"
+           }
+          }
+         }
+        },
+        "member": {
+         "constants": {
+          "level": {
+           "1": "Member",
+           "4": "Moderator",
+           "8": "Admin",
+           "9": "Owner"
+          }
+         },
+         "type": {
+          "0": "single",
+          "1": "user",
+          "2": "group",
+          "4": "mail",
+          "8": "contact",
+          "16": "circle",
+          "10000": "app"
+         }
+        },
+        "settings": {
+         "allowedCircles": 262143,
+         "allowedUserTypes": 31,
+         "frontendEnabled": true,
+         "membersLimit": -1
+        },
+        "status": {
+         "globalScale": false
+        },
+        "teamResourceProviders": [
+         "files"
+        ],
+        "version": "<text>"
+       },
+       "core": {
+        "mod-rewrite-working": true,
+        "pollinterval": 60,
+        "reference-api": true,
+        "reference-regex": "(\\s|\\n|^)(https?:\\/\\/)([-A-Z0-9+_.]+(?::[0-9]+)?(?:\\/[-A-Z0-9+&@#%?=~_|!:,.;()]*)*)(\\s|\\n|$)",
+        "user": {
+         "language": "",
+         "locale": "",
+         "timezone": "UTC"
+        },
+        "webdav-root": "remote.php/webdav"
+       },
+       "dav": {
+        "absence-replacement": true,
+        "absence-supported": true,
+        "bulkupload": "1.0",
+        "chunking": "1.0",
+        "public_shares_chunking": true,
+        "search_supports_creation_time": true,
+        "search_supports_last_activity": true,
+        "search_supports_upload_time": true
+       },
+       "downloadlimit": {
+        "default-limit": -1,
+        "enabled": true
+       },
+       "files": {
+        "$comment": "\"blacklisted_files\" is deprecated as of Nextcloud 30, use \"forbidden_filenames\" instead",
+        "bigfilechunking": true,
+        "blacklisted_files": [
+         ".htaccess"
+        ],
+        "chunked_upload": {
+         "max_parallel_count": 5,
+         "max_size": 104857600
+        },
+        "comments": true,
+        "delete_from_trash": true,
+        "directEditing": {
+         "etag": "5b2f367cfe076ab42b79601036409c2e",
+         "supportsFileId": true,
+         "url": "<text>"
+        },
+        "file_conversions": [],
+        "forbidden_filename_basenames": [],
+        "forbidden_filename_characters": [
+         "\\",
+         "/"
+        ],
+        "forbidden_filename_extensions": [
+         ".filepart",
+         ".part"
+        ],
+        "forbidden_filenames": [
+         ".htaccess"
+        ],
+        "undelete": true,
+        "version_deletion": true,
+        "version_labeling": true,
+        "versioning": true,
+        "windows_compatible_filenames": false
+       },
+       "files_sharing": {
+        "api_enabled": true,
+        "default_permissions": 31,
+        "federation": {
+         "expire_date": {
+          "enabled": true
+         },
+         "expire_date_supported": {
+          "enabled": true
+         },
+         "incoming": true,
+         "outgoing": true
+        },
+        "group": {
+         "enabled": true,
+         "expire_date": {
+          "enabled": true
+         }
+        },
+        "group_sharing": true,
+        "public": {
+         "custom_tokens": false,
+         "enabled": true,
+         "expire_date": {
+          "enabled": false
+         },
+         "expire_date_internal": {
+          "enabled": false
+         },
+         "expire_date_remote": {
+          "enabled": false
+         },
+         "multiple_links": true,
+         "password": {
+          "askForOptionalPassword": false,
+          "enforced": false
+         },
+         "send_mail": false,
+         "upload": true,
+         "upload_files_drop": true
+        },
+        "resharing": true,
+        "sharebymail": {
+         "enabled": true,
+         "expire_date": {
+          "enabled": true,
+          "enforced": false
+         },
+         "password": {
+          "enabled": true,
+          "enforced": false
+         },
+         "send_password_by_mail": true,
+         "upload_files_drop": {
+          "enabled": true
+         }
+        },
+        "sharee": {
+         "always_show_unique": true,
+         "query_lookup_default": false
+        },
+        "user": {
+         "expire_date": {
+          "enabled": true
+         },
+         "send_mail": false
+        }
+       },
+       "notifications": {
+        "admin-notifications": [
+         "ocs",
+         "cli"
+        ],
+        "ocs-endpoints": [
+         "list",
+         "get",
+         "delete",
+         "delete-all",
+         "icons",
+         "rich-strings",
+         "action-web",
+         "user-status",
+         "exists",
+         "test-push"
+        ],
+        "push": [
+         "devices",
+         "object-data",
+         "delete"
+        ]
+       },
+       "ocm": {
+        "apiVersion": "1.0-proposal1",
+        "capabilities": [
+         "/invite-accepted",
+         "/notifications",
+         "/shares"
+        ],
+        "enabled": true,
+        "endPoint": "{base}/ocm",
+        "provider": "Nextcloud 32.0.15.1",
+        "publicKey": null,
+        "resourceTypes": [
+         {
+          "name": "<text>",
+          "protocols": {
+           "webdav": "/public.php/webdav/"
+          },
+          "shareTypes": [
+           "user",
+           "group"
+          ]
+         }
+        ],
+        "version": "<text>"
+       },
+       "password_policy": {
+        "api": {
+         "generate": "{base}/ocs/v2.php/apps/password_policy/api/v1/generate",
+         "validate": "{base}/ocs/v2.php/apps/password_policy/api/v1/validate"
+        },
+        "enforceNonCommonPassword": true,
+        "enforceNumericCharacters": false,
+        "enforceSpecialCharacters": false,
+        "enforceUpperLowerCase": false,
+        "minLength": 10,
+        "policies": {
+         "account": {
+          "enforceHaveIBeenPwned": true,
+          "enforceNonCommonPassword": true,
+          "enforceNumericCharacters": false,
+          "enforceSpecialCharacters": false,
+          "enforceUpperLowerCase": false,
+          "minLength": 10
+         }
+        }
+       },
+       "provisioning_api": {
+        "AccountPropertyScopesFederatedEnabled": true,
+        "AccountPropertyScopesPublishedEnabled": false,
+        "AccountPropertyScopesVersion": 2,
+        "version": "<text>"
+       },
+       "recommendations": {
+        "enabled": true
+       },
+       "systemtags": {
+        "enabled": true
+       },
+       "theming": {
+        "background": "{base}/apps/theming/img/background/jo-myoung-hee-fluid.webp",
+        "background-default": true,
+        "background-plain": false,
+        "background-text": "#ffffff",
+        "color": "<text>",
+        "color-element": "<text>",
+        "color-element-bright": "<text>",
+        "color-element-dark": "<text>",
+        "color-text": "#ffffff",
+        "favicon": "{base}/core/img/logo/logo.svg?v=0",
+        "logo": "{base}/core/img/logo/logo.svg?v=0",
+        "logoheader": "{base}/core/img/logo/logo.svg?v=0",
+        "name": "<text>",
+        "productName": "<text>",
+        "slogan": "<text>",
+        "url": "<text>"
+       },
+       "user_status": {
+        "enabled": true,
+        "restore": true,
+        "supports_busy": true,
+        "supports_emoji": true
+       },
+       "weather_status": {
+        "enabled": true
+       }
+      },
+      "version": "<object>"
+     },
+     "meta": {
+      "message": "OK",
+      "status": "ok",
+      "statuscode": 200
+     }
+    }
+   }
+  },
+  {
+   "status": 200,
+   "headers": {
+    "content-type": "application/json",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "ocs": {
+     "data": {
+      "additional_mail": [],
+      "additional_mailScope": [],
+      "address": "",
+      "addressScope": "v2-local",
+      "avatarScope": "v2-federated",
+      "backend": "Database",
+      "backendCapabilities": {
+       "setDisplayName": true,
+       "setPassword": true
+      },
+      "biography": "",
+      "biographyScope": "v2-local",
+      "bluesky": "",
+      "blueskyScope": "v2-local",
+      "display-name": "oracle",
+      "displayname": "oracle",
+      "displaynameScope": "v2-federated",
+      "email": null,
+      "emailScope": "v2-federated",
+      "enabled": true,
+      "fediverse": "",
+      "fediverseScope": "v2-local",
+      "firstLoginTimestamp": "<int>",
+      "groups": [],
+      "headline": "",
+      "headlineScope": "v2-local",
+      "id": "<text>",
+      "language": "en",
+      "lastLogin": "<int>",
+      "lastLoginTimestamp": "<int>",
+      "locale": "",
+      "manager": "",
+      "notify_email": null,
+      "organisation": "",
+      "organisationScope": "v2-local",
+      "phone": "",
+      "phoneScope": "v2-local",
+      "profile_enabled": "1",
+      "profile_enabledScope": "v2-local",
+      "pronouns": "",
+      "pronounsScope": "v2-federated",
+      "quota": {
+       "free": "<int>",
+       "quota": -3,
+       "relative": "<int>",
+       "total": "<int>",
+       "used": 0
+      },
+      "role": "",
+      "roleScope": "v2-local",
+      "subadmin": [],
+      "timezone": "",
+      "twitter": "",
+      "twitterScope": "v2-local",
+      "website": "",
+      "websiteScope": "v2-local"
+     },
+     "meta": {
+      "message": "OK",
+      "status": "ok",
+      "statuscode": 200
+     }
+    }
+   }
+  },
+  {
+   "status": 207,
+   "headers": {
+    "content-type": "application/xml",
+    "dav": "1, 3, extended-mkcol, access-control, calendarserver-principal-property-search, nc-paginate, nextcloud-checksum-update, nc-calendar-search, nc-enable-birthday-calendar",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "{DAV:}multistatus": [
+     {
+      "{DAV:}response": [
+       {
+        "{DAV:}href": "/remote.php/dav/files/oracle/"
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{DAV:}getetag": "<text>"
+           },
+           {
+            "{DAV:}getlastmodified": "<date>"
+           },
+           {
+            "{DAV:}resourcetype": [
+             {
+              "{DAV:}collection": ""
+             }
+            ]
+           },
+           {
+            "{http://nextcloud.org/ns}has-preview": "false"
+           },
+           {
+            "{http://nextcloud.org/ns}mount-type": ""
+           },
+           {
+            "{http://owncloud.org/ns}fileid": "<digits>"
+           },
+           {
+            "{http://owncloud.org/ns}id": "<text>"
+           },
+           {
+            "{http://owncloud.org/ns}permissions": "RGDNVCK"
+           },
+           {
+            "{http://owncloud.org/ns}share-types": ""
+           },
+           {
+            "{http://owncloud.org/ns}size": "0"
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 200 OK"
+         }
+        ]
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{DAV:}getcontentlength": ""
+           },
+           {
+            "{http://nextcloud.org/ns}is-encrypted": ""
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 404 Not Found"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "status": 201,
+   "headers": {
+    "content-type": "text/html",
+    "oc-fileid": "<text>",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 405,
+   "headers": {
+    "content-type": "application/xml",
+    "date": "<date>"
+   },
+   "body": {
+    "{DAV:}error": [
+     {
+      "{http://sabredav.org/ns}exception": "Sabre\\DAV\\Exception\\MethodNotAllowed"
+     },
+     {
+      "{http://sabredav.org/ns}message": "The resource you tried to create already exists"
+     }
+    ]
+   }
+  },
+  {
+   "status": 409,
+   "headers": {
+    "content-type": "application/xml",
+    "date": "<date>"
+   },
+   "body": {
+    "{DAV:}error": [
+     {
+      "{http://sabredav.org/ns}exception": "Sabre\\DAV\\Exception\\Conflict"
+     },
+     {
+      "{http://sabredav.org/ns}message": "Parent node does not exist"
+     }
+    ]
+   }
+  },
+  {
+   "status": 201,
+   "headers": {
+    "content-type": "text/html",
+    "etag": "<text>",
+    "oc-etag": "<text>",
+    "oc-fileid": "<text>",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 204,
+   "headers": {
+    "etag": "<text>",
+    "oc-etag": "<text>",
+    "oc-fileid": "<text>",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 200,
+   "headers": {
+    "content-type": "text/plain",
+    "etag": "<text>",
+    "oc-etag": "<text>",
+    "last-modified": "<date>",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "bytes": 11
+   }
+  },
+  {
+   "status": 206,
+   "headers": {
+    "content-type": "text/plain",
+    "etag": "<text>",
+    "oc-etag": "<text>",
+    "last-modified": "<date>",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "bytes": 5
+   }
+  },
+  {
+   "status": 207,
+   "headers": {
+    "content-type": "application/xml",
+    "dav": "1, 3, extended-mkcol, access-control, calendarserver-principal-property-search, nc-paginate, nextcloud-checksum-update, nc-calendar-search, nc-enable-birthday-calendar",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "{DAV:}multistatus": [
+     {
+      "{DAV:}response": [
+       {
+        "{DAV:}href": "/remote.php/dav/files/oracle/oracle/"
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{DAV:}getetag": "<text>"
+           },
+           {
+            "{DAV:}getlastmodified": "<date>"
+           },
+           {
+            "{DAV:}resourcetype": [
+             {
+              "{DAV:}collection": ""
+             }
+            ]
+           },
+           {
+            "{http://nextcloud.org/ns}has-preview": "false"
+           },
+           {
+            "{http://nextcloud.org/ns}mount-type": ""
+           },
+           {
+            "{http://owncloud.org/ns}fileid": "<digits>"
+           },
+           {
+            "{http://owncloud.org/ns}id": "<text>"
+           },
+           {
+            "{http://owncloud.org/ns}permissions": "RGDNVCK"
+           },
+           {
+            "{http://owncloud.org/ns}share-types": ""
+           },
+           {
+            "{http://owncloud.org/ns}size": "11"
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 200 OK"
+         }
+        ]
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{DAV:}getcontentlength": ""
+           },
+           {
+            "{http://nextcloud.org/ns}is-encrypted": ""
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 404 Not Found"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "{DAV:}response": [
+       {
+        "{DAV:}href": "/remote.php/dav/files/oracle/oracle/a.txt"
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{DAV:}getcontentlength": "11"
+           },
+           {
+            "{DAV:}getetag": "<text>"
+           },
+           {
+            "{DAV:}getlastmodified": "<date>"
+           },
+           {
+            "{DAV:}resourcetype": ""
+           },
+           {
+            "{http://nextcloud.org/ns}has-preview": "true"
+           },
+           {
+            "{http://nextcloud.org/ns}mount-type": ""
+           },
+           {
+            "{http://owncloud.org/ns}fileid": "<digits>"
+           },
+           {
+            "{http://owncloud.org/ns}id": "<text>"
+           },
+           {
+            "{http://owncloud.org/ns}permissions": "RGDNVW"
+           },
+           {
+            "{http://owncloud.org/ns}share-types": ""
+           },
+           {
+            "{http://owncloud.org/ns}size": "11"
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 200 OK"
+         }
+        ]
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{http://nextcloud.org/ns}is-encrypted": ""
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 404 Not Found"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "status": 207,
+   "headers": {
+    "content-type": "application/xml",
+    "dav": "1, 3, extended-mkcol, access-control, calendarserver-principal-property-search, nc-paginate, nextcloud-checksum-update, nc-calendar-search, nc-enable-birthday-calendar",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "{DAV:}multistatus": [
+     {
+      "{DAV:}response": [
+       {
+        "{DAV:}href": "/remote.php/dav/files/oracle/oracle/a.txt"
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{DAV:}getcontentlength": "11"
+           },
+           {
+            "{DAV:}getetag": "<text>"
+           },
+           {
+            "{DAV:}getlastmodified": "<date>"
+           },
+           {
+            "{DAV:}resourcetype": ""
+           },
+           {
+            "{http://nextcloud.org/ns}has-preview": "true"
+           },
+           {
+            "{http://nextcloud.org/ns}mount-type": ""
+           },
+           {
+            "{http://owncloud.org/ns}fileid": "<digits>"
+           },
+           {
+            "{http://owncloud.org/ns}id": "<text>"
+           },
+           {
+            "{http://owncloud.org/ns}permissions": "RGDNVW"
+           },
+           {
+            "{http://owncloud.org/ns}share-types": ""
+           },
+           {
+            "{http://owncloud.org/ns}size": "11"
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 200 OK"
+         }
+        ]
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{http://nextcloud.org/ns}is-encrypted": ""
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 404 Not Found"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "status": 404,
+   "headers": {
+    "content-type": "application/xml",
+    "dav": "1, 3, extended-mkcol, access-control, calendarserver-principal-property-search, nc-paginate, nextcloud-checksum-update, nc-calendar-search, nc-enable-birthday-calendar",
+    "date": "<date>"
+   },
+   "body": {
+    "{DAV:}error": [
+     {
+      "{http://sabredav.org/ns}exception": "Sabre\\DAV\\Exception\\NotFound"
+     },
+     {
+      "{http://sabredav.org/ns}message": "File with name /oracle/none.txt could not be located"
+     }
+    ]
+   }
+  },
+  {
+   "status": 201,
+   "headers": {
+    "content-type": "text/html",
+    "etag": "<text>",
+    "oc-etag": "<text>",
+    "oc-fileid": "<text>",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 201,
+   "headers": {
+    "content-type": "text/html",
+    "oc-fileid": "<text>",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 412,
+   "headers": {
+    "content-type": "application/xml",
+    "date": "<date>"
+   },
+   "body": {
+    "{DAV:}error": [
+     {
+      "{http://sabredav.org/ns}exception": "Sabre\\DAV\\Exception\\PreconditionFailed"
+     },
+     {
+      "{http://sabredav.org/ns}message": "The destination node already exists, and the overwrite header is set to false"
+     },
+     {
+      "{http://sabredav.org/ns}header": "Overwrite"
+     }
+    ]
+   }
+  },
+  {
+   "status": 207,
+   "headers": {
+    "content-type": "application/xml",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "{DAV:}multistatus": [
+     {
+      "{DAV:}response": [
+       {
+        "{DAV:}href": "/remote.php/dav/files/oracle/oracle/c.txt"
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{http://owncloud.org/ns}favorite": ""
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 200 OK"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "status": 201,
+   "headers": {
+    "content-type": "text/html",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 201,
+   "headers": {
+    "content-type": "text/html",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 201,
+   "headers": {
+    "content-type": "text/html",
+    "etag": "<text>",
+    "oc-etag": "<text>",
+    "oc-fileid": "<text>",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 200,
+   "headers": {
+    "content-type": "application/json",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "ocs": {
+     "data": {
+      "attributes": null,
+      "can_delete": true,
+      "can_edit": true,
+      "displayname_file_owner": "<text>",
+      "displayname_owner": "<text>",
+      "expiration": "<empty>",
+      "file_parent": "<int>",
+      "file_source": "<int>",
+      "file_target": "/b.txt",
+      "has_preview": true,
+      "hide_download": 0,
+      "id": "<digits>",
+      "is-mount-root": false,
+      "item_mtime": 1700000100,
+      "item_permissions": 27,
+      "item_size": 11,
+      "item_source": "<int>",
+      "item_type": "file",
+      "label": "",
+      "mail_send": "<int>",
+      "mimetype": "text/plain",
+      "mount-type": "",
+      "note": "",
+      "parent": "<empty>",
+      "password": null,
+      "path": "/oracle/b.txt",
+      "permissions": 17,
+      "send_password_by_talk": false,
+      "share_type": 3,
+      "share_with": null,
+      "share_with_displayname": "(Shared link)",
+      "stime": "<int>",
+      "storage": "<int>",
+      "storage_id": "<text>",
+      "token": "<text>",
+      "uid_file_owner": "<text>",
+      "uid_owner": "<text>",
+      "url": "<text>"
+     },
+     "meta": {
+      "message": "OK",
+      "status": "ok",
+      "statuscode": 200
+     }
+    }
+   }
+  },
+  {
+   "status": 200,
+   "headers": {
+    "content-type": "application/json",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "ocs": {
+     "data": [
+      {
+       "attributes": null,
+       "can_delete": true,
+       "can_edit": true,
+       "displayname_file_owner": "<text>",
+       "displayname_owner": "<text>",
+       "expiration": "<empty>",
+       "file_parent": "<int>",
+       "file_source": "<int>",
+       "file_target": "/b.txt",
+       "has_preview": true,
+       "hide_download": 0,
+       "id": "<digits>",
+       "is-mount-root": false,
+       "item_mtime": 1700000100,
+       "item_permissions": 27,
+       "item_size": 11,
+       "item_source": "<int>",
+       "item_type": "file",
+       "label": "",
+       "mail_send": "<int>",
+       "mimetype": "text/plain",
+       "mount-type": "",
+       "note": "",
+       "parent": "<empty>",
+       "password": null,
+       "path": "/oracle/b.txt",
+       "permissions": 17,
+       "send_password_by_talk": false,
+       "share_type": 3,
+       "share_with": null,
+       "share_with_displayname": "(Shared link)",
+       "stime": "<int>",
+       "storage": "<int>",
+       "storage_id": "<text>",
+       "token": "<text>",
+       "uid_file_owner": "<text>",
+       "uid_owner": "<text>",
+       "url": "<text>"
+      }
+     ],
+     "meta": {
+      "message": "OK",
+      "status": "ok",
+      "statuscode": 200
+     }
+    }
+   }
+  },
+  {
+   "status": 200,
+   "headers": {
+    "content-type": "application/json",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "ocs": {
+     "data": [
+      {
+       "attributes": null,
+       "can_delete": true,
+       "can_edit": true,
+       "displayname_file_owner": "<text>",
+       "displayname_owner": "<text>",
+       "expiration": "<empty>",
+       "file_parent": "<int>",
+       "file_source": "<int>",
+       "file_target": "/b.txt",
+       "has_preview": true,
+       "hide_download": 0,
+       "id": "<digits>",
+       "is-mount-root": false,
+       "item_mtime": 1700000100,
+       "item_permissions": 27,
+       "item_size": 11,
+       "item_source": "<int>",
+       "item_type": "file",
+       "label": "",
+       "mail_send": "<int>",
+       "mimetype": "text/plain",
+       "mount-type": "",
+       "note": "",
+       "parent": "<empty>",
+       "password": null,
+       "path": "/oracle/b.txt",
+       "permissions": 17,
+       "send_password_by_talk": false,
+       "share_type": 3,
+       "share_with": null,
+       "share_with_displayname": "(Shared link)",
+       "stime": "<int>",
+       "storage": "<int>",
+       "storage_id": "<text>",
+       "token": "<text>",
+       "uid_file_owner": "<text>",
+       "uid_owner": "<text>",
+       "url": "<text>"
+      }
+     ],
+     "meta": {
+      "message": "OK",
+      "status": "ok",
+      "statuscode": 200
+     }
+    }
+   }
+  },
+  {
+   "status": 200,
+   "headers": {
+    "content-type": "application/json",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "ocs": {
+     "data": [],
+     "meta": {
+      "message": "OK",
+      "status": "ok",
+      "statuscode": 200
+     }
+    }
+   }
+  },
+  {
+   "status": 204,
+   "headers": {
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 207,
+   "headers": {
+    "content-type": "application/xml",
+    "dav": "1, 3, extended-mkcol, access-control, calendarserver-principal-property-search, nc-paginate, nextcloud-checksum-update, nc-calendar-search, nc-enable-birthday-calendar",
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": {
+    "{DAV:}multistatus": [
+     {
+      "{DAV:}response": [
+       {
+        "{DAV:}href": "/remote.php/dav/trashbin/oracle/trash/"
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{DAV:}resourcetype": [
+             {
+              "{DAV:}collection": ""
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 200 OK"
+         }
+        ]
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{DAV:}getcontentlength": ""
+           },
+           {
+            "{http://nextcloud.org/ns}trashbin-filename": ""
+           },
+           {
+            "{http://nextcloud.org/ns}trashbin-original-location": ""
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 404 Not Found"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "{DAV:}response": [
+       {
+        "{DAV:}href": "/remote.php/dav/trashbin/oracle/trash/c.txt.d{time}"
+       },
+       {
+        "{DAV:}propstat": [
+         {
+          "{DAV:}prop": [
+           {
+            "{DAV:}getcontentlength": "11"
+           },
+           {
+            "{DAV:}resourcetype": ""
+           },
+           {
+            "{http://nextcloud.org/ns}trashbin-filename": "c.txt"
+           },
+           {
+            "{http://nextcloud.org/ns}trashbin-original-location": "oracle/c.txt"
+           }
+          ]
+         },
+         {
+          "{DAV:}status": "HTTP/1.1 200 OK"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "status": 204,
+   "headers": {
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 204,
+   "headers": {
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  },
+  {
+   "status": 204,
+   "headers": {
+    "x-request-id": "<text>",
+    "date": "<date>"
+   },
+   "body": ""
+  }
+ ],
+ "image": "nextcloud@sha256:7032779c2121b26919ad36dc7bcb68b94ef37c451bfede06926e8b03b5caa1fc",
+ "version": "Nextcloud 32.0.15",
+ "rules": {
+  "maskProps": [
+   "{DAV:}getetag",
+   "{DAV:}getlastmodified",
+   "{DAV:}creationdate",
+   "{http://owncloud.org/ns}fileid",
+   "{http://owncloud.org/ns}id",
+   "{http://nextcloud.org/ns}creation_time",
+   "{http://nextcloud.org/ns}upload_time",
+   "{http://owncloud.org/ns}checksums",
+   "{DAV:}quota-available-bytes",
+   "{http://nextcloud.org/ns}data-fingerprint",
+   "{http://nextcloud.org/ns}lock-time",
+   "{http://nextcloud.org/ns}lock-token",
+   "{http://nextcloud.org/ns}trashbin-deletion-time"
+  ],
+  "maskJson": [
+   "id",
+   "token",
+   "url",
+   "stime",
+   "expiration",
+   "file_source",
+   "item_source",
+   "file_parent",
+   "storage",
+   "storage_id",
+   "parent",
+   "mail_send",
+   "uid_file_owner",
+   "displayname_file_owner",
+   "uid_owner",
+   "displayname_owner",
+   "version",
+   "versionstring",
+   "edition",
+   "productname",
+   "extendedSupport",
+   "installed",
+   "maintenance",
+   "needsDbUpgrade",
+   "lastLogin",
+   "firstLoginTimestamp",
+   "lastLoginTimestamp",
+   "free",
+   "total",
+   "relative",
+   "storageLocation",
+   "name",
+   "productName",
+   "slogan",
+   "color",
+   "color-element",
+   "color-element-bright",
+   "color-element-dark"
+  ],
+  "maskHeaders": [
+   "etag",
+   "oc-etag",
+   "oc-fileid",
+   "last-modified",
+   "x-request-id",
+   "date"
+  ],
+  "headers": [
+   "content-type",
+   "dav"
+  ]
+ },
+ "textMasks": [
+  "{base}",
+  ".d{time}"
+ ]
+}

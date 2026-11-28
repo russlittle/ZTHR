@@ -1,0 +1,37 @@
+{
+  "name": "store",
+  "purpose": "Owner-scoped document store and the classified data declaration",
+  "provides": [
+    "CLASSES",
+    "CollectionDef",
+    "DataClass",
+    "DocStore",
+    "FieldDef",
+    "atLeast",
+    "collectionClass",
+    "erd",
+    "field",
+    "rank",
+    "unclassified"
+  ],
+  "requires": [],
+  "externalRequires": [],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "Any app that keeps records about people and must be able to hand a person their whole record or erase it. Declare every collection once with `field(name, type, class)`; draw it with `erd()`; check it with `unclassified()`.",
+  "notFor": "Shared reference data with no owner (give it a system owner, as the operator does with `_operator`), append-only logs (use the evidence block or a ledger), or facts that must be encrypted at rest (seal them with the runtime block's sealed store).",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/store/test/store.test.ts`](../../packages/store/test/store.test.ts) (8 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 85,
+  "tests": 8,
+  "source": {
+    "path": "packages/store",
+    "sha256": "749d350d1897a6825c89695aba7c769c8cc1212f9d99fd3634342407f02adb2e"
+  }
+}

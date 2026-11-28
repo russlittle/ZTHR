@@ -1,0 +1,13 @@
+id: persona-1a-week-puzzle
+persona: maria
+delight: 1a
+phase: 2
+goal: Maria's rotating shifts, classes, daycare drop-off and pickup, commute and sleep are laid out for the week, and anything that cannot fit is named with a way out.
+forbidden:
+  - a study block is placed on top of a class or a shift
+  - a pickup that cannot be made goes unmentioned
+  - a message fails the tone rubric
+budget: { actions: 4, ms: 5000 }
+requirements: [HH-1]
+modes: [standard, walk-me-through]
+channels: [app, text]

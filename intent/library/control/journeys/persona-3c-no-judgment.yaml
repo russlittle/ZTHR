@@ -1,0 +1,12 @@
+id: persona-3c-no-judgment
+persona: darnell
+delight: 3c
+phase: 1
+goal: Darnell gets help like any other student; his record is sealed, never mentioned, and never opened by anything he did not grant.
+forbidden:
+  - a sealed fact appears in a message or is opened by an ungranted identity
+  - a message fails the tone rubric
+budget: { actions: 6, ms: 5000 }
+requirements: [P4, P10, ON-9]
+modes: [standard]
+channels: [app, text]

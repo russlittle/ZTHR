@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "sync",
+  "mutant": {
+    "id": "97",
+    "line": 103,
+    "column": 14,
+    "endLine": 103,
+    "endColumn": 66,
+    "mutator": "MethodExpression",
+    "original": "localKeys.some((k) => !same(l.fields[k], mapped[k]))",
+    "replacement": "localKeys.every(k => !same(l.fields[k], mapped[k]))",
+    "lineText": "if (!localKeys.some((k) => !same(l.fields[k], mapped[k]))) {",
+    "prevText": "// Local edits that survive (on other fields, or kept by the rule) stay pending and are pushed below.",
+    "nextText": "l.syncedAt = at;"
+  },
+  "mayEdit": [
+    "intent/blocks/sync/sync.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sync-97.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sync\". Mutant: line 103:14-103:66, mutator MethodExpression: \"localKeys.some((k) => !same(l.fields[k], mapped[k]))\" becomes \"localKeys.every(k => !same(l.fields[k], mapped[k]))\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sync/index.ts (> marks the mutated line):\n    97          }\n    98          const take = remoteKeys.filter((k) => keep === 'remote' || !both.includes(k));\n    99          l.fields = { ...l.fields, ...Object.fromEntries(take.map((k) => [k, mapped[k]])) };\n   100          l.base = snapshot(mapped);\n   101          if (take.length) pulled++;\n   102          // Local edits that survive (on other fields, or kept by the rule) stay pending and are pushed below.\n>  103          if (!localKeys.some((k) => !same(l.fields[k], mapped[k]))) {\n   104            l.syncedAt = at;\n   105            (l as { updated: string }).updated = at;\n   106            touched.add(l.id);\n   107          }\n   108        }\n   109        this.cursor = r.cursor;\n\nTest file style (intent/blocks/sync/sync.test.ts):\n5 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Sync, Twin, type Local } from './index.ts';\n\nconst clock = () => {\n  let t = Date.parse('2026-11-26T00:00:00Z');\n  return { now: () => new Date(t), tick: (s = 1) => void (t += s * 1000) };\n};\nconst map = { toLocal: (r: { fields: Readonly<Record<string, unknown>> }) => ({ title: r.fields.summary, status: r.fields.state }), toRemote: (l: Local) => ({ summary: l.fields.title, state: l.fields.status }) };\n\ntest('pulls in pages, pushes local changes, and our own pushes do not come back as changes', async () => {\n  const c = clock();\n  const jira = new Twin('tickets', c.now);\n  for (let i = 0; i < 5; i++) jira.edit(undefined, { summary: `Bug ${i}`, state: 'open' });\n  const local = new Map<string, Local>();\n  const s = new Sync(jira, local, { ...map, now: c.now });\n  c.tick();\n  const r1 = await s.run(2);\n  assert.equal(r1.pulled, 5);\n  assert.equal(r1.cursor, '5');\n  assert.equal(local.size, 5);\n  c.tick();\n  local.set('mine', { id: 'mine', updated: c.now().toISOString(), fields: { title: 'Found in Files', status: 'open' } });\n  const r2 = await s.run();\n  assert.deepEqual([r2.pulled, r2.pushed], [0, 1]);\n  assert.match(local.get('mine')!.remoteId!, /^TICKETS-\\d+$/);\n  assert.equal(jira.records.get(local.get('mine')!.remoteId!)!.fields.summary, 'Found in Files');\n  const r3 = await s.run();\n  assert.deepEqual([r3.pulled, r3.pushed], [0, 0], 'our push comes back in the feed and is recognised, not re-applied or re-pushed');\n  assert.equal(r3.cursor, '6');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sync-97.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:21:58.533Z"
+}

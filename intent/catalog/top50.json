@@ -1,0 +1,687 @@
+{
+  "method": "Ranked by judgment: how many applications need the block, most first. Replace with the measured rank by running tools/rank-blocks.ts where api.npmjs.org is reachable.",
+  "blocks": [
+    {
+      "rank": 1,
+      "name": "Authentication",
+      "gives": "Sign-in, sessions, sign-out, session expiry",
+      "libraries": [
+        "passport",
+        "next-auth",
+        "better-auth",
+        "@auth/core"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "sessions: limits and expiry; accounts: sign-in"
+      }
+    },
+    {
+      "rank": 2,
+      "name": "Authorization",
+      "gives": "Roles, permissions and per-record access checks",
+      "libraries": [
+        "@casl/ability",
+        "accesscontrol"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "rbac and grants: roles, record rules and sharing"
+      }
+    },
+    {
+      "rank": 3,
+      "name": "Validation",
+      "gives": "Schemas for every input, one error format",
+      "libraries": [
+        "zod",
+        "joi",
+        "yup",
+        "ajv"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "validate: the housekeeping block"
+      }
+    },
+    {
+      "rank": 4,
+      "name": "Data store and migrations",
+      "gives": "Persistence, schema changes, owner-scoped records",
+      "libraries": [
+        "prisma",
+        "drizzle-orm",
+        "knex",
+        "typeorm",
+        "sequelize"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "migrations: ordered, checksummed, locked; store: the document store"
+      }
+    },
+    {
+      "rank": 5,
+      "name": "HTTP API and routing",
+      "gives": "Endpoints, middleware, request lifecycle",
+      "libraries": [
+        "express",
+        "fastify",
+        "hono",
+        "koa"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "dav: the WebDAV methods, multistatus answers and headers, over a safe XML reader"
+      }
+    },
+    {
+      "rank": 6,
+      "name": "Configuration and secrets",
+      "gives": "Typed settings, secrets by name, refuse to start when unsafe",
+      "libraries": [
+        "dotenv",
+        "convict"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "config: the housekeeping block"
+      }
+    },
+    {
+      "rank": 7,
+      "name": "Logging",
+      "gives": "Structured logs with redaction",
+      "libraries": [
+        "pino",
+        "winston"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "observe: the housekeeping block"
+      }
+    },
+    {
+      "rank": 8,
+      "name": "Error reporting",
+      "gives": "Errors captured with context, grouped, alerted",
+      "libraries": [
+        "@sentry/node"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "observe: errors grouped, linked to builds, features and traces"
+      }
+    },
+    {
+      "rank": 9,
+      "name": "Forms",
+      "gives": "Form state, validation messages, accessible errors",
+      "libraries": [
+        "react-hook-form",
+        "formik"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "validate: field errors from the same schema as the server"
+      }
+    },
+    {
+      "rank": 10,
+      "name": "UI kit and accessibility",
+      "gives": "Themed, accessible components and layouts",
+      "libraries": [
+        "@radix-ui/react-dialog",
+        "@mui/material",
+        "@headlessui/react"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "ui"
+      }
+    },
+    {
+      "rank": 11,
+      "name": "Email",
+      "gives": "Templated mail, delivery status, bounces",
+      "libraries": [
+        "nodemailer",
+        "@sendgrid/mail",
+        "resend"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "notify: templates, unsubscribe headers, bounces; the provider sits behind send()"
+      }
+    },
+    {
+      "rank": 12,
+      "name": "User accounts",
+      "gives": "Sign-up, profile, password reset, invitations",
+      "libraries": [
+        "@supabase/supabase-js",
+        "firebase-admin"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "accounts: sign-up with confirmation, sign-in, resets"
+      }
+    },
+    {
+      "rank": 13,
+      "name": "File upload and storage",
+      "gives": "Uploads, limits, scanning, signed links",
+      "libraries": [
+        "multer",
+        "@aws-sdk/client-s3",
+        "busboy"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "objects and uploads: bytes streamed with checksums and byte ranges, and resumable chunked uploads joined in the store"
+      }
+    },
+    {
+      "rank": 14,
+      "name": "Background jobs and scheduling",
+      "gives": "Queues, retries, cron, idempotent work",
+      "libraries": [
+        "bullmq",
+        "node-cron",
+        "agenda",
+        "bree"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "jobs: queue, retries and cron in process"
+      }
+    },
+    {
+      "rank": 15,
+      "name": "Notifications",
+      "gives": "In-app, push and SMS with preferences",
+      "libraries": [
+        "twilio",
+        "web-push",
+        "firebase-admin"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "notify: channels, preferences, quiet hours, receipts"
+      }
+    },
+    {
+      "rank": 16,
+      "name": "Payments",
+      "gives": "Charges, refunds, payouts, idempotent calls",
+      "libraries": [
+        "stripe",
+        "@paypal/checkout-server-sdk"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "payments: provider interface and twin; no real provider adapter tested yet"
+      }
+    },
+    {
+      "rank": 17,
+      "name": "Subscriptions and billing",
+      "gives": "Plans, invoices, proration, dunning",
+      "libraries": [
+        "stripe",
+        "chargebee"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "payments: billing logic tested against the twin; needs a real provider adapter"
+      }
+    },
+    {
+      "rank": 18,
+      "name": "Audit log",
+      "gives": "Append-only record of who did what",
+      "libraries": [
+        "@bemi-db/prisma",
+        "pg-audit-log"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "audit: the housekeeping block"
+      }
+    },
+    {
+      "rank": 19,
+      "name": "Search",
+      "gives": "Full-text search, filters, ranking",
+      "libraries": [
+        "meilisearch",
+        "algoliasearch",
+        "@elastic/elasticsearch",
+        "fuse.js"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "search: BM25, facets, snippets"
+      }
+    },
+    {
+      "rank": 20,
+      "name": "Caching",
+      "gives": "Read-through cache with expiry and invalidation",
+      "libraries": [
+        "ioredis",
+        "redis",
+        "lru-cache",
+        "keyv"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "cache: read-through, stampede-safe, tags"
+      }
+    },
+    {
+      "rank": 21,
+      "name": "Rate limiting and abuse protection",
+      "gives": "Per-user and global limits, lockouts",
+      "libraries": [
+        "express-rate-limit",
+        "rate-limiter-flexible"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "ratelimit and grants: token buckets and failure counts per key, and wrong link passwords throttled per link"
+      }
+    },
+    {
+      "rank": 22,
+      "name": "Metrics and tracing",
+      "gives": "Request traces, service metrics, dashboards",
+      "libraries": [
+        "@opentelemetry/api",
+        "prom-client"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "observe: counters, histograms and traces in process"
+      }
+    },
+    {
+      "rank": 23,
+      "name": "Health and readiness",
+      "gives": "Liveness, readiness and version endpoints",
+      "libraries": [
+        "@godaddy/terminus",
+        "lightship"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "health: the housekeeping block"
+      }
+    },
+    {
+      "rank": 24,
+      "name": "Internationalization",
+      "gives": "Translated text, plurals, number and date formats",
+      "libraries": [
+        "i18next",
+        "react-intl"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "i18n: catalogues, plurals, formatting"
+      }
+    },
+    {
+      "rank": 25,
+      "name": "Dates and time zones",
+      "gives": "Time-zone-safe dates, durations, recurrence",
+      "libraries": [
+        "date-fns",
+        "dayjs",
+        "luxon"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "time: zones, DST, recurrence"
+      }
+    },
+    {
+      "rank": 26,
+      "name": "Webhooks",
+      "gives": "Signed inbound webhooks and reliable outbound ones",
+      "libraries": [
+        "svix",
+        "@octokit/webhooks"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "webhooks: signed inbound and reliable outbound"
+      }
+    },
+    {
+      "rank": 27,
+      "name": "Outbound HTTP",
+      "gives": "Allow-listed calls with timeouts, retries and records",
+      "libraries": [
+        "axios",
+        "ky",
+        "got",
+        "undici"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "egress: allow-listed hosts, named purposes, recorded"
+      }
+    },
+    {
+      "rank": 28,
+      "name": "Organizations and teams",
+      "gives": "Multi-tenancy, membership, invitations, switching",
+      "libraries": [
+        "@clerk/backend",
+        "@workos-inc/node"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "accounts: organisations, invitations, roles in each"
+      }
+    },
+    {
+      "rank": 29,
+      "name": "Feature flags",
+      "gives": "Gradual rollout, kill switches, targeting",
+      "libraries": [
+        "unleash-client",
+        "@openfeature/server-sdk",
+        "launchdarkly-node-server-sdk"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "flags: targeting, rollouts, kill switch"
+      }
+    },
+    {
+      "rank": 30,
+      "name": "Admin console",
+      "gives": "Back-office views to find, fix and support",
+      "libraries": [
+        "react-admin",
+        "adminjs"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "console: sections, statuses, reasons, permission filter and summary; no screen beyond escaped HTML"
+      }
+    },
+    {
+      "rank": 31,
+      "name": "Reports and export",
+      "gives": "CSV and spreadsheet export, scheduled reports",
+      "libraries": [
+        "papaparse",
+        "exceljs",
+        "csv-stringify"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "reports: grouped reports and CSV"
+      }
+    },
+    {
+      "rank": 32,
+      "name": "Data import",
+      "gives": "CSV and spreadsheet import with row-level errors",
+      "libraries": [
+        "papaparse",
+        "csv-parse",
+        "xlsx"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "tabular: mapping, row checks, quarantine"
+      }
+    },
+    {
+      "rank": 33,
+      "name": "PDF and documents",
+      "gives": "Generated PDFs, letters and receipts",
+      "libraries": [
+        "pdfkit",
+        "puppeteer",
+        "@react-pdf/renderer"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "pdf: generated PDF checked with qpdf"
+      }
+    },
+    {
+      "rank": 34,
+      "name": "Product analytics",
+      "gives": "Events, funnels, consent-aware tracking",
+      "libraries": [
+        "posthog-node",
+        "@segment/analytics-node",
+        "mixpanel"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "analytics: consent-gated events and funnels"
+      }
+    },
+    {
+      "rank": 35,
+      "name": "Privacy: consent, export, erasure",
+      "gives": "Consent records, whole-record export and deletion",
+      "libraries": [
+        "@transcend-io/consent-manager-ui"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "privacy, store and runtime: consent ledger, export and delete, sensitive-field tracing"
+      }
+    },
+    {
+      "rank": 36,
+      "name": "Security headers and CSRF",
+      "gives": "Safe defaults for browsers and forms",
+      "libraries": [
+        "helmet",
+        "csrf-csrf",
+        "cors"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "secheaders: the housekeeping block"
+      }
+    },
+    {
+      "rank": 37,
+      "name": "Password hashing and crypto",
+      "gives": "Hashing, tokens, signing, encryption at rest",
+      "libraries": [
+        "bcrypt",
+        "argon2",
+        "jose"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "crypto and grants: envelope encryption, signed tokens, scrypt"
+      }
+    },
+    {
+      "rank": 38,
+      "name": "Multi-factor sign-in",
+      "gives": "One-time codes, passkeys, recovery",
+      "libraries": [
+        "otplib",
+        "@simplewebauthn/server"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "sessions: TOTP (RFC 6238 vectors) and recovery codes"
+      }
+    },
+    {
+      "rank": 39,
+      "name": "Single sign-on",
+      "gives": "OIDC and SAML with major providers",
+      "libraries": [
+        "openid-client",
+        "@node-saml/node-saml"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "oidc: OpenID Connect; SAML not built"
+      }
+    },
+    {
+      "rank": 40,
+      "name": "API keys and tokens",
+      "gives": "Issue, scope, rotate and revoke keys",
+      "libraries": [
+        "unkey",
+        "@unkey/api"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "apikeys and devices: scoped keys and per-device tokens"
+      }
+    },
+    {
+      "rank": 41,
+      "name": "Real-time updates",
+      "gives": "Live updates, presence, subscriptions",
+      "libraries": [
+        "socket.io",
+        "ws",
+        "pusher"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "events: hub, replay and server-sent events"
+      }
+    },
+    {
+      "rank": 42,
+      "name": "Messaging and comments",
+      "gives": "Threads, mentions, read state",
+      "libraries": [
+        "stream-chat",
+        "@liveblocks/node"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "comments: threads, mentions, edits, reactions"
+      }
+    },
+    {
+      "rank": 43,
+      "name": "History and versioning",
+      "gives": "Change history, diffs, undo, activity feed",
+      "libraries": [
+        "paper-trail",
+        "yjs"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "history: versions, diff, restore"
+      }
+    },
+    {
+      "rank": 44,
+      "name": "Approvals and workflow",
+      "gives": "Multi-step approvals, state machines, holds",
+      "libraries": [
+        "xstate",
+        "temporalio"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "workflow: checked definitions, approvals, escalation"
+      }
+    },
+    {
+      "rank": 45,
+      "name": "Calendar and booking",
+      "gives": "Availability, booking, recurring events, invites",
+      "libraries": [
+        "rrule",
+        "ical-generator",
+        "googleapis"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "booking: holds, confirmations, buffers"
+      }
+    },
+    {
+      "rank": 46,
+      "name": "Maps and location",
+      "gives": "Geocoding, distance, maps",
+      "libraries": [
+        "leaflet",
+        "@googlemaps/google-maps-services-js",
+        "@turf/turf"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "geo: distance, areas, geohash; no tiles or geocoding service"
+      }
+    },
+    {
+      "rank": 47,
+      "name": "Image processing",
+      "gives": "Resize, crop, convert, strip metadata",
+      "libraries": [
+        "sharp",
+        "jimp"
+      ],
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "imagemeta: kind, size, orientation, stripping; no resizing"
+      }
+    },
+    {
+      "rank": 48,
+      "name": "AI model gateway",
+      "gives": "Approved model access with budgets, logging and a twin",
+      "libraries": [
+        "openai",
+        "@anthropic-ai/sdk",
+        "ai"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "models: one interface, twin, budgets, family labels"
+      }
+    },
+    {
+      "rank": 49,
+      "name": "Document parsing",
+      "gives": "Read PDFs, scans and office files into text",
+      "libraries": [
+        "pdf-parse",
+        "mammoth",
+        "tesseract.js"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "docparse: docx and xlsx"
+      }
+    },
+    {
+      "rank": 50,
+      "name": "Backups and retention",
+      "gives": "Scheduled backups, restore drills, retention rules",
+      "libraries": [
+        "node-pg-dump",
+        "@aws-sdk/client-backup"
+      ],
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "backups: retention with reasons"
+      }
+    }
+  ]
+}

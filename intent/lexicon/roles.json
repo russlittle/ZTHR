@@ -1,0 +1,49 @@
+{
+  "version": "1",
+  "about": "Who is usually involved in a kind of work, so a question about 'staff' or 'who sees this' can offer the likely answers instead of a blank box. Detected by rule from the person's words; every offer is confirmed in the read-back.",
+  "domains": [
+    {
+      "domain": "education",
+      "detect": ["\\bstudents?\\b", "\\bcollege\\b", "\\bcampus\\b", "\\bclass(es)?\\b", "\\benrol+(ment|ed)?\\b", "\\bsemester\\b", "\\bterm\\b", "\\bschool\\b"],
+      "primary": "students",
+      "organisations": [
+        { "name": "At the college", "units": ["Counseling", "Academic advising", "Financial aid", "Basic needs or student services", "Faculty", "Case management"] },
+        { "name": "At an outside service", "units": ["Housing support", "Utility assistance", "Food or benefits assistance", "Community health"] }
+      ]
+    },
+    {
+      "domain": "health",
+      "detect": ["\\bpatients?\\b", "\\bclinic\\b", "\\bcare team\\b", "\\bappointments?\\b", "\\bmembers?\\b"],
+      "primary": "patients",
+      "organisations": [
+        { "name": "In the care team", "units": ["Care coordination", "Nursing", "Primary care", "Behavioral health", "Pharmacy"] },
+        { "name": "At an outside service", "units": ["Social services", "Transport", "Housing support", "Food assistance"] }
+      ]
+    },
+    {
+      "domain": "workplace",
+      "detect": ["\\bemployees?\\b", "\\bstaff members?\\b", "\\bmanagers?\\b", "\\bteam\\b", "\\bhr\\b"],
+      "primary": "employees",
+      "organisations": [
+        { "name": "In the company", "units": ["Their manager", "People and HR", "Payroll", "IT", "Facilities"] },
+        { "name": "At an outside provider", "units": ["Benefits provider", "Employee assistance programme"] }
+      ]
+    }
+  ],
+  "access": {
+    "question": "What can they see, and when?",
+    "options": [
+      { "label": "Only what the {person} chooses to share, after they grant it: one way, from the {person} to staff", "means": "staff see only what the person chooses to share, and only after the person grants it; information flows one way, from the person to staff", "recommended": true },
+      { "label": "A summary the {person} can also see", "means": "staff see a summary that the person can also see" },
+      { "label": "Everything, as soon as it is entered", "means": "staff see everything the person enters, as soon as it is entered" }
+    ],
+    "revoke": {
+      "question": "Can the {person} take that permission back?",
+      "options": [
+        { "label": "Yes, at any time, and staff stop seeing it at once", "means": "the person can withdraw permission at any time, and staff stop seeing it at once", "recommended": true },
+        { "label": "Yes, but what staff already saw stays in their records", "means": "the person can withdraw permission for anything new; what staff already saw stays in their records" },
+        { "label": "No", "means": "once granted, permission cannot be withdrawn" }
+      ]
+    }
+  }
+}

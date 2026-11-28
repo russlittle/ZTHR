@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "leases",
+  "mutant": {
+    "id": "7",
+    "line": 35,
+    "column": 11,
+    "endLine": 35,
+    "endColumn": 51,
+    "mutator": "StringLiteral",
+    "original": "`${by.resource} is held by ${by.holder}`",
+    "replacement": "``",
+    "lineText": "super(`${by.resource} is held by ${by.holder}`);",
+    "prevText": "constructor(by: Lease) {",
+    "nextText": "this.by = by;"
+  },
+  "mayEdit": [
+    "intent/blocks/leases/leases.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/leases-7.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"leases\". Mutant: line 35:11-35:51, mutator StringLiteral: \"`${by.resource} is held by ${by.holder}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/leases/index.ts (> marks the mutated line):\n    29    return { all: async () => [...m.values()], set: async (l) => void m.set(l.token, l), delete: async (t) => void m.delete(t) };\n    30  }\n    31  \n    32  export class Held extends Error {\n    33    readonly by: Lease;\n    34    constructor(by: Lease) {\n>   35      super(`${by.resource} is held by ${by.holder}`);\n    36      this.by = by;\n    37    }\n    38  }\n    39  \n    40  export class NoLease extends Error {\n    41    constructor(token: string) {\n\nTest file style (intent/blocks/leases/leases.test.ts):\n6 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Held, Leases, NoLease, memoryLeases } from './index.ts';\n\nconst setup = () => {\n  let t = 0;\n  return { l: new Leases(memoryLeases(), { now: () => t, maxMs: 1000 }), tick: (ms: number) => (t += ms) };\n};\n\ntest('one holder at a time; the holder may change it, others are told who holds it', async () => {\n  const { l } = setup();\n  const a = await l.acquire('/ana/x.txt', 'ana', { holder: 'Ana (desktop)' });\n  await assert.rejects(l.acquire('ana/x.txt', 'ben'), (e: Held) => e instanceof Held && e.by.holder === 'Ana (desktop)');\n  await l.mayChange('/ana/x.txt', { owner: 'ben', tokens: [a.token] });\n  await assert.rejects(l.mayChange('/ana/x.txt', { owner: 'ben' }), Held);\n  await l.mayChange('/ana/x.txt', { owner: 'ana', ownerMay: true });\n});\n\ntest('a lease ends on its own, so a crashed holder never locks anyone out for good', async () => {\n  const { l, tick } = setup();\n  await l.acquire('/x', 'ana', { ms: 100 });\n  tick(101);\n  assert.equal(await l.heldOn('/x'), undefined);\n  await l.acquire('/x', 'ben');\n});\n\ntest('an ask for longer than the limit is cut to the limit; refresh extends it', async () => {\n  const { l, tick } = setup();\n  const a = await l.acquire('/x', 'ana', { ms: 10_000_000 });\n  assert.equal(a.until, 1000);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/leases-7.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:19:25.442Z"
+}

@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "pwa",
+  "mutant": {
+    "id": "119",
+    "line": 119,
+    "column": 12,
+    "endLine": 119,
+    "endColumn": 47,
+    "mutator": "MethodExpression",
+    "original": "this.items.filter((q) => q.refused)",
+    "replacement": "this.items",
+    "lineText": "return this.items.filter((q) => q.refused);",
+    "prevText": "needsYou(): Queued[] {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/pwa/pwa.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pwa-119.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pwa\". Mutant: line 119:12-119:47, mutator MethodExpression: \"this.items.filter((q) => q.refused)\" becomes \"this.items\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pwa/index.ts (> marks the mutated line):\n   113      }\n   114      for (let i = this.items.length - 1; i >= 0; i--) if ((this.items[i] as { done?: boolean }).done) this.items.splice(i, 1);\n   115      return { sent, refused, waiting: this.items.filter((q) => !q.refused).length };\n   116    }\n   117    /** Changes the server refused, for the person to fix or drop. */\n   118    needsYou(): Queued[] {\n>  119      return this.items.filter((q) => q.refused);\n   120    }\n   121    drop(key: string): void {\n   122      const i = this.items.findIndex((q) => q.key === key);\n   123      if (i >= 0) this.items.splice(i, 1);\n   124    }\n   125  }\n\nTest file style (intent/blocks/pwa/pwa.test.ts):\n6 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { OfflineQueue, checkManifest, worker, type Manifest } from './index.ts';\n\nconst good: Manifest = { name: 'Files', short_name: 'Files', start_url: '/apps/files', scope: '/', display: 'standalone', background_color: '#ffffff', theme_color: '#14324a', icons: [{ src: '/i/192.png', sizes: '192x192', type: 'image/png' }, { src: '/i/512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }] };\n\ntest('the manifest check lists what would stop installation', () => {\n  assert.deepEqual(checkManifest(good), []);\n  assert.deepEqual(checkManifest({ ...good, short_name: 'My Files Cloud', start_url: '/x', scope: '/app/', display: 'browser', theme_color: 'navy', icons: [{ src: '/i.png', sizes: '192x192', type: 'image/png' }] }), [\n    'the short name \"My Files Cloud\" is over 12 characters and will be cut on home screens',\n    'the start URL must be inside the scope',\n    'display \"browser\" cannot be installed as an app',\n    'an icon of 512x512 is needed',\n    'add a maskable icon so it is not boxed on Android',\n    'navy is not a #rrggbb colour',\n  ]);\n});\n\ntest('the worker is valid JavaScript carrying the plan', () => {\n  const src = worker({ version: 'v42', precache: ['/app.js', '/app.css'], offline: '/offline.html', routes: [{ match: '^/assets/', strategy: 'cacheFirst' }, { match: '^/api/', strategy: 'networkOnly' }, { match: '^/', strategy: 'networkFirst' }] });\n  assert.doesNotThrow(() => new Function(src));\n  assert.match(src, /\"\\^\\/api\\/\",\"networkOnly\"/);\n  assert.match(src, /caches\\.match\\(OFF\\)/);\n});\n\ntest('offline changes replay in order, stop while still offline, and set aside what the server refuses', async () => {\n  const q = new OfflineQueue(() => new Date('2026-11-26T00:00:00Z'));\n  q.add('POST', '/api/folders', { name: 'A' });\n  q.add('PATCH', '/api/files/1', { name: 'renamed' });\n  q.add('DELETE', '/api/files/2');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pwa-119.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:20:39.493Z"
+}

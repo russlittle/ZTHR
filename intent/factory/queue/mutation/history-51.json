@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "history",
+  "mutant": {
+    "id": "51",
+    "line": 65,
+    "column": 34,
+    "endLine": 65,
+    "endColumn": 49,
+    "mutator": "ArithmeticOperator",
+    "original": "list.length + 1",
+    "replacement": "list.length - 1",
+    "lineText": "const c: Change = { version: list.length + 1, by, at: this.now().toISOString(), before, after, ...(o.note ? { note: o.note } : {}), ...(o.undoes ? { undoes: o.undoes } : {}) };",
+    "prevText": "}",
+    "nextText": "list.push(c);"
+  },
+  "mayEdit": [
+    "intent/blocks/history/history.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/history-51.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"history\". Mutant: line 65:34-65:49, mutator ArithmeticOperator: \"list.length + 1\" becomes \"list.length - 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/history/index.ts (> marks the mutated line):\n    59      const after: Record<string, unknown> = {};\n    60      for (const [k, v] of Object.entries(fields)) {\n    61        if (same(own(cur, k), v)) continue;\n    62        put(before, k, own(cur, k));\n    63        put(after, k, v);\n    64      }\n>   65      const c: Change = { version: list.length + 1, by, at: this.now().toISOString(), before, after, ...(o.note ? { note: o.note } : {}), ...(o.undoes ? { undoes: o.undoes } : {}) };\n    66      list.push(c);\n    67      this.changes.set(id, list);\n    68      const next = { ...cur, ...after };\n    69      for (const [k, v] of Object.entries(after)) if (v === undefined) delete next[k];\n    70      this.current.set(id, next);\n    71      return c;\n\nTest file style (intent/blocks/history/history.test.ts):\n4 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Conflict, History } from './index.ts';\n\ntest('every version can be rebuilt and compared; only changed fields are kept', () => {\n  const h = new History(() => new Date('2026-11-26T00:00:00Z'));\n  h.change('r1', 'ana', { title: 'Plan', status: 'draft' });\n  h.change('r1', 'ben', { title: 'Plan', status: 'review' });\n  h.change('r1', 'ana', { owner: 'ben', status: 'approved' });\n  assert.deepEqual(h.log('r1')[1]!.after, { status: 'review' }, 'the unchanged title is not recorded');\n  assert.deepEqual(h.at('r1', 2), { title: 'Plan', status: 'review' });\n  assert.deepEqual(h.diff('r1', 1, 3), [{ field: 'owner', from: undefined, to: 'ben' }, { field: 'status', from: 'draft', to: 'approved' }]);\n  assert.throws(() => h.change('r1', 'cy', { status: 'x' }, { expected: 2 }), Conflict);\n});\n\ntest('undo is a new change, and refuses to lose a newer edit', () => {\n  const h = new History();\n  h.change('r', 'ana', { a: 1, b: 1 });\n  h.change('r', 'ana', { a: 2 });\n  h.change('r', 'ben', { b: 2 });\n  const u = h.undo('r', 2, 'ana');\n  assert.equal(u.undoes, 2);\n  assert.deepEqual(h.get('r'), { a: 1, b: 2 }, 'ben’s edit to b survives');\n  assert.equal(h.version('r'), 4);\n  h.change('r', 'ben', { a: 5 });\n  assert.throws(() => h.undo('r', 1, 'ana'), (e: unknown) => e instanceof Conflict && e.fields.join() === 'a,b');\n  h.change('r', 'cy', { extra: true });\n  h.restore('r', 1, 'ana');\n  assert.deepEqual(h.get('r'), { a: 1, b: 1 }, 'restore removes fields added later');\n  assert.deepEqual(h.at('r', 5), { a: 5, b: 2 }, 'and every version before it is still there');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/history-51.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:18:57.862Z"
+}

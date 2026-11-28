@@ -1,0 +1,12 @@
+id: persona-2c-adult-know-how
+persona: jayden
+delight: 2c
+phase: 1
+goal: Jayden asks how leases, bank accounts and taxes work and gets plain steps, with licensed questions routed to free professionals instead of guessed.
+forbidden:
+  - a message fails the tone rubric
+  - the team gives licensed legal or tax advice instead of routing it
+budget: { actions: 4, ms: 5000 }
+requirements: [MON-2, MON-3]
+modes: [standard, walk-me-through]
+channels: [app, text]

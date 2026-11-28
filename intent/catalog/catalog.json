@@ -1,0 +1,860 @@
+{
+  "source": {
+    "repository": "https://github.com/russlittle/zthr",
+    "branch": "reference-implementation",
+    "commit": "362d54f9af4b484a6698ab724c1a0b9691b1ab0d",
+    "copied": [
+      "packages",
+      "docs",
+      "control/journeys",
+      "LICENSE"
+    ],
+    "license": "Apache-2.0, kept with the copied files",
+    "purpose": "The starting block library: the 15 blocks from the Student Advocate reference implementation, with their design docs and journey cards."
+  },
+  "buildOrder": [
+    "egress",
+    "evidence",
+    "explore",
+    "gates",
+    "intent",
+    "models",
+    "operator",
+    "plain-language",
+    "privacy",
+    "review",
+    "runtime",
+    "store",
+    "twin-service",
+    "twins",
+    "ui"
+  ],
+  "blocks": [
+    {
+      "name": "egress",
+      "purpose": "The one door to the network: allow-listed https hosts, named purposes, recorded",
+      "requires": [],
+      "tests": 12,
+      "mutationFloor": 80,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "evidence",
+      "purpose": "Append-only, pseudonymous record of what the factory and the product did",
+      "requires": [],
+      "tests": 6,
+      "mutationFloor": 61,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "explore",
+      "purpose": "Walks every action from every state to a fixpoint, checking invariants",
+      "requires": [],
+      "tests": 5,
+      "mutationFloor": 62,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "gates",
+      "purpose": "Gates that count only after planted defects make them fail; verdicts and ratchets",
+      "requires": [],
+      "tests": 51,
+      "mutationFloor": 68,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "intent",
+      "purpose": "Locked journey cards: goals in plain words, run in every mode and channel",
+      "requires": [
+        "gates"
+      ],
+      "tests": 18,
+      "mutationFloor": 79,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "models",
+      "purpose": "Model calls behind one interface, with a twin, budgets and family labels",
+      "requires": [],
+      "tests": 9,
+      "mutationFloor": 80,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "operator",
+      "purpose": "Leases, idempotent dispatches confirmed by lookup, and holds",
+      "requires": [],
+      "tests": 14,
+      "mutationFloor": 90,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "plain-language",
+      "purpose": "Reading grade, phrase rules and carelessness checks for any text",
+      "requires": [],
+      "tests": 11,
+      "mutationFloor": 80,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "privacy",
+      "purpose": "Canary tracing of sensitive fields and small-cell suppression",
+      "requires": [],
+      "tests": 6,
+      "mutationFloor": 85,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "review",
+      "purpose": "A multi-family review panel that can fail a change, never pass one alone",
+      "requires": [
+        "gates",
+        "models"
+      ],
+      "tests": 15,
+      "mutationFloor": 80,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "runtime",
+      "purpose": "Consent ledger, sealed facts, approvals, outbound gate and refuse-to-start",
+      "requires": [
+        "gates"
+      ],
+      "tests": 73,
+      "mutationFloor": 48,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "store",
+      "purpose": "Owner-scoped document store and the classified data declaration",
+      "requires": [],
+      "tests": 8,
+      "mutationFloor": 85,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "twin-service",
+      "purpose": "Clock, scenarios, health and OpenAPI for synthetic services",
+      "requires": [],
+      "tests": 10,
+      "mutationFloor": 85,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "twins",
+      "purpose": "Twins of outside services (SMS, mail, calendars) with calibration dates",
+      "requires": [],
+      "tests": 8,
+      "mutationFloor": 80,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "ui",
+      "purpose": "Accessible, themed page parts shared by the app and the factory console",
+      "requires": [],
+      "tests": 18,
+      "mutationFloor": 12,
+      "undeclared": [
+        "conflicts",
+        "companions",
+        "secrets"
+      ]
+    },
+    {
+      "name": "resilience",
+      "purpose": "Timeouts with abort, bounded full-jitter retries, and a circuit breaker that half-opens on its own",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/resilience"
+    },
+    {
+      "name": "idempotency",
+      "purpose": "One result per idempotency key: repeats replay it, different content is refused, concurrent repeats wait",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/idempotency"
+    },
+    {
+      "name": "money",
+      "purpose": "Whole minor units per currency, half-even rounding, and splits that always add back to the total",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/money"
+    },
+    {
+      "name": "conflicts",
+      "purpose": "Versioned saves with a three-way merge of fields that do not clash, and the exact fields that do",
+      "requires": [],
+      "tests": 5,
+      "home": "intent/blocks/conflicts"
+    },
+    {
+      "name": "paging",
+      "purpose": "Stable keyset paging with opaque cursors, and only declared sorts and filters",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/paging"
+    },
+    {
+      "name": "retention",
+      "purpose": "Trash with dependents, restore of all of it, and a retention sweep plan with reasons",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/retention"
+    },
+    {
+      "name": "watchdog",
+      "purpose": "Missed, overlong, failed and overlapping scheduled runs, and a lease so one copy runs at a time",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/watchdog"
+    },
+    {
+      "name": "expiry",
+      "purpose": "Everything with an expiry date, and the alert each needs today",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/expiry"
+    },
+    {
+      "name": "tree",
+      "purpose": "Folders and files with stable ids, where a change re-tags every ancestor and keeps folder sizes, so sync skips unchanged subtrees",
+      "requires": [],
+      "tests": 12,
+      "home": "intent/blocks/tree"
+    },
+    {
+      "name": "objects",
+      "purpose": "Bytes streamed once with checksums computed on the way, byte ranges, and parts joined in the store; memory and disk stores",
+      "requires": [],
+      "tests": 10,
+      "home": "intent/blocks/objects"
+    },
+    {
+      "name": "uploads",
+      "purpose": "Resumable chunked uploads: any order, repeats replace, quota checked up front, joined in a tree of compose calls, idle sessions swept",
+      "requires": [
+        "objects"
+      ],
+      "tests": 8,
+      "home": "intent/blocks/uploads"
+    },
+    {
+      "name": "leases",
+      "purpose": "Exclusive holds with owners, tokens and time limits that end on their own, covering everything below a folder when deep",
+      "requires": [],
+      "tests": 6,
+      "home": "intent/blocks/leases"
+    },
+    {
+      "name": "grants",
+      "purpose": "Permissions to people, groups and links, never more than the giver has; link passwords hashed and throttled; expiries",
+      "requires": [],
+      "tests": 8,
+      "home": "intent/blocks/grants"
+    },
+    {
+      "name": "devices",
+      "purpose": "A browser sign-in flow that hands a new app its own hashed password once; revoke one device, or wipe it remotely",
+      "requires": [],
+      "tests": 6,
+      "home": "intent/blocks/devices"
+    },
+    {
+      "name": "dav",
+      "purpose": "The DAV core: a namespace-aware XML reader that refuses DTDs, the multistatus writer, and the WebDAV headers",
+      "requires": [],
+      "tests": 8,
+      "home": "intent/blocks/dav"
+    },
+    {
+      "name": "oracle",
+      "purpose": "Differential checks: the same requests to the reference and the candidate, answers normalised and compared, or recorded once",
+      "requires": [
+        "dav"
+      ],
+      "tests": 4,
+      "home": "intent/blocks/oracle"
+    },
+    {
+      "name": "ratelimit",
+      "purpose": "Token buckets per key that say how long to wait, and failure counts that slow only mistakes, with bounded memory",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/ratelimit"
+    },
+    {
+      "name": "uploadsafe",
+      "purpose": "Names a client could not hold refused before any bytes are kept, size limits, and the real type read from the first bytes",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/uploadsafe"
+    },
+    {
+      "name": "validate",
+      "purpose": "One schema per input and one error format: every problem at once, each with its path and a message, as problem details for APIs and field errors for forms",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/validate"
+    },
+    {
+      "name": "config",
+      "purpose": "Typed settings and secrets by name, refusing to start when one is missing or unsafe, an inventory that never shows a value, rotation dates and drift",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/config"
+    },
+    {
+      "name": "observe",
+      "purpose": "Structured logs redacted where written, errors grouped by kind and place, metrics with percentiles, and traces carried through async work",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/observe"
+    },
+    {
+      "name": "health",
+      "purpose": "Readiness with deadlines, the running version, graceful drain on shutdown, maintenance windows, the environment badge and the status model",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/health"
+    },
+    {
+      "name": "jobs",
+      "purpose": "A queue with jittered retries, dead letters and replay, keyed jobs, long tasks with progress and cancel, checkpointed backfills with a dry run, and cron",
+      "requires": [],
+      "tests": 5,
+      "home": "intent/blocks/jobs"
+    },
+    {
+      "name": "audit",
+      "purpose": "A hash-chained audit log of changes and sensitive reads, verifiable end to end and against a published head",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/audit"
+    },
+    {
+      "name": "crypto",
+      "purpose": "Envelope encryption bound to its record with a rotating key ring, purpose-bound expiring signed tokens, constant-time comparison and random ids",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/crypto"
+    },
+    {
+      "name": "rbac",
+      "purpose": "Roles and grants declared once, narrowed by record rules, refusals that win, and the same evaluator explaining every decision and filtering lists",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/rbac"
+    },
+    {
+      "name": "secheaders",
+      "purpose": "Strict browser headers with script nonces and features off by default, session cookie attributes, and cross-site request checks",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/secheaders"
+    },
+    {
+      "name": "apikeys",
+      "purpose": "Scoped API keys shown once and kept as hashes, found by prefix, rotated with an overlap, expired and revoked",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/apikeys"
+    },
+    {
+      "name": "accounts",
+      "purpose": "Sign-up with confirmation, sign-in, single-use password resets, organisations and invitations, a role switcher, deactivation and offboarding, and time-boxed act-as and break-glass that are recorded and announced",
+      "requires": [
+        "sessions",
+        "audit"
+      ],
+      "tests": 5,
+      "home": "intent/blocks/accounts"
+    },
+    {
+      "name": "sessions",
+      "purpose": "Sessions with idle and absolute limits and a warning before expiry, ending all sessions, TOTP enrolment and checking (RFC 6238, no replay) and single-use recovery codes",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/sessions"
+    },
+    {
+      "name": "oidc",
+      "purpose": "OpenID Connect sign-in: state, nonce and PKCE, a JWKS cache, and ID token checks (RS256/ES256 only; issuer, audience, expiry, nonce)",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/oidc"
+    },
+    {
+      "name": "webhooks",
+      "purpose": "Inbound webhooks believed only when signed, recent and not seen before; outbound delivery signed, retried with backoff, parked with the last answer, replayable, with failing endpoints paused",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/webhooks"
+    },
+    {
+      "name": "flags",
+      "purpose": "Feature flags for people, groups, attributes and stable percentage rollouts, a kill switch, an explanation for every answer, and a list of flags past their removal date",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/flags"
+    },
+    {
+      "name": "cache",
+      "purpose": "Read-through cache with one load per key under load, stale-while-refresh, tags, least-recently-used eviction and hit rates; failures are not cached",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/cache"
+    },
+    {
+      "name": "consent",
+      "purpose": "Terms and consent by version: agreement recorded with when and how, withdrawal as a new record, required re-agreement when a new version needs it",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/consent"
+    },
+    {
+      "name": "refdata",
+      "purpose": "Versioned code lists with effective and retirement dates, labels as of a day, replacements, and checks that refuse a version which would orphan stored values",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/refdata"
+    },
+    {
+      "name": "notify",
+      "purpose": "Notifications by template (escaped, nothing missing), per-category channel choices, quiet hours in the person's zone, digests, bounce suppression, one-click unsubscribe (RFC 8058), reminders that stop when done, and receipts",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/notify"
+    },
+    {
+      "name": "comments",
+      "purpose": "Threads and replies on any record, @mentions of people who can see it, edits with history, deletion markers, reactions, resolving and unread counts, shown escaped",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/comments"
+    },
+    {
+      "name": "history",
+      "purpose": "Field-level change history for any record: rebuild any version, compare two, undo as a new change that refuses to overwrite newer edits, and restore",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/history"
+    },
+    {
+      "name": "workflow",
+      "purpose": "Declared state machines checked so no record can be stranded, guards that explain, approvals by distinct people who did not ask, reasons for rejection, deadlines that escalate, and a trail",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/workflow"
+    },
+    {
+      "name": "events",
+      "purpose": "A CloudEvents 1.0 catalogue that refuses undeclared events or missing fields, a hub with replay for reconnecting clients, server-sent events, and presence",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/events"
+    },
+    {
+      "name": "slo",
+      "purpose": "Objectives, error budgets and multi-window burn-rate alerts; incidents with timelines and public notes; postmortems that need a cause, impact and owned actions",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/slo"
+    },
+    {
+      "name": "costmeter",
+      "purpose": "Usage priced from a rate card and attributed to feature and tenant, free units, budgets that warn and can stop spending, and a month-end forecast",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/costmeter"
+    },
+    {
+      "name": "tabular",
+      "purpose": "CSV to RFC 4180 with formula defusing, column mapping suggestions, imports that quarantine bad rows with reasons, rule-based dedupe and merge, and export to CSV, JSON lines and .xlsx",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/tabular"
+    },
+    {
+      "name": "reports",
+      "purpose": "Grouped reports with count, sum, average, min, max and distinct, filters, totals, small-group suppression, pivots, parameterised templates and scheduled delivery with a log",
+      "requires": [
+        "tabular",
+        "jobs"
+      ],
+      "tests": 3,
+      "home": "intent/blocks/reports"
+    },
+    {
+      "name": "search",
+      "purpose": "BM25 full-text search with field weights, accent folding and stemming, prefix while typing, phrases, facets and filters, escaped snippets, and a visibility check on every hit",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/search"
+    },
+    {
+      "name": "i18n",
+      "purpose": "Message catalogues with each language's plural rules, fallback chains with a missing report, Accept-Language negotiation, text direction, Intl formatting, and a completeness check",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/i18n"
+    },
+    {
+      "name": "time",
+      "purpose": "Wall time to instant across daylight-saving changes, RRULE recurrence in wall time (daily, weekly, monthly by day or weekday, yearly, until, count, exceptions), and working days",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/time"
+    },
+    {
+      "name": "booking",
+      "purpose": "Free time inside each person's local hours, find-a-time across zones ranked for everyone's day, and holds and bookings that cannot double-book, with buffers and expiry",
+      "requires": [
+        "time"
+      ],
+      "tests": 3,
+      "home": "intent/blocks/booking"
+    },
+    {
+      "name": "contact",
+      "purpose": "Names kept as written with a name to use and a sort key, addresses formatted and postcodes checked by country, and phone numbers normalised to E.164",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/contact"
+    },
+    {
+      "name": "analytics",
+      "purpose": "Consent-gated product analytics with pseudonymous ids and allow-listed properties, forgetting, ordered funnels within a time limit, common journeys, and small-count suppression",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/analytics"
+    },
+    {
+      "name": "payments",
+      "purpose": "Payments behind a provider interface with a tested twin (declines, confirmation, idempotency, partial refunds), integer money, and billing: trials, renewals, prorated plan changes, retries and cancel at period end",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/payments"
+    },
+    {
+      "name": "pdf",
+      "purpose": "PDF 1.7 written directly: headings, wrapped paragraphs, tables with repeated headers, page numbers, escaped WinAnsi text and a correct cross-reference table (checked with qpdf)",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/pdf"
+    },
+    {
+      "name": "docparse",
+      "purpose": "Text from .docx (headings, lists) and cells from .xlsx (shared and inline strings), read through a zip reader that refuses bombs, unsafe paths and damaged archives",
+      "requires": [
+        "tabular"
+      ],
+      "tests": 3,
+      "home": "intent/blocks/docparse"
+    },
+    {
+      "name": "imagemeta",
+      "purpose": "Image kind from the bytes, size for PNG, JPEG, GIF and WebP, EXIF orientation, refusal of decompression bombs, and stripping of EXIF, GPS and comments with the colour profile kept",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/imagemeta"
+    },
+    {
+      "name": "geo",
+      "purpose": "Great-circle distance, bounding boxes across the antimeridian, nearest places, service areas with holes, geohash, and coarsening a position to an area",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/geo"
+    },
+    {
+      "name": "sitemap",
+      "purpose": "Head tags for public pages (canonical, Open Graph, Twitter, JSON-LD) escaped, a check for missing, long and duplicate titles, sitemaps with an index past 50,000 URLs, and robots.txt",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/sitemap"
+    },
+    {
+      "name": "apiver",
+      "purpose": "Date-based API versions with per-change transforms back to a pinned version, Deprecation and Sunset headers, refusal after sunset, and a list of callers still on old versions",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/apiver"
+    },
+    {
+      "name": "drafts",
+      "purpose": "Autosaved drafts per person and record, spaced snapshots to restore, a conflict report when the record changed since, a list to pick up from, and sweeping",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/drafts"
+    },
+    {
+      "name": "palette",
+      "purpose": "A command palette with fuzzy matching, keywords, permission filtering, recent commands first, shortcut conflict detection and a shortcuts sheet",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/palette"
+    },
+    {
+      "name": "testdata",
+      "purpose": "Seeded, repeatable fake data in ranges reserved for fiction (example domains, 555-01xx numbers, published test cards), factories with overrides, and a guard against real-looking values",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/testdata"
+    },
+    {
+      "name": "privacy",
+      "purpose": "A registry of personal-data sources; one-archive exports with a manifest and readable summary; erasure that reports removed, kept and why, and is complete only when every source succeeded",
+      "requires": [
+        "tabular"
+      ],
+      "tests": 2,
+      "home": "intent/blocks/privacy"
+    },
+    {
+      "name": "surfaces",
+      "purpose": "A registry of every screen with its purpose, audience, help and words for loading, empty and error states, checked; contextual help, what's new once per person, a first-run checklist, and friendly error pages",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/surfaces"
+    },
+    {
+      "name": "upkeep",
+      "purpose": "Dependency verdicts from advisories and current versions, expiry warnings for certificates, domains, tokens and keys, and SARIF findings with stable fingerprints, triaged into new, open, accepted and fixed",
+      "requires": [],
+      "tests": 4,
+      "home": "intent/blocks/upkeep"
+    },
+    {
+      "name": "backups",
+      "purpose": "Backups with per-collection row counts and order-free hashes, restore drills into scratch timed against a target, and grandfather-father-son retention that says why each backup is kept",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/backups"
+    },
+    {
+      "name": "loadsoak",
+      "purpose": "Open-model load runs at a fixed arrival rate with percentile and error-rate limits, and soak verdicts that find a steady climb by fitting a line, ignoring noise",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/loadsoak"
+    },
+    {
+      "name": "datagate",
+      "purpose": "A classified inventory of every field with findings for gaps, a gate that allows, masks or denies each field per destination with the deciding rule, and evidence of every decision",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/datagate"
+    },
+    {
+      "name": "pipeline",
+      "purpose": "The delivery pipeline as stages and events: where each change is, what it waits for, what is stuck, and lead time, deployment frequency, change failure rate and time to restore",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/pipeline"
+    },
+    {
+      "name": "sync",
+      "purpose": "One sync engine for outside systems: paged pulls with a cursor kept only after a page applies, pushes by external id, echo recognition, conflicts settled by a rule and reported, and twins for testing",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/sync"
+    },
+    {
+      "name": "feedback",
+      "purpose": "Problem reports in the person's words with redacted context, grouping of similar reports, a triage board ordered by overdue and severity, and defects with evidence and a failing test skeleton",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/feedback"
+    },
+    {
+      "name": "cmi5",
+      "purpose": "cmi5 training modules: launch URLs, the defined xAPI statements with cmi5 context, the session rules, mastery scores and moveOn",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/cmi5"
+    },
+    {
+      "name": "pwa",
+      "purpose": "A checked web app manifest, a service worker built from a caching plan with an offline page, and an offline queue that replays in order and sets aside what the server refuses",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/pwa"
+    },
+    {
+      "name": "ux",
+      "purpose": "Snooze to times people mean, previewed bulk edits, signed shared views, learned defaults, magic paste, honest progress, reading comfort CSS, why am I seeing this, and is it me or is it down",
+      "requires": [
+        "time",
+        "tabular"
+      ],
+      "tests": 6,
+      "home": "intent/blocks/ux"
+    },
+    {
+      "name": "migrations",
+      "purpose": "Ordered, checksummed data migrations applied once each under a lock, with verify steps, dry runs, and refusal when an applied migration was edited, removed or arrives out of order",
+      "requires": [],
+      "tests": 3,
+      "home": "intent/blocks/migrations"
+    },
+    {
+      "name": "mcp",
+      "purpose": "Agent tools over the Model Context Protocol: a JSON-RPC 2.0 handler with initialize, tools/list and tools/call, schema-checked arguments, per-person permissions, read-only hints and a call log",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/mcp"
+    },
+    {
+      "name": "query",
+      "purpose": "A read-only query console: a small query language parsed and checked against declared collections, capped results, masked sensitive fields, no filtering on hidden values, and a log of every query",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/query"
+    },
+    {
+      "name": "uat",
+      "purpose": "Test-environment overrides of flags, clock and role for one tester, time-limited with a reason, shown on a banner, recorded, and refused in production",
+      "requires": [],
+      "tests": 2,
+      "home": "intent/blocks/uat"
+    },
+    {
+      "name": "importer",
+      "purpose": "One way in for data from anywhere: uploaded bytes or pasted text recognised as CSV/TSV, .xlsx, .docx, JSON, JSON lines, vCard, iCalendar or a pasted table or address list, decoded from UTF-8 or UTF-16, held to size and row limits, matched to fields, with every bad row quarantined by where it was and why",
+      "requires": [
+        "docparse",
+        "tabular",
+        "ux"
+      ],
+      "tests": 11,
+      "home": "intent/blocks/importer"
+    },
+    {
+      "name": "ask",
+      "purpose": "Plain-language questions over a declared dataset: a model's proposed report is checked against the fields, measures and filters the person may see, small groups are suppressed, and the answer comes with its records, a plain-English description of what was computed, and the report itself",
+      "requires": [
+        "reports"
+      ],
+      "tests": 6,
+      "home": "intent/blocks/ask"
+    },
+    {
+      "name": "etl",
+      "purpose": "Declared extract-transform-load pipelines with per-step page checkpoints that resume, idempotent loads by id, capped row-level error capture, dry runs, per-run lineage with an every-row-accounted check, a cron schedule and a watch for stale, failed or drifting runs",
+      "requires": [
+        "jobs"
+      ],
+      "tests": 10,
+      "home": "intent/blocks/etl"
+    },
+    {
+      "name": "console",
+      "purpose": "The model behind the admin console, housekeeping console and feature explorer: sections of items with status, reason, path and permission built from the app's registries, filtered by permission with a summary line, plus a feature explorer that joins and searches features, screens, flags, journeys and evidence",
+      "requires": [
+        "surfaces",
+        "flags",
+        "jobs",
+        "watchdog",
+        "upkeep",
+        "backups",
+        "slo",
+        "health",
+        "palette"
+      ],
+      "tests": 7,
+      "home": "intent/blocks/console"
+    },
+    {
+      "name": "factoryreports",
+      "purpose": "Feature reports, operations reports and the improvement brief as documents with tables and evidenced findings, rendered to Markdown and delivered on a schedule, with the brief ranking what to change next by weighted evidence and saying why",
+      "requires": [
+        "jobs",
+        "slo",
+        "pipeline",
+        "feedback"
+      ],
+      "tests": 7,
+      "home": "intent/blocks/factoryreports"
+    },
+    {
+      "name": "walkthrough",
+      "purpose": "A guided, ordered walk through a feature's journey steps showing each claim, its evidence and whether that evidence is current, with step-by-step sign-off refused on stale, failed, missing or untraceable evidence and voided when covered code changes",
+      "requires": [],
+      "tests": 5,
+      "home": "intent/blocks/walkthrough"
+    },
+    {
+      "name": "speech",
+      "purpose": "Speech transcripts turned into palette commands with spoken confirmation for destructive ones, dictation with spoken punctuation and corrections, and numbers and dates spoken in words, with a feature-detected Web Speech adapter",
+      "requires": [
+        "palette"
+      ],
+      "tests": 9,
+      "home": "intent/blocks/speech"
+    },
+    {
+      "name": "router",
+      "purpose": "Chooses the cheapest model proven good enough for each kind of task: a dated price table, per-request cost with long-context and regional rates, pass rates per model per task kind trusted on a Wilson lower bound, exploration of cheaper models, escalation through tiers, judges from another family, and a daily budget",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/router"
+    }
+  ]
+}

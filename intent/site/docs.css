@@ -1,0 +1,33 @@
+/* How it works: the line's docs, with the same depth ladder as the main site. */
+main.docs { max-width: 1120px; margin: 0 auto; padding: 0 max(4vw, 16px) 48px; }
+.crumbs { margin: 0 0 6px; font-size: 15px; }
+.crumbs a { color: inherit; }
+.ladder { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; margin: 8px 0 28px; }
+.rung { display: grid; gap: 6px; padding: 14px 16px; border: 1.5px solid var(--ink); border-radius: 6px; color: var(--ink); text-decoration: none; background: var(--sheet); }
+.rung:hover { background: color-mix(in srgb, var(--ink) 6%, var(--sheet)); }
+.rung:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.rung .depth { display: flex; justify-content: space-between; font: 600 13px/1 var(--letter, var(--body)); opacity: .8; }
+.rung-t { font: 700 20px/1.2 var(--letter, var(--body)); }
+.rung-b { font-size: 15px; line-height: 1.4; }
+.rung .gauge { height: 6px; border: 1px solid var(--ink); border-radius: 3px; overflow: hidden; }
+.rung .gauge > span { display: block; height: 100%; background: var(--ink); }
+.prose { font: 400 18px/1.6 var(--body); max-width: 72ch; }
+.prose h2 { font: 700 30px/1.2 var(--letter, var(--body)); margin: 48px 0 12px; padding-top: 18px; border-top: 2px solid var(--ink); scroll-margin-top: 16px; }
+.prose h3 { font: 700 21px/1.3 var(--letter, var(--body)); margin: 30px 0 8px; }
+.prose p, .prose ul, .prose ol { margin: 0 0 14px; }
+.prose li { margin: 4px 0; }
+.prose .lede { font-size: 20px; }
+.prose code { font-size: .88em; background: color-mix(in srgb, var(--ink) 7%, transparent); padding: 1px 5px; border-radius: 3px; }
+.prose pre { overflow-x: auto; padding: 12px; border: 1px solid var(--field); border-radius: 6px; }
+.prose .tbl-wrap { max-width: none; width: min(1040px, calc(100vw - 2 * max(4vw, 16px))); overflow-x: auto; margin: 10px 0 20px; }
+.prose table { border-collapse: collapse; font-size: 15.5px; line-height: 1.45; min-width: 100%; }
+.prose th, .prose td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--field); }
+.prose thead th { border-bottom: 2px solid var(--ink); font-weight: 700; }
+.prose .fig { margin: 16px 0 26px; width: min(1040px, calc(100vw - 2 * max(4vw, 16px))); max-width: none; }
+.prose .fig svg { width: 100%; height: auto; font-family: var(--letter, var(--body)); }
+.prose .fig figcaption { font-size: 15px; margin-top: 6px; color: var(--ink); opacity: .85; }
+.prose .erd { padding-left: 1.2em; }
+.prose a { color: var(--ink); text-underline-offset: 3px; }
+body[data-docs] .page-h { max-width: 1120px; margin-left: auto; margin-right: auto; padding-left: max(4vw, 16px); padding-right: max(4vw, 16px); box-sizing: border-box; }
+body[data-docs] .page-h > div { max-width: 72ch; }
+.prose .fig { --ink-2: var(--muted); }

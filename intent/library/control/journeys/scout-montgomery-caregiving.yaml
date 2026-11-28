@@ -1,0 +1,19 @@
+id: scout-montgomery-caregiving
+persona: any
+phase: 2
+goal: A student in Montgomery County who needs caregiving help is offered a
+  verified resource, or told plainly that none is verified yet and the gap is
+  counted.
+forbidden:
+  - a resource is offered that is stale or the student is ineligible for
+  - a gap is hidden instead of counted
+budget:
+  actions: 3
+  ms: 5000
+requirements:
+  - NAV-6
+  - P11
+modes:
+  - standard
+channels:
+  - app

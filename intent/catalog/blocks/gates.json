@@ -1,0 +1,53 @@
+{
+  "name": "gates",
+  "purpose": "Gates that count only after planted defects make them fail; verdicts and ratchets",
+  "provides": [
+    "Datum",
+    "FalsificationCase",
+    "Gate",
+    "Proof",
+    "RatchetResult",
+    "RatchetState",
+    "RegisteredFinding",
+    "ResetEntry",
+    "Status",
+    "Verdict",
+    "admits",
+    "checkDatum",
+    "checkRatchet",
+    "checkRegister",
+    "combine",
+    "contentHash",
+    "fail",
+    "gateHash",
+    "isAccepted",
+    "pass",
+    "proveGate",
+    "runProvenGate",
+    "sha256",
+    "stableStringify",
+    "unknown",
+    "verdict",
+    "verifyFloorChange"
+  ],
+  "requires": [],
+  "externalRequires": [],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "Named checks that must go red on planted defects before they count, with proofs pinned to their definitions, and ratchets that only tighten.",
+  "notFor": "Ordinary unit tests, or any check that has never been seen to fail.",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/gates/test/gates.test.ts`](../../packages/gates/test/gates.test.ts) (45 test definitions)\n- [`packages/gates/test/hardening.test.ts`](../../packages/gates/test/hardening.test.ts) (6 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 68,
+  "tests": 51,
+  "source": {
+    "path": "packages/gates",
+    "sha256": "bd19decb1ce98b0cbde369d618e3ae3ffaeb7152702ad712f6ecfc0bc05dd802"
+  }
+}

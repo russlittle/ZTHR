@@ -1,0 +1,12 @@
+id: persona-12b-work-fitted-coursework
+persona: keisha
+delight: 12b
+phase: 1
+goal: Keisha's coursework is planned into evenings and weekends around her full-time job, with nothing placed during work hours.
+forbidden:
+  - a study block is placed on top of a class or a shift
+  - a deadline the team could see coming is raised too late to act on
+budget: { actions: 4, ms: 5000 }
+requirements: [CRS-1, DAY-1]
+modes: [standard]
+channels: [app]

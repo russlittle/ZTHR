@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "apiver",
+  "mutant": {
+    "id": "17",
+    "line": 39,
+    "column": 14,
+    "endLine": 39,
+    "endColumn": 63,
+    "mutator": "LogicalOperator",
+    "original": "/^\\d{4}-\\d{2}-\\d{2}$/.test(d) && !Number.isNaN(t)",
+    "replacement": "/^\\d{4}-\\d{2}-\\d{2}$/.test(d) || !Number.isNaN(t)",
+    "lineText": "return /^\\d{4}-\\d{2}-\\d{2}$/.test(d) && !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === d;",
+    "prevText": "const t = Date.parse(`${d}T00:00:00Z`);",
+    "nextText": "};"
+  },
+  "mayEdit": [
+    "intent/blocks/apiver/apiver.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/apiver-17.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"apiver\". Mutant: line 39:14-39:63, mutator LogicalOperator: \"/^\\\\d{4}-\\\\d{2}-\\\\d{2}$/.test(d) && !Number.isNaN(t)\" becomes \"/^\\\\d{4}-\\\\d{2}-\\\\d{2}$/.test(d) || !Number.isNaN(t)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/apiver/index.ts (> marks the mutated line):\n    33      this.changes = [...changes].sort((a, b) => a.version.localeCompare(b.version));\n    34      this.known = [first, ...this.changes.map((c) => c.version)];\n    35      if (new Set(this.known).size !== this.known.length) throw new Error('two changes share a version');\n    36      this.latest = this.known.at(-1)!;\n    37      const isDate = (d: string) => {\n    38        const t = Date.parse(`${d}T00:00:00Z`);\n>   39        return /^\\d{4}-\\d{2}-\\d{2}$/.test(d) && !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === d;\n    40      };\n    41      for (const l of o.lifecycle ?? []) {\n    42        if (!this.known.includes(l.version)) throw new Error(`${l.version} in the lifecycle is not a version`);\n    43        for (const d of [l.deprecated, l.sunset]) if (d !== undefined && !isDate(d)) throw new Error(`${d} is not a date (YYYY-MM-DD)`);\n    44      }\n    45      this.life = new Map((o.lifecycle ?? []).map((l) => [l.version, l]));\n\nTest file style (intent/blocks/apiver/apiver.test.ts):\n4 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Versions } from './index.ts';\n\ntype User = Record<string, unknown>;\nconst v = new Versions(\n  '2025-01-01',\n  [\n    { version: '2026-06-01', description: 'name split into display_name; email moved under contact', down: (b) => {\n      const { display_name, contact, ...rest } = b as User;\n      return { ...rest, name: display_name, email: (contact as User | undefined)?.email };\n    } },\n    { version: '2026-11-01', description: 'amounts are minor units, not decimals', paths: /^\\/invoices/, down: (b) => ({ ...(b as User), amount: ((b as User).amount as number) / 100 }) },\n  ],\n  { lifecycle: [{ version: '2025-01-01', deprecated: '2026-06-01', sunset: '2026-12-31' }], notes: 'https://docs.example.org/changes' },\n);\n\ntest('a pinned client gets the shape it was written for, through each change in turn', () => {\n  const now = { id: 1, display_name: 'Ana', contact: { email: 'a@x.org' } };\n  assert.deepEqual(v.render(now, '/users/1', '2026-11-01'), now);\n  assert.deepEqual(v.render(now, '/users/1', '2025-01-01'), { id: 1, name: 'Ana', email: 'a@x.org' });\n  assert.deepEqual(v.render({ amount: 1250 }, '/invoices/9', '2026-06-01'), { amount: 12.5 });\n  assert.deepEqual(v.render({ amount: 1250 }, '/payouts/9', '2026-06-01'), { amount: 1250 }, 'the change only applies to its paths');\n  assert.deepEqual(v.pick(undefined, '2026-06-01'), { version: '2026-06-01' });\n  assert.deepEqual(v.pick(undefined), { version: '2026-11-01' });\n  const bad = v.pick('2024-13-01');\n  assert.ok('problem' in bad && bad.problem.status === 400);\n});\n\ntest('deprecated versions say so with standard headers, and are refused after sunset; stragglers are listed', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/apiver-17.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:17:54.567Z"
+}

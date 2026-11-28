@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "consent",
+  "mutant": {
+    "id": "94",
+    "line": 75,
+    "column": 12,
+    "endLine": 75,
+    "endColumn": 32,
+    "mutator": "LogicalOperator",
+    "original": "s.given && s.current",
+    "replacement": "s.given || s.current",
+    "lineText": "return s.given && s.current;",
+    "prevText": "const s = this.standing(who, doc);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/consent/consent.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/consent-94.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"consent\". Mutant: line 75:12-75:32, mutator LogicalOperator: \"s.given && s.current\" becomes \"s.given || s.current\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/consent/index.ts (> marks the mutated line):\n    69      const newer = this.versions.filter((v) => v.doc === doc && v.version > last.version && v.requiresAgreement && v.effective <= this.now().toISOString().slice(0, 10));\n    70      return { given: true, version: last.version, current: newer.length === 0 };\n    71    }\n    72  \n    73    allowed(who: string, doc: string): boolean {\n    74      const s = this.standing(who, doc);\n>   75      return s.given && s.current;\n    76    }\n    77  \n    78    /** The documents this person must agree to before carrying on. */\n    79    due(who: string): DocVersion[] {\n    80      const docs = new Set(this.versions.map((v) => v.doc));\n    81      return [...docs].map((d) => this.latest(d)).filter((v): v is DocVersion => !!v && v.required && !this.allowed(who, v.doc));\n\nTest file style (intent/blocks/consent/consent.test.ts):\n3 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Consent } from './index.ts';\n\ntest('agreement is by version; a new version needing agreement makes it due again', () => {\n  let now = new Date('2026-11-01T00:00:00Z');\n  const c = new Consent(() => now);\n  c.publish({ doc: 'terms', version: 1, effective: '2026-01-01', requiresAgreement: true, required: true, summary: 'first' });\n  c.publish({ doc: 'marketing', version: 1, effective: '2026-01-01', requiresAgreement: true, required: false, summary: 'news' });\n  assert.deepEqual(c.due('ana').map((v) => v.doc), ['terms']);\n  c.agree('ana', 'terms', 'sign-up form');\n  assert.deepEqual(c.due('ana'), []);\n  assert.equal(c.allowed('ana', 'marketing'), false, 'optional consent defaults to no');\n  c.publish({ doc: 'terms', version: 2, effective: '2026-12-01', requiresAgreement: true, required: true, summary: 'new fees' });\n  assert.equal(c.allowed('ana', 'terms'), true, 'not due before the new version takes effect');\n  now = new Date('2026-12-02T00:00:00Z');\n  assert.deepEqual(c.standing('ana', 'terms'), { given: true, version: 1, current: false });\n  c.agree('ana', 'terms', 'banner');\n  assert.equal(c.standing('ana', 'terms').version, 2);\n  c.publish({ doc: 'terms', version: 3, effective: '2026-12-01', requiresAgreement: false, required: true, summary: 'typo' });\n  assert.equal(c.allowed('ana', 'terms'), true, 'a minor version does not ask again');\n  assert.throws(() => c.publish({ doc: 'terms', version: 2, effective: '2027-01-01', requiresAgreement: false, required: true, summary: '' }), /already at version 3/);\n});\n\ntest('withdrawing is a new record, as easy as giving; required terms cannot be withdrawn piecemeal', () => {\n  const c = new Consent(() => new Date('2026-11-01T00:00:00Z'));\n  c.publish({ doc: 'marketing', version: 1, effective: '2026-01-01', requiresAgreement: true, required: false, summary: '' });\n  c.publish({ doc: 'terms', version: 1, effective: '2026-01-01', requiresAgreement: true, required: true, summary: '' });\n  c.agree('ben', 'marketing', 'settings');\n  assert.equal(c.allowed('ben', 'marketing'), true);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/consent-94.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:18:04.124Z"
+}

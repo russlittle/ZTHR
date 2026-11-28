@@ -1,0 +1,144 @@
+name: Review
+
+# Multi-family review (Pattern 21) of each push to intent-surface. Three reviewers from three model families, each on
+# the owner's Vertex project: Claude (context-aided), Gemini (unaided) and an open model on Vertex MaaS (independent).
+# Each verdict is recorded with provider, model id, the provider's response id and the tree hash of the exact code
+# reviewed, to intent/factory/reviews/<sha>.json. The job fails if fewer than three families returned a verdict or
+# any verdict blocks. The reviewer runs from the base commit, so a change cannot ship the reviewer that approves it.
+on:
+  push:
+    branches: [intent-surface]
+    paths-ignore: ['intent/factory/reviews/**']
+  workflow_call:
+    inputs:
+      base:
+        type: string
+        required: true
+      head:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      base:
+        description: 'Base commit (empty: the parent of head)'
+        required: false
+        default: ''
+      head:
+        description: 'Commit to review (empty: the tip of intent-surface)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: review-${{ inputs.head || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  not-live:
+    if: vars.GCP_WIF_PROVIDER == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: |
+          echo '### Review is not live yet' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Google Cloud is not set up for this repository (GCP_WIF_PROVIDER is unset), so no reviewer ran and no verdict was recorded. See tools/crew/README.md.' >> "$GITHUB_STEP_SUMMARY"
+  review:
+    if: vars.GCP_WIF_PROVIDER != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write # to commit the review record
+      id-token: write # Workload Identity Federation
+    env:
+      GCP_PROJECT: ${{ vars.GCP_PROJECT }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: intent-surface
+          fetch-depth: 0
+      - name: Which commits, and the reviewer pinned to the base
+        id: range
+        shell: bash
+        env:
+          IN_HEAD: ${{ inputs.head }}
+          IN_BASE: ${{ inputs.base }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_SHA: ${{ github.sha }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = push ]; then head="$PUSH_SHA"; base="$PUSH_BEFORE"; else head="${IN_HEAD:-$(git rev-parse HEAD)}"; base="${IN_BASE:-}"; fi
+          if [ -z "$base" ] || [ "$base" = 0000000000000000000000000000000000000000 ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then base=$(git rev-parse "$head~1"); fi
+          pinned=true
+          reviewer="$base"
+          if ! git cat-file -e "$base:tools/crew/review.ts" 2>/dev/null; then
+            pinned=false
+            reviewer="$head"
+            echo "::warning::The base has no reviewer yet; this first run uses the reviewer from the commit under review."
+          fi
+          git worktree add --detach "$RUNNER_TEMP/reviewer" "$reviewer"
+          { echo "base=$base"; echo "head=$head"; echo "pinned=$pinned"; } >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          project_id: ${{ vars.GCP_PROJECT }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          export_environment_variables: true
+      - name: Move the credentials file out of the working tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest="$RUNNER_TEMP/$(basename "$GOOGLE_APPLICATION_CREDENTIALS")"
+          mv "$GOOGLE_APPLICATION_CREDENTIALS" "$dest"
+          chmod 600 "$dest"
+          { echo "GOOGLE_APPLICATION_CREDENTIALS=$dest"; echo "CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE=$dest"; echo "GOOGLE_GHA_CREDS_PATH=$dest"; } >> "$GITHUB_ENV"
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+      - name: Three families review the change
+        id: review
+        shell: bash
+        env:
+          BASE: ${{ steps.range.outputs.base }}
+          HEAD_SHA: ${{ steps.range.outputs.head }}
+          PINNED: ${{ steps.range.outputs.pinned }}
+        run: |
+          set -uo pipefail
+          node "$RUNNER_TEMP/reviewer/tools/crew/review.ts" --repo "$GITHUB_WORKSPACE" --base "$BASE" --head "$HEAD_SHA" --project "$GCP_PROJECT" --pinned "$PINNED"
+          echo "status=$?" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: review-${{ steps.range.outputs.head }}
+          path: intent/factory/reviews/${{ steps.range.outputs.head }}.json
+          if-no-files-found: warn
+      - name: Commit the review record
+        if: always() && steps.range.outputs.head != ''
+        shell: bash
+        env:
+          HEAD_SHA: ${{ steps.range.outputs.head }}
+        run: |
+          set -euo pipefail
+          f="intent/factory/reviews/$HEAD_SHA.json"
+          [ -f "$f" ] || { echo 'No record was written.'; exit 0; }
+          h=$(date -u +%H%M)
+          if [ "$h" -ge 0630 ] && [ "$h" -lt 0830 ]; then echo "::warning::Inside the 06:30-08:30 UTC no-push window; the record is in the artefact."; exit 0; fi
+          git config user.name 'zthr-crew'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch -q origin intent-surface
+          git checkout -q -B record origin/intent-surface
+          git add "$f"
+          git diff --cached --quiet && { echo 'Record already committed.'; exit 0; }
+          git commit -q -m "Review record for ${HEAD_SHA:0:12}"
+          for _ in 1 2 3; do git pull --rebase -q origin intent-surface && git push -q origin HEAD:intent-surface && exit 0; sleep 5; done
+          exit 1
+      - name: Fail unless three families returned verdicts and none blocks
+        if: always()
+        env:
+          STATUS: ${{ steps.review.outputs.status }}
+        run: test "$STATUS" = 0

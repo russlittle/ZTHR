@@ -1,0 +1,108 @@
+[
+  {
+    "balloon": 15,
+    "measure": "given rough words with no end stated, when they are read, then the first redline offers the person's own sentence as the end",
+    "tolerance": "exactly as stated",
+    "range": {
+      "kind": "exact"
+    },
+    "confidence": "firm"
+  },
+  {
+    "balloon": 16,
+    "measure": "given an answer, when it is given, then that redline clears and the statement appears on the drawing with its balloon",
+    "tolerance": "exactly as stated",
+    "range": {
+      "kind": "exact"
+    },
+    "confidence": "firm"
+  },
+  {
+    "balloon": 17,
+    "measure": "given a revision after the first with no reason, when it is released, then it is refused",
+    "tolerance": "exactly as stated",
+    "range": {
+      "kind": "exact"
+    },
+    "confidence": "firm"
+  },
+  {
+    "balloon": 18,
+    "measure": "given the same intent, when it is released in the studio and with the command line, then the packages are identical",
+    "tolerance": "exactly as stated",
+    "range": {
+      "kind": "exact"
+    },
+    "confidence": "firm"
+  },
+  {
+    "balloon": 19,
+    "measure": "no more than five things to choose on any screen",
+    "tolerance": "at most five",
+    "range": {
+      "kind": "count",
+      "max": 5
+    },
+    "confidence": "provisional"
+  },
+  {
+    "balloon": 20,
+    "measure": "visible response to every tap",
+    "tolerance": "within 100 milliseconds",
+    "range": {
+      "kind": "time",
+      "maxMs": 100
+    },
+    "confidence": "provisional"
+  },
+  {
+    "balloon": 21,
+    "measure": "each screen ready",
+    "tolerance": "within 1 second on a mid-range phone",
+    "range": {
+      "kind": "time",
+      "maxMs": 1000
+    },
+    "confidence": "provisional"
+  },
+  {
+    "balloon": 22,
+    "measure": "works on a screen 320 pixels wide",
+    "tolerance": "no sideways scrolling",
+    "range": {
+      "kind": "rate",
+      "min": 1
+    },
+    "confidence": "provisional"
+  },
+  {
+    "balloon": 23,
+    "measure": "usable on a slow connection",
+    "tolerance": "first screen within 3 seconds",
+    "range": {
+      "kind": "time",
+      "maxMs": 3000
+    },
+    "confidence": "provisional"
+  },
+  {
+    "balloon": 24,
+    "measure": "text at or below the audience's reading level",
+    "tolerance": "every message",
+    "range": {
+      "kind": "rate",
+      "min": 1
+    },
+    "confidence": "provisional"
+  },
+  {
+    "balloon": 28,
+    "measure": "a person with no engineering background releases a package in one sitting, and the factory builds it without asking them anything new",
+    "tolerance": null,
+    "range": {
+      "kind": "unread",
+      "why": "no tolerance stated"
+    },
+    "confidence": "firm"
+  }
+]

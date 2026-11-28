@@ -1,0 +1,62 @@
+{
+  "title": "Intent studio",
+  "revision": 2,
+  "effectivity": "Anyone who holds an intent can turn it into a drawing a factory builds to, without losing what they meant, and without needing a developer to translate for them.",
+  "sources": [
+    {
+      "path": "intent.md",
+      "form": "markdown",
+      "sha256": "828d06e3c9c0942856fe5bc950f61f801c92127a02f38f4d46e0fded6cc6b672"
+    }
+  ],
+  "instruments": {
+    "design": "1",
+    "roles": "1"
+  },
+  "openQuestions": 9,
+  "ready": false,
+  "files": {
+    "balloons.json": "68ffe1c7d94f2354e2e2bf728383bdb5396980c50fbac92d75a154d5c182fa6e",
+    "change-notice.md": "74e31b65f7080183ce17b1cd15a5530b2e63de012e765ff927ac75f62d942676",
+    "context.md": "4c011e942f5ad60cb13e950fac9b1d0a5c128d181a75b46b855a19e573926b32",
+    "control-plan.yaml": "3f74770085534f57c6751bd32c9ed505c5c2dfcbf525c195876d678b9fb642c0",
+    "datum.json": "9710377c7dc70ee7a6646ad442ed53a3735d5968d956e6848d3b0ff61944ca79",
+    "drawing.md": "c809ef50f388a23f24bf5e44a428dcce8e4f2f72e16fe2efc75b051866d72872",
+    "features.yaml": "e21540379cbb09011121c0f0697c5bc954f9efd563d38c168fa8ebda97e667e5",
+    "knowledge/balloons/1.md": "aab892f9f0e98a75df5b757a288e2d6da249fd7a3c25f4096a79b780a7485796",
+    "knowledge/balloons/10.md": "2a2280c6b2213ac707c8904bc0dfe4403a106f40150678b82d3199bb020802a6",
+    "knowledge/balloons/11.md": "325ddcc67639405874b6e8ab157aca5ba73ca996a7a602c9477407b0048b5d7f",
+    "knowledge/balloons/12.md": "416017e1b3fc6c9a45d6c0fdb74e1b889b6ff51ff6af9d6cff58cf12cec48a54",
+    "knowledge/balloons/13.md": "56b7ce8c6e14cc447eab59d0fb86e0e7947ad6f23fac4e7973e09ccfd971564e",
+    "knowledge/balloons/14.md": "0ae2ef935ccc29c5a83eea1b093131d07e57af76744eafe6d39ee7b2c086258d",
+    "knowledge/balloons/15.md": "8102e82e692a08f6d14fb79911161014aabb3844e33e4600442e4fdd2262fcf7",
+    "knowledge/balloons/16.md": "4aeb7b6f6a9e44d4a2a9304fc2f4c6add23f65864068770f430f7889e1898535",
+    "knowledge/balloons/17.md": "e5a2d7b09b802385be9661d2e4792869042e84f021dc3f08532029f4b05c1203",
+    "knowledge/balloons/18.md": "839d3523db2b328db1fed77caa4568ea5c3a37c9eb30ba95524e2388c0c748c7",
+    "knowledge/balloons/19.md": "8c861347b956bf75d16050eca63413fe7b8b4e71788b4ce5cf3f05b296d8e98e",
+    "knowledge/balloons/2.md": "b2d7450d729971fb16a2696699eca5ca121016d89d433e776ac780239abbd123",
+    "knowledge/balloons/20.md": "f5aad46201d896cf745678b61da54db63223c5cf7f4aa664d2190309d66039b8",
+    "knowledge/balloons/21.md": "649a1aad2fb8c491dc5ea9aa44d174f3cd83a73c2ae6fea3c62f5e0c709fa24b",
+    "knowledge/balloons/22.md": "1e75c187f9a5b41f531006ee592cc76b37bcca04da52d6a04e43d540c5b165c4",
+    "knowledge/balloons/23.md": "acef9aa8a0422afba4837a46fb00ffe5a70228690d36149e400a62ba1cfbf985",
+    "knowledge/balloons/24.md": "601310c4ca999ffdedbc1053816561f4c4da6f0a5a8bff1ff1625bcdd4b64c1c",
+    "knowledge/balloons/25.md": "cc1cd2656a9c78e7becf0f927555aa764eadfadd5089fbe9f05d3c00a1313731",
+    "knowledge/balloons/26.md": "bb4f0ece91be81fcfe78937f0463ca48da45e4e0b2674bfa9d9add3042d86bbe",
+    "knowledge/balloons/27.md": "e1dabc3195296e671d694d8f5ae3b5a57c6e3e4795241e9fddf829adb60be36b",
+    "knowledge/balloons/28.md": "27b768807b6b6d42c935ce413544e9255703ddbdecfa5b316d53e755e71f88a7",
+    "knowledge/balloons/3.md": "3189e5e048ca1bcc8881f8ca82f141ce20d5abf9f7f89943520cdd2b94c9fb0f",
+    "knowledge/balloons/4.md": "eff2987fed5812a132ab6391be6fdb455acec29d48b8ebea7f0dc0b0185d6732",
+    "knowledge/balloons/5.md": "dc264af5b89501522cf7cf5545606ae97a68ac06452fbc89e49f7b8d5352ddfe",
+    "knowledge/balloons/6.md": "f08b7b3a796d3050cd5371df5a3c3afd38776595162736ab7784274db4f8f1b1",
+    "knowledge/balloons/7.md": "0d80a62d8b54f9e3676c74412b42cb33b31b82ec6a7667a857b07df3a7d78aa2",
+    "knowledge/balloons/8.md": "32dc7deee13731547e2318d8462b470b8d88ece33ef1038d6cd3ea0d6053b446",
+    "knowledge/balloons/9.md": "6f1afcf5d8d119c4c8eae0c86c97b9a55dcf43cde6f291a6212deb4270bbfd7e",
+    "knowledge/end.md": "19a12605cb346a96a4669bc6d57a37a9654024a64da33187e8b1080b343acc6e",
+    "knowledge/index.md": "047343191a4528ff7ffd1e7d8761c58f5bcb12b2d22dee8d47eff93ff688c6c1",
+    "notes.md": "5e32500ceb2e9a8c4ab3ae62be370ef29c227a220b375a93a50919b6f80abe58",
+    "ratchets.json": "cb119de3ab2665bbd0f30c8a60cc6b9785d91910e75bf8667a3b818dc54e628f",
+    "tests/scenarios.test.ts": "0e61ebf4c9ee3cf16605cfe02f7792c96f593f380bb2bd24a51c1e0cb71a85a7",
+    "tolerances.json": "e1241e058d437e1054bf73b0aa650412e3b045841721bc3ae9c0852bfaa65183"
+  },
+  "package": "175ffdf72fa3c3b233fd2e5a27aafcca53cdcf0ca67e4813add6f63638a4d7ff"
+}

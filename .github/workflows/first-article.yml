@@ -1,0 +1,376 @@
+name: First article
+
+# The first-article inspection of Files: its biggest claims checked against the real thing on the same runner.
+#  - reference: a stock Nextcloud records the oracle (twice, to prove the masks), self-checks, and on a push to
+#    intent-surface commits files/oracle/nextcloud.json when it changed
+#  - oracle:    Files from this commit against that recording, every unmasked difference in the summary
+#  - litmus:    the litmus WebDAV suite on Nextcloud (the control) and on Files
+#  - sync:      the unchanged Nextcloud desktop client (nextcloudcmd) through the same journey on both
+#  - benchmark: the small-files journey on both; Files' limits are what Nextcloud achieved on this runner
+# Every step writes what it found to the job summary, so a first run that fails still says why.
+
+on:
+  push:
+    branches: [intent-surface]
+    paths: ['files/**', 'intent/blocks/**', '.github/workflows/first-article.yml']
+  pull_request:
+    paths: ['files/**', 'intent/blocks/**', '.github/workflows/first-article.yml']
+  workflow_dispatch:
+    inputs:
+      files:
+        description: Small files in the sync journey and the benchmark
+        default: '25000'
+      factor:
+        description: Files may take at most this many times the control's time and p95
+        default: '1.0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: first-article-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  FILES_COUNT: ${{ inputs.files || '25000' }}
+  FACTOR: ${{ inputs.factor || '1.0' }}
+
+jobs:
+  pin:
+    runs-on: ubuntu-24.04
+    outputs:
+      image: ${{ steps.pin.outputs.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: files/oracle/nextcloud-image.txt
+          sparse-checkout-cone-mode: false
+      - id: pin
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="$(grep -v '^#' files/oracle/nextcloud-image.txt | head -1 | tr -d '[:space:]')"
+          case "$image" in nextcloud:*) ;; *) echo "::error::files/oracle/nextcloud-image.txt must name an official nextcloud image"; exit 1 ;; esac
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          if [[ "$image" != *@sha256:* ]]; then
+            echo "::warning::$image is pinned by tag only; the reference job records its digest and commits it to files/oracle/nextcloud-image.txt on the next push to intent-surface"
+          fi
+          echo "Nextcloud image: \`$image\`" >> "$GITHUB_STEP_SUMMARY"
+
+  reference:
+    needs: pin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    services:
+      nextcloud:
+        image: ${{ needs.pin.outputs.image }}
+        ports: ['8081:80']
+        env:
+          SQLITE_DATABASE: nextcloud
+          NEXTCLOUD_ADMIN_USER: admin
+          NEXTCLOUD_ADMIN_PASSWORD: first-article-admin-${{ github.run_id }}
+          NEXTCLOUD_TRUSTED_DOMAINS: localhost 127.0.0.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Inspection tools, unit-tested
+        shell: bash
+        run: |
+          node --test files/oracle/*.test.ts 2>&1 | tail -12 | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Nextcloud ready, account empty
+        shell: bash
+        run: |
+          pw="$(openssl rand -hex 16)"; echo "::add-mask::$pw"; echo "ORACLE_PW=$pw" >> "$GITHUB_ENV"
+          bash files/oracle/nextcloud-prepare.sh "${{ job.services.nextcloud.id }}" http://localhost:8081 oracle "$pw"
+      - name: Record the reference (twice) and self-check it
+        id: record
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          node files/tools/first-article.ts record http://localhost:8081 oracle "$ORACLE_PW" --out "$RUNNER_TEMP/nextcloud.json" --image "$NEXTCLOUD_IMAGE_RESOLVED" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Against the committed reference
+        id: same
+        if: steps.record.outcome != 'skipped'
+        continue-on-error: true
+        shell: bash
+        run: |
+          node files/tools/first-article.ts same files/oracle/nextcloud.json "$RUNNER_TEMP/nextcloud.json" | tee -a "$GITHUB_STEP_SUMMARY"; exit "${PIPESTATUS[0]}"
+      - name: Nextcloud's log
+        if: always()
+        shell: bash
+        run: |
+          docker logs "${{ job.services.nextcloud.id }}" > "$RUNNER_TEMP/nextcloud-container.log" 2>&1 || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: reference-recording
+          path: |
+            ${{ runner.temp }}/nextcloud.json
+            ${{ runner.temp }}/nextcloud.json.second.json
+            ${{ runner.temp }}/nextcloud.json.checks.json
+            ${{ runner.temp }}/nextcloud-container.log
+          if-no-files-found: warn
+      - name: Commit the reference
+        if: github.event_name == 'push' && github.ref == 'refs/heads/intent-surface' && steps.record.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          h=$(date -u +%H%M)
+          if [ "$h" -ge 0630 ] && [ "$h" -lt 0830 ]; then echo "Inside the 06:30-08:30 UTC no-push window; the recording is in the artefact." | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; fi
+          git config user.name 'zthr-first-article'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git pull --rebase -q origin intent-surface
+          changed=''
+          if ! node files/tools/first-article.ts same files/oracle/nextcloud.json "$RUNNER_TEMP/nextcloud.json" > /dev/null; then
+            cp "$RUNNER_TEMP/nextcloud.json" files/oracle/nextcloud.json; changed='the recording'
+          fi
+          pinned="$(grep -v '^#' files/oracle/nextcloud-image.txt | head -1 | tr -d '[:space:]')"
+          if [[ "$pinned" != *@sha256:* && "$NEXTCLOUD_IMAGE_RESOLVED" == *@sha256:* && "$pinned" == "${{ needs.pin.outputs.image }}" ]]; then
+            # Trust on first use: the tag's digest as pulled for this recording becomes the pin.
+            printf '%s@%s\n' "$pinned" "${NEXTCLOUD_IMAGE_RESOLVED#*@}" > files/oracle/nextcloud-image.txt; changed="${changed:+$changed and }the image digest"
+          fi
+          if [ -z "$changed" ]; then echo 'The committed reference is current.' | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; fi
+          git add files/oracle/nextcloud.json files/oracle/nextcloud-image.txt
+          git commit -q -m "First article: record $changed from $(jq -r .version files/oracle/nextcloud.json)"
+          for i in 1 2 3; do git pull --rebase -q origin intent-surface && git push -q origin HEAD:intent-surface && { echo "Committed $changed." | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; }; sleep 5; done
+          exit 1
+      - name: Fail when the recording failed its self-checks
+        if: steps.record.outcome == 'failure'
+        run: |
+          exit 1
+
+  oracle:
+    needs: reference
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          name: reference-recording
+          path: ${{ runner.temp }}/fresh
+      - name: Start Files from this commit
+        shell: bash
+        run: |
+          pw="$(openssl rand -hex 16)"; echo "::add-mask::$pw"; echo "ORACLE_PW=$pw" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/files-data"
+          PORT=8080 FILES_STORE=disk FILES_DIR="$RUNNER_TEMP/files-data" FILES_ADMIN=oracle FILES_ADMIN_PASSWORD="$pw" nohup node files/src/main.ts > "$RUNNER_TEMP/files.log" 2>&1 &
+          node files/tools/first-article.ts wait http://localhost:8080 60 || { cat "$RUNNER_TEMP/files.log"; exit 1; }
+      - name: Files against the reference
+        shell: bash
+        run: |
+          set -o pipefail
+          ref=files/oracle/nextcloud.json; from='committed'
+          if [ "${{ needs.reference.result }}" = success ] && [ -s "$RUNNER_TEMP/fresh/nextcloud.json" ]; then ref="$RUNNER_TEMP/fresh/nextcloud.json"; from='recorded in this run'; fi
+          if [ ! -s "$ref" ]; then echo '### Oracle: no reference recording exists yet (the reference job failed and none is committed)' >> "$GITHUB_STEP_SUMMARY"; exit 1; fi
+          echo "Reference: $from ($(jq -r '.version + " " + (.image // "")' "$ref"))" >> "$GITHUB_STEP_SUMMARY"
+          node files/tools/first-article.ts compare http://localhost:8080 oracle "$ORACLE_PW" "$ref" --title Files --out "$RUNNER_TEMP/differences.json" | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: oracle-differences
+          path: |
+            ${{ runner.temp }}/differences.json
+            ${{ runner.temp }}/files.log
+          if-no-files-found: warn
+
+  litmus:
+    needs: pin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      nextcloud:
+        image: ${{ needs.pin.outputs.image }}
+        ports: ['8081:80']
+        env:
+          SQLITE_DATABASE: nextcloud
+          NEXTCLOUD_ADMIN_USER: admin
+          NEXTCLOUD_ADMIN_PASSWORD: first-article-admin-${{ github.run_id }}
+          NEXTCLOUD_TRUSTED_DOMAINS: localhost 127.0.0.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Install litmus
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q litmus && (dpkg-query -W litmus | sed 's/^/Installed: /' | tee -a "$GITHUB_STEP_SUMMARY")
+      - name: Nextcloud ready, account empty
+        shell: bash
+        run: |
+          pw="$(openssl rand -hex 16)"; echo "::add-mask::$pw"; echo "LITMUS_PW=$pw" >> "$GITHUB_ENV"
+          bash files/oracle/nextcloud-prepare.sh "${{ job.services.nextcloud.id }}" http://localhost:8081 litmus "$pw"
+      - name: Start Files from this commit
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/files-data"
+          PORT=8080 FILES_STORE=disk FILES_DIR="$RUNNER_TEMP/files-data" FILES_ADMIN=litmus FILES_ADMIN_PASSWORD="$LITMUS_PW" nohup node files/src/main.ts > "$RUNNER_TEMP/files.log" 2>&1 &
+          node files/tools/first-article.ts wait http://localhost:8080 60 || { cat "$RUNNER_TEMP/files.log"; exit 1; }
+      - name: litmus on Nextcloud (control)
+        continue-on-error: true
+        run: |
+          timeout 600 litmus -k http://localhost:8081/remote.php/dav/files/litmus/ litmus "$LITMUS_PW" 2>&1 | tee "$RUNNER_TEMP/litmus-nextcloud.log"
+      - name: litmus on Files
+        continue-on-error: true
+        run: |
+          timeout 600 litmus -k http://localhost:8080/remote.php/dav/files/litmus/ litmus "$LITMUS_PW" 2>&1 | tee "$RUNNER_TEMP/litmus-files.log"
+      - name: Scores; fail on a test that passes on Nextcloud and fails on Files
+        shell: bash
+        run: |
+          node files/tools/first-article.ts litmus "$RUNNER_TEMP/litmus-nextcloud.log" "$RUNNER_TEMP/litmus-files.log" | tee -a "$GITHUB_STEP_SUMMARY"; exit "${PIPESTATUS[0]}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: litmus
+          path: |
+            ${{ runner.temp }}/litmus-*.log
+            ${{ runner.temp }}/files.log
+          if-no-files-found: warn
+
+  sync:
+    needs: pin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    services:
+      nextcloud:
+        image: ${{ needs.pin.outputs.image }}
+        ports: ['8081:80']
+        env:
+          SQLITE_DATABASE: nextcloud
+          NEXTCLOUD_ADMIN_USER: admin
+          NEXTCLOUD_ADMIN_PASSWORD: first-article-admin-${{ github.run_id }}
+          NEXTCLOUD_TRUSTED_DOMAINS: localhost 127.0.0.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Install the Nextcloud desktop command-line client
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends nextcloud-desktop-cmd
+          { echo "Installed: $(dpkg-query -W nextcloud-desktop-cmd)"; echo; echo "\`$(QT_QPA_PLATFORM=offscreen nextcloudcmd --version 2>&1 | head -3 | tr '\n' ' ')\`"; echo; } | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Nextcloud ready, account empty
+        shell: bash
+        run: |
+          pw="$(openssl rand -hex 16)"; echo "::add-mask::$pw"; echo "SYNC_PW=$pw" >> "$GITHUB_ENV"
+          bash files/oracle/nextcloud-prepare.sh "${{ job.services.nextcloud.id }}" http://localhost:8081 sync "$pw"
+      - name: Start Files from this commit
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/files-data"
+          PORT=8080 FILES_STORE=disk FILES_DIR="$RUNNER_TEMP/files-data" FILES_ADMIN=sync FILES_ADMIN_PASSWORD="$SYNC_PW" nohup node files/src/main.ts > "$RUNNER_TEMP/files.log" 2>&1 &
+          node files/tools/first-article.ts wait http://localhost:8080 60 || { cat "$RUNNER_TEMP/files.log"; exit 1; }
+      - name: Sync journey on Nextcloud (control)
+        continue-on-error: true
+        run: |
+          node files/tools/sync-journey.ts --url http://localhost:8081 --user sync --password "$SYNC_PW" --label nextcloud --files "$FILES_COUNT" --work "$RUNNER_TEMP/journey-nextcloud" --out "$RUNNER_TEMP/sync-nextcloud.json"
+      - name: Sync journey on Files
+        continue-on-error: true
+        run: |
+          node files/tools/sync-journey.ts --url http://localhost:8080 --user sync --password "$SYNC_PW" --label files --files "$FILES_COUNT" --work "$RUNNER_TEMP/journey-files" --out "$RUNNER_TEMP/sync-files.json"
+      - name: Both journeys; fail on a step that fails on Files alone
+        shell: bash
+        run: |
+          node files/tools/first-article.ts sync "$RUNNER_TEMP/sync-nextcloud.json" "$RUNNER_TEMP/sync-files.json" | tee -a "$GITHUB_STEP_SUMMARY"; exit "${PIPESTATUS[0]}"
+      - name: Logs
+        if: always()
+        shell: bash
+        run: |
+          docker logs "${{ job.services.nextcloud.id }}" > "$RUNNER_TEMP/nextcloud-container.log" 2>&1 || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: sync-journeys
+          path: |
+            ${{ runner.temp }}/sync-*.json
+            ${{ runner.temp }}/journey-*/logs/
+            ${{ runner.temp }}/files.log
+            ${{ runner.temp }}/nextcloud-container.log
+          if-no-files-found: warn
+
+  benchmark:
+    needs: pin
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    services:
+      nextcloud:
+        image: ${{ needs.pin.outputs.image }}
+        ports: ['8081:80']
+        env:
+          SQLITE_DATABASE: nextcloud
+          NEXTCLOUD_ADMIN_USER: admin
+          NEXTCLOUD_ADMIN_PASSWORD: first-article-admin-${{ github.run_id }}
+          NEXTCLOUD_TRUSTED_DOMAINS: localhost 127.0.0.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Nextcloud ready, account empty
+        shell: bash
+        run: |
+          pw="$(openssl rand -hex 16)"; echo "::add-mask::$pw"; echo "BENCH_PW=$pw" >> "$GITHUB_ENV"
+          bash files/oracle/nextcloud-prepare.sh "${{ job.services.nextcloud.id }}" http://localhost:8081 bench "$pw"
+      - name: Start Files from this commit
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/files-data"
+          PORT=8080 FILES_STORE=disk FILES_DIR="$RUNNER_TEMP/files-data" FILES_ADMIN=bench FILES_ADMIN_PASSWORD="$BENCH_PW" nohup node files/src/main.ts > "$RUNNER_TEMP/files.log" 2>&1 &
+          node files/tools/first-article.ts wait http://localhost:8080 60 || { cat "$RUNNER_TEMP/files.log"; exit 1; }
+      - name: Small files on Nextcloud (control)
+        continue-on-error: true
+        run: |
+          node files/tools/load.ts "$FILES_COUNT" --url http://localhost:8081 --user bench --password "$BENCH_PW" --time-limit 5400 --max-errors "$FILES_COUNT" --out "$RUNNER_TEMP/load-nextcloud.json"
+      - name: Limits from the control
+        id: limits
+        shell: bash
+        run: |
+          node files/tools/first-article.ts limits "$RUNNER_TEMP/load-nextcloud.json" "$FACTOR" | tee -a "$GITHUB_OUTPUT"
+      - name: Small files on Files, held to the control's limits
+        id: files
+        continue-on-error: true
+        shell: bash
+        run: |
+          limits=()
+          [ -n "${{ steps.limits.outputs.max_seconds }}" ] && limits+=(--max-seconds "${{ steps.limits.outputs.max_seconds }}")
+          [ -n "${{ steps.limits.outputs.max_p95_ms }}" ] && limits+=(--max-p95-ms "${{ steps.limits.outputs.max_p95_ms }}")
+          node files/tools/load.ts "$FILES_COUNT" --url http://localhost:8080 --user bench --password "$BENCH_PW" --time-limit 1800 "${limits[@]}" --out "$RUNNER_TEMP/load-files.json"
+      - name: Files in process (the README's figure, for the record)
+        continue-on-error: true
+        working-directory: files
+        run: |
+          node tools/load.ts "$FILES_COUNT" disk --time-limit 1800 --out "$RUNNER_TEMP/load-in-process.json"
+      - name: Both numbers
+        if: always()
+        shell: bash
+        run: |
+          {
+            node files/tools/first-article.ts bench "$RUNNER_TEMP/load-nextcloud.json" "$RUNNER_TEMP/load-files.json"
+            echo "Limits: ${{ steps.limits.outputs.note }}"
+            echo
+            [ -s "$RUNNER_TEMP/load-in-process.json" ] && echo "In process (no network, as in the README): \`$(jq -c '{uploadSeconds, perSecond, p95ms}' "$RUNNER_TEMP/load-in-process.json")\`"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: benchmark
+          path: |
+            ${{ runner.temp }}/load-*.json
+            ${{ runner.temp }}/files.log
+          if-no-files-found: warn
+      - name: Fail when Files broke a limit
+        if: steps.files.outcome == 'failure'
+        run: |
+          exit 1

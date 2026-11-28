@@ -1,0 +1,449 @@
+{
+ "round": 2,
+ "build": "Your own end in mind settles a reading difference; chain aligned and counts suggested journeys; map text larger; contributing guide",
+ "walk": "Same walk as round 1",
+ "fixed": [
+  "N1",
+  "N2",
+  "N4",
+  "N5"
+ ],
+ "partly": [
+  "N3",
+  "F12"
+ ],
+ "findings": {
+  "O1": {
+   "what": "On zthr.ai there is still no model to read your words: two readings mean copying the request into two other models (structural: needs a reading service, with its data flow stated)",
+   "axes": [
+    "effort",
+    "trust"
+   ]
+  },
+  "O2": {
+   "what": "On a phone the questions are two screens below the drawing; a person has to know to scroll for them",
+   "axes": [
+    "effort",
+    "craft"
+   ]
+  },
+  "O3": {
+   "what": "The intent map is readable at 72% but still asks for Full width on a laptop",
+   "axes": [
+    "craft"
+   ]
+  },
+  "O4": {
+   "what": "Mission control's factory row is empty until the reference build publishes its feed",
+   "axes": [
+    "value",
+    "trust"
+   ]
+  }
+ },
+ "grades": {
+  "denise": {
+   "value": [
+    "B+",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "B+",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "B-",
+    ""
+   ],
+   "voice": ""
+  },
+  "raj": {
+   "value": [
+    "B+",
+    ""
+   ],
+   "clarity": [
+    "A-",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "A-",
+    ""
+   ],
+   "depth": [
+    "A-",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "B+",
+    ""
+   ],
+   "voice": ""
+  },
+  "lena": {
+   "value": [
+    "B-",
+    ""
+   ],
+   "clarity": [
+    "B-",
+    ""
+   ],
+   "effort": [
+    "C+",
+    ""
+   ],
+   "trust": [
+    "B",
+    ""
+   ],
+   "depth": [
+    "B-",
+    ""
+   ],
+   "craft": [
+    "B-",
+    ""
+   ],
+   "open": [
+    "C+",
+    ""
+   ],
+   "voice": "Better. I would like the questions to follow me on the phone."
+  },
+  "tom": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "A-",
+    ""
+   ],
+   "depth": [
+    "A",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "B+",
+    ""
+   ],
+   "voice": ""
+  },
+  "aiko": {
+   "value": [
+    "B+",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "B+",
+    ""
+   ],
+   "depth": [
+    "A-",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "B",
+    ""
+   ],
+   "voice": ""
+  },
+  "grace": {
+   "value": [
+    "B+",
+    ""
+   ],
+   "clarity": [
+    "A-",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "A-",
+    ""
+   ],
+   "depth": [
+    "A",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "A-",
+    ""
+   ],
+   "voice": ""
+  },
+  "marcus": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "A-",
+    ""
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "A-",
+    ""
+   ],
+   "depth": [
+    "A-",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "B+",
+    ""
+   ],
+   "voice": ""
+  },
+  "priya": {
+   "value": [
+    "B+",
+    ""
+   ],
+   "clarity": [
+    "A-",
+    ""
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "A-",
+    ""
+   ],
+   "depth": [
+    "A",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "A-",
+    ""
+   ],
+   "voice": "Letting the person's own end in mind settle a disagreement between readings, by rule, is the right call, and it is tested. The remaining gap is a real reading service with its data flow written down."
+  },
+  "sam": {
+   "value": [
+    "B+",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "A-",
+    ""
+   ],
+   "depth": [
+    "A-",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "B+",
+    ""
+   ],
+   "voice": "I would take the meeting. Show me the live factory row filled in and a second intent built end to end."
+  },
+  "jordan": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "A-",
+    ""
+   ],
+   "depth": [
+    "A-",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "A-",
+    ""
+   ],
+   "voice": ""
+  },
+  "rosa": {
+   "value": [
+    "B",
+    ""
+   ],
+   "clarity": [
+    "B+",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "A-",
+    ""
+   ],
+   "depth": [
+    "B+",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "B",
+    ""
+   ],
+   "voice": ""
+  },
+  "kenji": {
+   "value": [
+    "B+",
+    ""
+   ],
+   "clarity": [
+    "A-",
+    ""
+   ],
+   "effort": [
+    "B",
+    ""
+   ],
+   "trust": [
+    "A-",
+    ""
+   ],
+   "depth": [
+    "A",
+    ""
+   ],
+   "craft": [
+    "B+",
+    ""
+   ],
+   "open": [
+    "B",
+    ""
+   ],
+   "voice": "Standard assemblies, catalogued parts, custom assemblies, a team minimum inherited and maintained by the fleet: that is how a platform is run."
+  },
+  "keisha": {
+   "value": [
+    "B-",
+    ""
+   ],
+   "clarity": [
+    "C+",
+    ""
+   ],
+   "effort": [
+    "C+",
+    ""
+   ],
+   "trust": [
+    "B",
+    ""
+   ],
+   "depth": [
+    "C+",
+    ""
+   ],
+   "craft": [
+    "B-",
+    ""
+   ],
+   "open": [
+    "C+",
+    ""
+   ],
+   "voice": ""
+  }
+ }
+}

@@ -1,0 +1,19 @@
+{
+  "repo": "russlittle/zthr",
+  "branches": {
+    "main": {
+      "pull_request": true,
+      "required_checks": ["Files (app 15368)", "Intent (app 15368)", "Supply chain (app 15368)"],
+      "non_fast_forward": true,
+      "deletion": true,
+      "stop_on": ["Intent", "Files", "Supply chain"]
+    },
+    "intent-surface": {
+      "pull_request": false,
+      "required_checks": [],
+      "non_fast_forward": true,
+      "deletion": true,
+      "stop_on": ["Supply chain"]
+    }
+  }
+}

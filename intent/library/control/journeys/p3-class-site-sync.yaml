@@ -1,0 +1,12 @@
+id: p3-class-site-sync
+persona: jayden
+phase: 3
+goal: A student who connects their class site has every assignment in their dates exactly once, and is told when an instructor moves a due date.
+forbidden:
+  - an assignment appears twice in the student's dates
+  - the class-site token is opened by anything but the sync job
+  - a moved due date is left at its old date
+budget: { actions: 3, ms: 5000 }
+requirements: [INT-2]
+modes: [standard]
+channels: [app]

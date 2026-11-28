@@ -1,0 +1,4 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["../oracle", "../tools", "../src", "../test/helpers.ts", "../../intent/blocks/*/index.ts"]
+}

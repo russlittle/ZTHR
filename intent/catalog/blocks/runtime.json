@@ -1,0 +1,50 @@
+{
+  "name": "runtime",
+  "purpose": "Consent ledger, sealed facts, approvals, outbound gate and refuse-to-start",
+  "provides": [
+    "ApprovalService",
+    "ApprovalToken",
+    "ConsentLedger",
+    "ContactPrefs",
+    "CrisisCategory",
+    "Decision",
+    "LedgerEntry",
+    "OutboundAction",
+    "OutboundGate",
+    "SafetyResult",
+    "SandwichSpec",
+    "SealedRecord",
+    "SealedStore",
+    "StartupCondition",
+    "crisisReply",
+    "decideContact",
+    "inQuietHours",
+    "localClock",
+    "mergeSecondCheck",
+    "refuseToStartUnless",
+    "sandwich",
+    "screen"
+  ],
+  "requires": [
+    "gates"
+  ],
+  "externalRequires": [],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "The safety screen, sealed facts and their consent ledger, approval tokens and the outbound gate, refusing to start misconfigured, and the deterministic sandwich.",
+  "notFor": "The app's own business rules.",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/runtime/test/hardening.test.ts`](../../packages/runtime/test/hardening.test.ts) (4 test definitions)\n- [`packages/runtime/test/runtime.test.ts`](../../packages/runtime/test/runtime.test.ts) (69 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 48,
+  "tests": 73,
+  "source": {
+    "path": "packages/runtime",
+    "sha256": "88bc7d1ca4b4de1d220919421bce354095064f02baaafebbe9f0171bfe155224"
+  }
+}

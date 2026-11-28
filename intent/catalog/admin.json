@@ -1,0 +1,551 @@
+{
+  "method": "Admin and engineering tools to debug and manage generated applications.",
+  "blocks": [
+    {
+      "name": "Record inspector",
+      "gives": "Open any record by id: every field, its history, its owner, and who has read or changed it",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "store: owner-scoped records"
+      }
+    },
+    {
+      "name": "Object viewer",
+      "gives": "Browse any collection or type with its declared fields, classes and live counts",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "store: data declaration"
+      }
+    },
+    {
+      "name": "ERD tool",
+      "gives": "Entity diagrams generated from the data declaration, so the picture can never drift from the schema",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "store: erd() from the declaration"
+      }
+    },
+    {
+      "name": "Field provenance",
+      "gives": "For any value: what the field means, how sensitive it is, which block, endpoint, person or import wrote it, and when",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "privacy: canary tracing; store: field classes"
+      }
+    },
+    {
+      "name": "Error monitoring",
+      "gives": "Errors grouped with the request, the build and the feature they belong to, linked to the feature registry",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "observe: grouping and first-seen; slo: alerts and incidents; feedback: reports joined by last error"
+      }
+    },
+    {
+      "name": "Roles and permissions (RBAC)",
+      "gives": "Roles, permissions and grants declared in one place and enforced by one evaluator",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "rbac: the housekeeping block"
+      }
+    },
+    {
+      "name": "Permission explainer",
+      "gives": "Why can or can't this person do this action on this record, answered by the same evaluator that enforces it",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "rbac: the same evaluator explains"
+      }
+    },
+    {
+      "name": "Row-level security controls",
+      "gives": "Who can see which rows, enforced in the data layer itself and viewable per person",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "rbac: record rules applied to lists"
+      }
+    },
+    {
+      "name": "Tamper-evident audit chain",
+      "gives": "Every change and every read of sensitive data in a hash-chained log, with the chain head anchored where admins cannot rewrite it",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "audit: the chain and its published head"
+      }
+    },
+    {
+      "name": "Request tracer",
+      "gives": "Follow one request through every block it touched, with timings and outcomes",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "observe: every span of a request, with timings and outcomes"
+      }
+    },
+    {
+      "name": "Feature registry console",
+      "gives": "Every feature, its walks, its blocks and whether it is proven on the running build",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "intent: locked journey cards"
+      }
+    },
+    {
+      "name": "Configuration and secrets inventory",
+      "gives": "Every setting and secret by name, where it is used and when it was last rotated, never the values",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "config: the inventory, never a value; upkeep: expiry"
+      }
+    },
+    {
+      "name": "Jobs and queues console",
+      "gives": "Running, waiting and failed work, with safe retry and cancel",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "operator: leases and idempotent dispatch"
+      }
+    },
+    {
+      "name": "Environment badge",
+      "gives": "Dev, test, UAT or production shown on every screen in its own colour, linked to the exact commit running. Hover shows the last commit, who made it, when and a link, plus the version running in every other environment",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "health: the badge"
+      }
+    },
+    {
+      "name": "Where is my change",
+      "gives": "Find a change by commit, pull request or ticket and watch it move through the pipeline: reviews, checks, mutation testing, build, each environment and the post-commit review, each stage linked to its evidence",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "pipeline: where"
+      }
+    },
+    {
+      "name": "Act as a user",
+      "gives": "An admin searches for any user and uses the app as them to reproduce and verify a problem, with every action recorded under both names",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "accounts: elevate act-as, time-boxed, recorded and announced"
+      }
+    },
+    {
+      "name": "Role switcher",
+      "gives": "People with more than one primary role switch between them from the top bar, next to the environment badge, with search, and see the app exactly as that role does",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "accounts: choices and switchTo"
+      }
+    },
+    {
+      "name": "What-if editing",
+      "gives": "Change any field in the record or object inspector and watch what the application does with it, for this session only, to check automations and updates or find out whether the data is the problem",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "twins and twin-service: stand-ins for outside services"
+      }
+    },
+    {
+      "name": "Runs",
+      "gives": "Every integration sync and data load is a recorded run: what came in, which records it created, changed or removed, which automations it set off, which rows were rejected and why, and whether anything broke afterwards",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "evidence: append-only record; explore: invariant checks"
+      }
+    },
+    {
+      "name": "Surface registry",
+      "gives": "Every screen, panel, dialog, email and admin tool is registered with its feature, its help and the content it shows; a surface that isn't registered fails the build",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "surfaces: checked registry"
+      }
+    },
+    {
+      "name": "Content registry",
+      "gives": "Every piece of text shown anywhere (labels, help, errors, emails, admin text, docs, every language) has one controlled home; text without one fails the build",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "plain-language: reading grade and phrase rules"
+      }
+    },
+    {
+      "name": "Contextual help",
+      "gives": "An i icon at the top right of every surface opens help for that surface, generated from its code, its feature and its walks on every build, so nobody maintains help text",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "surfaces: help per screen"
+      }
+    },
+    {
+      "name": "Generated documentation",
+      "gives": "Every document (repo, app, admin, API) generated from the code, the intent and the build's evidence; every instruction in it is carried out on the build before it is published",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "store: data-model pages generated from the declaration"
+      }
+    },
+    {
+      "name": "Data dictionary",
+      "gives": "Every model and field with its meaning, type, sensitivity class, owner, source, allowed values, examples, and every surface and report that uses it, generated from the Prisma schema",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "store: classified data declaration"
+      }
+    },
+    {
+      "name": "Prisma schema and ERD",
+      "gives": "The Prisma schema is the one data declaration; entity diagrams, the data dictionary, migrations and sensitivity classes are all generated from it",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "store: ERDs generated from the declaration"
+      }
+    },
+    {
+      "name": "Ingest connectors",
+      "gives": "Bring data in from files, APIs, webhooks and scheduled pulls from Cloud Storage, each recorded as a run",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "sync: the adapter interface; connectors per source still to write"
+      }
+    },
+    {
+      "name": "Mapping studio",
+      "gives": "Map incoming columns to fields, with suggestions from the data dictionary, saved and reused for every later load from the same source",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "tabular: mapping suggestions; no studio screen yet"
+      }
+    },
+    {
+      "name": "Quarantine and repair",
+      "gives": "Rows that fail validation are held with the reason, fixed in place or rejected, and never silently dropped",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "tabular: quarantined rows with row numbers and reasons"
+      }
+    },
+    {
+      "name": "Deduplicate and merge",
+      "gives": "Find likely duplicates across loads, merge them with a preview, and keep the history of every merge",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "tabular: dedupe with merge rules and provenance"
+      }
+    },
+    {
+      "name": "Export formats",
+      "gives": "Export any permitted data as CSV, Excel, JSON or Parquet, with sensitive fields handled by their class",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "tabular: CSV, JSON lines, .xlsx"
+      }
+    },
+    {
+      "name": "Scheduled exports",
+      "gives": "Exports that run on a schedule to Cloud Storage or by email, each recorded as a run",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "reports: Delivery on a cron schedule"
+      }
+    },
+    {
+      "name": "Warehouse sync",
+      "gives": "Keep BigQuery in step with the application's data for analysis, with sensitivity classes carried across",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "sync: engine tested with a warehouse twin; no real warehouse adapter yet"
+      }
+    },
+    {
+      "name": "Report builder",
+      "gives": "Build reports in the app by choosing fields from the data dictionary: filters, groupings, measures and charts, saved, shared and scheduled",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "reports: specs, measures, pivots and templates; privacy: small-cell suppression"
+      }
+    },
+    {
+      "name": "Report templates",
+      "gives": "Ready-made reports to start from, each with a generated walkthrough showing how it was built",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "reports: parameterised templates"
+      }
+    },
+    {
+      "name": "Accessibility conformance",
+      "gives": "WCAG 2.2 Level AA on every surface, in every mode, style, palette and layout, checked on every build, with Level AAA wherever the content allows",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "ui: accessible, themed page parts; intent: walks by accessible name"
+      }
+    },
+    {
+      "name": "Progressive web features",
+      "gives": "Modern browser features where they exist (install as an app, offline, push, share, view transitions, popovers, container queries), each detected before use, on a base that works on any phone without them",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "pwa: manifest check and service worker"
+      }
+    },
+    {
+      "name": "API contracts",
+      "gives": "An OpenAPI contract for every feature, written from the datum, secured by the same roles and row-level rules as the screens, and closed until the spec sheet switches it on",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "oracle: every answer checked against the system being replaced, as built"
+      }
+    },
+    {
+      "name": "Event catalogue",
+      "gives": "An AsyncAPI 3.1 contract for what each feature emits, as CloudEvents envelopes delivered by signed webhooks",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "events: catalogue with fields and versions"
+      }
+    },
+    {
+      "name": "Agent tools (MCP)",
+      "gives": "Each switched-on API operation offered as a tool over the Model Context Protocol, acting for one person with that person's access",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "mcp: tools with schemas and permissions"
+      }
+    },
+    {
+      "name": "Training modules",
+      "gives": "A lesson for every feature, built from its journeys and measures, published as a cmi5 course that reports through xAPI",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "cmi5: statements and rules; not yet run against a real learning record store"
+      }
+    },
+    {
+      "name": "Ticket sync",
+      "gives": "Factory progress written to Jira, Asana, GitHub Issues or Linear: one ticket per feature, moved as each station finishes",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "sync: engine tested with a tracker twin; no real tracker adapter yet"
+      }
+    },
+    {
+      "name": "Wiki publishing",
+      "gives": "The user guide and technical reference published to Confluence, Notion or a Git wiki on every release, replaced whole so they never drift",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "sync: engine tested with a wiki twin; no real wiki adapter yet"
+      }
+    },
+    {
+      "name": "Feature explorer",
+      "gives": "Open any feature and see everything about it: its assemblies and parts, its data, who may do what, its audit trail, its history and how it changed over time, its journeys and its evidence, with the record inspector's controls at every level",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "console: Explorer joins and searches features, screens, flags, journeys and evidence; no screen"
+      }
+    },
+    {
+      "name": "Query console",
+      "gives": "Query the application in SQL: every feature answers as a set of views, through the same roles, row-level rules and field masking as the screens. Queries are saved, exported and scheduled; the console is switched on per environment and left out of production by default",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "query: read-only language, masking, audit"
+      }
+    },
+    {
+      "name": "Test data generator",
+      "gives": "Realistic synthetic records from the data dictionary, for any feature and any person on the schematic, each marked synthetic and refused by production",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "testdata: seeded fakes in fiction ranges"
+      }
+    },
+    {
+      "name": "UAT overrides",
+      "gives": "In UAT, edit or override any record, clock or outside answer to set up the case you want to try, with every override recorded and reset in one step; not present in production",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "uat: flag, clock and role overrides"
+      }
+    },
+    {
+      "name": "Confidence walkthrough",
+      "gives": "Pick a feature and watch it work: its journeys walked on your test records, each step tied to the balloon it proves, with why the app decided what it did",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "walkthrough: evidence currency and sign-off rules; live walking of journeys not done here"
+      }
+    },
+    {
+      "name": "Feature reports",
+      "gives": "A report for every feature, written from the datum: who uses it, whether its journeys complete within budget, where people stop, refusals and errors, scheduled and delivered",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "factoryreports: featureReport with small cells hidden, scheduled delivery"
+      }
+    },
+    {
+      "name": "Operations reports",
+      "gives": "Availability, response times against the feedback budget, errors by feature, every run, who read what, and what model calls cost, every day",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "factoryreports: operationsReport, scheduled delivery"
+      }
+    },
+    {
+      "name": "Journey analytics",
+      "gives": "Real walks against the journey cards: starts, completions, where people leave, time and actions against budget, and common walks no card covers, never showing a group under the small-cell threshold",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "analytics: journeys"
+      }
+    },
+    {
+      "name": "Report delivery",
+      "gives": "Reports on a schedule to their audience by email, chat or the team's docs, each run recorded",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "reports: Delivery with a log"
+      }
+    },
+    {
+      "name": "Improvement brief",
+      "gives": "One page a week for the person who holds the intent: what people leave, what is over budget, what nobody designed, who is not who the schematic expected, and the change each suggests",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "factoryreports: improvementBrief ranked by weighted evidence with reasons"
+      }
+    },
+    {
+      "name": "Data pipeline",
+      "gives": "Every revision of the information planned, rehearsed on a copy with synthetic records, checked for integrity, loss and drift, promoted environment by environment with a ledger in each database, and watched every night",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "etl: resumable checkpointed runs, dry runs, idempotent loads, lineage and row-count drift; promotion between environments and schema drift not covered"
+      }
+    },
+    {
+      "name": "Compliance evidence",
+      "gives": "Each in-scope framework's controls mapped to evidence the factory produces on every release, collected once and serving every control that needs it, written as OSCAL for assessors",
+      "studentAdvocate": {
+        "coverage": "partial",
+        "from": "datagate: evidence of data decisions; other controls not yet collected"
+      }
+    },
+    {
+      "name": "Sensitive data inventory",
+      "gives": "Every sensitive field, in the same form in every app: its class, the frameworks it falls under, who may read it, where it may flow, how long it is kept",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "datagate: inventory with findings"
+      }
+    },
+    {
+      "name": "Data gate",
+      "gives": "One gate policy for the fleet: a central gateway allows or refuses reads, exports and queries by data class, and records why",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "datagate: per-field verdicts by destination"
+      }
+    },
+    {
+      "name": "Delivery pipeline",
+      "gives": "Build, test, rehearse the data, package with signed provenance, deploy without traffic, canary, release, with a gate between each",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "pipeline: stages, events and flow measures"
+      }
+    },
+    {
+      "name": "Service levels and alerts",
+      "gives": "Objectives from the schematic (feedback budget, availability, each outcome's target), error-budget alerts, and a runbook entry for every alert",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "slo: budgets and multi-window burn-rate alerts"
+      }
+    },
+    {
+      "name": "Report a problem",
+      "gives": "A button on every screen: say what happened and what you expected, as a bug, an idea, a question or praise. Where you were (feature, journey, screen, revision, trace) is captured for you; what you had typed elsewhere never is",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "feedback: report with redacted context"
+      }
+    },
+    {
+      "name": "Triage board",
+      "gives": "Every ticket by status, severity and feature: triage, merge duplicates, assign, reply to the reporter, resolve, with time-to-triage and time-to-resolve watched",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "feedback: board with targets"
+      }
+    },
+    {
+      "name": "Defect from ticket",
+      "gives": "A confirmed bug becomes a defect with a failing test written from it, and a ratchet once it is fixed, so it cannot come back",
+      "studentAdvocate": {
+        "coverage": "yes",
+        "from": "feedback: defect with a failing test skeleton"
+      }
+    }
+  ],
+  "rules": [
+    "The permission explainer runs the same code that enforces permissions, never a copy, so an explanation cannot disagree with what actually happens.",
+    "Every admin tool is itself behind roles and permissions, and every use of it is written to the audit chain: looking at a record is recorded like changing one.",
+    "The audit chain is hash-linked so any edit or deletion is detected, and its head is written regularly to storage with a locked retention policy, so even an administrator cannot rewrite history unnoticed.",
+    "Row-level security is enforced in the data layer, not only in the interface, and checked by planted defects: a query that would leak another person's rows must fail the build.",
+    "Field provenance comes from recording every write as it happens, never reconstructed later by guessing.",
+    "Each of these is a block with a manifest, tests and planted-defect proofs, like every other block.",
+    "The badge reads the build fingerprint the running service reports about itself, never a value typed into the page, so it cannot claim a version that isn't running.",
+    "Each environment's colour is paired with its name in text, so the badge is never colour alone, and every colour passes contrast checks.",
+    "In production the badge stays visible, but the commit details on hover are shown only to staff roles, so authors' names are never exposed to the public.",
+    "Where is my change shows a stage as passed only when that stage's evidence exists; a stage that is running or has no evidence yet shows as such, never as passed.",
+    "While acting as a user, every action is written to the audit chain with both identities: the admin who did it and the user it was done as. Authorship is never transferred to the user.",
+    "A banner stays on screen for as long as someone is acting as another user, naming who they are acting as, with a one-click way back.",
+    "An admin can never act as someone with more permission than their own, and acting-as sessions end on their own after a set time.",
+    "The person acted as can see in their own record when it happened, who did it and what was done.",
+    "The role switcher only lists roles the person actually holds; switching role is recorded, and each role sees exactly what that role would see, through the same permission evaluator.",
+    "What-if changes live in a layer over the real data for one session; reads in that session see the change, the stored record never does, and the layer is discarded when the session ends.",
+    "Anything a what-if session would send outward (mail, texts, calendar writes, payments, webhooks) goes to the service twins and is shown on screen, never to the real service.",
+    "Every what-if session is recorded in the audit chain: who opened it, which fields they changed and what the application did in response.",
+    "Every record a run touches is linked to that run, so field provenance can answer \"which load wrote this\" and a run's full effect can be listed.",
+    "After every run, the application's invariants and a sample of its intent walks are run against the new data and compared with the run before; anything that newly fails is shown against the run that caused it.",
+    "A load can be tried first in a what-if layer: it is applied there, the checks run, and only then is it applied for real or discarded.",
+    "A run whose changes can be reversed can be undone as one unit, and the undo is itself recorded as a run.",
+    "Help and documentation are regenerated on every build from the code, the feature registry and the walks, and carry that build's fingerprint; they are never edited by hand.",
+    "If content has no controlled home, the build fails until one is created: a surface is registered, or the text is moved into the content registry.",
+    "The report builder only offers fields the person may see, applies row-level security to every query, and suppresses small groups for sensitive fields, so a report can never reveal what the person could not see record by record.",
+    "Every ingest and every export is a run: what moved, from where, to where, who started it and what changed.",
+    "Sensitivity classes are written in the Prisma schema itself, as documentation comments on each field, so the classification cannot drift from the schema it describes.",
+    "API keys, tokens and every other secret live only in Google Cloud Secret Manager. Code, configuration, environment files, logs, error reports and anything sent to a browser refer to a secret by name and never contain its value.",
+    "Services read secrets at run time through their own Google Cloud identity; no person or file holds a copy.",
+    "A secret scanner runs on every change, its history included, and any secret-shaped value fails the build; the scanner is itself proven by planting a fake key it must catch.",
+    "Logs and error reports redact anything shaped like a secret before it is written.",
+    "API keys the application issues to its own users are shown once, stored only as a hash, scoped, and revocable at any time.",
+    "Every surface meets WCAG 2.2 Level AA in every mode, style, palette, layout and language. Level AAA is met wherever the content allows; W3C itself advises against requiring AAA for all content, because some content cannot meet every AAA criterion.",
+    "Accessibility is checked on every build with automated rules written to W3C's ACT Rules Format, keyboard-only walks of every journey, walks by accessible name, reflow at 320 pixels wide and 400% zoom, visible and unobscured focus, and target size. Automated checks find only part of what matters, so people who use assistive technology audit the app regularly and their findings are registered and fixed.",
+    "Compliance is claimed only on the evidence of the latest audit and the latest build's checks, never in general.",
+    "The base experience is plain, fast, server-rendered pages that work on any phone, on a slow connection, without the enhanced features; each enhancement is detected before use and the page works the same without it.",
+    "Every layout works from 320 pixels wide upward with no sideways scrolling, every control is at least 24 by 24 pixels and 44 where space allows, and reduced-motion and reduced-data preferences are respected."
+  ],
+  "reportTemplates": {
+    "operational": [
+      "Change lead time: commit to production, by week",
+      "Pipeline health: pass, fail and unknown by stage",
+      "Error rate by feature and build",
+      "Run health: loads, rejected rows and checks newly failing",
+      "Job queue latency and failed jobs",
+      "Intent completion: which journeys people finish, by surface",
+      "Model spend by block and model family"
+    ],
+    "business": [
+      "Active users by day, week and month",
+      "Sign-up to first value funnel",
+      "Retention by sign-up cohort",
+      "Revenue and refunds by period",
+      "Feature adoption from the feature registry",
+      "Support load: help opened per surface"
+    ]
+  }
+}

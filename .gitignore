@@ -1,0 +1,17 @@
+node_modules/
+evidence-out/
+.site-check/
+.site-check-open/
+# Built from intent/ by the deploy workflow, never committed
+/docs/intent/
+/docs/factory/
+/docs/mission/
+/docs/console/
+/docs/engineering/
+/docs/lines/
+/docs/qa/
+/docs/shipping/
+/docs/fleet/
+/docs/line/
+/docs/metrology/
+/docs/maintenance/

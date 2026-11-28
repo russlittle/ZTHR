@@ -1,0 +1,193 @@
+{
+  "name": "Compliance frameworks",
+  "what": "Each framework's controls, by their official identifiers, with what satisfies them. Control wording is paraphrased; the official text is the authority. Evidence is collected once and serves every control and framework that needs it.",
+  "evidence": {
+    "access": { "what": "Who may do what, on which records: roles, row-level rules, refusal journeys and the permission explainer", "from": ["api/access.md", "information/schema.md", "gauges/ (refusal and other-side journeys)"], "auto": true, "every": "release" },
+    "mfa": { "what": "Sign-in through an identity provider that enforces multi-factor authentication", "from": ["connections.json (identity)", "delivery/gcp/setup.md"], "auto": false, "every": "release" },
+    "audit": { "what": "Every change and every read of sensitive data in a hash-chained audit log, with the access report", "from": ["reports/ops-access.sql", "Tamper-evident audit chain"], "auto": true, "every": "day" },
+    "change": { "what": "Every change starts as a signed revision with a change notice, passes the gates, and is recorded", "from": ["datum.json (signed)", "change-notice.md", "manifest.json", "delivery/pipeline.json"], "auto": true, "every": "release" },
+    "testing": { "what": "Journeys, mutation floors, ratchets and held-out checks gate every release", "from": ["gauges/", "tests/", "ratchets.json", "control-plan.yaml"], "auto": true, "every": "release" },
+    "data-pipeline": { "what": "Schema revisions rehearsed, checked for loss and drift, promoted with a ledger", "from": ["information/pipeline.yaml", "information/ci/data-pipeline.yml"], "auto": true, "every": "release" },
+    "integrity": { "what": "Integrity rules that run on the data alone, and money calculated twice", "from": ["information/integrity.sql", "information/integrity-summary.sql"], "auto": true, "every": "day" },
+    "inventory": { "what": "Every sensitive field: its class, where it may flow, who may read it, how long it is kept", "from": ["compliance/data-inventory.json"], "auto": true, "every": "release" },
+    "retention": { "what": "Retention per record, enforced, and disposal recorded", "from": ["information/schema.json (retention)", "analytics/tracking-plan.json"], "auto": true, "every": "release" },
+    "consent": { "what": "Consent recorded and honoured, and withdrawable, proved by take-back journeys", "from": ["information/schema.json (Consent)", "gauges/ (take-back journeys)"], "auto": true, "every": "release" },
+    "encryption": { "what": "Encryption in transit (TLS) and at rest, from the platform, with keys in a managed service", "from": ["delivery/gcp/service.yaml", "delivery/gcp/setup.md"], "auto": false, "every": "release" },
+    "supply-chain": { "what": "Signed build provenance, a software bill of materials, and deploys only of images the build signed", "from": ["delivery/gcp/cloudbuild.yaml", "delivery/gcp/binauthz-policy.yaml"], "auto": true, "every": "release" },
+    "vulnerability": { "what": "Dependency, secret and container image scans gate every build", "from": ["delivery/gcp/cloudbuild.yaml"], "auto": true, "every": "release" },
+    "monitoring": { "what": "Service levels from the schematic, alerts on burn, and nightly integrity and drift checks", "from": ["ops/slos.json", "ops/alerts.json", "ops/scheduler.json"], "auto": true, "every": "continuous" },
+    "incident": { "what": "A runbook per alert; every incident becomes a defect, a test and a ratchet", "from": ["ops/runbook.md"], "auto": false, "every": "incident" },
+    "backup": { "what": "Point-in-time recovery, and restores rehearsed", "from": ["delivery/gcp/setup.md", "ops/runbook.md"], "auto": false, "every": "quarter" },
+    "availability": { "what": "Availability and latency objectives with error budgets, and canary releases that roll back on burn", "from": ["ops/slos.json", "delivery/gcp/cloudbuild.yaml"], "auto": true, "every": "continuous" },
+    "accessibility": { "what": "WCAG 2.2 AA checked on every surface in every mode, and journeys walked with assistive settings", "from": ["Accessibility conformance", "gauges/ (low-vision journeys)"], "auto": true, "every": "release" },
+    "risk": { "what": "The review panel, failure modes on the schematic, and the outcome framework set before building", "from": ["outcomes/framework.md", "review (in the studio)"], "auto": false, "every": "release" },
+    "platform": { "what": "Physical, environmental and infrastructure controls inherited from the cloud provider's own attestations", "from": ["the provider's SOC 2, ISO 27001, FedRAMP and HIPAA documentation"], "auto": false, "every": "year" },
+    "organization": { "what": "Policies, training, people, vendors and governance: supplied by the organization, not the factory", "from": ["a person uploads it"], "auto": false, "every": "year" }
+  },
+  "frameworks": [
+    {
+      "id": "soc2", "name": "SOC 2", "version": "Trust Services Criteria (2017, points of focus revised 2022)", "authority": "AICPA",
+      "suggest": { "always": true, "why": "Most organizations that buy software ask for a SOC 2 report" },
+      "controls": [
+        { "id": "CC1.1", "title": "Commitment to integrity and ethical values", "by": ["organization"] },
+        { "id": "CC2.1", "title": "Relevant, quality information supports internal control", "by": ["inventory", "audit"] },
+        { "id": "CC3.2", "title": "Risks are identified and analyzed", "by": ["risk", "organization"] },
+        { "id": "CC4.1", "title": "Controls are evaluated on an ongoing basis", "by": ["testing", "monitoring"] },
+        { "id": "CC5.2", "title": "General controls over technology are selected and developed", "by": ["change", "testing", "supply-chain"] },
+        { "id": "CC6.1", "title": "Logical access is restricted to authorized users and protected information", "by": ["access", "encryption", "inventory"] },
+        { "id": "CC6.2", "title": "Users are registered and authorized before access is granted", "by": ["access", "mfa"] },
+        { "id": "CC6.3", "title": "Access is changed and removed as roles change, with least privilege", "by": ["access", "audit"] },
+        { "id": "CC6.6", "title": "Access from outside the system boundary is protected", "by": ["access", "encryption", "supply-chain"] },
+        { "id": "CC6.7", "title": "Information is protected in transmission and movement", "by": ["encryption", "inventory"] },
+        { "id": "CC6.8", "title": "Unauthorized or malicious software is prevented or detected", "by": ["supply-chain", "vulnerability"] },
+        { "id": "CC7.1", "title": "Configuration changes and new vulnerabilities are detected", "by": ["vulnerability", "data-pipeline", "monitoring"] },
+        { "id": "CC7.2", "title": "Anomalies indicating attacks or errors are monitored", "by": ["monitoring", "audit"] },
+        { "id": "CC7.3", "title": "Security events are evaluated", "by": ["incident", "monitoring"] },
+        { "id": "CC7.4", "title": "Incidents are responded to", "by": ["incident"] },
+        { "id": "CC7.5", "title": "The system recovers from incidents", "by": ["incident", "backup"] },
+        { "id": "CC8.1", "title": "Changes are authorized, designed, tested, approved and implemented", "by": ["change", "testing", "data-pipeline"] },
+        { "id": "CC9.1", "title": "Business disruption risks are mitigated", "by": ["backup", "availability"] },
+        { "id": "CC9.2", "title": "Vendor and business partner risk is managed", "by": ["organization", "supply-chain"] },
+        { "id": "A1.2", "title": "Recovery infrastructure, including backups, is in place", "by": ["backup", "platform"] },
+        { "id": "A1.3", "title": "Recovery is tested", "by": ["backup", "data-pipeline"] },
+        { "id": "PI1.3", "title": "Processing is complete, accurate and timely", "by": ["integrity", "testing"] },
+        { "id": "C1.1", "title": "Confidential information is identified and protected", "by": ["inventory", "access"] },
+        { "id": "C1.2", "title": "Confidential information is disposed of as committed", "by": ["retention"] }
+      ]
+    },
+    {
+      "id": "hipaa", "name": "HIPAA Security Rule", "version": "45 CFR Part 164, Subpart C, as in force (an overhaul is proposed, with final action projected for July 2027)", "authority": "HHS Office for Civil Rights",
+      "suggest": { "sensitivity": "health", "words": "\\b(hipaa|patient|clinic|medical|health record|phi|diagnos)", "why": "It keeps health information" },
+      "controls": [
+        { "id": "164.308(a)(1)(ii)(A)", "title": "Risk analysis", "by": ["risk", "inventory", "organization"] },
+        { "id": "164.308(a)(1)(ii)(B)", "title": "Risk management", "by": ["risk", "testing"] },
+        { "id": "164.308(a)(1)(ii)(D)", "title": "Information system activity review", "by": ["audit", "monitoring"] },
+        { "id": "164.308(a)(3)", "title": "Workforce security", "by": ["access", "organization"] },
+        { "id": "164.308(a)(4)", "title": "Information access management", "by": ["access", "inventory"] },
+        { "id": "164.308(a)(5)", "title": "Security awareness and training", "by": ["organization"] },
+        { "id": "164.308(a)(6)", "title": "Security incident procedures", "by": ["incident"] },
+        { "id": "164.308(a)(7)", "title": "Contingency plan: backup, disaster recovery, testing", "by": ["backup", "data-pipeline", "availability"] },
+        { "id": "164.308(b)(1)", "title": "Business associate contracts", "by": ["organization"] },
+        { "id": "164.310", "title": "Physical safeguards", "by": ["platform"] },
+        { "id": "164.312(a)(1)", "title": "Access control: unique user identification, emergency access, automatic logoff, encryption", "by": ["access", "mfa", "encryption"] },
+        { "id": "164.312(b)", "title": "Audit controls", "by": ["audit"] },
+        { "id": "164.312(c)(1)", "title": "Integrity of health information", "by": ["integrity", "audit"] },
+        { "id": "164.312(d)", "title": "Person or entity authentication", "by": ["mfa"] },
+        { "id": "164.312(e)(1)", "title": "Transmission security", "by": ["encryption"] },
+        { "id": "164.316(b)", "title": "Documentation, kept six years", "by": ["change", "retention"] }
+      ]
+    },
+    {
+      "id": "ferpa", "name": "FERPA", "version": "34 CFR Part 99", "authority": "U.S. Department of Education",
+      "suggest": { "words": "\\b(students?|ferpa|transcripts?|grades?|enrollment|enrolled|education records?)\\b", "why": "It keeps student records" },
+      "controls": [
+        { "id": "99.30", "title": "Written consent before disclosing education records", "by": ["consent", "access"] },
+        { "id": "99.31(a)(1)", "title": "School officials see records only with a legitimate educational interest, by reasonable methods", "by": ["access", "audit", "inventory"] },
+        { "id": "99.32", "title": "A record of each disclosure is kept with the student's record", "by": ["audit"] },
+        { "id": "99.10", "title": "Students can inspect and review their records", "by": ["access", "inventory"] },
+        { "id": "99.20", "title": "Students can ask to amend records", "by": ["change", "organization"] },
+        { "id": "99.37", "title": "Directory information can be withheld at the student's request", "by": ["consent", "inventory"] },
+        { "id": "99.7", "title": "Annual notification of rights", "by": ["organization"] }
+      ]
+    },
+    {
+      "id": "pci", "name": "PCI DSS", "version": "4.0.1", "authority": "PCI Security Standards Council",
+      "suggest": { "words": "\\b(card|credit card|debit card|pay online|checkout|payments?)\\b", "why": "People pay in it. Keep card numbers out entirely: a hosted payment page keeps most of the standard out of scope" },
+      "controls": [
+        { "id": "3", "title": "Stored account data is protected; card numbers are never stored", "by": ["inventory", "encryption"] },
+        { "id": "4", "title": "Cardholder data is protected in transmission", "by": ["encryption"] },
+        { "id": "6.2", "title": "Bespoke software is developed securely", "by": ["testing", "change", "supply-chain"] },
+        { "id": "6.3", "title": "Vulnerabilities are identified and addressed", "by": ["vulnerability"] },
+        { "id": "6.4.3", "title": "Scripts on payment pages are authorized and their integrity assured", "by": ["supply-chain", "change"] },
+        { "id": "7", "title": "Access is restricted by business need to know", "by": ["access"] },
+        { "id": "8", "title": "Users are identified and authenticated, with multi-factor", "by": ["mfa", "access"] },
+        { "id": "10", "title": "All access is logged and monitored", "by": ["audit", "monitoring"] },
+        { "id": "11.6.1", "title": "Unauthorized changes to payment pages are detected", "by": ["monitoring", "change"] },
+        { "id": "12", "title": "Information security policy and program", "by": ["organization"] }
+      ]
+    },
+    {
+      "id": "glba", "name": "GLBA Safeguards Rule", "version": "16 CFR Part 314", "authority": "Federal Trade Commission",
+      "suggest": { "words": "\\b(loans?|financial aid|bank|banking|credit|lending|tax returns?)\\b", "why": "It handles financial information (including financial aid at colleges)" },
+      "controls": [
+        { "id": "314.4(b)", "title": "A written risk assessment", "by": ["risk", "inventory", "organization"] },
+        { "id": "314.4(c)(1)", "title": "Access controls, least privilege", "by": ["access"] },
+        { "id": "314.4(c)(2)", "title": "Data and systems inventory", "by": ["inventory"] },
+        { "id": "314.4(c)(3)", "title": "Encryption in transit and at rest", "by": ["encryption"] },
+        { "id": "314.4(c)(4)", "title": "Secure development practices", "by": ["testing", "change", "supply-chain"] },
+        { "id": "314.4(c)(5)", "title": "Multi-factor authentication", "by": ["mfa"] },
+        { "id": "314.4(c)(6)", "title": "Secure disposal", "by": ["retention"] },
+        { "id": "314.4(c)(7)", "title": "Change management", "by": ["change", "data-pipeline"] },
+        { "id": "314.4(c)(8)", "title": "Monitoring and logging of authorized users", "by": ["audit", "monitoring"] },
+        { "id": "314.4(d)", "title": "Regular testing: continuous monitoring or annual penetration testing", "by": ["testing", "monitoring", "organization"] },
+        { "id": "314.4(h)", "title": "Written incident response plan", "by": ["incident"] },
+        { "id": "314.4(e)", "title": "Staff training; service provider oversight; reports to the board", "by": ["organization"] }
+      ]
+    },
+    {
+      "id": "nist-800-171", "name": "NIST SP 800-171 (CMMC Level 2)", "version": "Revision 2, as required by DFARS 252.204-7012 and CMMC Level 2", "authority": "NIST; Department of War",
+      "suggest": { "words": "\\b(cui|controlled unclassified|defen[cs]e|dod|military|dfars|cmmc|itar)\\b", "why": "It touches defense work or controlled unclassified information" },
+      "controls": [
+        { "id": "3.1.1", "title": "Limit system access to authorized users", "by": ["access"] },
+        { "id": "3.1.2", "title": "Limit access to permitted transactions and functions", "by": ["access"] },
+        { "id": "3.1.5", "title": "Least privilege", "by": ["access"] },
+        { "id": "3.3.1", "title": "Create and retain audit records", "by": ["audit", "retention"] },
+        { "id": "3.3.2", "title": "Trace actions to individual users", "by": ["audit"] },
+        { "id": "3.3.8", "title": "Protect audit information", "by": ["audit"] },
+        { "id": "3.4.1", "title": "Baseline configurations and inventories", "by": ["change", "supply-chain", "inventory"] },
+        { "id": "3.4.3", "title": "Track, review and approve changes", "by": ["change", "data-pipeline"] },
+        { "id": "3.5.3", "title": "Multi-factor authentication", "by": ["mfa"] },
+        { "id": "3.6.1", "title": "Incident handling capability", "by": ["incident"] },
+        { "id": "3.11.2", "title": "Scan for vulnerabilities", "by": ["vulnerability"] },
+        { "id": "3.12.4", "title": "A system security plan", "by": ["change", "inventory"] },
+        { "id": "3.13.8", "title": "Cryptography protects information in transmission", "by": ["encryption"] },
+        { "id": "3.13.11", "title": "FIPS-validated cryptography", "by": ["encryption", "platform"] },
+        { "id": "3.13.16", "title": "Protect information at rest", "by": ["encryption"] },
+        { "id": "3.14.1", "title": "Identify and correct flaws in a timely way", "by": ["vulnerability", "testing"] },
+        { "id": "3.14.6", "title": "Monitor for attacks", "by": ["monitoring"] },
+        { "id": "3.2.1", "title": "Security awareness for users and managers", "by": ["organization"] },
+        { "id": "3.10.1", "title": "Limit physical access", "by": ["platform"] }
+      ]
+    },
+    {
+      "id": "nist-800-53", "name": "NIST SP 800-53 (FedRAMP Moderate)", "version": "Revision 5", "authority": "NIST; FedRAMP",
+      "suggest": { "words": "\\b(federal agenc|fedramp|government agenc|ato\\b|authority to operate)", "why": "It is for a federal agency" },
+      "controls": [
+        { "id": "AC-2", "title": "Account management", "by": ["access", "audit"] },
+        { "id": "AC-3", "title": "Access enforcement", "by": ["access"] },
+        { "id": "AC-6", "title": "Least privilege", "by": ["access"] },
+        { "id": "AU-2", "title": "Event logging", "by": ["audit"] },
+        { "id": "AU-9", "title": "Protection of audit information", "by": ["audit"] },
+        { "id": "CA-7", "title": "Continuous monitoring", "by": ["monitoring", "testing"] },
+        { "id": "CM-2", "title": "Baseline configuration", "by": ["change", "supply-chain"] },
+        { "id": "CM-3", "title": "Configuration change control", "by": ["change", "data-pipeline"] },
+        { "id": "CM-8", "title": "System component inventory", "by": ["supply-chain", "inventory"] },
+        { "id": "CP-9", "title": "System backup", "by": ["backup"] },
+        { "id": "CP-10", "title": "System recovery and reconstitution", "by": ["backup", "data-pipeline"] },
+        { "id": "IA-2(1)", "title": "Multi-factor authentication to privileged accounts", "by": ["mfa"] },
+        { "id": "IR-4", "title": "Incident handling", "by": ["incident"] },
+        { "id": "RA-5", "title": "Vulnerability monitoring and scanning", "by": ["vulnerability"] },
+        { "id": "SA-11", "title": "Developer testing and evaluation", "by": ["testing"] },
+        { "id": "SC-8", "title": "Transmission confidentiality and integrity", "by": ["encryption"] },
+        { "id": "SC-13", "title": "Cryptographic protection", "by": ["encryption", "platform"] },
+        { "id": "SC-28", "title": "Protection of information at rest", "by": ["encryption"] },
+        { "id": "SI-2", "title": "Flaw remediation", "by": ["vulnerability", "testing"] },
+        { "id": "SI-4", "title": "System monitoring", "by": ["monitoring"] },
+        { "id": "SR-4", "title": "Provenance", "by": ["supply-chain"] },
+        { "id": "PE-3", "title": "Physical access control", "by": ["platform"] },
+        { "id": "PL-2", "title": "System security and privacy plans", "by": ["change", "inventory", "organization"] }
+      ]
+    },
+    {
+      "id": "section-508", "name": "Section 508 (WCAG 2.2 AA)", "version": "Section 508 refers to WCAG 2.0 AA; the factory checks the stricter WCAG 2.2 AA", "authority": "U.S. Access Board; W3C",
+      "suggest": { "words": "\\b(college|university|school|public|government|agency|state|county|city)\\b", "why": "Public institutions must buy accessible software, and ask for an accessibility conformance report" },
+      "controls": [
+        { "id": "WCAG 1 Perceivable", "title": "Text alternatives, adaptable content, distinguishable (contrast, resize)", "by": ["accessibility"] },
+        { "id": "WCAG 2 Operable", "title": "Keyboard access, enough time, navigable, input modalities", "by": ["accessibility", "testing"] },
+        { "id": "WCAG 3 Understandable", "title": "Readable, predictable, input assistance", "by": ["accessibility"] },
+        { "id": "WCAG 4 Robust", "title": "Compatible with assistive technologies", "by": ["accessibility"] },
+        { "id": "ACR", "title": "Accessibility conformance report for buyers, including manual testing", "by": ["accessibility", "organization"] }
+      ]
+    }
+  ]
+}

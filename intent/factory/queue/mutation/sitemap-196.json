@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "sitemap",
+  "mutant": {
+    "id": "196",
+    "line": 96,
+    "column": 64,
+    "endLine": 96,
+    "endColumn": 68,
+    "mutator": "StringLiteral",
+    "original": "'\\n'",
+    "replacement": "\"\"",
+    "lineText": "const body = (list: readonly string[]) => `${top}${list.join('\\n')}${tail}`;",
+    "prevText": "}",
+    "nextText": "if (groups.length === 1) return [{ path: '/sitemap.xml', xml: body(groups[0]!) }];"
+  },
+  "mayEdit": [
+    "intent/blocks/sitemap/sitemap.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sitemap-196.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sitemap\". Mutant: line 96:64-96:68, mutator StringLiteral: \"'\\\\n'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sitemap/index.ts (> marks the mutated line):\n    90        bytes = Buffer.byteLength(top + tail) + n;\n    91      } else {\n    92        g.push(e);\n    93        bytes += n;\n    94      }\n    95    }\n>   96    const body = (list: readonly string[]) => `${top}${list.join('\\n')}${tail}`;\n    97    if (groups.length === 1) return [{ path: '/sitemap.xml', xml: body(groups[0]!) }];\n    98    const parts = groups.map((g, i) => ({ path: `/sitemap-${i + 1}.xml`, xml: body(g) }));\n    99    const index = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\\n<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\\n${parts.map((p) => `<sitemap><loc>${xesc(new URL(p.path, origin).href)}</loc></sitemap>`).join('\\n')}\\n</sitemapindex>\\n`;\n   100    return [{ path: '/sitemap.xml', xml: index }, ...parts];\n   101  }\n   102  \n\nTest file style (intent/blocks/sitemap/sitemap.test.ts):\n5 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { check, head, robots, sitemaps, type Page } from './index.ts';\n\nconst pages: Page[] = [\n  { path: '/', title: 'Files you own', description: 'Store and share files on your own cloud.', public: true, image: '/og.png', jsonLd: { '@type': 'WebSite', name: 'Files </script>' } },\n  { path: '/pricing', title: 'Pricing & plans', description: 'What it costs.', public: true, updated: '2026-11-20' },\n  { path: '/admin', title: 'Admin', description: 'x', public: false },\n  { path: '/draft', title: 'Files you own', description: '', public: true },\n  { path: '/old', title: 'Old', description: 'x', public: true, noindex: true },\n];\n\ntest('head tags are complete, absolute and escaped, and JSON-LD cannot close its script', () => {\n  const h = head(pages[1]!, 'https://files.example.org', 'Files');\n  assert.match(h, /<title>Pricing &#38; plans<\\/title>/);\n  assert.match(h, /<link rel=\"canonical\" href=\"https:\\/\\/files\\.example\\.org\\/pricing\">/);\n  assert.match(h, /twitter:card\" content=\"summary\"/);\n  const home = head(pages[0]!, 'https://files.example.org', 'Files');\n  assert.match(home, /og:image\" content=\"https:\\/\\/files\\.example\\.org\\/og\\.png\"/);\n  assert.equal(home.includes('</script>\"'), false);\n  assert.match(home, /\\\\u003c\\/script>/);\n  assert.match(head(pages[2]!, 'https://x.org', 'F'), /noindex/);\n});\n\ntest('the check finds what search engines would penalise; the sitemap lists only indexable public pages', () => {\n  assert.deepEqual(check(pages), ['/draft: no description', '/draft: same title as /']);\n  const [one] = sitemaps(pages, 'https://files.example.org');\n  assert.equal((one!.xml.match(/<url>/g) ?? []).length, 3);\n  assert.match(one!.xml, /<loc>https:\\/\\/files\\.example\\.org\\/pricing<\\/loc><lastmod>2026-11-20<\\/lastmod>/);\n  assert.equal(one!.xml.includes('/admin'), false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sitemap-196.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:21:22.311Z"
+}

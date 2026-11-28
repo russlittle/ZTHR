@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "apikeys",
+  "mutant": {
+    "id": "109",
+    "line": 97,
+    "column": 9,
+    "endLine": 97,
+    "endColumn": 51,
+    "mutator": "ConditionalExpression",
+    "original": "!old || old.owner !== owner || old.revoked",
+    "replacement": "false",
+    "lineText": "if (!old || old.owner !== owner || old.revoked) throw new Rejected('no such key of yours');",
+    "prevText": "const old = await this.store.byId(id);",
+    "nextText": "const t = this.now();"
+  },
+  "mayEdit": [
+    "intent/blocks/apikeys/apikeys.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/apikeys-109.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"apikeys\". Mutant: line 97:9-97:51, mutator ConditionalExpression: \"!old || old.owner !== owner || old.revoked\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/apikeys/index.ts (> marks the mutated line):\n    91    /**\n    92     * A replacement with the same scopes and expiry; the old key keeps working for `overlapMs`, then stops. A key is\n    93     * replaced once: an expired or already replaced key is refused.\n    94     */\n    95    async rotate(owner: string, id: string, overlapMs: number): Promise<{ key: Key; secret: string }> {\n    96      const old = await this.store.byId(id);\n>   97      if (!old || old.owner !== owner || old.revoked) throw new Rejected('no such key of yours');\n    98      const t = this.now();\n    99      if (old.expires && old.expires <= t) throw new Rejected('that key has expired; issue a new one');\n   100      if (old.replacedBy) throw new Rejected('that key was already replaced; rotate the new one');\n   101      // The replacement lives no longer than the key it replaces, so rotating never lifts an expiry.\n   102      const next = await this.issue(owner, old.name, old.scopes, old.expires ? { ttlMs: old.expires - t } : {});\n   103      old.replacedBy = next.key.id;\n\nTest file style (intent/blocks/apikeys/apikeys.test.ts):\n12 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { test } from 'node:test';\nimport { ApiKeys, Rejected, allows, memoryKeys } from './index.ts';\n\nconst setup = () => {\n  let t = 1000;\n  const store = memoryKeys();\n  return { k: new ApiKeys(store, { now: () => t }), store, tick: (ms: number) => (t += ms) };\n};\n\ntest('a key is shown once, kept as a hash, and allows only its scopes', async () => {\n  const { k, store } = setup();\n  const { key, secret } = await k.issue('ana', 'reporting', ['reports:read']);\n  assert.match(secret, /^zk_live_[0-9a-f]{12}_[A-Za-z0-9_-]{32}$/);\n  assert.ok(!JSON.stringify(await store.list('ana')).includes(secret.slice(`zk_live_${key.id}_`.length)));\n  assert.equal((await k.check(secret, 'reports:read')).id, key.id);\n  await assert.rejects(k.check(secret, 'reports:write'), /does not allow reports:write/);\n  await assert.rejects(k.check(`${secret}x`, 'reports:read'), Rejected);\n  await assert.rejects(k.check('zk_test_000000000000_abc', 'reports:read'), /not an API key/);\n  await assert.rejects(k.issue('ana', 'none', []), /at least one scope/);\n});\n\ntest('rotation overlaps, then the old key stops; revoked and expired keys stop at once', async () => {\n  const { k, tick } = setup();\n  const a = await k.issue('ana', 'sync', ['files:*', '*']);\n  const b = await k.rotate('ana', a.key.id, 5000);\n  assert.ok(await k.check(a.secret, 'x'), 'the old key works during the overlap');\n  assert.ok(await k.check(b.secret, 'x'));\n  tick(5001);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/apikeys-109.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:17:54.311Z"
+}

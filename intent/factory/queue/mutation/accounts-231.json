@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "accounts",
+  "mutant": {
+    "id": "231",
+    "line": 258,
+    "column": 124,
+    "endLine": 258,
+    "endColumn": 150,
+    "mutator": "OptionalChaining",
+    "original": "this.orgs.get(m.org)?.name",
+    "replacement": "this.orgs.get(m.org).name",
+    "lineText": "return this.memberships.filter((m) => m.account === account).flatMap((m) => m.roles.map((role) => ({ org: m.org, name: this.orgs.get(m.org)?.name ?? m.org, role })));",
+    "prevText": "choices(account: string): { org: string; name: string; role: string }[] {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/accounts/accounts.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/accounts-231.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"accounts\". Mutant: line 258:124-258:150, mutator OptionalChaining: \"this.orgs.get(m.org)?.name\" becomes \"this.orgs.get(m.org).name\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/accounts/index.ts (> marks the mutated line):\n   252    rolesIn(account: string, org: string): string[] {\n   253      return this.memberships.find((m) => m.org === org && m.account === account)?.roles ?? [];\n   254    }\n   255  \n   256    /** The organisations and roles a person can switch between, for the top bar. */\n   257    choices(account: string): { org: string; name: string; role: string }[] {\n>  258      return this.memberships.filter((m) => m.account === account).flatMap((m) => m.roles.map((role) => ({ org: m.org, name: this.orgs.get(m.org)?.name ?? m.org, role })));\n   259    }\n   260  \n   261    switchTo(account: string, org: string, role: string): void {\n   262      if (!this.rolesIn(account, org).includes(role)) throw new Refused('you do not hold that role there');\n   263      this.accounts.get(account)!.current = { org, role };\n   264    }\n\nTest file style (intent/blocks/accounts/accounts.test.ts):\n11 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Accounts, Refused } from './index.ts';\n\nconst setup = () => {\n  let t = 0;\n  const sent: { to: string; purpose: string; link: string }[] = [];\n  const log: string[] = [];\n  const announced: string[] = [];\n  const revoked: string[] = [];\n  const a = new Accounts(\n    {\n      send: async (to, purpose, link) => void sent.push({ to, purpose, link }),\n      hash: async (pw) => `h:${pw}`,\n      check: async (pw, h) => h === `h:${pw}`,\n      record: async (actor, action, target) => void log.push(`${actor} ${action} ${target}`),\n      announce: async (e) => void announced.push(e.kind),\n      revokeAll: async (id) => void revoked.push(id),\n    },\n    { now: () => t, baseUrl: 'https://app.example.org/' },\n  );\n  const tokenOf = (i: number) => sent[i]!.link.split('/').pop()!;\n  return { a, sent, log, announced, revoked, tokenOf, tick: (ms: number) => (t += ms) };\n};\n\ntest('sign-up sends a confirmation; a second sign-up with the same email reveals nothing', async () => {\n  const { a, sent, tokenOf } = setup();\n  const ana = await a.signUp(' Ana@Example.org ', 'Ana', 'pw-ana-12345');\n  assert.equal(ana.email, 'ana@example.org');\n  assert.equal(sent[0]!.purpose, 'confirm');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/accounts-231.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:17:52.200Z"
+}

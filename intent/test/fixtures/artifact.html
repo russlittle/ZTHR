@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Bill help</title><style>body{font-family:serif}</style></head>
+<body>
+<nav><a href="/">Home</a></nav>
+<script>window.x = "<li>not a requirement</li>";</script>
+<main>
+<h1>Feature Specification: Bill help</h1>
+<h2>The end in mind</h2>
+<p>Students stay housed &amp; in school, because a missed bill never becomes a shut&#8209;off.</p>
+<h2>User Scenarios &amp; Testing</h2>
+<h3>User Story 1 - See a short month coming (Priority: P1)</h3>
+<p><strong>Acceptance Scenarios</strong>:</p>
+<ol>
+  <li><strong>Given</strong> rent of $900 and $700 expected, <strong>When</strong> the student opens Today, <strong>Then</strong> a warning shows the $200 gap.</li>
+  <li><strong>Given</strong> nothing due, <strong>When</strong> the student opens Today, <strong>Then</strong> no warning shows.</li>
+</ol>
+<h2>Requirements</h2>
+<ul>
+  <li><strong>FR-001</strong>: The system MUST warn before the first of the month.</li>
+  <li><strong>FR-002</strong>: Reminders MUST stop once a bill is paid. [NEEDS CLARIFICATION: is a receipt needed?]</li>
+</ul>
+<table><tr><th>Setting</th><th>Default</th></tr><tr><td>Language</td><td>English | Spanish</td></tr></table>
+<pre><code class="language-gherkin">Scenario: Quiet hours
+  Given quiet hours from 9pm to 8am
+  When a reminder falls at 10pm
+  Then it is sent at 8am</code></pre>
+<h2>Engineering notes</h2>
+<ul><li>Use the student database already in place, until the new records system is live</li></ul>
+</main>
+<footer>© 2026</footer>
+</body></html>

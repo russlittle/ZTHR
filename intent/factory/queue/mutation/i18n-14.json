@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "i18n",
+  "mutant": {
+    "id": "14",
+    "line": 15,
+    "column": 54,
+    "endLine": 15,
+    "endColumn": 60,
+    "mutator": "StringLiteral",
+    "original": "'Thaa'",
+    "replacement": "\"\"",
+    "lineText": "const RTL_SCRIPTS = new Set(['Arab', 'Hebr', 'Syrc', 'Thaa', 'Nkoo', 'Adlm', 'Rohg', 'Mand', 'Samr', 'Armi', 'Mend']);",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/i18n/i18n.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/i18n-14.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"i18n\". Mutant: line 15:54-15:60, mutator StringLiteral: \"'Thaa'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/i18n/index.ts (> marks the mutated line):\n     9  /** A plain string, or plural forms by category, with optional exact matches such as \"=0\". */\n    10  export type Message = string | Readonly<Partial<Record<Intl.LDMLPluralRule | `=${number}`, string>>>;\n    11  export type Catalogue = Readonly<Record<string, Message>>;\n    12  \n    13  const RTL = new Set(['ar', 'he', 'fa', 'ur', 'ps', 'sd', 'yi', 'dv', 'ug']);\n    14  \n>   15  const RTL_SCRIPTS = new Set(['Arab', 'Hebr', 'Syrc', 'Thaa', 'Nkoo', 'Adlm', 'Rohg', 'Mand', 'Samr', 'Armi', 'Mend']);\n    16  \n    17  /** Right-to-left for right-to-left scripts, whether named in the tag (az-Arab) or implied by the language (ckb). */\n    18  export function direction(locale: string): 'rtl' | 'ltr' {\n    19    try {\n    20      const l = new Intl.Locale(locale) as Intl.Locale & { textInfo?: { direction?: string } };\n    21      const d = l.textInfo?.direction;\n\nTest file style (intent/blocks/i18n/i18n.test.ts):\n6 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { I18n, chain, direction, fmt, negotiate } from './index.ts';\n\nconst i = new I18n(\n  {\n    en: { files: { '=0': 'No files', one: '{count} file', other: '{count} files' }, hello: 'Hello, {name}', bye: 'Bye' },\n    fr: { files: { one: '{count} fichier', other: '{count} fichiers' }, hello: 'Bonjour, {name}' },\n    ar: { files: { one: 'ملف واحد', other: '{count} ملفات' }, hello: 'مرحبا {name}', bye: 'وداعا', extra: 'x' },\n  },\n  'en',\n);\n\ntest('plurals follow each language, values are formatted for it, and fallbacks are reported', () => {\n  assert.equal(i.t('en', 'files', { count: 0 }), 'No files');\n  assert.equal(i.t('en', 'files', { count: 1 }), '1 file');\n  assert.equal(i.t('en', 'files', { count: 1200 }), '1,200 files');\n  assert.equal(i.t('fr', 'files', { count: 0 }), '0 fichier', 'French treats 0 as singular');\n  assert.equal(i.t('fr', 'files', { count: 1200 }), '1 200 fichiers');\n  assert.equal(i.t('fr-CA', 'hello', { name: 'Ana' }), 'Bonjour, Ana');\n  assert.equal(i.t('fr', 'bye'), 'Bye');\n  assert.ok(i.missing.has('fr:bye') && i.missing.has('fr-CA:hello'));\n  assert.throws(() => i.t('en', 'hello'), /needs \\{name\\}/);\n  assert.throws(() => i.t('en', 'files'), /needs a count/);\n  assert.throws(() => i.t('en', 'nope'), /no message/);\n});\n\ntest('the check lists missing keys, extras and the plural forms a language needs', () => {\n  const c = i.check();\n  assert.deepEqual(c.fr, { missing: ['bye'], extra: [], plurals: ['files.many'] });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/i18n-14.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:18:58.937Z"
+}

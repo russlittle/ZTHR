@@ -1,0 +1,38 @@
+{
+  "name": "evidence",
+  "purpose": "Append-only, pseudonymous record of what the factory and the product did",
+  "provides": [
+    "CostSummary",
+    "EvidenceEvent",
+    "EvidenceStore",
+    "JourneyRunData",
+    "ModelCall",
+    "Price",
+    "Ratio",
+    "costSummary",
+    "distribution",
+    "intentCompletion",
+    "priceOn",
+    "revisionRate"
+  ],
+  "requires": [],
+  "externalRequires": [],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "An append-only, pseudonymous record of what the factory and the product did, for the console, the app admin and outcome measures.",
+  "notFor": "Message content, anything that identifies a student, or application state (that belongs in the store).",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/evidence/test/evidence.test.ts`](../../packages/evidence/test/evidence.test.ts) (6 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 61,
+  "tests": 6,
+  "source": {
+    "path": "packages/evidence",
+    "sha256": "b2023b2e9525632f1f428c46277985fb629e3304e4ebd65613026b8cecccfdbf"
+  }
+}

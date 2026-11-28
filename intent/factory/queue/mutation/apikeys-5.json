@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "apikeys",
+  "mutant": {
+    "id": "5",
+    "line": 31,
+    "column": 101,
+    "endLine": 31,
+    "endColumn": 145,
+    "mutator": "MethodExpression",
+    "original": "[...m.values()].filter((k) => k.owner === o)",
+    "replacement": "[...m.values()]",
+    "lineText": "return { byId: async (id) => m.get(id), set: async (k) => void m.set(k.id, k), list: async (o) => [...m.values()].filter((k) => k.owner === o) };",
+    "prevText": "const m = new Map<string, Key>();",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/apikeys/apikeys.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/apikeys-5.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"apikeys\". Mutant: line 31:101-31:145, mutator MethodExpression: \"[...m.values()].filter((k) => k.owner === o)\" becomes \"[...m.values()]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/apikeys/index.ts (> marks the mutated line):\n    25    set(k: Key): Promise<void>;\n    26    list(owner: string): Promise<Key[]>;\n    27  }\n    28  \n    29  export function memoryKeys(): KeyStore {\n    30    const m = new Map<string, Key>();\n>   31    return { byId: async (id) => m.get(id), set: async (k) => void m.set(k.id, k), list: async (o) => [...m.values()].filter((k) => k.owner === o) };\n    32  }\n    33  \n    34  export class Rejected extends Error {\n    35    constructor(why: string) {\n    36      super(why);\n    37    }\n\nTest file style (intent/blocks/apikeys/apikeys.test.ts):\n12 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { test } from 'node:test';\nimport { ApiKeys, Rejected, allows, memoryKeys } from './index.ts';\n\nconst setup = () => {\n  let t = 1000;\n  const store = memoryKeys();\n  return { k: new ApiKeys(store, { now: () => t }), store, tick: (ms: number) => (t += ms) };\n};\n\ntest('a key is shown once, kept as a hash, and allows only its scopes', async () => {\n  const { k, store } = setup();\n  const { key, secret } = await k.issue('ana', 'reporting', ['reports:read']);\n  assert.match(secret, /^zk_live_[0-9a-f]{12}_[A-Za-z0-9_-]{32}$/);\n  assert.ok(!JSON.stringify(await store.list('ana')).includes(secret.slice(`zk_live_${key.id}_`.length)));\n  assert.equal((await k.check(secret, 'reports:read')).id, key.id);\n  await assert.rejects(k.check(secret, 'reports:write'), /does not allow reports:write/);\n  await assert.rejects(k.check(`${secret}x`, 'reports:read'), Rejected);\n  await assert.rejects(k.check('zk_test_000000000000_abc', 'reports:read'), /not an API key/);\n  await assert.rejects(k.issue('ana', 'none', []), /at least one scope/);\n});\n\ntest('rotation overlaps, then the old key stops; revoked and expired keys stop at once', async () => {\n  const { k, tick } = setup();\n  const a = await k.issue('ana', 'sync', ['files:*', '*']);\n  const b = await k.rotate('ana', a.key.id, 5000);\n  assert.ok(await k.check(a.secret, 'x'), 'the old key works during the overlap');\n  assert.ok(await k.check(b.secret, 'x'));\n  tick(5001);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/apikeys-5.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:17:54.036Z"
+}

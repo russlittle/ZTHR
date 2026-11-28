@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "watchdog",
+  "mutant": {
+    "id": "39",
+    "line": 38,
+    "column": 39,
+    "endLine": 38,
+    "endColumn": 55,
+    "mutator": "ConditionalExpression",
+    "original": "r.start !== null",
+    "replacement": "true",
+    "lineText": "const starts = runs.filter((r) => r.start !== null).sort((a, b) => a.start! - b.start!);",
+    "prevText": "const runs = [...new Set(mine.map((x) => x.run))].map((run) => ({ run, start: mine.find((x) => x.run === run && x.kind === 'start')?.at ?? null, end: mine.find((x) => x.run === run && x.kind === 'end') ?? null }));",
+    "nextText": "const last = starts.at(-1);"
+  },
+  "mayEdit": [
+    "intent/blocks/watchdog/watchdog.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/watchdog-39.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"watchdog\". Mutant: line 38:39-38:55, mutator ConditionalExpression: \"r.start !== null\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/watchdog/index.ts (> marks the mutated line):\n    32  \n    33  export function check(jobs: readonly Job[], ins: readonly CheckIn[], now: number): Finding[] {\n    34    const out: Finding[] = [];\n    35    for (const j of jobs) {\n    36      const mine = ins.filter((x) => x.job === j.name).sort((a, b) => a.at - b.at);\n    37      const runs = [...new Set(mine.map((x) => x.run))].map((run) => ({ run, start: mine.find((x) => x.run === run && x.kind === 'start')?.at ?? null, end: mine.find((x) => x.run === run && x.kind === 'end') ?? null }));\n>   38      const starts = runs.filter((r) => r.start !== null).sort((a, b) => a.start! - b.start!);\n    39      const last = starts.at(-1);\n    40      if (!last) out.push({ job: j.name, problem: 'never ran', detail: 'no run has checked in' });\n    41      else if (now - last.start! > (j.everyMin + j.graceMin) * MIN) out.push({ job: j.name, problem: 'missed', detail: `last started ${Math.round((now - last.start!) / MIN)} minutes ago; due every ${j.everyMin}` });\n    42      for (const r of starts) {\n    43        const end = r.end?.at ?? now;\n    44        if (end - r.start! > j.maxMin * MIN) out.push({ job: j.name, problem: 'overlong', detail: `run ${r.run} ${r.end ? 'took' : 'has run'} ${Math.round((end - r.start!) / MIN)} minutes; allowed ${j.maxMin}` });\n\nTest file style (intent/blocks/watchdog/watchdog.test.ts):\n3 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { acquire, check, type CheckIn } from './index.ts';\n\nconst MIN = 60_000;\nconst job = { name: 'nightly', everyMin: 1440, graceMin: 30, maxMin: 60 };\nconst run = (id: string, start: number, end: number | null, ok = true): CheckIn[] => [{ job: 'nightly', run: id, at: start * MIN, kind: 'start' }, ...(end === null ? [] : [{ job: 'nightly', run: id, at: end * MIN, kind: 'end' as const, ok }])];\n\ntest('a healthy schedule raises nothing', () => {\n  assert.deepEqual(check([job], [...run('a', 0, 20), ...run('b', 1440, 1470)], 1500 * MIN), []);\n});\n\ntest('missed, overlong, failed, overlapping and never-run are each named', () => {\n  assert.deepEqual(check([job], [], 0).map((f) => f.problem), ['never ran']);\n  assert.deepEqual(check([job], run('a', 0, 20), 3000 * MIN).map((f) => f.problem), ['missed']);\n  assert.deepEqual(check([job], run('a', 0, 90), 100 * MIN).map((f) => f.problem), ['overlong']);\n  assert.deepEqual(check([job], run('a', 0, null), 70 * MIN).map((f) => f.problem), ['overlong'], 'a run that never ended is overlong once past its limit');\n  assert.deepEqual(check([job], run('a', 0, 10, false), 20 * MIN).map((f) => f.problem), ['failed']);\n  assert.deepEqual(check([{ ...job, maxMin: 999 }], [...run('a', 0, 50), ...run('b', 30, 60)], 70 * MIN).map((f) => f.problem), ['overlap']);\n});\n\ntest('only one holder at a time, and a dead holder’s lease expires', () => {\n  const a = acquire(null, 'pod-a', 0, 1000)!;\n  assert.equal(acquire(a, 'pod-b', 500, 1000), null);\n  assert.deepEqual(acquire(a, 'pod-a', 500, 1000), { holder: 'pod-a', until: 1500 }, 'the holder renews');\n  assert.deepEqual(acquire(a, 'pod-b', 1000, 1000), { holder: 'pod-b', until: 2000 });\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/watchdog-39.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:23:39.117Z"
+}

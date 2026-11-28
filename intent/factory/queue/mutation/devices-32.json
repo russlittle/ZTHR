@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "devices",
+  "mutant": {
+    "id": "32",
+    "line": 81,
+    "column": 40,
+    "endLine": 81,
+    "endColumn": 61,
+    "mutator": "ConditionalExpression",
+    "original": "a.length === b.length",
+    "replacement": "true",
+    "lineText": "const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));",
+    "prevText": "const hash = (s: string) => createHash('sha256').update(s).digest('hex');",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/devices/devices.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/devices-32.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"devices\". Mutant: line 81:40-81:61, mutator ConditionalExpression: \"a.length === b.length\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/devices/index.ts (> marks the mutated line):\n    75      super('that sign-in is finished, expired, or never started');\n    76    }\n    77  }\n    78  \n    79  const token = (bytes: number) => randomBytes(bytes).toString('base64url');\n    80  const hash = (s: string) => createHash('sha256').update(s).digest('hex');\n>   81  const same = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));\n    82  \n    83  export interface DevicesOptions {\n    84    readonly now?: () => number;\n    85    readonly flowMs?: number;\n    86    /** Only write \"last used\" this often, so every request is not a write. */\n    87    readonly touchMs?: number;\n\nTest file style (intent/blocks/devices/devices.test.ts):\n6 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Devices, FlowGone, NotSignedIn, memoryDevices } from './index.ts';\n\nconst setup = () => {\n  let t = 0;\n  const store = memoryDevices();\n  return { d: new Devices(store, { now: () => t, flowMs: 1000, touchMs: 100 }), store, tick: (ms: number) => (t += ms) };\n};\n\ntest('an app password signs in only its own user, and is kept only as a hash', async () => {\n  const { d, store } = setup();\n  const { password } = await d.issue('ana', 'Ana laptop');\n  assert.ok(password.length >= 64);\n  assert.equal((await d.verify('ana', password)).name, 'Ana laptop');\n  await assert.rejects(d.verify('ben', password), NotSignedIn);\n  await assert.rejects(d.verify('ana', `${password}x`), NotSignedIn);\n  assert.ok(!JSON.stringify(await store.all()).includes(password));\n});\n\ntest('revoking one device leaves the others signed in', async () => {\n  const { d } = setup();\n  const a = await d.issue('ana', 'laptop');\n  const b = await d.issue('ana', 'phone');\n  await d.revoke('ana', a.device.id);\n  await assert.rejects(d.verify('ana', a.password), NotSignedIn);\n  assert.ok(await d.verify('ana', b.password));\n  await d.revoke('ben', b.device.id);\n  assert.ok(await d.verify('ana', b.password), 'nobody revokes another person’s device');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/devices-32.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:18:21.312Z"
+}

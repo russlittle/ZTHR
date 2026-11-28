@@ -1,0 +1,3 @@
+# Control plan: every critical or significant characteristic and the controls it needs before it ships.
+# The factory traces each one; a characteristic with no control fails the build.
+characteristics: []

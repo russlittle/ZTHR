@@ -1,0 +1,172 @@
+name: Crew
+
+# The maintenance crew. Takes the night shift's work orders (intent/factory/queue/mutation) in order, fix-bug, then
+# kill-mutant, then simplify; routes each to the cheapest model proven good enough on the owner's Vertex project
+# (tools/crew/dispatch.ts, intent/blocks/router); keeps a change only when the gate passes; stops at the daily budget.
+# Accepted changes, the results log and the morning report are committed to intent-surface as zthr-crew, and the
+# push is then reviewed by three model families (review.yml).
+#
+# Scheduled and workflow_run triggers fire only from the copy of this file on the default branch (main); both check
+# out intent-surface. Authentication is Workload Identity Federation: no keys are stored anywhere.
+on:
+  workflow_run:
+    workflows: [Night shift]
+    types: [completed]
+  schedule:
+    - cron: '23 10 * * *' # 10:23 UTC backstop, clear of the 06:30-08:30 no-push window
+  workflow_dispatch:
+    inputs:
+      budget_usd:
+        description: 'Budget for this run in USD (empty: the CREW_DAILY_BUDGET_USD variable)'
+        required: false
+        default: ''
+      max_tasks:
+        description: 'Most work orders to hand out (empty: no limit)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'List what would be handed out, to which model, at what cost; run nothing'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: crew
+  cancel-in-progress: false
+
+jobs:
+  work:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: write # to commit accepted changes, results and the report
+      id-token: write # to exchange GitHub's OIDC token for short-lived Google credentials
+    outputs:
+      pushed: ${{ steps.commit.outputs.pushed }}
+      before: ${{ steps.commit.outputs.before }}
+      after: ${{ steps.commit.outputs.after }}
+    env:
+      GCP_PROJECT: ${{ vars.GCP_PROJECT }}
+      CREW_DAILY_BUDGET_USD: ${{ github.event.inputs.budget_usd || vars.CREW_DAILY_BUDGET_USD }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: intent-surface
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: 'Pre-flight: router, harness and dispatch tests, and a price table no more than 30 days old'
+        run: node --test intent/blocks/router/router.test.ts tools/crew/crew.test.ts
+      - name: Check the repository variables are set
+        shell: bash
+        env:
+          WIF: ${{ vars.GCP_WIF_PROVIDER }}
+          SA: ${{ vars.GCP_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "${GCP_PROJECT:-}" ] || missing+=(GCP_PROJECT)
+          [ -n "${WIF:-}" ] || missing+=(GCP_WIF_PROVIDER)
+          [ -n "${SA:-}" ] || missing+=(GCP_SERVICE_ACCOUNT)
+          [ -n "${CREW_DAILY_BUDGET_USD:-}" ] || missing+=(CREW_DAILY_BUDGET_USD)
+          if [ ${#missing[@]} -gt 0 ]; then echo "::error::Set these repository variables (tools/crew/setup-cloudshell.sh prints them): ${missing[*]}"; exit 1; fi
+      - name: Dry run
+        if: github.event.inputs.dry_run == 'true'
+        run: node tools/crew/dispatch.ts --dry-run --budget-usd "$CREW_DAILY_BUDGET_USD" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Install the mutation tester (pinned)
+        if: github.event.inputs.dry_run != 'true'
+        run: npm install --no-save --no-package-lock --prefix . @stryker-mutator/core@9.6.1 typescript@5.9.3
+      - name: Install Claude Code (pinned), for Claude-tier work orders
+        if: github.event.inputs.dry_run != 'true'
+        run: npm install -g @anthropic-ai/claude-code@2.1.332
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        if: github.event.inputs.dry_run != 'true'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          project_id: ${{ vars.GCP_PROJECT }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          export_environment_variables: true
+      - name: Move the credentials file out of the working tree
+        if: github.event.inputs.dry_run != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest="$RUNNER_TEMP/$(basename "$GOOGLE_APPLICATION_CREDENTIALS")"
+          mv "$GOOGLE_APPLICATION_CREDENTIALS" "$dest"
+          chmod 600 "$dest"
+          { echo "GOOGLE_APPLICATION_CREDENTIALS=$dest"; echo "CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE=$dest"; echo "GOOGLE_GHA_CREDS_PATH=$dest"; } >> "$GITHUB_ENV"
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+        if: github.event.inputs.dry_run != 'true'
+      - name: Dispatch work orders
+        if: github.event.inputs.dry_run != 'true'
+        shell: bash
+        env:
+          MAX_TASKS: ${{ github.event.inputs.max_tasks }}
+          # The gate runs model-written tests: with credentials scrubbed and inside a namespace with no network.
+          CREW_ACCEPT_PREFIX: bash tools/crew/no-network.sh
+        run: |
+          set -euo pipefail
+          # Hand out no work order after 06:15 UTC when the run starts before the window, so the commit lands first;
+          # otherwise stop 150 minutes in, inside the job's limit.
+          if [ "$(date -u +%H%M)" -lt 0615 ]; then deadline="$(date -u +%Y-%m-%dT06:15:00Z)"; else deadline="$(date -u -d '+150 minutes' +%Y-%m-%dT%H:%M:%SZ)"; fi
+          args=(--report --deadline "$deadline" --budget-usd "$CREW_DAILY_BUDGET_USD" --project "$GCP_PROJECT")
+          [ -n "${MAX_TASKS:-}" ] && args+=(--max-tasks "$MAX_TASKS")
+          node tools/crew/dispatch.ts "${args[@]}"
+      - name: Commit accepted changes, results and the report as zthr-crew
+        id: commit
+        if: github.event.inputs.dry_run != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "pushed=false" >> "$GITHUB_OUTPUT"
+          git config user.name 'zthr-crew'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # Only what the crew may change: blocks (each change passed the gate), its records, the queue, rulings.
+          for p in intent/blocks intent/factory/results.jsonl intent/factory/reports intent/factory/queue/mutation intent/eval/mutation/equivalent; do
+            if [ -e "$p" ] || git ls-files --error-unmatch "$p" >/dev/null 2>&1; then git add -A -- "$p"; fi
+          done
+          git diff --cached --quiet && { echo 'Nothing to commit.'; exit 0; }
+          fixed=$(git diff --cached --name-only -- intent/factory/queue/mutation/done | wc -l | tr -d ' ')
+          git commit -q -m "Crew: ${fixed} work orders closed, results and morning report ($(date -u +%F))"
+          git format-patch -1 --stdout > "$RUNNER_TEMP/crew.patch"
+          h=$(date -u +%H%M)
+          if [ "$h" -ge 0630 ] && [ "$h" -lt 0830 ]; then
+            echo "::warning::Inside the 06:30-08:30 UTC no-push window; the commit is in the crew-patch artefact."
+            exit 0
+          fi
+          before=$(git rev-parse origin/intent-surface)
+          for _ in 1 2 3; do
+            if git pull --rebase -q origin intent-surface && git push -q origin HEAD:intent-surface; then
+              { echo "pushed=true"; echo "before=$(git rev-parse HEAD~1)"; echo "after=$(git rev-parse HEAD)"; } >> "$GITHUB_OUTPUT"
+              echo "Pushed $(git rev-parse --short HEAD) onto $(git rev-parse --short "$before")."
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && github.event.inputs.dry_run != 'true'
+        with:
+          name: crew-${{ github.run_id }}
+          path: |
+            intent/factory/results.jsonl
+            intent/factory/reports/
+            ${{ runner.temp }}/crew.patch
+          if-no-files-found: ignore
+
+  review:
+    needs: work
+    if: needs.work.outputs.pushed == 'true'
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/review.yml
+    with:
+      base: ${{ needs.work.outputs.before }}
+      head: ${{ needs.work.outputs.after }}

@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/russlittle/zthr",
+  "branch": "reference-implementation",
+  "commit": "362d54f9af4b484a6698ab724c1a0b9691b1ab0d",
+  "copied": [
+    "packages",
+    "docs",
+    "control/journeys",
+    "LICENSE"
+  ],
+  "license": "Apache-2.0, kept with the copied files",
+  "purpose": "The starting block library: the 15 blocks from the Student Advocate reference implementation, with their design docs and journey cards."
+}

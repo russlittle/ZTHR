@@ -1,0 +1,539 @@
+{
+ "round": 0,
+ "build": "intent-surface after the build manifest (studio as published 2026-11-26)",
+ "walk": "Chrome, cold, localStorage cleared; 1440x900 and 390x844; open /intent, Try an example, scroll to the drawing, open mission control",
+ "findings": {
+  "F1": {
+   "what": "After Try an example, the drawing starts 2,248 px down on desktop and the intent map 3,130 px; on a phone the map is 5,209 px down (six screens)",
+   "axes": [
+    "value",
+    "craft"
+   ]
+  },
+  "F2": {
+   "what": "The example lands on a quiz: redline 1 asks what you are ultimately trying to achieve, although the example states its end in mind; the payoff is out of sight",
+   "axes": [
+    "value",
+    "clarity"
+   ]
+  },
+  "F3": {
+   "what": "A stray progress-track line is drawn across the top bar, through the ZTHR mark on a phone",
+   "axes": [
+    "craft"
+   ]
+  },
+  "F4": {
+   "what": "Empty state contradicts itself: 'Step 1 of 6: Your words are in' and 'Open redlines 3' before anything is typed",
+   "axes": [
+    "clarity",
+    "trust"
+   ]
+  },
+  "F5": {
+   "what": "The example's readings are hand-written but labelled with the families gemini and llama, and the status says 'sample readings from two model families'",
+   "axes": [
+    "trust"
+   ]
+  },
+  "F6": {
+   "what": "Nothing on first open says who this is for or what you will get; redline, balloon, datum, gauge and ratchet are used without a gloss",
+   "axes": [
+    "value",
+    "clarity"
+   ]
+  },
+  "F7": {
+   "what": "The intent map opens at 55% to fit the sheet column; card text renders near 7 px until Full width is pressed",
+   "axes": [
+    "craft",
+    "depth"
+   ]
+  },
+  "F8": {
+   "what": "Mission control's headline reads '0 of 47 journeys pass' when nothing was measured, which reads as failure",
+   "axes": [
+    "trust",
+    "value"
+   ]
+  },
+  "F9": {
+   "what": "Question hints are ungrammatical, for example 'It decides choosing between ways of meeting it'",
+   "axes": [
+    "craft",
+    "clarity"
+   ]
+  },
+  "F10": {
+   "what": "After release, nothing shows what happens next: how the package reaches the factory, who signs its journeys in, and where the measure appears",
+   "axes": [
+    "clarity",
+    "value"
+   ]
+  },
+  "F11": {
+   "what": "No link from any page to the source, the licence, the package formats or how to extend the lexicon, roles, catalogue or manifest rules",
+   "axes": [
+    "open",
+    "trust"
+   ]
+  },
+  "F12": {
+   "what": "On zthr.ai there is no model to read your words, so the two-reading path means copying a prompt into two other models and pasting JSON back",
+   "axes": [
+    "effort"
+   ]
+  },
+  "F13": {
+   "what": "Every part of the drawing opens a drawer with source, relations, open questions and the package file; the release preview shows every file and the build manifest every part",
+   "axes": [
+    "depth"
+   ],
+   "positive": true
+  },
+  "F14": {
+   "what": "Accessibility checks are clean in light and dark at desktop and phone; focus moves to the next question; diagrams have labelled boxes and a Parts list text view",
+   "axes": [
+    "craft"
+   ],
+   "positive": true
+  },
+  "F15": {
+   "what": "Your own words are quoted beside every interpretation, each statement says who supplied it, and 'Why this is asked' explains each question",
+   "axes": [
+    "trust",
+    "clarity"
+   ],
+   "positive": true
+  },
+  "F16": {
+   "what": "Manufacturing terms are used correctly: datum, balloons, title block, redlines, control plan, special characteristics, bill of materials with find numbers, make or buy, revisions with reasons",
+   "axes": [
+    "trust",
+    "depth"
+   ],
+   "positive": true
+  },
+  "F17": {
+   "what": "The intake already reads Spec Kit, Kiro, OpenSpec, Gherkin and HTML, and there is a command line, but the page never says so",
+   "axes": [
+    "effort",
+    "open"
+   ]
+  },
+  "F18": {
+   "what": "Mission control shows intents, journeys and the factory side by side, but not the stages the factory runs (design, build, QA, release), and offers one level of view; you cannot see the platform as one system, intent in to software out",
+   "axes": [
+    "clarity",
+    "value",
+    "depth"
+   ],
+   "from": "Russ, 2026-11-25"
+  }
+ },
+ "grades": {
+  "denise": {
+   "value": [
+    "C-",
+    "F1 F2 F6"
+   ],
+   "clarity": [
+    "C",
+    "F6 F9"
+   ],
+   "effort": [
+    "C",
+    "F12"
+   ],
+   "trust": [
+    "B",
+    "F15"
+   ],
+   "depth": [
+    "B",
+    "F13"
+   ],
+   "craft": [
+    "B-",
+    "F3 F1"
+   ],
+   "open": [
+    "C+",
+    "F11"
+   ],
+   "voice": "It quoted me back, which I liked. But I opened it and got a quiz about something I had already said, and I had to scroll forever to find what I was getting."
+  },
+  "raj": {
+   "value": [
+    "C",
+    "F1 F2"
+   ],
+   "clarity": [
+    "B-",
+    "F10"
+   ],
+   "effort": [
+    "C+",
+    "F12 F17"
+   ],
+   "trust": [
+    "B",
+    "F15"
+   ],
+   "depth": [
+    "B+",
+    "F13"
+   ],
+   "craft": [
+    "B-",
+    "F7"
+   ],
+   "open": [
+    "C+",
+    "F11 F17"
+   ],
+   "voice": "The traceability is the best I have seen. I only found it because I kept scrolling, and nothing told me it would read my Gherkin."
+  },
+  "lena": {
+   "value": [
+    "D",
+    "F1 F6"
+   ],
+   "clarity": [
+    "C-",
+    "F6 F10"
+   ],
+   "effort": [
+    "C-",
+    "F12"
+   ],
+   "trust": [
+    "B-",
+    "F15"
+   ],
+   "depth": [
+    "C+",
+    "F7"
+   ],
+   "craft": [
+    "C",
+    "F3 F1"
+   ],
+   "open": [
+    "C",
+    "F11"
+   ],
+   "voice": "On my phone it was a text box and a long page. I never saw the drawing or the part list, which is what I came for."
+  },
+  "tom": {
+   "value": [
+    "C+",
+    "F2"
+   ],
+   "clarity": [
+    "B-",
+    "F10"
+   ],
+   "effort": [
+    "B",
+    "F17"
+   ],
+   "trust": [
+    "C-",
+    "F5 F8"
+   ],
+   "depth": [
+    "A-",
+    "F13"
+   ],
+   "craft": [
+    "B",
+    "F3"
+   ],
+   "open": [
+    "C+",
+    "F11"
+   ],
+   "voice": "The package preview and the hashes are real engineering. Then I saw sample readings labelled gemini and llama, and the dashboard saying zero of forty-seven pass. Which numbers do I believe?"
+  },
+  "aiko": {
+   "value": [
+    "C-",
+    "F1 F2"
+   ],
+   "clarity": [
+    "C+",
+    "F6"
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "B",
+    "F15"
+   ],
+   "depth": [
+    "B+",
+    "F13"
+   ],
+   "craft": [
+    "C+",
+    "F3 F7 F1"
+   ],
+   "open": [
+    "C",
+    "F11"
+   ],
+   "voice": "The drafting sheet is a real point of view and the map is lovely once you go full width. The first screen is a form, there is a line through the nav, and the best thing is three screens down."
+  },
+  "grace": {
+   "value": [
+    "C+",
+    "F1"
+   ],
+   "clarity": [
+    "B-",
+    "F10"
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "B",
+    "F15"
+   ],
+   "depth": [
+    "A-",
+    "F13"
+   ],
+   "craft": [
+    "B-",
+    "F7"
+   ],
+   "open": [
+    "C+",
+    "F11"
+   ],
+   "voice": "Refusal journeys, a coverage matrix with red squares, tolerances as ratchets: that is how I think. I would like to see the card format documented so I can add my own outside the UI."
+  },
+  "marcus": {
+   "value": [
+    "C",
+    "F1"
+   ],
+   "clarity": [
+    "B-",
+    "F10"
+   ],
+   "effort": [
+    "C+",
+    "F12"
+   ],
+   "trust": [
+    "B-",
+    "F5 F15"
+   ],
+   "depth": [
+    "B+",
+    "F13"
+   ],
+   "craft": [
+    "B-",
+    ""
+   ],
+   "open": [
+    "C+",
+    "F11"
+   ],
+   "voice": "Staff seeing student data became forbidden outcomes and controls on its own, which I rarely see. I need to know where my words go when I press Read with Claude, and where the package goes after."
+  },
+  "priya": {
+   "value": [
+    "C+",
+    "F2"
+   ],
+   "clarity": [
+    "B-",
+    "F6"
+   ],
+   "effort": [
+    "C+",
+    "F12"
+   ],
+   "trust": [
+    "C",
+    "F5 F8"
+   ],
+   "depth": [
+    "A-",
+    "F13 F15"
+   ],
+   "craft": [
+    "B",
+    ""
+   ],
+   "open": [
+    "B-",
+    "F11"
+   ],
+   "voice": "Agreement between independent readings becoming fact, held-out personas, planted defects: this is serious. Which is why hand-written readings labelled as two model families in the example is exactly the thing I would write up."
+  },
+  "sam": {
+   "value": [
+    "D+",
+    "F1 F2 F6"
+   ],
+   "clarity": [
+    "C",
+    "F6"
+   ],
+   "effort": [
+    "C",
+    "F12"
+   ],
+   "trust": [
+    "C+",
+    "F8"
+   ],
+   "depth": [
+    "B",
+    "F13"
+   ],
+   "craft": [
+    "B-",
+    "F3"
+   ],
+   "open": [
+    "C+",
+    "F11"
+   ],
+   "voice": "In five minutes I saw a form and a quiz. Someone had to tell me to scroll to the build manifest, and that is the slide that matters: what exists, what is new, and how it is proven."
+  },
+  "jordan": {
+   "value": [
+    "C",
+    "F1"
+   ],
+   "clarity": [
+    "B-",
+    ""
+   ],
+   "effort": [
+    "B-",
+    "F17"
+   ],
+   "trust": [
+    "B",
+    "F15"
+   ],
+   "depth": [
+    "B+",
+    "F13"
+   ],
+   "craft": [
+    "B-",
+    "F3"
+   ],
+   "open": [
+    "C",
+    "F11 F17"
+   ],
+   "voice": "Apache 2.0 in the README, data-driven catalogue and lexicon: good bones. None of it is linked from the app, and I cannot find a schema for the package or how to add a rule."
+  },
+  "rosa": {
+   "value": [
+    "C",
+    "F1"
+   ],
+   "clarity": [
+    "B-",
+    "F15"
+   ],
+   "effort": [
+    "B-",
+    "F14"
+   ],
+   "trust": [
+    "B",
+    "F15"
+   ],
+   "depth": [
+    "B",
+    "F14"
+   ],
+   "craft": [
+    "B-",
+    "F14 F1"
+   ],
+   "open": [
+    "C+",
+    "F11"
+   ],
+   "voice": "Focus moves where it should and the diagrams have labelled boxes. At 200% the page is very long and the drawing is far from the questions it depends on."
+  },
+  "kenji": {
+   "value": [
+    "C+",
+    "F2"
+   ],
+   "clarity": [
+    "B",
+    "F16"
+   ],
+   "effort": [
+    "B-",
+    ""
+   ],
+   "trust": [
+    "B",
+    "F16"
+   ],
+   "depth": [
+    "A-",
+    "F13 F16"
+   ],
+   "craft": [
+    "B",
+    "F3"
+   ],
+   "open": [
+    "C+",
+    "F11"
+   ],
+   "voice": "Whoever built this has worked under a document control system: the terms hold up. The sheet should lead, as a drawing does, not sit under a form."
+  },
+  "keisha": {
+   "value": [
+    "D",
+    "F1 F6"
+   ],
+   "clarity": [
+    "D+",
+    "F6"
+   ],
+   "effort": [
+    "C-",
+    "F12"
+   ],
+   "trust": [
+    "B-",
+    ""
+   ],
+   "depth": [
+    "C",
+    "F7"
+   ],
+   "craft": [
+    "C",
+    "F3 F1"
+   ],
+   "open": [
+    "C",
+    ""
+   ],
+   "voice": "I did not understand what it was. A box to type in and a long page."
+  }
+ }
+}

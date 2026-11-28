@@ -1,0 +1,32 @@
+{
+  "name": "plain-language",
+  "purpose": "Reading grade, phrase rules and carelessness checks for any text",
+  "provides": [
+    "PhraseRule",
+    "carelessness",
+    "phraseProblems",
+    "readingGrade",
+    "sentence",
+    "syllables"
+  ],
+  "requires": [],
+  "externalRequires": [],
+  "conflicts": {
+    "known": false
+  },
+  "companions": {
+    "known": false
+  },
+  "secrets": {
+    "known": false
+  },
+  "usedFor": "Any text a person will read from an automated system: reading grade against their chosen level, phrase rules for tone, and catching careless output. `sentence()` closes a sentence once, so \"5 p.m.\" never becomes \"5 p.m..\".",
+  "notFor": "Languages other than English for the grade (the formula is English-only; the app records Spanish grade as not measured), judging meaning or accuracy, or translation.",
+  "verifiedBy": "<!-- verified-by:start -->\n- [`packages/plain-language/test/plain-language.test.ts`](../../packages/plain-language/test/plain-language.test.ts) (11 test definitions)\n<!-- verified-by:end -->",
+  "mutationFloor": 80,
+  "tests": 11,
+  "source": {
+    "path": "packages/plain-language",
+    "sha256": "eaa8e060827990f9478532186f54a107e1063caf9f4621ed4071dd78657b182c"
+  }
+}

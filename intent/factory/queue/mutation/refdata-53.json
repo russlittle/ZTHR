@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "refdata",
+  "mutant": {
+    "id": "53",
+    "line": 49,
+    "column": 50,
+    "endLine": 49,
+    "endColumn": 52,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "const codes = this.lists.get(name)?.codes ?? [];",
+    "prevText": "current(name: string, code: string, day: string): string | undefined {",
+    "nextText": "const seen = new Set<string>();"
+  },
+  "mayEdit": [
+    "intent/blocks/refdata/refdata.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/refdata-53.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"refdata\". Mutant: line 49:50-49:52, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/refdata/index.ts (> marks the mutated line):\n    43    /** The entry for a code as worded on a day: from the newest version in effect then that has it. */\n    44    private entry(name: string, code: string, day: string): Code | undefined {\n    45      const vs = this.lists.get(name) ?? [];\n    46      for (let i = vs.length - 1; i >= 0; i--) {\n    47        if (vs[i]!.from > day) continue;\n    48        const c = vs[i]!.list.codes.find((x) => x.code === code);\n>   49        if (c) return c;\n    50      }\n    51      return this.latest(name)?.codes.find((x) => x.code === code);\n    52    }\n    53  \n    54    /** Accepts a new version of a list, or says why not. */\n    55    load(next: List): void {\n\nTest file style (intent/blocks/refdata/refdata.test.ts):\n3 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { RefData, check } from './index.ts';\n\nconst v1 = { name: 'plan', version: 1, codes: [{ code: 'basic', label: 'Basic', from: '2020-01-01', order: 1 }, { code: 'pro', label: 'Pro', from: '2020-01-01', order: 2 }] };\n\ntest('lookups are as of a day; retired codes still read and point to their replacement', () => {\n  const r = new RefData();\n  r.load(v1);\n  r.load({ name: 'plan', version: 2, codes: [{ code: 'basic', label: 'Basic', from: '2020-01-01', until: '2026-07-01', replacedBy: 'starter', order: 1 }, { code: 'starter', label: 'Starter', from: '2026-07-01', order: 1 }, { code: 'pro', label: 'Pro', from: '2020-01-01', order: 2 }] });\n  assert.deepEqual(r.options('plan', '2026-01-01').map((c) => c.code), ['basic', 'pro']);\n  assert.deepEqual(r.options('plan', '2026-11-26').map((c) => c.code), ['starter', 'pro']);\n  assert.equal(r.label('plan', 'basic', '2026-11-26'), 'Basic', 'an old record still shows its label');\n  assert.equal(r.isValid('plan', 'basic', '2026-11-26'), false, 'but it is not offered for new records');\n  assert.equal(r.current('plan', 'basic', '2026-11-26'), 'starter');\n  assert.equal(r.current('plan', 'basic', '2026-01-01'), 'basic');\n  assert.equal(r.label('plan', 'starter', '2026-01-01'), undefined, 'not yet in effect');\n});\n\ntest('a new version that would orphan stored values is refused, with every reason', () => {\n  const r = new RefData();\n  r.load(v1);\n  assert.throws(() => r.load({ name: 'plan', version: 2, codes: [{ code: 'pro', label: 'Pro', from: '2020-01-01' }] }), /basic was removed; retire it/);\n  assert.deepEqual(check(v1, { name: 'plan', version: 1, codes: [...v1.codes, { code: 'pro', label: 'x', from: '2026-01-01', until: '2025-01-01', replacedBy: 'gone' }] }), ['pro appears twice', 'pro retires before it starts', 'pro is replaced by gone, which is not in the list', 'version must be above 1']);\n});\n\ntest('an old record still shows the label it had then when a later version renames it', () => {\n  const r = new RefData();\n  r.load(v1);\n  r.load({ name: 'plan', version: 2, from: '2026-07-01', codes: [{ code: 'basic', label: 'Essentials', from: '2020-01-01', order: 1 }, v1.codes[1]!] });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/refdata-53.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T01:20:54.918Z"
+}
