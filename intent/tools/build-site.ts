@@ -17,6 +17,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { DEPARTMENTS, lineBar, type Dept } from '../src/console/line.ts';
+import { plantPage } from './plant-page.ts';
 import { sitePages } from './docs.ts';
 import { readNight } from './night.ts';
 
@@ -100,7 +101,7 @@ ${p.body}
 // The front door: the plant laid out, open to anyone, with each department's standing. It links into the console.
 mkdirSync(join(OUT, 'plant'), { recursive: true });
 // Its script ships as its own file: zthr.ai's content security policy allows no unlisted inline script.
-const plant = readFileSync(join(HERE, 'site/plant.html'), 'utf8');
+const plant = plantPage();
 const plantScript = /<script>\n([\s\S]*?)<\/script>/.exec(plant);
 if (!plantScript) throw new Error('the plant page has no script to ship');
 writeFileSync(join(OUT, 'plant/app.js'), plantScript[1] ?? '');

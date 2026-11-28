@@ -69,6 +69,9 @@ a { color: var(--blue); }
 .glass .t { fill: var(--glass); } .glass .l, .glass .r { fill: var(--glass); opacity: .75; }
 .empty .f { fill: transparent; stroke: var(--steel-l); stroke-dasharray: 3 3; stroke-width: 1; }
 .slab { fill: var(--slab); stroke: var(--slab-e); stroke-width: 2; }
+.rw { fill: var(--stop); opacity: .38; }
+.rwc { fill: none; stroke: var(--stop); stroke-width: 2.2; }
+.air { fill: none; stroke: var(--blue); stroke-width: 2; opacity: .8; }
 .room { fill: none; stroke: var(--line); stroke-width: 1.6; stroke-dasharray: 7 5; }
 .road { fill: var(--road); }
 .dash { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 10 9; }
@@ -99,7 +102,10 @@ a { color: var(--blue); }
 .facts dd { margin: 0; font-variant-numeric: tabular-nums; }
 .gaps h3 { margin: 0 0 8px; font: 600 19px var(--letter); }
 .gaps ul { margin: 0 0 18px; padding-left: 20px; }
-.gaps li { margin: 4px 0; }
+.gaps ul { list-style: none; padding: 0; }
+.gaps li { margin: 6px 0; display: flex; gap: 10px; align-items: baseline; }
+.gaps li .m { flex: none; width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font: 700 13px/1 var(--body); color: #fff; transform: translateY(4px); }
+.gaps li .y { background: var(--go); } .gaps li .n { background: transparent; border: 2px solid var(--stop); color: var(--stop); }
 .dot { width: 13px; height: 13px; border-radius: 50%; display: inline-block; flex: none; }
 .dot.go { background: var(--go); } .dot.part { background: var(--part); } .dot.stop { background: var(--stop); } .dot.off { border: 2px solid var(--off); }
 .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 18px; border-radius: 6px; background: var(--blue); color: var(--on-blue); font: 600 16px var(--body); text-decoration: none; }
@@ -125,7 +131,7 @@ a { color: var(--blue); }
   <div class="head">
     <div>
       <h1>The plant</h1>
-      <p>ZTHR builds software the way a plant builds parts. The front office runs it, engineering defines the product and then how to make it, the hall builds it, QA inspects it, and it ships to the field. Pick any area to see what it does and where it stands today, or read <a id="how-line" href="/line/">how the line works</a>.</p>
+      <p>A factory that takes in what a person means and puts out production code, running on a working surface. Around it, an ecosystem of crews and tools, each coupled at arm’s length: every area hands the next something it can check. Pick any area to see what it takes, what it gives, what it needs and where it stands, or read <a id="how-line" href="/line/">how the line works</a>.</p>
     </div>
     <div class="shift" role="group" aria-label="Shift">
       <button type="button" id="day" aria-pressed="true">Day shift</button>
@@ -153,7 +159,7 @@ a { color: var(--blue); }
       <dl class="facts" id="t-facts"></dl>
     </div>
     <div class="gaps">
-      <h3>Not proven yet</h3>
+      <h3>What it needs</h3>
       <ul id="t-gaps"></ul>
       <div class="acts">
         <a class="btn" id="t-open" href="#">Open</a>
@@ -168,70 +174,13 @@ a { color: var(--blue); }
 {
 // Every figure is the factory's own, read from the repository at the revision below. Where an area has nothing to
 // show, it says so rather than showing a zero that looks like a measurement.
-const PLANT = { commit: '340bd74', asOf: '2026-11-28', claims: { proven: 10, partial: 43, unproven: 20 } };
-
-const AREAS = [
-  { key: 'mission', label: 'Mission control', where: 'The front office: runs the whole plant', lamp: 'part', page: 'mission',
-    does: 'Sees every product line, every product and where each stands, and holds what is waiting on a person. It runs the plant rather than being a step in it.',
-    state: 'The office is open, but journey results reach it only from a published build feed, and none is published yet.',
-    facts: [['Product lines', '1'], ['Products in work', '1, Files'], ['Waiting on a person', 'Nothing']],
-    gaps: ['The build feed is not published, so the plant-wide journey totals read 0 of 0'] },
-  { key: 'lines', label: 'Product lines', where: 'In the front office', lamp: 'part', page: 'lines',
-    does: 'Each product family: who it serves and the defaults every product in it starts from. A family can hold many products, each built separately in the hall.',
-    state: 'One family runs: file services compatible with Nextcloud, with one product, Files.',
-    facts: [['Families', '1, file services'], ['Products', '1, Files'], ['Reference system', 'Nextcloud 32.0.15']],
-    gaps: ['Families are kept in the browser; none is held centrally yet'] },
-  { key: 'intent', label: 'Intent studio', where: 'In each product line', lamp: 'go', page: 'intent',
-    does: 'Defines the thing. A person says what the product must do in their own words; the studio turns it into a numbered schematic, settles the questions, and releases a signed intent package.',
-    state: 'Works end to end in the browser, from rough words to a released package.',
-    facts: [['Steps', 'Rough intent, read, questions, review, signed, released'], ['Runs', 'In the browser, nothing sent anywhere']],
-    gaps: ['Held-out phrasing sets are sealed by convention, not by signature'] },
-  { key: 'design', label: 'Product engineering', where: 'Engineering, first step: what to build', lamp: 'go', page: 'engineering',
-    does: 'Takes the intent package and designs the app and its blocks: outcomes, data, compliance, operations, measures and tests.',
-    state: 'Designs from a library of 85 standard blocks, each with its tests. The catalogue specs about 300; the rest are being built.',
-    facts: [['Standard blocks', '85 built of about 300 specced'], ['Block tests', '1,063 passing'], ['Top 50 app needs', '38 covered, 12 partly']],
-    gaps: ['About 215 specced blocks are not built yet', 'Partly covered: HTTP routing, forms, uploads, background jobs, payments, billing, rate limiting, tracing, admin console, single sign-on, maps, images'] },
-  { key: 'process', label: 'Manufacturing engineering', where: 'Engineering, second step: how to build it', lamp: 'part', page: 'engineering',
-    does: 'Adapts the design for manufacture: the build package, the routing through the hall, the fixtures, and the gates each step must pass. Then releases it to the floor.',
-    state: 'The build package, the gates and the required checks are defined; not every stage of the routing has run.',
-    facts: [['Gates', '8, run on every change'], ['Routing run so far', 'Build, QA, release'], ['Defined, never run', 'Data, signing, canary, operate']],
-    gaps: ['The canary, signing and operate stages have never run', 'Failure modes are not analysed per block'] },
-  { key: 'factory', label: 'Factory floor', where: 'The production hall', lamp: 'part', page: 'factory',
-    does: 'Builds to the released package, on the line, and measures what was built.',
-    state: 'Files is built and passes its own suite; builds are reproducible byte for byte.',
-    facts: [['Files suite', '76 of 76 passing'], ['Builds', 'Reproducible byte for byte'], ['Supply chain', 'SBOM and licence gate passing']],
-    gaps: ['The build feed the office reads is not published'] },
-  { key: 'qa', label: 'QA', where: 'End of the line', lamp: 'stop', page: 'qa',
-    does: 'Inspects every product as a person would use it: every journey walked, every gate proven able to fail, every ratchet held.',
-    state: 'Files is inspected against stock Nextcloud with the real desktop sync client. Two sync steps failed where Nextcloud passed; the fix is under test.',
-    facts: [['WebDAV conformance (litmus)', '100%, level with Nextcloud'], ['Sync journey', '2 steps failing, fix under test'], ['Recorded differences', '101, each explained, none closed']],
-    gaps: ['No gauge is certified, so QA cannot yet meet its rule of using only certified gauges', 'Cross-family review has never run'] },
-  { key: 'shipping', label: 'Shipping', where: 'The dock', lamp: 'off', page: 'shipping',
-    does: 'Moves a certified build to the people it is for, stage by stage, with a person approving production.',
-    state: 'Nothing has shipped. Files goes out when it clears QA.',
-    facts: [['Shipped', 'None'], ['Next out', 'Files, after QA']],
-    gaps: ['No product build has been deployed'] },
-  { key: 'fleet', label: 'Fleet', where: 'In the field', lamp: 'off', page: 'fleet',
-    does: 'Everything in service, the blocks each app draws on, and the data it keeps. What the field teaches goes back to the front office.',
-    state: 'Nothing from the line is in service yet.',
-    facts: [['In service', 'None']],
-    gaps: ['No product has been used by a person'] },
-  { key: 'maintenance', label: 'Maintenance', where: 'Works on the factory', lamp: 'part', page: 'maintenance',
-    does: 'Keeps the factory running and improves it. The night shift works the backlog every department tags, within its budget, through the same gates as day work, and reports each morning.',
-    state: 'Works the queue a little each night without holding up the day line.',
-    facts: [['Queue', '5,659 work orders'], ['Closed so far', 'About 1,260 weak gauge points, and about 300 defects fixed'], ['Crew', 'Budgeted; runs as sub-agents until the Vertex crew is live']],
-    gaps: ['The Vertex crew has not run a shift'] },
-  { key: 'metrology', label: 'Metrology', where: 'Works on QA', lamp: 'stop', page: 'metrology',
-    does: 'The lab behind QA: defines every measure QA uses, traces it to a reference, and certifies every gauge before QA may use it.',
-    state: 'Every block is calibrated by planting defects in it. None is certified yet; certification needs every planted defect caught.',
-    facts: [['Gauges certified', '0 of 85'], ['Median mutation score', '75.2%'], ['Best', 'testdata 100%, validate 97.9%, contact 97.5%, pdf 96.8%'], ['Surviving planted defects', '5,659'], ['Claims audited', `${PLANT.claims.proven} proven, ${PLANT.claims.partial} partial, ${PLANT.claims.unproven} unproven`]],
-    gaps: ['Repeatability and reproducibility are not measured', 'The factory against a bare agent has not been measured'] },
-  { key: 'deploy', label: 'Deployment engineering', where: 'Supports shipping and the fleet', lamp: 'part', page: 'shipping',
-    does: 'The cloud and field engineers: stand up where products run, deploy them, watch them in service, and bring back what the field shows.',
-    state: 'Runs the live site today: zthr.ai deploys, and is walked and security-scanned every two hours. No product of the line has been deployed.',
-    facts: [['Live today', 'zthr.ai, walked and scanned every two hours'], ['Products deployed', 'None']],
-    gaps: ['Files has never been deployed'] },
-];
+// The plant model and where each area stands, written in by the build from src/console/plant-model.ts.
+const MODEL = /*MODEL*/null/*END*/;
+const AREAS = MODEL.areas;
+const GROUP = Object.fromEntries(MODEL.groups.map((g) => [g.key, g.label]));
+const LABEL = Object.fromEntries(AREAS.map((a) => [a.key, a.label]));
+const list = (xs) => xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
+for (const a of AREAS) a.where = a.inside ? `Inside ${LABEL[a.inside]}` : a.serves && a.group === 'support' ? `Support: keeps ${list(a.serves.map((k) => LABEL[k]))} working` : GROUP[a.group];
 
 const live = /(^|\.)zthr\.ai$/.test(location.hostname) || location.hostname === 'localhost';
 const SRC = 'https://github.com/russlittle/ZTHR/blob/intent-surface/intent';
@@ -261,9 +210,9 @@ const flat = (x, y, w, d, cls, parent, z = 0) => mk('polygon', { class: cls, poi
 
 // The ground, the road out to the field, and the painted aisles.
 const g0 = flat(-3, -3, 49, 38, 'road', L.ground); g0.setAttribute('style', 'fill:var(--ground)');
-flat(36.4, 14.6, 8.6, 3, 'road', L.ground);
-flat(42.2, -1, 2.8, 18.6, 'road', L.ground);
-mk('polyline', { class: 'dash', points: pts([[36.4, 16.1, 0], [43.6, 16.1, 0], [43.6, -1, 0]]) }, L.ground);
+flat(36.4, 2.6, 6.6, 2.8, 'road', L.ground);
+flat(40.4, 2.6, 2.6, 19, 'road', L.ground);
+mk('polyline', { class: 'dash', points: pts([[36.4, 4, 0], [41.7, 4, 0], [41.7, 21.6, 0]]) }, L.ground);
 
 // Buildings: a floor slab, tall back walls, low front walls. The roofs are off so the work shows.
 const building = (x, y, w, d, wallH) => {
@@ -276,14 +225,15 @@ const building = (x, y, w, d, wallH) => {
 building(0, 0, 12, 9, 2.4);      // the front office
 building(14, 0, 13, 9, 2.0);     // engineering
 building(0, 11, 27, 11, 2.8);    // the production hall
-building(29, 11, 7, 9, 2.2);     // QA and the dock
+building(29, 11, 7, 9, 2.2);     // QA
+building(29, 0, 7, 9, 2.2);      // shipping
 building(0, 24, 12, 7, 2.0);     // the maintenance shop, off the hall
 building(29, 22, 7, 9, 2.0);     // the metrology lab, behind QA
 
 const room = (x, y, w, d) => flat(x, y, w, d, 'room', L.slabs, 0.02);
 room(0.4, 0.4, 5.2, 8.2); room(6.2, 0.4, 5.4, 8.2); room(8.8, 0.8, 2.6, 7.4);
 room(14.4, 0.4, 6.0, 8.2); room(21, 0.4, 5.6, 8.2);
-room(29.4, 11.4, 6.2, 4.4); room(29.4, 16.4, 6.2, 3.2);
+room(29.4, 11.4, 6.2, 8.2); room(29.4, 0.4, 6.2, 8.2);
 
 // Mission control: a wall of screens and the desks that watch the whole plant.
 box(0.6, 0.6, 0, 4.8, .3, .2, 'steel'); for (let i = 0; i < 4; i++) box(0.8 + i * 1.15, 0.65, .3, 1, .12, .9, 'scr');
@@ -308,12 +258,22 @@ for (let i = 0; i < 3; i++) box(4 + i * 7.5, 18.8, 0, 4, 2, .8, 'steel');
 // QA: the coordinate measuring machine straddles the line at the end of the hall.
 box(30, 15.2, 0, 4.6, 2.8, .45, 'granite'); box(30.3, 15.2, .45, .5, .5, 2.4, 'steel'); box(33.8, 15.2, .45, .5, .5, 2.4, 'steel'); box(30.3, 15.2, 2.85, 4, .5, .4, 'yel');
 box(30, 12, 0, 2.4, 1.6, .9, 'desk'); box(32.8, 12, 0, 2.4, 1.6, .9, 'desk');
-// Shipping: dock doors and a trailer waiting, empty.
-for (let i = 0; i < 2; i++) box(36, 16.6 + i * 1.6, 0, .25, 1.2, 1.6, 'steel');
-box(37.4, 14.8, 0, 4.4, 1.6, 1.8, 'empty');
-// The field: sites where products run. None yet. The deployment engineers' van waits by the gate.
-for (let i = 0; i < 3; i++) box(38.2, 1 + i * 4, 0, 3, 2.4, 1.2, 'empty');
-box(37.4, 12.4, 0, 1.8, 1, .9, 'wall'); box(39.2, 12.4, 0, .6, 1, .6, 'wall');
+// Shipping: packing benches for the code, the tests and the docs; the version shelf; the release desk; the dock.
+[['crate', 1], ['yel', 3.4], ['glass', 5.8]].forEach(([c, y]) => { box(29.6, y, 0, 2.4, 1.6, .8, 'desk'); box(30.2, y + .3, .8, 1.1, 1, .7, c); });
+box(32.8, 0.5, 0, 2.8, .7, 2, 'steel'); for (let i = 0; i < 5; i++) box(33 + i * .5, 0.6, 1.2, .35, .4, .35, 'yel');
+box(32.8, 2.4, 0, 2.6, 1.4, .8, 'desk'); box(33.1, 2.5, .8, 2, .1, .7, 'scr');
+for (let i = 0; i < 3; i++) box(33.2 + (i % 2) * .9, 5.4 + Math.floor(i / 2) * .9, 0, .8, .8, .7, 'crate');
+for (let i = 0; i < 2; i++) box(36, 2.2 + i * 1.8, 0, .25, 1.3, 1.6, 'steel');
+box(37.2, 2.8, 0, 3, 1.5, 1.6, 'wall'); box(37.2 + 3, 2.8, 0, .8, 1.5, 1.1, 'wall');
+// The field: sites where products run, updated over the air from the mast. None in service yet.
+for (let i = 0; i < 3; i++) box(37.4, 8 + i * 4.2, 0, 2.6, 2.6, 1.2, 'empty');
+box(37.2, 6.3, 0, .5, .5, 3.6, 'steel');
+// The rework lane: back along the hall from QA to the rework cell.
+flat(1, 17.45, 28.4, .8, 'rw', L.slabs, 0.03);
+for (let x = 26; x > 2; x -= 3) mk('polyline', { class: 'rwc', points: pts([[x + .6, 17.55, .05], [x, 17.85, .05], [x + .6, 18.15, .05]]) }, L.slabs);
+box(0.6, 18.6, 0, 3, 2.6, .9, 'redc'); box(1, 19, .9, 2.2, 1.8, .2, 'steel');
+// The line's operator agent, at the head of the line where the build package comes in.
+box(0.8, 14.4, 0, .9, .9, 1.4, 'scr'); box(0.7, 14.3, 1.4, 1.1, 1.1, .15, 'steel');
 // The maintenance shop: tool cabinets, the bench, and the crew's carts.
 for (let i = 0; i < 4; i++) box(0.6 + i * 1.3, 24.4, 0, 1, .7, 1.4, 'redc');
 box(1, 27, 0, 4.5, 1.4, .8, 'desk'); box(7, 26.4, 0, 3.6, 2.6, .8, 'steel');
@@ -325,8 +285,11 @@ box(29.6, 27.6, 0, 5.8, .8, 1.1, 'desk');
 objs.sort((a, b) => (a.x + a.y + a.z * .01) - (b.x + b.y + b.z * .01) || a.z - b.z);
 for (const o of objs) drawBox(o, L.objs);
 
+// Updates over the air: arcs from the mast to the field.
+{ const [mx, my] = P(37.45, 6.55, 3.7); for (let r = 1; r <= 3; r++) mk('path', { class: 'air', d: `M ${mx - 14 * r} ${my + 4 * r} A ${16 * r} ${10 * r} 0 0 0 ${mx + 14 * r} ${my + 4 * r}`, transform: `rotate(180 ${mx} ${my})` }, L.objs); }
+
 // The product: Files, in its crate, travels its route and waits at QA.
-const route = [[9.9, 1.9, .75], [13, 4.5, 0], [17.5, 0.9, .6], [23.6, 2.1, .6], [27.6, 10, 0], [1.6, 10, 0], [1.6, 16.6, .63], [31.6, 16.6, .63]];
+const route = [[9.9, 1.9, .75], [13, 4.5, 0], [17.5, 0.9, .6], [23.6, 2.1, .6], [27.6, 10, 0], [1.2, 10, 0], [1.2, 16.6, .63], [31.6, 16.6, .63]];
 const crate = mk('g', { 'aria-hidden': 'true' }, L.objs);
 drawBox({ x: -.55, y: -.5, z: 0, w: 1.1, d: 1, h: .8, cls: 'crate' }, crate);
 const [cx0, cy0] = P(0, 0, 0);
@@ -367,10 +330,11 @@ const ZONES = {
   design: { at: [14.4, 0.4, 6.0, 8.2], tag: [16.8, 2.4, 3.6] },
   process: { at: [21, 0.4, 5.6, 8.2], tag: [23.8, 3.6, 2.4] },
   factory: { at: [0.4, 11.4, 26.2, 10.2], tag: [14, 19.6, 3] },
-  qa: { at: [29.4, 11.4, 6.2, 4.4], tag: [32, 12.8, 4.2] },
-  shipping: { at: [29.4, 16.4, 6.2, 3.2], tag: [35.4, 18.6, 2.2] },
-  fleet: { at: [37.6, 0.4, 4.6, 11.4], tag: [38.8, 2.6, 3.2] },
-  deploy: { at: [37, 11.9, 3.4, 2], tag: [38.2, 12.9, 1.8] },
+  qa: { at: [29.4, 11.4, 6.2, 8.2], tag: [32, 13, 4.2] },
+  rework: { at: [0.5, 17.4, 3.4, 4], tag: [2, 19.8, 3.2] },
+  shipping: { at: [29.4, 0.4, 6.2, 8.2], tag: [31.4, 2.4, 3.6] },
+  fleet: { at: [37.2, 7.8, 3.2, 12.6], tag: [38.6, 12.8, 2.6] },
+  deploy: { at: [36.9, 5.8, 1.2, 1.4], tag: [37.45, 6.55, 4.6] },
   maintenance: { at: [0.4, 24.4, 11.2, 6.2], tag: [6, 27.4, 2.4] },
   metrology: { at: [29.4, 22.4, 6.2, 8.2], tag: [32.4, 26.4, 2.4] },
 };
@@ -404,7 +368,7 @@ for (const a of AREAS) {
 
 // ---------------------------------------------------------------- shifts
 const yard = document.getElementById('yard'), caption = document.getElementById('caption');
-const DAY = 'Day shift: Files has come through engineering and the hall, and waits at QA on two failing sync steps.';
+const DAY = 'Day shift: Files failed two sync steps at QA and went back down the rework lane; both are fixed from failing tests and back in QA.';
 const NIGHT = 'Night shift: the hall is quiet and the maintenance crew works the queue of 5,659 work orders, as far as tonight’s budget goes.';
 const setShift = (n) => {
   night = n; yard.classList.toggle('night', n);
@@ -426,15 +390,23 @@ function select(k, fromUser) {
   $('t-name').replaceChildren(Object.assign(document.createElement('span'), { className: `dot ${a.lamp}` }), document.createTextNode(a.label));
   $('t-does').textContent = a.does;
   $('t-state').textContent = `${lampWord[a.lamp]}. ${a.state}`;
-  $('t-facts').replaceChildren(...a.facts.flatMap(([d, v]) => [Object.assign(document.createElement('dt'), { textContent: d }), Object.assign(document.createElement('dd'), { textContent: v })]));
-  $('t-gaps').replaceChildren(...a.gaps.map((g) => Object.assign(document.createElement('li'), { textContent: g })));
+  const rows = [['Discipline', `${a.discipline} (${a.standard})`], ['Takes', a.takes], ['Gives', a.gives], ['Who does the work', ({ person: 'A person', agent: 'An agent', crew: 'A crew of agents', 'person and agent': 'A person, with an agent' })[a.who]], ...a.facts];
+  $('t-facts').replaceChildren(...rows.flatMap(([d, v]) => [Object.assign(document.createElement('dt'), { textContent: d }), Object.assign(document.createElement('dd'), { textContent: v })]));
+  $('t-gaps').replaceChildren(...a.needs.map((n, i) => {
+    const li = document.createElement('li');
+    const m = Object.assign(document.createElement('span'), { className: `m ${a.met[i] ? 'y' : 'n'}`, textContent: a.met[i] ? '✓' : '✗' });
+    m.setAttribute('aria-label', a.met[i] ? 'Met' : 'Not met yet');
+    li.append(m, document.createTextNode(n));
+    return li;
+  }));
   $('t-open').href = hrefOpen(a.page); $('t-open').textContent = `Open ${a.label}`;
   $('t-how').href = hrefHow(a.page);
   if (fromUser) history.replaceState(null, '', `#${k}`);
 }
 const first = location.hash.slice(1);
 select(order.includes(first) ? first : 'qa', false);
-$('foot').textContent = `Every figure is the factory's own, read from the repository at revision ${PLANT.commit} on ${PLANT.asOf}. Claims audited: ${PLANT.claims.proven} proven, ${PLANT.claims.partial} partly proven, ${PLANT.claims.unproven} not proven yet.`;
+const unmet = AREAS.reduce((n, a) => n + a.met.filter((m) => !m).length, 0), needs = AREAS.reduce((n, a) => n + a.needs.length, 0);
+$('foot').textContent = `${needs - unmet} of ${needs} needs met across the plant. Every figure is the factory's own, read from the repository at revision ${MODEL.asOf.revision} on ${MODEL.asOf.date}.`;
 }
 </script>
 </body>
