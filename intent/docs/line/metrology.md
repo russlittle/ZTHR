@@ -98,7 +98,7 @@ The 85 blocks calibrated so far, of 235:
 | `config` | not certified: 46 planted defects not rejected, and not ruled equivalent | 71.1% | 46 | 0 | 2026-11-28 |
 | `observe` | not certified: 137 planted defects not rejected, and not ruled equivalent | 64.1% | 137 | 0 | 2026-11-28 |
 | `health` | not certified: 37 planted defects not rejected, and not ruled equivalent | 75.8% | 37 | 0 | 2026-11-28 |
-| `jobs` | not certified: 73 planted defects not rejected, and not ruled equivalent | 78.7% | 73 | 0 | 2026-11-28 |
+| `jobs` | not certified: 2 planted defects not rejected, and not ruled equivalent | 99.4% | 2 | 0 | 2026-11-28 |
 | `audit` | not certified: 32 planted defects not rejected, and not ruled equivalent | 75.0% | 32 | 0 | 2026-11-28 |
 | `crypto` | not certified: 14 planted defects not rejected, and not ruled equivalent | 89.2% | 14 | 0 | 2026-11-28 |
 | `rbac` | not certified: 58 planted defects not rejected, and not ruled equivalent | 70.0% | 58 | 0 | 2026-11-28 |
@@ -132,7 +132,7 @@ The 85 blocks calibrated so far, of 235:
 | `docparse` | not certified: 50 planted defects not rejected, and not ruled equivalent | 92.8% | 50 | 0 | 2026-11-28 |
 | `imagemeta` | not certified: 135 planted defects not rejected, and not ruled equivalent | 63.8% | 135 | 0 | 2026-11-28 |
 | `geo` | not certified: 44 planted defects not rejected, and not ruled equivalent | 78.8% | 44 | 0 | 2026-11-28 |
-| `sitemap` | not certified: 71 planted defects not rejected, and not ruled equivalent | 68.2% | 71 | 0 | 2026-11-28 |
+| `sitemap` | not certified: 7 planted defects not rejected, and not ruled equivalent | 96.9% | 7 | 0 | 2026-11-28 |
 | `apiver` | not certified: 15 planted defects not rejected, and not ruled equivalent | 87.4% | 15 | 0 | 2026-11-28 |
 | `drafts` | not certified: 15 planted defects not rejected, and not ruled equivalent | 82.1% | 15 | 0 | 2026-11-28 |
 | `palette` | not certified: 48 planted defects not rejected, and not ruled equivalent | 66.4% | 48 | 0 | 2026-11-28 |
