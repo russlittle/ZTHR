@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "search",
+  "mutant": {
+    "id": "153",
+    "line": 121,
+    "column": 11,
+    "endLine": 121,
+    "endColumn": 24,
+    "mutator": "ConditionalExpression",
+    "original": "!o.canSee(id)",
+    "replacement": "false",
+    "lineText": "if (!o.canSee(id)) continue;",
+    "prevText": "const d = this.docs.get(id)!;",
+    "nextText": "if (o.filters && !Object.entries(o.filters).every(([k, v]) => d.facets?.[k] === v)) continue;"
+  },
+  "mayEdit": [
+    "intent/blocks/search/search.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/search-153.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"search\". Mutant: line 121:11-121:24, mutator ConditionalExpression: \"!o.canSee(id)\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/search/index.ts (> marks the mutated line):\n   115          }\n   116        }\n   117      }\n   118      const matched: { id: string; score: number }[] = [];\n   119      for (const [id, score] of scores) {\n   120        const d = this.docs.get(id)!;\n>  121        if (!o.canSee(id)) continue;\n   122        if (o.filters && !Object.entries(o.filters).every(([k, v]) => d.facets?.[k] === v)) continue;\n   123        const perField = Object.values(d.fields).map(words);\n   124        if (!phrases.every((p) => perField.some((all) => all.some((_, i) => p.every((w, j) => all[i + j] === w))))) continue;\n   125        const stems = new Set(perField.flat().map(stem));\n   126        const required = (prefixStem === undefined ? qWords : qWords.slice(0, -1)).map(stem);\n   127        if (!required.every((t) => stems.has(t))) continue;\n\nTest file style (intent/blocks/search/search.test.ts):\n7 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Index, fold, stem, words } from './index.ts';\n\nconst idx = () => {\n  const i = new Index({ weights: { title: 3, body: 1 } });\n  i.add({ id: 'd1', fields: { title: 'Quarterly budget', body: 'The budget for the café renovation, approved by finance.' }, facets: { kind: 'doc', team: 'ops' } });\n  i.add({ id: 'd2', fields: { title: 'Renovation photos', body: 'Photos of the cafe. Budget mentioned once.' }, facets: { kind: 'image', team: 'ops' } });\n  i.add({ id: 'd3', fields: { title: 'Secret plans', body: 'budget budget budget' }, facets: { kind: 'doc', team: 'board' } });\n  i.add({ id: 'd4', fields: { title: 'Holiday rota', body: 'Who is on call over the holidays.' }, facets: { kind: 'doc', team: 'ops' } });\n  return i;\n};\nconst all = () => true;\n\ntest('folding and stemming', () => {\n  assert.equal(fold('Café ÉCOLE'), 'cafe ecole');\n  assert.deepEqual(words('The cats, and the dogs!').map(stem), ['cat', 'dog']);\n  assert.equal(stem('policies'), 'policy');\n});\n\ntest('title matches outrank body matches; accents and plurals match; nothing the person cannot see comes back', () => {\n  const i = idx();\n  const r = i.search('budgets cafe ', { canSee: (id) => id !== 'd3', facets: ['kind'] });\n  assert.deepEqual(r.hits.map((h) => h.id), ['d1', 'd2']);\n  assert.deepEqual(r.facets, { kind: { doc: 1, image: 1 } });\n  assert.match(r.hits[0]!.snippet, /<mark>budget<\\/mark>/);\n  assert.match(r.hits[0]!.snippet, /<mark>café<\\/mark>/);\n});\n\ntest('the last word matches as a prefix while typing; phrases match in order; filters narrow', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/search-153.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:55.444Z"
+}

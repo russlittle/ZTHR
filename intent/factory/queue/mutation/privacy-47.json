@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "privacy",
+  "mutant": {
+    "id": "47",
+    "line": 65,
+    "column": 245,
+    "endLine": 65,
+    "endColumn": 247,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "const readme = [`Your data, exported ${manifest.made.slice(0, 10)}`, '', ...sources.map((s) => `- ${s.description}: ${s.error ? `could not be exported (${s.error}); ask us again and we will fix it` : `${s.records} record${s.records === 1 ? '' : 's'} in ${s.file}`}`), ''].join('\\n');",
+    "prevText": "const manifest: Manifest = { person, made: this.now().toISOString(), sources };",
+    "nextText": "files.push({ name: 'manifest.json', data: JSON.stringify(manifest, null, 2) }, { name: 'README.txt', data: readme });"
+  },
+  "mayEdit": [
+    "intent/blocks/privacy/privacy.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/privacy-47.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"privacy\". Mutant: line 65:245-65:247, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/privacy/index.ts (> marks the mutated line):\n    59          sources.push({ name: s.name, description: s.description, file, records: rows.length });\n    60        } catch (e) {\n    61          sources.push({ name: s.name, description: s.description, file, records: 0, error: e instanceof Error ? e.message : String(e) });\n    62        }\n    63      }\n    64      const manifest: Manifest = { person, made: this.now().toISOString(), sources };\n>   65      const readme = [`Your data, exported ${manifest.made.slice(0, 10)}`, '', ...sources.map((s) => `- ${s.description}: ${s.error ? `could not be exported (${s.error}); ask us again and we will fix it` : `${s.records} record${s.records === 1 ? '' : 's'} in ${s.file}`}`), ''].join('\\n');\n    66      files.push({ name: 'manifest.json', data: JSON.stringify(manifest, null, 2) }, { name: 'README.txt', data: readme });\n    67      return { archive: zip(files), manifest };\n    68    }\n    69  \n    70    /** Erases a person from every source; `complete` is true only when every source succeeded. */\n    71    async erase(person: string): Promise<Erasure> {\n\nTest file style (intent/blocks/privacy/privacy.test.ts):\n3 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { unzip } from '../docparse/index.ts';\nimport { Privacy, tableSource } from './index.ts';\n\nconst setup = () => {\n  const files = [{ owner: 'ana', name: 'plan.pdf' }, { owner: 'ben', name: 'x' }, { owner: 'ana', name: 'photo.jpg' }];\n  const invoices = [{ who: 'ana', total: 1000, year: 2026 }, { who: 'ana', total: 500, year: 2019 }];\n  const p = new Privacy(() => new Date('2026-11-26T12:00:00Z'));\n  p.register(tableSource('files', 'Files you uploaded', files, 'owner'));\n  p.register(tableSource('invoices', 'Invoices and payments', invoices, 'who', { when: (r) => (r.year as number) >= 2020, why: 'tax law requires invoices for seven years', until: '2033-12-31' }));\n  return { p, files, invoices };\n};\n\ntest('the export holds every source, a manifest and a readable summary', async () => {\n  const { p } = setup();\n  p.register({ name: 'broken', description: 'Comments', export: async () => { throw new Error('store offline'); }, erase: async () => ({ removed: 0 }) });\n  const { archive, manifest } = await p.export('ana');\n  const z = unzip(archive);\n  assert.deepEqual([...z.keys()].sort(), ['README.txt', 'files.json', 'invoices.json', 'manifest.json']);\n  assert.deepEqual(JSON.parse(z.get('files.json')!.toString()).map((r: { name: string }) => r.name), ['plan.pdf', 'photo.jpg']);\n  assert.deepEqual(manifest.sources.map((s) => [s.name, s.records, s.error]), [['files', 2, undefined], ['invoices', 2, undefined], ['broken', 0, 'store offline']]);\n  assert.match(z.get('README.txt')!.toString(), /Comments: could not be exported \\(store offline\\)/);\n  assert.equal(JSON.stringify(manifest).includes('ben'), false);\n});\n\ntest('erasure reports what was removed, what was kept and why, and is complete only if every source succeeded', async () => {\n  const { p, files, invoices } = setup();\n  const e = await p.erase('ana');\n  assert.equal(e.complete, true);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/privacy-47.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:50.063Z"
+}

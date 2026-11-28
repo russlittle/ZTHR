@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "importer",
+  "mutant": {
+    "id": "373",
+    "line": 184,
+    "column": 20,
+    "endLine": 184,
+    "endColumn": 31,
+    "mutator": "MethodExpression",
+    "original": "line.trim()",
+    "replacement": "line",
+    "lineText": "const p = prop(line.trim());",
+    "prevText": "for (const line of unfold(text).split('\\n')) {",
+    "nextText": "if (!p) continue;"
+  },
+  "mayEdit": [
+    "intent/blocks/importer/importer.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/importer-373.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"importer\". Mutant: line 184:20-184:31, mutator MethodExpression: \"line.trim()\" becomes \"line\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/importer/index.ts (> marks the mutated line):\n   178  function icalendar(text: string): Omit<Table, 'kind'> {\n   179    const recs: Record<string, string>[] = [];\n   180    const at: number[] = [];\n   181    const stack: string[] = [];\n   182    let cur: Record<string, string> | undefined;\n   183    for (const line of unfold(text).split('\\n')) {\n>  184      const p = prop(line.trim());\n   185      if (!p) continue;\n   186      if (p.name === 'BEGIN') {\n   187        stack.push(p.value.toUpperCase());\n   188        if (p.value.toUpperCase() === 'VEVENT') cur = {};\n   189        continue;\n   190      }\n\nTest file style (intent/blocks/importer/importer.test.ts):\n11 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { toXlsx, zip, type Field } from '../tabular/index.ts';\nimport { Refused, decode, importFrom, read } from './index.ts';\n\nconst fields: Field[] = [\n  { name: 'email', label: 'Email', aliases: ['e-mail', 'mail'], required: true, parse: (v) => {\n    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(v)) throw new Error('not an email address');\n    return v.toLowerCase();\n  } },\n  { name: 'name', label: 'Name', aliases: ['full name'], required: true },\n  { name: 'age', label: 'Age', parse: (v) => {\n    const n = Number(v);\n    if (!Number.isInteger(n)) throw new Error('not a whole number');\n    return n;\n  } },\n];\n\nconst bytes = (s: string) => new Uint8Array(Buffer.from(s, 'utf8'));\nconst utf16 = (s: string, be: boolean) => {\n  const b = Buffer.from(s, 'utf16le');\n  if (be) b.swap16();\n  return new Uint8Array(Buffer.concat([Buffer.from(be ? [0xfe, 0xff] : [0xff, 0xfe]), b]));\n};\n\ntest('CSV: columns are matched, good rows kept, and bad rows quarantined by row number with every problem', () => {\n  const r = importFrom({ bytes: bytes('E-mail,Full name,Age,Shoe\\nana@x.org,Ana,40,9\\nnope,,old,\\n,,,\\nben@x.org,Ben,,10\\n'), name: 'people.csv' }, fields);\n  assert.equal(r.kind, 'csv');\n  assert.equal(r.encoding, 'utf-8');\n  assert.deepEqual(r.mapping, { 'E-mail': 'email', 'Full name': 'name', Age: 'age', Shoe: undefined });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/importer-373.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:31.687Z"
+}

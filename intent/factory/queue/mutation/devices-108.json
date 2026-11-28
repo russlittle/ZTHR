@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "devices",
+  "mutant": {
+    "id": "108",
+    "line": 147,
+    "column": 10,
+    "endLine": 147,
+    "endColumn": 17,
+    "mutator": "OptionalChaining",
+    "original": "d?.wipe",
+    "replacement": "d.wipe",
+    "lineText": "if (!d?.wipe) return false;",
+    "prevText": "const d = await this.store.byHash(hash(password));",
+    "nextText": "await this.store.delete(d.id);"
+  },
+  "mayEdit": [
+    "intent/blocks/devices/devices.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/devices-108.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"devices\". Mutant: line 147:10-147:17, mutator OptionalChaining: \"d?.wipe\" becomes \"d.wipe\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/devices/index.ts (> marks the mutated line):\n   141      return !!(await this.store.byHash(hash(password)))?.wipe;\n   142    }\n   143  \n   144    /** The device reports it erased itself; its record goes. */\n   145    async wiped(password: string): Promise<boolean> {\n   146      const d = await this.store.byHash(hash(password));\n>  147      if (!d?.wipe) return false;\n   148      await this.store.delete(d.id);\n   149      return true;\n   150    }\n   151  \n   152    /** Starts a sign-in for a new app: it polls with `poll`; the person opens the page that carries `login`. */\n   153    async startFlow(client: string): Promise<Flow> {\n\nTest file style (intent/blocks/devices/devices.test.ts):\n6 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Devices, FlowGone, NotSignedIn, memoryDevices } from './index.ts';\n\nconst setup = () => {\n  let t = 0;\n  const store = memoryDevices();\n  return { d: new Devices(store, { now: () => t, flowMs: 1000, touchMs: 100 }), store, tick: (ms: number) => (t += ms) };\n};\n\ntest('an app password signs in only its own user, and is kept only as a hash', async () => {\n  const { d, store } = setup();\n  const { password } = await d.issue('ana', 'Ana laptop');\n  assert.ok(password.length >= 64);\n  assert.equal((await d.verify('ana', password)).name, 'Ana laptop');\n  await assert.rejects(d.verify('ben', password), NotSignedIn);\n  await assert.rejects(d.verify('ana', `${password}x`), NotSignedIn);\n  assert.ok(!JSON.stringify(await store.all()).includes(password));\n});\n\ntest('revoking one device leaves the others signed in', async () => {\n  const { d } = setup();\n  const a = await d.issue('ana', 'laptop');\n  const b = await d.issue('ana', 'phone');\n  await d.revoke('ana', a.device.id);\n  await assert.rejects(d.verify('ana', a.password), NotSignedIn);\n  assert.ok(await d.verify('ana', b.password));\n  await d.revoke('ben', b.device.id);\n  assert.ok(await d.verify('ana', b.password), 'nobody revokes another person’s device');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/devices-108.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:16.791Z"
+}

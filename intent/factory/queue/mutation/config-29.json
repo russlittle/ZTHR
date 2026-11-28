@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "config",
+  "mutant": {
+    "id": "29",
+    "line": 57,
+    "column": 36,
+    "endLine": 57,
+    "endColumn": 53,
+    "mutator": "ConditionalExpression",
+    "original": "raw.trim() !== ''",
+    "replacement": "true",
+    "lineText": "return Number.isFinite(n) && raw.trim() !== '' ? { value: n } : { problem: `${s.name} must be a number, not \"${raw}\"` };",
+    "prevText": "const n = Number(raw);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/config/config.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/config-29.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"config\". Mutant: line 57:36-57:53, mutator ConditionalExpression: \"raw.trim() !== ''\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/config/index.ts (> marks the mutated line):\n    51  function convert(s: Setting, raw: string): { value?: string | number | boolean | readonly string[]; problem?: string } {\n    52    switch (s.kind) {\n    53      case 'text':\n    54        return { value: raw };\n    55      case 'number': {\n    56        const n = Number(raw);\n>   57        return Number.isFinite(n) && raw.trim() !== '' ? { value: n } : { problem: `${s.name} must be a number, not \"${raw}\"` };\n    58      }\n    59      case 'boolean':\n    60        if (/^(true|1|yes|on)$/i.test(raw)) return { value: true };\n    61        if (/^(false|0|no|off)$/i.test(raw)) return { value: false };\n    62        return { problem: `${s.name} must be true or false` };\n    63      case 'url':\n\nTest file style (intent/blocks/config/config.test.ts):\n7 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Unsafe, drift, envSecrets, inventory, load, redacted, type Setting } from './index.ts';\n\nconst DECL: Setting[] = [\n  { name: 'PUBLIC_URL', kind: 'url', description: 'the address people use', required: true, usedBy: ['links', 'email'] },\n  { name: 'WORKERS', kind: 'number', description: 'background workers', default: '2' },\n  { name: 'DEBUG', kind: 'boolean', description: 'verbose errors', default: 'false', unsafeInProduction: (v) => (/^(true|1|yes|on)$/i.test(v) ? 'must be off in production' : null) },\n  { name: 'SESSION_TTL', kind: 'duration', description: 'how long a session lasts', default: '12h' },\n  { name: 'ADMINS', kind: 'list', description: 'admin emails', default: '' },\n  { name: 'PAYMENTS_KEY', kind: 'text', description: 'payments API key', secret: true, required: true, rotateDays: 90, unsafeInProduction: (v) => (v.startsWith('sk_test_') ? 'is a test key' : null) },\n];\n\ntest('settings are read and typed, secrets come from the secret source, and defaults apply', async () => {\n  const v = await load(DECL, { PUBLIC_URL: 'https://files.example.org', WORKERS: '4' }, envSecrets({ PAYMENTS_KEY: 'sk_live_x' }), { production: true });\n  assert.deepEqual(v, { PUBLIC_URL: 'https://files.example.org', WORKERS: 4, DEBUG: false, SESSION_TTL: 43_200_000, PAYMENTS_KEY: 'sk_live_x' });\n  assert.equal(redacted(DECL, v)['PAYMENTS_KEY'], '[secret]');\n});\n\ntest('the service refuses to start, listing every problem at once, and never echoes a secret', async () => {\n  await assert.rejects(\n    load(DECL, { PUBLIC_URL: 'ftp://x', WORKERS: 'many', DEBUG: 'yes', SESSION_TTL: 'soon' }, envSecrets({ PAYMENTS_KEY: 'sk_test_abc' }), { production: true }),\n    (e: Unsafe) => {\n      assert.equal(e.problems.length, 5);\n      assert.ok(e.problems.some((p) => p.includes('DEBUG must be off in production')));\n      assert.ok(e.problems.some((p) => p.includes('PAYMENTS_KEY is a test key')));\n      assert.ok(!e.message.includes('sk_test_abc'));\n      return true;\n    },\n  );\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/config-29.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:09.832Z"
+}

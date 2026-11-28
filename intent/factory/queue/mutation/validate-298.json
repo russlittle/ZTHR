@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "validate",
+  "mutant": {
+    "id": "298",
+    "line": 87,
+    "column": 9,
+    "endLine": 87,
+    "endColumn": 48,
+    "mutator": "ConditionalExpression",
+    "original": "o.max !== undefined && v.length > o.max",
+    "replacement": "false",
+    "lineText": "if (o.max !== undefined && v.length > o.max) return bad(p, 'max', `${name(p)} can have at most ${o.max}`);",
+    "prevText": "if (o.min !== undefined && v.length < o.min) return bad(p, 'min', `${name(p)} needs at least ${o.min}`);",
+    "nextText": "const out: T[] = [];"
+  },
+  "mayEdit": [
+    "intent/blocks/validate/validate.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/validate-298.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"validate\". Mutant: line 87:9-87:48, mutator ConditionalExpression: \"o.max !== undefined && v.length > o.max\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/validate/index.ts (> marks the mutated line):\n    81    });\n    82  \n    83  export const list = <T>(item: Schema<T>, o: { min?: number; max?: number } = {}) =>\n    84    schema<T[]>((v, p) => {\n    85      if (!Array.isArray(v)) return bad(p, 'type', `${name(p)} must be a list`);\n    86      if (o.min !== undefined && v.length < o.min) return bad(p, 'min', `${name(p)} needs at least ${o.min}`);\n>   87      if (o.max !== undefined && v.length > o.max) return bad(p, 'max', `${name(p)} can have at most ${o.max}`);\n    88      const out: T[] = [];\n    89      const problems: Problem[] = [];\n    90      v.forEach((x, i) => {\n    91        const r = item.check(x, `${p}[${i}]`);\n    92        if (r.ok) out.push(r.value);\n    93        else problems.push(...r.problems);\n\nTest file style (intent/blocks/validate/validate.test.ts):\n7 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Invalid, date, email, fieldErrors, integer, list, oneOf, parse, problemDetails, record, text, boolean } from './index.ts';\n\nconst order = record({\n  name: text({ max: 40 }),\n  email: email(),\n  kind: oneOf(['standard', 'express'] as const),\n  when: date().optional(),\n  items: list(record({ sku: text({ pattern: /^[A-Z]{3}-\\d+$/ }), qty: integer({ min: 1, max: 99 }) }), { min: 1 }),\n  gift: boolean().optional(),\n});\n\ntest('a good input comes back cleaned and typed', () => {\n  const v = parse(order, { name: '  Ana  ', email: 'ana@example.org', kind: 'express', items: [{ sku: 'ABC-1', qty: '3' }], gift: 'on' });\n  assert.deepEqual(v, { name: 'Ana', email: 'ana@example.org', kind: 'express', items: [{ sku: 'ABC-1', qty: 3 }], gift: true });\n});\n\ntest('every problem is reported at once, each with its path and a message a person can act on', () => {\n  const r = order.check({ name: '', email: 'nope', kind: 'overnight', when: '2026-02-31', items: [{ sku: 'abc', qty: 0 }], extra: 1 }, '');\n  assert.equal(r.ok, false);\n  const errs = fieldErrors(!r.ok ? r.problems : []);\n  assert.equal(errs['name'], 'name is needed');\n  assert.match(errs['email']!, /email address/);\n  assert.match(errs['kind']!, /standard, express/);\n  assert.match(errs['when']!, /not a real date/);\n  assert.match(errs['items[0].sku']!, /expected form/);\n  assert.equal(errs['items[0].qty'], 'qty must be at least 1');\n  assert.equal(errs['extra'], 'extra is not a field here');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/validate-298.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:27:22.415Z"
+}

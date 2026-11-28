@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "speech",
+  "mutant": {
+    "id": "997",
+    "line": 399,
+    "column": 7,
+    "endLine": 399,
+    "endColumn": 19,
+    "mutator": "ConditionalExpression",
+    "original": "day === null",
+    "replacement": "false",
+    "lineText": "if (day === null) return null;",
+    "prevText": "}",
+    "nextText": "let year = t.getUTCFullYear();"
+  },
+  "mayEdit": [
+    "intent/blocks/speech/speech.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/speech-997.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"speech\". Mutant: line 399:7-399:19, mutator ConditionalExpression: \"day === null\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/speech/index.ts (> marks the mutated line):\n   393        if (d !== null) {\n   394          day = d;\n   395          yearWords = after.slice(k);\n   396        }\n   397      }\n   398    }\n>  399    if (day === null) return null;\n   400    let year = t.getUTCFullYear();\n   401    if (yearWords.length) {\n   402      const y = spokenYear(yearWords);\n   403      if (y === null) return null;\n   404      year = y;\n   405    }\n\nTest file style (intent/blocks/speech/speech.test.ts):\n9 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Palette } from '../palette/index.ts';\nimport { Dictation, VoiceCommands, dictateInto, errorWords, forField, listen, matchCommands, recognitionIn, similarity, spokenDate, spokenNumber, spokenYear, type Recognition, type RecognitionEvent } from './index.ts';\n\nfunction palette() {\n  const ran: string[] = [];\n  const p = new Palette();\n  const add = (id: string, title: string, o: { keywords?: string[]; permission?: string } = {}) => p.register({ id, title, section: 'Files', ...o, run: () => void ran.push(id) });\n  add('settings', 'Open settings', { keywords: ['preferences'] });\n  add('delete', 'Delete file');\n  add('archive', 'Archive file');\n  add('pdf', 'Export as PDF');\n  add('csv', 'Export as CSV');\n  add('purge', 'Purge cache', { permission: 'admin' });\n  return { p, ran };\n}\nconst member = (perm: string) => perm !== 'admin';\n\ntest('a clear spoken command runs; filler words and one misheard letter are forgiven; keywords count', async () => {\n  const { p, ran } = palette();\n  const v = new VoiceCommands(p, member);\n  assert.deepEqual(await v.hear('Please open the settings.'), { kind: 'ran', command: (await p.search('settings', member))[0]!.command });\n  assert.equal((await v.hear('go to preferences')).kind, 'ran');\n  assert.equal((await v.hear('archive the fil')).kind, 'ran', '\"fil\" is heard as \"file\"');\n  assert.deepEqual(ran, ['settings', 'settings', 'archive']);\n  assert.equal(similarity('open settings', 'Open settings'), 1);\n  assert.equal(similarity('the', 'Open settings'), 0);\n  assert.deepEqual(matchCommands('open', p.search('', member, 99).map((r) => r.command)).map((m) => m.command.id), ['settings']);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/speech-997.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:27:03.663Z"
+}

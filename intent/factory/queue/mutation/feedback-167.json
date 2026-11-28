@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "feedback",
+  "mutant": {
+    "id": "167",
+    "line": 102,
+    "column": 59,
+    "endLine": 102,
+    "endColumn": 69,
+    "mutator": "StringLiteral",
+    "original": "'wont fix'",
+    "replacement": "\"\"",
+    "lineText": ".filter((t) => t.column !== 'fixed' && t.column !== 'wont fix')",
+    "prevText": "return this.tickets",
+    "nextText": ".map((t) => {"
+  },
+  "mayEdit": [
+    "intent/blocks/feedback/feedback.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/feedback-167.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"feedback\". Mutant: line 102:59-102:69, mutator StringLiteral: \"'wont fix'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/feedback/index.ts (> marks the mutated line):\n    96  \n    97    /** Open tickets, most urgent first: past-target first, then severity, then the most reports, then the oldest. */\n    98    board(): (Ticket & { ageHours: number; overdue: boolean; count: number })[] {\n    99      const now = this.now().getTime();\n   100      const rank = (s?: Severity) => (s ? ['blocker', 'major', 'minor', 'cosmetic'].indexOf(s) : -1);\n   101      return this.tickets\n>  102        .filter((t) => t.column !== 'fixed' && t.column !== 'wont fix')\n   103        .map((t) => {\n   104          const ageHours = (now - Date.parse(t.opened)) / 3_600_000;\n   105          return { ...t, ageHours: Math.round(ageHours), overdue: !!t.severity && ageHours > TARGET_HOURS[t.severity], count: t.reports.length };\n   106        })\n   107        .sort((a, b) => Number(b.overdue) - Number(a.overdue) || rank(a.severity) - rank(b.severity) || b.count - a.count || a.opened.localeCompare(b.opened));\n   108    }\n\nTest file style (intent/blocks/feedback/feedback.test.ts):\n5 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Feedback } from './index.ts';\n\ntest('reports keep the person’s words, redacted, with context; similar reports join one ticket', () => {\n  let t = Date.parse('2026-11-26T09:00:00Z');\n  const f = new Feedback({ now: () => new Date(t) });\n  const a = f.report('ana', 'Upload of a big video fails at 99%, email me at ana@example.org', { surface: 'files', version: '1.4.2', trace: 'tr-1', errors: ['TypeError: x is undefined token=abc123'] });\n  assert.equal(a.isNew, true);\n  assert.equal(a.report.said, 'Upload of a big video fails at 99%, email me at [email]');\n  assert.deepEqual(a.report.context.errors, ['TypeError: x is undefined token=[hidden]']);\n  t += 3_600_000;\n  const b = f.report('ben', 'big video upload fails at 99 percent', { surface: 'files' });\n  assert.equal(b.isNew, false);\n  assert.equal(b.ticket.id, a.ticket.id);\n  const c = f.report('cy', 'something odd', { surface: 'files', errors: ['TypeError: x is undefined token=[hidden]'] });\n  assert.equal(c.ticket.id, a.ticket.id, 'the same last error is the same cause');\n  assert.equal(f.report('dee', 'The share dialog has a typo', { surface: 'sharing' }).isNew, true);\n  assert.throws(() => f.report('x', ' '), /a few words/);\n});\n\ntest('the board puts overdue and severe first; a defect comes with evidence and a failing test to write', () => {\n  let t = Date.parse('2026-11-26T09:00:00Z');\n  const f = new Feedback({ now: () => new Date(t) });\n  const up = f.report('ana', 'uploads fail at the end', { trace: 'tr-9', version: '1.4.2' }).ticket;\n  const typo = f.report('ben', \"typo in the share dialog's title\", {}).ticket;\n  assert.throws(() => f.move(up.id, 'in progress'), /triage it first/);\n  f.triage(typo.id, 'cosmetic');\n  f.triage(up.id, 'blocker', 'Uploads over 2 GB fail at the final chunk');\n  t += 5 * 3_600_000;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/feedback-167.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:24.098Z"
+}

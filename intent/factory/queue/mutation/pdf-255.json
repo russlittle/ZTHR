@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf",
+  "mutant": {
+    "id": "255",
+    "line": 159,
+    "column": 20,
+    "endLine": 159,
+    "endColumn": 121,
+    "mutator": "StringLiteral",
+    "original": "`<< /Title (${esc(o.title)})${o.author ? ` /Author (${esc(o.author)})` : ''} /Producer (zthr pdf) >>`",
+    "replacement": "``",
+    "lineText": "const info = add(`<< /Title (${esc(o.title)})${o.author ? ` /Author (${esc(o.author)})` : ''} /Producer (zthr pdf) >>`);",
+    "prevText": "objs[pagesObj - 1] = `<< /Type /Pages /Kids [${kids.map((k) => `${k} 0 R`).join(' ')}] /Count ${kids.length} >>`;",
+    "nextText": "let out = '%PDF-1.7\\n%\\xe2\\xe3\\xcf\\xd3\\n';"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf/pdf.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-255.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf\". Mutant: line 159:20-159:121, mutator StringLiteral: \"`<< /Title (${esc(o.title)})${o.author ? ` /Author (${esc(o.author)})` : ''} /Producer (zthr pdf) >>`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf/index.ts (> marks the mutated line):\n   153      const all = [...ops, `BT /F1 9 Tf ${(pw / 2 - width(foot, 9) / 2).toFixed(2)} ${(margin / 2).toFixed(2)} Td (${esc(foot)}) Tj ET`].join('\\n');\n   154      const content = add(`<< /Length ${Buffer.byteLength(all, 'latin1')} >>\\nstream\\n${all}\\nendstream`);\n   155      kids.push(add(`<< /Type /Page /Parent ${pagesObj} 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >> >> /Contents ${content} 0 R >>`));\n   156    });\n   157    objs[catalog - 1] = `<< /Type /Catalog /Pages ${pagesObj} 0 R /Lang (en) >>`;\n   158    objs[pagesObj - 1] = `<< /Type /Pages /Kids [${kids.map((k) => `${k} 0 R`).join(' ')}] /Count ${kids.length} >>`;\n>  159    const info = add(`<< /Title (${esc(o.title)})${o.author ? ` /Author (${esc(o.author)})` : ''} /Producer (zthr pdf) >>`);\n   160    let out = '%PDF-1.7\\n%\\xe2\\xe3\\xcf\\xd3\\n';\n   161    const offsets: number[] = [];\n   162    objs.forEach((body, i) => {\n   163      offsets.push(Buffer.byteLength(out, 'latin1'));\n   164      out += `${i + 1} 0 obj\\n${body}\\nendobj\\n`;\n   165    });\n\nTest file style (intent/blocks/pdf/pdf.test.ts):\n5 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { pdf, width, winAnsi, wrap } from './index.ts';\n\ntest('wrapping respects the width, and long words are broken', () => {\n  const lines = wrap('The quick brown fox jumps over the lazy dog again and again', 11, 120);\n  assert.ok(lines.length > 1);\n  assert.ok(lines.every((l) => width(l, 11) <= 120));\n  assert.ok(wrap('x'.repeat(200), 11, 100).every((l) => width(l, 11) <= 100));\n  assert.equal(winAnsi('“smart” — quotes… 日本'), '\"smart\" - quotes... ??');\n});\n\ntest('a well-formed PDF: every cross-reference offset points at its object, text is escaped, pages are numbered', () => {\n  const rows = [['Item', 'Note'], ...Array.from({ length: 80 }, (_, i) => [`Row ${i}`, i % 7 ? 'short' : 'a much longer note that will wrap onto a second line in this narrow column'])];\n  const b = pdf([{ h: 'Quarterly (draft) report' }, { p: 'Back\\\\slash and (brackets) are escaped.' }, { table: rows, widths: [1, 2] }], { title: 'Report', author: 'Ana' });\n  const s = b.toString('latin1');\n  assert.ok(s.startsWith('%PDF-1.7'));\n  assert.ok(s.trimEnd().endsWith('%%EOF'));\n  const start = Number(/startxref\\n(\\d+)/.exec(s)![1]);\n  assert.ok(s.slice(start).startsWith('xref'));\n  const entries = [...s.slice(start).matchAll(/^(\\d{10}) 00000 n $/gm)].map((m) => Number(m[1]));\n  entries.forEach((off, i) => assert.ok(s.slice(off).startsWith(`${i + 1} 0 obj`), `object ${i + 1} at ${off}`));\n  assert.match(s, /\\(Quarterly \\\\\\(draft\\\\\\) report\\) Tj/);\n  assert.match(s, /\\(Back\\\\\\\\slash and \\\\\\(brackets\\\\\\) are escaped\\.\\) Tj/);\n  const count = Number(/\\/Type \\/Pages \\/Kids \\[[^\\]]+\\] \\/Count (\\d+)/.exec(s)![1]);\n  assert.ok(count >= 2, 'the table runs onto more pages');\n  assert.match(s, new RegExp(`\\\\(${count} of ${count}\\\\) Tj`));\n  assert.equal((s.match(/\\(Item\\) Tj/g) ?? []).length, count, 'the header row repeats on every page');\n  for (const m of s.matchAll(/<< \\/Length (\\d+) >>\\nstream\\n/g)) {\n    const at = m.index! + m[0].length;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-255.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:48.663Z"
+}

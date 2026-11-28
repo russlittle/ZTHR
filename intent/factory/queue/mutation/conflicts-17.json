@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "conflicts",
+  "mutant": {
+    "id": "17",
+    "line": 24,
+    "column": 115,
+    "endLine": 24,
+    "endColumn": 117,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "if (from === current.version) return { ok: true, record: { version: current.version + 1, data: yours }, merged: [] };",
+    "prevText": "if (from > current.version) throw new RangeError(`version ${from} is newer than the record's ${current.version}`);",
+    "nextText": "const theirs = current.data;"
+  },
+  "mayEdit": [
+    "intent/blocks/conflicts/conflicts.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/conflicts-17.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"conflicts\". Mutant: line 24:115-24:117, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/conflicts/index.ts (> marks the mutated line):\n    18  \n    19  /**\n    20   * Save `yours`, edited from `base` at version `from`, onto `current`. `base` is the record as it was at `from`.\n    21   */\n    22  export function save<T extends Record<string, unknown>>(current: Versioned<T>, from: number, base: T, yours: T): SaveResult<T> {\n    23    if (from > current.version) throw new RangeError(`version ${from} is newer than the record's ${current.version}`);\n>   24    if (from === current.version) return { ok: true, record: { version: current.version + 1, data: yours }, merged: [] };\n    25    const theirs = current.data;\n    26    const keys = [...new Set([...Object.keys(base), ...Object.keys(theirs), ...Object.keys(yours)])] as (keyof T)[];\n    27    const out: Record<string, unknown> = {};\n    28    const conflicts: { field: keyof T; base: unknown; theirs: unknown; yours: unknown }[] = [];\n    29    const merged: (keyof T)[] = [];\n    30    for (const k of keys) {\n\nTest file style (intent/blocks/conflicts/conflicts.test.ts):\n5 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { save } from './index.ts';\n\nconst base = { name: 'Rent', amount: 900, due: '2026-12-01', note: '' };\n\ntest('a save from the current version goes straight through', () => {\n  const r = save({ version: 3, data: base }, 3, base, { ...base, amount: 950 });\n  assert.ok(r.ok);\n  assert.equal(r.record.version, 4);\n  assert.equal(r.record.data.amount, 950);\n});\n\ntest('edits to different fields merge, and nothing anyone changed is lost', () => {\n  const theirs = { ...base, due: '2026-12-05' };\n  const r = save({ version: 4, data: theirs }, 3, base, { ...base, amount: 950 });\n  assert.ok(r.ok);\n  assert.deepEqual(r.record.data, { name: 'Rent', amount: 950, due: '2026-12-05', note: '' });\n  assert.deepEqual(r.merged, ['amount']);\n});\n\ntest('the same change on both sides is not a conflict', () => {\n  const r = save({ version: 4, data: { ...base, amount: 950 } }, 3, base, { ...base, amount: 950 });\n  assert.ok(r.ok);\n});\n\ntest('different changes to the same field are shown, field by field, and nothing is saved', () => {\n  const r = save({ version: 4, data: { ...base, amount: 925, note: 'paid half' } }, 3, base, { ...base, amount: 950, note: 'paid half' });\n  assert.equal(r.ok, false);\n  if (!r.ok) assert.deepEqual(r.conflicts, [{ field: 'amount', base: 900, theirs: 925, yours: 950 }]);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/conflicts-17.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:10.241Z"
+}

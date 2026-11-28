@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "resilience",
+  "mutant": {
+    "id": "21",
+    "line": 51,
+    "column": 7,
+    "endLine": 51,
+    "endColumn": 21,
+    "mutator": "EqualityOperator",
+    "original": "p.attempts < 1",
+    "replacement": "p.attempts <= 1",
+    "lineText": "if (p.attempts < 1) throw new RangeError('at least one attempt');",
+    "prevText": "export async function retry<T>(call: (attempt: number) => Promise<T>, p: RetryPolicy = DEFAULT_RETRY, sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)), random: () => number = Math.random): Promise<T> {",
+    "nextText": "let last: unknown;"
+  },
+  "mayEdit": [
+    "intent/blocks/resilience/resilience.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/resilience-21.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"resilience\". Mutant: line 51:7-51:21, mutator EqualityOperator: \"p.attempts < 1\" becomes \"p.attempts <= 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/resilience/index.ts (> marks the mutated line):\n    45  export const DEFAULT_RETRY: RetryPolicy = { attempts: 3, baseMs: 200, maxMs: 5000, retryable: (e) => !(e instanceof BreakerOpen) };\n    46  \n    47  /** Full jitter: a random wait between zero and the capped exponential step, so retries from many callers spread out. */\n    48  export const backoff = (attempt: number, p: RetryPolicy, random: () => number): number => Math.floor(random() * Math.min(p.maxMs, p.baseMs * 2 ** attempt));\n    49  \n    50  export async function retry<T>(call: (attempt: number) => Promise<T>, p: RetryPolicy = DEFAULT_RETRY, sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)), random: () => number = Math.random): Promise<T> {\n>   51    if (p.attempts < 1) throw new RangeError('at least one attempt');\n    52    let last: unknown;\n    53    for (let a = 0; a < p.attempts; a++) {\n    54      try {\n    55        return await call(a);\n    56      } catch (e) {\n    57        last = e;\n\nTest file style (intent/blocks/resilience/resilience.test.ts):\n4 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { backoff, Breaker, BreakerOpen, DEFAULT_RETRY, retry, TimedOut, withTimeout } from './index.ts';\n\ntest('a call that does not answer in time is stopped, and told to stop', async () => {\n  let aborted = false;\n  await assert.rejects(withTimeout(20, (s) => new Promise((r) => { s.addEventListener('abort', () => { aborted = true; }); setTimeout(r, 200); })), TimedOut);\n  assert.ok(aborted);\n  assert.equal(await withTimeout(200, async () => 'fast'), 'fast');\n});\n\ntest('retries are bounded, spread by jitter, and never retry what cannot succeed', async () => {\n  const waits: number[] = [];\n  let n = 0;\n  const ok = await retry(async () => { if (++n < 3) throw new Error('flaky'); return 'done'; }, { ...DEFAULT_RETRY, attempts: 5 }, async (ms) => { waits.push(ms); }, () => 0.5);\n  assert.equal(ok, 'done');\n  assert.deepEqual(waits, [100, 200], 'half of 200, then half of 400');\n  n = 0;\n  await assert.rejects(retry(async () => { n++; throw new Error('down'); }, { ...DEFAULT_RETRY, attempts: 3 }, async () => {}, () => 0), /down/);\n  assert.equal(n, 3, 'exactly the attempts allowed');\n  n = 0;\n  await assert.rejects(retry(async () => { n++; throw new TypeError('bad input'); }, { ...DEFAULT_RETRY, attempts: 4, retryable: (e) => !(e instanceof TypeError) }, async () => {}, () => 0), TypeError);\n  assert.equal(n, 1, 'a caller error is not retried');\n  assert.equal(backoff(10, DEFAULT_RETRY, () => 0.999), 4995, 'the step is capped');\n  await assert.rejects(retry(async () => 1, { ...DEFAULT_RETRY, attempts: 0 }), RangeError);\n});\n\ntest('the breaker opens after repeated failures, fails fast, and lets one trial through after the cool-down', async () => {\n  let t = 0;\n  const b = new Breaker(2, 1000, () => t);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/resilience-21.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:54.192Z"
+}

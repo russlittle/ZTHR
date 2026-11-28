@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "payments",
+  "mutant": {
+    "id": "115",
+    "line": 169,
+    "column": 9,
+    "endLine": 169,
+    "endColumn": 23,
+    "mutator": "EqualityOperator",
+    "original": "inv.total <= 0",
+    "replacement": "inv.total < 0",
+    "lineText": "if (inv.total <= 0) {",
+    "prevText": "private async collect(inv: Invoice, s: Subscription): Promise<Outcome> {",
+    "nextText": "inv.state = 'paid';"
+  },
+  "mayEdit": [
+    "intent/blocks/payments/payments.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/payments-115.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"payments\". Mutant: line 169:9-169:23, mutator EqualityOperator: \"inv.total <= 0\" becomes \"inv.total < 0\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/payments/index.ts (> marks the mutated line):\n   163  \n   164    /**\n   165     * Charges an invoice. A provider error leaves the outcome unknown (the card may have been charged), so the next\n   166     * attempt reuses the same idempotency key and cannot charge twice.\n   167     */\n   168    private async collect(inv: Invoice, s: Subscription): Promise<Outcome> {\n>  169      if (inv.total <= 0) {\n   170        inv.state = 'paid';\n   171        return 'paid';\n   172      }\n   173      if (!this.unsure.has(inv.id)) inv.attempts++;\n   174      let c: Charge;\n   175      try {\n\nTest file style (intent/blocks/payments/payments.test.ts):\n7 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Billing, TEST_METHODS as M, TwinProvider, money } from './index.ts';\n\nconst DAY = 86_400_000;\n\ntest('the twin: declines, confirmation, idempotency and partial refunds', async () => {\n  const p = new TwinProvider();\n  assert.throws(() => money(10.5, 'USD'), /whole minor units/);\n  const a = await p.charge('c1', M.ok, money(1000, 'USD'), 'k1');\n  const again = await p.charge('c1', M.ok, money(1000, 'USD'), 'k1');\n  assert.equal(again.id, a.id, 'a retried request does not charge twice');\n  await assert.rejects(p.charge('c1', M.ok, money(999, 'USD'), 'k1'), /different details/);\n  assert.equal((await p.charge('c1', M.declined, money(1000, 'USD'), 'k2')).failure, 'card_declined');\n  const s = await p.charge('c1', M.needsAction, money(500, 'USD'), 'k3');\n  assert.equal(s.state, 'requires_action');\n  assert.equal((await p.confirm(s.id)).state, 'succeeded');\n  await p.refund(a.id, 400, 'r1');\n  await p.refund(a.id, 400, 'r1');\n  assert.equal(p.charges.get(a.id)!.refunded, 400);\n  await assert.rejects(p.refund(a.id, 700, 'r2'), /at most 600/);\n});\n\ntest('trials, renewals, prorated plan changes and cancel at period end', async () => {\n  let t = Date.parse('2026-11-01T00:00:00Z');\n  const b = new Billing(new TwinProvider(), [{ id: 'basic', price: money(1000, 'USD'), periodDays: 30, trialDays: 14 }, { id: 'pro', price: money(3000, 'USD'), periodDays: 30 }], { now: () => t });\n  const s = await b.subscribe('ana', 'basic', M.ok);\n  assert.equal(s.state, 'trialing');\n  assert.equal(b.invoices.length, 0, 'nothing is charged during a trial');\n  t += 14 * DAY;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/payments-115.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:46.220Z"
+}

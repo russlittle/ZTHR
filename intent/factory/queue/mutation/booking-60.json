@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "booking",
+  "mutant": {
+    "id": "60",
+    "line": 50,
+    "column": 157,
+    "endLine": 50,
+    "endColumn": 172,
+    "mutator": "ConditionalExpression",
+    "original": "x.end > x.start",
+    "replacement": "true",
+    "lineText": "for (const b of busy) pieces = pieces.flatMap((p) => (overlaps(p, b) ? [{ start: p.start, end: b.start }, { start: b.end, end: p.end }].filter((x) => x.end > x.start) : [p]));",
+    "prevText": "let pieces = [sp];",
+    "nextText": "return pieces;"
+  },
+  "mayEdit": [
+    "intent/blocks/booking/booking.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/booking-60.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"booking\". Mutant: line 50:157-50:172, mutator ConditionalExpression: \"x.end > x.start\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/booking/index.ts (> marks the mutated line):\n    44    }\n    45    const busy = [...c.busy].sort((a, b) => a.start - b.start);\n    46    return out\n    47      .sort((a, b) => a.start - b.start)\n    48      .flatMap((sp) => {\n    49        let pieces = [sp];\n>   50        for (const b of busy) pieces = pieces.flatMap((p) => (overlaps(p, b) ? [{ start: p.start, end: b.start }, { start: b.end, end: p.end }].filter((x) => x.end > x.start) : [p]));\n    51        return pieces;\n    52      });\n    53  }\n    54  \n    55  const intersect = (a: Span[], b: Span[]) => a.flatMap((x) => b.filter((y) => overlaps(x, y)).map((y) => ({ start: Math.max(x.start, y.start), end: Math.min(x.end, y.end) })));\n    56  \n\nTest file style (intent/blocks/booking/booking.test.ts):\n7 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Bookings, findTime, free, type Calendar } from './index.ts';\n\nconst t = (s: string) => Date.parse(s);\nconst iso = (n: number) => new Date(n).toISOString().slice(0, 16);\nconst weekdays = (a: number, b: number) => ({ 1: [a, b], 2: [a, b], 3: [a, b], 4: [a, b], 5: [a, b] }) as Calendar['hours'];\n\ntest('free time is inside local working hours and outside busy periods', () => {\n  const ana: Calendar = { id: 'ana', tz: 'America/New_York', hours: weekdays(9, 17), busy: [{ start: t('2026-11-30T15:00:00Z'), end: t('2026-11-30T16:00:00Z') }] };\n  const f = free(ana, { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-01T00:00:00Z') });\n  assert.deepEqual(f.map((s) => [iso(s.start), iso(s.end)]), [['2026-11-30T14:00', '2026-11-30T15:00'], ['2026-11-30T16:00', '2026-11-30T22:00']]);\n  assert.deepEqual(free(ana, { start: t('2026-11-28T00:00:00Z'), end: t('2026-11-29T23:00:00Z') }), [], 'no hours at the weekend');\n});\n\ntest('find a time across zones picks a slot everyone can make, kindest to their days', () => {\n  const ana: Calendar = { id: 'ana', tz: 'America/New_York', hours: weekdays(9, 17), busy: [] };\n  const raj: Calendar = { id: 'raj', tz: 'Europe/London', hours: weekdays(9, 17), busy: [{ start: t('2026-11-30T14:00:00Z'), end: t('2026-11-30T15:00:00Z') }] };\n  const slots = findTime([ana, raj], { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-01T00:00:00Z') }, 30, { stepMinutes: 30 });\n  assert.deepEqual(slots.map((s) => iso(s.start)), ['2026-11-30T15:00', '2026-11-30T15:30', '2026-11-30T16:00', '2026-11-30T16:30']);\n  assert.deepEqual(findTime([ana, raj], { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-01T00:00:00Z') }, 180), [], 'no three-hour overlap');\n});\n\ntest('a slot can be held by one person only, holds expire, and buffers keep gaps', () => {\n  let now = t('2026-11-26T12:00:00Z');\n  const b = new Bookings({ now: () => now, bufferMinutes: 10 });\n  const slot = { start: t('2026-11-30T15:00:00Z'), end: t('2026-11-30T15:30:00Z') };\n  const h = b.hold('room-1', slot, 'ana');\n  assert.throws(() => b.hold('room-1', slot, 'ben'), /just been taken/);\n  assert.throws(() => b.hold('room-1', { start: slot.end + 5 * 60_000, end: slot.end + 35 * 60_000 }, 'ben'), /just been taken/, 'inside the buffer');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/booking-60.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:08.411Z"
+}

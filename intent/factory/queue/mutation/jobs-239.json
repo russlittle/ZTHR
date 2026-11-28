@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "jobs",
+  "mutant": {
+    "id": "239",
+    "line": 238,
+    "column": 17,
+    "endLine": 238,
+    "endColumn": 28,
+    "mutator": "MethodExpression",
+    "original": "expr.trim()",
+    "replacement": "expr",
+    "lineText": "const parts = expr.trim().split(/\\s+/);",
+    "prevText": "export function cron(expr: string) {",
+    "nextText": "if (parts.length !== 5) throw new Error('a cron expression has five fields: minute hour day month weekday');"
+  },
+  "mayEdit": [
+    "intent/blocks/jobs/jobs.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/jobs-239.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"jobs\". Mutant: line 238:17-238:28, mutator MethodExpression: \"expr.trim()\" becomes \"expr\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/jobs/index.ts (> marks the mutated line):\n   232  \n   233  /**\n   234   * A parsed five-field cron expression (minute hour day-of-month month day-of-week, where Sunday is 0 or 7), in\n   235   * UTC. When both day fields are restricted, either may match.\n   236   */\n   237  export function cron(expr: string) {\n>  238    const parts = expr.trim().split(/\\s+/);\n   239    if (parts.length !== 5) throw new Error('a cron expression has five fields: minute hour day month weekday');\n   240    const [mi, h, dom, mo, dow] = parts.map((p, i) => field(p, RANGES[i]!)) as [Set<number>, Set<number>, Set<number>, Set<number>, Set<number>];\n   241    if (dow.delete(7)) dow.add(0);\n   242    const domAny = parts[2] === '*';\n   243    const dowAny = parts[4] === '*';\n   244    const dayOk = (d: Date) => (domAny && dowAny ? true : domAny ? dow.has(d.getUTCDay()) : dowAny ? dom.has(d.getUTCDate()) : dom.has(d.getUTCDate()) || dow.has(d.getUTCDay()));\n\nTest file style (intent/blocks/jobs/jobs.test.ts):\n8 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Queue, backfill, cron } from './index.ts';\n\nconst setup = () => {\n  let t = 0;\n  const q = new Queue({ now: () => t, baseMs: 100, maxMs: 1000, random: () => 0.999 });\n  return { q, tick: (ms: number) => (t += ms) };\n};\n\ntest('a failing job retries with backoff, then waits as a dead letter until replayed after a fix', async () => {\n  const { q, tick } = setup();\n  let broken = true;\n  q.handle('send', async () => {\n    if (broken) throw new Error('mail server refused');\n    return 'sent';\n  });\n  const j = q.enqueue('send', { to: 'ana' }, { maxAttempts: 3 });\n  await q.tick();\n  assert.equal(j.state, 'waiting');\n  assert.equal(j.runAt, 99, 'the first retry waits up to the base delay');\n  assert.equal(await q.tick(), 0, 'not due yet');\n  tick(100);\n  await q.tick();\n  assert.equal(j.runAt, 100 + 199);\n  tick(300);\n  await q.tick();\n  assert.equal(j.state, 'dead');\n  assert.equal(j.lastError, 'mail server refused');\n  broken = false;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/jobs-239.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:34.093Z"
+}

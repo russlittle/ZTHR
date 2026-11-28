@@ -1,0 +1,1677 @@
+{
+  "files": {
+    "blocks/ratelimit/index.ts": {
+      "language": "typescript",
+      "mutants": [
+        {
+          "id": "2",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "ms * 1000",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 47,
+              "line": 11
+            },
+            "start": {
+              "column": 38,
+              "line": 11
+            }
+          }
+        },
+        {
+          "id": "1",
+          "mutatorName": "StringLiteral",
+          "replacement": "``",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 52,
+              "line": 11
+            },
+            "start": {
+              "column": 11,
+              "line": 11
+            }
+          }
+        },
+        {
+          "id": "0",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.906307\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:12:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.267915\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.312813\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.478934\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:48:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 1\n\n# fail 3\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 150.781642\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 13
+            },
+            "start": {
+              "column": 41,
+              "line": 10
+            }
+          }
+        },
+        {
+          "id": "3",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 0.965225\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'this.now is not a function'\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.level (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:102:22)\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:121:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:9:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.249126\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'this.now is not a function'\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.level (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:102:22)\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:121:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:24:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.189918\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: 'this.now is not a function'\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.level (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:102:22)\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:121:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:33:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.631461\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 1\n\n# fail 3\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 162.8408\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 34
+            },
+            "start": {
+              "column": 73,
+              "line": 29
+            }
+          }
+        },
+        {
+          "id": "6",
+          "mutatorName": "LogicalOperator",
+          "replacement": "b.burst < 1 && b.perSecond <= 0",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.481914\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.27693\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.641223\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception (RangeError).'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:37:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.56078\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 122.197736\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 40,
+              "line": 30
+            },
+            "start": {
+              "column": 9,
+              "line": 30
+            }
+          }
+        },
+        {
+          "id": "5",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 4.505809\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.207347\n  type: 'test'\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.420955\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception (RangeError).'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:37:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.462919\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 159.153794\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 40,
+              "line": 30
+            },
+            "start": {
+              "column": 9,
+              "line": 30
+            }
+          }
+        },
+        {
+          "id": "4",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 0.922414\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'a bucket needs a burst of at least 1 and a positive rate'\n  code: 'ERR_TEST_FAILURE'\n  name: 'RangeError'\n  stack: |-\n    new Limiter (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:88:503)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:8:13)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.16129\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'a bucket needs a burst of at least 1 and a positive rate'\n  code: 'ERR_TEST_FAILURE'\n  name: 'RangeError'\n  stack: |-\n    new Limiter (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:88:503)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:23:13)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nnot ok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.124447\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: 'a bucket needs a burst of at least 1 and a positive rate'\n  code: 'ERR_TEST_FAILURE'\n  name: 'RangeError'\n  stack: |-\n    new Limiter (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:88:503)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:32:13)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 2.433279\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 1\n# fail 3\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 173.196873\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 40,
+              "line": 30
+            },
+            "start": {
+              "column": 9,
+              "line": 30
+            }
+          }
+        },
+        {
+          "id": "7",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 2.444746\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.252051\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.58104\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception (RangeError).'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:37:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.36782\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 138.581108\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 20,
+              "line": 30
+            },
+            "start": {
+              "column": 9,
+              "line": 30
+            }
+          }
+        },
+        {
+          "id": "10",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 40,
+              "line": 30
+            },
+            "start": {
+              "column": 24,
+              "line": 30
+            }
+          }
+        },
+        {
+          "id": "9",
+          "mutatorName": "EqualityOperator",
+          "replacement": "b.burst >= 1",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.642397\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'a bucket needs a burst of at least 1 and a positive rate'\n  code: 'ERR_TEST_FAILURE'\n  name: 'RangeError'\n  stack: |-\n    new Limiter (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:88:503)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:8:13)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.175069\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'a bucket needs a burst of at least 1 and a positive rate'\n  code: 'ERR_TEST_FAILURE'\n  name: 'RangeError'\n  stack: |-\n    new Limiter (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:88:503)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:23:13)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.134521\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: 'a bucket needs a burst of at least 1 and a positive rate'\n  code: 'ERR_TEST_FAILURE'\n  name: 'RangeError'\n  stack: |-\n    new Limiter (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:88:503)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:32:13)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.870513\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 1\n# fail 3\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 132.424358\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 20,
+              "line": 30
+            },
+            "start": {
+              "column": 9,
+              "line": 30
+            }
+          }
+        },
+        {
+          "id": "8",
+          "mutatorName": "EqualityOperator",
+          "replacement": "b.burst <= 1",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 20,
+              "line": 30
+            },
+            "start": {
+              "column": 9,
+              "line": 30
+            }
+          }
+        },
+        {
+          "id": "11",
+          "mutatorName": "EqualityOperator",
+          "replacement": "b.perSecond < 0",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 40,
+              "line": 30
+            },
+            "start": {
+              "column": 24,
+              "line": 30
+            }
+          }
+        },
+        {
+          "id": "13",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 121,
+              "line": 30
+            },
+            "start": {
+              "column": 63,
+              "line": 30
+            }
+          }
+        },
+        {
+          "id": "14",
+          "mutatorName": "LogicalOperator",
+          "replacement": "o.now && Date.now",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.434661\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait 1 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:15:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.198202\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait 2 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:27:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nnot ok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.903851\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    0 !== 2\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 2\n  actual: 0\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:36:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.574666\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 1\n\n# fail 3\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 132.385588\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 33,
+              "line": 32
+            },
+            "start": {
+              "column": 16,
+              "line": 32
+            }
+          }
+        },
+        {
+          "id": "12",
+          "mutatorName": "EqualityOperator",
+          "replacement": "b.perSecond > 0",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 5.953046\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'a bucket needs a burst of at least 1 and a positive rate'\n  code: 'ERR_TEST_FAILURE'\n  name: 'RangeError'\n  stack: |-\n    new Limiter (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:88:503)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:8:13)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.153234\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'a bucket needs a burst of at least 1 and a positive rate'\n  code: 'ERR_TEST_FAILURE'\n  name: 'RangeError'\n  stack: |-\n    new Limiter (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:88:503)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:23:13)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.151012\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: 'a bucket needs a burst of at least 1 and a positive rate'\n  code: 'ERR_TEST_FAILURE'\n  name: 'RangeError'\n  stack: |-\n    new Limiter (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:88:503)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:32:13)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.818904\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n# suites 0\n\n# pass 1\n\n# fail 3\n\n# cancelled 0\n\n# skipped 0\n# todo 0\n# duration_ms 165.107859\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 40,
+              "line": 30
+            },
+            "start": {
+              "column": 24,
+              "line": 30
+            }
+          }
+        },
+        {
+          "id": "15",
+          "mutatorName": "LogicalOperator",
+          "replacement": "o.what && 'too many requests'",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 46,
+              "line": 33
+            },
+            "start": {
+              "column": 17,
+              "line": 33
+            }
+          }
+        },
+        {
+          "id": "16",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 46,
+              "line": 33
+            },
+            "start": {
+              "column": 27,
+              "line": 33
+            }
+          }
+        },
+        {
+          "id": "17",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.117875\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'tokens')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:206)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:9:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.206711\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'tokens')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:206)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:24:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.159055\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'tokens')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:206)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:33:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.832756\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 1\n# fail 3\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 163.933482\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 41
+            },
+            "start": {
+              "column": 62,
+              "line": 36
+            }
+          }
+        },
+        {
+          "id": "18",
+          "mutatorName": "BooleanLiteral",
+          "replacement": "s",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.073275\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'tokens')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.level (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:109:260)\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:121:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:9:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.192779\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'tokens')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.level (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:109:260)\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:121:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:24:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nnot ok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.172831\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'tokens')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.level (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:109:260)\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:121:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:33:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.914708\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 1\n\n# fail 3\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 181.901601\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 11,
+              "line": 39
+            },
+            "start": {
+              "column": 9,
+              "line": 39
+            }
+          }
+        },
+        {
+          "id": "19",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 5.371253\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:12:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.208131\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.411509\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.545226\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n# suites 0\n# pass 2\n# fail 2\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 139.053806\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 11,
+              "line": 39
+            },
+            "start": {
+              "column": 9,
+              "line": 39
+            }
+          }
+        },
+        {
+          "id": "20",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.072819\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'tokens')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.level (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:109:260)\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:121:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:9:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 1.10364\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'tokens')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.level (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:109:260)\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:121:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:24:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.21439\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'tokens')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Limiter.level (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:109:260)\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:121:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:33:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.858534\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 1\n\n# fail 3\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 132.620975\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 11,
+              "line": 39
+            },
+            "start": {
+              "column": 9,
+              "line": 39
+            }
+          }
+        },
+        {
+          "id": "23",
+          "mutatorName": "MethodExpression",
+          "replacement": "Math.max(this.b.burst, s.tokens + (t - s.at) / 1000 * this.b.perSecond)",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.269408\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:12:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.912688\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.373011\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.38922\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 2\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 119.601222\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 95,
+              "line": 40
+            },
+            "start": {
+              "column": 22,
+              "line": 40
+            }
+          }
+        },
+        {
+          "id": "21",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.561959\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:12:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.227141\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.591247\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    NaN !== 2\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 2\n  actual: NaN\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:36:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.825757\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n\n# suites 0\n# pass 1\n# fail 3\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 168.453165\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 51,
+              "line": 39
+            },
+            "start": {
+              "column": 20,
+              "line": 39
+            }
+          }
+        },
+        {
+          "id": "22",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.37849\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:12:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.233803\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nnot ok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.559993\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    NaN !== 2\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 2\n  actual: NaN\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:36:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.766839\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 1\n\n# fail 3\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 159.259325\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 104,
+              "line": 40
+            },
+            "start": {
+              "column": 12,
+              "line": 40
+            }
+          }
+        },
+        {
+          "id": "24",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "s.tokens - (t - s.at) / 1000 * this.b.perSecond",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 4.338382\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait 2 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:15:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.241439\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait 3 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:27:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 1.080402\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    -5 !== 2\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 2\n  actual: -5\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:36:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.701743\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 1\n\n# fail 3\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 140.312024\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 94,
+              "line": 40
+            },
+            "start": {
+              "column": 45,
+              "line": 40
+            }
+          }
+        },
+        {
+          "id": "25",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "(t - s.at) / 1000 / this.b.perSecond",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.434183\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.329892\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait 2 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:27:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.260048\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.531932\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 149.78949\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 94,
+              "line": 40
+            },
+            "start": {
+              "column": 56,
+              "line": 40
+            }
+          }
+        },
+        {
+          "id": "26",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "(t - s.at) * 1000",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.738247\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception (Limited).'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:16:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.244296\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.389768\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.516186\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 159.723128\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 74,
+              "line": 40
+            },
+            "start": {
+              "column": 57,
+              "line": 40
+            }
+          }
+        },
+        {
+          "id": "27",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "t + s.at",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.588969\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception (Limited).'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:16:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.255289\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.368284\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.565861\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 150.291055\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 66,
+              "line": 40
+            },
+            "start": {
+              "column": 58,
+              "line": 40
+            }
+          }
+        },
+        {
+          "id": "29",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.915017\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait -2 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:9:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.177927\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait -1 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:24:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nnot ok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.177244\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait 0 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:33:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.794407\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n\n# suites 0\n# pass 1\n# fail 3\n# cancelled 0\n\n# skipped 0\n# todo 0\n\n# duration_ms 142.246042\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 24,
+              "line": 46
+            },
+            "start": {
+              "column": 9,
+              "line": 46
+            }
+          }
+        },
+        {
+          "id": "28",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.493644\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:12:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.213714\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.532216\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 5.807661\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 2\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 164.268332\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 49
+            },
+            "start": {
+              "column": 37,
+              "line": 44
+            }
+          }
+        },
+        {
+          "id": "30",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.928456\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:12:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.427895\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.461415\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.538352\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 2\n# fail 2\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 145.545926\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 24,
+              "line": 46
+            },
+            "start": {
+              "column": 9,
+              "line": 46
+            }
+          }
+        },
+        {
+          "id": "31",
+          "mutatorName": "EqualityOperator",
+          "replacement": "s.tokens <= cost",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.029247\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait 0 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:11:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.342226\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait 0 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:27:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.100248\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait 0 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:33:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.479028\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 1\n# fail 3\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 136.939506\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 24,
+              "line": 46
+            },
+            "start": {
+              "column": 9,
+              "line": 46
+            }
+          }
+        },
+        {
+          "id": "32",
+          "mutatorName": "EqualityOperator",
+          "replacement": "s.tokens >= cost",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.110661\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait -2 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:9:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.174697\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait -1 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:24:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nnot ok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.137404\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: 'too many requests: wait 0 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Limiter.take (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:122:228)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:33:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.902241\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n# pass 1\n# fail 3\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 129.305008\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 24,
+              "line": 46
+            },
+            "start": {
+              "column": 9,
+              "line": 46
+            }
+          }
+        },
+        {
+          "id": "33",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "(cost - s.tokens) / this.b.perSecond / 1000",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 4.621509\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: too many requests: wait 1 s\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:12:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.239035\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: too many requests: wait 1 s\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.315937\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.50343\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 2\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 160.415277\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 89,
+              "line": 46
+            },
+            "start": {
+              "column": 44,
+              "line": 46
+            }
+          }
+        },
+        {
+          "id": "35",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "cost + s.tokens",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 6.407874\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.62268\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: too many requests: wait 4 s\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.30618\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.533991\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 157.184019\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 61,
+              "line": 46
+            },
+            "start": {
+              "column": 46,
+              "line": 46
+            }
+          }
+        },
+        {
+          "id": "34",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "(cost - s.tokens) * this.b.perSecond",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.403872\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.62788\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: too many requests: wait 6 s\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.345291\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.500571\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 157.433757\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 81,
+              "line": 46
+            },
+            "start": {
+              "column": 45,
+              "line": 46
+            }
+          }
+        },
+        {
+          "id": "36",
+          "mutatorName": "ObjectLiteral",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 4.606843\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:12:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n\n# Subtest: a costly request takes more tokens\n\nnot ok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.228313\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nnot ok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.540408\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    NaN !== 2\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 2\n  actual: NaN\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:36:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.693445\n  type: 'test'\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 1\n# fail 3\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 134.830832\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 62,
+              "line": 47
+            },
+            "start": {
+              "column": 25,
+              "line": 47
+            }
+          }
+        },
+        {
+          "id": "38",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 33,
+              "line": 48
+            },
+            "start": {
+              "column": 9,
+              "line": 48
+            }
+          }
+        },
+        {
+          "id": "39",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 33,
+              "line": 48
+            },
+            "start": {
+              "column": 9,
+              "line": 48
+            }
+          }
+        },
+        {
+          "id": "37",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "s.tokens + cost",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.518764\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:12:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\nnot ok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.227449\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:21:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:25:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.368934\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.483108\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 2\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 175.064104\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 50,
+              "line": 47
+            },
+            "start": {
+              "column": 35,
+              "line": 47
+            }
+          }
+        },
+        {
+          "id": "40",
+          "mutatorName": "EqualityOperator",
+          "replacement": "this.state.size >= 50_000",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 33,
+              "line": 48
+            },
+            "start": {
+              "column": 9,
+              "line": 48
+            }
+          }
+        },
+        {
+          "id": "41",
+          "mutatorName": "EqualityOperator",
+          "replacement": "this.state.size <= 50_000",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 33,
+              "line": 48
+            },
+            "start": {
+              "column": 9,
+              "line": 48
+            }
+          }
+        },
+        {
+          "id": "42",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nnot ok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.977111\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:6:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    never more than the burst\n    \n    undefined !== 3\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 3\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:18:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.start (node:internal/test_runner/test:944:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.23776\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\n\nnot ok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.363668\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:30:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    Expected values to be strictly equal:\n    \n    undefined !== 2\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 2\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:36:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.484968\n  type: 'test'\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 2\n\n# fail 2\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 162.273003\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 54
+            },
+            "start": {
+              "column": 29,
+              "line": 52
+            }
+          }
+        },
+        {
+          "id": "43",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 59
+            },
+            "start": {
+              "column": 17,
+              "line": 57
+            }
+          }
+        },
+        {
+          "id": "44",
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[]",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 43,
+              "line": 58
+            },
+            "start": {
+              "column": 21,
+              "line": 58
+            }
+          }
+        },
+        {
+          "id": "45",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 85,
+              "line": 58
+            },
+            "start": {
+              "column": 49,
+              "line": 58
+            }
+          }
+        },
+        {
+          "id": "47",
+          "mutatorName": "EqualityOperator",
+          "replacement": "this.level(k).tokens > this.b.burst",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 85,
+              "line": 58
+            },
+            "start": {
+              "column": 49,
+              "line": 58
+            }
+          }
+        },
+        {
+          "id": "46",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 85,
+              "line": 58
+            },
+            "start": {
+              "column": 49,
+              "line": 58
+            }
+          }
+        },
+        {
+          "id": "48",
+          "mutatorName": "EqualityOperator",
+          "replacement": "this.level(k).tokens < this.b.burst",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 85,
+              "line": 58
+            },
+            "start": {
+              "column": 49,
+              "line": 58
+            }
+          }
+        },
+        {
+          "id": "49",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.532981\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\n\nok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.294655\n  type: 'test'\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.248218\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.319055\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'this.now is not a function'\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Failures.recent (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:181:22)\n    Failures.check (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:192:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:43:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 136.976489\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 78
+            },
+            "start": {
+              "column": 95,
+              "line": 73
+            }
+          }
+        },
+        {
+          "id": "51",
+          "mutatorName": "LogicalOperator",
+          "replacement": "o.what && 'too many failed attempts'",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 53,
+              "line": 77
+            },
+            "start": {
+              "column": 17,
+              "line": 77
+            }
+          }
+        },
+        {
+          "id": "50",
+          "mutatorName": "LogicalOperator",
+          "replacement": "o.now && Date.now",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.430462\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.292581\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.276459\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.812273\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: too many failed attempts: wait 60 s\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:50:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 180.769684\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 33,
+              "line": 76
+            },
+            "start": {
+              "column": 16,
+              "line": 76
+            }
+          }
+        },
+        {
+          "id": "52",
+          "mutatorName": "StringLiteral",
+          "replacement": "\"\"",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 53,
+              "line": 77
+            },
+            "start": {
+              "column": 27,
+              "line": 77
+            }
+          }
+        },
+        {
+          "id": "53",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.114559\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 3.306463\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.315254\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.322269\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'length')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Failures.check (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:193:216)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:43:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 138.230636\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 83
+            },
+            "start": {
+              "column": 41,
+              "line": 80
+            }
+          }
+        },
+        {
+          "id": "54",
+          "mutatorName": "MethodExpression",
+          "replacement": "this.seen.get(key) ?? []",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 3.45715\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\n\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.288467\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.230797\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 2.358269\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'too many failed attempts: wait 0 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Failures.check (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:193:245)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:52:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 142.496259\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 75,
+              "line": 82
+            },
+            "start": {
+              "column": 12,
+              "line": 82
+            }
+          }
+        },
+        {
+          "id": "55",
+          "mutatorName": "LogicalOperator",
+          "replacement": "this.seen.get(key) && []",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 5.566298\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\n\nok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.286985\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.241543\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.322045\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: \"Cannot read properties of undefined (reading 'filter')\"\n  code: 'ERR_TEST_FAILURE'\n  name: 'TypeError'\n  stack: |-\n    Failures.recent (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:182:263)\n    Failures.check (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:192:22)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:43:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 149.58437\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 37,
+              "line": 82
+            },
+            "start": {
+              "column": 13,
+              "line": 82
+            }
+          }
+        },
+        {
+          "id": "56",
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[\"Stryker was here\"]",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 37,
+              "line": 82
+            },
+            "start": {
+              "column": 35,
+              "line": 82
+            }
+          }
+        },
+        {
+          "id": "58",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 2.559109\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.325104\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.230998\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.461819\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'too many failed attempts: wait 0 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Failures.check (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:193:245)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:52:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 135.882572\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 74,
+              "line": 82
+            },
+            "start": {
+              "column": 53,
+              "line": 82
+            }
+          }
+        },
+        {
+          "id": "57",
+          "mutatorName": "ArrowFunction",
+          "replacement": "() => undefined",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.456119\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.28227\n  type: 'test'\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.238646\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.710987\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:48:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 163.428828\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 74,
+              "line": 82
+            },
+            "start": {
+              "column": 46,
+              "line": 82
+            }
+          }
+        },
+        {
+          "id": "59",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.526639\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 5.07468\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.300056\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.746691\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:48:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 194.077189\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 74,
+              "line": 82
+            },
+            "start": {
+              "column": 53,
+              "line": 82
+            }
+          }
+        },
+        {
+          "id": "60",
+          "mutatorName": "EqualityOperator",
+          "replacement": "t - x <= this.windowMs",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 74,
+              "line": 82
+            },
+            "start": {
+              "column": 53,
+              "line": 82
+            }
+          }
+        },
+        {
+          "id": "61",
+          "mutatorName": "EqualityOperator",
+          "replacement": "t - x >= this.windowMs",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.499046\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\n\nok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.259263\n  type: 'test'\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.254408\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.745415\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:48:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 148.31129\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 74,
+              "line": 82
+            },
+            "start": {
+              "column": 53,
+              "line": 82
+            }
+          }
+        },
+        {
+          "id": "62",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "t + x",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 58,
+              "line": 82
+            },
+            "start": {
+              "column": 53,
+              "line": 82
+            }
+          }
+        },
+        {
+          "id": "64",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.246249\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\n\nok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.26097\n  type: 'test'\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.22921\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.319693\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'too many failed attempts: wait NaN s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Failures.check (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:193:245)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:43:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 122.098123\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 31,
+              "line": 88
+            },
+            "start": {
+              "column": 9,
+              "line": 88
+            }
+          }
+        },
+        {
+          "id": "63",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.437736\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\n\nok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.281606\n  type: 'test'\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.249543\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.802175\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:48:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 161.824963\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 89
+            },
+            "start": {
+              "column": 28,
+              "line": 86
+            }
+          }
+        },
+        {
+          "id": "66",
+          "mutatorName": "EqualityOperator",
+          "replacement": "r.length > this.limit",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.420071\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.273402\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.236996\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.727474\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:48:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 145.705104\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 31,
+              "line": 88
+            },
+            "start": {
+              "column": 9,
+              "line": 88
+            }
+          }
+        },
+        {
+          "id": "65",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.451743\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.271667\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.241712\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 2.214284\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:48:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 164.368256\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 31,
+              "line": 88
+            },
+            "start": {
+              "column": 9,
+              "line": 88
+            }
+          }
+        },
+        {
+          "id": "67",
+          "mutatorName": "EqualityOperator",
+          "replacement": "r.length < this.limit",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.419044\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.268435\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.20626\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.264474\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'too many failed attempts: wait NaN s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Failures.check (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:193:245)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:43:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 137.318434\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 31,
+              "line": 88
+            },
+            "start": {
+              "column": 9,
+              "line": 88
+            }
+          }
+        },
+        {
+          "id": "69",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "this.now() + r[0]!",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 86,
+              "line": 88
+            },
+            "start": {
+              "column": 68,
+              "line": 88
+            }
+          }
+        },
+        {
+          "id": "68",
+          "mutatorName": "ArithmeticOperator",
+          "replacement": "this.windowMs + (this.now() - r[0]!)",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n  ---\n  duration_ms: 1.301859\n  type: 'test'\n  ...\n# Subtest: a costly request takes more tokens\nok 2 - a costly request takes more tokens\n  ---\n  duration_ms: 0.301918\n  type: 'test'\n  ...\n# Subtest: full buckets are pruned, and behave as if never seen\nok 3 - full buckets are pruned, and behave as if never seen\n  ---\n  duration_ms: 0.216974\n  type: 'test'\n  ...\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n  ---\n  duration_ms: 0.760145\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The validation function is expected to return \"true\". Received false\n    \n    Caught error:\n    \n    Error: too many failed attempts: wait 90 s\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:50:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n\n# pass 3\n# fail 1\n\n# cancelled 0\n\n# skipped 0\n\n# todo 0\n\n# duration_ms 121.346578\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 87,
+              "line": 88
+            },
+            "start": {
+              "column": 51,
+              "line": 88
+            }
+          }
+        },
+        {
+          "id": "70",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.418195\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\n\nok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.26649\n  type: 'test'\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.216654\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 2.38603\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'Missing expected exception.'\n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  stack: |-\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:48:10)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n# tests 4\n# suites 0\n# pass 3\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 192.620677\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 96
+            },
+            "start": {
+              "column": 27,
+              "line": 91
+            }
+          }
+        },
+        {
+          "id": "71",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 32,
+              "line": 95
+            },
+            "start": {
+              "column": 9,
+              "line": 95
+            }
+          }
+        },
+        {
+          "id": "72",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 32,
+              "line": 95
+            },
+            "start": {
+              "column": 9,
+              "line": 95
+            }
+          }
+        },
+        {
+          "id": "73",
+          "mutatorName": "EqualityOperator",
+          "replacement": "this.seen.size >= 50_000",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 32,
+              "line": 95
+            },
+            "start": {
+              "column": 9,
+              "line": 95
+            }
+          }
+        },
+        {
+          "id": "75",
+          "mutatorName": "ArrayDeclaration",
+          "replacement": "[]",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 71,
+              "line": 95
+            },
+            "start": {
+              "column": 50,
+              "line": 95
+            }
+          }
+        },
+        {
+          "id": "74",
+          "mutatorName": "EqualityOperator",
+          "replacement": "this.seen.size <= 50_000",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 32,
+              "line": 95
+            },
+            "start": {
+              "column": 9,
+              "line": 95
+            }
+          }
+        },
+        {
+          "id": "76",
+          "mutatorName": "BooleanLiteral",
+          "replacement": "this.recent(k).length",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 99,
+              "line": 95
+            },
+            "start": {
+              "column": 77,
+              "line": 95
+            }
+          }
+        },
+        {
+          "id": "77",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "true",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 99,
+              "line": 95
+            },
+            "start": {
+              "column": 77,
+              "line": 95
+            }
+          }
+        },
+        {
+          "id": "78",
+          "mutatorName": "ConditionalExpression",
+          "replacement": "false",
+          "status": "Survived",
+          "testsCompleted": 1,
+          "location": {
+            "end": {
+              "column": 99,
+              "line": 95
+            },
+            "start": {
+              "column": 77,
+              "line": 95
+            }
+          }
+        },
+        {
+          "id": "79",
+          "mutatorName": "BlockStatement",
+          "replacement": "{}",
+          "statusReason": "TAP version 13\n\n# Subtest: a bucket allows a burst, then refills at its rate, and says how long to wait\n\nok 1 - a bucket allows a burst, then refills at its rate, and says how long to wait\n\n  ---\n  duration_ms: 1.495271\n  type: 'test'\n  ...\n\n# Subtest: a costly request takes more tokens\n\nok 2 - a costly request takes more tokens\n\n  ---\n  duration_ms: 0.344461\n  type: 'test'\n  ...\n\n# Subtest: full buckets are pruned, and behave as if never seen\n\nok 3 - full buckets are pruned, and behave as if never seen\n\n  ---\n  duration_ms: 0.333061\n  type: 'test'\n  ...\n\n# Subtest: failures slow a key down only after the limit, and a success clears them\n\nnot ok 4 - failures slow a key down only after the limit, and a success clears them\n\n  ---\n  duration_ms: 0.69268\n  type: 'test'\n  location: '/tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:40:1'\n  failureType: 'testCodeFailure'\n  error: 'too many failed attempts: wait 60 s'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Failures.check (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/index.ts:193:245)\n    TestContext.<anonymous> (file:///tmp/mutation-ratelimit-OaJRnE/sandbox/sandbox-5RHkYX/blocks/ratelimit/ratelimit.test.ts:57:5)\n    Test.runInAsyncScope (node:async_hooks:214:14)\n    Test.run (node:internal/test_runner/test:1047:25)\n    Test.processPendingSubtests (node:internal/test_runner/test:744:18)\n    Test.postRun (node:internal/test_runner/test:1173:19)\n    Test.run (node:internal/test_runner/test:1101:12)\n    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)\n  ...\n\n1..4\n\n# tests 4\n\n# suites 0\n# pass 3\n\n# fail 1\n\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 106.867528\n",
+          "status": "Killed",
+          "testsCompleted": 1,
+          "killedBy": [
+            "0"
+          ],
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 100
+            },
+            "start": {
+              "column": 30,
+              "line": 98
+            }
+          }
+        }
+      ],
+      "source": "/**\n * Rate limits by key: a token bucket per key (an address, an account, a link), refilled continuously, with a\n * separate failure counter for things that should slow down only on mistakes (wrong passwords). A refusal says\n * how long to wait, so a client can back off instead of hammering. Buckets idle long enough to be full are\n * dropped, so memory stays bounded by the keys active now.\n */\n\nexport class Limited extends Error {\n  readonly retryAfterMs: number;\n  constructor(ms: number, what: string) {\n    super(`${what}: wait ${Math.ceil(ms / 1000)} s`);\n    this.retryAfterMs = ms;\n  }\n}\n\nexport interface Bucket {\n  /** Requests allowed at once. */\n  readonly burst: number;\n  /** Requests added back per second. */\n  readonly perSecond: number;\n}\n\nexport class Limiter {\n  private readonly b: Bucket;\n  private readonly now: () => number;\n  private readonly what: string;\n  private readonly state = new Map<string, { tokens: number; at: number }>();\n\n  constructor(b: Bucket, o: { now?: () => number; what?: string } = {}) {\n    if (b.burst < 1 || b.perSecond <= 0) throw new RangeError('a bucket needs a burst of at least 1 and a positive rate');\n    this.b = b;\n    this.now = o.now ?? Date.now;\n    this.what = o.what ?? 'too many requests';\n  }\n\n  private level(key: string): { tokens: number; at: number } {\n    const t = this.now();\n    const s = this.state.get(key);\n    if (!s) return { tokens: this.b.burst, at: t };\n    return { tokens: Math.min(this.b.burst, s.tokens + ((t - s.at) / 1000) * this.b.perSecond), at: t };\n  }\n\n  /** Takes `cost` tokens for a key, or refuses with how long until there are enough. */\n  take(key: string, cost = 1): void {\n    const s = this.level(key);\n    if (s.tokens < cost) throw new Limited(((cost - s.tokens) / this.b.perSecond) * 1000, this.what);\n    this.state.set(key, { tokens: s.tokens - cost, at: s.at });\n    if (this.state.size > 50_000) this.prune();\n  }\n\n  /** Tokens a key has now, for headers and tests. */\n  left(key: string): number {\n    return Math.floor(this.level(key).tokens);\n  }\n\n  /** Drops keys whose buckets have refilled: they behave exactly as keys never seen. */\n  prune(): void {\n    for (const k of [...this.state.keys()]) if (this.level(k).tokens >= this.b.burst) this.state.delete(k);\n  }\n}\n\n/**\n * Failures by key within a window: allowed until `limit` failures, then refused until the oldest falls out of\n * the window. A success clears the key. For sign-ins and passwords, where only mistakes should slow anyone down.\n */\nexport class Failures {\n  private readonly limit: number;\n  private readonly windowMs: number;\n  private readonly now: () => number;\n  private readonly what: string;\n  private readonly seen = new Map<string, number[]>();\n\n  constructor(limit: number, windowMs: number, o: { now?: () => number; what?: string } = {}) {\n    this.limit = limit;\n    this.windowMs = windowMs;\n    this.now = o.now ?? Date.now;\n    this.what = o.what ?? 'too many failed attempts';\n  }\n\n  private recent(key: string): number[] {\n    const t = this.now();\n    return (this.seen.get(key) ?? []).filter((x) => t - x < this.windowMs);\n  }\n\n  /** Refuses when a key has failed too often lately. */\n  check(key: string): void {\n    const r = this.recent(key);\n    if (r.length >= this.limit) throw new Limited(this.windowMs - (this.now() - r[0]!), this.what);\n  }\n\n  fail(key: string): void {\n    const r = this.recent(key);\n    r.push(this.now());\n    this.seen.set(key, r);\n    if (this.seen.size > 50_000) for (const k of [...this.seen.keys()]) if (!this.recent(k).length) this.seen.delete(k);\n  }\n\n  succeed(key: string): void {\n    this.seen.delete(key);\n  }\n}\n"
+    }
+  },
+  "schemaVersion": "1.0",
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": null
+  },
+  "testFiles": {
+    "": {
+      "tests": [
+        {
+          "id": "0",
+          "name": "All tests"
+        }
+      ]
+    }
+  },
+  "projectRoot": "/home/runner/work/ZTHR/ZTHR/intent",
+  "config": {
+    "testRunner": "command",
+    "commandRunner": {
+      "command": "node --test blocks/ratelimit/ratelimit.test.ts"
+    },
+    "mutate": [
+      "blocks/ratelimit/index.ts"
+    ],
+    "coverageAnalysis": "off",
+    "reporters": [
+      "json"
+    ],
+    "jsonReporter": {
+      "fileName": "/tmp/mutation-ratelimit-OaJRnE/report.json"
+    },
+    "tempDirName": "/tmp/mutation-ratelimit-OaJRnE/sandbox",
+    "concurrency": 4,
+    "timeoutMS": 20000,
+    "ignorePatterns": [
+      "node_modules",
+      "docs",
+      "site",
+      "studio",
+      "eval",
+      "lexicon",
+      "library"
+    ],
+    "disableTypeChecks": true,
+    "logLevel": "error",
+    "incremental": true,
+    "incrementalFile": "/home/runner/work/ZTHR/ZTHR/intent/eval/mutation/.incremental/ratelimit.json",
+    "configFile": "/tmp/mutation-ratelimit-OaJRnE/stryker.conf.json",
+    "allowConsoleColors": true,
+    "checkers": [],
+    "checkerNodeArgs": [],
+    "clearTextReporter": {
+      "allowColor": true,
+      "allowEmojis": false,
+      "logTests": true,
+      "maxTestsToLog": 3,
+      "reportTests": true,
+      "reportMutants": true,
+      "reportScoreTable": true,
+      "skipFull": false
+    },
+    "dashboard": {
+      "baseUrl": "https://dashboard.stryker-mutator.io/api/reports",
+      "reportType": "full"
+    },
+    "dryRunOnly": false,
+    "eventReporter": {
+      "baseDir": "reports/mutation/events"
+    },
+    "ignoreStatic": false,
+    "force": false,
+    "fileLogLevel": "off",
+    "inPlace": false,
+    "maxConcurrentTestRunners": 9007199254740991,
+    "maxTestRunnerReuse": 0,
+    "mutator": {
+      "plugins": null,
+      "excludedMutations": []
+    },
+    "plugins": [
+      "@stryker-mutator/*"
+    ],
+    "appendPlugins": [],
+    "htmlReporter": {
+      "fileName": "reports/mutation/mutation.html"
+    },
+    "symlinkNodeModules": true,
+    "cleanTempDir": true,
+    "testRunnerNodeArgs": [],
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": null
+    },
+    "timeoutFactor": 1.5,
+    "dryRunTimeoutMinutes": 5,
+    "tsconfigFile": "tsconfig.json",
+    "warnings": true,
+    "disableBail": false,
+    "allowEmpty": false,
+    "ignorers": [],
+    "testFiles": []
+  },
+  "framework": {
+    "name": "StrykerJS",
+    "version": "9.6.1",
+    "branding": {
+      "homepageUrl": "https://stryker-mutator.io",
+      "imageUrl": "data:image/svg+xml;utf8,%3Csvg viewBox='0 0 1458 1458' xmlns='http://www.w3.org/2000/svg' fill-rule='evenodd' clip-rule='evenodd' stroke-linejoin='round' stroke-miterlimit='2'%3E%3Cpath fill='none' d='M0 0h1458v1458H0z'/%3E%3CclipPath id='a'%3E%3Cpath d='M0 0h1458v1458H0z'/%3E%3C/clipPath%3E%3Cg clip-path='url(%23a)'%3E%3Cpath d='M1458 729c0 402.655-326.345 729-729 729S0 1131.655 0 729C0 326.445 326.345 0 729 0s729 326.345 729 729' fill='%23e74c3c' fill-rule='nonzero'/%3E%3Cpath d='M778.349 1456.15L576.6 1254.401l233-105 85-78.668v-64.332l-257-257-44-187-50-208 251.806-82.793L1076.6 389.401l380.14 379.15c-19.681 367.728-311.914 663.049-678.391 687.599z' fill-opacity='.3'/%3E%3Cpath d='M753.4 329.503c41.79 0 74.579 7.83 97.925 25.444 23.571 18.015 41.69 43.956 55.167 77.097l11.662 28.679 165.733-58.183-14.137-32.13c-26.688-60.655-64.896-108.61-114.191-144.011-49.329-35.423-117.458-54.302-204.859-54.302-50.78 0-95.646 7.376-134.767 21.542-40.093 14.671-74.09 34.79-102.239 60.259-28.84 26.207-50.646 57.06-65.496 92.701-14.718 35.052-22.101 72.538-22.101 112.401 0 72.536 20.667 133.294 61.165 182.704 38.624 47.255 98.346 88.037 179.861 121.291 42.257 17.475 78.715 33.125 109.227 46.994 27.193 12.361 49.294 26.124 66.157 41.751 15.309 14.186 26.497 30.584 33.63 49.258 7.721 20.214 11.16 45.69 11.16 76.402 0 28.021-4.251 51.787-13.591 71.219-8.832 18.374-20.171 33.178-34.523 44.219-14.787 11.374-31.193 19.591-49.393 24.466-19.68 5.359-39.14 7.993-58.69 7.993-29.359 0-54.387-3.407-75.182-10.747-20.112-7.013-37.144-16.144-51.259-27.486-13.618-11.009-24.971-23.766-33.744-38.279-9.64-15.8-17.272-31.924-23.032-48.408l-10.965-31.376-161.669 60.585 10.734 30.124c10.191 28.601 24.197 56.228 42.059 82.748 18.208 27.144 41.322 51.369 69.525 72.745 27.695 21.075 60.904 38.218 99.481 51.041 37.777 12.664 82.004 19.159 132.552 19.159 49.998 0 95.818-8.321 137.611-24.622 42.228-16.471 78.436-38.992 108.835-67.291 30.719-28.597 54.631-62.103 71.834-100.642 17.263-38.56 25.923-79.392 25.923-122.248 0-54.339-8.368-100.37-24.208-138.32-16.29-38.759-38.252-71.661-65.948-98.797-26.965-26.418-58.269-48.835-93.858-67.175-33.655-17.241-69.196-33.11-106.593-47.533-35.934-13.429-65.822-26.601-89.948-39.525-22.153-11.868-40.009-24.21-53.547-37.309-11.429-11.13-19.83-23.678-24.718-37.664-5.413-15.49-7.98-33.423-7.98-53.577 0-40.883 11.293-71.522 37.086-90.539 28.443-20.825 64.985-30.658 109.311-30.658z' fill='%23f1c40f' fill-rule='nonzero'/%3E%3Cpath d='M720 0h18v113h-18zM1458 738v-18h-113v18h113zM720 1345h18v113h-18zM113 738v-18H0v18h113z'/%3E%3C/g%3E%3C/svg%3E"
+    },
+    "dependencies": {
+      "typescript": "5.9.3"
+    }
+  }
+}

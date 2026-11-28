@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "importer",
+  "mutant": {
+    "id": "568",
+    "line": 278,
+    "column": 64,
+    "endLine": 278,
+    "endColumn": 66,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "const first = text.replace(/^﻿/, '').split(/\\r?\\n/, 1)[0] ?? '';",
+    "prevText": "const ext = name?.toLowerCase().match(/\\.([a-z]+)$/)?.[1];",
+    "nextText": "const count = (c: string) => first.split(c).length - 1;"
+  },
+  "mayEdit": [
+    "intent/blocks/importer/importer.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/importer-568.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"importer\". Mutant: line 278:64-278:66, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/importer/index.ts (> marks the mutated line):\n   272    const [headers = [], ...rows] = all;\n   273    return { headers, rows, at: rows.map((_, i) => i + 2), unit: 'row', skipped: [] };\n   274  }\n   275  \n   276  function pickSeparator(text: string, name: string | undefined): ',' | '\\t' | ';' {\n   277    const ext = name?.toLowerCase().match(/\\.([a-z]+)$/)?.[1];\n>  278    const first = text.replace(/^﻿/, '').split(/\\r?\\n/, 1)[0] ?? '';\n   279    const count = (c: string) => first.split(c).length - 1;\n   280    if (ext === 'tsv' || ext === 'tab') return '\\t';\n   281    if (ext === 'csv') return count(';') > count(',') ? ';' : ',';\n   282    const tabs = count('\\t');\n   283    const commas = count(',');\n   284    const semis = count(';');\n\nTest file style (intent/blocks/importer/importer.test.ts):\n11 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { toXlsx, zip, type Field } from '../tabular/index.ts';\nimport { Refused, decode, importFrom, read } from './index.ts';\n\nconst fields: Field[] = [\n  { name: 'email', label: 'Email', aliases: ['e-mail', 'mail'], required: true, parse: (v) => {\n    if (!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(v)) throw new Error('not an email address');\n    return v.toLowerCase();\n  } },\n  { name: 'name', label: 'Name', aliases: ['full name'], required: true },\n  { name: 'age', label: 'Age', parse: (v) => {\n    const n = Number(v);\n    if (!Number.isInteger(n)) throw new Error('not a whole number');\n    return n;\n  } },\n];\n\nconst bytes = (s: string) => new Uint8Array(Buffer.from(s, 'utf8'));\nconst utf16 = (s: string, be: boolean) => {\n  const b = Buffer.from(s, 'utf16le');\n  if (be) b.swap16();\n  return new Uint8Array(Buffer.concat([Buffer.from(be ? [0xfe, 0xff] : [0xff, 0xfe]), b]));\n};\n\ntest('CSV: columns are matched, good rows kept, and bad rows quarantined by row number with every problem', () => {\n  const r = importFrom({ bytes: bytes('E-mail,Full name,Age,Shoe\\nana@x.org,Ana,40,9\\nnope,,old,\\n,,,\\nben@x.org,Ben,,10\\n'), name: 'people.csv' }, fields);\n  assert.equal(r.kind, 'csv');\n  assert.equal(r.encoding, 'utf-8');\n  assert.deepEqual(r.mapping, { 'E-mail': 'email', 'Full name': 'name', Age: 'age', Shoe: undefined });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/importer-568.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:32.012Z"
+}

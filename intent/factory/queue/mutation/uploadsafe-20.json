@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "uploadsafe",
+  "mutant": {
+    "id": "20",
+    "line": 40,
+    "column": 7,
+    "endLine": 40,
+    "endColumn": 53,
+    "mutator": "MethodExpression",
+    "original": "p.names.some((n) => n.toLowerCase() === lower)",
+    "replacement": "p.names.every(n => n.toLowerCase() === lower)",
+    "lineText": "if (p.names.some((n) => n.toLowerCase() === lower)) throw new Unsafe(`\"${name}\" is a name this server does not keep`);",
+    "prevText": "const lower = name.toLowerCase();",
+    "nextText": "const end = p.endings.find((e) => lower.endsWith(e.toLowerCase()));"
+  },
+  "mayEdit": [
+    "intent/blocks/uploadsafe/uploadsafe.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/uploadsafe-20.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"uploadsafe\". Mutant: line 40:7-40:53, mutator MethodExpression: \"p.names.some((n) => n.toLowerCase() === lower)\" becomes \"p.names.every(n => n.toLowerCase() === lower)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/uploadsafe/index.ts (> marks the mutated line):\n    34  \n    35  const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\\..*)?$/i;\n    36  \n    37  /** Throws Unsafe with the reason when a name breaks the policy. */\n    38  export function checkName(name: string, p: Policy = NEXTCLOUD): void {\n    39    const lower = name.toLowerCase();\n>   40    if (p.names.some((n) => n.toLowerCase() === lower)) throw new Unsafe(`\"${name}\" is a name this server does not keep`);\n    41    const end = p.endings.find((e) => lower.endsWith(e.toLowerCase()));\n    42    if (end) throw new Unsafe(`names ending in \"${end}\" are kept for unfinished uploads`);\n    43    const bad = [...name].find((c) => p.characters.includes(c) || c.charCodeAt(0) < 32);\n    44    if (bad !== undefined) throw new Unsafe(`\"${name}\" contains a character a file system cannot hold`);\n    45    if (p.windowsReserved && RESERVED.test(name)) throw new Unsafe(`\"${name}\" is a name Windows reserves`);\n    46    if (p.windowsTrailing && /[. ]$/.test(name)) throw new Unsafe(`\"${name}\" ends in a dot or a space, which Windows removes`);\n\nTest file style (intent/blocks/uploadsafe/uploadsafe.test.ts):\n4 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { NEXTCLOUD, Unsafe, checkName, checkSize, inspect, sniff } from './index.ts';\n\ntest('names a client on another system could not hold, or the server must never keep, are refused with a reason', () => {\n  for (const bad of ['.htaccess', '.HTACCESS', 'report.docx.part', 'x.filepart', 'CON', 'con.txt', 'LPT1.log', 'notes.', 'notes ', 'a\\u0001b'])\n    assert.throws(() => checkName(bad), Unsafe, bad);\n  for (const ok of ['report.docx', 'console.log', 'CONTRACT.pdf', 'résumé 2026.pdf', '.hidden', 'a.b.c'])\n    assert.doesNotThrow(() => checkName(ok), ok);\n});\n\ntest('a policy can relax the Windows rules for a server only Unix clients use', () => {\n  assert.doesNotThrow(() => checkName('CON', { ...NEXTCLOUD, windowsReserved: false }));\n  assert.doesNotThrow(() => checkName('dots.', { ...NEXTCLOUD, windowsTrailing: false }));\n});\n\ntest('a size limit applies only when one is set', () => {\n  assert.doesNotThrow(() => checkSize(10 ** 12));\n  assert.throws(() => checkSize(11, { ...NEXTCLOUD, maxBytes: 10 }), Unsafe);\n});\n\ntest('the first bytes say what a file is, and a disguised program is caught', () => {\n  assert.equal(sniff(Uint8Array.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31])), 'application/pdf');\n  assert.equal(sniff(Uint8Array.from([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4, 0x57, 0x45, 0x42, 0x50])), 'image/webp');\n  assert.equal(sniff(Uint8Array.from([0, 0, 0, 0x20, 0x66, 0x74, 0x79, 0x70])), 'video/mp4');\n  assert.equal(sniff(new TextEncoder().encode('just text')), null);\n  const exe = Uint8Array.from([0x4d, 0x5a, 0x90, 0]);\n  assert.deepEqual(inspect('invoice.pdf', exe), { actual: 'application/x-msdownload', mismatch: true, executable: true });\n  assert.deepEqual(inspect('photo.jpg', Uint8Array.from([0xff, 0xd8, 0xff, 0xe0])), { actual: 'image/jpeg', mismatch: false, executable: false });\n  assert.deepEqual(inspect('budget.xlsx', Uint8Array.from([0x50, 0x4b, 0x03, 0x04])), { actual: 'application/zip', mismatch: false, executable: false });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/uploadsafe-20.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:27:17.044Z"
+}

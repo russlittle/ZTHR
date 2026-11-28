@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "ux",
+  "mutant": {
+    "id": "289",
+    "line": 156,
+    "column": 7,
+    "endLine": 156,
+    "endColumn": 28,
+    "mutator": "EqualityOperator",
+    "original": "c.contrast === 'more'",
+    "replacement": "c.contrast !== 'more'",
+    "lineText": "if (c.contrast === 'more') v.push('--text-muted:var(--text)', '--border:var(--text)');",
+    "prevText": "if (c.font === 'readable') v.push('--font-body:Atkinson Hyperlegible, Verdana, sans-serif');",
+    "nextText": "const motion = c.motion === 'reduced' ? '*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}' : '';"
+  },
+  "mayEdit": [
+    "intent/blocks/ux/ux.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ux-289.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ux\". Mutant: line 156:7-156:28, mutator EqualityOperator: \"c.contrast === 'more'\" becomes \"c.contrast !== 'more'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ux/index.ts (> marks the mutated line):\n   150  }\n   151  \n   152  /** The person's reading settings as CSS custom properties on the root, layered over their system preferences. */\n   153  export function comfortCss(c: Comfort): string {\n   154    const v: string[] = [`--text-scale:${{ default: 1, large: 1.125, larger: 1.25 }[c.size]}`, `--line-height:${c.spacing === 'relaxed' ? 1.8 : 1.5}`, `--letter-spacing:${c.spacing === 'relaxed' ? '0.02em' : 'normal'}`];\n   155    if (c.font === 'readable') v.push('--font-body:Atkinson Hyperlegible, Verdana, sans-serif');\n>  156    if (c.contrast === 'more') v.push('--text-muted:var(--text)', '--border:var(--text)');\n   157    const motion = c.motion === 'reduced' ? '*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}' : '';\n   158    return `:root{${v.join(';')}}${motion}`;\n   159  }\n   160  \n   161  /** Why something was shown, in plain words, from the reasons that put it there. */\n   162  export function why(reasons: readonly ({ kind: 'shared'; by: string } | { kind: 'role'; role: string } | { kind: 'flag'; flag: string; because: string } | { kind: 'follows'; what: string } | { kind: 'recent' } | { kind: 'mentioned'; by: string })[]): string {\n\nTest file style (intent/blocks/ux/ux.test.ts):\n6 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Progress, comfortCss, magicPaste, meOrDown, openView, preview, shareView, smartDefault, snoozeUntil, why } from './index.ts';\n\nconst NY = 'America/New_York';\nconst iso = (d: Date) => d.toISOString().slice(0, 16);\n\ntest('snooze lands where people mean, in their own zone', () => {\n  const thu2pm = new Date('2026-11-26T19:00:00Z');\n  assert.equal(iso(snoozeUntil('tomorrow morning', thu2pm, NY)), '2026-11-27T14:00');\n  assert.equal(iso(snoozeUntil('later today', thu2pm, NY)), '2026-11-26T22:00');\n  assert.equal(iso(snoozeUntil('tonight', thu2pm, NY)), '2026-11-27T00:00');\n  assert.equal(iso(snoozeUntil('this weekend', thu2pm, NY)), '2026-11-28T14:00');\n  assert.equal(iso(snoozeUntil('next week', thu2pm, NY)), '2026-11-30T14:00');\n  assert.equal(iso(snoozeUntil('next week', new Date('2026-11-30T15:00:00Z'), NY)), '2026-12-07T14:00', 'on a Monday, next week is the following Monday');\n});\n\ntest('bulk edits are previewed exactly, with unchanged and refused records apart', () => {\n  const files = [{ id: 'a', tag: 'draft', owner: 'ana' }, { id: 'b', tag: 'final', owner: 'ana' }, { id: 'c', tag: 'draft', owner: 'ben' }];\n  const p = preview(files, () => ({ tag: 'final' }), (f) => f.owner === 'ana');\n  assert.deepEqual(p, { changes: [{ id: 'a', field: 'tag', from: 'draft', to: 'final' }], unchanged: ['b'], refused: ['c'] });\n});\n\ntest('shared views are tamper-evident; defaults are learned only from a clear habit', () => {\n  const t = shareView({ folder: '/Plans', sort: 'modified', cols: ['name', 'size'] }, 's');\n  assert.deepEqual(openView(t, 's'), { folder: '/Plans', sort: 'modified', cols: ['name', 'size'] });\n  assert.equal(openView(t.replace(/^./, 'x'), 's'), undefined);\n  assert.equal(openView(t, 'other'), undefined);\n  assert.equal(smartDefault(['pdf', 'pdf', 'docx', 'pdf']), 'pdf');\n  assert.equal(smartDefault(['pdf', 'docx']), undefined, 'not enough to go on');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ux-289.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:27:19.632Z"
+}

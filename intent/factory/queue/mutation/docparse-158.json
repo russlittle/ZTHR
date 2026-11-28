@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "docparse",
+  "mutant": {
+    "id": "158",
+    "line": 77,
+    "column": 132,
+    "endLine": 77,
+    "endColumn": 147,
+    "mutator": "Regex",
+    "original": "/&#(\\d{1,8});/g",
+    "replacement": "/&#(\\D{1,8});/g",
+    "lineText": "const unxml = (s: string) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '\"').replace(/&apos;/g, \"'\").replace(/&#(\\d{1,8});/g, (_, n) => codePoint(Number(n))).replace(/&#x([0-9a-f]{1,8});/gi, (_, n) => codePoint(parseInt(n, 16))).replace(/&amp;/g, '&');",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/docparse/docparse.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/docparse-158.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"docparse\". Mutant: line 77:132-77:147, mutator Regex: \"/&#(\\\\d{1,8});/g\" becomes \"/&#(\\\\D{1,8});/g\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/docparse/index.ts (> marks the mutated line):\n    71  \n    72  const codePoint = (n: number) => {\n    73    if (!(n >= 0 && n <= 0x10ffff)) throw new Refused(`&#${n}; is not a character`);\n    74    return String.fromCodePoint(n);\n    75  };\n    76  \n>   77  const unxml = (s: string) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '\"').replace(/&apos;/g, \"'\").replace(/&#(\\d{1,8});/g, (_, n) => codePoint(Number(n))).replace(/&#x([0-9a-f]{1,8});/gi, (_, n) => codePoint(parseInt(n, 16))).replace(/&amp;/g, '&');\n    78  \n    79  /** Attributes of a start tag, in any order. Starts only after whitespace, so a long word cannot cause backtracking. */\n    80  const attrs = (head: string): Record<string, string> => {\n    81    const out: Record<string, string> = Object.create(null);\n    82    for (const m of head.matchAll(/(?:^|\\s)([\\w:.-]+)\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)')/g)) out[m[1]!] = m[2] ?? m[3] ?? '';\n    83    return out;\n\nTest file style (intent/blocks/docparse/docparse.test.ts):\n8 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { toXlsx, zip } from '../tabular/index.ts';\nimport { Refused, docx, unzip, xlsx } from './index.ts';\n\ntest('xlsx: reads back what the tabular block writes, and shared strings from other writers', () => {\n  const book = toXlsx([['Name', 'Amount', 'Paid'], ['A & B', 12.5, true], ['Ö', -3, false]], 'Q4 & more');\n  assert.deepEqual(xlsx(book), [{ name: 'Q4 & more', rows: [['Name', 'Amount', 'Paid'], ['A & B', 12.5, true], ['Ö', -3, false]] }]);\n  const shared = zip([\n    { name: 'xl/workbook.xml', data: '<workbook><sheets><sheet name=\"S\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>' },\n    { name: 'xl/_rels/workbook.xml.rels', data: '<Relationships><Relationship Id=\"rId1\" Target=\"worksheets/sheet1.xml\"/></Relationships>' },\n    { name: 'xl/sharedStrings.xml', data: '<sst><si><t>hello</t></si><si><r><t>rich </t></r><r><t>text</t></r></si></sst>' },\n    { name: 'xl/worksheets/sheet1.xml', data: '<worksheet><sheetData><row r=\"1\"><c r=\"A1\" t=\"s\"><v>0</v></c><c r=\"C1\" t=\"s\"><v>1</v></c></row><row r=\"3\"><c r=\"B3\"><v>7</v></c></row></sheetData></worksheet>' },\n  ]);\n  assert.deepEqual(xlsx(shared)[0]!.rows, [['hello', null, 'rich text'], [], [null, 7]]);\n});\n\ntest('docx: paragraphs, headings, list items, tabs and entities', () => {\n  const body = '<w:document><w:body>' +\n    '<w:p><w:pPr><w:pStyle w:val=\"Heading1\"/></w:pPr><w:r><w:t>Plan &amp; scope</w:t></w:r></w:p>' +\n    '<w:p><w:r><w:t xml:space=\"preserve\">First </w:t></w:r><w:r><w:t>para</w:t><w:tab/><w:t>tabbed</w:t></w:r></w:p>' +\n    '<w:p/>' +\n    '<w:p><w:pPr><w:numPr><w:ilvl w:val=\"0\"/></w:numPr></w:pPr><w:r><w:t>An item</w:t></w:r></w:p>' +\n    '</w:body></w:document>';\n  assert.deepEqual(docx(zip([{ name: 'word/document.xml', data: body }])), [{ text: 'Plan & scope', heading: 1 }, { text: 'First para\\ttabbed' }, { text: 'An item', list: true }]);\n  assert.throws(() => docx(zip([{ name: 'x.xml', data: '' }])), /not a Word document/);\n});\n\ntest('zip bombs, unsafe paths and junk are refused', () => {\n  assert.throws(() => unzip(zip([{ name: 'big.xml', data: '0'.repeat(5_000_000) }])), Refused);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/docparse-158.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:17.434Z"
+}

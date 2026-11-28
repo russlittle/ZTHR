@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "reports",
+  "mutant": {
+    "id": "24",
+    "line": 34,
+    "column": 72,
+    "endLine": 34,
+    "endColumn": 80,
+    "mutator": "ConditionalExpression",
+    "original": "x < f.lt",
+    "replacement": "false",
+    "lineText": "return (f.gte === undefined || x >= f.gte) && (f.lt === undefined || x < f.lt);",
+    "prevText": "const x = v as number | string;",
+    "nextText": "};"
+  },
+  "mayEdit": [
+    "intent/blocks/reports/reports.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/reports-24.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"reports\". Mutant: line 34:72-34:80, mutator ConditionalExpression: \"x < f.lt\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/reports/index.ts (> marks the mutated line):\n    28  \n    29  const pass = (r: Row, f: Filter) => {\n    30    const v = r[f.field];\n    31    if ('eq' in f) return v === f.eq;\n    32    if ('in' in f) return f.in.includes(v);\n    33    const x = v as number | string;\n>   34    return (f.gte === undefined || x >= f.gte) && (f.lt === undefined || x < f.lt);\n    35  };\n    36  \n    37  function measure(rows: readonly Row[], m: Measure): number | null {\n    38    if (m.op === 'count') return rows.length;\n    39    const vals = rows.map((r) => r[m.field!]).filter((v) => v !== null && v !== undefined);\n    40    if (m.op === 'distinct') return new Set(vals.map((v) => JSON.stringify(v))).size;\n\nTest file style (intent/blocks/reports/reports.test.ts):\n7 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Delivery, asCsv, fromTemplate, pivot, run, type Template } from './index.ts';\n\nconst sales = [\n  { region: 'east', month: '2026-10', amount: 100, rep: 'ana' },\n  { region: 'east', month: '2026-11', amount: 150, rep: 'ana' },\n  { region: 'east', month: '2026-11', amount: 50, rep: 'ben' },\n  { region: 'west', month: '2026-11', amount: 300, rep: 'cy' },\n  { region: 'north', month: '2026-11', amount: 7, rep: 'dee' },\n  { region: 'west', month: '2026-11', amount: null, rep: 'cy' },\n];\n\ntest('group, measure, filter, sort, suppress small groups and total', () => {\n  const r = run(sales, { groupBy: ['region'], measures: [{ name: 'n', op: 'count' }, { name: 'total', op: 'sum', field: 'amount' }, { name: 'reps', op: 'distinct', field: 'rep' }, { name: 'avg', op: 'avg', field: 'amount' }], sort: { by: 'total', desc: true }, minGroup: 2 });\n  assert.deepEqual(r.rows, [{ region: 'east', n: 3, total: 300, reps: 2, avg: 100 }, { region: 'west', n: 2, total: 300, reps: 1, avg: 300 }]);\n  assert.equal(r.hidden, 1, 'north has one row');\n  assert.deepEqual(r.totals, { region: 'Total', n: 6, total: 607, reps: 4, avg: 121.4 });\n  const nov = run(sales, { filters: [{ field: 'month', eq: '2026-11' }, { field: 'amount', gte: 50 }], groupBy: ['rep'], measures: [{ name: 'max', op: 'max', field: 'amount' }] });\n  assert.deepEqual(nov.rows.map((x) => x.rep), ['ana', 'ben', 'cy']);\n  assert.throws(() => run(sales, { groupBy: [], measures: [{ name: 's', op: 'sum' }] }), /needs a field/);\n  assert.equal(asCsv(nov).split('\\r\\n').at(-1), 'Total,300');\n});\n\ntest('pivot with one dimension across', () => {\n  const p = pivot(sales, 'region', 'month', { name: 'total', op: 'sum', field: 'amount' });\n  assert.deepEqual(p.columns, ['region', '2026-10', '2026-11']);\n  assert.deepEqual(p.rows[0], { region: 'east', '2026-10': 100, '2026-11': 200 });\n  assert.deepEqual(p.rows.find((r) => r.region === 'west'), { region: 'west', '2026-10': null, '2026-11': 300 });\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/reports-24.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:53.589Z"
+}

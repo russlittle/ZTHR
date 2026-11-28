@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "search",
+  "mutant": {
+    "id": "47",
+    "line": 77,
+    "column": 9,
+    "endLine": 77,
+    "endColumn": 27,
+    "mutator": "ConditionalExpression",
+    "original": "!this.docs.has(id)",
+    "replacement": "false",
+    "lineText": "if (!this.docs.has(id)) return;",
+    "prevText": "remove(id: string): void {",
+    "nextText": "for (const t of this.docTerms.get(id) ?? []) {"
+  },
+  "mayEdit": [
+    "intent/blocks/search/search.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/search-47.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"search\". Mutant: line 77:9-77:27, mutator ConditionalExpression: \"!this.docs.has(id)\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/search/index.ts (> marks the mutated line):\n    71      this.lengths.set(d.id, len);\n    72      this.docTerms.set(d.id, mine);\n    73      this.total += len;\n    74    }\n    75  \n    76    remove(id: string): void {\n>   77      if (!this.docs.has(id)) return;\n    78      for (const t of this.docTerms.get(id) ?? []) {\n    79        const m = this.terms.get(t);\n    80        m?.delete(id);\n    81        if (m && !m.size) this.terms.delete(t);\n    82      }\n    83      this.docTerms.delete(id);\n\nTest file style (intent/blocks/search/search.test.ts):\n7 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Index, fold, stem, words } from './index.ts';\n\nconst idx = () => {\n  const i = new Index({ weights: { title: 3, body: 1 } });\n  i.add({ id: 'd1', fields: { title: 'Quarterly budget', body: 'The budget for the café renovation, approved by finance.' }, facets: { kind: 'doc', team: 'ops' } });\n  i.add({ id: 'd2', fields: { title: 'Renovation photos', body: 'Photos of the cafe. Budget mentioned once.' }, facets: { kind: 'image', team: 'ops' } });\n  i.add({ id: 'd3', fields: { title: 'Secret plans', body: 'budget budget budget' }, facets: { kind: 'doc', team: 'board' } });\n  i.add({ id: 'd4', fields: { title: 'Holiday rota', body: 'Who is on call over the holidays.' }, facets: { kind: 'doc', team: 'ops' } });\n  return i;\n};\nconst all = () => true;\n\ntest('folding and stemming', () => {\n  assert.equal(fold('Café ÉCOLE'), 'cafe ecole');\n  assert.deepEqual(words('The cats, and the dogs!').map(stem), ['cat', 'dog']);\n  assert.equal(stem('policies'), 'policy');\n});\n\ntest('title matches outrank body matches; accents and plurals match; nothing the person cannot see comes back', () => {\n  const i = idx();\n  const r = i.search('budgets cafe ', { canSee: (id) => id !== 'd3', facets: ['kind'] });\n  assert.deepEqual(r.hits.map((h) => h.id), ['d1', 'd2']);\n  assert.deepEqual(r.facets, { kind: { doc: 1, image: 1 } });\n  assert.match(r.hits[0]!.snippet, /<mark>budget<\\/mark>/);\n  assert.match(r.hits[0]!.snippet, /<mark>café<\\/mark>/);\n});\n\ntest('the last word matches as a prefix while typing; phrases match in order; filters narrow', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/search-47.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:54.883Z"
+}

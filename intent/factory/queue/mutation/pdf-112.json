@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf",
+  "mutant": {
+    "id": "112",
+    "line": 84,
+    "column": 7,
+    "endLine": 84,
+    "endColumn": 13,
+    "mutator": "AssignmentOperator",
+    "original": "y -= 8",
+    "replacement": "y += 8",
+    "lineText": "y -= 8;",
+    "prevText": "}",
+    "nextText": "} else if ('p' in b) {"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf/pdf.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-112.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf\". Mutant: line 84:7-84:13, mutator AssignmentOperator: \"y -= 8\" becomes \"y += 8\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf/index.ts (> marks the mutated line):\n    78        need(lines.length * 20 + 8);\n    79        y -= 4;\n    80        for (const l of lines) {\n    81          y -= 18;\n    82          text(l, margin, 16, true);\n    83        }\n>   84        y -= 8;\n    85      } else if ('p' in b) {\n    86        for (const l of wrap(b.p, 11, usable)) {\n    87          need(15);\n    88          y -= 15;\n    89          text(l, margin, 11);\n    90        }\n\nTest file style (intent/blocks/pdf/pdf.test.ts):\n5 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { pdf, width, winAnsi, wrap } from './index.ts';\n\ntest('wrapping respects the width, and long words are broken', () => {\n  const lines = wrap('The quick brown fox jumps over the lazy dog again and again', 11, 120);\n  assert.ok(lines.length > 1);\n  assert.ok(lines.every((l) => width(l, 11) <= 120));\n  assert.ok(wrap('x'.repeat(200), 11, 100).every((l) => width(l, 11) <= 100));\n  assert.equal(winAnsi('“smart” — quotes… 日本'), '\"smart\" - quotes... ??');\n});\n\ntest('a well-formed PDF: every cross-reference offset points at its object, text is escaped, pages are numbered', () => {\n  const rows = [['Item', 'Note'], ...Array.from({ length: 80 }, (_, i) => [`Row ${i}`, i % 7 ? 'short' : 'a much longer note that will wrap onto a second line in this narrow column'])];\n  const b = pdf([{ h: 'Quarterly (draft) report' }, { p: 'Back\\\\slash and (brackets) are escaped.' }, { table: rows, widths: [1, 2] }], { title: 'Report', author: 'Ana' });\n  const s = b.toString('latin1');\n  assert.ok(s.startsWith('%PDF-1.7'));\n  assert.ok(s.trimEnd().endsWith('%%EOF'));\n  const start = Number(/startxref\\n(\\d+)/.exec(s)![1]);\n  assert.ok(s.slice(start).startsWith('xref'));\n  const entries = [...s.slice(start).matchAll(/^(\\d{10}) 00000 n $/gm)].map((m) => Number(m[1]));\n  entries.forEach((off, i) => assert.ok(s.slice(off).startsWith(`${i + 1} 0 obj`), `object ${i + 1} at ${off}`));\n  assert.match(s, /\\(Quarterly \\\\\\(draft\\\\\\) report\\) Tj/);\n  assert.match(s, /\\(Back\\\\\\\\slash and \\\\\\(brackets\\\\\\) are escaped\\.\\) Tj/);\n  const count = Number(/\\/Type \\/Pages \\/Kids \\[[^\\]]+\\] \\/Count (\\d+)/.exec(s)![1]);\n  assert.ok(count >= 2, 'the table runs onto more pages');\n  assert.match(s, new RegExp(`\\\\(${count} of ${count}\\\\) Tj`));\n  assert.equal((s.match(/\\(Item\\) Tj/g) ?? []).length, count, 'the header row repeats on every page');\n  for (const m of s.matchAll(/<< \\/Length (\\d+) >>\\nstream\\n/g)) {\n    const at = m.index! + m[0].length;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-112.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:47.468Z"
+}

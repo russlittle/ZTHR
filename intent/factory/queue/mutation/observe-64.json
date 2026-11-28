@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "observe",
+  "mutant": {
+    "id": "64",
+    "line": 54,
+    "column": 12,
+    "endLine": 54,
+    "endColumn": 33,
+    "mutator": "ConditionalExpression",
+    "original": "typeof v === 'object'",
+    "replacement": "true",
+    "lineText": "if (v && typeof v === 'object')",
+    "prevText": "if (v instanceof Error) return { name: v.name, message: redact(v.message, extraKeys, depth + 1) };",
+    "nextText": "return Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => [k, SENSITIVE_KEYS.test(k) || extraKeys.includes(k) ? '[redacted]' : redact(x, extraKeys, depth + 1)]));"
+  },
+  "mayEdit": [
+    "intent/blocks/observe/observe.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/observe-64.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"observe\". Mutant: line 54:12-54:33, mutator ConditionalExpression: \"typeof v === 'object'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/observe/index.ts (> marks the mutated line):\n    48  /** A copy with sensitive keys and secret-shaped values replaced, so nothing sensitive is ever written. */\n    49  export function redact(v: unknown, extraKeys: readonly string[] = [], depth = 0): unknown {\n    50    if (depth > 8) return '[deep]';\n    51    if (typeof v === 'string') return SENSITIVE_VALUES.reduce((s, [re, rep]) => s.replace(re, rep), v);\n    52    if (Array.isArray(v)) return v.map((x) => redact(x, extraKeys, depth + 1));\n    53    if (v instanceof Error) return { name: v.name, message: redact(v.message, extraKeys, depth + 1) };\n>   54    if (v && typeof v === 'object')\n    55      return Object.fromEntries(Object.entries(v as Record<string, unknown>).map(([k, x]) => [k, SENSITIVE_KEYS.test(k) || extraKeys.includes(k) ? '[redacted]' : redact(x, extraKeys, depth + 1)]));\n    56    return v;\n    57  }\n    58  \n    59  export interface LoggerOptions {\n    60    readonly write?: (line: string) => void;\n\nTest file style (intent/blocks/observe/observe.test.ts):\n9 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Errors, Logger, Metrics, keepDays, redact, span, traceparent, withTrace } from './index.ts';\n\ntest('sensitive keys and secret-shaped values never reach a log line', () => {\n  const lines: string[] = [];\n  const log = new Logger({ write: (l) => lines.push(l), build: 'abc123', extraSensitive: ['diagnosis'] });\n  log.info('charged card 4242 4242 4242 4242 for ana', { password: 'hunter2', user: { name: 'Ana', token: 'x', diagnosis: 'flu' }, header: 'Bearer eyJhbGciOi.eyJzdWIiOjF9.c2ln', note: 'ssn 123-45-6789' });\n  const l = JSON.parse(lines[0]!);\n  assert.equal(l.password, '[redacted]');\n  assert.equal(l.user.token, '[redacted]');\n  assert.equal(l.user.diagnosis, '[redacted]');\n  assert.equal(l.user.name, 'Ana');\n  assert.match(l.message, /\\[card\\]/);\n  assert.equal(l.header, 'Bearer [redacted]');\n  assert.equal(l.note, 'ssn [ssn]');\n  assert.equal(l.build, 'abc123');\n  assert.equal(JSON.stringify(redact({ a: [{ secret: 1 }] })), '{\"a\":[{\"secret\":\"[redacted]\"}]}');\n});\n\ntest('a trace follows a request through every step, and every line written inside carries it', async () => {\n  const lines: string[] = [];\n  const log = new Logger({ write: (l) => lines.push(l), project: 'p' });\n  const incoming = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';\n  const { spans } = await withTrace({ traceparent: incoming, feature: 'upload', name: 'PUT /file' }, async () => {\n    await span('store', async () => {\n      log.info('stored');\n      assert.match(traceparent()!, /^00-4bf92f3577b34da6a3ce929d0e0e4736-[0-9a-f]{16}-01$/);\n    });\n    await span('index', async () => undefined, { rows: 3 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/observe-64.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:39.861Z"
+}

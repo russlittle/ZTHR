@@ -4655,7 +4655,7 @@
       ]
     }
   },
-  "projectRoot": "/home/claude/zthr/intent",
+  "projectRoot": "/home/runner/work/ZTHR/ZTHR/intent",
   "config": {
     "testRunner": "command",
     "commandRunner": {
@@ -4669,10 +4669,10 @@
       "json"
     ],
     "jsonReporter": {
-      "fileName": "/tmp/mutation-geo-NUqbRy/report.json"
+      "fileName": "/tmp/mutation-geo-ZIrgDQ/report.json"
     },
-    "tempDirName": "/tmp/mutation-geo-NUqbRy/sandbox",
-    "concurrency": 2,
+    "tempDirName": "/tmp/mutation-geo-ZIrgDQ/sandbox",
+    "concurrency": 4,
     "timeoutMS": 20000,
     "ignorePatterns": [
       "node_modules",
@@ -4686,8 +4686,8 @@
     "disableTypeChecks": true,
     "logLevel": "error",
     "incremental": true,
-    "incrementalFile": "/home/claude/zthr/intent/eval/mutation/.incremental/geo.json",
-    "configFile": "/tmp/mutation-geo-NUqbRy/stryker.conf.json",
+    "incrementalFile": "/home/runner/work/ZTHR/ZTHR/intent/eval/mutation/.incremental/geo.json",
+    "configFile": "/tmp/mutation-geo-ZIrgDQ/stryker.conf.json",
     "allowConsoleColors": true,
     "checkers": [],
     "checkerNodeArgs": [],
@@ -4741,10 +4741,7 @@
     "disableBail": false,
     "allowEmpty": false,
     "ignorers": [],
-    "testFiles": [],
-    "vitest": {
-      "related": true
-    }
+    "testFiles": []
   },
   "framework": {
     "name": "StrykerJS",

@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "sessions",
+  "mutant": {
+    "id": "96",
+    "line": 115,
+    "column": 103,
+    "endLine": 115,
+    "endColumn": 126,
+    "mutator": "ArithmeticOperator",
+    "original": "b.lastSeen - a.lastSeen",
+    "replacement": "b.lastSeen + a.lastSeen",
+    "lineText": "return [...this.all.values()].filter((s) => s.user === user && t < this.endsAt(s)).sort((a, b) => b.lastSeen - a.lastSeen);",
+    "prevText": "const t = this.now();",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/sessions/sessions.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sessions-96.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sessions\". Mutant: line 115:103-115:126, mutator ArithmeticOperator: \"b.lastSeen - a.lastSeen\" becomes \"b.lastSeen + a.lastSeen\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sessions/index.ts (> marks the mutated line):\n   109      return n;\n   110    }\n   111  \n   112    /** A person's sessions that are still signed in, most recently used first. */\n   113    list(user: string): Session[] {\n   114      const t = this.now();\n>  115      return [...this.all.values()].filter((s) => s.user === user && t < this.endsAt(s)).sort((a, b) => b.lastSeen - a.lastSeen);\n   116    }\n   117  }\n   118  \n   119  // ---------------------------------------------------------------- one-time codes (RFC 6238)\n   120  \n   121  const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';\n\nTest file style (intent/blocks/sessions/sessions.test.ts):\n6 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Expired, Sessions, base32, checkCode, enrol, hotp, recoveryCodes, totp, unbase32, useRecovery } from './index.ts';\n\ntest('RFC 6238 test vectors: the codes match the published values for SHA-1, SHA-256 and SHA-512', () => {\n  const s1 = Buffer.from('12345678901234567890');\n  const s256 = Buffer.from('12345678901234567890123456789012');\n  const s512 = Buffer.from('1234567890123456789012345678901234567890123456789012345678901234');\n  const vectors: [number, string, string, string][] = [\n    [59, '94287082', '46119246', '90693936'],\n    [1111111109, '07081804', '68084774', '25091201'],\n    [2000000000, '69279037', '90698825', '38618901'],\n    [20000000000, '65353130', '77737706', '47863826'],\n  ];\n  for (const [t, a, b, c] of vectors) {\n    assert.equal(totp(s1, t * 1000, { digits: 8 }), a, `sha1 at ${t}`);\n    assert.equal(totp(s256, t * 1000, { digits: 8, algo: 'sha256' }), b, `sha256 at ${t}`);\n    assert.equal(totp(s512, t * 1000, { digits: 8, algo: 'sha512' }), c, `sha512 at ${t}`);\n  }\n  assert.equal(hotp(s1, 0), '755224', 'RFC 4226 counter 0');\n});\n\ntest('a code is accepted one step either side for drift, and never twice', () => {\n  const { secret, uri } = enrol('ana@example.org', 'Files');\n  assert.match(uri, /^otpauth:\\/\\/totp\\/Files%3Aana%40example\\.org\\?secret=[A-Z2-7]{32}&issuer=Files/);\n  assert.deepEqual(unbase32(base32(Buffer.from('hello'))), Buffer.from('hello'));\n  const t = 1_700_000_000_000;\n  const now = totp(unbase32(secret), t);\n  const step = checkCode(secret, now, t);\n  assert.equal(step, Math.floor(t / 30_000));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sessions-96.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:26:57.352Z"
+}
