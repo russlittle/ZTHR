@@ -69,7 +69,7 @@ jobs:
         with:
           node-version: 22
       - name: Install the mutation tester (pinned)
-        run: npm install --no-save --no-package-lock --prefix . @stryker-mutator/core@9.6.1
+        run: npm install --no-save --no-package-lock --prefix . @stryker-mutator/core@9.6.1 typescript@5.9.3
       - name: Calibrate ${{ matrix.block }}
         env:
           MUTATION_CONCURRENCY: '4'
