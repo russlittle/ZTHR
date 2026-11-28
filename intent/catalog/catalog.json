@@ -855,6 +855,486 @@
       "requires": [],
       "tests": 17,
       "home": "intent/blocks/router"
+    },
+    {
+      "name": "node-registry",
+      "purpose": "Node and credential types for workflow engines: parameter schemas checked, defaults filled, credentials redacted and authenticated, versions migrated",
+      "requires": [
+        "validate"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/node-registry"
+    },
+    {
+      "name": "execution-log",
+      "purpose": "Workflow runs and steps recorded with secrets redacted as written, size caps, a readable prune plan, pinned runs and replay from any step",
+      "requires": [
+        "audit"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/execution-log"
+    },
+    {
+      "name": "trigger-polling",
+      "purpose": "Poll and webhook triggers on the job queue: deduplicated polls, test polls and test listening, and an overview of every trigger",
+      "requires": [
+        "jobs",
+        "webhooks"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/trigger-polling"
+    },
+    {
+      "name": "storage-policies",
+      "purpose": "Bucket policies with a decision engine, cleaned paths, sniffed content, signed URLs, and image transforms in one canonical form with size caps",
+      "requires": [
+        "uploadsafe"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/storage-policies"
+    },
+    {
+      "name": "webrtc-signaling",
+      "purpose": "SDP read and written (RFC 8866), ICE candidates (RFC 8839), TURN credentials, signed room tokens and a signalling hub",
+      "requires": [],
+      "tests": 25,
+      "home": "intent/blocks/webrtc-signaling"
+    },
+    {
+      "name": "call-rooms",
+      "purpose": "Call rooms with roles, signed join tokens, limits and recording plans",
+      "requires": [
+        "webrtc-signaling"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/call-rooms"
+    },
+    {
+      "name": "icalendar",
+      "purpose": "iCalendar (RFC 5545): folded content lines, events, recurrence expanded to the RFC's own examples, time zones read and written, and alarms",
+      "requires": [
+        "time"
+      ],
+      "tests": 25,
+      "home": "intent/blocks/icalendar"
+    },
+    {
+      "name": "caldav",
+      "purpose": "A CalDAV store: put, get, delete, calendar queries, free-busy, sync tokens and the scheduling inbox and outbox",
+      "requires": [
+        "icalendar",
+        "dav"
+      ],
+      "tests": 19,
+      "home": "intent/blocks/caldav"
+    },
+    {
+      "name": "rest-filter-syntax",
+      "purpose": "PostgREST, Strapi and Directus filter syntaxes read into one filter tree, with range headers, an evaluator and a canonical form",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/rest-filter-syntax"
+    },
+    {
+      "name": "view-engine",
+      "purpose": "Saved views shared and defaulted, compiled and run without ever widening access, exported and fingerprinted",
+      "requires": [
+        "rest-filter-syntax"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/view-engine"
+    },
+    {
+      "name": "dashboards",
+      "purpose": "Dashboards: panels, time ranges, variables, grid layout, shares and public links kept as hashes, and provisioning from files",
+      "requires": [
+        "view-engine",
+        "time"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/dashboards"
+    },
+    {
+      "name": "dns-wire",
+      "purpose": "DNS messages (RFC 1035) with name compression safe from pointer loops, EDNS(0), zone files read and written, and serial arithmetic",
+      "requires": [],
+      "tests": 19,
+      "home": "intent/blocks/dns-wire"
+    },
+    {
+      "name": "geoip",
+      "purpose": "MaxMind database reader, most-specific CIDR tables, special ranges, address truncation, and locations never finer than allowed",
+      "requires": [
+        "geo"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/geoip"
+    },
+    {
+      "name": "text-diff",
+      "purpose": "Myers diff of lines, words or characters, unified patches identical to GNU diff, applied with offsets and reversed, and moved blocks",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/text-diff"
+    },
+    {
+      "name": "oidc-provider",
+      "purpose": "An OpenID Provider: discovery, rotating keys, the code flow with PKCE, ID tokens, UserInfo, pairwise subjects, revocation and logout",
+      "requires": [
+        "crypto"
+      ],
+      "tests": 27,
+      "home": "intent/blocks/oidc-provider"
+    },
+    {
+      "name": "alert-rules",
+      "purpose": "Alert rules that go pending, firing and resolved, with matchers, fingerprints, silences, grouping, routing and inhibition, as Alertmanager does",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/alert-rules"
+    },
+    {
+      "name": "cors-cookies",
+      "purpose": "CORS decisions by the Fetch standard, and cookies by RFC 6265bis: parsed, written, and kept in a jar with SameSite, domain and path rules",
+      "requires": [],
+      "tests": 24,
+      "home": "intent/blocks/cors-cookies"
+    },
+    {
+      "name": "sun-calc",
+      "purpose": "Sun and moon positions, sunrise and sunset including polar day and night, and moon phases, after Meeus",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/sun-calc"
+    },
+    {
+      "name": "prometheus-text",
+      "purpose": "Prometheus and OpenMetrics text exposition, a registry with a cardinality cap, and a parser safe on hostile input",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/prometheus-text"
+    },
+    {
+      "name": "svg-writer",
+      "purpose": "A safe SVG writer: everything escaped, accessible titles, shapes and paths built and parsed, and text widths estimated",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/svg-writer"
+    },
+    {
+      "name": "chart-spec",
+      "purpose": "Declarative charts drawn to SVG with nice ticks and scales, a colour-blind-safe palette checked for contrast, and alt text",
+      "requires": [
+        "svg-writer"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/chart-spec"
+    },
+    {
+      "name": "iam-policy",
+      "purpose": "Policy evaluation as AWS IAM does it: explicit deny wins, wildcards, conditions and IP ranges, and policies validated",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/iam-policy"
+    },
+    {
+      "name": "identity-brokering",
+      "purpose": "Sign-in through other identity providers, with account linking that refuses pre-hijack and issuer mix-up, role mapping and unlinking",
+      "requires": [
+        "oidc"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/identity-brokering"
+    },
+    {
+      "name": "columnar-agg",
+      "purpose": "A small column store: filters, group-by, approximate distinct counts and time rollups corrected for late data",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/columnar-agg"
+    },
+    {
+      "name": "access-policy",
+      "purpose": "Forward-auth rules: paths normalised and double encoding refused, hosts and address ranges, a guard on slow patterns, and every decision explained",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/access-policy"
+    },
+    {
+      "name": "email-threading",
+      "purpose": "Mail threads by the JWZ method, base subjects (RFC 5256), encoded words (RFC 2047), auto-reply rules (RFC 3834) and reply headers",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/email-threading"
+    },
+    {
+      "name": "login-flows",
+      "purpose": "Declared login flows with step-up, required actions, brute-force lockout, and failures that never say whether an account exists",
+      "requires": [
+        "sessions"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/login-flows"
+    },
+    {
+      "name": "stats-basic",
+      "purpose": "Descriptive statistics and quantiles, common distributions, t and chi-square tests, confidence intervals, effect sizes and power",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/stats-basic"
+    },
+    {
+      "name": "cert-store",
+      "purpose": "Certificates read with a strict DER reader, chains built and checked, host names matched (RFC 9525), and expiry alerts",
+      "requires": [],
+      "tests": 23,
+      "home": "intent/blocks/cert-store"
+    },
+    {
+      "name": "subscriber-lists",
+      "purpose": "Mailing lists with double opt-in, one-click unsubscribe (RFC 8058), preferences, suppression kept as keyed hashes, consent evidence and CSV",
+      "requires": [
+        "consent",
+        "notify"
+      ],
+      "tests": 22,
+      "home": "intent/blocks/subscriber-lists"
+    },
+    {
+      "name": "webhook-catalog",
+      "purpose": "Outgoing webhook events declared once: schemas checked, sample payloads, and a delivery log per subscriber",
+      "requires": [
+        "webhooks",
+        "validate"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/webhook-catalog"
+    },
+    {
+      "name": "template-engine",
+      "purpose": "A logic-light template language: escaped by default, filters, includes and a step limit so no template can run away",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/template-engine"
+    },
+    {
+      "name": "tenant-model",
+      "purpose": "Tenant isolation: a store scoped to the tenant, keys per tenant, quotas and fair shares, and permissions through roles",
+      "requires": [
+        "rbac"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/tenant-model"
+    },
+    {
+      "name": "smtp-protocol",
+      "purpose": "SMTP and ESMTP client and server state machines: STARTTLS, AUTH, pipelining and reply parsing",
+      "requires": [],
+      "tests": 27,
+      "home": "intent/blocks/smtp-protocol"
+    },
+    {
+      "name": "mail-queue",
+      "purpose": "Outbound mail decisions: the retry curve, state per receiving domain, and sender warm-up",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/mail-queue"
+    },
+    {
+      "name": "api-client",
+      "purpose": "Calls to outside APIs only to allowed hosts, with rate limits honoured, paging, and a circuit breaker",
+      "requires": [
+        "resilience"
+      ],
+      "tests": 19,
+      "home": "intent/blocks/api-client"
+    },
+    {
+      "name": "html-sanitize",
+      "purpose": "Allow-list HTML cleaning in three strengths, for comments, posts and rich pages",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/html-sanitize"
+    },
+    {
+      "name": "zip-write",
+      "purpose": "ZIP (with ZIP64) and tar written as streams, and read back, checked against Python's zipfile and GNU tar",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/zip-write"
+    },
+    {
+      "name": "jwt",
+      "purpose": "JSON Web Signatures signed and verified, claims checked, key sets rotated and revoked, JWKS and thumbprints (RFC 7515, 7638, 8037)",
+      "requires": [],
+      "tests": 19,
+      "home": "intent/blocks/jwt"
+    },
+    {
+      "name": "ldap",
+      "purpose": "LDAP names and filters (RFC 4514, 4515), a directory with scoped and paged search, safe binds, nested groups mapped to roles, and user sync",
+      "requires": [],
+      "tests": 19,
+      "home": "intent/blocks/ldap"
+    },
+    {
+      "name": "webpush",
+      "purpose": "Web Push: VAPID, payloads encrypted to RFC 8291 byte for byte, requests checked, and subscriptions kept sealed and pruned on 404 and 410",
+      "requires": [
+        "crypto"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/webpush"
+    },
+    {
+      "name": "credential-vault",
+      "purpose": "Stored credentials sealed to their owner, shared by level with expiry, sent only to their own hosts, refreshed one at a time and rotated",
+      "requires": [
+        "crypto",
+        "config"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/credential-vault"
+    },
+    {
+      "name": "workflow-graph",
+      "purpose": "Workflow graphs with branches, merges, loops, waits and per-item retries, validated, and run step by step as plain JSON on the job queue",
+      "requires": [
+        "workflow",
+        "jobs"
+      ],
+      "tests": 19,
+      "home": "intent/blocks/workflow-graph"
+    },
+    {
+      "name": "timeseries",
+      "purpose": "Time series downsampled and rolled up so rollups of rollups agree, counter rates across resets, gaps found and filled, tiered retention",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/timeseries"
+    },
+    {
+      "name": "json-patch",
+      "purpose": "JSON Pointer, JSON Patch and Merge Patch (RFC 6901, 6902, 7396) applied atomically, diffed, inverted and merged three ways",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/json-patch"
+    },
+    {
+      "name": "websocket-frames",
+      "purpose": "WebSocket (RFC 6455): the handshake, frames with masking and length rules, close codes, ping and pong, and backpressure",
+      "requires": [],
+      "tests": 24,
+      "home": "intent/blocks/websocket-frames"
+    },
+    {
+      "name": "ws-rpc",
+      "purpose": "Requests and subscriptions over WebSocket: sign-in first, allowed topics, signed resume tokens with replay, and slow clients closed",
+      "requires": [
+        "websocket-frames",
+        "events"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/ws-rpc"
+    },
+    {
+      "name": "magic-links",
+      "purpose": "Sign-in links and codes by email, stored as keyed hashes, bound to the device, safe from mail scanners, and throttled",
+      "requires": [
+        "ratelimit"
+      ],
+      "tests": 19,
+      "home": "intent/blocks/magic-links"
+    },
+    {
+      "name": "token-service",
+      "purpose": "Access and refresh tokens: RFC 9068 access tokens, rotating refresh with reuse detection, introspection, revocation, exchange and binding",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/token-service"
+    },
+    {
+      "name": "webauthn",
+      "purpose": "Passkeys: registration and sign-in with COSE keys, authenticator data, counters and backup flags, and none, packed and U2F attestation",
+      "requires": [],
+      "tests": 22,
+      "home": "intent/blocks/webauthn"
+    },
+    {
+      "name": "document-templates",
+      "purpose": "Document templates merged strictly with roles and repeaters, frozen by content hash, and a stamped PDF footer",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/document-templates"
+    },
+    {
+      "name": "mime",
+      "purpose": "Mail messages read and built (RFC 5322, 2045, 2047, 2231): folding, encoded words, quoted-printable and attachments",
+      "requires": [],
+      "tests": 23,
+      "home": "intent/blocks/mime"
+    },
+    {
+      "name": "pdf-parse",
+      "purpose": "PDF read with both kinds of cross-reference, object streams and repair, text extracted, and pages split, merged and rotated",
+      "requires": [],
+      "tests": 25,
+      "home": "intent/blocks/pdf-parse"
+    },
+    {
+      "name": "asn1-der",
+      "purpose": "A strict DER reader and canonical writer, with X.509 certificates and certificate requests",
+      "requires": [],
+      "tests": 21,
+      "home": "intent/blocks/asn1-der"
+    },
+    {
+      "name": "email-html",
+      "purpose": "HTML for email: allow-list cleaning, CSS inlined by real specificity, tracked links, a plain-text part and a client-support report",
+      "requires": [],
+      "tests": 21,
+      "home": "intent/blocks/email-html"
+    },
+    {
+      "name": "password-policy",
+      "purpose": "Password rules after NIST 800-63B: strength by guess count, breached-password checks by k-anonymity, and reuse history",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/password-policy"
+    },
+    {
+      "name": "argon2id",
+      "purpose": "Argon2id, Argon2i and Argon2d (RFC 9106) and BLAKE2b (RFC 7693) in plain TypeScript, with every RFC vector",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/argon2id"
+    },
+    {
+      "name": "password-hash",
+      "purpose": "Password hashing over Argon2id, scrypt and PBKDF2 with a rotating pepper, rehash on sign-in, and equal timing for unknown users",
+      "requires": [
+        "argon2id"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/password-hash"
+    },
+    {
+      "name": "xml-dsig",
+      "purpose": "XML signatures: exclusive canonicalisation, signing and verifying, with signature wrapping refused",
+      "requires": [
+        "dav"
+      ],
+      "tests": 19,
+      "home": "intent/blocks/xml-dsig"
+    },
+    {
+      "name": "saml",
+      "purpose": "A SAML 2.0 service provider: signed requests, strict response checks, replay refused, and metadata written and read",
+      "requires": [
+        "xml-dsig"
+      ],
+      "tests": 20,
+      "home": "intent/blocks/saml"
     }
   ]
 }
