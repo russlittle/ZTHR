@@ -90,7 +90,7 @@ The 84 blocks calibrated so far, of 85:
 | `leases` | not certified: 21 planted defects not rejected, and not ruled equivalent | 83.7% | 21 | 0 | 2026-11-28 |
 | `grants` | not certified: 123 planted defects not rejected, and not ruled equivalent | 60.5% | 123 | 0 | 2026-11-28 |
 | `devices` | not certified: 32 planted defects not rejected, and not ruled equivalent | 77.6% | 32 | 0 | 2026-11-28 |
-| `dav` | not certified: 186 planted defects not rejected, and not ruled equivalent | 66.4% | 186 | 0 | 2026-11-28 |
+| `dav` | not certified: 159 planted defects not rejected, and not ruled equivalent | 83.5% | 159 | 0 | 2026-11-28 |
 | `oracle` | not certified: 151 planted defects not rejected, and not ruled equivalent | 53.0% | 151 | 0 | 2026-11-28 |
 | `ratelimit` | not certified: 32 planted defects not rejected, and not ruled equivalent | 60.0% | 32 | 0 | 2026-11-28 |
 | `uploadsafe` | not certified: 69 planted defects not rejected, and not ruled equivalent | 64.4% | 69 | 0 | 2026-11-28 |

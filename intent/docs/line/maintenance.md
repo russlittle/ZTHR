@@ -136,7 +136,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 | `costmeter` | 79.1% | none | 28 | 0 |
 | `crypto` | 89.2% | none | 14 | 0 |
 | `datagate` | 80.5% | none | 42 | 0 |
-| `dav` | 66.4% | none | 186 | 0 |
+| `dav` | 83.5% | none | 159 | 0 |
 | `devices` | 77.6% | none | 32 | 0 |
 | `docparse` | 66.6% | none | 165 | 0 |
 | `drafts` | 82.1% | none | 15 | 0 |

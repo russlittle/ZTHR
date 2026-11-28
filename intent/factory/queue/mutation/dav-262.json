@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "dav",
+  "mutant": {
+    "id": "262",
+    "line": 143,
+    "column": 9,
+    "endLine": 143,
+    "endColumn": 15,
+    "mutator": "ConditionalExpression",
+    "original": "lt < 0",
+    "replacement": "false",
+    "lineText": "if (lt < 0) break;",
+    "prevText": "else if (text.trim() && !stack.length) throw new BadXml('text outside the root element');",
+    "nextText": "if (src.startsWith('<?', lt)) {"
+  },
+  "mayEdit": [
+    "intent/blocks/dav/dav.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/dav-262.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"dav\". Mutant: line 143:9-143:15, mutator ConditionalExpression: \"lt < 0\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/dav/index.ts (> marks the mutated line):\n   137    };\n   138    while (i < src.length) {\n   139      const lt = src.indexOf('<', i);\n   140      const text = lt < 0 ? src.slice(i) : src.slice(i, lt);\n   141      if (text && stack.length) stack[stack.length - 1]!.text += unescape(text);\n   142      else if (text.trim() && !stack.length) throw new BadXml('text outside the root element');\n>  143      if (lt < 0) break;\n   144      if (src.startsWith('<?', lt)) {\n   145        const e = src.indexOf('?>', lt);\n   146        if (e < 0) throw new BadXml('unclosed processing instruction');\n   147        i = e + 2;\n   148      } else if (src.startsWith('<!--', lt)) {\n   149        const e = src.indexOf('-->', lt);\n\nTest file style (intent/blocks/dav/dav.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadIf, BadXml, DAV, depth, destination, el, encodePath, ifHolds, ifTokens, multistatus, netPropChanges, overwrite, parseIf, parseXml, propfindRequest, proppatchOps, proppatchRequest, timeout, writeXml } from './index.ts';\n\nconst OC = 'http://owncloud.org/ns';\n\ntest('a PROPFIND body resolves prefixes to namespaces, whatever prefixes the client chose', () => {\n  const a = propfindRequest('<?xml version=\"1.0\"?><d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\"><d:prop><d:getetag/><oc:fileid/></d:prop></d:propfind>');\n  const b = propfindRequest('<propfind xmlns=\"DAV:\"><prop><getetag/><x:fileid xmlns:x=\"http://owncloud.org/ns\"/></prop></propfind>');\n  assert.deepEqual(a, b);\n  assert.deepEqual(a, { kind: 'prop', props: [{ ns: DAV, name: 'getetag' }, { ns: OC, name: 'fileid' }] });\n  assert.deepEqual(propfindRequest(''), { kind: 'allprop' });\n});\n\ntest('document type declarations are refused, so no external entity is ever read', () => {\n  const xxe = '<?xml version=\"1.0\"?><!DOCTYPE d [<!ENTITY x SYSTEM \"file:///etc/passwd\">]><d:propfind xmlns:d=\"DAV:\">&x;</d:propfind>';\n  assert.throws(() => parseXml(xxe), BadXml);\n  assert.throws(() => parseXml('<a>&nope;</a>'), BadXml);\n  assert.throws(() => parseXml('<a><b></a>'), BadXml);\n  assert.throws(() => parseXml('<x:a/>'), BadXml, 'an undeclared prefix');\n  assert.throws(() => parseXml(`${'<a>'.repeat(100)}${'</a>'.repeat(100)}`), BadXml, 'too deep');\n});\n\ntest('text, entities, character references and CDATA read back exactly', () => {\n  const r = parseXml('<a>x &amp; y &#233; &#x1F600; <![CDATA[<raw>]]></a>');\n  assert.equal(r.text, 'x & y é 😀 <raw>');\n});\n\ntest('a PROPPATCH lists what is set with its value and what is removed', () => {\n  const r = proppatchRequest('<d:propertyupdate xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\"><d:set><d:prop><oc:favorite>1</oc:favorite></d:prop></d:set><d:remove><d:prop><oc:tags/></d:prop></d:remove></d:propertyupdate>');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/dav-262.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:58:36.573Z"
+}
