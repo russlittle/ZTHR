@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-The library holds 85 built blocks. Decomposing the hundred applications people most often self-host or build products on shows that a library of 418 blocks (333 new) lets every one of them be assembled from tested parts. The first 215 new blocks, taken in the order below, bring the library to 300 and make 39 applications (about 72% of the usage-weighted total) fully assemblable. The first ten rebuilds, chosen for value and coverage, need 117 of the new blocks.
+The library holds 310 built blocks, and 40 of the hundred applications below can be assembled entirely from them today: Nextcloud, WordPress, Immich, Home Assistant and Keycloak among them, and every one of the first ten rebuilds. Decomposing the hundred applications people most often self-host or build products on shows that a library of 418 blocks (333 new) lets every one of them be assembled from tested parts. The first 215 new blocks, taken in the order below from the 85-block foundation, bring the library to 300 and make 39 applications (about 72% of the usage-weighted total) fully assemblable. The first ten rebuilds, chosen for value and coverage, need 117 of the new blocks.
 
 ## How the blocks were chosen
 

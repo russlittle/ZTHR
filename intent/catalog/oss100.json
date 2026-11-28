@@ -9609,7 +9609,7 @@
     "Snipe-IT",
     "Miniflux"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Event catalogue"
@@ -9648,7 +9648,7 @@
     "PrestaShop",
     "Akaunting"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Content registry"
@@ -9677,7 +9677,7 @@
     "Keycloak",
     "Documenso"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Organizations and teams"
@@ -9718,7 +9718,7 @@
     "FreeScout",
     "SuiteCRM"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Email"
@@ -9755,7 +9755,7 @@
     "Hi.Events",
     "SuiteCRM"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Email"
@@ -9788,7 +9788,7 @@
     "Appsmith",
     "Typebot"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Outbound HTTP"
@@ -9849,7 +9849,7 @@
     "FreshRSS",
     "Miniflux"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Upload safety"
@@ -9886,7 +9886,7 @@
     "Documenso",
     "Linkwarden"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Export formats"
@@ -9935,7 +9935,7 @@
     "Woodpecker",
     "Canvas LMS"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "API keys and tokens"
@@ -9990,7 +9990,7 @@
     "Snipe-IT",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Single sign-on"
@@ -10021,7 +10021,7 @@
     "Mattermost",
     "Zulip"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Notifications"
@@ -10050,7 +10050,7 @@
     "Cal.com",
     "Appsmith"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Configuration and secrets inventory"
@@ -10089,7 +10089,7 @@
     "SuiteCRM",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Approvals and workflow"
@@ -10125,7 +10125,7 @@
     "Matomo",
     "OpenProject"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Metrics and tracing"
@@ -10160,7 +10160,7 @@
     "Snipe-IT",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "History and versioning"
@@ -10194,7 +10194,7 @@
     "Excalidraw",
     "Baserow"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Real-time updates"
@@ -10227,7 +10227,7 @@
     "Excalidraw",
     "Baserow"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Real-time updates"
@@ -10255,7 +10255,7 @@
     "Keycloak",
     "Authentik"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Authentication"
@@ -10283,7 +10283,7 @@
     "Harbor",
     "MinIO"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "API keys and tokens"
@@ -10309,7 +10309,7 @@
     "Keycloak",
     "Authentik"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Multi-factor sign-in"
@@ -10339,7 +10339,7 @@
     "Documenso",
     "Akaunting"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "PDF and documents"
@@ -10377,7 +10377,7 @@
     "SuiteCRM",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Email"
@@ -10405,7 +10405,7 @@
     "Documenso",
     "OpenSign"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "PDF and documents"
@@ -10437,7 +10437,7 @@
     "Documenso",
     "OpenSign"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Expiry watch"
@@ -10465,7 +10465,7 @@
     "Mautic",
     "Hi.Events"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Email"
@@ -10489,7 +10489,7 @@
     "Vaultwarden",
     "Keycloak"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Authentication"
@@ -10513,7 +10513,7 @@
     "Pi-hole",
     "Keycloak"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Password hashing and crypto"
@@ -10539,7 +10539,7 @@
     "Pi-hole",
     "Keycloak"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Password hashing and crypto"
@@ -10588,7 +10588,7 @@
     "Snipe-IT",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Single sign-on"
@@ -10638,7 +10638,7 @@
     "Snipe-IT",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Single sign-on"
@@ -10682,7 +10682,7 @@
     "Woodpecker",
     "Canvas LMS"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Single sign-on"
@@ -10727,7 +10727,7 @@
     "Woodpecker",
     "Canvas LMS"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Single sign-on"
@@ -10774,7 +10774,7 @@
     "Seafile",
     "Linkwarden"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Image processing"
@@ -10825,7 +10825,7 @@
     "Huly",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Content registry"
@@ -10864,7 +10864,7 @@
     "SuiteCRM",
     "Snipe-IT"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Data dictionary"
@@ -10890,7 +10890,7 @@
     "Wiki.js",
     "BookStack"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Content registry"
@@ -10927,7 +10927,7 @@
     "Snipe-IT",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Single sign-on"
@@ -10952,7 +10952,7 @@
     "Home Assistant",
     "Vaultwarden"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Backup restore drills"
@@ -10981,7 +10981,7 @@
     "Directus",
     "Typebot"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Mapping studio"
@@ -11014,7 +11014,7 @@
     "Bagisto",
     "Baserow"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "API contracts"
@@ -11052,7 +11052,7 @@
     "Huly",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Wiki publishing"
@@ -11079,7 +11079,7 @@
     "Stirling-PDF",
     "Paperless-ngx"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Upload safety"
@@ -11105,7 +11105,7 @@
     "Dify",
     "Typebot"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "AI model gateway"
@@ -11132,7 +11132,7 @@
     "Open WebUI",
     "Dify"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Agent tools (MCP)"
@@ -11158,7 +11158,7 @@
     "Hoppscotch",
     "NocoDB"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Mapping studio"
@@ -11180,7 +11180,7 @@
     "n8n",
     "Dify"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Ingest connectors"
@@ -11204,7 +11204,7 @@
     "n8n",
     "Dify"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Runs"
@@ -11226,7 +11226,7 @@
    "usedBy": [
     "n8n"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Webhooks"
@@ -11252,7 +11252,7 @@
     "Supabase",
     "Paperless-ngx"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Upload safety"
@@ -11279,7 +11279,7 @@
     "Mattermost",
     "Jitsi"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Real-time updates"
@@ -11307,7 +11307,7 @@
     "Mattermost",
     "Jitsi"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Real-time updates"
@@ -11336,7 +11336,7 @@
     "Canvas LMS",
     "Huly"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Calendar and booking"
@@ -11363,7 +11363,7 @@
     "Vikunja",
     "Huly"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Calendar and booking"
@@ -11413,7 +11413,7 @@
     "Vikunja",
     "SuiteCRM"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Lists: paging, sorting and filters"
@@ -11455,7 +11455,7 @@
     "Vikunja",
     "SuiteCRM"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Share a view"
@@ -11488,7 +11488,7 @@
     "Plausible",
     "Matomo"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Report builder"
@@ -11514,7 +11514,7 @@
     "Pi-hole",
     "Postal"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Maps and location"
@@ -11539,7 +11539,7 @@
     "Plausible",
     "Matomo"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Maps and location"
@@ -11569,7 +11569,7 @@
     "Wiki.js",
     "BookStack"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "History and versioning"
@@ -11594,7 +11594,7 @@
     "Keycloak",
     "Authentik"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Single sign-on"
@@ -11620,7 +11620,7 @@
     "Superset",
     "Metabase"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Service levels and alerts"
@@ -11645,7 +11645,7 @@
     "Hoppscotch",
     "Keycloak"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Security headers and CSRF"
@@ -11668,7 +11668,7 @@
     "Home Assistant",
     "Cal.com"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Calendar and booking"
@@ -11694,7 +11694,7 @@
     "Uptime Kuma",
     "MinIO"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Metrics and tracing"
@@ -11731,7 +11731,7 @@
     "Ghostfolio",
     "Linkwarden"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "UI kit and accessibility"
@@ -11762,7 +11762,7 @@
     "Matomo",
     "Ghostfolio"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Report builder"
@@ -11787,7 +11787,7 @@
     "Keycloak",
     "MinIO"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Authorization"
@@ -11812,7 +11812,7 @@
     "Keycloak",
     "Authentik"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Single sign-on"
@@ -11840,7 +11840,7 @@
     "Plausible",
     "Matomo"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Warehouse sync"
@@ -11866,7 +11866,7 @@
     "Harbor",
     "Authentik"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Authorization"
@@ -11899,7 +11899,7 @@
     "SuiteCRM",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Messaging and comments"
@@ -11924,7 +11924,7 @@
     "Keycloak",
     "Authentik"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Authentication"
@@ -11956,7 +11956,7 @@
     "LimeSurvey",
     "Ghostfolio"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Report builder"
@@ -11977,7 +11977,7 @@
     "Uptime Kuma",
     "Syncthing"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Expiry watch"
@@ -12005,7 +12005,7 @@
     "Mautic",
     "SuiteCRM"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Terms and consent versions"
@@ -12036,7 +12036,7 @@
     "Hi.Events",
     "Pretix"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Money and rounding"
@@ -12062,7 +12062,7 @@
     "Stirling-PDF",
     "Paperless-ngx"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Document parsing"
@@ -12090,7 +12090,7 @@
     "Matomo",
     "Mautic"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Product analytics"
@@ -12121,7 +12121,7 @@
     "SuiteCRM",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Email"
@@ -12147,7 +12147,7 @@
     "Formbricks",
     "Typebot"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Security headers and CSRF"
@@ -12187,7 +12187,7 @@
     "GLPI",
     "Ghostfolio"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Money and rounding"
@@ -12219,7 +12219,7 @@
     "Hi.Events",
     "Pretix"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Money and rounding"
@@ -12249,7 +12249,7 @@
     "Hi.Events",
     "Pretix"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Idempotent requests"
@@ -12280,7 +12280,7 @@
     "Hi.Events",
     "Pretix"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Payments"
@@ -12318,7 +12318,7 @@
     "Canvas LMS",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Report builder"
@@ -12353,7 +12353,7 @@
     "Canvas LMS",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Forms"
@@ -12386,7 +12386,7 @@
     "Mautic",
     "SuiteCRM"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Product analytics"
@@ -12417,7 +12417,7 @@
     "Mautic",
     "SuiteCRM"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Report delivery"
@@ -12445,7 +12445,7 @@
     "Matomo",
     "Formbricks"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Feature flags"
@@ -12469,7 +12469,7 @@
    "usedBy": [
     "Uptime Kuma"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Is it me or is it down?"
@@ -12493,7 +12493,7 @@
    "usedBy": [
     "Uptime Kuma"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Status page"
@@ -12516,7 +12516,7 @@
    "usedBy": [
     "Uptime Kuma"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Cron watchdog"
@@ -12542,7 +12542,7 @@
     "Zammad",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Approvals and workflow"
@@ -12567,7 +12567,7 @@
     "Plausible",
     "Matomo"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Product analytics"
@@ -12591,7 +12591,7 @@
     "Plausible",
     "Matomo"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Reports and export"
@@ -12615,7 +12615,7 @@
     "Documenso",
     "OpenSign"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "PDF and documents"
@@ -12643,7 +12643,7 @@
     "Documenso",
     "OpenSign"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "PDF and documents"
@@ -12669,7 +12669,7 @@
     "Documenso",
     "OpenSign"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Approvals and workflow"
@@ -12695,7 +12695,7 @@
     "Cal.com",
     "Lago"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Feature flags"
@@ -12719,7 +12719,7 @@
    "usedBy": [
     "Vaultwarden"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Password hashing and crypto"
@@ -12742,7 +12742,7 @@
    "usedBy": [
     "Vaultwarden"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Secret rotation"
@@ -12764,7 +12764,7 @@
    "usedBy": [
     "Vaultwarden"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Password hashing and crypto"
@@ -12789,7 +12789,7 @@
     "Cal.com",
     "Mautic"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Reminders that stop"
@@ -12813,7 +12813,7 @@
     "PostHog",
     "Matomo"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Journey analytics"
@@ -12840,7 +12840,7 @@
     "Formbricks",
     "Mautic"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Reports and export"
@@ -12863,7 +12863,7 @@
     "Keycloak",
     "Harbor"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Secret rotation"
@@ -12888,7 +12888,7 @@
     "Postal",
     "FreeScout"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Bounces and unsubscribes"
@@ -12913,7 +12913,7 @@
     "Keycloak",
     "Authentik"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Organizations and teams"
@@ -12938,7 +12938,7 @@
     "Documenso",
     "OpenSign"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Terms and consent versions"
@@ -12961,7 +12961,7 @@
    "usedBy": [
     "Paperless-ngx"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Names, addresses and phone numbers"
@@ -12990,7 +12990,7 @@
     "ERPNext",
     "Akaunting"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Deduplicate and merge"
@@ -13011,7 +13011,7 @@
     "Nextcloud",
     "Paperless-ngx"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Document parsing"
@@ -13035,7 +13035,7 @@
    "usedBy": [
     "Paperless-ngx"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Ingest connectors"
@@ -13061,7 +13061,7 @@
     "Listmonk",
     "Postal"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Names, addresses and phone numbers"
@@ -13082,7 +13082,7 @@
     "Listmonk",
     "Postal"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Email"
@@ -13107,7 +13107,7 @@
     "Documenso",
     "OpenSign"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Tamper-evident audit chain"
@@ -13133,7 +13133,7 @@
     "Documenso",
     "OpenSign"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 1,
    "specRefs": [
     "Tamper-evident audit chain"
@@ -13158,7 +13158,7 @@
     "Hoppscotch",
     "Jitsi"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Real-time updates"
@@ -13179,7 +13179,7 @@
     "Home Assistant",
     "Syncthing"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Real-time updates"
@@ -13201,7 +13201,7 @@
    "usedBy": [
     "Home Assistant"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Data pipeline"
@@ -13224,7 +13224,7 @@
    "usedBy": [
     "Home Assistant"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Object viewer"
@@ -13247,7 +13247,7 @@
    "usedBy": [
     "Home Assistant"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Approvals and workflow"
@@ -13283,7 +13283,7 @@
     "FreeScout",
     "Akaunting"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Dependency upkeep"
@@ -13311,7 +13311,7 @@
     "Directus",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Data store and migrations"
@@ -13338,7 +13338,7 @@
     "Medusa",
     "Bagisto"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Folders and paths"
@@ -13370,7 +13370,7 @@
     "LimeSurvey",
     "PrestaShop"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Your language"
@@ -13395,7 +13395,7 @@
     "Gitea",
     "Discourse"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "UI kit and accessibility"
@@ -13420,7 +13420,7 @@
     "Mattermost",
     "Zulip"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Messaging and comments"
@@ -13444,7 +13444,7 @@
     "Ghost",
     "Directus"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "History and versioning"
@@ -13472,7 +13472,7 @@
     "Directus",
     "PrestaShop"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Feature registry console"
@@ -13496,7 +13496,7 @@
     "Discourse",
     "Lemmy"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Upload safety"
@@ -13521,7 +13521,7 @@
     "Ghost",
     "Audiobookshelf"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Public pages: metadata and sitemap"
@@ -13543,7 +13543,7 @@
     "Ghost",
     "PrestaShop"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Layouts"
@@ -13566,7 +13566,7 @@
     "WordPress",
     "Ghost"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Messaging and comments"
@@ -13590,7 +13590,7 @@
     "Ghost",
     "Bagisto"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Public pages: metadata and sitemap"
@@ -13614,7 +13614,7 @@
     "Ghost",
     "Bagisto"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Public pages: metadata and sitemap"
@@ -13637,7 +13637,7 @@
     "WordPress",
     "Ghost"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Public pages: metadata and sitemap"
@@ -13660,7 +13660,7 @@
     "WordPress",
     "Ghost"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Configuration and secrets"
@@ -13684,7 +13684,7 @@
     "WordPress",
     "Ghost"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Surface registry"
@@ -13707,7 +13707,7 @@
    "usedBy": [
     "WordPress"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Content registry"
@@ -13731,7 +13731,7 @@
     "Forgejo",
     "Harbor"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Dependency upkeep"
@@ -13751,7 +13751,7 @@
    "usedBy": [
     "WordPress"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Content registry"
@@ -13783,7 +13783,7 @@
     "Bagisto",
     "Baserow"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "API contracts"
@@ -13816,7 +13816,7 @@
     "Bagisto",
     "Baserow"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "API contracts"
@@ -13853,7 +13853,7 @@
     "FreshRSS",
     "Miniflux"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Document parsing"
@@ -13882,7 +13882,7 @@
     "Mealie",
     "Linkwarden"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Outbound HTTP"
@@ -13906,7 +13906,7 @@
     "Moodle",
     "Canvas LMS"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Accessibility conformance"
@@ -13929,7 +13929,7 @@
     "WordPress",
     "Ghost"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Content registry"
@@ -13955,7 +13955,7 @@
     "Syncthing",
     "Seafile"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Folders and paths"
@@ -13983,7 +13983,7 @@
     "FreshRSS",
     "Miniflux"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Caching"
@@ -14004,7 +14004,7 @@
     "Syncthing",
     "Seafile"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Backups and retention"
@@ -14030,7 +14030,7 @@
     "Harbor",
     "MinIO"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "API keys and tokens"
@@ -14058,7 +14058,7 @@
     "Bagisto",
     "Saleor"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "API contracts"
@@ -14085,7 +14085,7 @@
     "Snipe-IT",
     "GLPI"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "PDF and documents"
@@ -14108,7 +14108,7 @@
     "Penpot",
     "Excalidraw"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Image processing"
@@ -14145,7 +14145,7 @@
     "Canvas LMS",
     "Huly"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Messaging and comments"
@@ -14171,7 +14171,7 @@
     "Immich",
     "Pixelfed"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Image processing"
@@ -14209,7 +14209,7 @@
     "Wekan",
     "Huly"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Approvals and workflow"
@@ -14237,7 +14237,7 @@
     "Plane",
     "Discourse"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Notifications"
@@ -14263,7 +14263,7 @@
     "Harbor",
     "MinIO"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Folders and paths"
@@ -14290,7 +14290,7 @@
     "Outline",
     "Huly"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Never lose work"
@@ -14314,7 +14314,7 @@
     "MinIO",
     "Seafile"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Data retention sweeper"
@@ -14339,7 +14339,7 @@
     "Nextcloud",
     "Seafile"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Folders and paths"
@@ -14362,7 +14362,7 @@
    "usedBy": [
     "Nextcloud"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Data import"
@@ -14384,7 +14384,7 @@
    "usedBy": [
     "Nextcloud"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Single sign-on"
@@ -14406,7 +14406,7 @@
    "usedBy": [
     "Nextcloud"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Data import"
@@ -14436,7 +14436,7 @@
     "Wiki.js",
     "Huly"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Messaging and comments"
@@ -14462,7 +14462,7 @@
     "Outline",
     "Huly"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Never lose work"
@@ -14494,7 +14494,7 @@
     "Vikunja",
     "Wekan"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Lists: paging, sorting and filters"
@@ -14525,7 +14525,7 @@
     "Vikunja",
     "Wekan"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Approvals and workflow"
@@ -14554,7 +14554,7 @@
     "Mastodon",
     "Metabase"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Search"
@@ -14579,7 +14579,7 @@
     "Dify",
     "Metabase"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "AI model gateway"
@@ -14609,7 +14609,7 @@
     "Appsmith",
     "PostHog"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Query console"
@@ -14640,7 +14640,7 @@
     "ERPNext",
     "Baserow"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Data store and migrations"
@@ -14665,7 +14665,7 @@
     "Supabase",
     "Grafana"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Log retention and redaction"
@@ -14690,7 +14690,7 @@
     "NocoDB",
     "Baserow"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Real-time updates"
@@ -14715,7 +14715,7 @@
     "PostHog",
     "Harbor"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Security scanning"
@@ -14743,7 +14743,7 @@
     "Huly",
     "SuiteCRM"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Approvals and workflow"
@@ -14770,7 +14770,7 @@
     "Metabase",
     "Appsmith"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Query console"
@@ -14796,7 +14796,7 @@
     "Metabase",
     "PostHog"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Report builder"
@@ -14820,7 +14820,7 @@
    "usedBy": [
     "Grafana"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Request tracer"
@@ -14843,7 +14843,7 @@
    "usedBy": [
     "Grafana"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Metrics and tracing"
@@ -14867,7 +14867,7 @@
     "Strapi",
     "Directus"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Event catalogue"
@@ -14890,7 +14890,7 @@
    "usedBy": [
     "Strapi"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Content registry"
@@ -14919,7 +14919,7 @@
     "PeerTube",
     "Owncast"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Image processing"
@@ -14946,7 +14946,7 @@
     "PeerTube",
     "Owncast"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Image processing"
@@ -14973,7 +14973,7 @@
     "PeerTube",
     "Owncast"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Image processing"
@@ -14998,7 +14998,7 @@
     "Discourse",
     "Pixelfed"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "UI kit and accessibility"
@@ -15020,7 +15020,7 @@
     "Immich",
     "Pixelfed"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Image processing"
@@ -15043,7 +15043,7 @@
    "usedBy": [
     "Immich"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Folders and paths"
@@ -15066,7 +15066,7 @@
    "usedBy": [
     "Immich"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Deduplicate and merge"
@@ -15088,7 +15088,7 @@
    "usedBy": [
     "Immich"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "AI model gateway"
@@ -15118,7 +15118,7 @@
     "Pixelfed",
     "Owncast"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Webhooks"
@@ -15147,7 +15147,7 @@
     "Pixelfed",
     "Owncast"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "API contracts"
@@ -15175,7 +15175,7 @@
     "Pixelfed",
     "Owncast"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Messaging and comments"
@@ -15203,7 +15203,7 @@
     "PeerTube",
     "Pixelfed"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Messaging and comments"
@@ -15229,7 +15229,7 @@
     "PeerTube",
     "Pixelfed"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Lists: paging, sorting and filters"
@@ -15253,7 +15253,7 @@
     "PostHog",
     "Matomo"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Privacy: consent, export, erasure"
@@ -15276,7 +15276,7 @@
    "usedBy": [
     "Pi-hole"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Security scanning"
@@ -15298,7 +15298,7 @@
    "usedBy": [
     "Pi-hole"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Security scanning"
@@ -15320,7 +15320,7 @@
     "Dify",
     "Metabase"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "AI model gateway"
@@ -15345,7 +15345,7 @@
     "Dify",
     "Metabase"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Ask your data"
@@ -15375,7 +15375,7 @@
     "Mattermost",
     "Zulip"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Search"
@@ -15399,7 +15399,7 @@
     "Open WebUI",
     "Dify"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "AI model gateway"
@@ -15421,7 +15421,7 @@
     "Open WebUI",
     "Dify"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "AI model gateway"
@@ -15445,7 +15445,7 @@
     "Open WebUI",
     "Dify"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Model guard"
@@ -15467,7 +15467,7 @@
    "usedBy": [
     "Dify"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Rate limiting and abuse protection"
@@ -15493,7 +15493,7 @@
     "Wiki.js",
     "Memos"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Wiki publishing"
@@ -15531,7 +15531,7 @@
     "SuiteCRM",
     "Akaunting"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Money and rounding"
@@ -15570,7 +15570,7 @@
     "SuiteCRM",
     "Akaunting"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Money and rounding"
@@ -15601,7 +15601,7 @@
     "Kill Bill",
     "Akaunting"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Subscriptions and billing"
@@ -15626,7 +15626,7 @@
     "Excalidraw",
     "Baserow"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Never lose work"
@@ -15650,7 +15650,7 @@
     "Mattermost",
     "Zulip"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Webhooks"
@@ -15676,7 +15676,7 @@
     "Outline",
     "Excalidraw"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Who's here"
@@ -15701,7 +15701,7 @@
     "Navidrome",
     "Audiobookshelf"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 2,
    "specRefs": [
     "Pick up where you left off"
@@ -15725,7 +15725,7 @@
     "Navidrome",
     "Audiobookshelf"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 3,
    "specRefs": [
     "Ingest connectors"
@@ -15751,7 +15751,7 @@
     "Navidrome",
     "Audiobookshelf"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 3,
    "specRefs": [
     "Folders and paths"
@@ -15776,7 +15776,7 @@
     "Navidrome",
     "Audiobookshelf"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 3,
    "specRefs": [
     "Image processing"
@@ -15798,7 +15798,7 @@
     "Navidrome",
     "PeerTube"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 3,
    "specRefs": [
     "Lists: paging, sorting and filters"
@@ -15820,7 +15820,7 @@
     "Jellyfin",
     "Audiobookshelf"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 3,
    "specRefs": [
     "Document parsing"
@@ -15844,7 +15844,7 @@
     "Jellyfin",
     "PeerTube"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 3,
    "specRefs": [
     "Content registry"
@@ -15864,7 +15864,7 @@
    "usedBy": [
     "Jellyfin"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 3,
    "specRefs": [
     "Ingest connectors"
@@ -15885,7 +15885,7 @@
    "usedBy": [
     "Jellyfin"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 3,
    "specRefs": [
     "Data import"
@@ -15906,7 +15906,7 @@
    "usedBy": [
     "Jellyfin"
    ],
-   "exists": false,
+   "exists": true,
    "priority": 3,
    "specRefs": [
     "Image processing"
@@ -18625,7 +18625,8 @@
    ],
    "requires": [],
    "layer": "Starting library",
-   "role": "application"
+   "role": "application",
+   "builtAs": "outbound"
   }
  ],
  "firstTen": [
