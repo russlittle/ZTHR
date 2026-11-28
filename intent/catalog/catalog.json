@@ -1465,6 +1465,119 @@
       "requires": [],
       "tests": 17,
       "home": "intent/blocks/jsonpath"
+    },
+    {
+      "name": "entity-registry",
+      "purpose": "A registry of devices, entities and areas as Home Assistant keeps it: devices merged by identifiers, renames that keep old ids, and areas without loops",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/entity-registry"
+    },
+    {
+      "name": "automation-engine",
+      "purpose": "Automations: triggers, conditions and actions with single, restart, queued and parallel modes, a safe template language, and traces",
+      "requires": [],
+      "tests": 27,
+      "home": "intent/blocks/automation-engine"
+    },
+    {
+      "name": "plugin-manifest",
+      "purpose": "Plugin manifests checked all at once, permissions reviewed, packages signed with Ed25519 against scoped trust, and install plans in dependency order",
+      "requires": [],
+      "tests": 24,
+      "home": "intent/blocks/plugin-manifest"
+    },
+    {
+      "name": "relations",
+      "purpose": "Relations between records: belongs-to, one-to-one, ordered many-to-many and soft links, with delete plans and orphan repair",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/relations"
+    },
+    {
+      "name": "media-assets",
+      "purpose": "A media library: real types sniffed, dangerous SVG refused, usage tracked, alt text reported, derivatives and srcset planned",
+      "requires": [
+        "uploadsafe"
+      ],
+      "tests": 25,
+      "home": "intent/blocks/media-assets"
+    },
+    {
+      "name": "i18n-content",
+      "purpose": "Content in many languages: variants that know when they are stale, review, machine translation with placeholders kept, and alternates",
+      "requires": [
+        "i18n"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/i18n-content"
+    },
+    {
+      "name": "avatars",
+      "purpose": "Avatars: Gravatar hashes, identicons and initials on a palette checked for contrast, sizes and srcset",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/avatars"
+    },
+    {
+      "name": "emoji",
+      "purpose": "Emoji found whole across joiners and skin tones, shortcodes, a custom set, safe HTML and reactions",
+      "requires": [],
+      "tests": 22,
+      "home": "intent/blocks/emoji"
+    },
+    {
+      "name": "content-versions",
+      "purpose": "Content revisions with conflict detection, publish, schedule and roll back, field and text diffs, and signed preview links",
+      "requires": [
+        "crypto"
+      ],
+      "tests": 25,
+      "home": "intent/blocks/content-versions"
+    },
+    {
+      "name": "hooks",
+      "purpose": "Actions and filters as WordPress has them: priorities, run-once, owners, a declared catalogue, deprecations forwarded, and async forms",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/hooks"
+    },
+    {
+      "name": "spam-heuristics",
+      "purpose": "Spam scored by rules: honeypots, fill time, links, text shape, email, rate and duplicates, with reputation and an explanation",
+      "requires": [
+        "ratelimit"
+      ],
+      "tests": 19,
+      "home": "intent/blocks/spam-heuristics"
+    },
+    {
+      "name": "feed-write",
+      "purpose": "RSS 2.0, Atom 1.0 and JSON Feed 1.1 written with podcast and media tags, every problem reported first, and conditional GET",
+      "requires": [],
+      "tests": 19,
+      "home": "intent/blocks/feed-write"
+    },
+    {
+      "name": "theme-resolver",
+      "purpose": "Themes: the template hierarchy, child themes with site edits on top, merged theme settings, hashed asset URLs with integrity",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/theme-resolver"
+    },
+    {
+      "name": "webmention",
+      "purpose": "Webmention sent and received with the source verified, private hosts refused, microformats read, and replies, likes and reposts sorted",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/webmention"
+    },
+    {
+      "name": "redirects",
+      "purpose": "Redirect rules, exact, glob and pattern, safe from open redirects and slow patterns, with loops and chains found and flattened, and CSV",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/redirects"
     }
   ]
 }

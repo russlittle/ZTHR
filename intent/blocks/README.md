@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->160<!-- /fact --> blocks, <!-- fact:blocks.tests -->2439<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->175<!-- /fact --> blocks, <!-- fact:blocks.tests -->2746<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -169,6 +169,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [llm-provider](llm-provider/index.ts) | One request shape over model vendors: streaming, tool calls, structured output with repair, retries and fallbacks, a twin, and cost records | 30 |
 | [agent-loop](agent-loop/index.ts) | A bounded agent loop: budgets for steps, tools, cost, tokens and time, repeats caught, tools checked, approvals that suspend and resume, and a trace | 22 |
 | [jsonpath](jsonpath/index.ts) | JSONPath (RFC 9535) with slices, filters and typed functions, normalised paths and limits, and a jq-like transform | 17 |
+| [entity-registry](entity-registry/index.ts) | A registry of devices, entities and areas as Home Assistant keeps it: devices merged by identifiers, renames that keep old ids, and areas without loops | 16 |
+| [automation-engine](automation-engine/index.ts) | Automations: triggers, conditions and actions with single, restart, queued and parallel modes, a safe template language, and traces | 27 |
+| [plugin-manifest](plugin-manifest/index.ts) | Plugin manifests checked all at once, permissions reviewed, packages signed with Ed25519 against scoped trust, and install plans in dependency order | 24 |
+| [relations](relations/index.ts) | Relations between records: belongs-to, one-to-one, ordered many-to-many and soft links, with delete plans and orphan repair | 18 |
+| [media-assets](media-assets/index.ts) | A media library: real types sniffed, dangerous SVG refused, usage tracked, alt text reported, derivatives and srcset planned | 25 |
+| [i18n-content](i18n-content/index.ts) | Content in many languages: variants that know when they are stale, review, machine translation with placeholders kept, and alternates | 18 |
+| [avatars](avatars/index.ts) | Avatars: Gravatar hashes, identicons and initials on a palette checked for contrast, sizes and srcset | 16 |
+| [emoji](emoji/index.ts) | Emoji found whole across joiners and skin tones, shortcodes, a custom set, safe HTML and reactions | 22 |
+| [content-versions](content-versions/index.ts) | Content revisions with conflict detection, publish, schedule and roll back, field and text diffs, and signed preview links | 25 |
+| [hooks](hooks/index.ts) | Actions and filters as WordPress has them: priorities, run-once, owners, a declared catalogue, deprecations forwarded, and async forms | 20 |
+| [spam-heuristics](spam-heuristics/index.ts) | Spam scored by rules: honeypots, fill time, links, text shape, email, rate and duplicates, with reputation and an explanation | 19 |
+| [feed-write](feed-write/index.ts) | RSS 2.0, Atom 1.0 and JSON Feed 1.1 written with podcast and media tags, every problem reported first, and conditional GET | 19 |
+| [theme-resolver](theme-resolver/index.ts) | Themes: the template hierarchy, child themes with site edits on top, merged theme settings, hashed asset URLs with integrity | 20 |
+| [webmention](webmention/index.ts) | Webmention sent and received with the source verified, private hosts refused, microformats read, and replies, likes and reposts sorted | 18 |
+| [redirects](redirects/index.ts) | Redirect rules, exact, glob and pattern, safe from open redirects and slow patterns, with loops and chains found and flattened, and CSV | 20 |
 <!-- /gen -->
 
 ```mermaid
