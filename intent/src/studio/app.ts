@@ -284,10 +284,10 @@ function renderHandoff(p: Prepared) {
   if (!el) return;
   if (DEPT === 'intent') {
     const signed = isSigned(p);
-    el.innerHTML = state.words.trim() ? handoff('intent', signed, signed ? 'The schematic is signed. Engineering turns it into a complete specification: outcomes, data, compliance, operations, measures and tests.' : `Engineering can preview it now; it works from what you sign. ${p.questions.length ? `${p.questions.length} question${p.questions.length === 1 ? '' : 's'} still open.` : 'Sign it on the right when it says what you mean.'}`) : '';
+    el.innerHTML = state.words.trim() ? handoff('intent', signed, signed ? 'The intent package is signed. Product engineering turns it into the product spec: outcomes, data, compliance, operations, measures and tests.' : `Product engineering can preview it now; it works from what you sign. ${p.questions.length ? `${p.questions.length} question${p.questions.length === 1 ? '' : 's'} still open.` : 'Sign it on the right when it says what you mean.'}`) : '';
   } else {
     const last = state.releases.at(-1);
-    el.innerHTML = handoff('engineering', !!last?.ready, last?.ready ? `Revision ${last.revision} is released. The factory builds to it.` : 'Release the package when the checklist holds; the factory builds only to a released revision.');
+    el.innerHTML = handoff('design', !!last?.ready, last?.ready ? `Revision ${last.revision} is released. Manufacturing engineering builds the build package from it.` : 'Release the product spec when the checklist holds; manufacturing engineering works only from a released revision.');
   }
 }
 
@@ -310,7 +310,7 @@ function renderEngineering(p: Prepared) {
   const row = (ok: boolean | null, title: string, text: string, view: View) => `<li class="ck ${ok === null ? 'ck-info' : ok ? 'ck-ok' : 'ck-open'}"><span class="ck-mark" aria-hidden="true">${ok === null ? '•' : ok ? '✓' : '!'}</span><div><strong>${title}</strong><span class="sr">${ok === null ? '' : ok ? ': holds' : ': open'}</span><p>${text}</p><button type="button" class="btn quiet" data-view="${view}">Open ${esc(ALL_VIEWS.find((v) => v.key === view)!.label.toLowerCase())}</button></div></li>`;
   const missing = fw.outcomes.reduce((a, x) => a + x.missing.length, 0);
   el.innerHTML = `<h2 id="h-eng">Engineering checklist</h2>
-<p class="lede">${signed ? 'Specifying the signed schematic.' : `<strong>Not signed yet.</strong> This is a preview of the unsigned schematic; <a href="/intent">sign it in the studio</a> before it is built.`}</p>
+<p class="lede">${signed ? 'Specifying the signed intent package.' : `<strong>Not signed yet.</strong> This is a preview of the unsigned intent package; <a href="/intent">sign it in the studio</a> before it is built.`}</p>
 <ol class="cklist">
 ${row(missing === 0 && fw.outcomes.length > 0, 'Outcomes', fw.outcomes.length ? `${fw.outcomes.length} outcome${fw.outcomes.length === 1 ? '' : 's'}, each with how it is assessed, its criteria, a passing target and its evidence.${missing ? ` ${missing} item${missing === 1 ? '' : 's'} missing.` : ''}` : 'No outcome stated yet: say what will be true when it works.', 'outcomes')}
 ${row(info.unread.length === 0, 'Information', `${info.entities.length} record${info.entities.length === 1 ? '' : 's'}, ${info.entities.reduce((a, e) => a + e.fields.length, 0)} fields and ${info.rules.length} integrity rules, signed with the schematic.${info.unread.length ? ` ${info.unread.length} sentence${info.unread.length === 1 ? '' : 's'} not read.` : ''}`, 'information')}
@@ -743,7 +743,7 @@ const GLOSSARY: readonly [string, string, string][] = [
   ['Ratchet', 'A measure that may only get better: once held, the floor never drops without a person signing for it.', 'A ratchet that turns one way only.'],
   ['Control plan', 'Every critical or significant statement, and the controls it needs before it ships.', 'The control plan for special characteristics.'],
   ['Build manifest', 'The bill of materials the factory starts from: each part from the library, extended, catalogued to make, or made new.', 'A bill of materials with make-or-buy codes.'],
-  ['Release', 'The signed schematic issued as a package, with a revision number and a reason, that the factory builds to.', 'Release of a drawing under document control.'],
+  ['Release', 'The signed schematic issued as the product spec, with a revision number and a reason, that manufacturing engineering builds from.', 'Release of a drawing under document control.'],
 ];
 
 function openGlossary() {
@@ -890,7 +890,7 @@ function renderRelease(p: Prepared) {
   const next = (last?.revision ?? 0) + 1;
   const eng = DEPT === 'engineering';
   panel.innerHTML = `<h2 id="h-release"><span class="proc" data-step="5">${eng ? 6 : 5}</span>${eng ? 'Release the package' : 'Sign it'}</h2>
-<p class="lede">${eng ? 'The release is the package the factory builds to: the schematic, the specification, the gauges in the factory’s own format, the control plan, working ranges and starting ratchets, pending tests, and the knowledge bundle.' : 'Your signature says the schematic means what you mean. Engineering then specifies it in full and releases the package the factory builds to.'}</p>
+<p class="lede">${eng ? 'The release hands the product spec to manufacturing engineering: the schematic, the specification, the gauges in the factory’s own format, the control plan, working ranges and starting ratchets, pending tests, and the knowledge bundle. Manufacturing engineering builds the build package from it.' : 'Your signature says the schematic means what you mean. Product engineering then specifies it in full and releases the product spec.'}</p>
 ${Object.keys(state.unsure).length ? `<p class="note">You were not sure about ${Object.keys(state.unsure).length} answer${Object.keys(state.unsure).length === 1 ? '' : 's'}; ${Object.keys(state.unsure).length === 1 ? 'it is' : 'they are'} released on the recommended answer and listed in Your answers so you can come back.</p>` : ''}
 ${ready ? '<p class="ok"><strong>Ready to release.</strong> Nothing that changes what gets built is open.</p>' : `<p class="todo"><strong>Not ready yet.</strong> You can still issue a draft revision to share or keep.</p><ol>${problems.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>`}
 ${lastReview ? `<div class="bom-mini"><p><strong>Review: ${lastReview.overall} overall.</strong> ${lastReview.panel.map((x) => `${esc(x.name)} ${x.grade}`).join(', ')}; ${lastReview.people.map((x) => `${esc(x.name)} ${x.grade}`).join(', ')}.</p><button class="btn" type="button" data-view="review">Open the review</button></div>` : ''}

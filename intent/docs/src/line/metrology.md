@@ -1,6 +1,6 @@
 # Metrology
 
-> The lab beneath the line: it defines every measure QA uses, traces each to a reference standard, certifies every gauge before QA may use it, charts the factory's own process for drift, and audits the factory's claims against their evidence.
+> The lab behind QA: it keeps QA's gauges and process true. It defines every measure QA uses, traces each to a reference standard, certifies every gauge before QA may use it, charts the factory's own process for drift, and audits the factory's claims against their evidence.
 
 ## TL;DR
 
@@ -56,7 +56,7 @@ Every claim the factory makes about itself is checked against its evidence and r
 
 ## Architect
 
-- **Beneath the line.** Metrology serves QA first, but also the factory's required checks, the oracle the fleet relies on, and the service levels shipping watches. It has no place in the order work moves through, so it sits beneath the line beside maintenance: metrology measures and tags; maintenance repairs.
-- **Methods, not metaphors.** Gauge R&R, control charts and certified gauges are used here because AI workers vary from run to run, and those methods were made for variation; [the plant map](plant.md) says why, and where each stands.
+- **A support crew for QA.** Metrology keeps QA's gauges and process true: it defines the measures QA uses, certifies the gauges, and fixes QA's quality and process. Work does not pass through it, so it sits in the support group beside maintenance: metrology measures and tags; maintenance repairs. Other areas may read its charts, but QA is the area it serves.
+- **Methods, not metaphors.** Gauge R&R, control charts and certified gauges are used here because AI workers vary from run to run, and those methods were made for variation; [the standards map](standards.md) says why, and where each stands.
 - **A certificate is a reading, not a promise.** It is dated, it names its interval, and it lapses when the gauge's code changes. A gauge without a current certificate is not used, and the page says which.
 - **Audit the factory, not only the product.** The claims audit applies the same rule to the factory that QA applies to a build: nothing counts on assertion.

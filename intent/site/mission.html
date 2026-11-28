@@ -10,14 +10,16 @@
 <link rel="stylesheet" href="/console/console.css">
 <link rel="stylesheet" href="/console/bar.css">
 <title>Mission control · ZTHR</title>
-<meta name="description" content="Intents on the left, the factory on the right, and working software as the measure between them.">
+<meta name="description" content="The front office: it runs the plant. Priorities, approvals, stop-the-line and spend, every product line and product, and what waits on a person.">
 </head>
 <body data-dept="mission">
 <a class="skip" href="#main">Skip to content</a>
 <header class="zbar"></header>
-<div class="page-h"><div><h1>Mission control</h1><p>The whole platform as one line: product lines and products on the way in, working software in the fleet on the way out. Every product moves through the same departments, and the only measure that counts is journeys walked as a person would, and passing.</p></div></div>
+<div class="page-h"><div><h1>Mission control</h1><p>The front office: it runs the plant. It sets priorities, gives approvals, stops the line when it must and holds the spend, and it sees every product line and product, where each stands in each area, and what waits on a person. The measure that counts is journeys walked as a person would, and passing.</p></div></div>
 <nav class="crumb-bar" id="crumbs" aria-label="Level"></nav>
 <main id="main"><div id="body"><section class="sheet measure"><p class="muted">Reading the factory's latest build…</p></section></div></main>
+<div class="area-standing"><!--standing--></div>
+<section class="area-standing sheet" aria-labelledby="h-auth"><h2 id="h-auth">What mission control may do</h2><ul><li><strong>Set priorities</strong> for every area: which product line and which product the plant works on next.</li><li><strong>Give approvals</strong>: the acts only a person may do, such as signing an intent and approving production, wait here.</li><li><strong>Stop the line</strong>: a red required check stops new work on its branch until the fix names it. See <a href="https://github.com/russlittle/ZTHR/blob/main/intent/tools/stop-line.ts">tools/stop-line.ts</a> and <a href="https://github.com/russlittle/ZTHR/blob/main/intent/src/governance/stopline.ts">src/governance/stopline.ts</a>.</li><li><strong>Hold the spend</strong>: each crew works within a budget, shown on <a href="/maintenance">Maintenance</a>; a budget per product is not recorded yet.</li></ul><p class="small muted">Its lamps are readings, never inferred: an area with nothing measured says so.</p></section>
 <div id="handoff-slot"></div>
 <aside class="drawer" id="drawer" hidden aria-labelledby="dr-title">
   <div class="dr-head"><h2 id="dr-title">Detail</h2><button class="btn quiet" type="button" id="dr-close">Close</button></div>

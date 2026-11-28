@@ -2,15 +2,15 @@
 
 # Maintenance
 
-> The night shift, beneath the line: every department and metrology tag what is not working instead of stopping, and a crew works the tags overnight, through the same gates as day work, and reports each morning.
+> The crew that keeps the factory floor running: anyone tags what is not working instead of stopping the line, and a crew works the tags overnight, through the same gates as day work, and reports each morning.
 
 ## TL;DR
 
-The line runs two shifts. The day shift builds. Every department, gate, reviewer, fuzz run, user report and metrology's calibration runs tag what is not working instead of stopping the line: what is wrong, where, how it is known, and the test that will prove it fixed. The night shift is maintenance: a crew that works the tags at 5 stations (gauge repair, wear checks, restore drills, scrap review and open suspicions), accepts a fix only through the gates day work passes, escalates anything above its tier, and ends with a morning report: what was fixed, with its evidence; what was escalated, and why; what is new on the list. Where it stands: No shift has run yet: the crew’s runner is not live yet.
+The plant runs two shifts. The day shift builds. Anyone, and any gate, reviewer, fuzz run, user report or calibration run, tags what is not working instead of stopping the line: what is wrong, where, how it is known, and the test that will prove it fixed. The night shift is maintenance, the support crew that keeps the [factory floor](factory.md) running and getting better: a crew that works the tags, once accepted as work orders, at 5 stations (gauge repair, wear checks, restore drills, scrap review and open suspicions), accepts a fix only through the gates day work passes, escalates anything above its tier, and ends with a morning report: what was fixed, with its evidence; what was escalated, and why; what is new on the list. Where it stands: No shift has run yet: the crew’s runner is not live yet.
 
 ```mermaid
 flowchart LR
-  d["Day shift<br><small>every department builds</small>"]
+  d["Day shift<br><small>every area builds</small>"]
   t["Tag<br><small>what, where, evidence, proving test</small>"]
   q["The list<br><small>by station and kind</small>"]
   c["Night crew<br><small>cheapest proven model</small>"]
@@ -329,13 +329,13 @@ erDiagram
   }
 ```
 
-Every figure the department reports is read from these records: a shift log per night; per-block mutation scores and survivors; cost per accepted change (not measured: no change accepted yet); pass rate per model per task kind; and time from tag to fix (not measured: no tag fixed yet).
+Every figure maintenance reports is read from these records: a shift log per night; per-block mutation scores and survivors; cost per accepted change (not measured: no change accepted yet); pass rate per model per task kind; and time from tag to fix (not measured: no tag fixed yet).
 
 ## Architect
 
 Maintenance is total productive maintenance applied to a software line: the instruments are maintained as carefully as the product, and upkeep is scheduled work, not an interruption.
 
-- **Beneath the line, not a step in it.** Every department raises tags and every department receives fixes, so maintenance has no place in the order work moves through. It is drawn beneath the line, and its report goes to mission control.
+- **A support crew for the factory floor, not a step in the flow.** Tags can come from anywhere, and that is a source of work orders, not a service relationship: maintenance serves the factory floor, keeping its builders, gauges and blocks working. Work does not pass through it, and its report goes to mission control.
 - **Tag, do not stop.** Stopping the line for every defect stalls everything behind it; ignoring defects lets them compound. A tag with its evidence and its proving test is neither: the line keeps moving, and nothing found is lost.
 - **Same gates at night.** A night fix passes exactly what a day change passes. There is no maintenance exemption, so the night shift cannot be the way around a gate.
 - **Repair what metrology finds.** Calibration finds tests that cannot fail and code that does nothing; maintenance closes both. Every later product gains: the gauges it inherits are proven, and the blocks it assembles are smaller.

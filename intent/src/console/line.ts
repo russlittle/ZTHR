@@ -1,56 +1,73 @@
 /**
- * The line: every surface of zthr.ai in the order work moves through it, from mission control to the fleet, and the
- * metrology lab and maintenance crew beneath it that serve every department. Each page carries the same bar, the product in focus, and
- * a lamp for where that product stands at each department, so a person can move along the line without losing the
- * thread.
+ * The bar every page of zthr.ai carries: the areas of the plant, grouped as the plant model groups them (the front
+ * office, engineering, the line, the field and support), the area you are in marked, and a lamp for where the product
+ * in focus stands at each. It is drawn from src/console/plant-model.ts and from nothing else, so the bar, the docs and
+ * the pages cannot disagree about what the plant is made of.
  */
-import type { Flow, Light, StageKey } from './pipeline.ts';
+import type { Flow, Light } from './pipeline.ts';
+import { AREAS, GROUPS, area, depthOf, nextOf, pageHref, stepOf, type Area, type AreaKey, type Station } from './plant-model.ts';
 
-export type Dept = 'mission' | 'lines' | 'intent' | 'engineering' | 'factory' | 'qa' | 'shipping' | 'fleet' | 'metrology' | 'maintenance';
+export type Dept = AreaKey;
 
 export interface Department {
-  readonly key: Dept;
+  readonly key: AreaKey;
   readonly href: string;
   readonly label: string;
-  /** What the department does, in a line. */
+  /** What the area does, in a line. */
   readonly does: string;
-  /** The factory station it reports on, when it has one. */
-  readonly station?: StageKey;
-  /** Beneath the line, not a step in it: a function that serves every department, so it has no number and no handoff. */
-  readonly beneath?: true;
+  /** The station it reports on in a product's flow, when it has one. */
+  readonly station?: Station;
+  /** Its step on the work path, when it has one. The front office and the support crews have none. */
+  readonly step: number | null;
+  readonly group: Area['group'];
+  readonly inside?: AreaKey;
+  readonly serves?: readonly AreaKey[];
+  readonly serving?: string;
 }
 
-export const DEPARTMENTS: readonly Department[] = [
-  { key: 'mission', href: '/mission', label: 'Mission control', does: 'Every product line and product, where each stands, and what is waiting on a person.' },
-  { key: 'lines', href: '/lines', label: 'Product lines', does: 'Define a line: who it serves, and the defaults every product in it starts from.' },
-  { key: 'intent', href: '/intent', label: 'Intent studio', does: 'Say what a product must do, settle the questions, and sign the schematic as what you mean.', station: 'intent' },
-  { key: 'engineering', href: '/engineering', label: 'Engineering', does: 'Turn the signed schematic into a complete specification: outcomes, data, compliance, operations, measures and tests.', station: 'design' },
-  { key: 'factory', href: '/factory', label: 'Factory', does: 'Build to the released package, and measure what was built.', station: 'build' },
-  { key: 'qa', href: '/qa', label: 'QA', does: 'Walk every journey as a person would, prove every gate can fail, hold every ratchet.', station: 'qa' },
-  { key: 'shipping', href: '/shipping', label: 'Shipping', does: 'Move a certified build to the people it is for, stage by stage, with a person approving production.', station: 'release' },
-  { key: 'fleet', href: '/fleet', label: 'Fleet', does: 'Everything in service, the library each app draws on, and the data it keeps.' },
-  { key: 'metrology', href: '/metrology', label: 'Metrology', does: 'The lab: defines every measure QA uses, traces it to a reference, certifies every gauge, and charts the factory for drift.', beneath: true },
-  { key: 'maintenance', href: '/maintenance', label: 'Maintenance', does: 'The night shift: works what every department tagged, through the same gates as day work, and reports each morning.', beneath: true },
-];
-
-/** The departments work moves through, in order; metrology and maintenance sit beneath them. */
-export const LINE = DEPARTMENTS.filter((d) => !d.beneath);
-export const BENEATH = DEPARTMENTS.filter((d) => d.beneath);
+/** Every area of the plant, in the model's order. */
+export const DEPARTMENTS: readonly Department[] = AREAS.map((a) => ({
+  key: a.key,
+  href: pageHref(a),
+  label: a.label,
+  does: a.does,
+  ...(a.station ? { station: a.station } : {}),
+  step: stepOf(a.key),
+  group: a.group,
+  ...(a.inside ? { inside: a.inside } : {}),
+  ...(a.serves ? { serves: a.serves } : {}),
+  ...(a.serving ? { serving: a.serving } : {}),
+}));
 
 export const dept = (k: Dept) => DEPARTMENTS.find((d) => d.key === k)!;
-export const nextDept = (k: Dept): Department | null => (dept(k).beneath ? null : (LINE[LINE.findIndex((d) => d.key === k) + 1] ?? null));
+/** The area that takes the work next; the front office and the support crews hand nothing on. */
+export const nextDept = (k: Dept): Department | null => {
+  const n = nextOf(k);
+  return n ? dept(n.key) : null;
+};
 
-/** The bar, as static HTML: the line in order, the current department marked, lamps filled in by the page's script. */
-export function lineBar(current: Dept | null, docs = false): string {
-  const item = (d: Department, n: string) => `<a href="${d.href}"${d.key === current ? ' aria-current="page"' : ''} data-dept="${d.key}"${d.beneath ? ` title="${d.does}"` : ''}><span class="zl-n" aria-hidden="true">${n}</span><span class="zl-name">${d.label}</span><span class="zl-lamp" data-lamp="${d.key}" aria-hidden="true"></span>${d.beneath ? '<span class="sr">, beneath the line, serving every department</span>' : ''}</a>`;
-  return `<header class="zbar"><a class="brand" href="/">ZTHR</a><nav aria-label="Departments"><ol class="zline">${LINE.map((d, i) => `<li>${item(d, String(i + 1))}</li>`).join('')}</ol><p class="zl-beneath">${BENEATH.map((d) => item(d, d.key === 'metrology' ? '±' : '↻')).join('')}</p></nav><a class="zl-product" id="zl-product" href="/lines" hidden></a><a class="zl-docs" href="/line/${!docs && current ? `${current}/` : ''}"${docs && !current ? ' aria-current="page"' : ''}>How it works</a></header>`;
+/** The words a screen reader gets after an area's name: where it sits, or whom it serves. */
+const placing = (d: Department): string => (d.inside ? `inside ${area(d.inside).label}` : d.serving ? d.serving : '');
+
+/** The bar, as static HTML: the plant's areas by group, the current one marked, lamps filled in by the page's script. */
+export function lineBar(current: Dept | 'plant' | null, docs = false): string {
+  const item = (d: Department) => {
+    const depth = depthOf(d.key);
+    const mark = d.step !== null ? `<span class="zl-n" aria-hidden="true">${d.step}</span>` : d.key === 'rework' ? '<span class="zl-n zl-loop" aria-hidden="true">\u21a9</span>' : depth ? '<span class="zl-in" aria-hidden="true">\u21b3</span>' : '';
+    const where = placing(d);
+    const title = where ? `${d.label}, ${where}. ${d.does}` : d.does;
+    return `<li class="zi${depth ? ` in${depth}` : ''}${d.group === 'support' ? ' zs' : ''}"><a href="${d.href}"${d.key === current ? ' aria-current="page"' : ''} data-dept="${d.key}" title="${title.replace(/"/g, '&quot;')}">${mark}<span class="zl-name">${d.label}</span><span class="zl-lamp" data-lamp="${d.key}" aria-hidden="true"></span>${where ? `<span class="sr">, ${where}</span>` : ''}</a></li>`;
+  };
+  const groups = GROUPS.map((g) => `<li class="zg" data-group="${g.key}"><span class="zg-h">${g.label}</span><ul class="zline">${DEPARTMENTS.filter((d) => d.group === g.key).map(item).join('')}</ul></li>`).join('');
+  const page = current && current !== 'plant' ? area(current).page : '';
+  return `<header class="zbar"><a class="brand" href="/">ZTHR</a><a class="zl-plant" href="/plant/"${current === 'plant' ? ' aria-current="page"' : ''}>Plant</a><nav aria-label="Areas of the plant"><ul class="zgroups">${groups}</ul></nav><a class="zl-product" id="zl-product" href="/lines" hidden></a><a class="zl-docs" href="/line/${!docs && page ? `${page}/` : ''}"${docs && !current ? ' aria-current="page"' : ''}>How it works</a></header>`;
 }
 
-/** The one action that hands the work to the next department. */
+/** The one action that hands the work to the next area. */
 export function handoff(current: Dept, ready: boolean, why: string): string {
   const n = nextDept(current);
   if (!n) return '';
-  return `<section class="handoff" aria-label="Next department"><p><strong>Next: ${n.label}.</strong> ${why}</p><a class="btn ${ready ? 'primary' : 'secondary'}" href="${n.href}">Go on to ${n.label}</a></section>`;
+  return `<section class="handoff" aria-label="Next area"><p><strong>Next: ${n.label}.</strong> ${why}</p><a class="btn ${ready ? 'primary' : 'secondary'}" href="${n.href}">Go on to ${n.label}</a></section>`;
 }
 
 // ---------------------------------------------------------------- the product in focus
@@ -73,26 +90,27 @@ export function setFocus(name: string): void {
   }
 }
 
-const WORD: Record<Light, string> = { pass: 'holds', fail: 'open or failing', 'not measured': 'not measured', waiting: 'waiting for an earlier department' };
+const WORD: Record<Light, string> = { pass: 'holds', fail: 'open or failing', 'not measured': 'not measured', waiting: 'waiting for an earlier area' };
 
 /** Fill the bar's lamps for the product in focus. */
 export function paintLine(flow: Flow | null): void {
   const chip = document.getElementById('zl-product');
-  // On a narrow screen the line scrolls: keep the department you are in, and its neighbours, in view.
+  // On a narrow screen the line scrolls: keep the area you are in, and its neighbours, in view.
   const here = document.querySelector<HTMLElement>('.zline a[aria-current=page]');
   const nav = here?.closest('nav');
   if (here && nav && nav.scrollWidth > nav.clientWidth) {
     const left = here.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
     nav.scrollLeft = Math.max(0, left - (nav.clientWidth - here.offsetWidth) / 2);
   }
-  for (const d of LINE) {
+  for (const d of DEPARTMENTS) {
     const el = document.querySelector<HTMLElement>(`[data-lamp="${d.key}"]`);
     const a = document.querySelector<HTMLElement>(`a[data-dept="${d.key}"]`);
     if (!el || !a) continue;
-    const light: Light | null = !flow ? null : d.station ? flow.stages.find((s) => s.key === d.station)!.light : d.key === 'fleet' ? (flow.stages.find((s) => s.key === 'release')!.light === 'pass' ? 'pass' : 'waiting') : null;
+    // A lamp shows only what was measured for the product at that station. The fleet's is lit only by something in service.
+    const light: Light | null = !flow || !d.station ? null : (flow.stages.find((s) => s.key === d.station)?.light ?? null);
     el.className = `zl-lamp${light ? ` l-${light.replace(' ', '-')}` : ''}`;
     a.title = light ? `${d.label}: ${flow!.product}, ${WORD[light]}` : d.does;
-    const sr = a.querySelector('.sr') ?? a.appendChild(Object.assign(document.createElement('span'), { className: 'sr' }));
+    const sr = a.querySelector('.zl-state') ?? a.appendChild(Object.assign(document.createElement('span'), { className: 'sr zl-state' }));
     sr.textContent = light ? `, ${WORD[light]}` : '';
   }
   if (chip) {

@@ -4,6 +4,7 @@
  * plainly: built and proven, partial, or missing.
  */
 import type { Standing } from '../src/console/lab.ts';
+import { AREAS, type AreaKey } from '../src/console/plant-model.ts';
 
 export interface PlantFunction {
   readonly plant: string;
@@ -44,3 +45,24 @@ export const PLANT: readonly PlantFunction[] = [
   { plant: 'Kaizen', standard: 'Continuous improvement', factory: 'The improvement brief: one page a week, what to change and why', standing: 'partial', evidence: 'Catalogued as a part for products; not yet produced for the factory itself' },
   { plant: 'Capacity planning', standard: 'Load against capacity and cost', factory: 'The model router: the cheapest model proven for each task kind, within the day’s budget', standing: 'partial', evidence: 'The router and its dated price table are built and tested; no pass rates are measured yet' },
 ];
+
+/** The area of the plant each function belongs to: the one that carries it out in the software factory. */
+const AREA_OF: Readonly<Record<string, AreaKey>> = {
+  'Metrology lab': 'metrology', 'Reference standards': 'metrology', 'Gauge R&R': 'metrology', 'Calibration certificates and intervals': 'metrology', 'Gauge capability': 'metrology',
+  'Measurement system analysis of a fixture': 'metrology', 'Statistical process control': 'metrology', 'Internal audit': 'metrology',
+  'Inspection (QA)': 'qa', 'First article inspection': 'qa',
+  'Maintenance': 'maintenance', 'Andon': 'maintenance',
+  'Incoming inspection': 'shipping', 'Lot traceability': 'shipping', 'Certificate of conformance': 'shipping',
+  'Document control': 'process', 'Control plan': 'process', 'Poka-yoke': 'process', 'Kaizen': 'process',
+  'Engineering change control': 'intent', 'FMEA': 'design', 'Tool crib': 'design',
+  'Service monitoring': 'deploy', 'Nonconformance and review board': 'rework', 'Corrective and preventive action': 'rework',
+  'Work instructions': 'factory', 'Capacity planning': 'factory', 'Registrar audit': 'mission',
+};
+
+/** Every function with its area, in the order of the plant model, so the standards map reads area by area. */
+export const plantByArea = (): readonly (PlantFunction & { readonly area: AreaKey })[] =>
+  PLANT.map((f) => {
+    const a = AREA_OF[f.plant];
+    if (!a) throw new Error(`the plant function "${f.plant}" belongs to no area`);
+    return { ...f, area: a };
+  }).sort((a, b) => AREAS.findIndex((x) => x.key === a.area) - AREAS.findIndex((x) => x.key === b.area));

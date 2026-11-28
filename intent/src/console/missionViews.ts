@@ -68,14 +68,14 @@ export function platform(flows: readonly Flow[], lib: Lib, extra = ''): string {
   const total = flows.reduce((a, f) => ({ pass: a.pass + f.measure.pass, fail: a.fail + f.measure.fail, unmeasured: a.unmeasured + f.measure.unmeasured, total: a.total + f.measure.total }), { pass: 0, fail: 0, unmeasured: 0, total: 0 });
   const stageCount = (k: StageKey, l: Light) => flows.filter((f) => f.stages.find((s) => s.key === k)!.light === l).length;
   const station = (s: (typeof STAGES)[number], i: number) =>
-    `<li class="station"><button type="button" class="st-card" data-stage-all="${s.key}"><span class="st-n">${i + 1}</span><span class="st-name">${esc(s.label)}</span><span class="st-asks">${esc(s.asks)}</span><span class="st-lamps">${flows.map((f) => lamp(f.stages.find((x) => x.key === s.key)!.light, `${f.title}: ${WORD[f.stages.find((x) => x.key === s.key)!.light]}`)).join('')}</span><span class="st-sum">${stageCount(s.key, 'pass')} of ${flows.length} hold</span></button></li>`;
+    `<li class="station"><button type="button" class="st-card" data-stage-all="${s.key}"><span class="st-n">${s.step ?? (s.key === 'rework' ? '\u21a9' : '\u2022')}</span><span class="st-name">${esc(s.label)}</span><span class="st-asks">${esc(s.asks)}</span><span class="st-lamps">${flows.map((f) => lamp(f.stages.find((x) => x.key === s.key)!.light, `${f.title}: ${WORD[f.stages.find((x) => x.key === s.key)!.light]}`)).join('')}</span><span class="st-sum">${stageCount(s.key, 'pass')} of ${flows.length} hold</span></button></li>`;
   const tests = lib.assemblies.reduce((a, b) => a + b.tests, 0);
   const flow = `<div class="sysflow" role="group" aria-label="The platform: intent in, software out">
 <p class="io in">Intent in</p>
 <ol class="stations">${STAGES.map(station).join('')}</ol>
 <p class="io out">Working software out</p>
-<div class="loops"><p class="loop ratchet"><span aria-hidden="true">↺</span> QA to build: every defect found becomes a ratchet, so it can never come back</p><p class="loop fleet"><span aria-hidden="true">↻</span> Release to the library: a fix to a standard assembly is pushed to every app that uses it</p><p class="loop night"><span aria-hidden="true">↻</span> Beneath every department: what is tagged by day, maintenance works by night, through the same gates</p></div>
-<div class="libbox"><p class="lib-h"><strong>The library every intent draws on in design</strong>, maintained by the fleet</p><ul class="lib-stats"><li><span class="n">${lib.assemblies.length}</span> standard assemblies, ${tests} tests between them</li><li><span class="n">${lib.parts}</span> catalogued parts in ${lib.groups} groups</li><li><span class="n">${lib.minimum}</span> in the ${esc(lib.minimumName)}, inherited by every app</li></ul><details><summary>The standard assemblies</summary><ul class="asm">${lib.assemblies.map((a) => `<li><code>${esc(a.name)}</code> <span class="muted">${a.tests} tests${a.mutationFloor ? `, mutation floor ${a.mutationFloor}%` : ''}</span></li>`).join('')}</ul></details></div>
+<div class="loops"><p class="loop ratchet"><span aria-hidden="true">↺</span> QA to rework: every defect found goes back with its failing evidence, is fixed from a failing test, and returns to QA as a ratchet that holds it</p><p class="loop fleet"><span aria-hidden="true">↻</span> Fleet to mission control: what the field shows comes back to the office, and updates go out to the field over the air, with rollback</p><p class="loop night"><span aria-hidden="true">↻</span> Maintenance keeps the factory floor running: what anyone tags by day it works by night, through the same gates</p></div>
+<div class="libbox"><p class="lib-h"><strong>The library every product is designed from</strong>, kept by product engineering</p><ul class="lib-stats"><li><span class="n">${lib.assemblies.length}</span> standard assemblies, ${tests} tests between them</li><li><span class="n">${lib.parts}</span> catalogued parts in ${lib.groups} groups</li><li><span class="n">${lib.minimum}</span> in the ${esc(lib.minimumName)}, inherited by every app</li></ul><details><summary>The standard assemblies</summary><ul class="asm">${lib.assemblies.map((a) => `<li><code>${esc(a.name)}</code> <span class="muted">${a.tests} tests${a.mutationFloor ? `, mutation floor ${a.mutationFloor}%` : ''}</span></li>`).join('')}</ul></details></div>
 </div>`;
   const prods = products(flows)
     .map((pr) => {
@@ -86,10 +86,11 @@ export function platform(flows: readonly Flow[], lib: Lib, extra = ''): string {
     .join('');
   const table = `<ul class="prod-list">${prods || '<li>No products yet. <a href="/intent">Write an intent in the studio</a>.</li>'}</ul>`;
   return `${extra}<section class="sheet measure" aria-label="The measure across the platform"><div class="headline"><p class="eyebrowless">Across the platform</p><p class="big">${total.total && total.pass + total.fail === 0 ? `<span class="num">${total.total}</span> journeys waiting to be walked` : `<span class="num">${total.pass}</span> of <span class="num">${total.total}</span> journeys pass`}</p><p class="verdict v-${total.total && total.pass === total.total ? 'ok' : total.fail ? 'bad' : 'unk'}">${total.pass + total.fail === 0 ? 'Nothing walked yet: the measure fills in as the factory walks each journey' : total.fail ? `${total.fail} failing, ${total.unmeasured} not walked` : `${total.unmeasured} not walked yet`}</p>${bar(total)}</div></section>
-<section class="sheet" aria-labelledby="h-sys"><h2 id="h-sys">How the platform works</h2><p class="muted">Every intent goes through the same departments, from the intent studio to shipping. Lamps show where each intent stands at each: ✓ holds, ✕ open or failing, ? not measured, … waiting for an earlier department. Select a department for every intent's reading there.</p>${flow}</section>
-<section class="sheet" aria-labelledby="h-fl"><h2 id="h-fl">The fleet</h2><p><a href="/fleet">The fleet: what is in service, the library where used, and sensitive data across every app</a></p></section>
-<section class="sheet" aria-labelledby="h-my"><h2 id="h-my">Metrology</h2><p><a href="/metrology">The lab: which gauges QA may use, the measures and their references, control charts on the factory, and the claims audit</a></p></section>
-<section class="sheet" aria-labelledby="h-mt"><h2 id="h-mt">Maintenance</h2><p><a href="/maintenance">The night shift: the morning report, what every department tagged, gauge scores per block, and the crew's cost and pass rates</a></p></section>`;
+<section class="sheet" aria-labelledby="h-sys"><h2 id="h-sys">How the platform works</h2><p class="muted">Every intent goes through the same areas of the plant, from the intent studio to the fleet, with rework taking back what QA fails. Lamps show where each intent stands at each: ✓ holds, ✕ open or failing, ? not measured, … waiting for an earlier area. Select an area for every intent's reading there.</p>${flow}</section>
+<section class="sheet" aria-labelledby="h-fl"><h2 id="h-fl">The fleet</h2><p><a href="/fleet">The fleet: what is in service and the version each app runs, updates over the air with rollback, where the library is used, and sensitive data across every app</a></p></section>
+<section class="sheet" aria-labelledby="h-my"><h2 id="h-my">Metrology</h2><p><a href="/metrology">The lab behind QA: which gauges QA may use, the measures and their references, control charts on the factory, and the claims audit</a></p></section>
+<section class="sheet" aria-labelledby="h-mt"><h2 id="h-mt">Maintenance</h2><p><a href="/maintenance">The crew that keeps the factory floor running: the morning report, what anyone tagged, gauge scores per block, and the crew's cost and pass rates</a></p></section>
+<section class="sheet" aria-labelledby="h-dp"><h2 id="h-dp">Deployment engineering</h2><p><a href="/deployment">The crew that keeps shipping and the fleet deploying and updated: environments, deploys, over-the-air updates, rollback and monitoring</a></p></section>`;
 }
 
 export function intent(f: Flow, station: StageKey, filter: string): string {
@@ -97,7 +98,7 @@ export function intent(f: Flow, station: StageKey, filter: string): string {
   const head = `<section class="sheet measure" aria-label="The measure"><div class="headline"><p class="eyebrowless">The measure for <strong>${esc(f.title)}</strong>${f.end ? `: ${esc(f.end)}` : ''}</p><p class="big">${esc(ml.big)}</p><p class="verdict v-${ml.cls}">${esc(ml.verdict)}</p>${bar(f.measure)}<p class="muted small">A journey passes only when a person reaches their goal, in every mode and channel it names, with nothing forbidden happening.</p></div></section>`;
   const stations = `<ol class="stations line" aria-label="Stations">${STAGES.map((s, i) => {
     const st = f.stages.find((x) => x.key === s.key)!;
-    return `<li class="station"><button type="button" class="st-card${station === s.key ? ' on' : ''}" data-stage="${s.key}" aria-pressed="${station === s.key}"><span class="st-n">${i + 1}</span><span class="st-name">${lamp(st.light)}${esc(s.label)}</span><span class="st-asks">${esc(st.headline)}</span></button></li>`;
+    return `<li class="station"><button type="button" class="st-card${station === s.key ? ' on' : ''}" data-stage="${s.key}" aria-pressed="${station === s.key}"><span class="st-n">${s.step ?? (s.key === 'rework' ? '\u21a9' : '\u2022')}</span><span class="st-name">${lamp(st.light)}${esc(s.label)}</span><span class="st-asks">${esc(st.headline)}</span></button></li>`;
   }).join('')}</ol>`;
   const st = f.stages.find((x) => x.key === station)!;
   const detail = stageDetail(f, st, filter);
@@ -146,9 +147,9 @@ export function product(name: string, flows: readonly Flow[]): string {
 <section class="sheet" aria-labelledby="h-pass"><h2 id="h-pass">One pass per intent</h2><p class="muted">Each intent is made into all of these together, in one pass of the factory, and the pass is not done until every one holds.</p><div class="tbl-wrap"><table class="swim"><thead><tr><th scope="col">Intent</th>${OUTPUTS.map((o) => `<th scope="col">${esc(o.label)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div></section>`;
 }
 
-const DEPT_HREF: Record<StageKey, string> = { intent: '/intent', design: '/engineering', build: '/factory', qa: '/qa', release: '/shipping' };
+const DEPT_HREF = Object.fromEntries(STAGES.map((s) => [s.key, s.href])) as Record<StageKey, string>;
 
-/** Every product along the line: one row each, a lamp at every department, each lamp a way into that department. */
+/** Every product along the line: one row each, a lamp at every area, each lamp a way into that area. */
 export function along(flows: readonly Flow[], lines: readonly { name: string; products: readonly string[] }[]): string {
   const names = [...new Set(flows.map((f) => f.product))];
   if (!names.length) return '<p>No products yet. <a href="/lines">Define a product line</a> and start one.</p>';
@@ -157,10 +158,9 @@ export function along(flows: readonly Flow[], lines: readonly { name: string; pr
     const ls = flows.filter((f) => f.product === n).map((f) => f.stages.find((x) => x.key === k)!.light);
     return (['fail', 'not measured', 'waiting', 'pass'] as Light[]).find((l) => ls.includes(l)) ?? 'waiting';
   };
-  return `<div class="tbl-wrap" tabindex="0" role="region" aria-label="Products along the line"><table class="swim along"><caption class="sr">Each product, and where it stands in each department</caption><thead><tr><th scope="col">Product</th><th scope="col">Line</th>${STAGES.map((st) => `<th scope="col"><a href="${DEPT_HREF[st.key]}">${esc(st.label)}</a></th>`).join('')}<th scope="col"><a href="/fleet">Fleet</a></th></tr></thead><tbody>${names
+  return `<div class="tbl-wrap" tabindex="0" role="region" aria-label="Products along the line"><table class="swim along"><caption class="sr">Each product, and where it stands in each area</caption><thead><tr><th scope="col">Product</th><th scope="col">Line</th>${STAGES.map((st) => `<th scope="col"><a href="${DEPT_HREF[st.key]}">${esc(st.label)}</a></th>`).join('')}</tr></thead><tbody>${names
     .map((n) => {
-      const rel = worst(n, 'release');
-      return `<tr><th scope="row"><button type="button" class="linklike" data-product="${esc(n)}">${esc(n)}</button></th><td class="small">${esc(lineOf(n))}</td>${STAGES.map((st) => { const l = worst(n, st.key); const href = st.key === 'intent' || st.key === 'design' ? `${DEPT_HREF[st.key]}?product=${encodeURIComponent(n)}` : DEPT_HREF[st.key]; return `<td><a class="cell-lamp" href="${esc(href)}" data-focus="${esc(n)}">${lamp(l, `${n}, ${st.label}: ${WORD[l]}`)}</a></td>`; }).join('')}<td>${lamp(rel === 'pass' ? 'pass' : 'waiting', `${n}, fleet: ${rel === 'pass' ? 'in service' : 'not in service yet'}`)}</td></tr>`;
+      return `<tr><th scope="row"><button type="button" class="linklike" data-product="${esc(n)}">${esc(n)}</button></th><td class="small">${esc(lineOf(n))}</td>${STAGES.map((st) => { const l = worst(n, st.key); const href = st.key === 'intent' || st.key === 'design' ? `${DEPT_HREF[st.key]}?product=${encodeURIComponent(n)}` : DEPT_HREF[st.key]; return `<td><a class="cell-lamp" href="${esc(href)}" data-focus="${esc(n)}">${lamp(l, `${n}, ${st.label}: ${WORD[l]}`)}</a></td>`; }).join('')}</tr>`;
     })
     .join('')}</tbody></table></div>`;
 }

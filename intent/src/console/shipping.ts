@@ -59,7 +59,7 @@ async function start() {
   const mine = own(focus);
   $('ship-body').innerHTML = `${mine}${feed ? reference(feed, delivery) : '<section class="sheet"><p><strong>The factory has not published its feed yet.</strong> The reference product shows here once it does.</p></section>'}
 <section class="sheet" aria-labelledby="h-who"><h2 id="h-who">Who does what</h2><p>The operator requests each stage in order; the pipeline runs it under its own identity and records what it proved; a named person approves production after the canary; rolling back is always allowed and takes one step. No one, agent or person, skips a stage. <a href="https://github.com/russlittle/ZTHR/blob/main/intent/docs/operations.md">How delivery and operations work</a>.</p></section>`;
-  $('handoff-slot').innerHTML = handoff('shipping', !!feed, 'What ships joins the fleet: watched against its service levels, and kept current with every fix to the standard assemblies it uses.');
+  $('handoff-slot').innerHTML = handoff('shipping', !!feed, 'What ships joins the fleet: updated over the air, with rollback, watched against its service levels, and reporting back to mission control.');
 }
 
 void start();
