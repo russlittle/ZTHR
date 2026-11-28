@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crdt-text",
+  "mutant": {
+    "id": "629",
+    "line": 513,
+    "column": 7,
+    "endLine": 513,
+    "endColumn": 14,
+    "mutator": "ConditionalExpression",
+    "original": "!r.done",
+    "replacement": "false",
+    "lineText": "if (!r.done) throw new Refused('there are bytes after the end');",
+    "prevText": "for (let i = 0; i < n; i++) sv.set(r.uint(), r.uint());",
+    "nextText": "return sv;"
+  },
+  "mayEdit": [
+    "intent/blocks/crdt-text/crdt-text.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crdt-text-629.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crdt-text\". Mutant: line 513:7-513:14, mutator ConditionalExpression: \"!r.done\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crdt-text/index.ts (> marks the mutated line):\n   507  export function decodeStateVector(b: Uint8Array): StateVector {\n   508    const r = new Reader(b);\n   509    const n = r.uint();\n   510    if (n > b.length) throw new Refused('more clients than bytes');\n   511    const sv: StateVector = new Map();\n   512    for (let i = 0; i < n; i++) sv.set(r.uint(), r.uint());\n>  513    if (!r.done) throw new Refused('there are bytes after the end');\n   514    return sv;\n   515  }\n   516  \n   517  /** One update that carries what several do, by applying them to a scratch document; refuses if some stay pending. */\n   518  export function mergeUpdates(updates: readonly Uint8Array[]): Uint8Array {\n   519    const d = new Doc(0);\n\nTest file style (intent/blocks/crdt-text/crdt-text.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Doc, Refused, decodeRelativePosition, decodeStateVector, encodeRelativePosition, encodeStateVector, mergeUpdates, sync } from './index.ts';\n\nfunction rng(seed: number) {\n  return () => {\n    seed = (seed + 0x6d2b79f5) | 0;\n    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);\n    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;\n    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;\n  };\n}\n\ntest('local inserts and deletes edit the text by code point index', () => {\n  const d = new Doc(1);\n  d.insert(0, 'hello world');\n  d.insert(5, ',');\n  d.delete(6, 1);\n  assert.equal(d.toString(), 'hello,world');\n  assert.equal(d.length, 11);\n  d.insert(11, '!');\n  d.insert(0, '>> ');\n  assert.equal(d.toString(), '>> hello,world!');\n  assert.throws(() => d.insert(99, 'x'), /past the end/);\n  assert.throws(() => d.delete(10, 99), /past the end/);\n});\n\ntest('astral characters count as one and are never split', () => {\n  const d = new Doc(1);\n  d.insert(0, 'a😀b');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crdt-text-629.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.243Z"
+}

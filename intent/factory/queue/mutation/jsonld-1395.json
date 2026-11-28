@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "jsonld",
+  "mutant": {
+    "id": "1395",
+    "line": 618,
+    "column": 58,
+    "endLine": 618,
+    "endColumn": 69,
+    "mutator": "StringLiteral",
+    "original": "'@language'",
+    "replacement": "\"\"",
+    "lineText": "if (typeof lang === 'string' && (term?.container === '@language' || (lang === ctx.language && term?.type === undefined))) return v['@value'] as Json;",
+    "prevText": "const ty = v['@type'];",
+    "nextText": "if (typeof ty === 'string') return term?.type === ty ? (v['@value'] as Json) : { '@value': v['@value'] as Json, '@type': compactIri(ctx, inv, ty, true) };"
+  },
+  "mayEdit": [
+    "intent/blocks/jsonld/jsonld.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/jsonld-1395.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"jsonld\". Mutant: line 618:58-618:69, mutator StringLiteral: \"'@language'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/jsonld/index.ts (> marks the mutated line):\n   612      const items = (v['@list'] as Item[]).map((x) => compactValue(ctx, inv, term && term.container === '@list' ? { ...term, container: undefined as never } : undefined, x, arrays));\n   613      return term?.container === '@list' ? items : { '@list': items };\n   614    }\n   615    if (isValue(v)) {\n   616      const lang = v['@language'];\n   617      const ty = v['@type'];\n>  618      if (typeof lang === 'string' && (term?.container === '@language' || (lang === ctx.language && term?.type === undefined))) return v['@value'] as Json;\n   619      if (typeof ty === 'string') return term?.type === ty ? (v['@value'] as Json) : { '@value': v['@value'] as Json, '@type': compactIri(ctx, inv, ty, true) };\n   620      if (typeof lang === 'string') return { '@value': v['@value'] as Json, '@language': lang };\n   621      return v['@value'] as Json;\n   622    }\n   623    if (isRef(v)) {\n   624      const id = v['@id'] as string;\n\nTest file style (intent/blocks/jsonld/jsonld.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  AS, AS_PUBLIC, ContextLoader, FEDERATION_CONTEXT, JsonLdError, SECURITY, assertSameOrigin, asArray, compact, expand, hasType, idOf, idsOf, normalise, typesOf, type Json,\n} from './index.ts';\n\nconst code = (c: string) => (e: unknown) => e instanceof JsonLdError && e.code === c;\n\nconst mastodonNote = (): Json => ({\n  '@context': [AS, SECURITY, { toot: 'http://joinmastodon.org/ns#', sensitive: 'as:sensitive', Hashtag: 'as:Hashtag', discoverable: 'toot:discoverable' }],\n  id: 'https://remote.example/users/ana/statuses/1/activity',\n  type: 'Create',\n  actor: 'https://remote.example/users/ana',\n  published: '2024-05-01T12:00:00Z',\n  to: [AS_PUBLIC],\n  cc: ['https://remote.example/users/ana/followers'],\n  object: {\n    id: 'https://remote.example/users/ana/statuses/1',\n    type: 'Note',\n    attributedTo: 'https://remote.example/users/ana',\n    content: '<p>Hello</p>',\n    contentMap: { en: '<p>Hello</p>', fr: '<p>Bonjour</p>' },\n    sensitive: false,\n    tag: [{ type: 'Hashtag', href: 'https://remote.example/tags/hi', name: '#hi' }],\n  },\n});\n\ntest('expansion gives full IRIs, arrays everywhere, and typed values and references', async () => {\n  const [a] = await expand(mastodonNote());\n  const AS_NS = 'https://www.w3.org/ns/activitystreams#';\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/jsonld-1395.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:45.830Z"
+}

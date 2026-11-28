@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "router",
+  "mutant": {
+    "id": "414",
+    "line": 338,
+    "column": 25,
+    "endLine": 338,
+    "endColumn": 38,
+    "mutator": "ArithmeticOperator",
+    "original": "a.est - b.est",
+    "replacement": "a.est + b.est",
+    "lineText": ".sort((a, b) => a.est - b.est || a.m.id.localeCompare(b.m.id));",
+    "prevText": ".filter((c) => c.standing !== 'ruled-out')",
+    "nextText": "const fresh = pool.filter((c) => !o.avoid?.includes(c.m.id));"
+  },
+  "mayEdit": [
+    "intent/blocks/router/router.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/router-414.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"router\". Mutant: line 338:25-338:38, mutator ArithmeticOperator: \"a.est - b.est\" becomes \"a.est + b.est\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/router/index.ts (> marks the mutated line):\n   332          .filter((m) => (o.anyLevel ? LEVELS.slice(LEVELS.indexOf(start)).some((l) => m.levels.includes(l)) : m.levels.includes(level)))\n   333          .filter((m) => !m.price.retired && !exclude.has(m.family.toLowerCase()) && (!only || only.has(m.family.toLowerCase())))\n   334          .filter((m) => !o.runners || o.runners.includes(m.runner))\n   335          .filter((m) => m.contextTokens >= largest)\n   336          .map((m) => ({ m, est: this.estCost(m, e), ...this.standing(m, kind) }))\n   337          .filter((c) => c.standing !== 'ruled-out')\n>  338          .sort((a, b) => a.est - b.est || a.m.id.localeCompare(b.m.id));\n   339        const fresh = pool.filter((c) => !o.avoid?.includes(c.m.id));\n   340        const affordable = (fresh.length ? fresh : pool).filter((c) => c.est <= budgetLeftUsd);\n   341        if (pool.length && !affordable.length) overBudget = true;\n   342        if (!affordable.length) {\n   343          if (o.anyLevel) break;\n   344          continue;\n\nTest file style (intent/blocks/router/router.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { readFileSync } from 'node:fs';\nimport { test } from 'node:test';\nimport { CATALOGUE, LEVELS, POLICY, Router, cost, failuresOf, measure, models, spentOn, staleness, statOf, wilson, type Choice, type PriceTable, type Result, type Stop } from './index.ts';\n\nconst TABLE = JSON.parse(readFileSync(new URL('../../factory/prices.json', import.meta.url), 'utf8')) as PriceTable;\nconst NOW = new Date('2026-11-27T12:00:00Z');\nconst never = () => 0.99; // never explores\nconst always = () => 0; // always explores when it may\n\nconst r = (model: string, kind: string, pass: boolean | null, extra: Partial<Result> = {}): Result => ({ at: '2026-11-27T01:00:00Z', model, kind, pass, inputTokens: 1000, outputTokens: 100, costUsd: 0.001, ...extra });\nconst times = (n: number, f: () => Result) => Array.from({ length: n }, f);\nconst router = (results: Result[] = [], random = never, policy = {}) => new Router(TABLE, results, { now: NOW, random, policy });\nconst chosen = (c: Choice | Stop): Choice => {\n  assert.equal(c.stop, false, c.stop ? `${c.reason}: ${c.detail}` : '');\n  return c as Choice;\n};\nconst stopped = (c: Choice | Stop): Stop => {\n  assert.equal(c.stop, true, c.stop ? '' : `chose ${c.model.id}`);\n  return c as Stop;\n};\n\ntest('the price table is no more than 30 days old, every row is sourced, and no promotional rate has lapsed', () => {\n  assert.deepEqual(staleness(TABLE, new Date()), [], 'intent/factory/prices.json needs re-reading from the sources it names');\n  assert.deepEqual(staleness(TABLE, NOW), []);\n  assert.deepEqual(staleness(TABLE, new Date('2026-12-27T00:00:00Z')), [], 'exactly 30 days is still fresh');\n  const old = staleness(TABLE, new Date('2026-12-28T00:00:01Z'));\n  assert.ok(old.includes('price table checked 2026-11-27, more than 30 days ago'), old.join('\\n'));\n  assert.ok(old.includes('claude-haiku-5-5: price checked 2026-11-27, more than 30 days ago'));\n  const lapsed = staleness({ ...TABLE, checked: '2027-01-02', models: TABLE.models.map((m) => ({ ...m, checked: '2027-01-02' })) }, new Date('2027-01-02T00:00:00Z'));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/router-414.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.353Z"
+}

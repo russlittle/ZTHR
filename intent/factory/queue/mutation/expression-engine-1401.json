@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "expression-engine",
+  "mutant": {
+    "id": "1401",
+    "line": 559,
+    "column": 84,
+    "endLine": 559,
+    "endColumn": 96,
+    "mutator": "EqualityOperator",
+    "original": "obj === null",
+    "replacement": "obj !== null",
+    "lineText": "if (obj === null || obj === undefined) throw err(`cannot call ${name} on ${obj === null ? 'null' : 'undefined'}`);",
+    "prevText": "const table = typeof obj === 'string' ? STRING_METHODS : typeof obj === 'number' ? NUMBER_METHODS : typeof obj === 'boolean' ? BOOL_METHODS : Array.isArray(obj) ? ARRAY_METHODS : undefined;",
+    "nextText": "if (!table || !Object.hasOwn(table, name)) throw err(`${typeOf(obj)} has no method ${name}`);"
+  },
+  "mayEdit": [
+    "intent/blocks/expression-engine/expression-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1401.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"expression-engine\". Mutant: line 559:84-559:96, mutator EqualityOperator: \"obj === null\" becomes \"obj !== null\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/expression-engine/index.ts (> marks the mutated line):\n   553          if (m.opt && (obj === null || obj === undefined)) return undefined;\n   554          const name = evalAst(rt, m.prop, scope);\n   555          if (typeof name !== 'string' || BAD_KEYS.has(name)) throw new ExpressionForbidden(`calling ${String(name)} is not allowed`);\n   556          const args = a.args.map((x) => evalAst(rt, x, scope));\n   557          if (obj instanceof Namespace) return callFn(rt, Object.hasOwn(obj.members, name) ? obj.members[name] : undefined, args, m.at);\n   558          const table = typeof obj === 'string' ? STRING_METHODS : typeof obj === 'number' ? NUMBER_METHODS : typeof obj === 'boolean' ? BOOL_METHODS : Array.isArray(obj) ? ARRAY_METHODS : undefined;\n>  559          if (obj === null || obj === undefined) throw err(`cannot call ${name} on ${obj === null ? 'null' : 'undefined'}`);\n   560          if (!table || !Object.hasOwn(table, name)) throw err(`${typeOf(obj)} has no method ${name}`);\n   561          return (table[name] as unknown as (s: unknown, a: unknown[], rt: Runtime) => unknown)(obj, args, rt);\n   562        }\n   563        const f = evalAst(rt, a.callee, scope);\n   564        if (a.opt && (f === null || f === undefined)) return undefined;\n   565        return callFn(rt, f, a.args.map((x) => evalAst(rt, x, scope)), a.at);\n\nTest file style (intent/blocks/expression-engine/expression-engine.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  compile, evaluate, references, render, resolve, resolveDeep, compileTemplate,\n  ExpressionSyntaxError, ExpressionRuntimeError, ExpressionLimitError, ExpressionForbidden,\n} from './index.ts';\n\nconst ev = (s: string, ctx: unknown = {}) => evaluate(s, ctx);\n\ntest('arithmetic and precedence', () => {\n  assert.equal(ev('1 + 2 * 3'), 7);\n  assert.equal(ev('(1 + 2) * 3'), 9);\n  assert.equal(ev('2 ** 3 ** 2'), 512);\n  assert.equal(ev('10 % 4'), 2);\n  assert.equal(ev('-3 + 5'), 2);\n});\n\ntest('strings, concatenation and comparison', () => {\n  assert.equal(ev('\"a\" + \"b\" + 1'), 'ab1');\n  assert.equal(ev('\"abc\" < \"abd\"'), true);\n  assert.equal(ev('1 === 1 && 2 !== 3'), true);\n});\n\ntest('logic operators return operands', () => {\n  assert.equal(ev('0 || \"x\"'), 'x');\n  assert.equal(ev('\"a\" && \"b\"'), 'b');\n  assert.equal(ev('null ?? 5'), 5);\n  assert.equal(ev('0 ?? 5'), 0);\n  assert.equal(ev('true ? 1 : 2'), 1);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1401.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.840Z"
+}

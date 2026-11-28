@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "web-analytics",
+  "mutant": {
+    "id": "53",
+    "line": 97,
+    "column": 4,
+    "endLine": 97,
+    "endColumn": 37,
+    "mutator": "Regex",
+    "original": "/(^|\\.)linkedin\\.com$|^lnkd\\.in$/",
+    "replacement": "/(\\.)linkedin\\.com$|^lnkd\\.in$/",
+    "lineText": "[/(^|\\.)linkedin\\.com$|^lnkd\\.in$/, 'LinkedIn'],",
+    "prevText": "[/(^|\\.)(facebook\\.com|fb\\.com|l\\.facebook\\.com)$/, 'Facebook'],",
+    "nextText": "[/(^|\\.)reddit\\.com$/, 'Reddit'],"
+  },
+  "mayEdit": [
+    "intent/blocks/web-analytics/web-analytics.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/web-analytics-53.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"web-analytics\". Mutant: line 97:4-97:37, mutator Regex: \"/(^|\\\\.)linkedin\\\\.com$|^lnkd\\\\.in$/\" becomes \"/(\\\\.)linkedin\\\\.com$|^lnkd\\\\.in$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/web-analytics/index.ts (> marks the mutated line):\n    91  const SOURCES: readonly [RegExp, string][] = [\n    92    [/(^|\\.)google\\.[a-z.]+$/, 'Google'],\n    93    [/(^|\\.)bing\\.com$/, 'Bing'],\n    94    [/(^|\\.)duckduckgo\\.com$/, 'DuckDuckGo'],\n    95    [/(^|\\.)(t\\.co|twitter\\.com|x\\.com)$/, 'Twitter'],\n    96    [/(^|\\.)(facebook\\.com|fb\\.com|l\\.facebook\\.com)$/, 'Facebook'],\n>   97    [/(^|\\.)linkedin\\.com$|^lnkd\\.in$/, 'LinkedIn'],\n    98    [/(^|\\.)reddit\\.com$/, 'Reddit'],\n    99    [/^news\\.ycombinator\\.com$/, 'Hacker News'],\n   100  ];\n   101  \n   102  export interface Landing {\n   103    readonly path: string;\n\nTest file style (intent/blocks/web-analytics/web-analytics.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { test } from 'node:test';\nimport { isBot, parseLanding, SaltBook, sourceOf, UnknownSite, WebAnalytics, type Hit, type Options } from './index.ts';\n\nconst MIN = 60_000;\nconst T0 = Date.parse('2026-03-10T10:00:00Z');\nconst DAY = 86_400_000;\nconst seeded = () => {\n  let n = 0;\n  return (len: number) => createHash('sha256').update(`seed-${n++}`).digest().subarray(0, len > 32 ? 32 : len);\n};\nconst site = { id: 's1', domains: ['example.com'] };\nconst make = (extra: Partial<Options> = {}) => new WebAnalytics({ sites: [site], salts: new SaltBook(seeded()), events: ['signup', 'purchase'], ...extra });\nconst hit = (o: Partial<Hit> = {}): Hit => ({ site: 's1', url: 'https://example.com/', userAgent: 'Mozilla/5.0 (X11; Linux) Firefox/130', ip: '203.0.113.7', at: T0, ...o });\n\ntest('the same visitor and day give the same id; another day, site, address or browser do not', () => {\n  const a = make();\n  const id = a.visitorId('s1', '203.0.113.7', 'UA', T0);\n  assert.equal(id.length, 22);\n  assert.equal(a.visitorId('s1', '203.0.113.7', 'UA', T0 + 5 * MIN), id);\n  assert.notEqual(a.visitorId('s1', '203.0.113.7', 'UA', T0 + DAY), id, 'a new day, a new salt');\n  assert.notEqual(a.visitorId('s2', '203.0.113.7', 'UA', T0), id);\n  assert.notEqual(a.visitorId('s1', '203.0.113.8', 'UA', T0), id);\n  assert.notEqual(a.visitorId('s1', '203.0.113.7', 'UA2', T0), id);\n});\n\ntest('salts older than yesterday are forgotten, so old ids cannot be recomputed', () => {\n  const salts = new SaltBook(seeded());\n  salts.forDay('2026-03-10');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/web-analytics-53.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:13.528Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "ws-rpc",
+  "mutant": {
+    "id": "311",
+    "line": 262,
+    "column": 19,
+    "endLine": 262,
+    "endColumn": 49,
+    "mutator": "EqualityOperator",
+    "original": "typeof m['after'] === 'number'",
+    "replacement": "typeof m['after'] !== 'number'",
+    "lineText": "const after = typeof m['after'] === 'number' && Number.isFinite(m['after']) ? m['after'] : undefined;",
+    "prevText": "if (!Object.hasOwn(this.o.topics, topic)) return this.fail(id, 'not_found', 'no such topic');",
+    "nextText": "const r = this.attach({ id: sub, topic, params }, after);"
+  },
+  "mayEdit": [
+    "intent/blocks/ws-rpc/ws-rpc.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ws-rpc-311.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ws-rpc\". Mutant: line 262:19-262:49, mutator EqualityOperator: \"typeof m['after'] === 'number'\" becomes \"typeof m['after'] !== 'number'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ws-rpc/index.ts (> marks the mutated line):\n   256      const sub = m['sub'];\n   257      const topic = m['topic'];\n   258      const params = m['params'] ?? {};\n   259      if (typeof sub !== 'string' || !SUB_ID.test(sub) || typeof topic !== 'string' || !isObj(params)) return this.fail(id, 'bad_request', 'a subscription needs a sub id, a topic and object params');\n   260      if (!this.subs.has(sub) && this.subs.size >= (this.o.maxSubscriptions ?? 100)) return this.fail(id, 'too_many', 'too many subscriptions on this connection');\n   261      if (!Object.hasOwn(this.o.topics, topic)) return this.fail(id, 'not_found', 'no such topic');\n>  262      const after = typeof m['after'] === 'number' && Number.isFinite(m['after']) ? m['after'] : undefined;\n   263      const r = this.attach({ id: sub, topic, params }, after);\n   264      if (r === 'refused') return this.fail(id, 'forbidden', 'you may not subscribe to that');\n   265      this.reply({ t: 'res', id, result: { sub, missed: r === 'missed' }, resume: this.resumeToken() });\n   266    }\n   267  \n   268    private unsubscribe(id: string, m: Record<string, unknown>): void {\n\nTest file style (intent/blocks/ws-rpc/ws-rpc.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Catalogue, Hub } from '../events/index.ts';\nimport type { CloudEvent } from '../events/index.ts';\nimport { Failures } from '../ratelimit/index.ts';\nimport { Connection, RpcClient, RpcError, RpcFailed } from './index.ts';\nimport type { ConnectionOptions, Principal } from './index.ts';\n\nconst cat = new Catalogue([\n  { type: 'files.file.created', version: 1, owner: 'files', description: 'a file was made', fields: { id: 'string', owner: 'string' } },\n  { type: 'files.file.deleted', version: 1, owner: 'files', description: 'a file was removed', fields: { id: 'string', owner: 'string' } },\n  { type: 'chat.message.sent', version: 1, owner: 'chat', description: 'a message', fields: { id: 'string', owner: 'string' } },\n]);\nconst ev = (type: string, id: string, owner = 'ana') => cat.make('urn:test', type, { id, owner }, { now: new Date(0) });\n\nconst people: Record<string, Principal> = { 'tok-ana': { id: 'ana' }, 'tok-bo': { id: 'bo' } };\n\ninterface Rig {\n  hub: Hub;\n  t: { now: number };\n  toClient: string[];\n  toServer: string[];\n  closed: { code: number; reason: string }[];\n  conn: () => Connection;\n  client: RpcClient;\n  server: Connection;\n  pump: () => Promise<void>;\n  newServer: (o?: Partial<ConnectionOptions>) => Connection;\n  resyncs: string[];\n}\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ws-rpc-311.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:16.245Z"
+}

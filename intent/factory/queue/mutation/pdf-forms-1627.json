@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf-forms",
+  "mutant": {
+    "id": "1627",
+    "line": 822,
+    "column": 63,
+    "endLine": 822,
+    "endColumn": 72,
+    "mutator": "ArithmeticOperator",
+    "original": "cell - cw",
+    "replacement": "cell + cw",
+    "lineText": "body.push(`BT /F0 ${r4(size)} Tf 0 g ${r4(cell * i + (cell - cw) / 2)} ${r4((h - 0.72 * size) / 2)} Td (${pdfText(ch)}) Tj ET`);",
+    "prevText": "const cw = width(winAnsi(ch), size);",
+    "nextText": "});"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf-forms/pdf-forms.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-forms-1627.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf-forms\". Mutant: line 822:63-822:72, mutator ArithmeticOperator: \"cell - cw\" becomes \"cell + cw\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf-forms/index.ts (> marks the mutated line):\n   816    if (shown !== '') {\n   817      if (f.comb && f.maxLen) {\n   818        const size = s.size > 0 ? s.size : Math.max(4, Math.min(12, h - 4));\n   819        const cell = w / f.maxLen;\n   820        [...shown].slice(0, f.maxLen).forEach((ch, i) => {\n   821          const cw = width(winAnsi(ch), size);\n>  822          body.push(`BT /F0 ${r4(size)} Tf 0 g ${r4(cell * i + (cell - cw) / 2)} ${r4((h - 0.72 * size) / 2)} Td (${pdfText(ch)}) Tj ET`);\n   823        });\n   824      } else if (f.multiline) {\n   825        const size = s.size > 0 ? s.size : 10;\n   826        const lines = shown.split(/\\r\\n|\\r|\\n/).flatMap((l) => (l === '' ? [''] : wrap(winAnsi(l), size, w - 4)));\n   827        lines.forEach((l, i) => {\n   828          const y = h - 2 - size * (i + 1) * 1.15 + size * 0.15;\n\nTest file style (intent/blocks/pdf-forms/pdf-forms.test.ts):\n30 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { pdf } from '../pdf/index.ts';\nimport { FormError, FormsError, addFields, appearanceMatrix, displayed, fill, flatten, missingRequired, pageGeometry, pageRefs, placement, readDoc, readForm, serialize } from './index.ts';\nimport type { PageGeometry, PdfDict } from './index.ts';\n\nconst latin = (b: Uint8Array) => Buffer.from(b).toString('latin1');\n\nfunction stream(dictBody: string, data: string): string {\n  return `<< ${dictBody} /Length ${Buffer.byteLength(data, 'latin1')} >>\\nstream\\n${data}\\nendstream`;\n}\n\n/** A classic PDF from numbered object bodies. */\nfunction build(objs: Record<number, string>, root = 1): Buffer {\n  const max = Math.max(...Object.keys(objs).map(Number));\n  let out = '%PDF-1.7\\n%\\xe2\\xe3\\xcf\\xd3\\n';\n  const offs: Record<number, number> = {};\n  for (let n = 1; n <= max; n++) {\n    if (objs[n] === undefined) continue;\n    offs[n] = Buffer.byteLength(out, 'latin1');\n    out += `${n} 0 obj\\n${objs[n]}\\nendobj\\n`;\n  }\n  const x = Buffer.byteLength(out, 'latin1');\n  out += `xref\\n0 ${max + 1}\\n0000000000 65535 f \\n`;\n  for (let n = 1; n <= max; n++) out += offs[n] === undefined ? '0000000000 00000 f \\n' : `${String(offs[n]).padStart(10, '0')} 00000 n \\n`;\n  out += `trailer\\n<< /Size ${max + 1} /Root ${root} 0 R >>\\nstartxref\\n${x}\\n%%EOF\\n`;\n  return Buffer.from(out, 'latin1');\n}\n\nconst FORM_XOBJ = (w: number, h: number, body: string) => stream(`/Type /XObject /Subtype /Form /BBox [0 0 ${w} ${h}]`, body);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-forms-1627.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:54.167Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "face-cluster",
+  "mutant": {
+    "id": "145",
+    "line": 105,
+    "column": 49,
+    "endLine": 105,
+    "endColumn": 57,
+    "mutator": "StringLiteral",
+    "original": "'params'",
+    "replacement": "\"\"",
+    "lineText": "if (!(threshold >= 0)) throw new ClusterError('params', 'threshold cannot be negative');",
+    "prevText": "export function agglomerative(points: readonly Vec[], threshold: number, linkage: Linkage = 'average'): number[] {",
+    "nextText": "const n = points.length;"
+  },
+  "mayEdit": [
+    "intent/blocks/face-cluster/face-cluster.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/face-cluster-145.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"face-cluster\". Mutant: line 105:49-105:57, mutator StringLiteral: \"'params'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/face-cluster/index.ts (> marks the mutated line):\n    99  }\n   100  \n   101  export type Linkage = 'single' | 'average' | 'complete';\n   102  \n   103  /** Merges the two closest groups until the closest pair is farther than `threshold`. Labels as for dbscan; nothing is noise. */\n   104  export function agglomerative(points: readonly Vec[], threshold: number, linkage: Linkage = 'average'): number[] {\n>  105    if (!(threshold >= 0)) throw new ClusterError('params', 'threshold cannot be negative');\n   106    const n = points.length;\n   107    const d: number[][] = Array.from({ length: n }, () => new Array<number>(n).fill(0));\n   108    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) d[i]![j] = d[j]![i] = cosineDistance(points[i] as Vec, points[j] as Vec);\n   109    let groups: number[][] = points.map((_, i) => [i]);\n   110    const between = (a: number[], b: number[]) => {\n   111      let lo = Infinity;\n\nTest file style (intent/blocks/face-cluster/face-cluster.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ClusterError, People, agglomerative, centroid, cosineDistance, dbscan, norm, unit, type FaceInput } from './index.ts';\n\nconst rng = (seed: number) => () => {\n  seed = (seed * 1664525 + 1013904223) >>> 0;\n  return seed / 2 ** 32;\n};\nconst DIM = 16;\nconst centreOf = (k: number) => {\n  const r = rng(1000 + k * 7919);\n  return unit(Array.from({ length: DIM }, () => r() * 2 - 1));\n};\nconst around = (k: number, seed: number, spread = 0.05) => {\n  const r = rng(seed);\n  return Array.from(centreOf(k), (x) => x + (r() - 0.5) * 2 * spread);\n};\nlet n = 0;\n/** `count` faces of person k. */\nconst faces = (k: number, count: number, score = 0.95, prefix = `p${k}`): FaceInput[] =>\n  Array.from({ length: count }, (_, i) => ({ id: `${prefix}-${i}`, assetId: `asset${++n}`, embedding: around(k, k * 100 + i + 1), score }));\nconst ids = (...fs: FaceInput[][]) => fs.flat().map((f) => f.id);\nconst sortedGroups = (p: People) => p.people().map((x) => [...x.faces]).sort((a, b) => (a[0] as string).localeCompare(b[0] as string));\n\ntest('cosine distance: zero for the same direction, one for orthogonal, two for opposite, and length does not matter', () => {\n  assert.equal(cosineDistance([1, 0], [5, 0]), 0);\n  assert.ok(Math.abs(cosineDistance([1, 0], [0, 3]) - 1) < 1e-12);\n  assert.ok(Math.abs(cosineDistance([1, 0], [-2, 0]) - 2) < 1e-12);\n  assert.throws(() => cosineDistance([1, 2], [1, 2, 3]), /cannot be compared/);\n  assert.throws(() => cosineDistance([0, 0], [1, 1]), /all zero/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/face-cluster-145.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.958Z"
+}

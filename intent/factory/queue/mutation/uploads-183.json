@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "uploads",
+  "mutant": {
+    "id": "183",
+    "line": 199,
+    "column": 23,
+    "endLine": 199,
+    "endColumn": 32,
+    "mutator": "ArithmeticOperator",
+    "original": "a.n - b.n",
+    "replacement": "a.n + b.n",
+    "lineText": ".sort((a, b) => a.n - b.n);",
+    "prevText": ".map(([n, c]) => ({ n: Number(n), size: c.size }))",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/uploads/uploads.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/uploads-183.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"uploads\". Mutant: line 199:23-199:32, mutator ArithmeticOperator: \"a.n - b.n\" becomes \"a.n + b.n\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/uploads/index.ts (> marks the mutated line):\n   193  \n   194    /** The chunks a client has sent so far, so it can resume with the rest. */\n   195    async received(owner: string, id: string): Promise<{ n: number; size: number }[]> {\n   196      const s = await this.live(owner, id);\n   197      return Object.entries(s.chunks)\n   198        .map(([n, c]) => ({ n: Number(n), size: c.size }))\n>  199        .sort((a, b) => a.n - b.n);\n   200    }\n   201  \n   202    /**\n   203     * Joins the chunks in number order into one new object. The chunks and the session stay: the caller commits the\n   204     * object where it belongs, makes that durable, and then calls finish. Until then a retry assembles again.\n   205     */\n\nTest file style (intent/blocks/uploads/uploads.test.ts):\n10 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { TooLarge, memoryObjects, readAll } from '../objects/index.ts';\nimport { BadChunk, NoSession, OverQuota, Uploads, WrongLength, memorySessions, type Rules } from './index.ts';\n\nconst RULES: Rules = { minChunk: 1, maxChunk: 10_000, minBytes: 4, maxBytes: 64, idleMs: 1000 };\nconst b = (s: string) => new TextEncoder().encode(s);\n\nconst setup = (free?: number) => {\n  let t = 0;\n  const objects = memoryObjects();\n  const up = new Uploads(objects, memorySessions(), { rules: RULES, now: () => t, free: async () => free, composeWidth: 3 });\n  return { up, objects, tick: (ms: number) => (t += ms) };\n};\n\ntest('chunks sent out of order assemble in number order into one object, and the chunks are cleaned up', async () => {\n  const { up, objects } = setup();\n  await up.start('ana', 'u1', '/files/ana/big.bin');\n  await up.chunk('ana', 'u1', '00003', b('ijkl'));\n  await up.chunk('ana', 'u1', '00001', b('abcd'));\n  await up.chunk('ana', 'u1', '00002', b('efgh'));\n  const w = await up.assemble('ana', 'u1');\n  await up.finish('ana', 'u1');\n  assert.equal((await readAll(await objects.get(w.key))).toString(), 'abcdefghijkl');\n  assert.equal(w.destination, '/files/ana/big.bin');\n  assert.equal(objects.count(), 1, 'only the assembled object is left');\n  await assert.rejects(up.received('ana', 'u1'), NoSession);\n});\n\ntest('a resend of a chunk replaces it, and the client can see what has arrived', async () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/uploads-183.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:11.927Z"
+}

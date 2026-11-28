@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "experiments",
+  "mutant": {
+    "id": "37",
+    "line": 49,
+    "column": 11,
+    "endLine": 49,
+    "endColumn": 48,
+    "mutator": "ConditionalExpression",
+    "original": "Math.abs(del) < Math.abs(sum) * 1e-16",
+    "replacement": "true",
+    "lineText": "if (Math.abs(del) < Math.abs(sum) * 1e-16) break;",
+    "prevText": "sum += del;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/experiments/experiments.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/experiments-37.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"experiments\". Mutant: line 49:11-49:48, mutator ConditionalExpression: \"Math.abs(del) < Math.abs(sum) * 1e-16\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/experiments/index.ts (> marks the mutated line):\n    43      let sum = 1 / a;\n    44      let del = sum;\n    45      for (let n = 0; n < 500; n++) {\n    46        ap++;\n    47        del *= x / ap;\n    48        sum += del;\n>   49        if (Math.abs(del) < Math.abs(sum) * 1e-16) break;\n    50      }\n    51      return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));\n    52    }\n    53    return 1 - gammaQcf(a, x);\n    54  }\n    55  \n\nTest file style (intent/blocks/experiments/experiments.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Flags, type Who } from '../flags/index.ts';\nimport { chiSquareSf, ExperimentError, Experiments, normCdf, normQuantile, SequentialTest, studentTwoSided, studentQuantile, type ExperimentDef } from './index.ts';\n\nconst near = (a: number, b: number, tol = 1e-6) => assert.ok(Math.abs(a - b) <= tol, `${a} is not within ${tol} of ${b}`);\nconst T0 = Date.UTC(2026, 5, 1);\nconst def = (o: Partial<ExperimentDef> = {}): ExperimentDef => ({ key: 'checkout-button', variants: [{ id: 'control' }, { id: 'big' }], traffic: 100, ...o });\nfunction rig(flagList: ConstructorParameters<typeof Flags>[0] = []) {\n  const clock = { now: T0 };\n  const flags = new Flags(flagList);\n  const ex = new Experiments({ flags, now: () => clock.now });\n  return { clock, flags, ex };\n}\nconst who = (i: number | string): Who => ({ id: `u${i}` });\nfunction mulberry32(seed: number) {\n  return () => {\n    seed = (seed + 0x6d2b79f5) | 0;\n    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);\n    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;\n    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;\n  };\n}\n\ntest('the special functions agree with reference values', () => {\n  near(normCdf(1.96), 0.9750021048517795);\n  near(normCdf(0), 0.5);\n  near(normCdf(-1.96), 1 - 0.9750021048517795);\n  near(normQuantile(0.975), 1.959963984540054, 1e-6);\n  near(studentTwoSided(2.0, 10), 0.07338803477074037);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/experiments-37.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.592Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "cors-cookies",
+  "mutant": {
+    "id": "614",
+    "line": 301,
+    "column": 30,
+    "endLine": 301,
+    "endColumn": 51,
+    "mutator": "MethodExpression",
+    "original": "value.startsWith('\"')",
+    "replacement": "value.endsWith('\"')",
+    "lineText": "if (value.length >= 2 && value.startsWith('\"') && value.endsWith('\"')) value = value.slice(1, -1);",
+    "prevText": "if (!name || !NAME_OK.test(name)) continue;",
+    "nextText": "out.push({ name, value });"
+  },
+  "mayEdit": [
+    "intent/blocks/cors-cookies/cors-cookies.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/cors-cookies-614.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"cors-cookies\". Mutant: line 301:30-301:51, mutator MethodExpression: \"value.startsWith('\\\"')\" becomes \"value.endsWith('\\\"')\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/cors-cookies/index.ts (> marks the mutated line):\n   295    for (const piece of header.split(';')) {\n   296      const i = piece.indexOf('=');\n   297      if (i < 0) continue;\n   298      const name = piece.slice(0, i).trim();\n   299      let value = piece.slice(i + 1).trim();\n   300      if (!name || !NAME_OK.test(name)) continue;\n>  301      if (value.length >= 2 && value.startsWith('\"') && value.endsWith('\"')) value = value.slice(1, -1);\n   302      out.push({ name, value });\n   303    }\n   304    return out;\n   305  }\n   306  \n   307  const isIp = (h: string) => /^\\d{1,3}(\\.\\d{1,3}){3}$/.test(h) || h.includes(':');\n\nTest file style (intent/blocks/cors-cookies/cors-cookies.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CookieError, CookieJar, Cors, CorsError, defaultPath, domainMatch, normalizeOrigin, parseCookieHeader, parseSetCookie, pathMatch, sameSite, serializeSetCookie } from './index.ts';\n\nconst policy = { origins: ['https://app.example.com', 'https://*.example.org', 'http://localhost:3000'], methods: ['PUT', 'DELETE'], allowedHeaders: ['Content-Type', 'X-Token'], exposedHeaders: ['X-Total'], credentials: true, maxAgeSec: 120 };\nconst pre = (origin: string, m: string, h?: string, extra: Record<string, string> = {}) => ({ method: 'OPTIONS', headers: { origin, 'access-control-request-method': m, ...(h ? { 'access-control-request-headers': h } : {}), ...extra } });\n\ntest('cors: a listed origin is echoed exactly, with credentials, exposed headers and Vary: Origin', () => {\n  const r = new Cors(policy).check({ method: 'GET', headers: { origin: 'https://app.example.com' } });\n  assert.equal(r.action, 'allow');\n  assert.equal(r.headers['access-control-allow-origin'], 'https://app.example.com');\n  assert.equal(r.headers['access-control-allow-credentials'], 'true');\n  assert.equal(r.headers['access-control-expose-headers'], 'X-Total');\n  assert.equal(r.headers['vary'], 'Origin');\n});\n\ntest('cors: unlisted origins, lookalikes and a different port or scheme get nothing', () => {\n  const c = new Cors(policy);\n  for (const o of ['https://evil.com', 'https://app.example.com.evil.com', 'http://app.example.com', 'https://app.example.com:8443', 'https://evilexample.org', 'not an origin', 'https://app.example.com/path']) {\n    const r = c.check({ method: 'GET', headers: { origin: o } });\n    assert.equal(r.action, 'deny', o);\n    assert.equal(r.headers['access-control-allow-origin'], undefined, o);\n  }\n});\n\ntest('cors: wildcard subdomains match subdomains only, never the bare domain, and keep scheme and port', () => {\n  const c = new Cors(policy);\n  assert.equal(c.allows('https://a.example.org'), true);\n  assert.equal(c.allows('https://a.b.example.org'), true);\n  assert.equal(c.allows('https://example.org'), false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/cors-cookies-614.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.993Z"
+}

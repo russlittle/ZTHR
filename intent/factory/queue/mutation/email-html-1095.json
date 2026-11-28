@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "email-html",
+  "mutant": {
+    "id": "1095",
+    "line": 458,
+    "column": 15,
+    "endLine": 461,
+    "endColumn": 6,
+    "mutator": "BlockStatement",
+    "original": "{\n      const sibs = e.parent?.children.filter((x): x is El => x.kind === 'el') ?? [];\n      return sibs.slice(0, sibs.indexOf(e)).some((p) => matches(p, chain, at - 1));\n    }",
+    "replacement": "{}",
+    "lineText": "case '~': {",
+    "prevText": "}",
+    "nextText": "const sibs = e.parent?.children.filter((x): x is El => x.kind === 'el') ?? [];"
+  },
+  "mayEdit": [
+    "intent/blocks/email-html/email-html.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/email-html-1095.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"email-html\". Mutant: line 458:15-461:6, mutator BlockStatement: \"{\\n      const sibs = e.parent?.children.filter((x): x is El => x.kind === 'el') ?? [];\\n      return sibs.slice(0, sibs.indexOf(e)).some((p) => matches(p, chain, at - 1));\\n    }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/email-html/index.ts (> marks the mutated line):\n   452        return false;\n   453      case '+': {\n   454        const sibs = e.parent?.children.filter((x): x is El => x.kind === 'el') ?? [];\n   455        const prev = sibs[sibs.indexOf(e) - 1];\n   456        return !!prev && matches(prev, chain, at - 1);\n   457      }\n>  458      case '~': {\n   459        const sibs = e.parent?.children.filter((x): x is El => x.kind === 'el') ?? [];\n   460        return sibs.slice(0, sibs.indexOf(e)).some((p) => matches(p, chain, at - 1));\n   461      }\n   462      default:\n   463        return false;\n   464    }\n\nTest file style (intent/blocks/email-html/email-html.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { sanitize, inlineCss, rewriteLinks, toText, darkModeHints, supportReport, parseHtml, serialize, safeUrl, parseCss, parseSelector, specificity, misleadingLinks, decodeEntities, wrapText, prepareEmail, EmailHtmlError } from './index.ts';\n\ntest('sanitize removes scripts, handlers, frames and forms with their content', () => {\n  const out = sanitize('<p onclick=\"x()\">hi</p><script>alert(1)</script><iframe src=\"http://e\"></iframe><form><input></form><object data=\"x\"></object>');\n  assert.equal(out, '<p>hi</p>');\n});\n\ntest('sanitize refuses javascript: URLs even when disguised', () => {\n  for (const u of ['javascript:alert(1)', 'JaVaScRiPt:alert(1)', 'java\\tscript:alert(1)', ' \\u0001javascript:x', 'jav&#x09;ascript:x', 'vbscript:x', 'data:text/html;base64,AAAA']) {\n    const out = sanitize(`<a href=\"${u}\">x</a>`);\n    assert.ok(!/href/.test(out), u);\n  }\n  assert.match(sanitize('<a href=\"https://ok.example/p?a=1&amp;b=2\">x</a>'), /href=\"https:\\/\\/ok.example\\/p\\?a=1&amp;b=2\"/);\n  assert.match(sanitize('<a href=\"mailto:a@b.example\">x</a>'), /mailto:a@b.example/);\n});\n\ntest('safeUrl rules for images', () => {\n  assert.equal(safeUrl('cid:logo', { image: true }), true);\n  assert.equal(safeUrl('data:image/png;base64,AAAA', { image: true }), false);\n  assert.equal(safeUrl('data:image/png;base64,AAAA', { image: true, allowDataImage: true }), true);\n  assert.equal(safeUrl('data:image/svg+xml;base64,AAAA', { image: true, allowDataImage: true }), false);\n  assert.equal(safeUrl('//evil.example/x'), false);\n});\n\ntest('sanitize filters styles: unknown properties, expression and non-http url() go', () => {\n  const out = sanitize('<div style=\"color: red; position: fixed; background: url(javascript:x); width: expression(alert(1)); margin: 0\">a</div>');\n  assert.equal(out, '<div style=\"color: red; margin: 0\">a</div>');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/email-html-1095.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.084Z"
+}

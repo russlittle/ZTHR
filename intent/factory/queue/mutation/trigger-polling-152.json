@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "trigger-polling",
+  "mutant": {
+    "id": "152",
+    "line": 226,
+    "column": 5,
+    "endLine": 226,
+    "endColumn": 38,
+    "mutator": "AssignmentOperator",
+    "original": "st.emittedTotal += emitted.length",
+    "replacement": "st.emittedTotal -= emitted.length",
+    "lineText": "st.emittedTotal += emitted.length;",
+    "prevText": "if (got.cursor !== undefined) st.cursor = got.cursor;",
+    "nextText": "this.#store.set(st);"
+  },
+  "mayEdit": [
+    "intent/blocks/trigger-polling/trigger-polling.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/trigger-polling-152.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"trigger-polling\". Mutant: line 226:5-226:38, mutator AssignmentOperator: \"st.emittedTotal += emitted.length\" becomes \"st.emittedTotal -= emitted.length\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/trigger-polling/index.ts (> marks the mutated line):\n   220      st.primed = true;\n   221      st.failures = 0;\n   222      delete st.lastError;\n   223      st.lastPollAt = now;\n   224      st.nextPollAt = now + t.intervalMs;\n   225      if (got.cursor !== undefined) st.cursor = got.cursor;\n>  226      st.emittedTotal += emitted.length;\n   227      this.#store.set(st);\n   228      return { emitted, duplicates, baseline };\n   229    }\n   230  \n   231    /**\n   232     * Test mode for a polling trigger: fetch with the current cursor but change nothing and queue nothing. If the\n\nTest file style (intent/blocks/trigger-polling/trigger-polling.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Queue } from '../jobs/index.ts';\nimport { signature } from '../webhooks/index.ts';\nimport { Inactive, TriggerHost, Unverified, UnknownTrigger } from './index.ts';\nimport type { PollTrigger } from './index.ts';\n\ninterface Item { id: number; title: string }\n\nconst setup = () => {\n  let t = 1_800_000_000_000;\n  const queue = new Queue({ now: () => t, random: () => 0 });\n  const host = new TriggerHost({ queue, now: () => t });\n  const advance = (ms: number) => void (t += ms);\n  return { queue, host, advance, now: () => t };\n};\n\nconst source = (batches: Item[][]) => {\n  const calls: (string | undefined)[] = [];\n  let i = 0;\n  const fetch: PollTrigger<Item>['fetch'] = async (cursor) => {\n    calls.push(cursor);\n    const items = batches[Math.min(i, batches.length - 1)]!;\n    i++;\n    return { items, cursor: `c${i}` };\n  };\n  return { fetch, calls };\n};\n\nconst def = (fetch: PollTrigger<Item>['fetch'], more: Partial<PollTrigger<Item>> = {}): PollTrigger<Item> => ({ id: 'tickets', flow: 'on-ticket', intervalMs: 60_000, key: (x) => String(x.id), fetch, sample: [{ id: 0, title: 'sample' }], ...more });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/trigger-polling-152.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:10.737Z"
+}

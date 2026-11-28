@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "xml-dsig",
+  "mutant": {
+    "id": "612",
+    "line": 302,
+    "column": 88,
+    "endLine": 302,
+    "endColumn": 120,
+    "mutator": "LogicalOperator",
+    "original": "a.local === local && a.ns === ''",
+    "replacement": "a.local === local || a.ns === ''",
+    "lineText": "export const attr = (e: XEl, local: string): string | undefined => e.attrs.find((a) => a.local === local && a.ns === '')?.value;",
+    "prevText": "export const textOf = (e: XEl): string => e.children.map((c) => (c.kind === 'text' ? c.text : textOf(c))).join('');",
+    "nextText": "export function* descendants(e: XEl): Generator<XEl> {"
+  },
+  "mayEdit": [
+    "intent/blocks/xml-dsig/xml-dsig.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/xml-dsig-612.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"xml-dsig\". Mutant: line 302:88-302:120, mutator LogicalOperator: \"a.local === local && a.ns === ''\" becomes \"a.local === local || a.ns === ''\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/xml-dsig/index.ts (> marks the mutated line):\n   296  // ---------------------------------------------------------------- navigation\n   297  \n   298  export const childEls = (e: XEl): XEl[] => e.children.filter((c): c is XEl => c.kind === 'el');\n   299  export const childNamed = (e: XEl, ns: string, local: string): XEl | undefined => childEls(e).find((c) => c.ns === ns && c.local === local);\n   300  export const childrenNamed = (e: XEl, ns: string, local: string): XEl[] => childEls(e).filter((c) => c.ns === ns && c.local === local);\n   301  export const textOf = (e: XEl): string => e.children.map((c) => (c.kind === 'text' ? c.text : textOf(c))).join('');\n>  302  export const attr = (e: XEl, local: string): string | undefined => e.attrs.find((a) => a.local === local && a.ns === '')?.value;\n   303  export function* descendants(e: XEl): Generator<XEl> {\n   304    yield e;\n   305    for (const c of childEls(e)) yield* descendants(c);\n   306  }\n   307  export const isInside = (node: XEl, ancestor: XEl): boolean => {\n   308    for (let x: XEl | undefined = node; x; x = x.parent) if (x === ancestor) return true;\n\nTest file style (intent/blocks/xml-dsig/xml-dsig.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, createPublicKey, randomBytes, sign as nodeSign, type KeyObject } from 'node:crypto';\nimport { bitString, boolean, explicit, integer, octetString, oid, oidOf, sequence, set, time, toPem, utf8String } from '../asn1-der/index.ts';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, writeFileSync, rmSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { readXml, exclusiveC14n, sign, verifyDocument, verifyElement, childNamed, childEls, textOf, NS_DSIG, ALG, XmlDsigError } from './index.ts';\n\n/** A throwaway certificate made at run time: DER from the asn1-der writers, signed with node:crypto (ECDSA P-256 / SHA-256). */\nconst certName = (cn: string) => sequence(set(sequence(oid(oidOf('CN')), utf8String(cn))));\nfunction makeCert(o: { subject: string; publicKey: KeyObject; issuer?: string; issuerKey: KeyObject; ca?: boolean }): string {\n  const algId = sequence(oid(oidOf('ecdsa-with-SHA256')));\n  const exts = o.ca ? [explicit(3, sequence(sequence(oid(oidOf('basicConstraints')), boolean(true), octetString(sequence(boolean(true))))))] : [];\n  const tbs = sequence(\n    explicit(0, integer(2)), integer(BigInt(`0x${randomBytes(12).toString('hex')}`)), algId, certName(o.issuer ?? o.subject),\n    sequence(time(new Date(Date.UTC(2020, 0, 1))), time(new Date(Date.UTC(2120, 0, 1)))),\n    certName(o.subject), Buffer.from(o.publicKey.export({ type: 'spki', format: 'der' })), ...exts,\n  );\n  return toPem('CERTIFICATE', sequence(tbs, algId, bitString(nodeSign('sha256', tbs, o.issuerKey)))).trim();\n}\n// A fresh key pair and a self-signed certificate for it, made for each run.\nconst KEY_PAIR = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst KEY = KEY_PAIR.privateKey.export({ type: 'pkcs8', format: 'pem' }) as string;\nconst CERT = makeCert({ subject: 'example.org', publicKey: KEY_PAIR.publicKey, issuerKey: KEY_PAIR.privateKey });\nconst rsa = generateKeyPairSync('rsa', { modulusLength: 2048 });\nconst ec = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst SAML = 'urn:s';\nconst DOC = `<r:Response xmlns:r=\"urn:r\" xmlns:s=\"urn:s\" ID=\"_resp\"><s:Issuer>idp</s:Issuer><s:Assertion ID=\"_a1\"><s:Subject>alice</s:Subject></s:Assertion></r:Response>`;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/xml-dsig-612.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:16.455Z"
+}

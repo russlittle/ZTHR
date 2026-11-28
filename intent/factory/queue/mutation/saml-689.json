@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "saml",
+  "mutant": {
+    "id": "689",
+    "line": 460,
+    "column": 61,
+    "endLine": 460,
+    "endColumn": 69,
+    "mutator": "StringLiteral",
+    "original": "'sha256'",
+    "replacement": "\"\"",
+    "lineText": "'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256': ['sha256', true],",
+    "prevText": "'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512': ['sha512', false],",
+    "nextText": "};"
+  },
+  "mayEdit": [
+    "intent/blocks/saml/saml.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/saml-689.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"saml\". Mutant: line 460:61-460:69, mutator StringLiteral: \"'sha256'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/saml/index.ts (> marks the mutated line):\n   454    const signedPart = [msg, get('RelayState'), alg].filter(Boolean).join('&');\n   455    const algUri = decodeURIComponent(alg.slice(7));\n   456    const map: Record<string, ['sha256' | 'sha384' | 'sha512', boolean]> = {\n   457      'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256': ['sha256', false],\n   458      'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384': ['sha384', false],\n   459      'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512': ['sha512', false],\n>  460      'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256': ['sha256', true],\n   461    };\n   462    const m = map[algUri];\n   463    if (!m) return false;\n   464    const key = trusted.certificate ? new X509Certificate(trusted.certificate).publicKey : typeof trusted.key === 'string' ? createPublicKey(trusted.key) : trusted.key;\n   465    if (!key || key.asymmetricKeyType !== (m[1] ? 'ec' : 'rsa')) return false;\n   466    const v = createVerify(m[0]).update(signedPart);\n\nTest file style (intent/blocks/saml/saml.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, createPublicKey, randomBytes, sign as nodeSign, type KeyObject } from 'node:crypto';\nimport { bitString, boolean, explicit, integer, octetString, oid, oidOf, sequence, set, time, toPem, utf8String } from '../asn1-der/index.ts';\nimport { inflateRawSync, deflateRawSync } from 'node:zlib';\nimport { Sp, SamlError, MemoryRequestStore, MemoryReplayCache, parseTime, formatTime, inflateRedirect, verifyRedirectSignature, spMetadata, parseIdpMetadata, NS, BINDING, NAMEID, type SpConfig } from './index.ts';\nimport { sign, readXml, verifyDocument, childNamed, NS_DSIG } from '../xml-dsig/index.ts';\n\n/** A throwaway certificate made at run time: DER from the asn1-der writers, signed with node:crypto (ECDSA P-256 / SHA-256). */\nconst certName = (cn: string) => sequence(set(sequence(oid(oidOf('CN')), utf8String(cn))));\nfunction makeCert(o: { subject: string; publicKey: KeyObject; issuer?: string; issuerKey: KeyObject; ca?: boolean }): string {\n  const algId = sequence(oid(oidOf('ecdsa-with-SHA256')));\n  const exts = o.ca ? [explicit(3, sequence(sequence(oid(oidOf('basicConstraints')), boolean(true), octetString(sequence(boolean(true))))))] : [];\n  const tbs = sequence(\n    explicit(0, integer(2)), integer(BigInt(`0x${randomBytes(12).toString('hex')}`)), algId, certName(o.issuer ?? o.subject),\n    sequence(time(new Date(Date.UTC(2020, 0, 1))), time(new Date(Date.UTC(2120, 0, 1)))),\n    certName(o.subject), Buffer.from(o.publicKey.export({ type: 'spki', format: 'der' })), ...exts,\n  );\n  return toPem('CERTIFICATE', sequence(tbs, algId, bitString(nodeSign('sha256', tbs, o.issuerKey)))).trim();\n}\n// A fresh key pair and a self-signed certificate for it, made for each run.\nconst KEY_PAIR = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst KEY = KEY_PAIR.privateKey.export({ type: 'pkcs8', format: 'pem' }) as string;\nconst CERT = makeCert({ subject: 'example.org', publicKey: KEY_PAIR.publicKey, issuerKey: KEY_PAIR.privateKey });\nconst SP = 'https://sp.example/metadata';\nconst ACS = 'https://sp.example/saml/acs';\nconst IDP = 'https://idp.example/entity';\nconst SSO = 'https://idp.example/sso';\nconst T = Date.UTC(2026, 11, 15, 12, 0, 0);\nconst iso = (ms: number) => formatTime(ms);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/saml-689.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.811Z"
+}

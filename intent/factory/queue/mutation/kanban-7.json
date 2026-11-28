@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "kanban",
+  "mutant": {
+    "id": "7",
+    "line": 50,
+    "column": 11,
+    "endLine": 50,
+    "endColumn": 28,
+    "mutator": "StringLiteral",
+    "original": "`no such ${what}`",
+    "replacement": "``",
+    "lineText": "super(`no such ${what}`);",
+    "prevText": "constructor(what: string) {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/kanban/kanban.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/kanban-7.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"kanban\". Mutant: line 50:11-50:28, mutator StringLiteral: \"`no such ${what}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/kanban/index.ts (> marks the mutated line):\n    44      super(`the card is blocked by ${by.join(', ')}`);\n    45      this.by = by;\n    46    }\n    47  }\n    48  export class NotFound extends Error {\n    49    constructor(what: string) {\n>   50      super(`no such ${what}`);\n    51    }\n    52  }\n    53  \n    54  export type Json = string | number | boolean | null | readonly Json[] | { readonly [k: string]: Json };\n    55  export interface Stamp {\n    56    readonly c: number;\n\nTest file style (intent/blocks/kanban/kanban.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { checkOrder } from '../fractional-index/index.ts';\nimport { BadOp, Blocked, Board, NotFound, WipLimit } from './index.ts';\nimport type { Op } from './index.ts';\n\nconst seeded = (seed: number) => () => ((seed = (seed * 48271) % 2147483647) / 2147483647);\nconst mk = (actor: string, seed = 1) => new Board({ actor, random: seeded(seed) });\n\nfunction basic(b = mk('ana')) {\n  b.addList('todo', 'To do');\n  b.addList('doing', 'Doing', { kind: 'doing', after: 'todo' });\n  b.addList('done', 'Done', { kind: 'done', after: 'doing' });\n  return b;\n}\n\ntest('lists keep their order, cards keep theirs, and a move puts a card exactly where it was dropped', () => {\n  const b = basic();\n  assert.deepEqual(b.lists().map((l) => l.id), ['todo', 'doing', 'done']);\n  b.addCard('c1', 'todo', 'One');\n  b.addCard('c2', 'todo', 'Two');\n  b.addCard('c3', 'todo', 'Three');\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c1', 'c2', 'c3']);\n  b.moveCard('c3', 'todo', { before: 'c1' });\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c1', 'c2']);\n  b.moveCard('c1', 'todo', { after: 'c2' });\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c2', 'c1']);\n  b.moveCard('c2', 'doing');\n  assert.deepEqual(b.cards('doing').map((c) => c.id), ['c2']);\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c1']);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/kanban-7.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:46.328Z"
+}

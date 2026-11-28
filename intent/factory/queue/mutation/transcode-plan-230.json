@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "transcode-plan",
+  "mutant": {
+    "id": "230",
+    "line": 158,
+    "column": 18,
+    "endLine": 158,
+    "endColumn": 38,
+    "mutator": "ConditionalExpression",
+    "original": "Number(hvc[1]) === 2",
+    "replacement": "false",
+    "lineText": "bitDepth = Number(hvc[1]) === 2 ? 10 : 8; // general_profile_idc 2 is Main 10",
+    "prevText": "if (hvc) {",
+    "nextText": "level = Number(hvc[2]);"
+  },
+  "mayEdit": [
+    "intent/blocks/transcode-plan/transcode-plan.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/transcode-plan-230.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"transcode-plan\". Mutant: line 158:18-158:38, mutator ConditionalExpression: \"Number(hvc[1]) === 2\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/transcode-plan/index.ts (> marks the mutated line):\n   152        profile = pi === 0x42 || pi === 0x2c ? 'baseline' : pi === 0x4d ? 'main' : 'high';\n   153        bitDepth = pi === 0x6e || pi === 0x7a || pi === 0xf4 ? 10 : 8;\n   154        level = parseInt(avc[3] as string, 16);\n   155      }\n   156      const hvc = /^hvc1\\.[A-C]?(\\d+)\\.[0-9A-F]+\\.[LH](\\d+)/.exec(cs);\n   157      if (hvc) {\n>  158        bitDepth = Number(hvc[1]) === 2 ? 10 : 8; // general_profile_idc 2 is Main 10\n   159        level = Number(hvc[2]);\n   160      }\n   161      const av = /^av01\\.\\d\\.\\d+[MH]\\.(\\d+)/.exec(cs);\n   162      if (av) bitDepth = Number(av[1]);\n   163      video = {\n   164        codec, ...(profile ? { profile } : {}), ...(level !== undefined ? { level } : {}), width: v.width, height: v.height,\n\nTest file style (intent/blocks/transcode-plan/transcode-plan.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { probe } from '../iso-bmff-probe/index.ts';\nimport { escapeFilterValue, ffmpegArgs, ladderFor, mediaFromProbe, plan, PlanError, PROFILES } from './index.ts';\nimport type { MediaInfo } from './index.ts';\n\nconst h264 = (over: Partial<NonNullable<MediaInfo['video']>> = {}): NonNullable<MediaInfo['video']> => ({ codec: 'h264', profile: 'high', level: 40, width: 1920, height: 1080, fps: 30, bitrate: 6_000_000, bitDepth: 8, ...over });\nconst media = (over: Partial<MediaInfo> = {}): MediaInfo => ({ container: 'mp4', durationSeconds: 100, video: h264(), audio: [{ codec: 'aac', channels: 2, bitrate: 128_000 }], subtitles: [], ...over });\nconst chrome = PROFILES['chrome']!;\nconst { hls: _noHls, ...chromeNoHls } = chrome;\nconst bare = (codec: 'hevc' | 'h264'): NonNullable<MediaInfo['video']> => ({ codec, width: 1920, height: 1080, fps: 30, bitrate: 6_000_000, bitDepth: 8 });\nconst safari = PROFILES['safari']!;\nconst tv = PROFILES['android-tv-basic']!;\nconst codes = (p: ReturnType<typeof plan>) => p.reasons.map((x) => x.code);\n\n// ------------------------------------------------------------ the decision\n\ntest('direct play when the container, video and audio are all taken as they are', () => {\n  const p = plan(media(), chrome);\n  assert.equal(p.mode, 'direct-play');\n  assert.deepEqual([p.videoAction, p.audioAction, p.subtitleAction], ['copy', 'copy', 'none']);\n  assert.deepEqual(p.reasons, []);\n  assert.equal(p.target, undefined);\n});\n\ntest('remux when only the container is wrong: video and audio are copied into one the device plays', () => {\n  const p = plan(media({ container: 'mkv' }), chrome);\n  assert.equal(p.mode, 'remux');\n  assert.deepEqual(codes(p), ['ContainerNotSupported']);\n  assert.equal(p.container, 'mp4');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/transcode-plan-230.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:10.355Z"
+}

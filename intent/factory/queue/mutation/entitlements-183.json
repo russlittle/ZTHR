@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "entitlements",
+  "mutant": {
+    "id": "183",
+    "line": 188,
+    "column": 32,
+    "endLine": 188,
+    "endColumn": 50,
+    "mutator": "ConditionalExpression",
+    "original": "period === 'gauge'",
+    "replacement": "false",
+    "lineText": "if (period === 'lifetime' || period === 'gauge') return { start: 0, end: Infinity };",
+    "prevText": "export function periodOf(period: Period, anchorDay: number, now: number): { start: number; end: number } {",
+    "nextText": "if (period === 'day') return { start: startOfDay(now), end: startOfDay(now) + DAY_MS };"
+  },
+  "mayEdit": [
+    "intent/blocks/entitlements/entitlements.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/entitlements-183.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"entitlements\". Mutant: line 188:32-188:50, mutator ConditionalExpression: \"period === 'gauge'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/entitlements/index.ts (> marks the mutated line):\n   182  \n   183  const startOfDay = (t: number) => Math.floor(t / DAY_MS) * DAY_MS;\n   184  const daysIn = (y: number, m: number) => new Date(Date.UTC(y, m + 1, 0)).getUTCDate();\n   185  \n   186  /** The billing period [start, end) holding `now`, with the anchor day clamped to short months. */\n   187  export function periodOf(period: Period, anchorDay: number, now: number): { start: number; end: number } {\n>  188    if (period === 'lifetime' || period === 'gauge') return { start: 0, end: Infinity };\n   189    if (period === 'day') return { start: startOfDay(now), end: startOfDay(now) + DAY_MS };\n   190    const d = new Date(now);\n   191    const at = (y: number, m: number) => Date.UTC(y, m, Math.min(anchorDay, daysIn(y, m)));\n   192    if (period === 'year') {\n   193      // A year is the calendar year.\n   194      return { start: Date.UTC(d.getUTCFullYear(), 0, 1), end: Date.UTC(d.getUTCFullYear() + 1, 0, 1) };\n\nTest file style (intent/blocks/entitlements/entitlements.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Flags } from '../flags/index.ts';\nimport { EntitlementError, Entitlements, Ledger, checkCatalog, flatten, periodOf, resolve } from './index.ts';\nimport type { Account, Catalog } from './index.ts';\n\nconst D = 86_400_000;\nconst at = (s: string) => Date.parse(s);\nconst T = at('2026-03-10T12:00:00Z');\n\nconst catalog: Catalog = {\n  features: ['sso', 'audit-log', 'api', 'beta-editor'],\n  limits: ['seats', 'emails', 'storage', 'exports'],\n  plans: {\n    free: { name: 'free', features: { api: false }, limits: { seats: { included: 3, period: 'gauge' }, emails: { included: 100, period: 'month', overage: { mode: 'block' } }, exports: { included: 5, period: 'day' } } },\n    pro: {\n      name: 'pro',\n      extends: 'free',\n      trialDays: 14,\n      features: { api: true, 'audit-log': true, 'beta-editor': { enabled: true, flag: 'beta-editor' } },\n      limits: { seats: { included: 10, period: 'gauge' }, emails: { included: 1000, period: 'month', overage: { mode: 'charge', price: 200, perUnits: 500, cap: 5000 } }, storage: { included: 50, period: 'lifetime', overage: { mode: 'allow' } } },\n    },\n    team: { name: 'team', extends: 'pro', features: { sso: true }, limits: { seats: { included: null, period: 'gauge' } } },\n  },\n};\n\nconst acct = (over: Partial<Account> = {}): Account => ({ id: 'acme', plan: 'pro', anchorDay: 15, ...over });\nconst make = (flags?: Flags) => new Entitlements(catalog, new Ledger(), flags);\n\ntest('a catalog is checked as a whole: unknown names, loops, bad numbers and prices that do not add up', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/entitlements-183.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.843Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webrtc-signaling",
+  "mutant": {
+    "id": "569",
+    "line": 226,
+    "column": 213,
+    "endLine": 226,
+    "endColumn": 232,
+    "mutator": "ConditionalExpression",
+    "original": "rport !== undefined",
+    "replacement": "true",
+    "lineText": "return { foundation, component: Number(comp), transport: tr, priority: Number(prio), address, port: Number(port), type: type as Candidate['type'], ...(raddr !== undefined ? { relatedAddress: raddr } : {}), ...(rport !== undefined ? { relatedPort: rport } : {}), ...(tcpType ? { tcpType } : {}), extensions: ext };",
+    "prevText": "if (type !== 'host' && raddr === undefined) throw new BadSdp(`a ${type} candidate needs raddr and rport`);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/webrtc-signaling/webrtc-signaling.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webrtc-signaling-569.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webrtc-signaling\". Mutant: line 226:213-226:232, mutator ConditionalExpression: \"rport !== undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webrtc-signaling/index.ts (> marks the mutated line):\n   220      else if (k === 'rport') { if (!/^\\d+$/.test(v) || Number(v) > 65535) throw new BadSdp('bad rport'); rport = Number(v); }\n   221      else if (k === 'tcptype') { if (!['active', 'passive', 'so'].includes(v)) throw new BadSdp('bad tcptype'); tcpType = v as 'active'; }\n   222      else if (/^[A-Za-z0-9-]+$/.test(k)) ext[k] = v;\n   223      else throw new BadSdp(`bad extension name ${k}`);\n   224    }\n   225    if (type !== 'host' && raddr === undefined) throw new BadSdp(`a ${type} candidate needs raddr and rport`);\n>  226    return { foundation, component: Number(comp), transport: tr, priority: Number(prio), address, port: Number(port), type: type as Candidate['type'], ...(raddr !== undefined ? { relatedAddress: raddr } : {}), ...(rport !== undefined ? { relatedPort: rport } : {}), ...(tcpType ? { tcpType } : {}), extensions: ext };\n   227  }\n   228  \n   229  export function formatCandidate(c: Candidate): string {\n   230    const parts = [`candidate:${c.foundation}`, String(c.component), c.transport, String(c.priority), c.address, String(c.port), 'typ', c.type];\n   231    if (c.relatedAddress !== undefined) parts.push('raddr', c.relatedAddress, 'rport', String(c.relatedPort ?? 0));\n   232    if (c.tcpType) parts.push('tcptype', c.tcpType);\n\nTest file style (intent/blocks/webrtc-signaling/webrtc-signaling.test.ts):\n25 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHmac } from 'node:crypto';\nimport { test } from 'node:test';\nimport { BadSdp, BadToken, ERR, ForbiddenMunge, Signaling, attrOf, checkTurnCredential, formatCandidate, hasFingerprint, isPrivateAddress, munge, parseCandidate, parseSdp, rtpmaps, signJwt, turnCredentials, verifyJwt, writeSdp } from './index.ts';\n\n// RFC 8866 section 5 example.\nconst RFC8866 = [\n  'v=0',\n  'o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5',\n  's=SDP Seminar',\n  'i=A Seminar on the session description protocol',\n  'u=http://www.example.com/seminars/sdp.pdf',\n  'e=j.doe@example.com (Jane Doe)',\n  'c=IN IP4 224.2.17.12/127',\n  't=2873397496 2873404696',\n  'a=recvonly',\n  'm=audio 49170 RTP/AVP 0',\n  'm=video 51372 RTP/AVP 99',\n  'c=IN IP4 203.0.113.1',\n  'a=rtpmap:99 h263-1998/90000',\n  '',\n].join('\\r\\n');\n\nconst offer = (o: { ufrag?: string; extra?: string[]; fingerprint?: boolean } = {}) => [\n  'v=0',\n  'o=- 4611731400430051336 2 IN IP4 127.0.0.1',\n  's=-',\n  't=0 0',\n  'a=group:BUNDLE 0 1',\n  ...(o.fingerprint === false ? [] : ['a=fingerprint:sha-256 AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89']),\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webrtc-signaling-569.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.072Z"
+}

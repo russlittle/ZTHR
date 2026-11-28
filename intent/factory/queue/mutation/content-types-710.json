@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "content-types",
+  "mutant": {
+    "id": "710",
+    "line": 310,
+    "column": 11,
+    "endLine": 310,
+    "endColumn": 30,
+    "mutator": "ConditionalExpression",
+    "original": "f.min !== undefined",
+    "replacement": "true",
+    "lineText": "if (f.min !== undefined && v.length < f.min) bad(`needs at least ${f.min} items`);",
+    "prevText": "if (!Array.isArray(v)) return bad('must be a list');",
+    "nextText": "if (f.max !== undefined && v.length > f.max) bad(`allows at most ${f.max} items`);"
+  },
+  "mayEdit": [
+    "intent/blocks/content-types/content-types.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/content-types-710.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"content-types\". Mutant: line 310:11-310:30, mutator ConditionalExpression: \"f.min !== undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/content-types/index.ts (> marks the mutated line):\n   304          validateFields(reg, def.fields, v as Data, enforceRequired, `${path}.`, problems);\n   305        }\n   306        return;\n   307      }\n   308      case 'dynamiczone': {\n   309        if (!Array.isArray(v)) return bad('must be a list');\n>  310        if (f.min !== undefined && v.length < f.min) bad(`needs at least ${f.min} items`);\n   311        if (f.max !== undefined && v.length > f.max) bad(`allows at most ${f.max} items`);\n   312        v.forEach((item, i) => {\n   313          const p = `${path}[${i}]`;\n   314          if (typeof item !== 'object' || item === null || Array.isArray(item)) return void problems.push({ path: p, message: 'must be an object' });\n   315          const { __component, ...rest } = item as Data;\n   316          if (typeof __component !== 'string' || !(f.components ?? []).includes(__component)) return void problems.push({ path: `${p}.__component`, message: `must be one of ${(f.components ?? []).join(', ')}` });\n\nTest file style (intent/blocks/content-types/content-types.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ContentModelError, ContentStore, NotFoundError, Registry, slugify, ValidationFailed, validateFields } from './index.ts';\n\nfunction model(): Registry {\n  const r = new Registry();\n  r.defineComponent({ uid: 'shared.seo', fields: { metaTitle: { kind: 'string', required: true, maxLength: 60 }, metaDescription: { kind: 'text', maxLength: 160 } } });\n  r.defineComponent({ uid: 'blocks.hero', fields: { heading: { kind: 'string', required: true }, image: { kind: 'media' } } });\n  r.defineComponent({ uid: 'blocks.quote', fields: { text: { kind: 'text', required: true }, author: { kind: 'string' } } });\n  r.defineComponent({ uid: 'shared.link', fields: { label: { kind: 'string', required: true }, url: { kind: 'string', required: true, regex: '^https?://' } } });\n  r.defineType({ uid: 'author', fields: { name: { kind: 'string', required: true }, email: { kind: 'email', unique: true } } });\n  r.defineType({\n    uid: 'article',\n    draftAndPublish: true,\n    localized: true,\n    fields: {\n      title: { kind: 'string', required: true, maxLength: 120 },\n      slug: { kind: 'uid', targetField: 'title' },\n      views: { kind: 'integer', min: 0, default: 0, localized: false },\n      kind: { kind: 'enumeration', values: ['news', 'essay'], default: 'news' },\n      seo: { kind: 'component', component: 'shared.seo' },\n      links: { kind: 'component', component: 'shared.link', repeatable: true, max: 3 },\n      body: { kind: 'dynamiczone', components: ['blocks.hero', 'blocks.quote'] },\n      author: { kind: 'relation', target: 'author', relation: 'manyToOne' },\n      tags: { kind: 'relation', target: 'author', relation: 'manyToMany' },\n      internalNote: { kind: 'text', private: true },\n      published_on: { kind: 'date' },\n    },\n  });\n  r.defineType({ uid: 'homepage', kind: 'single', fields: { tagline: { kind: 'string', required: true } } });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/content-types-710.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.902Z"
+}

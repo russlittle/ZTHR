@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "esign-envelope",
+  "mutant": {
+    "id": "369",
+    "line": 305,
+    "column": 117,
+    "endLine": 305,
+    "endColumn": 159,
+    "mutator": "StringLiteral",
+    "original": "'maxLen is a whole number from 1 to 10000'",
+    "replacement": "\"\"",
+    "lineText": "if (f.maxLen !== undefined && (!Number.isInteger(f.maxLen) || f.maxLen < 1 || f.maxLen > 10_000)) problems.push('maxLen is a whole number from 1 to 10000');",
+    "prevText": "}",
+    "nextText": "const a = f.at;"
+  },
+  "mayEdit": [
+    "intent/blocks/esign-envelope/esign-envelope.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/esign-envelope-369.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"esign-envelope\". Mutant: line 305:117-305:159, mutator StringLiteral: \"'maxLen is a whole number from 1 to 10000'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/esign-envelope/index.ts (> marks the mutated line):\n   299          new RegExp(`^(?:${f.pattern})$`);\n   300          if (f.pattern.length > 200 || /\\([^)]*[+*][^)]*\\)[+*{]/.test(f.pattern)) problems.push('that pattern could take very long to match; use a simpler one');\n   301        } catch {\n   302          problems.push('the pattern is not a valid regular expression');\n   303        }\n   304      }\n>  305      if (f.maxLen !== undefined && (!Number.isInteger(f.maxLen) || f.maxLen < 1 || f.maxLen > 10_000)) problems.push('maxLen is a whole number from 1 to 10000');\n   306      const a = f.at;\n   307      if (![a.x, a.y, a.width, a.height].every(Number.isFinite) || !(a.width > 0 && a.height > 0)) problems.push('the field needs a place with a size');\n   308      else if (a.unit === 'fraction' && (a.x < 0 || a.y < 0 || a.x + a.width > 1 || a.y + a.height > 1)) problems.push('a place given as a fraction of the page must lie within it');\n   309      if (problems.length) throw new EnvelopeError(problems);\n   310      this.fields.push({ ...f });\n   311      this.log(this.sender.email, 'field added', `${f.id} ${f.kind} for ${f.signer} on ${f.document} page ${f.page + 1}`);\n\nTest file style (intent/blocks/esign-envelope/esign-envelope.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { test } from 'node:test';\nimport { sign as signLink } from '../crypto/index.ts';\nimport { pdf } from '../pdf/index.ts';\nimport { readForm } from '../pdf-forms/index.ts';\nimport { Envelope, EnvelopeError } from './index.ts';\nimport type { Certificate, FieldSpec, Message } from './index.ts';\n\nconst T0 = Date.UTC(2026, 2, 2, 9, 0, 0);\nconst HOUR = 3_600_000;\nconst SECRET = createHash('sha256').update('esign-envelope test key 1').digest('hex');\n\nfunction clock() {\n  const c = { t: T0 };\n  return { c, now: () => c.t };\n}\n\nfunction make(opts: { days?: number } = {}) {\n  const { c, now } = clock();\n  let n = 0;\n  const env = new Envelope({ now, secret: SECRET, baseUrl: 'https://sign.example.com', ids: () => `env${++n}` }, { subject: 'Services agreement', sender: { name: 'Sam Ortiz', email: 'Sam@Example.com' }, ...(opts.days ? { expiresInDays: opts.days } : {}) });\n  return { env, c };\n}\n\nconst DOC = pdf([{ h: 'Services agreement' }, { p: 'The supplier will deliver the services described.' }, { p: 'Signed by both parties.' }], { title: 'Agreement', size: 'Letter' });\nconst sha = (b: Uint8Array) => createHash('sha256').update(b).digest('hex');\nconst place = { x: 72, y: 600, width: 200, height: 30 };\nconst sigField = (id: string, signer: string, over: Partial<FieldSpec> = {}): FieldSpec => ({ id, signer, document: 'd1', page: 0, at: place, kind: 'signature', ...over });\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/esign-envelope-369.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.043Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "dashboards",
+  "mutant": {
+    "id": "435",
+    "line": 228,
+    "column": 13,
+    "endLine": 228,
+    "endColumn": 34,
+    "mutator": "Regex",
+    "original": "/^(\\d{1,4})([mhdw])$/",
+    "replacement": "/^(\\d{1,4})([mhdw])/",
+    "lineText": "const m = /^(\\d{1,4})([mhdw])$/.exec(s);",
+    "prevText": "export function parseInterval(s: string): { n: number; unit: 'm' | 'h' | 'd' | 'w' } {",
+    "nextText": "if (!m || Number(m[1]) < 1) throw new DashboardError(`${JSON.stringify(s.slice(0, 10))} is not an interval like 15m, 1h, 1d or 1w`);"
+  },
+  "mayEdit": [
+    "intent/blocks/dashboards/dashboards.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/dashboards-435.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"dashboards\". Mutant: line 228:13-228:34, mutator Regex: \"/^(\\\\d{1,4})([mhdw])$/\" becomes \"/^(\\\\d{1,4})([mhdw])/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/dashboards/index.ts (> marks the mutated line):\n   222  }\n   223  \n   224  const checksum = (s: string) => createHash('sha256').update(s).digest('hex');\n   225  const hashToken = (t: string) => createHash('sha256').update(t).digest('hex');\n   226  \n   227  export function parseInterval(s: string): { n: number; unit: 'm' | 'h' | 'd' | 'w' } {\n>  228    const m = /^(\\d{1,4})([mhdw])$/.exec(s);\n   229    if (!m || Number(m[1]) < 1) throw new DashboardError(`${JSON.stringify(s.slice(0, 10))} is not an interval like 15m, 1h, 1d or 1w`);\n   230    return { n: Number(m[1]), unit: m[2] as 'm' | 'h' | 'd' | 'w' };\n   231  }\n   232  \n   233  /** The start of the bucket a time falls in. Days and weeks follow the time zone. */\n   234  export function bucketStart(t: number, iv: { n: number; unit: 'm' | 'h' | 'd' | 'w' }, tz: string): number {\n\nTest file style (intent/blocks/dashboards/dashboards.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ViewEngine } from '../view-engine/index.ts';\nimport type { Node, Person, TableDef } from '../view-engine/index.ts';\nimport { BadLayout, DashboardError, Dashboards, NotAllowed, NotFound, VersionConflict, bucketStart, compact, interpolateNode, interpolateText, parseInterval, place, resolveRange, timeExpr, validateLayout } from './index.ts';\nimport type { Fetch, Panel, Resolved } from './index.ts';\n\nconst NY = 'America/New_York';\nconst NOW = new Date('2026-06-15T12:00:00Z');\nconst EVENTS: TableDef = { name: 'events', fields: [{ name: 'id', type: 'number' }, { name: 'ts', type: 'date' }, { name: 'region', type: 'select' }, { name: 'amount', type: 'number' }, { name: 'user', type: 'text' }, { name: 'secret', type: 'text', sensitive: true }] };\nconst rows = [\n  { id: 1, ts: '2026-06-12T10:00:00Z', region: 'eu', amount: 10, user: 'ana', secret: 's1' },\n  { id: 2, ts: '2026-06-13T03:00:00Z', region: 'eu', amount: 20, user: 'ben', secret: 's2' },\n  { id: 3, ts: '2026-06-13T15:00:00Z', region: 'us', amount: 30, user: 'cy', secret: 's3' },\n  { id: 4, ts: '2026-06-14T23:30:00Z', region: 'us', amount: 40, user: 'ana', secret: 's4' },\n  { id: 5, ts: '2026-06-15T01:00:00Z', region: 'eu', amount: 50, user: 'ben', secret: 's5' },\n  { id: 6, ts: '2026-06-10T00:00:00Z', region: 'eu', amount: 100, user: 'cy', secret: 's6' },\n];\nconst ana: Person = { id: 'ana' };\nconst ben: Person = { id: 'ben' };\nconst cy: Person = { id: 'cy' };\nconst root: Person = { id: 'root', admin: true };\n\nconst make = () => {\n  let n = 0;\n  const engine = new ViewEngine({ tables: [EVENTS], access: { canRead: (who, _t, f) => !(who === 'cy' && f === 'secret') && !(who.startsWith('link:') && f === 'secret') } });\n  const dash = new Dashboards({ engine, now: () => NOW, id: () => `d${++n}`, scopeFor: (who, table) => (who.id === 'ben' && table === 'events' ? ({ kind: 'cmp', path: ['region'], op: 'eq', value: 'eu' } as Node) : undefined) });\n  const seen: unknown[] = [];\n  const fetch: Fetch = (_t, c) => { seen.push(c); return rows; };\n  return { dash, engine, fetch, seen };\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/dashboards-435.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.774Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "cart",
+  "mutant": {
+    "id": "434",
+    "line": 388,
+    "column": 9,
+    "endLine": 388,
+    "endColumn": 20,
+    "mutator": "ConditionalExpression",
+    "original": "!o.keepHold",
+    "replacement": "true",
+    "lineText": "if (!o.keepHold) for (const l of c.lines) this.o.inventory?.release(this.ref(c, l.sku));",
+    "prevText": "if (!c.quote) throw new CartError('not-priced', 'price the cart before it becomes an order');",
+    "nextText": "if (this.o.redemptions && c.owner.customer) redeemCoupons(c.quote, this.cat(), this.customerOf(c), this.o.redemptions);"
+  },
+  "mayEdit": [
+    "intent/blocks/cart/cart.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/cart-434.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"cart\". Mutant: line 388:9-388:20, mutator ConditionalExpression: \"!o.keepHold\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/cart/index.ts (> marks the mutated line):\n   382    // -------------------------------------------------------------------------------------------------- lifecycle\n   383  \n   384    /** The cart became an order: its stock hold is taken over by the caller (released here unless `keepHold`), coupons are counted, and the cart is closed. */\n   385    markConverted(id: string, orderId: string, o: { keepHold?: boolean } = {}): Cart {\n   386      const c = this.open(id);\n   387      if (!c.quote) throw new CartError('not-priced', 'price the cart before it becomes an order');\n>  388      if (!o.keepHold) for (const l of c.lines) this.o.inventory?.release(this.ref(c, l.sku));\n   389      if (this.o.redemptions && c.owner.customer) redeemCoupons(c.quote, this.cat(), this.customerOf(c), this.o.redemptions);\n   390      c.status = 'converted';\n   391      c.orderId = orderId;\n   392      this.touch(c);\n   393      return this.snap(c);\n   394    }\n\nTest file style (intent/blocks/cart/cart.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Inventory } from '../inventory/index.ts';\nimport { money } from '../money/index.ts';\nimport { RedemptionLog, type Catalog } from '../pricing/index.ts';\nimport { CartError, Carts, type Options } from './index.ts';\n\nconst usd = (n: number) => money(n, 'USD');\nconst MIN = 60_000;\nconst HOUR = 60 * MIN;\nlet t = Date.parse('2026-06-15T12:00:00Z');\n\nfunction shop(extra: Partial<Options> = {}, catalogRef: { cat: Catalog } = { cat: baseCatalog() }) {\n  t = Date.parse('2026-06-15T12:00:00Z');\n  const inv = new Inventory({ now: () => new Date(t), currency: 'USD' });\n  inv.addPlace({ id: 'supplier', kind: 'supplier' });\n  inv.addPlace({ id: 'customer', kind: 'customer' });\n  inv.addPlace({ id: 'main', kind: 'internal' });\n  for (const sku of ['tee', 'mug', 'hat']) inv.addProduct({ sku, tracking: 'none', valuation: 'average' });\n  inv.receive({ sku: 'tee', qty: 10, to: 'main', unitCost: usd(500) });\n  inv.receive({ sku: 'mug', qty: 5, to: 'main', unitCost: usd(300) });\n  inv.receive({ sku: 'hat', qty: 2, to: 'main', unitCost: usd(300) });\n  let n = 0;\n  const log = new RedemptionLog();\n  const carts = new Carts({ catalog: () => catalogRef.cat, now: () => t, newId: () => `c${++n}`, currency: 'USD', inventory: inv, place: 'main', redemptions: log, customers: (id) => ({ id, groups: id === 'vera' ? ['vip'] : [] }), ...extra });\n  return { carts, inv, log, catalogRef };\n}\nfunction baseCatalog(): Catalog {\n  return {\n    lists: [\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/cart-434.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.762Z"
+}

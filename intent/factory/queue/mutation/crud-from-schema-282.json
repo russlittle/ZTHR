@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crud-from-schema",
+  "mutant": {
+    "id": "282",
+    "line": 242,
+    "column": 5,
+    "endLine": 242,
+    "endColumn": 52,
+    "mutator": "ConditionalExpression",
+    "original": "case 'boolean': s = { type: 'boolean' }; break;",
+    "replacement": "case 'boolean':",
+    "lineText": "case 'boolean': s = { type: 'boolean' }; break;",
+    "prevText": "case 'number': s = { type: 'number', ...(f.minimum !== undefined ? { minimum: f.minimum } : {}), ...(f.maximum !== undefined ? { maximum: f.maximum } : {}) }; break;",
+    "nextText": "case 'datetime': s = { type: 'string', format: 'date-time' }; break;"
+  },
+  "mayEdit": [
+    "intent/blocks/crud-from-schema/crud-from-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crud-from-schema-282.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crud-from-schema\". Mutant: line 242:5-242:52, mutator ConditionalExpression: \"case 'boolean': s = { type: 'boolean' }; break;\" becomes \"case 'boolean':\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crud-from-schema/index.ts (> marks the mutated line):\n   236  function fieldSchema(f: Field): Schema {\n   237    let s: Record<string, unknown>;\n   238    switch (f.type) {\n   239      case 'string': s = { type: 'string', ...(f.minLength !== undefined ? { minLength: f.minLength } : {}), ...(f.maxLength !== undefined ? { maxLength: f.maxLength } : {}), ...(f.pattern ? { pattern: f.pattern } : {}), ...(f.format ? { format: f.format } : {}) }; break;\n   240      case 'integer': s = { type: 'integer', ...(f.minimum !== undefined ? { minimum: f.minimum } : {}), ...(f.maximum !== undefined ? { maximum: f.maximum } : {}) }; break;\n   241      case 'number': s = { type: 'number', ...(f.minimum !== undefined ? { minimum: f.minimum } : {}), ...(f.maximum !== undefined ? { maximum: f.maximum } : {}) }; break;\n>  242      case 'boolean': s = { type: 'boolean' }; break;\n   243      case 'datetime': s = { type: 'string', format: 'date-time' }; break;\n   244      case 'json': s = {}; break;\n   245    }\n   246    if (f.enum) s['enum'] = [...f.enum];\n   247    if (f.description) s['description'] = f.description;\n   248    if (f.default !== undefined) s['default'] = f.default;\n\nTest file style (intent/blocks/crud-from-schema/crud-from-schema.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { BadSchema, StoreConflict, crud, declare, memoryStore } from './index.ts';\nimport type { Entity, Req } from './index.ts';\nimport type { Policy, Subject } from '../rbac/index.ts';\nimport { check, contract, verifyResponse } from '../openapi/index.ts';\n\nconst User: Entity = {\n  name: 'User', plural: 'users',\n  fields: {\n    name: { type: 'string', required: true, minLength: 1, maxLength: 50, filterable: true, sortable: true },\n    email: { type: 'string', required: true, format: 'email', unique: true, filterable: true },\n    salary: { type: 'integer', nullable: true, readAction: 'read-salary', writeAction: 'write-salary', filterable: true, sortable: true },\n  },\n};\nconst Post: Entity = {\n  name: 'Post', plural: 'posts',\n  fields: {\n    title: { type: 'string', required: true, maxLength: 80, filterable: true, sortable: true },\n    status: { type: 'string', enum: ['draft', 'published'], default: 'draft', filterable: true },\n    views: { type: 'integer', default: 0, minimum: 0, filterable: true, sortable: true },\n    authorId: { type: 'string', required: true, filterable: true },\n    meta: { type: 'json' },\n  },\n  relations: { author: { entity: 'User', kind: 'one', field: 'authorId' }, comments: { entity: 'Comment', kind: 'many', field: 'postId' } },\n};\nconst Comment: Entity = { name: 'Comment', plural: 'comments', fields: { postId: { type: 'string', required: true, filterable: true }, text: { type: 'string', required: true } }, operations: ['list', 'get', 'create'] };\n\nconst policy: Policy = {\n  roles: { member: { label: 'Member' }, admin: { label: 'Admin', inherits: ['member'] } },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crud-from-schema-282.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.502Z"
+}

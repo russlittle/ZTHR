@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "cart",
+  "mutant": {
+    "id": "211",
+    "line": 238,
+    "column": 12,
+    "endLine": 238,
+    "endColumn": 41,
+    "mutator": "EqualityOperator",
+    "original": "c.reservedUntil !== undefined",
+    "replacement": "c.reservedUntil === undefined",
+    "lineText": "return c.reservedUntil !== undefined ? Math.max(1, c.reservedUntil - this.o.now()) : this.o.reserveTtlMs;",
+    "prevText": "private remainingTtl(c: Mut): number {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/cart/cart.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/cart-211.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"cart\". Mutant: line 238:12-238:41, mutator EqualityOperator: \"c.reservedUntil !== undefined\" becomes \"c.reservedUntil === undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/cart/index.ts (> marks the mutated line):\n   232        }\n   233      }\n   234      if (line) line.qty = qty;\n   235      else c.lines.push({ sku, qty, reserved: false });\n   236    }\n   237    private remainingTtl(c: Mut): number {\n>  238      return c.reservedUntil !== undefined ? Math.max(1, c.reservedUntil - this.o.now()) : this.o.reserveTtlMs;\n   239    }\n   240  \n   241    // ---------------------------------------------------------------------------------------------- reservation\n   242  \n   243    /** Hold stock for every line for a limited time. All lines or none: a shortage on one releases what was taken. */\n   244    reserve(id: string): Cart {\n\nTest file style (intent/blocks/cart/cart.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Inventory } from '../inventory/index.ts';\nimport { money } from '../money/index.ts';\nimport { RedemptionLog, type Catalog } from '../pricing/index.ts';\nimport { CartError, Carts, type Options } from './index.ts';\n\nconst usd = (n: number) => money(n, 'USD');\nconst MIN = 60_000;\nconst HOUR = 60 * MIN;\nlet t = Date.parse('2026-06-15T12:00:00Z');\n\nfunction shop(extra: Partial<Options> = {}, catalogRef: { cat: Catalog } = { cat: baseCatalog() }) {\n  t = Date.parse('2026-06-15T12:00:00Z');\n  const inv = new Inventory({ now: () => new Date(t), currency: 'USD' });\n  inv.addPlace({ id: 'supplier', kind: 'supplier' });\n  inv.addPlace({ id: 'customer', kind: 'customer' });\n  inv.addPlace({ id: 'main', kind: 'internal' });\n  for (const sku of ['tee', 'mug', 'hat']) inv.addProduct({ sku, tracking: 'none', valuation: 'average' });\n  inv.receive({ sku: 'tee', qty: 10, to: 'main', unitCost: usd(500) });\n  inv.receive({ sku: 'mug', qty: 5, to: 'main', unitCost: usd(300) });\n  inv.receive({ sku: 'hat', qty: 2, to: 'main', unitCost: usd(300) });\n  let n = 0;\n  const log = new RedemptionLog();\n  const carts = new Carts({ catalog: () => catalogRef.cat, now: () => t, newId: () => `c${++n}`, currency: 'USD', inventory: inv, place: 'main', redemptions: log, customers: (id) => ({ id, groups: id === 'vera' ? ['vip'] : [] }), ...extra });\n  return { carts, inv, log, catalogRef };\n}\nfunction baseCatalog(): Catalog {\n  return {\n    lists: [\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/cart-211.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.755Z"
+}

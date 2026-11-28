@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "block-markup",
+  "mutant": {
+    "id": "370",
+    "line": 294,
+    "column": 9,
+    "endLine": 294,
+    "endColumn": 84,
+    "mutator": "LogicalOperator",
+    "original": "b.name === 'core/missing' && typeof b.attrs['originalContent'] === 'string'",
+    "replacement": "b.name === 'core/missing' || typeof b.attrs['originalContent'] === 'string'",
+    "lineText": "if (b.name === 'core/missing' && typeof b.attrs['originalContent'] === 'string') return b.attrs['originalContent'];",
+    "prevText": "if (b.name === null) return b.innerHTML;",
+    "nextText": "const nm = short(b.name);"
+  },
+  "mayEdit": [
+    "intent/blocks/block-markup/block-markup.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/block-markup-370.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"block-markup\". Mutant: line 294:9-294:84, mutator LogicalOperator: \"b.name === 'core/missing' && typeof b.attrs['originalContent'] === 'string'\" becomes \"b.name === 'core/missing' || typeof b.attrs['originalContent'] === 'string'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/block-markup/index.ts (> marks the mutated line):\n   288  \n   289  /** Writes blocks as a document. Blocks are separated by a blank line. */\n   290  export function serialize(blocks: readonly Block[], o: { prefix?: string } = {}): string {\n   291    const prefix = o.prefix ?? 'wp';\n   292    const one = (b: Block): string => {\n   293      if (b.name === null) return b.innerHTML;\n>  294      if (b.name === 'core/missing' && typeof b.attrs['originalContent'] === 'string') return b.attrs['originalContent'];\n   295      const nm = short(b.name);\n   296      if (!/^[a-z][a-z0-9_-]*(?:\\/[a-z][a-z0-9_-]*)?$/.test(nm)) throw new MarkupError(`\"${b.name}\" cannot be written as a block name`, 0);\n   297      const attrs = Object.keys(b.attrs).length ? ` ${encodeAttrs(b.attrs)}` : '';\n   298      const content = innerOf(b);\n   299      if (content === '' && !b.innerBlocks.length) return `<!-- ${prefix}:${nm}${attrs} /-->`;\n   300      return `<!-- ${prefix}:${nm}${attrs} -->${content}<!-- /${prefix}:${nm} -->`;\n\nTest file style (intent/blocks/block-markup/block-markup.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { block, encodeAttrs, LimitExceeded, MarkupError, normalise, parse, plainText, qualify, registry, serialize, short, validate, walkBlocks } from './index.ts';\nimport type { BlockType } from './index.ts';\n\nconst doc = `<!-- wp:heading {\"level\":3} -->\n<h3>Title</h3>\n<!-- /wp:heading -->\n\nSome loose <b>HTML</b> between.\n\n<!-- wp:group {\"className\":\"box\"} -->\n<div class=\"box\">\n<!-- wp:paragraph -->\n<p>One</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:separator /-->\n\n<!-- wp:acme/quote {\"cite\":\"Ann\"} -->\n<blockquote>Q</blockquote>\n<!-- /wp:acme/quote -->\n</div>\n<!-- /wp:group -->`;\n\ntest('a document parses into blocks, freeform HTML, and nested blocks, with attributes', () => {\n  const { blocks, problems } = parse(doc);\n  assert.deepEqual(problems, []);\n  assert.deepEqual(blocks.map((b) => b.name), ['core/heading', null, 'core/group']);\n  assert.deepEqual(blocks[0]!.attrs, { level: 3 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/block-markup-370.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.094Z"
+}

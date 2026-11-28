@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "rich-text-doc",
+  "mutant": {
+    "id": "2635",
+    "line": 1764,
+    "column": 102,
+    "endLine": 1764,
+    "endColumn": 108,
+    "mutator": "EqualityOperator",
+    "original": "v >= 0",
+    "replacement": "v > 0",
+    "lineText": "attrs: { start: { default: 1, validate: (v) => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < 1_000_000 } },",
+    "prevText": "group: 'block',",
+    "nextText": "toHTML: (n) => ({ tag: 'ol', ...(n.attrs?.start !== 1 ? { attrs: { start: String(n.attrs?.start) } } : {}) }),"
+  },
+  "mayEdit": [
+    "intent/blocks/rich-text-doc/rich-text-doc.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-doc-2635.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"rich-text-doc\". Mutant: line 1764:102-1764:108, mutator EqualityOperator: \"v >= 0\" becomes \"v > 0\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/rich-text-doc/index.ts (> marks the mutated line):\n  1758      code_block: { content: 'text*', group: 'block', marks: '', toHTML: () => ({ tag: 'pre' }), parseHTML: [{ tag: 'pre', preserveWhitespace: true }] },\n  1759      horizontal_rule: { group: 'block', toHTML: () => ({ tag: 'hr' }), parseHTML: [{ tag: 'hr' }] },\n  1760      bullet_list: { content: 'list_item+', group: 'block', toHTML: () => ({ tag: 'ul' }), parseHTML: [{ tag: 'ul' }] },\n  1761      ordered_list: {\n  1762        content: 'list_item+',\n  1763        group: 'block',\n> 1764        attrs: { start: { default: 1, validate: (v) => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < 1_000_000 } },\n  1765        toHTML: (n) => ({ tag: 'ol', ...(n.attrs?.start !== 1 ? { attrs: { start: String(n.attrs?.start) } } : {}) }),\n  1766        parseHTML: [{ tag: 'ol', attrs: (el) => ({ start: /^\\d{1,6}$/.test(htmlAttr(el, 'start') ?? '') ? Number(htmlAttr(el, 'start')) : 1 }) }],\n  1767      },\n  1768      list_item: { content: 'paragraph block*', toHTML: () => ({ tag: 'li' }), parseHTML: [{ tag: 'li' }] },\n  1769      hard_break: { inline: true, group: 'inline', toHTML: () => ({ tag: 'br' }), parseHTML: [{ tag: 'br' }] },\n  1770      image: {\n\nTest file style (intent/blocks/rich-text-doc/rich-text-doc.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AddMarkStep, AttrStep, InvalidContent, Mapping, ReplaceAroundStep, ReplaceError, ReplaceStep, RemoveMarkStep, Schema, StepMap, Transform, TransformError, basicSchema as S, cut, emptySlice, fragSize, fromHTML, nodeSize, nodesBetween, replace, resolve, slice, sliceOf, stepFromJSON, textBetween, textContent, toHTML } from './index.ts';\nimport type { Node, Step } from './index.ts';\n\nconst t = (s: string, marks?: Parameters<typeof S.text>[1]) => S.text(s, marks);\nconst p = (...c: Node[]) => S.node('paragraph', undefined, c);\nconst h = (level: number, ...c: Node[]) => S.node('heading', { level }, c);\nconst doc = (...c: Node[]) => S.node('doc', undefined, c);\nconst li = (...c: Node[]) => S.node('list_item', undefined, c);\nconst ul = (...c: Node[]) => S.node('bullet_list', undefined, c);\nconst bq = (...c: Node[]) => S.node('blockquote', undefined, c);\nconst strong = S.mark('strong');\nconst em = S.mark('em');\nconst link = (href: string) => S.mark('link', { href });\nconst same = (a: Node, b: Node) => assert.deepEqual(a, b);\nconst valid = (d: Node) => assert.deepEqual(S.check(d), []);\n\nfunction run(d: Node, f: (tr: Transform) => void): Transform {\n  const tr = new Transform(S, d);\n  f(tr);\n  valid(tr.doc);\n  return tr;\n}\nfunction undo(tr: Transform): Node {\n  const back = new Transform(S, tr.doc);\n  for (const s of tr.inverted()) back.step(s);\n  return back.doc;\n}\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-doc-2635.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.175Z"
+}

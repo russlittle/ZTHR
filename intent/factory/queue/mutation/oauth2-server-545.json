@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "oauth2-server",
+  "mutant": {
+    "id": "545",
+    "line": 468,
+    "column": 60,
+    "endLine": 468,
+    "endColumn": 87,
+    "mutator": "StringLiteral",
+    "original": "'code_verifier is required'",
+    "replacement": "\"\"",
+    "lineText": "if (!verifier) throw new OAuthError('invalid_request', 'code_verifier is required');",
+    "prevText": "if (!code) throw new OAuthError('invalid_request', 'code is required');",
+    "nextText": "const rec = this.codes.get(sha(code));"
+  },
+  "mayEdit": [
+    "intent/blocks/oauth2-server/oauth2-server.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/oauth2-server-545.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"oauth2-server\". Mutant: line 468:60-468:87, mutator StringLiteral: \"'code_verifier is required'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/oauth2-server/index.ts (> marks the mutated line):\n   462    }\n   463  \n   464    private codeGrant(client: ClientRecord, b: Readonly<Record<string, string | undefined>>): Record<string, unknown> {\n   465      const code = b.code;\n   466      const verifier = b.code_verifier;\n   467      if (!code) throw new OAuthError('invalid_request', 'code is required');\n>  468      if (!verifier) throw new OAuthError('invalid_request', 'code_verifier is required');\n   469      const rec = this.codes.get(sha(code));\n   470      if (!rec) throw new OAuthError('invalid_grant', 'the code is not valid');\n   471      if (rec.used) {\n   472        // A code used twice: whatever it produced is no longer to be trusted.\n   473        if (rec.family) this.revokeFamily(rec.family);\n   474        throw new OAuthError('invalid_grant', 'the code was already used');\n\nTest file style (intent/blocks/oauth2-server/oauth2-server.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, generateKeyPairSync } from 'node:crypto';\nimport { test } from 'node:test';\nimport { ClientRegistry } from '../client-registry/index.ts';\nimport { AuthorizationServer, BadJwt, OAuthError, parseParams, pkceChallenge, signJwt, verifyJwt } from './index.ts';\nimport type { AuthorizeResult, ServerOptions, Subject } from './index.ts';\n\nfunction counter() {\n  let n = 0;\n  return (len: number) => {\n    n += 1;\n    return Uint8Array.from({ length: len }, (_, i) => (n * 37 + i * 11 + (n >> 3)) & 0xff);\n  };\n}\nconst SCOPES = [\n  { name: 'openid', description: 'Know who you are' },\n  { name: 'profile', description: 'See your name' },\n  { name: 'read', description: 'Read your data' },\n  { name: 'write', description: 'Change your data', implies: ['read'] },\n  { name: 'admin', description: 'Administer everything', implies: ['write'], sensitive: true },\n  { name: 'offline_access', description: 'Stay signed in' },\n];\nconst VERIFIER = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';\nconst CHALLENGE = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';\nconst ALICE: Subject = { id: 'alice', authTime: 1_800_000_000_000 };\n\nfunction setup(over: Partial<ServerOptions> = {}) {\n  const t = { v: 1_800_000_000_000 };\n  const registry = new ClientRegistry({ now: () => t.v, randomBytes: counter(), policy: { allowedScopes: SCOPES.map((s) => s.name), defaultScopes: ['openid'] } });\n  const web = registry.create({ name: 'Web', clientId: 'web', redirectUris: ['https://app.example.org/cb'], grantTypes: ['authorization_code', 'refresh_token', 'client_credentials'], scopes: ['openid', 'profile', 'read', 'write', 'admin', 'offline_access'] });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/oauth2-server-545.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.372Z"
+}

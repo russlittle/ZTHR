@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "promql-lite",
+  "mutant": {
+    "id": "664",
+    "line": 323,
+    "column": 11,
+    "endLine": 323,
+    "endColumn": 29,
+    "mutator": "ConditionalExpression",
+    "original": "a.t !== 'selector'",
+    "replacement": "false",
+    "lineText": "if (a.t !== 'selector' || a.rangeMs === undefined) throw new PromQLError(`${nameTok.v} needs a range vector such as metric[5m]`, nameTok.pos);",
+    "prevText": "const a = args[0] as Node;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/promql-lite/promql-lite.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/promql-lite-664.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"promql-lite\". Mutant: line 323:11-323:29, mutator ConditionalExpression: \"a.t !== 'selector'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/promql-lite/index.ts (> marks the mutated line):\n   317      const total = args.length + strs.length;\n   318      if (nameTok.v !== 'label_replace' && strs.length) throw new PromQLError(`${nameTok.v} takes no string arguments`, nameTok.pos);\n   319      if (total < spec.min || total > spec.max) throw new PromQLError(`${nameTok.v} takes ${spec.min === spec.max ? spec.min : `${spec.min} to ${spec.max}`} argument(s), got ${total}`, nameTok.pos);\n   320      if (nameTok.v === 'label_replace' && (strs.length !== 4 || args.length !== 1)) throw new PromQLError('label_replace(v, \"dst\", \"replacement\", \"src\", \"regex\")', nameTok.pos);\n   321      if (RANGE_FUNCS.has(nameTok.v)) {\n   322        const a = args[0] as Node;\n>  323        if (a.t !== 'selector' || a.rangeMs === undefined) throw new PromQLError(`${nameTok.v} needs a range vector such as metric[5m]`, nameTok.pos);\n   324      }\n   325      return { t: 'call', fn: nameTok.v, args, strs };\n   326    }\n   327  \n   328    private aggregation(): Node {\n   329      const op = (this.next() as { v: string }).v;\n\nTest file style (intent/blocks/promql-lite/promql-lite.test.ts):\n28 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { alignRange, instantQuery, parse, parseDuration, PromQLError, rangeQuery, SeriesStore } from './index.ts';\nimport type { Result } from './index.ts';\n\nconst S = 1000;\nconst approx = (a: number, b: number, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${a} is not ${b}`);\n\n/** A counter growing 1 per second: samples every 10 s from 0 to 120 s. */\nfunction counters(): SeriesStore {\n  const st = new SeriesStore();\n  for (let i = 0; i <= 12; i++) {\n    st.ingest('http_requests_total', { job: 'api', code: '200' }, i * 10 * S, i * 10);\n    st.ingest('http_requests_total', { job: 'api', code: '500' }, i * 10 * S, i);\n    st.ingest('http_requests_total', { job: 'web', code: '200' }, i * 10 * S, i * 20);\n  }\n  return st;\n}\nconst vec = (r: Result) => {\n  assert.equal(r.type, 'vector');\n  return (r as Extract<Result, { type: 'vector' }>).samples.map((s) => ({ labels: { ...s.labels }, value: s.value }));\n};\nconst scalar = (r: Result) => {\n  assert.equal(r.type, 'scalar');\n  return (r as Extract<Result, { type: 'scalar' }>).value;\n};\n\n// ------------------------------------------------------------ parsing\n\ntest('durations: units, compound forms, and refusal of nonsense', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/promql-lite-664.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.958Z"
+}

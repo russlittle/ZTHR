@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "zip-write",
+  "mutant": {
+    "id": "278",
+    "line": 223,
+    "column": 29,
+    "endLine": 223,
+    "endColumn": 36,
+    "mutator": "StringLiteral",
+    "original": "'never'",
+    "replacement": "\"\"",
+    "lineText": "if (big && mode64 === 'never') throw new Zip64Required(`${name} needs ZIP64 and it is turned off`);",
+    "prevText": "const big = mode64 === 'always' || known.length >= T || body.length >= T || pos >= T;",
+    "nextText": "const offset = pos;"
+  },
+  "mayEdit": [
+    "intent/blocks/zip-write/zip-write.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/zip-write-278.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"zip-write\". Mutant: line 223:29-223:36, mutator StringLiteral: \"'never'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/zip-write/index.ts (> marks the mutated line):\n   217            body = d;\n   218            method = 8;\n   219          }\n   220        }\n   221        const crc = crc32(known);\n   222        const big = mode64 === 'always' || known.length >= T || body.length >= T || pos >= T;\n>  223        if (big && mode64 === 'never') throw new Zip64Required(`${name} needs ZIP64 and it is turned off`);\n   224        const offset = pos;\n   225        const z64 = big;\n   226        const extra = Buffer.concat([ut, ...(z64 ? [Buffer.concat([u16(1), u16(16), u64(known.length), u64(body.length)])] : [])]);\n   227        yield out(Buffer.concat([u32(0x04034b50), u16(z64 ? 45 : 20), u16(0x0800), u16(method), u16(time), u16(date), u32(crc), u32(z64 ? 0xffffffff : body.length), u32(z64 ? 0xffffffff : known.length), u16(nameBuf.length), u16(extra.length), nameBuf, extra]));\n   228        if (body.length) yield out(body);\n   229        total += known.length;\n\nTest file style (intent/blocks/zip-write/zip-write.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { crc32, inflateRawSync } from 'node:zlib';\nimport { unzip } from '../docparse/index.ts';\nimport { ArchiveError, SizeMismatch, UnsafePath, Zip64Required, collect, dosTime, listTar, listZip, readZipEntry, safePath, tarBuffer, tarStream, uniquePath, zipBuffer, zipStream, type Entry } from './index.ts';\n\nconst T = new Date('2026-03-05T14:07:09Z');\nconst text = 'The quick brown fox jumps over the lazy dog. '.repeat(200);\nconst contents = (zip: Buffer) => {\n  const { entries } = listZip(zip);\n  return Object.fromEntries(entries.map((e) => [e.name, e.dir ? null : readZipEntry(zip, e).toString('utf8')]));\n};\nasync function* gen<T>(...xs: T[]): AsyncGenerator<T> {\n  for (const x of xs) yield x;\n}\n\ntest('a zip round trips through our reader and through docparse, with the CRC and sizes right', async () => {\n  const zip = await zipBuffer([{ name: 'a.txt', data: 'hello' }, { name: 'dir/b.txt', data: text }, { name: 'empty.txt', data: '' }], { now: T });\n  assert.deepEqual(contents(zip), { 'a.txt': 'hello', 'dir/b.txt': text, 'empty.txt': '' });\n  const { entries } = listZip(zip);\n  assert.deepEqual(entries.map((e) => [e.name, e.uncompressedSize, e.crc32]), [['a.txt', 5, crc32('hello')], ['dir/b.txt', text.length, crc32(text)], ['empty.txt', 0, 0]]);\n  assert.equal(zip.readUInt32LE(0), 0x04034b50);\n  const viaDocparse = unzip(zip);\n  assert.equal(viaDocparse.get('dir/b.txt')!.toString(), text, 'a different reader agrees');\n  assert.equal(zip.length < text.length, true, 'the repeated text was compressed');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/zip-write-278.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:17.024Z"
+}

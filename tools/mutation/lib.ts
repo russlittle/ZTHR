@@ -4,7 +4,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 
@@ -406,7 +406,9 @@ export function dirtyPaths(): string[] {
 
 export function fileHash(path: string): string {
   const abs = join(ROOT, path);
-  return existsSync(abs) ? sha(readFileSync(abs, 'utf8')) : 'deleted';
+  if (!existsSync(abs)) return 'deleted';
+  // An untracked directory or link to one (a node_modules link, say) has no content of its own to hash.
+  return statSync(abs).isDirectory() ? 'directory' : sha(readFileSync(abs, 'utf8'));
 }
 
 export function snapshotDirty(): Record<string, string> {
@@ -462,9 +464,15 @@ export function rangeSpec(block: string, m: Mutant): string {
   return `blocks/${block}/index.ts:${m.line}:${m.column - 1}-${m.endLine}:${m.endColumn - 1}`;
 }
 
+/** A work order's file belongs to a block only by its exact name: pdf's orders are not pdf-sign's or pdf-forms'. */
+export function isTaskOf(block: string, file: string): boolean {
+  if (!file.startsWith(`${block}-`)) return false;
+  return /^\d+(?:-fix|-simplify)?\.json$/.test(file.slice(block.length + 1));
+}
+
 export function taskFiles(block?: string): string[] {
   if (!existsSync(QUEUE)) return [];
-  const files = readdirSync(QUEUE).filter((f) => f.endsWith('.json') && (!block || f.startsWith(`${block}-`)));
+  const files = readdirSync(QUEUE).filter((f) => f.endsWith('.json') && (!block || isTaskOf(block, f)));
   const tasks = files.map((f) => ({ f, t: JSON.parse(readFileSync(join(QUEUE, f), 'utf8')) as Task }));
   tasks.sort((a, b) => KIND_RANK[a.t.kind] - KIND_RANK[b.t.kind] || a.t.mutant.line - b.t.mutant.line || a.f.localeCompare(b.f));
   return tasks.map((x) => join(QUEUE, x.f));

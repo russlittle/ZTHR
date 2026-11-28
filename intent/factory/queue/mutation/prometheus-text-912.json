@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "prometheus-text",
+  "mutant": {
+    "id": "912",
+    "line": 518,
+    "column": 18,
+    "endLine": 518,
+    "endColumn": 36,
+    "mutator": "ArithmeticOperator",
+    "original": "buckets.length - 1",
+    "replacement": "buckets.length + 1",
+    "lineText": "if (i < 0) i = buckets.length - 1;",
+    "prevText": "let i = buckets.findIndex((b) => b.count >= rank);",
+    "nextText": "if (i === buckets.length - 1) return buckets[buckets.length - 2]!.le;"
+  },
+  "mayEdit": [
+    "intent/blocks/prometheus-text/prometheus-text.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/prometheus-text-912.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"prometheus-text\". Mutant: line 518:18-518:36, mutator ArithmeticOperator: \"buckets.length - 1\" becomes \"buckets.length + 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/prometheus-text/index.ts (> marks the mutated line):\n   512    if (!(q >= 0 && q <= 1)) return q < 0 ? -Infinity : q > 1 ? Infinity : Number.NaN;\n   513    if (buckets.length < 2 || buckets[buckets.length - 1]!.le !== Infinity) return Number.NaN;\n   514    const total = buckets[buckets.length - 1]!.count;\n   515    if (total === 0) return Number.NaN;\n   516    const rank = q * total;\n   517    let i = buckets.findIndex((b) => b.count >= rank);\n>  518    if (i < 0) i = buckets.length - 1;\n   519    if (i === buckets.length - 1) return buckets[buckets.length - 2]!.le;\n   520    if (i === 0 && buckets[0]!.le <= 0) return buckets[0]!.le;\n   521    const lower = i === 0 ? 0 : buckets[i - 1]!.le;\n   522    const below = i === 0 ? 0 : buckets[i - 1]!.count;\n   523    const inBucket = buckets[i]!.count - below;\n   524    return inBucket === 0 ? lower : lower + (buckets[i]!.le - lower) * ((rank - below) / inBucket);\n\nTest file style (intent/blocks/prometheus-text/prometheus-text.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CardinalityError, MetricsError, ParseError, Registry, checkHistogram, findSample, formatValue, histogramBuckets, histogramQuantile, parseExposition } from './index.ts';\n\nconst SPEC = `# HELP http_requests_total The total number of HTTP requests.\n# TYPE http_requests_total counter\nhttp_requests_total{method=\"post\",code=\"200\"} 1027 1395066363000\nhttp_requests_total{method=\"post\",code=\"400\"}    3 1395066363000\n\n# Escaping in label values:\nmsdos_file_access_time_seconds{path=\"C:\\\\\\\\DIR\\\\\\\\FILE.TXT\",error=\"Cannot find file:\\\\n\\\\\"FILE.TXT\\\\\"\"} 1.458255915e9\n\n# Minimalistic line:\nmetric_without_timestamp_and_labels 12.47\n\n# A weird metric from before the epoch:\nsomething_weird{problem=\"division by zero\"} +Inf -3982045\n\n# A histogram, which has a pretty complex representation in the text format:\n# HELP http_request_duration_seconds A histogram of the request duration.\n# TYPE http_request_duration_seconds histogram\nhttp_request_duration_seconds_bucket{le=\"0.05\"} 24054\nhttp_request_duration_seconds_bucket{le=\"0.1\"} 33444\nhttp_request_duration_seconds_bucket{le=\"0.2\"} 100392\nhttp_request_duration_seconds_bucket{le=\"0.5\"} 129389\nhttp_request_duration_seconds_bucket{le=\"1\"} 133988\nhttp_request_duration_seconds_bucket{le=\"+Inf\"} 144320\nhttp_request_duration_seconds_sum 53423\nhttp_request_duration_seconds_count 144320\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/prometheus-text-912.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.637Z"
+}

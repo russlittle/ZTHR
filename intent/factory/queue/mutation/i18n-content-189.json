@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "i18n-content",
+  "mutant": {
+    "id": "189",
+    "line": 229,
+    "column": 71,
+    "endLine": 229,
+    "endColumn": 100,
+    "mutator": "MethodExpression",
+    "original": "(values[f.name] ?? '').trim()",
+    "replacement": "values[f.name] ?? ''",
+    "lineText": "const missing = this.o.schema.fields.filter((f) => f.required && !(values[f.name] ?? '').trim()).map((f) => f.name);",
+    "prevText": "this.checkValues(values, 'any');",
+    "nextText": "if (missing.length) throw new ContentError(`the source needs: ${missing.join(', ')}`);"
+  },
+  "mayEdit": [
+    "intent/blocks/i18n-content/i18n-content.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/i18n-content-189.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"i18n-content\". Mutant: line 229:71-229:100, mutator MethodExpression: \"(values[f.name] ?? '').trim()\" becomes \"values[f.name] ?? ''\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/i18n-content/index.ts (> marks the mutated line):\n   223  \n   224    // ------------------------------------------------------------ source\n   225  \n   226    create(id: string, values: Readonly<Record<string, string>>): void {\n   227      if (this.items.has(id)) throw new ContentError(`content ${id} already exists`);\n   228      this.checkValues(values, 'any');\n>  229      const missing = this.o.schema.fields.filter((f) => f.required && !(values[f.name] ?? '').trim()).map((f) => f.name);\n   230      if (missing.length) throw new ContentError(`the source needs: ${missing.join(', ')}`);\n   231      const slugField = this.o.schema.slugField;\n   232      if (slugField !== undefined) this.claimSlug(this.source, id, values[slugField], undefined);\n   233      const item: Item = { id, source: {}, shared: {}, revision: 1, variants: new Map() };\n   234      for (const [k, v] of Object.entries(values)) (this.defs.get(k)!.translatable ? item.source : item.shared)[k] = v;\n   235      this.items.set(id, item);\n\nTest file style (intent/blocks/i18n-content/i18n-content.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Content, ContentError, canonicalLocale, maskPlaceholders, unmaskPlaceholders } from './index.ts';\nimport type { Options, Translator } from './index.ts';\n\nconst schema = {\n  fields: [\n    { name: 'title', translatable: true, required: true, maxLength: 40 },\n    { name: 'slug', translatable: true },\n    { name: 'body', translatable: true },\n    { name: 'price', translatable: false },\n  ],\n  slugField: 'slug',\n} as const;\n\nconst make = (o: Partial<Options> = {}) => {\n  let t = 100;\n  return new Content({ schema, sourceLocale: 'en', locales: ['fr', 'fr-CA', 'es', 'ar', 'nb', 'no'], now: () => ++t, ...o });\n};\n\nconst seeded = (o: Partial<Options> = {}) => {\n  const c = make(o);\n  c.create('a1', { title: 'Hello world', slug: 'hello-world', body: 'Welcome, {name}! See <b>this</b> at https://x.example/a?b=1.', price: '10' });\n  return c;\n};\n\nconst publish = (c: Content, id: string, locale: string, values: Record<string, string>, by = 'tara', reviewer = 'rex') => {\n  c.setTranslation(id, locale, values, by);\n  c.submit(id, locale, by);\n  c.approve(id, locale, reviewer);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/i18n-content-189.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.664Z"
+}

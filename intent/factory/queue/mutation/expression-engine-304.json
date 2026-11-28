@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "expression-engine",
+  "mutant": {
+    "id": "304",
+    "line": 139,
+    "column": 135,
+    "endLine": 139,
+    "endColumn": 138,
+    "mutator": "StringLiteral",
+    "original": "'/'",
+    "replacement": "\"\"",
+    "lineText": "static readonly LEVELS: string[][] = [['??'], ['||'], ['&&'], ['===', '!==', '==', '!='], ['<', '>', '<=', '>='], ['+', '-'], ['*', '/', '%']];",
+    "prevText": "}",
+    "nextText": "binary(level: number): Ast {"
+  },
+  "mayEdit": [
+    "intent/blocks/expression-engine/expression-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-304.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"expression-engine\". Mutant: line 139:135-139:138, mutator StringLiteral: \"'/'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/expression-engine/index.ts (> marks the mutated line):\n   133    expression(): Ast { return this.nest(() => this.ternary()); }\n   134    ternary(): Ast {\n   135      const c = this.binary(0);\n   136      if (this.eat('?')) { const a = this.expression(); this.need(':'); return { t: 'cond', c, a, b: this.expression() }; }\n   137      return c;\n   138    }\n>  139    static readonly LEVELS: string[][] = [['??'], ['||'], ['&&'], ['===', '!==', '==', '!='], ['<', '>', '<=', '>='], ['+', '-'], ['*', '/', '%']];\n   140    binary(level: number): Ast {\n   141      if (level >= Parser.LEVELS.length) return this.power();\n   142      let l = this.binary(level + 1);\n   143      for (;;) {\n   144        const t = this.cur;\n   145        if (t.k === 'op' && Parser.LEVELS[level]!.includes(t.v)) {\n\nTest file style (intent/blocks/expression-engine/expression-engine.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  compile, evaluate, references, render, resolve, resolveDeep, compileTemplate,\n  ExpressionSyntaxError, ExpressionRuntimeError, ExpressionLimitError, ExpressionForbidden,\n} from './index.ts';\n\nconst ev = (s: string, ctx: unknown = {}) => evaluate(s, ctx);\n\ntest('arithmetic and precedence', () => {\n  assert.equal(ev('1 + 2 * 3'), 7);\n  assert.equal(ev('(1 + 2) * 3'), 9);\n  assert.equal(ev('2 ** 3 ** 2'), 512);\n  assert.equal(ev('10 % 4'), 2);\n  assert.equal(ev('-3 + 5'), 2);\n});\n\ntest('strings, concatenation and comparison', () => {\n  assert.equal(ev('\"a\" + \"b\" + 1'), 'ab1');\n  assert.equal(ev('\"abc\" < \"abd\"'), true);\n  assert.equal(ev('1 === 1 && 2 !== 3'), true);\n});\n\ntest('logic operators return operands', () => {\n  assert.equal(ev('0 || \"x\"'), 'x');\n  assert.equal(ev('\"a\" && \"b\"'), 'b');\n  assert.equal(ev('null ?? 5'), 5);\n  assert.equal(ev('0 ?? 5'), 0);\n  assert.equal(ev('true ? 1 : 2'), 1);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-304.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.773Z"
+}

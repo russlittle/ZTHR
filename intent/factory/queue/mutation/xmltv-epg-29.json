@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "xmltv-epg",
+  "mutant": {
+    "id": "29",
+    "line": 34,
+    "column": 112,
+    "endLine": 34,
+    "endColumn": 120,
+    "mutator": "MethodExpression",
+    "original": "s.trim()",
+    "replacement": "s",
+    "lineText": "const m = /^(\\d{4})(\\d{2})?(\\d{2})?(\\d{2})?(\\d{2})?(\\d{2})?\\s*(?:(Z|UTC|GMT)|([+-])(\\d{2}):?(\\d{2}))?$/.exec(s.trim());",
+    "prevText": "export function parseXmltvTime(s: string): number | undefined {",
+    "nextText": "if (!m) return undefined;"
+  },
+  "mayEdit": [
+    "intent/blocks/xmltv-epg/xmltv-epg.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/xmltv-epg-29.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"xmltv-epg\". Mutant: line 34:112-34:120, mutator MethodExpression: \"s.trim()\" becomes \"s\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/xmltv-epg/index.ts (> marks the mutated line):\n    28  export class XmltvError extends Error {}\n    29  \n    30  // ---------------------------------------------------------------- times\n    31  \n    32  /** \"YYYY[MM[DD[hh[mm[ss]]]]] [+-hhmm]\" as epoch milliseconds; no zone means UTC. Impossible dates are refused. */\n    33  export function parseXmltvTime(s: string): number | undefined {\n>   34    const m = /^(\\d{4})(\\d{2})?(\\d{2})?(\\d{2})?(\\d{2})?(\\d{2})?\\s*(?:(Z|UTC|GMT)|([+-])(\\d{2}):?(\\d{2}))?$/.exec(s.trim());\n    35    if (!m) return undefined;\n    36    const [y, mo, d, h, mi, se] = [m[1], m[2] ?? '01', m[3] ?? '01', m[4] ?? '00', m[5] ?? '00', m[6] ?? '00'].map(Number) as [number, number, number, number, number, number];\n    37    const t = Date.UTC(y, mo - 1, d, h, mi, se);\n    38    const c = new Date(t);\n    39    if (c.getUTCFullYear() !== y || c.getUTCMonth() !== mo - 1 || c.getUTCDate() !== d || h > 23 || mi > 59 || se > 60) return undefined;\n    40    let off = 0;\n\nTest file style (intent/blocks/xmltv-epg/xmltv-epg.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Guide, XmltvError, episodeKey, episodeOf, fold, formatXmltvTime, globMatch, localParts, mapChannels, normaliseChannelName, parseXmltv, parseXmltvTime, pick, plan, ruleMatches, toXmltv } from './index.ts';\nimport type { Programme, RecordingRule } from './index.ts';\n\nconst H = 3_600_000;\nconst T0 = Date.UTC(2026, 0, 15, 20, 0, 0);\n\nconst XML = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE tv SYSTEM \"xmltv.dtd\">\n<tv generator-info-name=\"test-grabber\" source-info-name=\"Example &amp; Co\">\n<channel id=\"bbc1.uk\"><display-name lang=\"en\">BBC One HD</display-name><display-name>101</display-name><icon src=\"http://x.test/bbc1.png\"/><url>http://bbc.test</url></channel>\n<channel id=\"itv.uk\"><display-name>ITV</display-name></channel>\n<programme start=\"20260115200000 +0000\" stop=\"20260115210000 +0000\" channel=\"bbc1.uk\">\n <title lang=\"en\">News &amp; Weather</title><title lang=\"fr\">Infos</title><sub-title>Evening edition</sub-title><desc lang=\"en\">Today's headlines &nbsp;and more</desc>\n <credits><presenter>Ann Anchor</presenter><actor role=\"Self\">Bob Guest</actor></credits><date>2026</date><category lang=\"en\">News</category><length units=\"minutes\">60</length>\n <episode-num system=\"xmltv_ns\">2.4.0/2</episode-num><episode-num system=\"onscreen\">S03E05</episode-num><episode-num system=\"dd_progid\">EP012345670042</episode-num>\n <video><aspect>16:9</aspect><quality>HDTV</quality></video><audio><stereo>stereo</stereo></audio><new/><subtitles type=\"teletext\"/><rating system=\"BBFC\"><value>PG</value></rating><star-rating><value>4/5</value></star-rating>\n</programme>\n<programme start=\"20260115210000 +0000\" channel=\"bbc1.uk\"><title>Drama</title></programme>\n<programme start=\"20260115220000 +0100\" stop=\"20260115230000 +0100\" channel=\"itv.uk\"><title>Late Show</title><previously-shown/></programme>\n<programme start=\"20260230100000\" channel=\"itv.uk\"><title>Impossible date</title></programme>\n<programme start=\"20260115100000\" channel=\"itv.uk\"><desc>No title</desc></programme>\n<programme start=\"20260115110000\" stop=\"20260115100000\" channel=\"itv.uk\"><title>Stop before start</title></programme>\n<programme start=\"20260115120000\" channel=\"ghost.uk\"><title>Orphan</title></programme>\n</tv>`;\n\ntest('XMLTV times: forms, zones, calendar checks, round trip', () => {\n  assert.equal(parseXmltvTime('20260115203000 +0100'), Date.UTC(2026, 0, 15, 19, 30, 0));\n  assert.equal(parseXmltvTime('20260115203000'), Date.UTC(2026, 0, 15, 20, 30, 0));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/xmltv-epg-29.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:16.725Z"
+}

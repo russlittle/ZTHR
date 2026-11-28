@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "node-registry",
+  "mutant": {
+    "id": "65",
+    "line": 62,
+    "column": 106,
+    "endLine": 62,
+    "endColumn": 130,
+    "mutator": "ArrowFunction",
+    "original": "(e) => JSON.stringify(e)",
+    "replacement": "() => undefined",
+    "lineText": "if (schema.enum && !schema.enum.some((e) => sameJson(e, value))) bad(`must be one of ${schema.enum.map((e) => JSON.stringify(e)).join(', ')}`);",
+    "prevText": "if (schema.const !== undefined && !sameJson(schema.const, value)) bad(`must equal ${JSON.stringify(schema.const)}`);",
+    "nextText": "if (typeof value === 'number') {"
+  },
+  "mayEdit": [
+    "intent/blocks/node-registry/node-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/node-registry-65.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"node-registry\". Mutant: line 62:106-62:130, mutator ArrowFunction: \"(e) => JSON.stringify(e)\" becomes \"() => undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/node-registry/index.ts (> marks the mutated line):\n    56      if (!fits) {\n    57        bad(`expected ${allowed.join(' or ')}, got ${t}`);\n    58        return out;\n    59      }\n    60    }\n    61    if (schema.const !== undefined && !sameJson(schema.const, value)) bad(`must equal ${JSON.stringify(schema.const)}`);\n>   62    if (schema.enum && !schema.enum.some((e) => sameJson(e, value))) bad(`must be one of ${schema.enum.map((e) => JSON.stringify(e)).join(', ')}`);\n    63    if (typeof value === 'number') {\n    64      if (schema.minimum !== undefined && value < schema.minimum) bad(`must be at least ${schema.minimum}`);\n    65      if (schema.maximum !== undefined && value > schema.maximum) bad(`must be at most ${schema.maximum}`);\n    66    }\n    67    if (typeof value === 'string') {\n    68      if (schema.minLength !== undefined && value.length < schema.minLength) bad(`must be at least ${schema.minLength} characters`);\n\nTest file style (intent/blocks/node-registry/node-registry.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { InvalidDefinition, InvalidParameters, Registry, UnknownNode, checkSchema, withDefaults } from './index.ts';\nimport type { CredentialType, JsonSchema, NodeType } from './index.ts';\n\nconst apiKey: CredentialType = {\n  name: 'slackApi',\n  displayName: 'Slack API',\n  schema: { type: 'object', required: ['token'], additionalProperties: false, properties: { token: { type: 'string', minLength: 8, description: 'Bot token' }, workspace: { type: 'string' } } },\n  secretFields: ['token'],\n  authenticate: { kind: 'bearer', field: 'token' },\n};\n\nconst slack: NodeType = {\n  name: 'slack',\n  displayName: 'Slack',\n  group: 'action',\n  versions: [\n    {\n      version: 1,\n      credentials: ['slackApi'],\n      operations: [{ name: 'post', description: 'Post a message', parameters: { type: 'object', required: ['channel', 'text'], properties: { channel: { type: 'string' }, text: { type: 'string' } } } }],\n    },\n    {\n      version: 2,\n      credentials: ['slackApi'],\n      migrateFromPrevious: [{ rename: { channel: 'channelId' } }, { set: { unfurl: false } }],\n      operations: [\n        {\n          name: 'post',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/node-registry-65.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.623Z"
+}

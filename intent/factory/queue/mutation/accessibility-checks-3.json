@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "accessibility-checks",
+  "mutant": {
+    "id": "3",
+    "line": 66,
+    "column": 44,
+    "endLine": 66,
+    "endColumn": 53,
+    "mutator": "StringLiteral",
+    "original": "'#ff0000'",
+    "replacement": "\"\"",
+    "lineText": "black: '#000000', white: '#ffffff', red: '#ff0000', green: '#008000', blue: '#0000ff', yellow: '#ffff00', gray: '#808080', grey: '#808080', silver: '#c0c0c0',",
+    "prevText": "const NAMED: Readonly<Record<string, string>> = {",
+    "nextText": "maroon: '#800000', purple: '#800080', fuchsia: '#ff00ff', magenta: '#ff00ff', lime: '#00ff00', olive: '#808000', navy: '#000080', teal: '#008080', aqua: '#00ffff',"
+  },
+  "mayEdit": [
+    "intent/blocks/accessibility-checks/accessibility-checks.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/accessibility-checks-3.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"accessibility-checks\". Mutant: line 66:44-66:53, mutator StringLiteral: \"'#ff0000'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/accessibility-checks/index.ts (> marks the mutated line):\n    60    readonly g: number;\n    61    readonly b: number;\n    62    readonly a: number;\n    63  }\n    64  \n    65  const NAMED: Readonly<Record<string, string>> = {\n>   66    black: '#000000', white: '#ffffff', red: '#ff0000', green: '#008000', blue: '#0000ff', yellow: '#ffff00', gray: '#808080', grey: '#808080', silver: '#c0c0c0',\n    67    maroon: '#800000', purple: '#800080', fuchsia: '#ff00ff', magenta: '#ff00ff', lime: '#00ff00', olive: '#808000', navy: '#000080', teal: '#008080', aqua: '#00ffff',\n    68    cyan: '#00ffff', orange: '#ffa500', pink: '#ffc0cb', brown: '#a52a2a', gold: '#ffd700', darkgray: '#a9a9a9', darkgrey: '#a9a9a9', lightgray: '#d3d3d3', lightgrey: '#d3d3d3',\n    69    dimgray: '#696969', dimgrey: '#696969', darkblue: '#00008b', darkred: '#8b0000', darkgreen: '#006400', transparent: '#00000000',\n    70  };\n    71  \n    72  const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));\n\nTest file style (intent/blocks/accessibility-checks/accessibility-checks.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { accessibleName, check, composite, contrastRatio, focusOrder, formatReport, luminance, parseColor } from './index.ts';\nimport { parse, query } from '../html-parse/index.ts';\n\nconst rules = (html: string, o = {}) => check(html, o).findings.map((f) => f.rule);\nconst only = (html: string, rule: string, o = {}) => check(html, o).findings.filter((f) => f.rule === rule);\n\ntest('contrast ratios match the WCAG definition at its known points', () => {\n  const white = { r: 255, g: 255, b: 255 };\n  assert.equal(contrastRatio({ r: 0, g: 0, b: 0 }, white), 21);\n  assert.equal(contrastRatio(white, white), 1);\n  assert.equal(contrastRatio(parseColor('#767676')!, white).toFixed(2), '4.54');\n  assert.equal(contrastRatio(parseColor('#777777')!, white).toFixed(2), '4.48');\n  assert.equal(contrastRatio(parseColor('#ff0000')!, white).toFixed(2), '4.00');\n  assert.equal(contrastRatio(parseColor('#595959')!, white).toFixed(2), '7.00');\n  assert.equal(luminance({ r: 255, g: 255, b: 255 }), 1);\n  assert.equal(luminance({ r: 0, g: 0, b: 0 }), 0);\n  assert.equal(contrastRatio(white, parseColor('#767676')!), contrastRatio(parseColor('#767676')!, white), 'order does not matter');\n});\n\ntest('colours read in every common form, and unknown ones are not guessed', () => {\n  assert.deepEqual(parseColor('#fff'), { r: 255, g: 255, b: 255, a: 1 });\n  assert.deepEqual(parseColor('#336699'), { r: 51, g: 102, b: 153, a: 1 });\n  assert.deepEqual(parseColor('#33669980'), { r: 51, g: 102, b: 153, a: 128 / 255 });\n  assert.deepEqual(parseColor('rgb(10, 20, 30)'), { r: 10, g: 20, b: 30, a: 1 });\n  assert.deepEqual(parseColor('rgba(10 20 30 / 50%)'), { r: 10, g: 20, b: 30, a: 0.5 });\n  assert.deepEqual(parseColor('rgb(100%, 0%, 0%)'), { r: 255, g: 0, b: 0, a: 1 });\n  assert.deepEqual(parseColor('hsl(0, 100%, 50%)'), { r: 255, g: 0, b: 0, a: 1 });\n  assert.deepEqual(parseColor('hsl(120 100% 25%)'), { r: 0, g: 128, b: 0, a: 1 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/accessibility-checks-3.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:33.550Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "ocs-share-api",
+  "mutant": {
+    "id": "103",
+    "line": 156,
+    "column": 7,
+    "endLine": 156,
+    "endColumn": 51,
+    "mutator": "LogicalOperator",
+    "original": "p.length > 4096 || /[\\u0000-\\u001f]/.test(p)",
+    "replacement": "p.length > 4096 && /[\\u0000-\\u001f]/.test(p)",
+    "lineText": "if (p.length > 4096 || /[\\u0000-\\u001f]/.test(p)) throw new Fail(400, 'that is not a path');",
+    "prevText": "if (p === undefined || p === '') throw new Fail(400, 'Please specify a file or folder path');",
+    "nextText": "const parts = `/${p}`.split('/').filter((s) => s !== '');"
+  },
+  "mayEdit": [
+    "intent/blocks/ocs-share-api/ocs-share-api.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ocs-share-api-103.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ocs-share-api\". Mutant: line 156:7-156:51, mutator LogicalOperator: \"p.length > 4096 || /[\\\\u0000-\\\\u001f]/.test(p)\" becomes \"p.length > 4096 && /[\\\\u0000-\\\\u001f]/.test(p)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ocs-share-api/index.ts (> marks the mutated line):\n   150    for (const [k, v] of new URLSearchParams(body)) if (k !== '__proto__') out[k] = v;\n   151    return out;\n   152  }\n   153  \n   154  function cleanPath(p: string | undefined): string {\n   155    if (p === undefined || p === '') throw new Fail(400, 'Please specify a file or folder path');\n>  156    if (p.length > 4096 || /[\\u0000-\\u001f]/.test(p)) throw new Fail(400, 'that is not a path');\n   157    const parts = `/${p}`.split('/').filter((s) => s !== '');\n   158    if (parts.some((s) => s === '..' || s === '.')) throw new Fail(400, 'that is not a path');\n   159    return `/${parts.join('/')}`;\n   160  }\n   161  \n   162  function wholeNumber(v: string, what: string): number {\n\nTest file style (intent/blocks/ocs-share-api/ocs-share-api.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ALL, Grants, memoryGrants } from '../grants/index.ts';\nimport { CREATE, DELETE, FILE_MAX, OcsShares, READ, SHARE, UPDATE, parseParams, permissionNames, toXml } from './index.ts';\nimport type { Env, Reply, Target } from './index.ts';\n\nconst NOW = Date.UTC(2026, 2, 10, 15, 30);\nconst BASEPATH = '/ocs/v2.php/apps/files_sharing/api/v1/shares';\n\ninterface Node extends Target {\n  parent?: number;\n}\nfunction world() {\n  const nodes: Node[] = [\n    { id: 1, kind: 'folder', path: '/Docs', owner: 'ana' },\n    { id: 2, kind: 'file', path: '/Docs/plan.txt', owner: 'ana', mimetype: 'text/plain', parent: 1 },\n    { id: 3, kind: 'file', path: '/notes.md', owner: 'ana', mimetype: 'text/markdown' },\n    { id: 4, kind: 'folder', path: '/Docs/Sub', owner: 'ana', parent: 1 },\n  ];\n  const groups: Record<string, string[]> = { bo: ['team'], cy: ['team'], ana: [] };\n  const grants = new Grants(memoryGrants(), { now: () => NOW });\n  const chainOf = (n: Node) => {\n    const c: { id: number; kind: 'file' | 'folder' }[] = [];\n    for (let x: Node | undefined = n; x; x = nodes.find((y) => y.id === x!.parent)) c.push({ id: x.id, kind: x.kind });\n    return c;\n  };\n  const env: Env = {\n    find: async (user, path) => {\n      const n = nodes.find((x) => x.path === path);\n      if (!n) return undefined;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ocs-share-api-103.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.870Z"
+}

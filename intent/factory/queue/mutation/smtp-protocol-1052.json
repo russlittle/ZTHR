@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "smtp-protocol",
+  "mutant": {
+    "id": "1052",
+    "line": 541,
+    "column": 54,
+    "endLine": 541,
+    "endColumn": 68,
+    "mutator": "ConditionalExpression",
+    "original": "k !== 'NOTIFY'",
+    "replacement": "true",
+    "lineText": "for (const k of Object.keys(cmd.params)) if (k !== 'NOTIFY' && k !== 'ORCPT') return this.bad(555, `${k} is not supported`, '5.5.4');",
+    "prevText": "if (this.state !== 'mail' && this.state !== 'rcpt') return this.bad(503, hello ? 'send MAIL first' : 'send EHLO or HELO first', '5.5.1');",
+    "nextText": "if (this.rcpts.length >= this.o.maxRecipients) return this.bad(452, 'too many recipients', '4.5.3');"
+  },
+  "mayEdit": [
+    "intent/blocks/smtp-protocol/smtp-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-1052.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"smtp-protocol\". Mutant: line 541:54-541:68, mutator ConditionalExpression: \"k !== 'NOTIFY'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/smtp-protocol/index.ts (> marks the mutated line):\n   535          this.params = { ...cmd.params };\n   536          this.state = 'mail';\n   537          return this.ok(250, 'sender OK', '2.1.0');\n   538        }\n   539        case 'RCPT': {\n   540          if (this.state !== 'mail' && this.state !== 'rcpt') return this.bad(503, hello ? 'send MAIL first' : 'send EHLO or HELO first', '5.5.1');\n>  541          for (const k of Object.keys(cmd.params)) if (k !== 'NOTIFY' && k !== 'ORCPT') return this.bad(555, `${k} is not supported`, '5.5.4');\n   542          if (this.rcpts.length >= this.o.maxRecipients) return this.bad(452, 'too many recipients', '4.5.3');\n   543          const v = this.o.onRecipient?.(cmd.to.address, this.env());\n   544          if (v && v.code >= 400) return this.verdict(v);\n   545          this.rcpts.push(cmd.to.address);\n   546          this.state = 'rcpt';\n   547          return this.ok(250, 'recipient OK', '2.1.5');\n\nTest file style (intent/blocks/smtp-protocol/smtp-protocol.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadCommand, ClientSession, ProtocolError, ReplyParser, ServerSession, classify, endsGroup, formatReply, parseCommand, parsePath, parsePlain, parseXoauth2, pipelineGroups, plainInitial, prepareBody, xoauth2Initial, type ClientOptions, type ClientResult, type Envelope, type ServerOptions } from './index.ts';\n\nconst mkServer = (o: Partial<ServerOptions> = {}) => {\n  const got: { env: Envelope; body: string }[] = [];\n  const s = new ServerSession({ hostname: 'mx.example.org', onMessage: (env, body) => void got.push({ env, body: body.toString('latin1') }), ...o });\n  return { s, got };\n};\nconst talk = (s: ServerSession, ...lines: string[]) => s.feed(lines.join(''));\nconst replies = (text: string) => new ReplyParser().push(text);\nconst codes = (text: string) => replies(text).map((r) => r.code);\n\n/** Runs a client against a server in memory, answering STARTTLS when asked. */\nfunction run(server: ServerSession, opts: ClientOptions) {\n  const client = new ClientSession(opts);\n  const parser = new ReplyParser();\n  const wire: string[] = [];\n  let inbox = server.greeting();\n  let result: ClientResult | undefined;\n  for (let guard = 0; guard < 200 && !result; guard++) {\n    wire.push(`S: ${inbox}`);\n    let outgoing = '';\n    let tls = false;\n    for (const r of parser.push(inbox)) {\n      const step = client.receive(r);\n      outgoing += step.send;\n      if (step.startTls) tls = true;\n      if (step.done) result = step.done;\n    }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-1052.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.968Z"
+}

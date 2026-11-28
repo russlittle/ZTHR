@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "smtp-protocol",
+  "mutant": {
+    "id": "384",
+    "line": 174,
+    "column": 38,
+    "endLine": 174,
+    "endColumn": 60,
+    "mutator": "Regex",
+    "original": "/^[A-Za-z0-9-]+=\\S+$/u",
+    "replacement": "/^[A-Za-z0-9-]+=\\s+$/u",
+    "lineText": "if (!PARAMS.test(p) && !(utf8 && /^[A-Za-z0-9-]+=\\S+$/u.test(p))) throw new BadCommand(501, `\"${p.slice(0, 30)}\" is not a valid parameter`);",
+    "prevText": "for (const p of rest.split(' ').filter(Boolean)) {",
+    "nextText": "const [k, v] = p.split(/=(.*)/s);"
+  },
+  "mayEdit": [
+    "intent/blocks/smtp-protocol/smtp-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-384.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"smtp-protocol\". Mutant: line 174:38-174:60, mutator Regex: \"/^[A-Za-z0-9-]+=\\\\S+$/u\" becomes \"/^[A-Za-z0-9-]+=\\\\s+$/u\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/smtp-protocol/index.ts (> marks the mutated line):\n   168  \n   169  const PARAMS = /^[A-Za-z0-9][A-Za-z0-9-]*(=[\\x21-\\x3c\\x3e-\\x7e]+)?$/;\n   170  \n   171  function params(rest: string, utf8: boolean): Record<string, string> {\n   172    const out: Record<string, string> = {};\n   173    for (const p of rest.split(' ').filter(Boolean)) {\n>  174      if (!PARAMS.test(p) && !(utf8 && /^[A-Za-z0-9-]+=\\S+$/u.test(p))) throw new BadCommand(501, `\"${p.slice(0, 30)}\" is not a valid parameter`);\n   175      const [k, v] = p.split(/=(.*)/s);\n   176      const key = k!.toUpperCase();\n   177      if (Object.hasOwn(out, key)) throw new BadCommand(501, `${key} is given twice`);\n   178      out[key] = v ?? '';\n   179    }\n   180    return out;\n\nTest file style (intent/blocks/smtp-protocol/smtp-protocol.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadCommand, ClientSession, ProtocolError, ReplyParser, ServerSession, classify, endsGroup, formatReply, parseCommand, parsePath, parsePlain, parseXoauth2, pipelineGroups, plainInitial, prepareBody, xoauth2Initial, type ClientOptions, type ClientResult, type Envelope, type ServerOptions } from './index.ts';\n\nconst mkServer = (o: Partial<ServerOptions> = {}) => {\n  const got: { env: Envelope; body: string }[] = [];\n  const s = new ServerSession({ hostname: 'mx.example.org', onMessage: (env, body) => void got.push({ env, body: body.toString('latin1') }), ...o });\n  return { s, got };\n};\nconst talk = (s: ServerSession, ...lines: string[]) => s.feed(lines.join(''));\nconst replies = (text: string) => new ReplyParser().push(text);\nconst codes = (text: string) => replies(text).map((r) => r.code);\n\n/** Runs a client against a server in memory, answering STARTTLS when asked. */\nfunction run(server: ServerSession, opts: ClientOptions) {\n  const client = new ClientSession(opts);\n  const parser = new ReplyParser();\n  const wire: string[] = [];\n  let inbox = server.greeting();\n  let result: ClientResult | undefined;\n  for (let guard = 0; guard < 200 && !result; guard++) {\n    wire.push(`S: ${inbox}`);\n    let outgoing = '';\n    let tls = false;\n    for (const r of parser.push(inbox)) {\n      const step = client.receive(r);\n      outgoing += step.send;\n      if (step.startTls) tls = true;\n      if (step.done) result = step.done;\n    }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-384.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.908Z"
+}

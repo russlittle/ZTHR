@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "notifications-inbox",
+  "mutant": {
+    "id": "345",
+    "line": 261,
+    "column": 54,
+    "endLine": 261,
+    "endColumn": 76,
+    "mutator": "MethodExpression",
+    "original": "k.startsWith('\\u0000')",
+    "replacement": "k.endsWith('\\u0000')",
+    "lineText": "return [...by.entries()].map(([k, m]) => ({ key: k.startsWith('\\u0000') ? m[0]!.id : m[0]!.groupKey!, count: m.length, unread: m.filter((i) => i.readAt === undefined).length, latest: m[0]!, ids: m.map((i) => i.id) })).sort((a, b) => newer(a.latest, b.latest));",
+    "prevText": "}",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/notifications-inbox/notifications-inbox.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/notifications-inbox-345.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"notifications-inbox\". Mutant: line 261:54-261:76, mutator MethodExpression: \"k.startsWith('\\\\u0000')\" becomes \"k.endsWith('\\\\u0000')\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/notifications-inbox/index.ts (> marks the mutated line):\n   255      }\n   256      const by = new Map<string, Item[]>();\n   257      for (const i of items) {\n   258        const k = i.groupKey === undefined ? `\\u0000${i.id}` : `${i.app}\\u0000${i.groupKey}`;\n   259        by.set(k, [...(by.get(k) ?? []), i]);\n   260      }\n>  261      return [...by.entries()].map(([k, m]) => ({ key: k.startsWith('\\u0000') ? m[0]!.id : m[0]!.groupKey!, count: m.length, unread: m.filter((i) => i.readAt === undefined).length, latest: m[0]!, ids: m.map((i) => i.id) })).sort((a, b) => newer(a.latest, b.latest));\n   262    }\n   263  \n   264    unreadCount(person: string): { total: number; byApp: Record<string, number> } {\n   265      this.expire(person);\n   266      const byApp: Record<string, number> = {};\n   267      let total = 0;\n\nTest file style (intent/blocks/notifications-inbox/notifications-inbox.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Inbox, InboxError, safeLink } from './index.ts';\n\nconst H = 3_600_000;\nconst D = 24 * H;\nfunction mk(o: ConstructorParameters<typeof Inbox>[0] = {}) {\n  let t = 1_700_000_000_000;\n  const inbox = new Inbox({ now: () => t, hosts: ['app.example.com'], ...o });\n  return { inbox, tick: (ms: number) => void (t += ms), now: () => t };\n}\nconst base = { app: 'docs', kind: 'comment', title: 'Ana commented' };\n\ntest('an item is stored with cleaned text and appears in the list newest first', () => {\n  const { inbox, tick } = mk();\n  const a = inbox.add('u', { ...base, title: ' Hello\\u0000‮ world ', body: 'line1\\r\\nline2' });\n  tick(1000);\n  const b = inbox.add('u', { ...base, title: 'Second' });\n  assert.equal(a.title, 'Hello world');\n  assert.equal(a.body, 'line1\\nline2');\n  assert.deepEqual(inbox.list('u').items.map((i) => i.id), [b.id, a.id]);\n  assert.deepEqual(inbox.list('other').items, []);\n});\n\ntest('markup is kept as text, never interpreted', () => {\n  const { inbox } = mk();\n  const i = inbox.add('u', { ...base, title: '<img src=x onerror=alert(1)>' });\n  assert.equal(i.title, '<img src=x onerror=alert(1)>');\n  const d = inbox.digest('u', 0, { subject: 'You have {{count}}', line: '- {{title}}' })!;\n  assert.match(d.text, /<img src=x/, 'digest text is plain text, so it is not escaped to HTML either');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/notifications-inbox-345.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.754Z"
+}

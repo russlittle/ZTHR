@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webdav-props",
+  "mutant": {
+    "id": "770",
+    "line": 430,
+    "column": 26,
+    "endLine": 430,
+    "endColumn": 31,
+    "mutator": "ArithmeticOperator",
+    "original": "i + 1",
+    "replacement": "i - 1",
+    "lineText": "if (p[i] === '\\\\' && i + 1 < p.length) toks.push({ ch: p[++i]! });",
+    "prevText": "for (let i = 0; i < p.length; i++) {",
+    "nextText": "else if (p[i] === '%') {"
+  },
+  "mayEdit": [
+    "intent/blocks/webdav-props/webdav-props.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webdav-props-770.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webdav-props\". Mutant: line 430:26-430:31, mutator ArithmeticOperator: \"i + 1\" becomes \"i - 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webdav-props/index.ts (> marks the mutated line):\n   424  /** LIKE without regular expressions: % any run, _ one character, backslash escapes. Linear in the text per wildcard. */\n   425  export function like(text: string, pattern: string): boolean {\n   426    const t = [...text];\n   427    const toks: { any?: true; one?: true; ch?: string }[] = [];\n   428    const p = [...pattern];\n   429    for (let i = 0; i < p.length; i++) {\n>  430      if (p[i] === '\\\\' && i + 1 < p.length) toks.push({ ch: p[++i]! });\n   431      else if (p[i] === '%') {\n   432        if (!toks.length || !toks[toks.length - 1]!.any) toks.push({ any: true });\n   433      } else if (p[i] === '_') toks.push({ one: true });\n   434      else toks.push({ ch: p[i]! });\n   435    }\n   436    let ti = 0;\n\nTest file style (intent/blocks/webdav-props/webdav-props.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { DAV, parseXml } from '../dav/index.ts';\nimport type { El } from '../dav/index.ts';\nimport { Tree, memoryNodes } from '../tree/index.ts';\nimport { CS, OC, WebdavProps, hrefFor, like, relPath } from './index.ts';\nimport type { Options } from './index.ts';\n\nconst BASE = '/remote.php/dav/files/ana';\nconst ctx = { owner: 'ana', base: BASE };\nconst MTIME = 1_700_000_000;\n\nfunction mk(o: Options = {}) {\n  let n = 0;\n  const tree = new Tree(memoryNodes(), { now: () => MTIME, etag: () => `e${++n}` });\n  const dav = new WebdavProps(tree, o);\n  return { tree, dav };\n}\nconst file = async (tree: Tree, path: string, size = 10, extra: { mime?: string; checksums?: string[] } = {}, owner = 'ana') => (await tree.put(owner, path, { size, blob: `blob:${path}`, mtime: MTIME, ...extra })).node;\n\ninterface Row { href: string; props: Map<string, string>; status: Map<string, number>; rawStatus: number[] }\nfunction rows(xml: string): Row[] {\n  const root = parseXml(xml);\n  assert.deepEqual([root.ns, root.name], [DAV, 'multistatus']);\n  return root.children.map((r) => {\n    const props = new Map<string, string>();\n    const status = new Map<string, number>();\n    const rawStatus: number[] = [];\n    for (const c of r.children) {\n      if (c.name === 'status') rawStatus.push(Number(/ (\\d{3})/.exec(c.text)![1]));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webdav-props-770.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:13.960Z"
+}

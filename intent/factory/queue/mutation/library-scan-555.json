@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "library-scan",
+  "mutant": {
+    "id": "555",
+    "line": 302,
+    "column": 12,
+    "endLine": 302,
+    "endColumn": 54,
+    "mutator": "ConditionalExpression",
+    "original": "head < f.length - 1 && head < t.length - 1",
+    "replacement": "true",
+    "lineText": "while (head < f.length - 1 && head < t.length - 1 && f[head] === t[head]) head++;",
+    "prevText": "let head = 0;",
+    "nextText": "let tail = 0;"
+  },
+  "mayEdit": [
+    "intent/blocks/library-scan/library-scan.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/library-scan-555.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"library-scan\". Mutant: line 302:12-302:54, mutator ConditionalExpression: \"head < f.length - 1 && head < t.length - 1\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/library-scan/index.ts (> marks the mutated line):\n   296    const dm = new Map<string, number>();\n   297    for (const m of moved) {\n   298      if (m.how === 'case') continue;\n   299      const f = m.from.split('/');\n   300      const t = m.to.split('/');\n   301      let head = 0;\n>  302      while (head < f.length - 1 && head < t.length - 1 && f[head] === t[head]) head++;\n   303      let tail = 0;\n   304      while (tail < Math.min(f.length, t.length) - head && f[f.length - 1 - tail] === t[t.length - 1 - tail]) tail++;\n   305      if (tail === 0) continue; // the file itself was renamed\n   306      const from = f.slice(0, f.length - tail).join('/');\n   307      const to = t.slice(0, t.length - tail).join('/');\n   308      if (from !== to) dm.set(`${from}\\u0000${to}`, (dm.get(`${from}\\u0000${to}`) ?? 0) + 1);\n\nTest file style (intent/blocks/library-scan/library-scan.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Tree, memoryNodes } from '../tree/index.ts';\nimport { DEFAULT_IGNORES, IgnoreRules, ScanError, SuspiciousScan, WatchCoalescer, applyDiff, checkSafety, diffScan, loadCatalogue, type CatalogueEntry, type ScanEntry } from './index.ts';\n\nconst MB = 1_000_000;\nconst ce = (id: number, path: string, size: number, mtimeMs: number, extra: Partial<ScanEntry> = {}): CatalogueEntry => ({ id, path, size, mtimeMs, ...extra });\nconst se = (path: string, size: number, mtimeMs: number, extra: Partial<ScanEntry> = {}): ScanEntry => ({ path, size, mtimeMs, ...extra });\n\ntest('added, changed, unchanged and removed, with the modified-time tolerance of FAT', () => {\n  const cat = [ce(1, 'a.mkv', 5 * MB, 1_000_000), ce(2, 'b.mkv', 6 * MB, 2_000_000), ce(3, 'c.mkv', 7 * MB, 3_000_000), ce(4, 'd.mkv', 8 * MB, 4_000_000), ce(5, 'e.mkv', 9 * MB, 5_000_000)];\n  const scan = [se('a.mkv', 5 * MB, 1_001_999), se('b.mkv', 6 * MB, 2_002_001), se('c.mkv', 7 * MB + 1, 3_000_000), se('new.mkv', 1 * MB, 9_000_000), se('d.mkv', 8 * MB, 4_000_000)];\n  const d = diffScan(cat, scan);\n  assert.deepEqual(d.added.map((x) => x.path), ['new.mkv']);\n  assert.deepEqual(d.removed.map((x) => [x.id, x.path]), [[5, 'e.mkv']]);\n  assert.deepEqual(d.changed.map((x) => [x.path, ...x.why]), [['b.mkv', 'mtime'], ['c.mkv', 'size']]);\n  assert.equal(d.unchanged, 2, 'a.mkv is within 2 seconds and d.mkv is identical');\n  assert.deepEqual(d.moved, []);\n});\n\ntest('with hashes, a touched file is unchanged and a different hash is a change', () => {\n  const cat = [ce(1, 'a', 10, 1_000_000, { hash: 'sha256:aa' }), ce(2, 'b', 10, 1_000_000, { hash: 'sha256:bb' })];\n  const d = diffScan(cat, [se('a', 10, 9_000_000, { hash: 'sha256:aa' }), se('b', 10, 1_000_000, { hash: 'sha256:cc' })]);\n  assert.equal(d.unchanged, 1, 'same hash and size: touching does not change content');\n  assert.deepEqual(d.changed.map((x) => [x.path, ...x.why]), [['b', 'hash']]);\n});\n\ntest('a file the store gives the same id is the same file, even if its content changed', () => {\n  const cat = [ce(7, 'Movies/old.mkv', 5 * MB, 1_000_000, { fileId: '64:1001' })];\n  const d = diffScan(cat, [se('Movies/Sub/new name.mkv', 5 * MB + 10, 1_000_000, { fileId: '64:1001' })]);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/library-scan-555.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:46.763Z"
+}

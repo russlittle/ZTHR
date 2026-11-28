@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "datasource-queries",
+  "mutant": {
+    "id": "735",
+    "line": 457,
+    "column": 23,
+    "endLine": 457,
+    "endColumn": 107,
+    "mutator": "ConditionalExpression",
+    "original": "(q.sql ?? '').includes('{{session.') || tables.some((t) => src.policy[t]?.rowFilter)",
+    "replacement": "true",
+    "lineText": "const userBound = (q.sql ?? '').includes('{{session.') || tables.some((t) => src.policy[t]?.rowFilter);",
+    "prevText": "for (const t of tables) if (!this.allowedColumns(src, t, s)) throw new Forbidden(`you cannot read ${t}`);",
+    "nextText": "const scope = createHash('sha256').update(stable([[...s.roles].sort(), userBound ? s.user : '', userBound ? s.attrs ?? {} : {}])).digest('base64url').slice(0, 12);"
+  },
+  "mayEdit": [
+    "intent/blocks/datasource-queries/datasource-queries.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-735.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"datasource-queries\". Mutant: line 457:23-457:107, mutator ConditionalExpression: \"(q.sql ?? '').includes('{{session.') || tables.some((t) => src.policy[t]?.rowFilter)\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/datasource-queries/index.ts (> marks the mutated line):\n   451      if (!Number.isInteger(size) || size < 1 || size > maxSize) throw new BadArguments([{ path: 'size', code: 'range', message: `size is 1 to ${maxSize}` }]);\n   452      const page = r.page ?? 1;\n   453      if (!Number.isInteger(page) || page < 1 || page > 10_000) throw new BadArguments([{ path: 'page', code: 'range', message: 'page is 1 to 10000' }]);\n   454      if (r.cursor !== undefined && pg?.mode !== 'keyset') throw new BadArguments([{ path: 'cursor', code: 'unknown', message: 'this query does not use cursors' }]);\n   455      const tables = this.tablesOf(q, src);\n   456      for (const t of tables) if (!this.allowedColumns(src, t, s)) throw new Forbidden(`you cannot read ${t}`);\n>  457      const userBound = (q.sql ?? '').includes('{{session.') || tables.some((t) => src.policy[t]?.rowFilter);\n   458      const scope = createHash('sha256').update(stable([[...s.roles].sort(), userBound ? s.user : '', userBound ? s.attrs ?? {} : {}])).digest('base64url').slice(0, 12);\n   459      const key = createHash('sha256').update(stable([q.id, args, pg ? [pg.mode, size, page, r.cursor ?? null] : null, scope])).digest('base64url');\n   460      const exec = async (): Promise<QueryResult> => {\n   461        let built: Built;\n   462        let order: { column: string; dir: 'asc' | 'desc' }[] = [];\n   463        if (q.spec) {\n\nTest file style (intent/blocks/datasource-queries/datasource-queries.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { randomBytes } from 'node:crypto';\nimport { Engine, QueryDefError, BadArguments, Forbidden, BadCursor } from './index.ts';\nimport type { DataSource, Session } from './index.ts';\nimport type { Built } from '../sql-builder/index.ts';\nimport type { Collection } from '../query/index.ts';\n\nconst collections: Collection[] = [\n  { name: 'orders', fields: { id: { type: 'number' }, owner_id: { type: 'string' }, status: { type: 'string' }, total: { type: 'number' }, created: { type: 'date' }, note: { type: 'string', sensitive: true } } },\n  { name: 'customers', fields: { id: { type: 'number' }, name: { type: 'string' }, email: { type: 'string' } } },\n];\nconst ana: Session = { user: 'ana', roles: ['sales'], attrs: { team: 'north' } };\nconst boss: Session = { user: 'boss', roles: ['manager'] };\nconst nobody: Session = { user: 'x', roles: [] };\n\nfunction setup(rowsFor: (b: Built, n: number) => Record<string, unknown>[] = () => []) {\n  const calls: Built[] = [];\n  const src: DataSource = {\n    name: 'main',\n    dialect: 'pg',\n    collections,\n    policy: {\n      orders: { roles: ['sales', 'manager'], columns: { sales: ['id', 'status', 'total', 'created', 'owner_id'] }, rowFilter: (s) => (s.roles.includes('manager') ? undefined : { column: 'owner_id', op: '=', value: s.user }) },\n      customers: { roles: ['sales', 'manager'], columns: { sales: ['id', 'name'] } },\n    },\n    run: async (b) => {\n      calls.push(b);\n      return rowsFor(b, calls.length);\n    },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-735.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.959Z"
+}

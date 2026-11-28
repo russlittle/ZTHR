@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "smtp-protocol",
+  "mutant": {
+    "id": "1445",
+    "line": 808,
+    "column": 45,
+    "endLine": 808,
+    "endColumn": 74,
+    "mutator": "ArrowFunction",
+    "original": "(a) => /[^\\x20-\\x7e]/.test(a)",
+    "replacement": "() => undefined",
+    "lineText": "const utf8Addr = [m.from, ...m.to].some((a) => /[^\\x20-\\x7e]/.test(a));",
+    "prevText": "const eightBit = [...body].some((b) => b > 127);",
+    "nextText": "const size = this.ext.get('SIZE');"
+  },
+  "mayEdit": [
+    "intent/blocks/smtp-protocol/smtp-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-1445.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"smtp-protocol\". Mutant: line 808:45-808:74, mutator ArrowFunction: \"(a) => /[^\\\\x20-\\\\x7e]/.test(a)\" becomes \"() => undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/smtp-protocol/index.ts (> marks the mutated line):\n   802    private beginMail(): ClientStep {\n   803      const m = this.o.message;\n   804      for (const a of [m.from, ...m.to]) if (/[<>\\r\\n\\0]/.test(a)) return this.failLocal('mail', `the address ${JSON.stringify(a.slice(0, 40))} holds characters that cannot be sent`);\n   805      if (!m.to.length) return this.failLocal('mail', 'there is no recipient');\n   806      const body = prepareBody(m.body);\n   807      const eightBit = [...body].some((b) => b > 127);\n>  808      const utf8Addr = [m.from, ...m.to].some((a) => /[^\\x20-\\x7e]/.test(a));\n   809      const size = this.ext.get('SIZE');\n   810      if (size && Number(size) > 0 && body.length > Number(size)) return this.failLocal('mail', `the message is ${body.length} bytes; the server accepts ${size}`);\n   811      if (eightBit && !this.ext.has('8BITMIME')) return this.failLocal('mail', 'the message has 8-bit bytes and the server does not offer 8BITMIME; encode it as 7-bit first');\n   812      if (utf8Addr && !this.ext.has('SMTPUTF8')) return this.failLocal('mail', 'an address is not ASCII and the server does not offer SMTPUTF8');\n   813      const cmds = this.mailCommands();\n   814      if (this.o.pipelining !== false && this.ext.has('PIPELINING')) {\n\nTest file style (intent/blocks/smtp-protocol/smtp-protocol.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadCommand, ClientSession, ProtocolError, ReplyParser, ServerSession, classify, endsGroup, formatReply, parseCommand, parsePath, parsePlain, parseXoauth2, pipelineGroups, plainInitial, prepareBody, xoauth2Initial, type ClientOptions, type ClientResult, type Envelope, type ServerOptions } from './index.ts';\n\nconst mkServer = (o: Partial<ServerOptions> = {}) => {\n  const got: { env: Envelope; body: string }[] = [];\n  const s = new ServerSession({ hostname: 'mx.example.org', onMessage: (env, body) => void got.push({ env, body: body.toString('latin1') }), ...o });\n  return { s, got };\n};\nconst talk = (s: ServerSession, ...lines: string[]) => s.feed(lines.join(''));\nconst replies = (text: string) => new ReplyParser().push(text);\nconst codes = (text: string) => replies(text).map((r) => r.code);\n\n/** Runs a client against a server in memory, answering STARTTLS when asked. */\nfunction run(server: ServerSession, opts: ClientOptions) {\n  const client = new ClientSession(opts);\n  const parser = new ReplyParser();\n  const wire: string[] = [];\n  let inbox = server.greeting();\n  let result: ClientResult | undefined;\n  for (let guard = 0; guard < 200 && !result; guard++) {\n    wire.push(`S: ${inbox}`);\n    let outgoing = '';\n    let tls = false;\n    for (const r of parser.push(inbox)) {\n      const step = client.receive(r);\n      outgoing += step.send;\n      if (step.startTls) tls = true;\n      if (step.done) result = step.done;\n    }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-1445.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.995Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "table-schema",
+  "mutant": {
+    "id": "1395",
+    "line": 326,
+    "column": 31,
+    "endLine": 326,
+    "endColumn": 41,
+    "mutator": "ConditionalExpression",
+    "original": "d !== 'pg'",
+    "replacement": "true",
+    "lineText": "if (f.type === 'boolean' && d !== 'pg') out.push(`${c} IN (0, 1)`);",
+    "prevText": "if (f.type === 'select' && f.options) out.push(`${c} IN (${f.options.map((o) => lit(o, d)).join(', ')})`);",
+    "nextText": "return out;"
+  },
+  "mayEdit": [
+    "intent/blocks/table-schema/table-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/table-schema-1395.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"table-schema\". Mutant: line 326:31-326:41, mutator ConditionalExpression: \"d !== 'pg'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/table-schema/index.ts (> marks the mutated line):\n   320  function checksFor(_t: Table, f: Field, d: Dialect): string[] {\n   321    const c = qi(d, f.name);\n   322    const out: string[] = [];\n   323    if (f.min !== undefined) out.push(`${c} >= ${lit(f.min, d)}`);\n   324    if (f.max !== undefined) out.push(`${c} <= ${lit(f.max, d)}`);\n   325    if (f.type === 'select' && f.options) out.push(`${c} IN (${f.options.map((o) => lit(o, d)).join(', ')})`);\n>  326    if (f.type === 'boolean' && d !== 'pg') out.push(`${c} IN (0, 1)`);\n   327    return out;\n   328  }\n   329  \n   330  export interface Step {\n   331    readonly kind: 'create-table' | 'add-column' | 'drop-column' | 'rename-column' | 'change-type' | 'set-required' | 'drop-required' | 'set-unique' | 'drop-unique' | 'set-default' | 'drop-default' | 'set-checks' | 'drop-table';\n   332    readonly field?: string;\n\nTest file style (intent/blocks/table-schema/table-schema.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { checkTable, checkRow, findDuplicates, conversion, convertValue, previewConversion, createTable, dropTable, diff, toMigration, needsApproval, fieldTypes, SchemaError } from './index.ts';\nimport type { Table, Field } from './index.ts';\nimport { plan } from '../migrations/index.ts';\n\nconst f = (o: Partial<Field> & Pick<Field, 'id' | 'name' | 'type'>): Field => o;\nconst contacts: Table = {\n  name: 'contacts',\n  fields: [\n    f({ id: 'a', name: 'full_name', type: 'text', required: true, maxLength: 80 }),\n    f({ id: 'b', name: 'email', type: 'email', unique: true }),\n    f({ id: 'c', name: 'age', type: 'integer', min: 0, max: 150 }),\n    f({ id: 'd', name: 'stage', type: 'select', options: ['lead', 'won', \"it's lost\"], default: 'lead' }),\n    f({ id: 'e', name: 'tags', type: 'multiselect', options: ['x', 'y'] }),\n  ],\n};\n\ntest('registry covers the documented types', () => {\n  assert.deepEqual(fieldTypes().sort(), ['boolean', 'date', 'datetime', 'decimal', 'email', 'integer', 'json', 'longtext', 'multiselect', 'select', 'text', 'url', 'uuid']);\n});\n\ntest('a sound table has no problems', () => assert.deepEqual(checkTable(contacts), []));\n\ntest('bad names, reserved words, duplicates and misplaced options are reported', () => {\n  const bad: Table = { name: 'Users;', fields: [f({ id: 'a', name: 'select', type: 'text' }), f({ id: 'a', name: 'x', type: 'text', options: ['a'] }), f({ id: 'c', name: 'x', type: 'weird' as never }), f({ id: 'd', name: 'p', type: 'select' }), f({ id: 'e', name: 'j', type: 'json', unique: true })] };\n  const p = checkTable(bad).join('\\n');\n  for (const s of ['table name', 'not allowed', 'two fields have id a', 'two fields have this name', 'unknown type', 'options are 1 to 200', 'cannot be unique', 'options does not apply']) assert.match(p, new RegExp(s));\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/table-schema-1395.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:07.256Z"
+}

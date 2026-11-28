@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "client-registry",
+  "mutant": {
+    "id": "99",
+    "line": 125,
+    "column": 9,
+    "endLine": 125,
+    "endColumn": 20,
+    "mutator": "ConditionalExpression",
+    "original": "!u.hostname",
+    "replacement": "false",
+    "lineText": "if (!u.hostname) throw new ClientError('invalid_redirect_uri', 'a redirect URI needs a host');",
+    "prevText": "if (scheme === 'https') {",
+    "nextText": "return uri;"
+  },
+  "mayEdit": [
+    "intent/blocks/client-registry/client-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-99.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"client-registry\". Mutant: line 125:9-125:20, mutator ConditionalExpression: \"!u.hostname\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/client-registry/index.ts (> marks the mutated line):\n   119      throw new ClientError('invalid_redirect_uri', 'a redirect URI must be an absolute URI');\n   120    }\n   121    const scheme = u.protocol.slice(0, -1).toLowerCase();\n   122    if (DANGEROUS_SCHEMES.has(scheme)) throw new ClientError('invalid_redirect_uri', `the ${scheme}: scheme cannot be a redirect`);\n   123    if (u.username || u.password) throw new ClientError('invalid_redirect_uri', 'a redirect URI may not carry a user name or password');\n   124    if (scheme === 'https') {\n>  125      if (!u.hostname) throw new ClientError('invalid_redirect_uri', 'a redirect URI needs a host');\n   126      return uri;\n   127    }\n   128    if (scheme === 'http') {\n   129      if (isLoopbackIp(u.hostname)) return uri;\n   130      if (u.hostname === 'localhost' && o.allowLocalhostHost) return uri;\n   131      throw new ClientError('invalid_redirect_uri', 'plain http is allowed only for a loopback address such as 127.0.0.1 or [::1]');\n\nTest file style (intent/blocks/client-registry/client-registry.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ClientError, ClientRegistry, checkRedirectUri, matchRedirectUri, parseBasicAuthorization } from './index.ts';\n\n/** Deterministic randomness: each call yields bytes counting up from a seed. */\nfunction counter() {\n  let n = 0;\n  return (len: number) => {\n    n += 1;\n    return Uint8Array.from({ length: len }, (_, i) => (n * 31 + i) & 0xff);\n  };\n}\nconst make = (o: { t?: { v: number }; policy?: object } = {}) => {\n  const t = o.t ?? { v: 1_800_000_000_000 };\n  return { t, reg: new ClientRegistry({ now: () => t.v, randomBytes: counter(), registrationEndpoint: 'https://as.example.org/register', ...(o.policy ? { policy: o.policy } : {}) }) };\n};\nconst code = (fn: () => unknown) => {\n  try {\n    fn();\n  } catch (e) {\n    assert.ok(e instanceof ClientError, String(e));\n    return e.code;\n  }\n  assert.fail('expected a ClientError');\n};\n\ntest('redirect URIs match exactly: no prefix, case, trailing-slash or query-parameter leniency', () => {\n  const reg = ['https://app.example.org/cb', 'https://app.example.org/cb2?x=1'];\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb'), true);\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb/'), false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-99.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.259Z"
+}

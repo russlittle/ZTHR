@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "zip-write",
+  "mutant": {
+    "id": "596",
+    "line": 355,
+    "column": 35,
+    "endLine": 355,
+    "endColumn": 41,
+    "mutator": "ArithmeticOperator",
+    "original": "p + 12",
+    "replacement": "p - 12",
+    "lineText": "const time = buf.readUInt16LE(p + 12);",
+    "prevText": "const method = buf.readUInt16LE(p + 10);",
+    "nextText": "const date = buf.readUInt16LE(p + 14);"
+  },
+  "mayEdit": [
+    "intent/blocks/zip-write/zip-write.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/zip-write-596.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"zip-write\". Mutant: line 355:35-355:41, mutator ArithmeticOperator: \"p + 12\" becomes \"p - 12\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/zip-write/index.ts (> marks the mutated line):\n   349    const entries: ZipEntryInfo[] = [];\n   350    let p = cdOffset;\n   351    for (let i = 0; i < count; i++) {\n   352      if (p + 46 > buf.length || buf.readUInt32LE(p) !== 0x02014b50) throw new ArchiveError('the central directory is damaged');\n   353      const flags = buf.readUInt16LE(p + 8);\n   354      const method = buf.readUInt16LE(p + 10);\n>  355      const time = buf.readUInt16LE(p + 12);\n   356      const date = buf.readUInt16LE(p + 14);\n   357      const crc = buf.readUInt32LE(p + 16);\n   358      let csize = buf.readUInt32LE(p + 20);\n   359      let usize = buf.readUInt32LE(p + 24);\n   360      const nlen = buf.readUInt16LE(p + 28);\n   361      const xlen = buf.readUInt16LE(p + 30);\n\nTest file style (intent/blocks/zip-write/zip-write.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { crc32, inflateRawSync } from 'node:zlib';\nimport { unzip } from '../docparse/index.ts';\nimport { ArchiveError, SizeMismatch, UnsafePath, Zip64Required, collect, dosTime, listTar, listZip, readZipEntry, safePath, tarBuffer, tarStream, uniquePath, zipBuffer, zipStream, type Entry } from './index.ts';\n\nconst T = new Date('2026-03-05T14:07:09Z');\nconst text = 'The quick brown fox jumps over the lazy dog. '.repeat(200);\nconst contents = (zip: Buffer) => {\n  const { entries } = listZip(zip);\n  return Object.fromEntries(entries.map((e) => [e.name, e.dir ? null : readZipEntry(zip, e).toString('utf8')]));\n};\nasync function* gen<T>(...xs: T[]): AsyncGenerator<T> {\n  for (const x of xs) yield x;\n}\n\ntest('a zip round trips through our reader and through docparse, with the CRC and sizes right', async () => {\n  const zip = await zipBuffer([{ name: 'a.txt', data: 'hello' }, { name: 'dir/b.txt', data: text }, { name: 'empty.txt', data: '' }], { now: T });\n  assert.deepEqual(contents(zip), { 'a.txt': 'hello', 'dir/b.txt': text, 'empty.txt': '' });\n  const { entries } = listZip(zip);\n  assert.deepEqual(entries.map((e) => [e.name, e.uncompressedSize, e.crc32]), [['a.txt', 5, crc32('hello')], ['dir/b.txt', text.length, crc32(text)], ['empty.txt', 0, 0]]);\n  assert.equal(zip.readUInt32LE(0), 0x04034b50);\n  const viaDocparse = unzip(zip);\n  assert.equal(viaDocparse.get('dir/b.txt')!.toString(), text, 'a different reader agrees');\n  assert.equal(zip.length < text.length, true, 'the repeated text was compressed');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/zip-write-596.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:17.043Z"
+}

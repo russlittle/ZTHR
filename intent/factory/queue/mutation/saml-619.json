@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "saml",
+  "mutant": {
+    "id": "619",
+    "line": 404,
+    "column": 78,
+    "endLine": 404,
+    "endColumn": 91,
+    "mutator": "StringLiteral",
+    "original": "'unsupported'",
+    "replacement": "\"\"",
+    "lineText": "if (childNamed(st, NS.saml, 'EncryptedAttribute')) throw new SamlError('unsupported', 'encrypted attributes are not supported');",
+    "prevText": "for (const st of childrenNamed(a, NS.saml, 'AttributeStatement')) {",
+    "nextText": "for (const at of childrenNamed(st, NS.saml, 'Attribute')) {"
+  },
+  "mayEdit": [
+    "intent/blocks/saml/saml.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/saml-619.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"saml\". Mutant: line 404:78-404:91, mutator StringLiteral: \"'unsupported'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/saml/index.ts (> marks the mutated line):\n   398      const classRef = ctx && childNamed(ctx, NS.saml, 'AuthnContextClassRef');\n   399      // replay: after every other check, so a bad message never uses up an ID\n   400      const until = Math.min(confirmedUntil, condEnd) + skew;\n   401      if (this.#replay.seen(assertionId, until, now)) throw new SamlError('replay', 'this assertion has already been used');\n   402      const attributes: Record<string, string[]> = Object.create(null) as Record<string, string[]>;\n   403      for (const st of childrenNamed(a, NS.saml, 'AttributeStatement')) {\n>  404        if (childNamed(st, NS.saml, 'EncryptedAttribute')) throw new SamlError('unsupported', 'encrypted attributes are not supported');\n   405        for (const at of childrenNamed(st, NS.saml, 'Attribute')) {\n   406          const name = attr(at, 'Name');\n   407          if (!name) continue;\n   408          (attributes[name] ??= []).push(...childrenNamed(at, NS.saml, 'AttributeValue').map((v) => textOf(v).trim()));\n   409        }\n   410      }\n\nTest file style (intent/blocks/saml/saml.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, createPublicKey, randomBytes, sign as nodeSign, type KeyObject } from 'node:crypto';\nimport { bitString, boolean, explicit, integer, octetString, oid, oidOf, sequence, set, time, toPem, utf8String } from '../asn1-der/index.ts';\nimport { inflateRawSync, deflateRawSync } from 'node:zlib';\nimport { Sp, SamlError, MemoryRequestStore, MemoryReplayCache, parseTime, formatTime, inflateRedirect, verifyRedirectSignature, spMetadata, parseIdpMetadata, NS, BINDING, NAMEID, type SpConfig } from './index.ts';\nimport { sign, readXml, verifyDocument, childNamed, NS_DSIG } from '../xml-dsig/index.ts';\n\n/** A throwaway certificate made at run time: DER from the asn1-der writers, signed with node:crypto (ECDSA P-256 / SHA-256). */\nconst certName = (cn: string) => sequence(set(sequence(oid(oidOf('CN')), utf8String(cn))));\nfunction makeCert(o: { subject: string; publicKey: KeyObject; issuer?: string; issuerKey: KeyObject; ca?: boolean }): string {\n  const algId = sequence(oid(oidOf('ecdsa-with-SHA256')));\n  const exts = o.ca ? [explicit(3, sequence(sequence(oid(oidOf('basicConstraints')), boolean(true), octetString(sequence(boolean(true))))))] : [];\n  const tbs = sequence(\n    explicit(0, integer(2)), integer(BigInt(`0x${randomBytes(12).toString('hex')}`)), algId, certName(o.issuer ?? o.subject),\n    sequence(time(new Date(Date.UTC(2020, 0, 1))), time(new Date(Date.UTC(2120, 0, 1)))),\n    certName(o.subject), Buffer.from(o.publicKey.export({ type: 'spki', format: 'der' })), ...exts,\n  );\n  return toPem('CERTIFICATE', sequence(tbs, algId, bitString(nodeSign('sha256', tbs, o.issuerKey)))).trim();\n}\n// A fresh key pair and a self-signed certificate for it, made for each run.\nconst KEY_PAIR = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst KEY = KEY_PAIR.privateKey.export({ type: 'pkcs8', format: 'pem' }) as string;\nconst CERT = makeCert({ subject: 'example.org', publicKey: KEY_PAIR.publicKey, issuerKey: KEY_PAIR.privateKey });\nconst SP = 'https://sp.example/metadata';\nconst ACS = 'https://sp.example/saml/acs';\nconst IDP = 'https://idp.example/entity';\nconst SSO = 'https://idp.example/sso';\nconst T = Date.UTC(2026, 11, 15, 12, 0, 0);\nconst iso = (ms: number) => formatTime(ms);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/saml-619.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.808Z"
+}

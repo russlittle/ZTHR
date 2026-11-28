@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "api-client",
+  "mutant": {
+    "id": "917",
+    "line": 626,
+    "column": 72,
+    "endLine": 626,
+    "endColumn": 101,
+    "mutator": "ConditionalExpression",
+    "original": "typeof init.body === 'string'",
+    "replacement": "true",
+    "lineText": "this.seen.push({ method: init.method ?? 'GET', url, headers, body: typeof init.body === 'string' ? init.body : undefined });",
+    "prevText": "const headers = Object.fromEntries(Object.entries((init.headers ?? {}) as Record<string, string>).map(([k, v]) => [k.toLowerCase(), v]));",
+    "nextText": "const json = (status: number, body: unknown, h: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...h } });"
+  },
+  "mayEdit": [
+    "intent/blocks/api-client/api-client.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/api-client-917.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"api-client\". Mutant: line 626:72-626:101, mutator ConditionalExpression: \"typeof init.body === 'string'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/api-client/index.ts (> marks the mutated line):\n   620    }\n   621  \n   622    /** Use as the client's transport. */\n   623    readonly transport: Transport = async (url, init) => {\n   624      const u = new URL(url);\n   625      const headers = Object.fromEntries(Object.entries((init.headers ?? {}) as Record<string, string>).map(([k, v]) => [k.toLowerCase(), v]));\n>  626      this.seen.push({ method: init.method ?? 'GET', url, headers, body: typeof init.body === 'string' ? init.body : undefined });\n   627      const json = (status: number, body: unknown, h: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...h } });\n   628      const o = this.o;\n   629      if (o.oauth && u.pathname === o.oauth.path) {\n   630        const want = `Basic ${Buffer.from(`${o.oauth.clientId}:${o.oauth.clientSecret}`).toString('base64')}`;\n   631        if (headers.authorization !== want) return json(401, { error: 'invalid_client' });\n   632        const tok = `tok-${this.issued.length + 1}`;\n\nTest file style (intent/blocks/api-client/api-client.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ApiClient, ApiError, BreakerOpen, EgressDenied, MockApi, PaginationLoop, RateLimited, ResponseTooLarge, parseLinkHeader, parseRateLimit, pick, type Auth, type ClientOptions, type Transport } from './index.ts';\nimport { TimedOut } from '../resilience/index.ts';\n\nconst BASE = 'https://api.example.com/v1/';\nconst ITEMS = Array.from({ length: 25 }, (_, i) => ({ id: i + 1 }));\n\nfunction env(o: Partial<ClientOptions> & { transport: Transport }) {\n  const clock = { t: Date.UTC(2026, 2, 1) };\n  const sleeps: number[] = [];\n  const client = new ApiClient({ baseUrl: BASE, now: () => clock.t, sleep: async (ms) => void (sleeps.push(ms), (clock.t += ms)), random: () => 0.5, ...o });\n  return { client, clock, sleeps };\n}\nconst ids = async (g: AsyncGenerator<unknown>) => {\n  const out: number[] = [];\n  for await (const x of g) out.push((x as { id: number }).id);\n  return out;\n};\nconst reply = (status: number, body: unknown = {}, headers: Record<string, string> = {}) => new Response(typeof body === 'string' ? body : JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } });\n\ntest('rate limit headers in every common dialect', () => {\n  const now = Date.UTC(2026, 2, 1);\n  const h = (o: Record<string, string>) => new Headers(o);\n  assert.deepEqual(parseRateLimit(h({ 'retry-after': '120' }), now), { retryAfterMs: 120_000 });\n  assert.deepEqual(parseRateLimit(h({ 'retry-after': new Date(now + 30_000).toUTCString() }), now), { retryAfterMs: 30_000 });\n  assert.deepEqual(parseRateLimit(h({ 'retry-after': new Date(now - 30_000).toUTCString() }), now), { retryAfterMs: 0 });\n  assert.deepEqual(parseRateLimit(h({ 'x-ratelimit-limit': '5000', 'x-ratelimit-remaining': '4999', 'x-ratelimit-reset': String(now / 1000 + 60) }), now), { limit: 5000, remaining: 4999, resetAt: now + 60_000 });\n  assert.deepEqual(parseRateLimit(h({ 'ratelimit-limit': '100', 'ratelimit-remaining': '0', 'ratelimit-reset': '30' }), now), { limit: 100, remaining: 0, resetAt: now + 30_000 });\n  assert.deepEqual(parseRateLimit(h({ ratelimit: 'limit=10, remaining=3, reset=7' }), now), { limit: 10, remaining: 3, resetAt: now + 7000 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/api-client-917.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.147Z"
+}

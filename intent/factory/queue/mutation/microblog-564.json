@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "microblog",
+  "mutant": {
+    "id": "564",
+    "line": 388,
+    "column": 9,
+    "endLine": 388,
+    "endColumn": 26,
+    "mutator": "ConditionalExpression",
+    "original": "uniq.length === 0",
+    "replacement": "false",
+    "lineText": "if (uniq.length === 0 || uniq.some((c) => !Number.isInteger(c) || c < 0 || c >= s.poll!.options.length)) throw new MicroblogError('invalid', 'choose existing options');",
+    "prevText": "const uniq = [...new Set(choices)];",
+    "nextText": "if (!s.poll.multiple && uniq.length > 1) throw new MicroblogError('invalid', 'this poll takes one choice');"
+  },
+  "mayEdit": [
+    "intent/blocks/microblog/microblog.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/microblog-564.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"microblog\". Mutant: line 388:9-388:26, mutator ConditionalExpression: \"uniq.length === 0\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/microblog/index.ts (> marks the mutated line):\n   382      if (!this.canSee(voter, s)) throw new MicroblogError('forbidden', 'that status is not visible');\n   383      if (voter === s.author) throw new MicroblogError('forbidden', 'the author cannot vote in their own poll');\n   384      if (this.#o.now() >= s.poll.expiresAt) throw new MicroblogError('closed', 'the poll has closed');\n   385      const votes = this.#votes.get(id) ?? new Map<string, number[]>();\n   386      if (votes.has(voter)) throw new MicroblogError('conflict', 'already voted');\n   387      const uniq = [...new Set(choices)];\n>  388      if (uniq.length === 0 || uniq.some((c) => !Number.isInteger(c) || c < 0 || c >= s.poll!.options.length)) throw new MicroblogError('invalid', 'choose existing options');\n   389      if (!s.poll.multiple && uniq.length > 1) throw new MicroblogError('invalid', 'this poll takes one choice');\n   390      votes.set(voter, uniq);\n   391      this.#votes.set(id, votes);\n   392      s.poll = { ...s.poll, options: s.poll.options.map((o, i) => (uniq.includes(i) ? { ...o, votes: o.votes + 1 } : o)), votersCount: s.poll.votersCount + 1 };\n   393      return s.poll;\n   394    }\n\nTest file style (intent/blocks/microblog/microblog.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { PUBLIC } from '../activitypub/index.ts';\nimport { MicroblogError, Microblog, addressing, fromNote, parseText, renderHtml, toActivity, visibilityFrom, type Relations, type Status } from './index.ts';\n\nconst A = 'https://a.example/users/alice';\nconst B = 'https://b.example/users/bob';\nconst C = 'https://c.example/users/carol';\nconst D = 'https://d.example/users/dan';\n\nfunction setup(follows: [string, string][] = [], blocks: [string, string][] = []) {\n  let t = Date.UTC(2026, 10, 28, 12, 0, 0);\n  let n = 0;\n  const f = new Set(follows.map(([a, b]) => `${a}>${b}`));\n  const bl = new Set(blocks.map(([a, b]) => `${a}>${b}`));\n  const relations: Relations = { follows: (a, b) => f.has(`${a}>${b}`), blocks: (a, b) => bl.has(`${a}>${b}`) };\n  const handles: Record<string, string> = { alice: A, bob: B, carol: C, dan: D };\n  const mb = new Microblog({ now: () => t, newId: () => `s${++n}`, relations, resolveMention: (u) => handles[u] });\n  return { mb, tick: (ms: number) => (t += ms), now: () => t, follow: (a: string, b: string) => f.add(`${a}>${b}`) };\n}\n\ntest('mentions and hashtags are found in text; tags are lower-cased and unique; e-mail addresses and urls are not mentions', () => {\n  const p = parseText('Hi @bob and @carol@c.example! #Fediverse #fediverse #日本語 mail me@x.org http://x.org/@nobody#frag');\n  assert.deepEqual(p.mentions, [{ user: 'bob', host: undefined }, { user: 'carol', host: 'c.example' }]);\n  assert.deepEqual(p.tags, ['fediverse', '日本語']);\n});\n\ntest('html rendering escapes everything, then links urls, mentions and tags, and keeps line breaks', () => {\n  const html = renderHtml('<b>x</b> & @bob see https://x.example/a?b=1&c=2. #Tag\\nnext @ghost', {\n    tagUrl: (t) => `https://a.example/tags/${t}`,\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/microblog-564.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:52.959Z"
+}

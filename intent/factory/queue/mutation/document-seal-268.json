@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "document-seal",
+  "mutant": {
+    "id": "268",
+    "line": 195,
+    "column": 12,
+    "endLine": 195,
+    "endColumn": 91,
+    "mutator": "LogicalOperator",
+    "original": "equal(url, r.link) && equal(this.linkFor(r.manifest.id, r.manifestSha256), url)",
+    "replacement": "equal(url, r.link) || equal(this.linkFor(r.manifest.id, r.manifestSha256), url)",
+    "lineText": "return equal(url, r.link) && equal(this.linkFor(r.manifest.id, r.manifestSha256), url);",
+    "prevText": "linkMatches(url: string, r: SealRecord): boolean {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/document-seal/document-seal.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/document-seal-268.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"document-seal\". Mutant: line 195:12-195:91, mutator LogicalOperator: \"equal(url, r.link) && equal(this.linkFor(r.manifest.id, r.manifestSha256), url)\" becomes \"equal(url, r.link) || equal(this.linkFor(r.manifest.id, r.manifestSha256), url)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/document-seal/index.ts (> marks the mutated line):\n   189      }\n   190      return report;\n   191    }\n   192  \n   193    /** Whether a verification link's key belongs to the seal record it names. */\n   194    linkMatches(url: string, r: SealRecord): boolean {\n>  195      return equal(url, r.link) && equal(this.linkFor(r.manifest.id, r.manifestSha256), url);\n   196    }\n   197  }\n   198  \n   199  // ---------------------------------------------------------------- certificate of completion\n   200  \n   201  const esc = (s: string) => s.replace(/[&<>\"']/g, (c) => `&#${c.charCodeAt(0)};`);\n\nTest file style (intent/blocks/document-seal/document-seal.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, generateKeyPairSync, randomBytes } from 'node:crypto';\nimport { test } from 'node:test';\nimport { Consent } from '../consent/index.ts';\nimport { SignatureCapture, intentStatement } from '../signature-capture/index.ts';\nimport { createCertificate, issue } from '../trusted-timestamp/index.ts';\nimport { SealRefused, Sealer, certificateHtml, certificateLines, certificatePdf, sealIdFromLink, verifyHtml } from './index.ts';\nimport type { SealRecord, SignerEntry } from './index.ts';\n\nconst T0 = new Date('2025-06-01T12:00:00Z');\nconst key = randomBytes(24).toString('hex');\nconst doc = Buffer.from('%PDF-1.7\\nthe lease, every page\\n%%EOF');\nconst ev = (c: string) => createHash('sha256').update(c).digest('hex');\nconst signers: SignerEntry[] = [\n  { id: 'u2', name: 'Bo Chen', email: 'bo@example.org', method: 'typed', signedAt: '2025-06-01T11:30:00Z', evidenceSha256: ev('bo') },\n  { id: 'u1', name: 'Ana Silva', method: 'drawn', signedAt: '2025-06-01T11:00:00Z', evidenceSha256: ev('ana'), ip: '203.0.113.7' },\n];\n\nconst tsa = () => {\n  const ca = generateKeyPairSync('ec', { namedCurve: 'P-256' });\n  const k = generateKeyPairSync('ec', { namedCurve: 'P-256' });\n  const nb = new Date('2025-01-01T00:00:00Z');\n  const na = new Date('2035-01-01T00:00:00Z');\n  const caCert = createCertificate({ subject: { commonName: 'Seal Test CA' }, publicKey: ca.publicKey, signingKey: ca.privateKey, serial: 1n, notBefore: nb, notAfter: na, kind: 'ca' });\n  const cert = createCertificate({ subject: { commonName: 'Seal Test TSA' }, issuer: { commonName: 'Seal Test CA' }, publicKey: k.publicKey, signingKey: ca.privateKey, serial: 2n, notBefore: nb, notAfter: na, kind: 'tsa' });\n  let n = 1n;\n  return { ca: caCert, at: (when: string) => async (req: Buffer) => issue(req, { certificate: cert, privateKey: k.privateKey, policy: '1.2.3.4', now: () => new Date(when), nextSerial: () => n++ }) };\n};\n\nconst make = (o: Partial<ConstructorParameters<typeof Sealer>[0]> = {}) => new Sealer({ sealKey: key, baseUrl: 'https://sign.example.com', now: () => new Date('2025-06-01T12:05:00Z'), ...o });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/document-seal-268.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.693Z"
+}

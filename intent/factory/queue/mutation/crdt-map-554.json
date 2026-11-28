@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crdt-map",
+  "mutant": {
+    "id": "554",
+    "line": 385,
+    "column": 49,
+    "endLine": 388,
+    "endColumn": 2,
+    "mutator": "BlockStatement",
+    "original": "{\n  const s = m.state();\n  return canonical({ clock: s.clock as Json, entries: s.entries.map((e) => [e.dot, e.kind, e.path as Json, e.value, e.stamp.t, e.stamp.r]) as Json });\n}",
+    "replacement": "{}",
+    "lineText": "export function fingerprint(m: CrdtMap): string {",
+    "prevText": "/** Stable text of a state's meaning (entries and clock), for comparing replicas. */",
+    "nextText": "const s = m.state();"
+  },
+  "mayEdit": [
+    "intent/blocks/crdt-map/crdt-map.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crdt-map-554.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crdt-map\". Mutant: line 385:49-388:2, mutator BlockStatement: \"{\\n  const s = m.state();\\n  return canonical({ clock: s.clock as Json, entries: s.entries.map((e) => [e.dot, e.kind, e.path as Json, e.value, e.stamp.t, e.stamp.r]) as Json });\\n}\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crdt-map/index.ts (> marks the mutated line):\n   379      }\n   380      return JSON.parse(JSON.stringify(root)) as Json;\n   381    }\n   382  }\n   383  \n   384  /** Stable text of a state's meaning (entries and clock), for comparing replicas. */\n>  385  export function fingerprint(m: CrdtMap): string {\n   386    const s = m.state();\n   387    return canonical({ clock: s.clock as Json, entries: s.entries.map((e) => [e.dot, e.kind, e.path as Json, e.value, e.stamp.t, e.stamp.r]) as Json });\n   388  }\n   389  \n\nTest file style (intent/blocks/crdt-map/crdt-map.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CrdtError, CrdtMap, compare, covers, fingerprint, mergeClocks, type Op } from './index.ts';\n\nconst rng = (seed: number) => () => {\n  seed = (seed + 0x6d2b79f5) | 0;\n  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);\n  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;\n  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;\n};\nconst clone = (m: CrdtMap, name = 'clone') => CrdtMap.from(name, m.state());\nconst join = (...ms: CrdtMap[]) => {\n  const out = new CrdtMap('join');\n  for (const m of ms) out.merge(m);\n  return out;\n};\n/** Deliver every operation to a replica in the given order; causal delivery sorts out the rest. */\nconst deliver = (to: CrdtMap, ops: readonly Op[]) => ops.forEach((o) => (o.replica === to.replica ? undefined : to.apply(o)));\n\ntest('vector clocks: order, merge and the causal delivery test', () => {\n  assert.equal(compare({ a: 1 }, { a: 1 }), 'equal');\n  assert.equal(compare({ a: 1 }, { a: 2, b: 1 }), 'before');\n  assert.equal(compare({ a: 3 }, { a: 2 }), 'after');\n  assert.equal(compare({ a: 2 }, { b: 1 }), 'concurrent');\n  assert.equal(compare({}, {}), 'equal');\n  assert.deepEqual(mergeClocks({ a: 2, b: 1 }, { a: 1, c: 4 }), { a: 2, b: 1, c: 4 });\n  assert.equal(covers({ a: 2, b: 1 }, { a: 2 }), true);\n  assert.equal(covers({ a: 2 }, { a: 3 }), false);\n  assert.equal(covers({}, {}), true);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crdt-map-554.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.177Z"
+}

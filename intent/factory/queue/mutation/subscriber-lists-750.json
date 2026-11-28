@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "subscriber-lists",
+  "mutant": {
+    "id": "750",
+    "line": 539,
+    "column": 9,
+    "endLine": 539,
+    "endColumn": 17,
+    "mutator": "ConditionalExpression",
+    "original": "!l || !s",
+    "replacement": "false",
+    "lineText": "if (!l || !s) return { ok: false };",
+    "prevText": "const s = l?.subs.get(t.email);",
+    "nextText": "if (s.state !== 'unsubscribed') {"
+  },
+  "mayEdit": [
+    "intent/blocks/subscriber-lists/subscriber-lists.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/subscriber-lists-750.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"subscriber-lists\". Mutant: line 539:9-539:17, mutator ConditionalExpression: \"!l || !s\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/subscriber-lists/index.ts (> marks the mutated line):\n   533    /** One-click unsubscribe: the POST (or GET) from the link in List-Unsubscribe. Safe to repeat. */\n   534    unsubscribe(token: string): { ok: boolean; list?: string } {\n   535      const t = this.readToken('unsub', token);\n   536      if (!t) return { ok: false };\n   537      const l = this.lists.get(t.list);\n   538      const s = l?.subs.get(t.email);\n>  539      if (!l || !s) return { ok: false };\n   540      if (s.state !== 'unsubscribed') {\n   541        s.evidence.push(this.evidence(l, 'unsubscribe-link', 'one-click unsubscribe', {}));\n   542        s.epoch++;\n   543        this.setState(l, s, 'unsubscribed', 'unsubscribed', 'by link');\n   544      }\n   545      return { ok: true, list: t.list };\n\nTest file style (intent/blocks/subscriber-lists/subscriber-lists.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ListError, SubscriberLists, addressFingerprint, csvCell, isRoleAddress, normalizeEmail, parseCsv } from './index.ts';\nimport type { ListsOptions } from './index.ts';\nimport type { Message } from '../notify/index.ts';\nimport type { Record_ } from '../consent/index.ts';\n\nconst T0 = Date.UTC(2026, 5, 1, 9, 0, 0);\nconst DAY = 86_400_000;\n\ninterface Rig {\n  readonly lists: SubscriberLists;\n  readonly sent: Message[];\n  readonly consents: Record_[];\n  clock: { t: number };\n}\n\nfunction rig(over: Partial<ListsOptions> = {}, double = true): Rig {\n  const sent: Message[] = [];\n  const consents: Record_[] = [];\n  const clock = { t: T0 };\n  const lists = new SubscriberLists({\n    secret: 'test-secret-01234', now: () => clock.t, send: async (m) => { sent.push(m); }, onConsent: (r) => consents.push(r),\n    confirmUrl: 'https://example.org/confirm', unsubscribeUrl: 'https://example.org/unsub?src=mail', preferencesUrl: 'https://example.org/prefs',\n    ...over,\n  });\n  lists.createList({ id: 'news', name: 'Monthly news', doubleOptIn: double, consentText: 'Send me the monthly news by email.', topics: [{ id: 'product', name: 'Product', defaultOn: true }, { id: 'events', name: 'Events', defaultOn: false }], frequencies: ['weekly', 'monthly'] });\n  return { lists, sent, consents, clock };\n}\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/subscriber-lists-750.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:06.021Z"
+}

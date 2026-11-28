@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "ocs-share-api",
+  "mutant": {
+    "id": "38",
+    "line": 129,
+    "column": 93,
+    "endLine": 129,
+    "endColumn": 97,
+    "mutator": "StringLiteral",
+    "original": "'on'",
+    "replacement": "\"\"",
+    "lineText": "const truthy = (v: string | undefined) => v === 'true' || v === '1' || v === 'yes' || v === 'on';",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/ocs-share-api/ocs-share-api.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ocs-share-api-38.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ocs-share-api\". Mutant: line 129:93-129:97, mutator StringLiteral: \"'on'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ocs-share-api/index.ts (> marks the mutated line):\n   123  \n   124  /** \"read, update, share\" for a mask, for messages and logs. */\n   125  export function permissionNames(mask: number): string[] {\n   126    return (['read', 'update', 'create', 'delete', 'share'] as const).filter((_, i) => mask & (1 << i));\n   127  }\n   128  \n>  129  const truthy = (v: string | undefined) => v === 'true' || v === '1' || v === 'yes' || v === 'on';\n   130  \n   131  /** Request parameters from a JSON body or a urlencoded form, with the query string under them. */\n   132  export function parseParams(body: string | undefined, contentType: string | undefined, query: Readonly<Record<string, string>> = {}): Record<string, string> {\n   133    const out: Record<string, string> = Object.assign(Object.create(null) as Record<string, string>, query);\n   134    if (!body) return out;\n   135    if ((contentType ?? '').toLowerCase().includes('json')) {\n\nTest file style (intent/blocks/ocs-share-api/ocs-share-api.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ALL, Grants, memoryGrants } from '../grants/index.ts';\nimport { CREATE, DELETE, FILE_MAX, OcsShares, READ, SHARE, UPDATE, parseParams, permissionNames, toXml } from './index.ts';\nimport type { Env, Reply, Target } from './index.ts';\n\nconst NOW = Date.UTC(2026, 2, 10, 15, 30);\nconst BASEPATH = '/ocs/v2.php/apps/files_sharing/api/v1/shares';\n\ninterface Node extends Target {\n  parent?: number;\n}\nfunction world() {\n  const nodes: Node[] = [\n    { id: 1, kind: 'folder', path: '/Docs', owner: 'ana' },\n    { id: 2, kind: 'file', path: '/Docs/plan.txt', owner: 'ana', mimetype: 'text/plain', parent: 1 },\n    { id: 3, kind: 'file', path: '/notes.md', owner: 'ana', mimetype: 'text/markdown' },\n    { id: 4, kind: 'folder', path: '/Docs/Sub', owner: 'ana', parent: 1 },\n  ];\n  const groups: Record<string, string[]> = { bo: ['team'], cy: ['team'], ana: [] };\n  const grants = new Grants(memoryGrants(), { now: () => NOW });\n  const chainOf = (n: Node) => {\n    const c: { id: number; kind: 'file' | 'folder' }[] = [];\n    for (let x: Node | undefined = n; x; x = nodes.find((y) => y.id === x!.parent)) c.push({ id: x.id, kind: x.kind });\n    return c;\n  };\n  const env: Env = {\n    find: async (user, path) => {\n      const n = nodes.find((x) => x.path === path);\n      if (!n) return undefined;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ocs-share-api-38.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.868Z"
+}

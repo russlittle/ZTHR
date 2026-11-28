@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "bounce-classify",
+  "mutant": {
+    "id": "219",
+    "line": 159,
+    "column": 13,
+    "endLine": 159,
+    "endColumn": 44,
+    "mutator": "Regex",
+    "original": "/^\\s*[a-zA-Z0-9-]+\\s*;\\s*(.+)$/",
+    "replacement": "/^\\s*[a-zA-Z0-9-]+\\S*;\\s*(.+)$/",
+    "lineText": "const m = /^\\s*[a-zA-Z0-9-]+\\s*;\\s*(.+)$/.exec(v);",
+    "prevText": "if (!v) return undefined;",
+    "nextText": "const a = (m ? m[1]! : v).trim().replace(/^<|>$/g, '').toLowerCase();"
+  },
+  "mayEdit": [
+    "intent/blocks/bounce-classify/bounce-classify.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/bounce-classify-219.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"bounce-classify\". Mutant: line 159:13-159:44, mutator Regex: \"/^\\\\s*[a-zA-Z0-9-]+\\\\s*;\\\\s*(.+)$/\" becomes \"/^\\\\s*[a-zA-Z0-9-]+\\\\S*;\\\\s*(.+)$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/bounce-classify/index.ts (> marks the mutated line):\n   153  }\n   154  \n   155  const ADDRESS = /^[^\\s<>()[\\]\\\\,;:\"@\\x00-\\x1f]+@[^\\s<>()[\\]\\\\,;:\"@\\x00-\\x1f]+$/;\n   156  \n   157  function recipientAddress(v: string | undefined): string | undefined {\n   158    if (!v) return undefined;\n>  159    const m = /^\\s*[a-zA-Z0-9-]+\\s*;\\s*(.+)$/.exec(v);\n   160    const a = (m ? m[1]! : v).trim().replace(/^<|>$/g, '').toLowerCase();\n   161    return ADDRESS.test(a) ? a : undefined;\n   162  }\n   163  \n   164  const HARD_WORDS = /(user unknown|unknown user|no such user|does(?: not|n't) exist|invalid recipient|recipient rejected|mailbox unavailable|account (?:has been )?(?:disabled|closed)|address rejected)/i;\n   165  const FULL_WORDS = /(mailbox full|over quota|quota exceeded|insufficient storage|mailbox is full)/i;\n\nTest file style (intent/blocks/bounce-classify/bounce-classify.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Notify } from '../notify/index.ts';\nimport { NotAReport, SoftBounceTracker, classifyMessage, classifyRecipient, feedSuppression, isAutoReply, parseMime, parseStatus, statusFromReply } from './index.ts';\n\nconst dsn = (fields: string, extra = '') => [\n  'From: MAILER-DAEMON@mx.example.org',\n  'To: sender@example.com',\n  'Subject: Undelivered Mail Returned to Sender',\n  'Content-Type: multipart/report; report-type=delivery-status; boundary=\"BND\"',\n  '',\n  '--BND',\n  'Content-Type: text/plain',\n  '',\n  'This is the mail system. Delivery failed.',\n  '--BND',\n  'Content-Type: message/delivery-status',\n  '',\n  'Reporting-MTA: dns; mx.example.org',\n  'Arrival-Date: Mon, 3 Mar 2025 10:00:00 +0000',\n  '',\n  fields,\n  extra,\n  '--BND',\n  'Content-Type: text/rfc822-headers',\n  '',\n  'From: sender@example.com',\n  'To: ana@example.net',\n  '--BND--',\n  '',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/bounce-classify-219.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.253Z"
+}

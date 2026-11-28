@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "image-plan",
+  "mutant": {
+    "id": "453",
+    "line": 264,
+    "column": 60,
+    "endLine": 264,
+    "endColumn": 104,
+    "mutator": "StringLiteral",
+    "original": "'without the profile, convert to sRGB first'",
+    "replacement": "\"\"",
+    "lineText": "if (minimal) { remove.push('colour profile'); notes.push('without the profile, convert to sRGB first'); } else keep.push('colour profile');",
+    "prevText": "const minimal = policy === 'minimal';",
+    "nextText": "return { policy, remove, keep, bakeOrientation: bake, convertToSrgb: minimal, notes };"
+  },
+  "mayEdit": [
+    "intent/blocks/image-plan/image-plan.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/image-plan-453.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"image-plan\". Mutant: line 264:60-264:104, mutator StringLiteral: \"'without the profile, convert to sRGB first'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/image-plan/index.ts (> marks the mutated line):\n   258      case 'gif': remove.push('comment and application extensions except looping'); keep.push('frames', 'palette'); notes.push('GIF is rewritten only by re-encoding'); break;\n   259    }\n   260    const exifGoes = info.kind === 'jpeg' || info.kind === 'webp';\n   261    const bake = exifGoes && info.orientation !== 1;\n   262    if (bake) notes.push(`orientation ${info.orientation} is stored in the EXIF block being removed: apply it to the pixels, or the picture will show sideways`);\n   263    const minimal = policy === 'minimal';\n>  264    if (minimal) { remove.push('colour profile'); notes.push('without the profile, convert to sRGB first'); } else keep.push('colour profile');\n   265    return { policy, remove, keep, bakeOrientation: bake, convertToSrgb: minimal, notes };\n   266  }\n   267  \n   268  const PNG_SIG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);\n   269  const PNG_DROP = new Set(['eXIf', 'tEXt', 'zTXt', 'iTXt', 'tIME']);\n   270  \n\nTest file style (intent/blocks/image-plan/image-plan.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { inspect } from '../imagemeta/index.ts';\nimport {\n  applyStrip, buildSrcset, chooseWidths, cropPlan, displaySize, focalCrop, ImagePlanError, negotiate, pickCandidate, pictureHtml, sizesAttribute, stripPlan, stripPng, urlTemplate,\n} from './index.ts';\n\nconst url = urlTemplate('/img/{id}?w={w}&h={h}&f={fmt}&q={q}', { id: 'a b' });\n\n// ------------------------------------------------------------ sizes\n\ntest('displayed size swaps for the orientations that turn the picture on its side', () => {\n  for (const o of [1, 2, 3, 4]) assert.deepEqual(displaySize({ width: 4032, height: 3024 }, o), { width: 4032, height: 3024 });\n  for (const o of [5, 6, 7, 8]) assert.deepEqual(displaySize({ width: 4032, height: 3024 }, o), { width: 3024, height: 4032 });\n  assert.throws(() => displaySize({ width: 4032, height: 3024 }, 9), /1 to 8/);\n  assert.throws(() => displaySize({ width: 0, height: 10 }), /whole numbers/);\n});\n\ntest('the width ladder never goes above the source, and gives the source its own rung when it falls between rungs', () => {\n  assert.deepEqual(chooseWidths({ source: { width: 1000, height: 700 } }), [320, 480, 640, 768, 960, 1000]);\n  assert.deepEqual(chooseWidths({ source: { width: 1280, height: 700 } }), [320, 480, 640, 768, 960, 1280]);\n  assert.deepEqual(chooseWidths({ source: { width: 200, height: 100 } }), [200]); // smaller than the smallest rung: just itself\n  assert.deepEqual(chooseWidths({ source: { width: 5000, height: 3000 } }).at(-1), 3840); // a huge source is not offered whole\n  assert.deepEqual(chooseWidths({ source: { width: 5000, height: 3000 }, maxCssWidth: 500, maxDensity: 2 }), [320, 480, 640, 768, 960, 1000]);\n  assert.deepEqual(chooseWidths({ source: { width: 3000, height: 2000 }, maxCssWidth: 600, maxDensity: 1 }), [320, 480, 600]);\n  assert.deepEqual(chooseWidths({ source: { width: 2000, height: 2000 }, widths: [100, 400, 800], minWidth: 300 }), [400, 800]);\n  assert.throws(() => chooseWidths({ source: { width: 100, height: 100 }, widths: [] }), /whole numbers/);\n  assert.throws(() => chooseWidths({ source: { width: 100, height: 100 }, widths: [10.5] }), /whole numbers/);\n  assert.throws(() => chooseWidths({ source: { width: 100, height: 100 }, maxDensity: 0.5 }), /at least 1/);\n  assert.throws(() => chooseWidths({ source: { width: 100, height: 100 }, maxCssWidth: 0 }), /at least 1/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/image-plan-453.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:44.325Z"
+}

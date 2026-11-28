@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "moderation-model",
+  "mutant": {
+    "id": "119",
+    "line": 143,
+    "column": 37,
+    "endLine": 143,
+    "endColumn": 43,
+    "mutator": "EqualityOperator",
+    "original": "x <= 1",
+    "replacement": "x < 1",
+    "lineText": "if (seq.some((x) => !(x >= 0 && x <= 1))) throw new ModerationError('invalid', `${where}: thresholds are from 0 to 1`);",
+    "prevText": "const seq = [t.flag, t.hold, t.block].filter((x): x is number => x !== undefined);",
+    "nextText": "if (seq.some((x, i) => i > 0 && x < seq[i - 1]!)) throw new ModerationError('invalid', `${where}: thresholds must rise from flag to hold to block`);"
+  },
+  "mayEdit": [
+    "intent/blocks/moderation-model/moderation-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/moderation-model-119.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"moderation-model\". Mutant: line 143:37-143:43, mutator EqualityOperator: \"x <= 1\" becomes \"x < 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/moderation-model/index.ts (> marks the mutated line):\n   137    readonly trustedAuthors?: readonly string[];\n   138  }\n   139  \n   140  export function validatePolicy(p: Policy): void {\n   141    const ok = (t: Partial<Thresholds>, where: string) => {\n   142      const seq = [t.flag, t.hold, t.block].filter((x): x is number => x !== undefined);\n>  143      if (seq.some((x) => !(x >= 0 && x <= 1))) throw new ModerationError('invalid', `${where}: thresholds are from 0 to 1`);\n   144      if (seq.some((x, i) => i > 0 && x < seq[i - 1]!)) throw new ModerationError('invalid', `${where}: thresholds must rise from flag to hold to block`);\n   145    };\n   146    if (Object.keys(p.categories).length === 0) throw new ModerationError('invalid', 'a policy needs categories');\n   147    for (const [c, t] of Object.entries(p.categories)) ok(t, c);\n   148    for (const [ctx, m] of Object.entries(p.contexts ?? {})) for (const [c, t] of Object.entries(m)) {\n   149      if (!p.categories[c]) throw new ModerationError('invalid', `context ${ctx} names unknown category ${c}`);\n\nTest file style (intent/blocks/moderation-model/moderation-model.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Moderator, ModerationError, decideAction, lexiconClassifier, llmClassifier, normalizeText, policyHash, validatePolicy, type Classifier, type Policy } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst policy: Policy = {\n  id: 'community',\n  version: 1,\n  categories: {\n    harassment: { flag: 0.4, hold: 0.7, block: 0.9 },\n    violence: { flag: 0.5, block: 0.9 },\n    sexual_minors: { flag: 0.05, block: 0.2, zeroTolerance: true },\n  },\n  contexts: { kids: { harassment: { flag: 0.1, hold: 0.3, block: 0.6 } } },\n  onError: 'hold',\n  maxChars: 200,\n  appealWindowMs: 7 * DAY,\n  trustedAuthors: ['trusted'],\n};\nconst lexicon = {\n  harassment: ['idiot', 'loser', 'moron', 'worthless'],\n  violence: ['kill', 'stab'],\n  sexual_minors: ['csamword'],\n};\n\nfunction mod(opts: { classifier?: Classifier; p?: Policy } = {}) {\n  let t = T0;\n  const calls: string[] = [];\n  const base = lexiconClassifier(lexicon);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/moderation-model-119.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.087Z"
+}

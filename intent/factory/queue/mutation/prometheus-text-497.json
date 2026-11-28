@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "prometheus-text",
+  "mutant": {
+    "id": "497",
+    "line": 364,
+    "column": 11,
+    "endLine": 364,
+    "endColumn": 61,
+    "mutator": "LogicalOperator",
+    "original": "f && (types as readonly string[]).includes(f.type)",
+    "replacement": "f || (types as readonly string[]).includes(f.type)",
+    "lineText": "if (f && (types as readonly string[]).includes(f.type)) return f;",
+    "prevText": "const f = fams.get(sample.slice(0, -suffix.length));",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/prometheus-text/prometheus-text.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/prometheus-text-497.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"prometheus-text\". Mutant: line 364:11-364:61, mutator LogicalOperator: \"f && (types as readonly string[]).includes(f.type)\" becomes \"f || (types as readonly string[]).includes(f.type)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/prometheus-text/index.ts (> marks the mutated line):\n   358  function familyFor(fams: Map<string, Family>, sample: string): Family | undefined {\n   359    const direct = fams.get(sample);\n   360    if (direct) return direct;\n   361    for (const [suffix, types] of [['_bucket', ['histogram', 'gaugehistogram']], ['_sum', ['histogram', 'summary', 'gaugehistogram']], ['_count', ['histogram', 'summary', 'gaugehistogram']], ['_gcount', ['gaugehistogram']], ['_gsum', ['gaugehistogram']], ['_total', ['counter']], ['_created', ['counter', 'histogram', 'summary']], ['_info', ['info']]] as const)\n   362      if (sample.endsWith(suffix)) {\n   363        const f = fams.get(sample.slice(0, -suffix.length));\n>  364        if (f && (types as readonly string[]).includes(f.type)) return f;\n   365      }\n   366    return undefined;\n   367  }\n   368  \n   369  const seriesKey = (name: string, labels: Labels) => `${name}\\u0001${JSON.stringify(Object.keys(labels).sort().map((k) => [k, labels[k]]))}`;\n   370  \n\nTest file style (intent/blocks/prometheus-text/prometheus-text.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CardinalityError, MetricsError, ParseError, Registry, checkHistogram, findSample, formatValue, histogramBuckets, histogramQuantile, parseExposition } from './index.ts';\n\nconst SPEC = `# HELP http_requests_total The total number of HTTP requests.\n# TYPE http_requests_total counter\nhttp_requests_total{method=\"post\",code=\"200\"} 1027 1395066363000\nhttp_requests_total{method=\"post\",code=\"400\"}    3 1395066363000\n\n# Escaping in label values:\nmsdos_file_access_time_seconds{path=\"C:\\\\\\\\DIR\\\\\\\\FILE.TXT\",error=\"Cannot find file:\\\\n\\\\\"FILE.TXT\\\\\"\"} 1.458255915e9\n\n# Minimalistic line:\nmetric_without_timestamp_and_labels 12.47\n\n# A weird metric from before the epoch:\nsomething_weird{problem=\"division by zero\"} +Inf -3982045\n\n# A histogram, which has a pretty complex representation in the text format:\n# HELP http_request_duration_seconds A histogram of the request duration.\n# TYPE http_request_duration_seconds histogram\nhttp_request_duration_seconds_bucket{le=\"0.05\"} 24054\nhttp_request_duration_seconds_bucket{le=\"0.1\"} 33444\nhttp_request_duration_seconds_bucket{le=\"0.2\"} 100392\nhttp_request_duration_seconds_bucket{le=\"0.5\"} 129389\nhttp_request_duration_seconds_bucket{le=\"1\"} 133988\nhttp_request_duration_seconds_bucket{le=\"+Inf\"} 144320\nhttp_request_duration_seconds_sum 53423\nhttp_request_duration_seconds_count 144320\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/prometheus-text-497.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.624Z"
+}

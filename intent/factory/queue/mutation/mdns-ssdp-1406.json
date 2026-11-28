@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mdns-ssdp",
+  "mutant": {
+    "id": "1406",
+    "line": 715,
+    "column": 214,
+    "endLine": 715,
+    "endColumn": 236,
+    "mutator": "ObjectLiteral",
+    "original": "{ bootId: msg.bootId }",
+    "replacement": "{}",
+    "lineText": "const d: Device = { usn, nt, location, seenAt: now, expiresAt: now + Math.min(msg.maxAge, 86_400) * 1000, ...(msg.server ? { server: msg.server } : {}), ...(msg.kind === 'notify' && msg.bootId !== undefined ? { bootId: msg.bootId } : {}) };",
+    "prevText": "const nt = msg.kind === 'notify' ? msg.nt : msg.st;",
+    "nextText": "this.devices.set(usn, d);"
+  },
+  "mayEdit": [
+    "intent/blocks/mdns-ssdp/mdns-ssdp.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mdns-ssdp-1406.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mdns-ssdp\". Mutant: line 715:214-715:236, mutator ObjectLiteral: \"{ bootId: msg.bootId }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mdns-ssdp/index.ts (> marks the mutated line):\n   709      const location = msg.location;\n   710      if (!location || msg.maxAge === undefined) return { kind: 'ignored' };\n   711      if (!this.o.allowOtherHosts) checkLocation(location, senderIp);\n   712      else checkLocation(new URL(location).href.replace(/^(https?:\\/\\/)[^/]+/, `$1${senderIp.includes(':') ? `[${senderIp}]` : senderIp}`), senderIp);\n   713      const had = this.devices.get(usn);\n   714      const nt = msg.kind === 'notify' ? msg.nt : msg.st;\n>  715      const d: Device = { usn, nt, location, seenAt: now, expiresAt: now + Math.min(msg.maxAge, 86_400) * 1000, ...(msg.server ? { server: msg.server } : {}), ...(msg.kind === 'notify' && msg.bootId !== undefined ? { bootId: msg.bootId } : {}) };\n   716      this.devices.set(usn, d);\n   717      return { kind: had ? 'updated' : 'added', usn };\n   718    }\n   719  \n   720    expire(): string[] {\n   721      const now = this.o.now();\n\nTest file style (intent/blocks/mdns-ssdp/mdns-ssdp.test.ts):\n28 test() blocks. Imports and the first tests, verbatim:\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  DiscoveryError, MdnsCache, SsdpCache, announce, answerQuery, browse, checkLocation, decodeMessage, decodeTxt, encodeMessage, encodeTxt, goodbye,\n  matchesSearch, msearch, notify, parseName, parseSsdp, resolve, searchResponse, serviceRecords, sameName, nameToString,\n  type Message, type Service,\n} from './index.ts';\n\nconst svc: Service = { instance: 'Front Printer', type: '_ipp._tcp', host: 'printer', port: 631, addresses: ['192.168.1.20', 'fe80::1'], txt: { rp: 'ipp/print', color: 'T', duplex: true } };\n\nlet t = 1_000_000;\nconst clock = () => t;\ntest.beforeEach(() => { t = 1_000_000; });\n\ntest('a query for _http._tcp.local has the bytes RFC 6762 gives (compression of the repeated name)', () => {\n  const b = encodeMessage({ id: 0, response: false, questions: [{ name: ['_http', '_tcp', 'local'], type: 'PTR' }], answers: [] });\n  assert.equal(b.toString('hex'), '000000000001000000000000' + '055f68747470045f746370056c6f63616c00' + '000c0001');\n});\n\ntest('the unicast-response bit is the top bit of a question class', () => {\n  const b = encodeMessage({ id: 0, response: false, questions: [{ name: ['a', 'local'], type: 'A', unicast: true }], answers: [] });\n  assert.equal(b.readUInt16BE(b.length - 2), 0x8001);\n  assert.equal(decodeMessage(b).questions[0]!.unicast, true);\n});\n\ntest('a message round-trips: A, AAAA, PTR, SRV, TXT and NSEC', () => {\n  const m: Message = {\n    id: 7, response: true, authoritative: true, questions: [],\n    answers: [\n      { name: ['h', 'local'], ttl: 120, flush: true, data: { type: 'A', address: '10.0.0.5' } },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mdns-ssdp-1406.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:48.832Z"
+}

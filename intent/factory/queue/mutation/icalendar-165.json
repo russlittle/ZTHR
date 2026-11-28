@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "icalendar",
+  "mutant": {
+    "id": "165",
+    "line": 111,
+    "column": 37,
+    "endLine": 111,
+    "endColumn": 46,
+    "mutator": "Regex",
+    "original": "/^\\uFEFF/",
+    "replacement": "/\\uFEFF/",
+    "lineText": "const lines = unfold(text.replace(/^\\uFEFF/, ''));",
+    "prevText": "if (text.includes('\\u0000')) throw new BadCalendar('the calendar has a NUL character');",
+    "nextText": "if (lines.length > (limits.maxLines ?? 200_000)) throw new BadCalendar('the calendar has too many lines');"
+  },
+  "mayEdit": [
+    "intent/blocks/icalendar/icalendar.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/icalendar-165.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"icalendar\". Mutant: line 111:37-111:46, mutator Regex: \"/^\\\\uFEFF/\" becomes \"/\\\\uFEFF/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/icalendar/index.ts (> marks the mutated line):\n   105  // --- components -------------------------------------------------------------------------------------------------\n   106  \n   107  export function parseComponents(text: string, limits: Limits = {}): Component[] {\n   108    const maxBytes = limits.maxBytes ?? 5_000_000;\n   109    if (Buffer.byteLength(text) > maxBytes) throw new BadCalendar(`the calendar is larger than ${maxBytes} bytes`);\n   110    if (text.includes('\\u0000')) throw new BadCalendar('the calendar has a NUL character');\n>  111    const lines = unfold(text.replace(/^\\uFEFF/, ''));\n   112    if (lines.length > (limits.maxLines ?? 200_000)) throw new BadCalendar('the calendar has too many lines');\n   113    const roots: Component[] = [];\n   114    const stack: Component[] = [];\n   115    let count = 0;\n   116    for (const line of lines) {\n   117      if (line === '') continue;\n\nTest file style (intent/blocks/icalendar/icalendar.test.ts):\n25 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { offset, wallOf } from '../time/index.ts';\nimport { BadCalendar, alarmTimes, buildCalendar, buildEvent, dateProp, durationMs, escapeText, expand, expandCalendar, first, fold, formatContentLine, formatDuration, formatUtcOffset, parseComponents, parseContentLine, parseDateValue, parseDuration, parsePeriod, parseUtcOffset, prop, readEvent, readZone, splitList, unescapeText, unfold, writeComponent, zoneComponent, zonesOf } from './index.ts';\nimport type { Event } from './index.ts';\n\nconst NY = 'America/New_York';\nconst BASTILLE = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//hacksw/handcal//NONSGML v1.0//EN', 'BEGIN:VEVENT', 'UID:19970610T172345Z-AF23B2@example.com', 'DTSTAMP:19970610T172345Z', 'DTSTART:19970714T170000Z', 'DTEND:19970715T040000Z', 'SUMMARY:Bastille Day Party', 'END:VEVENT', 'END:VCALENDAR', ''].join('\\r\\n');\n\nconst vevent = (lines: string[]) => parseComponents(['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:x', 'BEGIN:VEVENT', 'UID:u1', 'DTSTAMP:20260101T000000Z', ...lines, 'END:VEVENT', 'END:VCALENDAR', ''].join('\\r\\n'))[0]!.components[0]!;\nconst local = (d: Date, tz = NY) => { const w = wallOf(d, tz); return `${w.y}-${String(w.m).padStart(2, '0')}-${String(w.d).padStart(2, '0')} ${String(w.h).padStart(2, '0')}:${String(w.min).padStart(2, '0')}`; };\nconst range = (a: string, b: string) => ({ from: new Date(a), to: new Date(b) });\n\ntest('the RFC 5545 folding example unfolds to the original line and folds back the same way', () => {\n  const folded = ['DESCRIPTION:This is a lo', ' ng description', '  that exists on a long line.'].join('\\r\\n');\n  assert.deepEqual(unfold(folded), ['DESCRIPTION:This is a long description that exists on a long line.']);\n  assert.deepEqual(unfold('A:1\\nB:2\\r\\n\\tcontinued\\rC:3\\r\\n'), ['A:1', 'B:2continued', 'C:3']);\n  const long = `DESCRIPTION:${'x'.repeat(200)}`;\n  const f = fold(long);\n  assert.ok(f.split('\\r\\n').every((l, i) => Buffer.byteLength(l) <= 75 + (i ? 0 : 0)));\n  assert.equal(f.split('\\r\\n')[0]!.length, 75);\n  assert.deepEqual(unfold(f), [long]);\n  assert.equal(fold('SHORT:line'), 'SHORT:line');\n});\n\ntest('folding never splits a multi-byte character, and every folded line stays within 75 octets', () => {\n  const line = `SUMMARY:${'é€𝄞日本語'.repeat(30)}`;\n  const parts = fold(line).split('\\r\\n');\n  for (const p of parts) assert.ok(Buffer.byteLength(p) <= 75, `${Buffer.byteLength(p)} bytes`);\n  assert.deepEqual(unfold(fold(line)), [line]);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/icalendar-165.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.978Z"
+}

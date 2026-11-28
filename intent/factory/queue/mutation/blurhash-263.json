@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "blurhash",
+  "mutant": {
+    "id": "263",
+    "line": 145,
+    "column": 26,
+    "endLine": 145,
+    "endColumn": 57,
+    "mutator": "ArithmeticOperator",
+    "original": "decode83(hash[1] as string) + 1",
+    "replacement": "decode83(hash[1] as string) - 1",
+    "lineText": "const maximumValue = ((decode83(hash[1] as string) + 1) / 166) * punch;",
+    "prevText": "const { componentsX, componentsY } = blurhashInfo(hash);",
+    "nextText": "const colours: [number, number, number][] = [];"
+  },
+  "mayEdit": [
+    "intent/blocks/blurhash/blurhash.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/blurhash-263.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"blurhash\". Mutant: line 145:26-145:57, mutator ArithmeticOperator: \"decode83(hash[1] as string) + 1\" becomes \"decode83(hash[1] as string) - 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/blurhash/index.ts (> marks the mutated line):\n   139  }\n   140  \n   141  export function blurhashDecode(hash: string, width: number, height: number, punch = 1): Bitmap {\n   142    checkSize(width, height, 'blurhash decode', MAX_PIXELS_DECODE);\n   143    if (!(punch > 0) || !Number.isFinite(punch)) throw new HashError('punch must be above zero');\n   144    const { componentsX, componentsY } = blurhashInfo(hash);\n>  145    const maximumValue = ((decode83(hash[1] as string) + 1) / 166) * punch;\n   146    const colours: [number, number, number][] = [];\n   147    const dcValue = decode83(hash.slice(2, 6));\n   148    colours.push([sRGBToLinear(dcValue >> 16), sRGBToLinear((dcValue >> 8) & 255), sRGBToLinear(dcValue & 255)]);\n   149    for (let i = 1; i < componentsX * componentsY; i++) {\n   150      const v = decode83(hash.slice(4 + i * 2, 6 + i * 2));\n   151      colours.push([signPow((Math.floor(v / 361) - 9) / 9, 2) * maximumValue, signPow(((Math.floor(v / 19) % 19) - 9) / 9, 2) * maximumValue, signPow(((v % 19) - 9) / 9, 2) * maximumValue]);\n\nTest file style (intent/blocks/blurhash/blurhash.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  blurhashColour, blurhashDecode, blurhashEncode, blurhashInfo, decode83, downscale, encode83, fromBase64, HashError, thumbhashAspectRatio, thumbhashColour, thumbhashDecode, thumbhashEncode, toBase64,\n} from './index.ts';\n\nfunction solid(w: number, h: number, r: number, g: number, b: number, a = 255): Uint8ClampedArray {\n  const px = new Uint8ClampedArray(w * h * 4);\n  for (let i = 0; i < w * h; i++) px.set([r, g, b, a], i * 4);\n  return px;\n}\n/** Red on the left to blue on the right. */\nfunction gradient(w: number, h: number): Uint8ClampedArray {\n  const px = new Uint8ClampedArray(w * h * 4);\n  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) px.set([Math.round(255 * (1 - x / (w - 1))), 20, Math.round(255 * (x / (w - 1))), 255], (y * w + x) * 4);\n  return px;\n}\nconst at = (b: { width: number; pixels: Uint8ClampedArray }, x: number, y: number) => Array.from(b.pixels.subarray((y * b.width + x) * 4, (y * b.width + x) * 4 + 4));\n\n// ------------------------------------------------------------ blurhash\n\ntest('base 83 uses the published alphabet and round trips', () => {\n  assert.equal(decode83('0'), 0);\n  assert.equal(decode83('~'), 82);\n  assert.equal(decode83('10'), 83);\n  assert.equal(encode83(16711680, 4), 'TI:j');\n  assert.equal(decode83('TI:j'), 16711680);\n  assert.equal(encode83(0, 2), '00');\n  for (const n of [1, 82, 83, 6888, 6889, 571786, 571787]) assert.equal(decode83(encode83(n, 4)), n);\n  assert.throws(() => decode83('a b'), /not a base 83 character/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/blurhash-263.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.151Z"
+}

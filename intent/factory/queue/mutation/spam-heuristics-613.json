@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "spam-heuristics",
+  "mutant": {
+    "id": "613",
+    "line": 347,
+    "column": 11,
+    "endLine": 347,
+    "endColumn": 22,
+    "mutator": "StringLiteral",
+    "original": "'duplicate'",
+    "replacement": "\"\"",
+    "lineText": "id: 'duplicate',",
+    "prevText": "{",
+    "nextText": "check: (s, c) => {"
+  },
+  "mayEdit": [
+    "intent/blocks/spam-heuristics/spam-heuristics.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/spam-heuristics-613.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"spam-heuristics\". Mutant: line 347:11-347:22, mutator StringLiteral: \"'duplicate'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/spam-heuristics/index.ts (> marks the mutated line):\n   341          ask('ip', s.ip, 'this address', 25);\n   342          ask('network', s.ip ? networkOf(s.ip) : undefined, 'this network', 20);\n   343          return out.length ? out : undefined;\n   344        },\n   345      },\n   346      {\n>  347        id: 'duplicate',\n   348        check: (s, c) => {\n   349          if (s.content.trim().length < 20) return undefined;\n   350          const h = hashOf(s.content);\n   351          const who = s.userId ?? s.ip ?? s.email ?? 'anonymous';\n   352          const known = c.seen(h, who);\n   353          const out: Hit[] = [];\n\nTest file style (intent/blocks/spam-heuristics/spam-heuristics.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Reputation, SpamConfigError, SpamScorer, entropy, explain, extractLinks, identities, mixedScriptWords, networkOf } from './index.ts';\nimport type { Config, Hit, Rule, Submission } from './index.ts';\n\nconst DAY = 86_400_000;\nconst make = (c: Config = {}) => {\n  const clock = { now: 10 * DAY };\n  const scorer = new SpamScorer({ honeypots: ['website_url'], words: { viagra: 50, 'free money': 30 }, now: () => clock.now, velocity: {}, ...c });\n  return { scorer, clock };\n};\nconst human: Submission = { kind: 'comment', content: 'Thanks for the clear write-up, the second example helped me fix my build.', renderedAt: 0, submittedAt: 45_000, userAgent: 'Mozilla/5.0 (X11; Linux x86_64) Firefox/126.0' };\nconst rules = (r: { hits: readonly Hit[] }) => r.hits.map((h) => h.rule);\nconst points = (r: { hits: readonly Hit[] }, rule: string) => r.hits.filter((h) => h.rule === rule).reduce((n, h) => n + h.points, 0);\n\ntest('an ordinary comment scores nothing and is accepted', () => {\n  const { scorer } = make();\n  const r = scorer.score(human);\n  assert.deepEqual({ score: r.score, verdict: r.verdict, hits: r.hits }, { score: 0, verdict: 'accept', hits: [] });\n  assert.equal(explain(r), 'Accepted (score 0): nothing looked wrong.');\n});\n\ntest('a filled honeypot is decisive: nothing, not even a long good record, outweighs it', () => {\n  const { scorer } = make();\n  for (let i = 0; i < 20; i++) scorer.feedback({ ...human, userId: 'ana' }, 'ham');\n  const r = scorer.score({ ...human, userId: 'ana', signedIn: true, fields: { website_url: 'http://spam.example', other: 'x' } });\n  assert.equal(r.decisive, true);\n  assert.equal(r.verdict, 'reject');\n  assert.equal(r.hits[0]?.rule, 'honeypot');\n  assert.equal(r.hits[0]?.detail, 'the hidden field \"website_url\" was filled in');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/spam-heuristics-613.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:04.372Z"
+}

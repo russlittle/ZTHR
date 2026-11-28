@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "cert-store",
+  "mutant": {
+    "id": "11",
+    "line": 51,
+    "column": 7,
+    "endLine": 51,
+    "endColumn": 27,
+    "mutator": "ConditionalExpression",
+    "original": "pos + 2 > buf.length",
+    "replacement": "false",
+    "lineText": "if (pos + 2 > buf.length) throw new CertError('DER is truncated');",
+    "prevText": "if (++counter.n > MAX_ELEMENTS) throw new CertError('DER has too many elements');",
+    "nextText": "const tag = buf[pos]!;"
+  },
+  "mayEdit": [
+    "intent/blocks/cert-store/cert-store.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/cert-store-11.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"cert-store\". Mutant: line 51:7-51:27, mutator ConditionalExpression: \"pos + 2 > buf.length\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/cert-store/index.ts (> marks the mutated line):\n    45    readonly value: Uint8Array;\n    46    readonly raw: Uint8Array;\n    47  }\n    48  \n    49  function readOne(buf: Uint8Array, pos: number, counter: { n: number }): { tlv: Tlv; next: number } {\n    50    if (++counter.n > MAX_ELEMENTS) throw new CertError('DER has too many elements');\n>   51    if (pos + 2 > buf.length) throw new CertError('DER is truncated');\n    52    const tag = buf[pos]!;\n    53    if ((tag & 0x1f) === 0x1f) throw new CertError('DER high tag numbers are not supported');\n    54    let len = buf[pos + 1]!;\n    55    let p = pos + 2;\n    56    if (len === 0x80) throw new CertError('DER must not use indefinite lengths');\n    57    if (len & 0x80) {\n\nTest file style (intent/blocks/cert-store/cert-store.test.ts):\n23 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CertError, CertStore, buildChain, certificateCoversHost, nameKey, nameToString, normalizeHost, parseCertificate, parseIp, parsePem, verifySignature } from './index.ts';\n\n// Generated once with OpenSSL; every certificate here is a throwaway test certificate.\nexport const PEM = {\n  ca: `-----BEGIN CERTIFICATE-----\nMIIB0DCCAXagAwIBAgIBATAKBggqhkjOPQQDAjA/MQswCQYDVQQGEwJVUzEWMBQG\nA1UECgwNRXhhbXBsZSBUcnVzdDEYMBYGA1UEAwwPRXhhbXBsZSBSb290IENBMB4X\nDTI2MTEyODA2NDk1MVoXDTM2MTEyNTA2NDk1MVowPzELMAkGA1UEBhMCVVMxFjAU\nBgNVBAoMDUV4YW1wbGUgVHJ1c3QxGDAWBgNVBAMMD0V4YW1wbGUgUm9vdCBDQTBZ\nMBMGByqGSM49AgEGCCqGSM49AwEHA0IABI0DXcPRwMXxQ14obQw2VTgc71tyUpKZ\nkWsxvl37gBZDRrPWdMvS9qHG7Tv6swo/FavGVyXgVrP3IXYznUfTBnqjYzBhMB8G\nA1UdIwQYMBaAFC0eqNIFuEyCZivxF89crzoMURK+MA8GA1UdEwEB/wQFMAMBAf8w\nDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBQtHqjSBbhMgmYr8RfPXK86DFESvjAK\nBggqhkjOPQQDAgNIADBFAiAIxfD/UaF7JwZgXA/OuL4p7QcFswvJNZZujGgMJRbl\nCgIhAKYqbBRoECqFt+cejmpIZo3FhQ/4D5fkXrryTVxMKBsN\n-----END CERTIFICATE-----\n`,\n  int: `-----BEGIN CERTIFICATE-----\nMIIB1zCCAX6gAwIBAgIBAjAKBggqhkjOPQQDAjA/MQswCQYDVQQGEwJVUzEWMBQG\nA1UECgwNRXhhbXBsZSBUcnVzdDEYMBYGA1UEAwwPRXhhbXBsZSBSb290IENBMB4X\nDTI2MTEyODA2NDk1MloXDTMxMTEwMjA2NDk1MlowRDELMAkGA1UEBhMCVVMxFjAU\nBgNVBAoMDUV4YW1wbGUgVHJ1c3QxHTAbBgNVBAMMFEV4YW1wbGUgSXNzdWluZyBD\nQSAxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAECCw1w08ZW+Q7jklDizWvL7Ut\nIod1FXhLqbyVKCzyOUOs9ylOEkjQ+2AWSd4513Ovp5BrGyUPLS65A9uxpOMAWKNm\nMGQwEgYDVR0TAQH/BAgwBgEB/wIBADAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYE\nFKnVKnfH4aiQX73M/n3XRZmsYIi7MB8GA1UdIwQYMBaAFC0eqNIFuEyCZivxF89c\nrzoMURK+MAoGCCqGSM49BAMCA0cAMEQCID4bUnIr1n3w+4SVEpCKp0z+Fl8LcCdO\nC5awI5xAnxbkAiARsrV9NQi8LUyczo/vCqpw5W0Aubur0ATR48OwK0Ge6A==\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/cert-store-11.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.811Z"
+}

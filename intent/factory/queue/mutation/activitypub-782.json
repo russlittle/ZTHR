@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "activitypub",
+  "mutant": {
+    "id": "782",
+    "line": 496,
+    "column": 12,
+    "endLine": 496,
+    "endColumn": 31,
+    "mutator": "ConditionalExpression",
+    "original": "mem.type === 'Like'",
+    "replacement": "true",
+    "lineText": "(mem.type === 'Like' ? this.likes : this.announces).get(mem.object)?.delete(mem.actor);",
+    "prevText": "} else {",
+    "nextText": "events.push({ kind: mem.type === 'Like' ? 'unlike' : 'unannounce', actor: mem.actor, object: mem.object });"
+  },
+  "mayEdit": [
+    "intent/blocks/activitypub/activitypub.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/activitypub-782.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"activitypub\". Mutant: line 496:12-496:31, mutator ConditionalExpression: \"mem.type === 'Like'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/activitypub/index.ts (> marks the mutated line):\n   490          this.#remembered.delete(innerId!);\n   491          if (mem.type === 'Follow') {\n   492            this.followers.delete(mem.actor);\n   493            this.pending.delete(innerId!);\n   494            events.push({ kind: 'follower-removed', actor: mem.actor });\n   495          } else {\n>  496            (mem.type === 'Like' ? this.likes : this.announces).get(mem.object)?.delete(mem.actor);\n   497            events.push({ kind: mem.type === 'Like' ? 'unlike' : 'unannounce', actor: mem.actor, object: mem.object });\n   498          }\n   499          break;\n   500        }\n   501        case 'Create':\n   502        case 'Update':\n\nTest file style (intent/blocks/activitypub/activitypub.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync } from 'node:crypto';\nimport { test } from 'node:test';\nimport {\n  ApError, AS_CONTEXT, CollectionStore, Inbox, PUBLIC, accept, actorFromWebfinger, announce, block, create, deliver, digestOf, follow, hasActivityStreamsContext,\n  like, makeActor, move, parseAcct, parseSignatureHeader, planDelivery, remove, signRequest, undo, update, validateActivity, validateActor, verifyRequest, webfinger, type Doc,\n} from './index.ts';\n\nconst NOW = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst rsa = generateKeyPairSync('rsa', { modulusLength: 2048 });\nconst ed = generateKeyPairSync('ed25519');\nconst pem = rsa.publicKey.export({ type: 'spki', format: 'pem' }) as string;\n\nconst ALICE = 'https://a.example/users/alice';\nconst BOB = 'https://b.example/users/bob';\nconst note = (id: string, by: string): Doc => ({ id, type: 'Note', attributedTo: by, content: '<p>hi</p>', to: [PUBLIC], cc: [`${by}/followers`], published: '2026-11-28T12:00:00Z' });\n\nlet n = 0;\nconst inbox = (manual = false) => new Inbox({ self: ALICE, manuallyApprovesFollowers: manual, newId: (l) => `https://a.example/activities/${l}-${++n}` });\n\ntest('an actor document has the required parts, the security context and a key owned by the actor', () => {\n  const a = makeActor({ id: ALICE, preferredUsername: 'alice', name: 'Alice', inbox: `${ALICE}/inbox`, outbox: `${ALICE}/outbox`, followers: `${ALICE}/followers`, sharedInbox: 'https://a.example/inbox', publicKeyPem: pem, manuallyApprovesFollowers: false });\n  assert.deepEqual(a['@context'], [AS_CONTEXT, 'https://w3id.org/security/v1']);\n  assert.deepEqual(a['publicKey'], { id: `${ALICE}#main-key`, owner: ALICE, publicKeyPem: pem });\n  const v = validateActor(a);\n  assert.equal(v.sharedInbox, 'https://a.example/inbox');\n  assert.equal(v.keyId, `${ALICE}#main-key`);\n  assert.throws(() => makeActor({ id: 'http://a.example/x', preferredUsername: 'x', inbox: 'i', outbox: 'o' }), /https/);\n  assert.throws(() => makeActor({ id: ALICE, preferredUsername: 'bad name!', inbox: `${ALICE}/inbox`, outbox: `${ALICE}/outbox` }), /preferredUsername/);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/activitypub-782.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:33.849Z"
+}

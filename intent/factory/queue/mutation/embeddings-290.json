@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "embeddings",
+  "mutant": {
+    "id": "290",
+    "line": 325,
+    "column": 98,
+    "endLine": 325,
+    "endColumn": 148,
+    "mutator": "LogicalOperator",
+    "original": "(causes[0] as Error)?.message ?? String(causes[0])",
+    "replacement": "(causes[0] as Error)?.message && String(causes[0])",
+    "lineText": "throw new EmbeddingFailed(`embedding failed for ${failed.length} of ${first.size} texts: ${(causes[0] as Error)?.message ?? String(causes[0])}`, causes);",
+    "prevText": "if (causes.length === 1 && (only instanceof BadEmbedding || only instanceof DimensionMismatch || only instanceof BadRequest)) throw only;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/embeddings/embeddings.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/embeddings-290.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"embeddings\". Mutant: line 325:98-325:148, mutator LogicalOperator: \"(causes[0] as Error)?.message ?? String(causes[0])\" becomes \"(causes[0] as Error)?.message && String(causes[0])\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/embeddings/index.ts (> marks the mutated line):\n   319      const settled = await Promise.allSettled([...answers.values()]);\n   320      const failed = settled.filter((s): s is PromiseRejectedResult => s.status === 'rejected');\n   321      if (failed.length) {\n   322        const causes = errors.length ? errors : failed.map((f) => f.reason as unknown);\n   323        const only = causes[0];\n   324        if (causes.length === 1 && (only instanceof BadEmbedding || only instanceof DimensionMismatch || only instanceof BadRequest)) throw only;\n>  325        throw new EmbeddingFailed(`embedding failed for ${failed.length} of ${first.size} texts: ${(causes[0] as Error)?.message ?? String(causes[0])}`, causes);\n   326      }\n   327      const byKey = new Map<string, Float32Array>();\n   328      for (const [i, key] of [...answers.keys()].entries()) byKey.set(key, (settled[i] as PromiseFulfilledResult<Float32Array>).value);\n   329      // Copies, so a caller who changes a vector cannot change what is cached.\n   330      return keys.map((k) => Float32Array.from(byKey.get(k)!));\n   331    }\n\nTest file style (intent/blocks/embeddings/embeddings.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Cache } from '../cache/index.ts';\nimport { Breaker, BreakerOpen, TimedOut } from '../resilience/index.ts';\nimport { BadEmbedding, BadRequest, DimensionMismatch, Embedder, EmbeddingFailed, ProviderError, assertSameSpace, cosine, twin, words } from './index.ts';\nimport type { EmbeddingProvider } from './index.ts';\n\nconst noSleep = async () => {};\nconst mk = (o: Partial<ConstructorParameters<typeof Embedder>[0]> = {}, p = twin({ dim: 32, maxBatch: 10 })) => ({ p, e: new Embedder({ provider: p, sleep: noSleep, random: () => 0.5, ...o }) });\n\n/** A provider whose answers a test controls. */\nfunction scripted(dim: number, script: (texts: readonly string[], call: number, signal: AbortSignal) => Promise<ArrayLike<number>[]> | ArrayLike<number>[], model = 'scripted'): EmbeddingProvider & { calls: number } {\n  const p = {\n    model,\n    dim,\n    maxBatch: 4,\n    calls: 0,\n    async embed(texts: readonly string[], o: { signal: AbortSignal }) {\n      return script(texts, p.calls++, o.signal);\n    },\n  };\n  return p;\n}\nconst unit = (dim: number, hot = 0) => Array.from({ length: dim }, (_, i) => (i === hot ? 1 : 0));\n\ntest('the twin gives the same unit vector for the same text, close vectors for shared words, far for unrelated', async () => {\n  const a = twin({ dim: 256 });\n  const [x1, y1, z1] = (await a.embed(['the quick brown fox', 'the quick brown fox', 'a quick brown dog'], { kind: 'document', signal: new AbortController().signal })) as number[][];\n  assert.deepEqual(x1, y1);\n  assert.ok(Math.abs(Math.hypot(...x1!) - 1) < 1e-9, 'unit length');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/embeddings-290.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.639Z"
+}

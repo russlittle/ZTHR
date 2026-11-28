@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "media-name-parse",
+  "mutant": {
+    "id": "852",
+    "line": 349,
+    "column": 54,
+    "endLine": 349,
+    "endColumn": 57,
+    "mutator": "StringLiteral",
+    "original": "' '",
+    "replacement": "\"\"",
+    "lineText": "const s = squash(despace(t.s).replace(/[\\[\\]{}]/g, ' ').replace(/\\(\\s*\\)/g, ' '));",
+    "prevText": "const t = takeIds(name);",
+    "nextText": "return { s, ids: t.ids, ...(t.edition ? { edition: t.edition } : {}), ...(group ? { group } : {}), anime };"
+  },
+  "mayEdit": [
+    "intent/blocks/media-name-parse/media-name-parse.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/media-name-parse-852.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"media-name-parse\". Mutant: line 349:54-349:57, mutator StringLiteral: \"' '\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/media-name-parse/index.ts (> marks the mutated line):\n   343      anime = true;\n   344      name = name.slice(fan[0].length);\n   345    }\n   346    if (/\\[[0-9A-Fa-f]{8}\\]|\\([0-9A-Fa-f]{8}\\)/.test(name)) anime = true;\n   347    name = name.replace(/[\\[(][0-9A-Fa-f]{8}[\\])]/g, ' ');\n   348    const t = takeIds(name);\n>  349    const s = squash(despace(t.s).replace(/[\\[\\]{}]/g, ' ').replace(/\\(\\s*\\)/g, ' '));\n   350    return { s, ids: t.ids, ...(t.edition ? { edition: t.edition } : {}), ...(group ? { group } : {}), anime };\n   351  }\n   352  \n   353  function qualityOf(s: string, group?: string): Quality {\n   354    const q = parseQuality(s);\n   355    return group && !q.group ? { ...q, group } : q;\n\nTest file style (intent/blocks/media-name-parse/media-name-parse.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { identify, parseAlbumDir, parseDiscDir, parseQuality, parseSeasonDir, parseSidecar, parseTrackName, splitExt, titleKey, episodeKey, movieKey } from './index.ts';\nimport type { Episode, Extra, Movie, Options, Track } from './index.ts';\n\nconst NOW = Date.UTC(2026, 5, 1);\nconst O: Options = { now: () => NOW };\nconst mov = (p: string, o: Options = O) => {\n  const r = identify(p, o);\n  assert.equal(r.kind, 'movie', `${p} -> ${JSON.stringify(r)}`);\n  return r as Movie;\n};\nconst ep = (p: string, o: Options = O) => {\n  const r = identify(p, o);\n  assert.equal(r.kind, 'episode', `${p} -> ${JSON.stringify(r)}`);\n  return r as Episode;\n};\n\ntest('splitExt only strips extensions that are media or sidecars', () => {\n  assert.deepEqual(splitExt('Movie.2019.mkv'), { base: 'Movie.2019', ext: 'mkv' });\n  assert.deepEqual(splitExt('Dr. Strangelove'), { base: 'Dr. Strangelove', ext: '' });\n  assert.deepEqual(splitExt('Mr.Robot.S01E01.1080p'), { base: 'Mr.Robot.S01E01.1080p', ext: '' });\n  assert.deepEqual(splitExt('song.FLAC'), { base: 'song', ext: 'flac' });\n});\n\ntest('movies: release names, brackets, year as title, the title keeps its own numbers', () => {\n  const rows: [string, string, number | undefined][] = [\n    ['The.Matrix.1999.1080p.BluRay.x264-GRP.mkv', 'The Matrix', 1999],\n    ['Blade Runner 2049 (2017) 2160p.mkv', 'Blade Runner 2049', 2017],\n    ['Blade.Runner.2049.2017.UHD.BluRay.mkv', 'Blade Runner 2049', 2017],\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/media-name-parse-852.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:49.229Z"
+}

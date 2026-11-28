@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf-forms",
+  "mutant": {
+    "id": "1898",
+    "line": 903,
+    "column": 22,
+    "endLine": 903,
+    "endColumn": 92,
+    "mutator": "MethodExpression",
+    "original": "f.widgets.map((w) => w.onState).filter((s): s is string => s !== null)",
+    "replacement": "f.widgets.map(w => w.onState)",
+    "lineText": "const states = f.widgets.map((w) => w.onState).filter((s): s is string => s !== null);",
+    "prevText": "} else if (f.type === 'radio') {",
+    "nextText": "if (value === null || value === '' || value === 'Off') plan.push({ field: f, c, value: null });"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf-forms/pdf-forms.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-forms-1898.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf-forms\". Mutant: line 903:22-903:92, mutator MethodExpression: \"f.widgets.map((w) => w.onState).filter((s): s is string => s !== null)\" becomes \"f.widgets.map(w => w.onState)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf-forms/index.ts (> marks the mutated line):\n   897      } else if (f.type === 'checkbox') {\n   898        const on = f.widgets[0]?.onState ?? 'Yes';\n   899        if (value === true || value === on) plan.push({ field: f, c, value: true });\n   900        else if (value === false || value === null || value === '' || value === 'Off') plan.push({ field: f, c, value: false });\n   901        else problems.push({ field: fname, why: `a check box is true, false or \"${on}\"` });\n   902      } else if (f.type === 'radio') {\n>  903        const states = f.widgets.map((w) => w.onState).filter((s): s is string => s !== null);\n   904        if (value === null || value === '' || value === 'Off') plan.push({ field: f, c, value: null });\n   905        else if (typeof value === 'string' && states.includes(value)) plan.push({ field: f, c, value });\n   906        else problems.push({ field: fname, why: `choose one of: ${states.join(', ') || '(no buttons have appearance states)'}` });\n   907      } else {\n   908        const list = value === null || value === '' ? [] : typeof value === 'string' ? [value] : Array.isArray(value) ? [...value] : null;\n   909        if (list === null) problems.push({ field: fname, why: 'a choice field takes an option or a list of options' });\n\nTest file style (intent/blocks/pdf-forms/pdf-forms.test.ts):\n30 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { pdf } from '../pdf/index.ts';\nimport { FormError, FormsError, addFields, appearanceMatrix, displayed, fill, flatten, missingRequired, pageGeometry, pageRefs, placement, readDoc, readForm, serialize } from './index.ts';\nimport type { PageGeometry, PdfDict } from './index.ts';\n\nconst latin = (b: Uint8Array) => Buffer.from(b).toString('latin1');\n\nfunction stream(dictBody: string, data: string): string {\n  return `<< ${dictBody} /Length ${Buffer.byteLength(data, 'latin1')} >>\\nstream\\n${data}\\nendstream`;\n}\n\n/** A classic PDF from numbered object bodies. */\nfunction build(objs: Record<number, string>, root = 1): Buffer {\n  const max = Math.max(...Object.keys(objs).map(Number));\n  let out = '%PDF-1.7\\n%\\xe2\\xe3\\xcf\\xd3\\n';\n  const offs: Record<number, number> = {};\n  for (let n = 1; n <= max; n++) {\n    if (objs[n] === undefined) continue;\n    offs[n] = Buffer.byteLength(out, 'latin1');\n    out += `${n} 0 obj\\n${objs[n]}\\nendobj\\n`;\n  }\n  const x = Buffer.byteLength(out, 'latin1');\n  out += `xref\\n0 ${max + 1}\\n0000000000 65535 f \\n`;\n  for (let n = 1; n <= max; n++) out += offs[n] === undefined ? '0000000000 00000 f \\n' : `${String(offs[n]).padStart(10, '0')} 00000 n \\n`;\n  out += `trailer\\n<< /Size ${max + 1} /Root ${root} 0 R >>\\nstartxref\\n${x}\\n%%EOF\\n`;\n  return Buffer.from(out, 'latin1');\n}\n\nconst FORM_XOBJ = (w: number, h: number, body: string) => stream(`/Type /XObject /Subtype /Form /BBox [0 0 ${w} ${h}]`, body);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-forms-1898.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:54.192Z"
+}

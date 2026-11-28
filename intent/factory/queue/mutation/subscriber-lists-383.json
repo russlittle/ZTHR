@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "subscriber-lists",
+  "mutant": {
+    "id": "383",
+    "line": 327,
+    "column": 11,
+    "endLine": 327,
+    "endColumn": 74,
+    "mutator": "LogicalOperator",
+    "original": "!Array.isArray(v) || v.length !== 4 || typeof v[0] !== 'string'",
+    "replacement": "(!Array.isArray(v) || v.length !== 4) && typeof v[0] !== 'string'",
+    "lineText": "if (!Array.isArray(v) || v.length !== 4 || typeof v[0] !== 'string' || typeof v[1] !== 'string' || typeof v[2] !== 'number' || typeof v[3] !== 'number') return undefined;",
+    "prevText": "const v: unknown = JSON.parse(Buffer.from(parts[0], 'base64url').toString());",
+    "nextText": "return { list: v[0], email: v[1], epoch: v[2], exp: v[3] };"
+  },
+  "mayEdit": [
+    "intent/blocks/subscriber-lists/subscriber-lists.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/subscriber-lists-383.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"subscriber-lists\". Mutant: line 327:11-327:74, mutator LogicalOperator: \"!Array.isArray(v) || v.length !== 4 || typeof v[0] !== 'string'\" becomes \"(!Array.isArray(v) || v.length !== 4) && typeof v[0] !== 'string'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/subscriber-lists/index.ts (> marks the mutated line):\n   321      if (parts.length !== 2 || !parts[0] || !parts[1]) return undefined;\n   322      const got = Buffer.from(parts[1], 'base64url');\n   323      const want = this.mac(kind, parts[0]);\n   324      if (got.length !== want.length || !timingSafeEqual(got, want)) return undefined;\n   325      try {\n   326        const v: unknown = JSON.parse(Buffer.from(parts[0], 'base64url').toString());\n>  327        if (!Array.isArray(v) || v.length !== 4 || typeof v[0] !== 'string' || typeof v[1] !== 'string' || typeof v[2] !== 'number' || typeof v[3] !== 'number') return undefined;\n   328        return { list: v[0], email: v[1], epoch: v[2], exp: v[3] };\n   329      } catch {\n   330        return undefined;\n   331      }\n   332    }\n   333  \n\nTest file style (intent/blocks/subscriber-lists/subscriber-lists.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ListError, SubscriberLists, addressFingerprint, csvCell, isRoleAddress, normalizeEmail, parseCsv } from './index.ts';\nimport type { ListsOptions } from './index.ts';\nimport type { Message } from '../notify/index.ts';\nimport type { Record_ } from '../consent/index.ts';\n\nconst T0 = Date.UTC(2026, 5, 1, 9, 0, 0);\nconst DAY = 86_400_000;\n\ninterface Rig {\n  readonly lists: SubscriberLists;\n  readonly sent: Message[];\n  readonly consents: Record_[];\n  clock: { t: number };\n}\n\nfunction rig(over: Partial<ListsOptions> = {}, double = true): Rig {\n  const sent: Message[] = [];\n  const consents: Record_[] = [];\n  const clock = { t: T0 };\n  const lists = new SubscriberLists({\n    secret: 'test-secret-01234', now: () => clock.t, send: async (m) => { sent.push(m); }, onConsent: (r) => consents.push(r),\n    confirmUrl: 'https://example.org/confirm', unsubscribeUrl: 'https://example.org/unsub?src=mail', preferencesUrl: 'https://example.org/prefs',\n    ...over,\n  });\n  lists.createList({ id: 'news', name: 'Monthly news', doubleOptIn: double, consentText: 'Send me the monthly news by email.', topics: [{ id: 'product', name: 'Product', defaultOn: true }, { id: 'events', name: 'Events', defaultOn: false }], frequencies: ['weekly', 'monthly'] });\n  return { lists, sent, consents, clock };\n}\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/subscriber-lists-383.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:06.003Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "sketches",
+  "mutant": {
+    "id": "458",
+    "line": 323,
+    "column": 32,
+    "endLine": 323,
+    "endColumn": 53,
+    "mutator": "ConditionalExpression",
+    "original": "compression <= 10_000",
+    "replacement": "true",
+    "lineText": "if (!(compression >= 10 && compression <= 10_000)) throw new SketchError('the saved t-digest has an impossible compression');",
+    "prevText": "const hi = r.f64();",
+    "nextText": "if (n > compression * 20) throw new SketchError('the saved t-digest has more centroids than its compression allows');"
+  },
+  "mayEdit": [
+    "intent/blocks/sketches/sketches.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sketches-458.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sketches\". Mutant: line 323:32-323:53, mutator ConditionalExpression: \"compression <= 10_000\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sketches/index.ts (> marks the mutated line):\n   317      const r = new Reader(buf, 't-digest');\n   318      r.tag('TDG1', 1);\n   319      const compression = r.f64();\n   320      const n = r.u32();\n   321      const lo = r.f64();\n   322      const hi = r.f64();\n>  323      if (!(compression >= 10 && compression <= 10_000)) throw new SketchError('the saved t-digest has an impossible compression');\n   324      if (n > compression * 20) throw new SketchError('the saved t-digest has more centroids than its compression allows');\n   325      const d = new TDigest(compression);\n   326      let prev = -Infinity;\n   327      let total = 0;\n   328      for (let i = 0; i < n; i++) {\n   329        const mean = r.f64();\n\nTest file style (intent/blocks/sketches/sketches.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BloomFilter, CountMin, HyperLogLog, SketchError, TDigest, hash64 } from './index.ts';\n\nconst within = (got: number, want: number, rel: number, what: string) => assert.ok(Math.abs(got - want) <= want * rel, `${what}: got ${got}, wanted ${want} within ${rel * 100}%`);\n\ntest('the hash is SHA-256 of the seed then the item, so it is the same everywhere', () => {\n  // sha256(00000000 || \"abc\") = 0a834ab0 4b1628b0 b4ec20ca ..., computed independently with openssl.\n  assert.deepEqual(hash64('abc'), { hi: 0x0a834ab0, lo: 0x4b1628b0 });\n  assert.deepEqual(hash64('abc'), hash64(new TextEncoder().encode('abc')));\n  assert.notDeepEqual(hash64('abc', 1), hash64('abc', 0));\n  assert.deepEqual(hash64('abc', 5), hash64('abc', 5));\n});\n\ntest('HyperLogLog: small sets are counted exactly, large ones within a few standard errors', () => {\n  const h = new HyperLogLog(14);\n  assert.equal(h.count(), 0);\n  for (let i = 0; i < 10; i++) h.add(`user-${i}`);\n  assert.equal(h.count(), 10);\n  for (let i = 0; i < 10; i++) h.add(`user-${i}`);\n  assert.equal(h.count(), 10, 'seeing the same ones again changes nothing');\n  const big = new HyperLogLog(14);\n  for (let i = 0; i < 200_000; i++) big.add(`id-${i}`);\n  within(big.count(), 200_000, 3 * big.standardError, '200k distinct');\n  assert.equal(big.registers, 16384);\n  assert.ok(Math.abs(big.standardError - 0.0081) < 0.0001);\n});\n\ntest('HyperLogLog: precision trades memory for error', () => {\n  const lo = new HyperLogLog(6);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sketches-458.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.208Z"
+}

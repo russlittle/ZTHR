@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "columnar-agg",
+  "mutant": {
+    "id": "436",
+    "line": 366,
+    "column": 34,
+    "endLine": 366,
+    "endColumn": 39,
+    "mutator": "StringLiteral",
+    "original": "'int'",
+    "replacement": "\"\"",
+    "lineText": "this.col(f.col, ['time', 'int', 'float']);",
+    "prevText": "case 'gt':",
+    "nextText": "return (c, i) => num(c, i) > f.value;"
+  },
+  "mayEdit": [
+    "intent/blocks/columnar-agg/columnar-agg.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/columnar-agg-436.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"columnar-agg\". Mutant: line 366:34-366:39, mutator StringLiteral: \"'int'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/columnar-agg/index.ts (> marks the mutated line):\n   360          }\n   361          this.col(f.col, ['time', 'int', 'float']);\n   362          const vs = new Set(f.values.map(Number));\n   363          return (c, i) => vs.has(num(c, i));\n   364        }\n   365        case 'gt':\n>  366          this.col(f.col, ['time', 'int', 'float']);\n   367          return (c, i) => num(c, i) > f.value;\n   368        case 'gte':\n   369          this.col(f.col, ['time', 'int', 'float']);\n   370          return (c, i) => num(c, i) >= f.value;\n   371        case 'lt':\n   372          this.col(f.col, ['time', 'int', 'float']);\n\nTest file style (intent/blocks/columnar-agg/columnar-agg.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ColumnStore, ColumnarError, Hll, OTHER, Rollup, bucketEnd, bucketStart } from './index.ts';\nimport type { Filter, InputRow } from './index.ts';\n\nconst schema = [{ name: 'ts', type: 'time' }, { name: 'country', type: 'string' }, { name: 'path', type: 'string' }, { name: 'user', type: 'string' }, { name: 'ms', type: 'float' }, { name: 'bytes', type: 'int' }, { name: 'ok', type: 'bool' }] as const;\nconst T0 = Date.UTC(2024, 4, 15, 10, 0, 0); // Wednesday\nconst ev = (dt: number, country: string, path: string, user: string, ms: number | null, bytes: number, ok = true): InputRow => ({ ts: T0 + dt, country, path, user, ms, bytes, ok });\nconst sample: InputRow[] = [\n  ev(0, 'US', '/a', 'u1', 10, 100),\n  ev(1_000, 'US', '/a', 'u2', 30, 200),\n  ev(61_000, 'DE', '/b', 'u1', 20, 50, false),\n  ev(3_700_000, 'US', '/b', 'u3', null, 400),\n  ev(3_800_000, 'DE', '/a', 'u3', 40, 10),\n];\nconst loaded = () => {\n  const s = new ColumnStore(schema);\n  assert.equal(s.append(sample).accepted, 5);\n  return s;\n};\n\ntest('group by a column with count, sum, average, min and max', () => {\n  const rows = loaded().query({ by: ['country'], aggs: [{ op: 'count' }, { op: 'sum', col: 'bytes' }, { op: 'avg', col: 'ms' }, { op: 'min', col: 'ms' }, { op: 'max', col: 'ms' }], orderBy: { key: 'country' } });\n  assert.deepEqual(rows, [\n    { country: 'DE', count: 2, sum_bytes: 60, avg_ms: 30, min_ms: 20, max_ms: 40 },\n    { country: 'US', count: 3, sum_bytes: 700, avg_ms: 20, min_ms: 10, max_ms: 30 },\n  ]);\n});\n\ntest('nulls: count of a column counts only what is there; empty aggregates are null, not zero', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/columnar-agg-436.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.452Z"
+}

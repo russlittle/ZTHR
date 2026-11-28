@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "execution-log",
+  "mutant": {
+    "id": "15",
+    "line": 73,
+    "column": 147,
+    "endLine": 73,
+    "endColumn": 161,
+    "mutator": "Regex",
+    "original": "/^x-api-key$/i",
+    "replacement": "/x-api-key$/i",
+    "lineText": "const DEFAULT_KEYS: readonly RegExp[] = [/pass(word|wd)?/i, /secret/i, /token/i, /authorization/i, /api[-_]?key/i, /cookie/i, /private[-_]?key/i, /^x-api-key$/i, /credential/i, /signature/i];",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/execution-log/execution-log.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/execution-log-15.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"execution-log\". Mutant: line 73:147-73:161, mutator Regex: \"/^x-api-key$/i\" becomes \"/x-api-key$/i\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/execution-log/index.ts (> marks the mutated line):\n    67    /** Arrays longer than this are cut. */\n    68    readonly maxItems?: number;\n    69    /** Nesting deeper than this is replaced. */\n    70    readonly maxDepth?: number;\n    71  }\n    72  \n>   73  const DEFAULT_KEYS: readonly RegExp[] = [/pass(word|wd)?/i, /secret/i, /token/i, /authorization/i, /api[-_]?key/i, /cookie/i, /private[-_]?key/i, /^x-api-key$/i, /credential/i, /signature/i];\n    74  \n    75  /** A copy of the value with secrets removed and size capped. `altered` says whether anything was changed. */\n    76  export function redact(value: unknown, o: RedactionOptions = {}): { value: unknown; altered: boolean } {\n    77    const keys = [...DEFAULT_KEYS, ...(o.keys ?? [])];\n    78    const secrets = (o.secrets ?? []).filter((s) => s.length >= 4).sort((a, b) => b.length - a.length);\n    79    const maxString = o.maxString ?? 10_000;\n\nTest file style (intent/blocks/execution-log/execution-log.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Audit, memoryAudit } from '../audit/index.ts';\nimport { ExecutionLog, NotFound, NotReplayable, REDACTED, redact } from './index.ts';\n\nconst clock = (start = '2026-11-01T00:00:00Z') => {\n  let t = new Date(start).getTime();\n  return { now: () => new Date(t), advance: (ms: number) => void (t += ms) };\n};\nconst ids = () => { let n = 0; return () => `r${++n}`; };\n\ntest('sensitive keys are redacted at any depth, other values are kept', () => {\n  const r = redact({ user: 'ana', password: 'hunter2', nested: { Authorization: 'Bearer abc', list: [{ apiKey: 'k', ok: 1 }] }, 'X-Api-Key': 'z' });\n  assert.deepEqual(r.value, { user: 'ana', password: REDACTED, nested: { Authorization: REDACTED, list: [{ apiKey: REDACTED, ok: 1 }] }, 'X-Api-Key': REDACTED });\n  assert.equal(r.altered, true);\n  assert.deepEqual(redact({ a: 1 }), { value: { a: 1 }, altered: false });\n});\n\ntest('declared secret values are removed from inside strings, longest first', () => {\n  const r = redact({ url: 'https://x/?k=supersecret123&z=1', note: 'supersecret123456 and supersecret123' }, { secrets: ['supersecret123', 'supersecret123456'] });\n  assert.deepEqual(r.value, { url: `https://x/?k=${REDACTED}&z=1`, note: `${REDACTED} and ${REDACTED}` });\n  assert.equal(redact('abc', { secrets: ['abc'] }).altered, false, 'a secret shorter than 4 characters is ignored, not scrubbed everywhere');\n});\n\ntest('long strings, long arrays, deep nesting and cycles are cut with a marker', () => {\n  const r = redact({ s: 'x'.repeat(30), a: [1, 2, 3, 4] }, { maxString: 10, maxItems: 2 });\n  assert.deepEqual(r.value, { s: `${'x'.repeat(10)}…[cut 20 characters]`, a: [1, 2, '[cut 2 more items]'] });\n  const cyc: Record<string, unknown> = { name: 'c' };\n  cyc.self = cyc;\n  assert.deepEqual(redact(cyc).value, { name: 'c', self: '[circular]' });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/execution-log-15.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.298Z"
+}

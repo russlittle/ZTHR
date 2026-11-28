@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mime",
+  "mutant": {
+    "id": "395",
+    "line": 253,
+    "column": 16,
+    "endLine": 253,
+    "endColumn": 25,
+    "mutator": "EqualityOperator",
+    "original": "c === '\"'",
+    "replacement": "c !== '\"'",
+    "lineText": "else if (c === '\"') quote = false;",
+    "prevText": "if (c === '\\\\') out += s[++i] ?? '';",
+    "nextText": "} else if (depth) {"
+  },
+  "mayEdit": [
+    "intent/blocks/mime/mime.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mime-395.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mime\". Mutant: line 253:16-253:25, mutator EqualityOperator: \"c === '\\\"'\" becomes \"c !== '\\\"'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mime/index.ts (> marks the mutated line):\n   247    let quote = false;\n   248    for (let i = 0; i < s.length; i++) {\n   249      const c = s[i]!;\n   250      if (quote) {\n   251        out += c;\n   252        if (c === '\\\\') out += s[++i] ?? '';\n>  253        else if (c === '\"') quote = false;\n   254      } else if (depth) {\n   255        if (c === '\\\\') i++;\n   256        else if (c === '(') depth++;\n   257        else if (c === ')') depth--;\n   258      } else if (c === '\"') {\n   259        quote = true;\n\nTest file style (intent/blocks/mime/mime.test.ts):\n23 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MimeError, attachments, bodies, buildMessage, contentIds, decodeQuotedPrintable, decodeWords, encodeBase64Lines, encodeQuotedPrintable, encodeWords, foldHeader, formatMailbox, formatParam, header, headerText, parseAddresses, parseMessage, parseParams, rewriteCids, safeFilename, textValue } from './index.ts';\nimport type { OutMessage } from './index.ts';\n\nconst crlf = (s: string) => s.replace(/\\n/g, '\\r\\n');\n\ntest('RFC 2047 section 8: the published encoded-word examples', () => {\n  const cases: [string, string][] = [\n    ['(=?ISO-8859-1?Q?a?=)', '(a)'],\n    ['(=?ISO-8859-1?Q?a?= b)', '(a b)'],\n    ['(=?ISO-8859-1?Q?a?= =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a?=  =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a?=\\r\\n    =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a_b?=)', '(a b)'],\n    ['(=?ISO-8859-1?Q?a?= =?ISO-8859-2?Q?_b?=)', '(a b)'],\n    ['=?US-ASCII?Q?Keith_Moore?=', 'Keith Moore'],\n    ['=?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?=', 'Keld Jørn Simonsen'],\n    ['=?ISO-8859-1?Q?Andr=E9?= Pirard', 'André Pirard'],\n    ['=?ISO-8859-1?B?SWYgeW91IGNhbiByZWFkIHRoaXMgeW8=?= =?ISO-8859-2?B?dSB1bmRlcnN0YW5kIHRoZSBleGFtcGxlLg==?=', 'If you can read this you understand the example.'],\n    ['=?ISO-8859-1?Q?Olle_J=E4rnefors?=', 'Olle Järnefors'],\n  ];\n  for (const [src, want] of cases) assert.equal(decodeWords(src), want, src);\n});\n\ntest('encoded words: not decoded when malformed, charsets honoured, and a language tag allowed', () => {\n  assert.equal(decodeWords('=?UTF-8?Q?caf=C3=A9?='), 'café');\n  assert.equal(decodeWords('=?utf-8*en?B?Y2Fmw6k=?='), 'café');\n  assert.equal(decodeWords('=?UTF-8?X?abc?='), '=?UTF-8?X?abc?=');\n  assert.equal(decodeWords('plain text, no words'), 'plain text, no words');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mime-395.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:49.915Z"
+}

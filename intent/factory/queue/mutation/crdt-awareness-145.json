@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crdt-awareness",
+  "mutant": {
+    "id": "145",
+    "line": 170,
+    "column": 30,
+    "endLine": 170,
+    "endColumn": 60,
+    "mutator": "ConditionalExpression",
+    "original": "cur && typeof cur === 'object'",
+    "replacement": "true",
+    "lineText": "this.setLocalState({ ...(cur && typeof cur === 'object' && !Array.isArray(cur) ? cur : {}), [key]: value });",
+    "prevText": "const cur = this.getLocalState();",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/crdt-awareness/crdt-awareness.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crdt-awareness-145.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crdt-awareness\". Mutant: line 170:30-170:60, mutator ConditionalExpression: \"cur && typeof cur === 'object'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crdt-awareness/index.ts (> marks the mutated line):\n   164    }\n   165  \n   166    /** Change one field of the local state, keeping the rest. */\n   167    setLocalField(key: string, value: Json): void {\n   168      if (key === '__proto__') throw new AwarenessError('\"__proto__\" is not a usable key');\n   169      const cur = this.getLocalState();\n>  170      this.setLocalState({ ...(cur && typeof cur === 'object' && !Array.isArray(cur) ? cur : {}), [key]: value });\n   171    }\n   172  \n   173    /** Heartbeat: if the local clock has not moved for the renew interval, advance it so others do not time us out. */\n   174    renewIfDue(): boolean {\n   175      const m = this.meta.get(this.clientId)!;\n   176      if (this.getLocalState() === null || this.o.now() - m.lastUpdated < this.o.renewMs) return false;\n\nTest file style (intent/blocks/crdt-awareness/crdt-awareness.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Awareness, AwarenessError, AwarenessHub, IdentityBinder, PALETTE, assignColours, clampIndex, contrast, luminance, textOn, toScene, toScreen, transformIndex, transformSelection, userColour, type Edit, type Json } from './index.ts';\n\nfunction clock(start = 1_000_000) {\n  const c = { t: start, now: () => c.t };\n  return c;\n}\nconst make = (id: number, c = clock()) => new Awareness(id, { now: c.now });\nconst bytes = (...n: number[]) => Uint8Array.from(n);\n\ntest('the wire form is y-protocols: varuint count, then id, clock and a length-prefixed JSON string', () => {\n  const a = make(1);\n  a.setLocalState({ a: 1 });\n  assert.equal(a.clockOf(1), 2, 'the constructor made clock 1, this is the second change');\n  const fresh = make(1);\n  fresh.setLocalState({ a: 1 });\n  const text = Buffer.from('{\"a\":1}');\n  assert.deepEqual([...make(1).encodeUpdate([1])].slice(0, 3), [1, 1, 1], 'one client, id 1, clock 1');\n  assert.deepEqual([...fresh.encodeUpdate([1])], [1, 1, 2, text.length, ...text]);\n  const big = new Awareness(300, { now: clock().now });\n  assert.deepEqual([...big.encodeUpdate([300])].slice(0, 3), [1, 0xac, 0x02], '300 is the two bytes AC 02');\n  const r = make(9).decodeUpdate(bytes(1, 0x80, 0x80, 0x80, 0x80, 0x80, 0x20, 1, 0x01, 0x34));\n  assert.deepEqual(r, [{ id: 2 ** 40, clock: 1, state: 4 }], 'a client id above 32 bits reads exactly');\n});\n\ntest('an update decoded and applied elsewhere gives the same state; a repeat changes nothing', () => {\n  const [a, b] = [make(1), make(2)];\n  a.setLocalState({ user: { id: 'u1', name: 'Ann' }, cursor: { anchor: 3, head: 5 } });\n  const u = a.encodeUpdate();\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crdt-awareness-145.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.107Z"
+}

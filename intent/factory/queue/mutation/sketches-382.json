@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "sketches",
+  "mutant": {
+    "id": "382",
+    "line": 274,
+    "column": 87,
+    "endLine": 274,
+    "endColumn": 125,
+    "mutator": "ArithmeticOperator",
+    "original": "(x - this.lo) / (first.mean - this.lo)",
+    "replacement": "(x - this.lo) * (first.mean - this.lo)",
+    "lineText": "if (x < first.mean) return first.mean === this.lo ? 0 : (first.weight / 2 / n) * ((x - this.lo) / (first.mean - this.lo));",
+    "prevText": "const last = c[c.length - 1]!;",
+    "nextText": "if (x > last.mean) return 1 - (last.weight / 2 / n) * ((this.hi - x) / (this.hi - last.mean));"
+  },
+  "mayEdit": [
+    "intent/blocks/sketches/sketches.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sketches-382.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sketches\". Mutant: line 274:87-274:125, mutator ArithmeticOperator: \"(x - this.lo) / (first.mean - this.lo)\" becomes \"(x - this.lo) * (first.mean - this.lo)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sketches/index.ts (> marks the mutated line):\n   268      if (x < this.lo) return 0;\n   269      if (x >= this.hi) return 1;\n   270      const n = this.total;\n   271      if (c.length === 1) return (x - this.lo) / (this.hi - this.lo);\n   272      const first = c[0]!;\n   273      const last = c[c.length - 1]!;\n>  274      if (x < first.mean) return first.mean === this.lo ? 0 : (first.weight / 2 / n) * ((x - this.lo) / (first.mean - this.lo));\n   275      if (x > last.mean) return 1 - (last.weight / 2 / n) * ((this.hi - x) / (this.hi - last.mean));\n   276      let so = first.weight / 2;\n   277      for (let i = 0; i < c.length - 1; i++) {\n   278        const a = c[i]!;\n   279        const b = c[i + 1]!;\n   280        const dw = (a.weight + b.weight) / 2;\n\nTest file style (intent/blocks/sketches/sketches.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BloomFilter, CountMin, HyperLogLog, SketchError, TDigest, hash64 } from './index.ts';\n\nconst within = (got: number, want: number, rel: number, what: string) => assert.ok(Math.abs(got - want) <= want * rel, `${what}: got ${got}, wanted ${want} within ${rel * 100}%`);\n\ntest('the hash is SHA-256 of the seed then the item, so it is the same everywhere', () => {\n  // sha256(00000000 || \"abc\") = 0a834ab0 4b1628b0 b4ec20ca ..., computed independently with openssl.\n  assert.deepEqual(hash64('abc'), { hi: 0x0a834ab0, lo: 0x4b1628b0 });\n  assert.deepEqual(hash64('abc'), hash64(new TextEncoder().encode('abc')));\n  assert.notDeepEqual(hash64('abc', 1), hash64('abc', 0));\n  assert.deepEqual(hash64('abc', 5), hash64('abc', 5));\n});\n\ntest('HyperLogLog: small sets are counted exactly, large ones within a few standard errors', () => {\n  const h = new HyperLogLog(14);\n  assert.equal(h.count(), 0);\n  for (let i = 0; i < 10; i++) h.add(`user-${i}`);\n  assert.equal(h.count(), 10);\n  for (let i = 0; i < 10; i++) h.add(`user-${i}`);\n  assert.equal(h.count(), 10, 'seeing the same ones again changes nothing');\n  const big = new HyperLogLog(14);\n  for (let i = 0; i < 200_000; i++) big.add(`id-${i}`);\n  within(big.count(), 200_000, 3 * big.standardError, '200k distinct');\n  assert.equal(big.registers, 16384);\n  assert.ok(Math.abs(big.standardError - 0.0081) < 0.0001);\n});\n\ntest('HyperLogLog: precision trades memory for error', () => {\n  const lo = new HyperLogLog(6);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sketches-382.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.204Z"
+}

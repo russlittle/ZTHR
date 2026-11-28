@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "email-address",
+  "mutant": {
+    "id": "913",
+    "line": 504,
+    "column": 7,
+    "endLine": 504,
+    "endColumn": 29,
+    "mutator": "ConditionalExpression",
+    "original": "/[^\\x20-\\x7e]/.test(n)",
+    "replacement": "false",
+    "lineText": "if (/[^\\x20-\\x7e]/.test(n)) return encodeWord(n);",
+    "prevText": "const n = name.normalize('NFC');",
+    "nextText": "return needsQuote(n) ? `\"${n.replace(/[\"\\\\]/g, '\\\\$&')}\"` : n;"
+  },
+  "mayEdit": [
+    "intent/blocks/email-address/email-address.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/email-address-913.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"email-address\". Mutant: line 504:7-504:29, mutator ConditionalExpression: \"/[^\\\\x20-\\\\x7e]/.test(n)\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/email-address/index.ts (> marks the mutated line):\n   498  \n   499  const needsQuote = (s: string) => !/^[A-Za-z0-9!#$%&'*+\\-/=?^_`{|}~ ]+$/.test(s);\n   500  \n   501  function formatPhrase(name: string): string {\n   502    if (/[\\r\\n]/.test(name)) throw new BadAddress('a line break cannot go into an address header');\n   503    const n = name.normalize('NFC');\n>  504    if (/[^\\x20-\\x7e]/.test(n)) return encodeWord(n);\n   505    return needsQuote(n) ? `\"${n.replace(/[\"\\\\]/g, '\\\\$&')}\"` : n;\n   506  }\n   507  \n   508  /** A header-ready mailbox. Display names are quoted or encoded as needed; line breaks are refused. */\n   509  export function formatMailbox(m: { name?: string; local: string; domain: string }): string {\n   510    if (/[\\r\\n]/.test(m.local) || /[\\r\\n]/.test(m.domain) || /[\\r\\n]/.test(m.name ?? '')) throw new BadAddress('a line break cannot go into an address header');\n\nTest file style (intent/blocks/email-address/email-address.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadAddress, canonical, decodeWords, domainToAscii, domainToUnicode, flatten, formatList, formatMailbox, isGroup, isNoReply, isRoleAddress, parseAddress, parseAddressList, plusTag, punycodeDecode, punycodeEncode } from './index.ts';\n\ntest('RFC 3492 section 7.1 sample strings encode and decode to the published Punycode', () => {\n  const v: [string, string][] = [\n    ['ليهمابتكلموشعربي؟', 'egbpdaj6bu4bxfgehfvwxn'],\n    ['他们为什么不说中文', 'ihqwcrb4cv8a8dqg056pqjye'],\n    ['他們爲什麽不說中文', 'ihqwctvzc91f659drss3x8bo0yb'],\n    ['Pročprostěnemluvíčesky', 'Proprostnemluvesky-uyb24dma41a'],\n    ['למההםפשוטלאמדבריםעברית', '4dbcagdahymbxekheh6e0a7fei0b'],\n  ];\n  for (const [u, p] of v) {\n    assert.equal(punycodeEncode(u), p);\n    assert.equal(punycodeDecode(p), u);\n  }\n  assert.equal(punycodeEncode('bücher'), 'bcher-kva');\n  assert.equal(punycodeEncode('mañana'), 'maana-pta');\n  assert.equal(punycodeEncode('München'), 'Mnchen-3ya');\n  assert.equal(punycodeDecode('maana-pta'), 'mañana');\n});\n\ntest('domains: non-ASCII labels become xn-- labels and back; ASCII is lower-cased', () => {\n  assert.equal(domainToAscii('Bücher.Example'), 'xn--bcher-kva.example');\n  assert.equal(domainToAscii('EXAMPLE.com'), 'example.com');\n  assert.equal(domainToUnicode('xn--bcher-kva.example'), 'bücher.example');\n  assert.throws(() => punycodeDecode('éé-x'), /bad punycode/);\n  assert.throws(() => punycodeDecode('a-!!'), /bad punycode/);\n  assert.throws(() => domainToAscii('a​bü.com'), /invisible/);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/email-address-913.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.902Z"
+}

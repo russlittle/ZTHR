@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webhook-catalog",
+  "mutant": {
+    "id": "696",
+    "line": 374,
+    "column": 20,
+    "endLine": 374,
+    "endColumn": 45,
+    "mutator": "MethodExpression",
+    "original": "mine.filter((r) => !r.ok)",
+    "replacement": "mine",
+    "lineText": "const failed = mine.filter((r) => !r.ok);",
+    "prevText": "for (let i = mine.length - 1; i >= 0 && !mine[i]!.ok; i--) streak++;",
+    "nextText": "return { total: mine.length, ok, failed: mine.length - ok, successRate: mine.length ? ok / mine.length : 1, p50: pct(ms, 50), p95: pct(ms, 95), consecutiveFailures: streak, ...(failed.length ? { lastFailure: failed[failed.length - 1]! } : {}) };"
+  },
+  "mayEdit": [
+    "intent/blocks/webhook-catalog/webhook-catalog.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webhook-catalog-696.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webhook-catalog\". Mutant: line 374:20-374:45, mutator MethodExpression: \"mine.filter((r) => !r.ok)\" becomes \"mine\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webhook-catalog/index.ts (> marks the mutated line):\n   368    summary(endpoint: string): Summary {\n   369      const mine = this.rows.filter((r) => r.endpoint === endpoint);\n   370      const ms = mine.map((r) => r.ms).sort((a, b) => a - b);\n   371      const ok = mine.filter((r) => r.ok).length;\n   372      let streak = 0;\n   373      for (let i = mine.length - 1; i >= 0 && !mine[i]!.ok; i--) streak++;\n>  374      const failed = mine.filter((r) => !r.ok);\n   375      return { total: mine.length, ok, failed: mine.length - ok, successRate: mine.length ? ok / mine.length : 1, p50: pct(ms, 50), p95: pct(ms, 95), consecutiveFailures: streak, ...(failed.length ? { lastFailure: failed[failed.length - 1]! } : {}) };\n   376    }\n   377  \n   378    /** Counts by event type, by outcome and by reason, over the matching attempts, for the explorer's side panel. */\n   379    facets(f: Filter = {}): { byType: Record<string, number>; byOutcome: Record<string, number>; byReason: Record<string, number> } {\n   380      const byType: Record<string, number> = {};\n\nTest file style (intent/blocks/webhook-catalog/webhook-catalog.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Catalog, CatalogError, DeliveryLog, InvalidPayload, check, redact, type EventDef } from './index.ts';\n\nconst NOW = new Date('2026-03-01T12:00:00Z');\nconst paid = (over: Partial<EventDef> = {}): EventDef => ({\n  type: 'invoice.paid',\n  version: 1,\n  summary: 'An invoice was paid in full',\n  schema: {\n    type: 'object',\n    required: ['invoice', 'amount', 'currency'],\n    additionalProperties: false,\n    properties: {\n      invoice: { type: 'string', format: 'uuid' },\n      amount: { type: 'integer', minimum: 1 },\n      currency: { type: 'string', enum: ['USD', 'EUR'] },\n      payer: { type: 'object', properties: { email: { type: 'string', format: 'email', 'x-sensitive': true }, name: { type: 'string' } }, required: ['name'] },\n      paidAt: { type: 'string', format: 'date-time' },\n    },\n  },\n  sample: { invoice: '3f2b8c1e-0a52-4f6e-9d1a-6c5a2b7e9f10', amount: 4200, currency: 'USD', payer: { email: 'ana@example.org', name: 'Ana' } },\n  ...over,\n});\nconst cat = () => {\n  const c = new Catalog();\n  c.define(paid());\n  c.define({ type: 'invoice.voided', version: 1, summary: 'An invoice was voided', schema: { type: 'object', required: ['invoice'], properties: { invoice: { type: 'string' } } }, sample: { invoice: 'inv-1' } });\n  c.define({ type: 'user.created', version: 1, summary: 'A user signed up', schema: { type: 'object', properties: { id: { type: 'string' } } }, sample: { id: 'u1' } });\n  return c;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webhook-catalog-696.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:14.162Z"
+}

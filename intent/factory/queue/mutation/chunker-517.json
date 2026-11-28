@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "chunker",
+  "mutant": {
+    "id": "517",
+    "line": 313,
+    "column": 54,
+    "endLine": 313,
+    "endColumn": 68,
+    "mutator": "EqualityOperator",
+    "original": "offset < c.end",
+    "replacement": "offset <= c.end",
+    "lineText": "return chunks.find((c) => offset >= c.coreStart && offset < c.end);",
+    "prevText": "export function chunkAt(chunks: readonly Chunk[], offset: number): Chunk | undefined {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/chunker/chunker.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/chunker-517.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"chunker\". Mutant: line 313:54-313:68, mutator EqualityOperator: \"offset < c.end\" becomes \"offset <= c.end\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/chunker/index.ts (> marks the mutated line):\n   307    const m = new RegExp(words.join('\\\\s+')).exec(source);\n   308    return m ? { start: m.index, end: m.index + m[0].length, line: lineOf(m.index) } : undefined;\n   309  }\n   310  \n   311  /** The chunk that holds an offset's own text (not just overlap). */\n   312  export function chunkAt(chunks: readonly Chunk[], offset: number): Chunk | undefined {\n>  313    return chunks.find((c) => offset >= c.coreStart && offset < c.end);\n   314  }\n   315  \n\nTest file style (intent/blocks/chunker/chunker.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ChunkError, chunk, chunkAt, cite, defaultCounter, locateQuote, verifyAnchor } from './index.ts';\n\nconst bytes = (t: string) => new TextEncoder().encode(t).length;\nconst doc = `---\ntitle: Guide\n---\n# Guide\n\nIntro paragraph about the guide.\n\n## Install\n\nRun the installer. It takes a minute.\n\n\\`\\`\\`sh\nnpm install thing\nnpm run setup\n\\`\\`\\`\n\n## Usage\n\nCall the function. It returns a value.\n\n### Options\n\n- one\n- two\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/chunker-517.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.207Z"
+}

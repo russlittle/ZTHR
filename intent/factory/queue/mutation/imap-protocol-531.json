@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "imap-protocol",
+  "mutant": {
+    "id": "531",
+    "line": 318,
+    "column": 9,
+    "endLine": 318,
+    "endColumn": 29,
+    "mutator": "ConditionalExpression",
+    "original": "opt(8) !== undefined",
+    "replacement": "true",
+    "lineText": "...(opt(8) !== undefined ? { inReplyTo: opt(8)! } : {}),",
+    "prevText": "bcc: addresses(f[7]),",
+    "nextText": "...(opt(9) !== undefined ? { messageId: opt(9)! } : {}),"
+  },
+  "mayEdit": [
+    "intent/blocks/imap-protocol/imap-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/imap-protocol-531.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"imap-protocol\". Mutant: line 318:9-318:29, mutator ConditionalExpression: \"opt(8) !== undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/imap-protocol/index.ts (> marks the mutated line):\n   312      from: addresses(f[2]),\n   313      sender: addresses(f[3]),\n   314      replyTo: addresses(f[4]),\n   315      to: addresses(f[5]),\n   316      cc: addresses(f[6]),\n   317      bcc: addresses(f[7]),\n>  318      ...(opt(8) !== undefined ? { inReplyTo: opt(8)! } : {}),\n   319      ...(opt(9) !== undefined ? { messageId: opt(9)! } : {}),\n   320    };\n   321  }\n   322  \n   323  export type Part = { readonly multipart: true; readonly section: string; readonly subtype: string; readonly parts: readonly Part[] } | { readonly multipart: false; readonly section: string; readonly type: string; readonly subtype: string; readonly params: Readonly<Record<string, string>>; readonly id?: string; readonly encoding: string; readonly size: number };\n   324  \n\nTest file style (intent/blocks/imap-protocol/imap-protocol.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  bodyStructure, command, decodeMailbox, encodeMailbox, expunged, fetched, formatSet, idlePlan, ImapCommandError, ImapParseError, ImapStateError, mailboxInfo, parseInternalDate, parseResponse, parseSet, planSync, ResponseStream, searchArgs, searchDate, searchResult, Session, tagger, text,\n  type Arg, type Response, type SearchKey,\n} from './index.ts';\n\nconst b = (s: string) => Buffer.from(s.replace(/\\n/g, '\\r\\n'), 'latin1');\nconst line = (s: string): Response => parseResponse(b(`${s}\\n`));\nconst wire = (segs: { data: Buffer }[]) => segs.map((s) => s.data.toString('utf8')).join('|');\n\ntest('tagged, untagged and continuation responses are told apart', () => {\n  assert.deepEqual(line('A001 OK LOGIN completed'), { kind: 'tagged', tag: 'A001', status: 'OK', text: 'LOGIN completed' });\n  assert.deepEqual(line('a2 NO [AUTHENTICATIONFAILED] Invalid credentials'), { kind: 'tagged', tag: 'a2', status: 'NO', code: { name: 'AUTHENTICATIONFAILED', args: [] }, text: 'Invalid credentials' });\n  assert.deepEqual(line('+ idling'), { kind: 'continuation', text: 'idling' });\n  assert.deepEqual(line('* 23 EXISTS'), { kind: 'untagged', type: 'exists', number: 23, data: [] });\n  assert.deepEqual(line('* 3 expunge'), { kind: 'untagged', type: 'expunge', number: 3, data: [] });\n  assert.deepEqual(line('* BYE Server shutting down'), { kind: 'untagged', type: 'status', status: 'BYE', text: 'Server shutting down', data: [] });\n  const cap = line('* CAPABILITY IMAP4rev1 STARTTLS AUTH=PLAIN IDLE');\n  assert.deepEqual(cap.kind === 'untagged' && cap.data.map(text), ['IMAP4rev1', 'STARTTLS', 'AUTH=PLAIN', 'IDLE']);\n});\n\ntest('response codes carry their arguments', () => {\n  const ok = (s: string) => {\n    const r = line(s);\n    return r.kind === 'untagged' ? r.code : undefined;\n  };\n  assert.deepEqual(ok('* OK [UIDVALIDITY 3857529045] UIDs valid'), { name: 'UIDVALIDITY', args: [{ kind: 'atom', value: '3857529045' }] });\n  const perm = ok('* OK [PERMANENTFLAGS (\\\\Deleted \\\\Seen \\\\*)] Limited');\n  assert.deepEqual(perm!.args[0], { kind: 'list', items: [{ kind: 'atom', value: '\\\\Deleted' }, { kind: 'atom', value: '\\\\Seen' }, { kind: 'atom', value: '\\\\*' }] });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/imap-protocol-531.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:44.522Z"
+}

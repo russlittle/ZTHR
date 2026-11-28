@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "transcode-plan",
+  "mutant": {
+    "id": "806",
+    "line": 385,
+    "column": 9,
+    "endLine": 385,
+    "endColumn": 98,
+    "mutator": "LogicalOperator",
+    "original": "t.width !== (quarter ? v.height : v.width) || t.height !== (quarter ? v.width : v.height)",
+    "replacement": "t.width !== (quarter ? v.height : v.width) && t.height !== (quarter ? v.width : v.height)",
+    "lineText": "if (t.width !== (quarter ? v.height : v.width) || t.height !== (quarter ? v.width : v.height)) filters.push(`scale=${t.width}:${t.height}`);",
+    "prevText": "const quarter = v.rotation === 90 || v.rotation === 270;",
+    "nextText": "if (enc === 'vaapi') filters.push('format=nv12', 'hwupload');"
+  },
+  "mayEdit": [
+    "intent/blocks/transcode-plan/transcode-plan.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/transcode-plan-806.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"transcode-plan\". Mutant: line 385:9-385:98, mutator LogicalOperator: \"t.width !== (quarter ? v.height : v.width) || t.height !== (quarter ? v.width : v.height)\" becomes \"t.width !== (quarter ? v.height : v.width) && t.height !== (quarter ? v.width : v.height)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/transcode-plan/index.ts (> marks the mutated line):\n   379      if (p.subtitleAction === 'burn') {\n   380        const src = safePath(o.subtitleSource ?? o.input, 'subtitle source');\n   381        filters.push(`subtitles=filename=${escapeFilterValue(src)}:si=${p.subtitleIndex}`);\n   382      }\n   383      if (v.hdr && !p.profile.hdr) filters.push(TONEMAP);\n   384      const quarter = v.rotation === 90 || v.rotation === 270;\n>  385      if (t.width !== (quarter ? v.height : v.width) || t.height !== (quarter ? v.width : v.height)) filters.push(`scale=${t.width}:${t.height}`);\n   386      if (enc === 'vaapi') filters.push('format=nv12', 'hwupload');\n   387      args.push('-c:v', encoder);\n   388      if (filters.length) args.push('-vf', filters.join(','));\n   389      args.push('-b:v', String(t.videoBitrate), '-maxrate', String(Math.round(t.videoBitrate * 1.5)), '-bufsize', String(t.videoBitrate * 2));\n   390      if (enc === 'software' && (t.codec === 'h264' || t.codec === 'hevc')) args.push('-preset', 'veryfast');\n   391      if (t.codec === 'h264') args.push('-profile:v', 'high');\n\nTest file style (intent/blocks/transcode-plan/transcode-plan.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { probe } from '../iso-bmff-probe/index.ts';\nimport { escapeFilterValue, ffmpegArgs, ladderFor, mediaFromProbe, plan, PlanError, PROFILES } from './index.ts';\nimport type { MediaInfo } from './index.ts';\n\nconst h264 = (over: Partial<NonNullable<MediaInfo['video']>> = {}): NonNullable<MediaInfo['video']> => ({ codec: 'h264', profile: 'high', level: 40, width: 1920, height: 1080, fps: 30, bitrate: 6_000_000, bitDepth: 8, ...over });\nconst media = (over: Partial<MediaInfo> = {}): MediaInfo => ({ container: 'mp4', durationSeconds: 100, video: h264(), audio: [{ codec: 'aac', channels: 2, bitrate: 128_000 }], subtitles: [], ...over });\nconst chrome = PROFILES['chrome']!;\nconst { hls: _noHls, ...chromeNoHls } = chrome;\nconst bare = (codec: 'hevc' | 'h264'): NonNullable<MediaInfo['video']> => ({ codec, width: 1920, height: 1080, fps: 30, bitrate: 6_000_000, bitDepth: 8 });\nconst safari = PROFILES['safari']!;\nconst tv = PROFILES['android-tv-basic']!;\nconst codes = (p: ReturnType<typeof plan>) => p.reasons.map((x) => x.code);\n\n// ------------------------------------------------------------ the decision\n\ntest('direct play when the container, video and audio are all taken as they are', () => {\n  const p = plan(media(), chrome);\n  assert.equal(p.mode, 'direct-play');\n  assert.deepEqual([p.videoAction, p.audioAction, p.subtitleAction], ['copy', 'copy', 'none']);\n  assert.deepEqual(p.reasons, []);\n  assert.equal(p.target, undefined);\n});\n\ntest('remux when only the container is wrong: video and audio are copied into one the device plays', () => {\n  const p = plan(media({ container: 'mkv' }), chrome);\n  assert.equal(p.mode, 'remux');\n  assert.deepEqual(codes(p), ['ContainerNotSupported']);\n  assert.equal(p.container, 'mp4');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/transcode-plan-806.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:10.382Z"
+}

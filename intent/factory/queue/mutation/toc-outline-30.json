@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "toc-outline",
+  "mutant": {
+    "id": "30",
+    "line": 65,
+    "column": 44,
+    "endLine": 65,
+    "endColumn": 79,
+    "mutator": "ArrowFunction",
+    "original": "(x): x is string => x !== undefined",
+    "replacement": "() => undefined",
+    "lineText": "const taken = new Set<string>(ids.filter((x): x is string => x !== undefined));",
+    "prevText": "});",
+    "nextText": "const matched = new Set(ids.map((id, i) => (id !== undefined ? i : -1)).filter((i) => i >= 0));"
+  },
+  "mayEdit": [
+    "intent/blocks/toc-outline/toc-outline.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/toc-outline-30.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"toc-outline\". Mutant: line 65:44-65:79, mutator ArrowFunction: \"(x): x is string => x !== undefined\" becomes \"() => undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/toc-outline/index.ts (> marks the mutated line):\n    59    const ids: (string | undefined)[] = headings.map(() => undefined);\n    60    const claimed = new Set<number>();\n    61    headings.forEach((h, i) => {\n    62      const j = previous.findIndex((p, k) => !claimed.has(k) && p.text === h.text);\n    63      if (j >= 0) { claimed.add(j); ids[i] = previous[j]!.id; }\n    64    });\n>   65    const taken = new Set<string>(ids.filter((x): x is string => x !== undefined));\n    66    const matched = new Set(ids.map((id, i) => (id !== undefined ? i : -1)).filter((i) => i >= 0));\n    67    headings.forEach((h, i) => {\n    68      if (ids[i] !== undefined) return;\n    69      const base = slugify(h.text);\n    70      let id = base;\n    71      let n = 0;\n\nTest file style (intent/blocks/toc-outline/toc-outline.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { parse } from '../markdown/index.ts';\nimport { countWords, excerpt, headingAtLine, outline, readingTime, sections, stableAnchors, tocHtml, tocMarkdown } from './index.ts';\n\nconst DOC = '# Guide\\n\\nIntro text.\\n\\n## Install\\n\\nSteps.\\n\\n### Linux\\n\\nx\\n\\n### macOS\\n\\ny\\n\\n## Use\\n\\nz\\n\\n## Install\\n\\nagain\\n';\n\ntest('the outline nests headings by level, in document order, with positions', () => {\n  const o = outline(DOC);\n  assert.deepEqual(o.headings.map((h) => h.text), ['Guide']);\n  assert.deepEqual(o.headings[0]!.children.map((h) => h.text), ['Install', 'Use', 'Install']);\n  assert.deepEqual(o.headings[0]!.children[0]!.children.map((h) => h.text), ['Linux', 'macOS']);\n  assert.deepEqual(o.flat.map((h) => h.depth), [1, 2, 3, 3, 2, 2]);\n  assert.deepEqual(o.flat[2]!.position!.start, { line: 9, column: 1 });\n  assert.deepEqual(o.lint.map((l) => l.code), ['duplicate-text']);\n});\n\ntest('heading text is the plain text, not the markup', () => {\n  const o = outline('# The *big* `idea` [link](/x) &amp; more\\n');\n  assert.equal(o.flat[0]!.text, 'The big idea link & more');\n  assert.equal(o.flat[0]!.id, 'the-big-idea-link--more');\n});\n\ntest('skipped levels, several titles, no title and empty headings are reported; the tree still nests sensibly', () => {\n  const o = outline('# One\\n\\n### Deep\\n\\n# Two\\n\\n##\\n');\n  assert.deepEqual(o.lint.map((l) => l.code), ['many-titles', 'skipped-level', 'empty-heading']);\n  assert.equal(o.lint.find((l) => l.code === 'skipped-level')!.heading, 'Deep');\n  assert.deepEqual(o.headings.map((h) => [h.text, h.children.map((c) => c.text)]), [['One', ['Deep']], ['Two', ['']]]);\n  assert.deepEqual(outline('## Only second\\n').lint.map((l) => l.code), ['no-title']);\n  assert.deepEqual(outline('plain text only\\n').lint, []);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/toc-outline-30.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:09.784Z"
+}

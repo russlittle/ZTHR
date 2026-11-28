@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webrtc-signaling",
+  "mutant": {
+    "id": "43",
+    "line": 80,
+    "column": 7,
+    "endLine": 80,
+    "endColumn": 31,
+    "mutator": "ConditionalExpression",
+    "original": "typeof text !== 'string'",
+    "replacement": "false",
+    "lineText": "if (typeof text !== 'string' || text.length === 0) throw new BadSdp('the description is empty');",
+    "prevText": "export function parseSdp(text: string): Session {",
+    "nextText": "if (text.length > MAX_SDP) throw new BadSdp(`the description is longer than ${MAX_SDP} characters`);"
+  },
+  "mayEdit": [
+    "intent/blocks/webrtc-signaling/webrtc-signaling.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webrtc-signaling-43.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webrtc-signaling\". Mutant: line 80:7-80:31, mutator ConditionalExpression: \"typeof text !== 'string'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webrtc-signaling/index.ts (> marks the mutated line):\n    74  const attr = (v: string): Attribute => {\n    75    const i = v.indexOf(':');\n    76    return i < 0 ? { name: v } : { name: v.slice(0, i), value: v.slice(i + 1) };\n    77  };\n    78  \n    79  export function parseSdp(text: string): Session {\n>   80    if (typeof text !== 'string' || text.length === 0) throw new BadSdp('the description is empty');\n    81    if (text.length > MAX_SDP) throw new BadSdp(`the description is longer than ${MAX_SDP} characters`);\n    82    if (/[\\u0000]/.test(text)) throw new BadSdp('the description has a NUL character');\n    83    const lines = text.split(/\\r?\\n/);\n    84    if (lines.at(-1) === '') lines.pop();\n    85    if (lines.length > MAX_LINES) throw new BadSdp('the description has too many lines');\n    86    const s: Session = { version: 0, origin: undefined as unknown as Origin, name: '', emails: [], phones: [], bandwidth: [], timings: [], attributes: [], media: [] };\n\nTest file style (intent/blocks/webrtc-signaling/webrtc-signaling.test.ts):\n25 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHmac } from 'node:crypto';\nimport { test } from 'node:test';\nimport { BadSdp, BadToken, ERR, ForbiddenMunge, Signaling, attrOf, checkTurnCredential, formatCandidate, hasFingerprint, isPrivateAddress, munge, parseCandidate, parseSdp, rtpmaps, signJwt, turnCredentials, verifyJwt, writeSdp } from './index.ts';\n\n// RFC 8866 section 5 example.\nconst RFC8866 = [\n  'v=0',\n  'o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5',\n  's=SDP Seminar',\n  'i=A Seminar on the session description protocol',\n  'u=http://www.example.com/seminars/sdp.pdf',\n  'e=j.doe@example.com (Jane Doe)',\n  'c=IN IP4 224.2.17.12/127',\n  't=2873397496 2873404696',\n  'a=recvonly',\n  'm=audio 49170 RTP/AVP 0',\n  'm=video 51372 RTP/AVP 99',\n  'c=IN IP4 203.0.113.1',\n  'a=rtpmap:99 h263-1998/90000',\n  '',\n].join('\\r\\n');\n\nconst offer = (o: { ufrag?: string; extra?: string[]; fingerprint?: boolean } = {}) => [\n  'v=0',\n  'o=- 4611731400430051336 2 IN IP4 127.0.0.1',\n  's=-',\n  't=0 0',\n  'a=group:BUNDLE 0 1',\n  ...(o.fingerprint === false ? [] : ['a=fingerprint:sha-256 AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89']),\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webrtc-signaling-43.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.045Z"
+}

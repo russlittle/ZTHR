@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "uptime-probes",
+  "mutant": {
+    "id": "711",
+    "line": 362,
+    "column": 148,
+    "endLine": 362,
+    "endColumn": 170,
+    "mutator": "ConditionalExpression",
+    "original": "def.body !== undefined",
+    "replacement": "false",
+    "lineText": "const r = await t.http({ url: def.url, method: def.method ?? 'GET', headers: { 'user-agent': 'uptime-probe/1', ...(def.headers ?? {}) }, ...(def.body !== undefined ? { body: def.body } : {}), timeoutMs: def.timeoutMs, maxBytes: MAX_BODY, maxRedirects: def.maxRedirects ?? 5 }, signal);",
+    "prevText": "case 'json': {",
+    "nextText": "return { ...judgeHttp(def, r), ms: r.ms };"
+  },
+  "mayEdit": [
+    "intent/blocks/uptime-probes/uptime-probes.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/uptime-probes-711.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"uptime-probes\". Mutant: line 362:148-362:170, mutator ConditionalExpression: \"def.body !== undefined\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/uptime-probes/index.ts (> marks the mutated line):\n   356  \n   357  async function once(def: ProbeDef, t: Transport, now: number, signal: AbortSignal): Promise<{ status: Status; ms: number; message: string }> {\n   358    switch (def.type) {\n   359      case 'http':\n   360      case 'keyword':\n   361      case 'json': {\n>  362        const r = await t.http({ url: def.url, method: def.method ?? 'GET', headers: { 'user-agent': 'uptime-probe/1', ...(def.headers ?? {}) }, ...(def.body !== undefined ? { body: def.body } : {}), timeoutMs: def.timeoutMs, maxBytes: MAX_BODY, maxRedirects: def.maxRedirects ?? 5 }, signal);\n   363        return { ...judgeHttp(def, r), ms: r.ms };\n   364      }\n   365      case 'tcp': {\n   366        let r: { ms: number };\n   367        try {\n   368          r = await t.tcp(def.host, def.port, signal);\n\nTest file style (intent/blocks/uptime-probes/uptime-probes.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { statusPage } from '../health/index.ts';\nimport { isPrivateAddress, matchesHost, Monitor, ProbeError, queryJson, TwinTransport, type ProbeDef, type Transition } from './index.ts';\n\nconst T0 = Date.UTC(2026, 5, 1, 12, 0, 0);\nconst DAY = 86_400_000;\nfunction rig(o: Partial<ConstructorParameters<typeof Monitor>[0]> = {}) {\n  const clock = { now: T0 };\n  const twin = new TwinTransport();\n  const events: Transition[] = [];\n  const slept: number[] = [];\n  const mon = new Monitor({ transport: twin, now: () => clock.now, sleep: async (ms) => void slept.push(ms), random: () => 0.5, onEvent: (e) => events.push(e), ...o });\n  return { clock, twin, events, slept, mon };\n}\nconst web = (o: Partial<Extract<ProbeDef, { type: 'http' }>> = {}): ProbeDef => ({ type: 'http', id: 'web', url: 'https://example.com/', intervalMs: 60_000, timeoutMs: 1000, ...o }) as ProbeDef;\nconst ok = { status: 200, body: 'ok', ms: 50 };\nconst status = async (m: Monitor, id = 'web') => (await m.check(id)).result.status;\n\ntest('addresses that are not on the public internet are recognised in every spelling', () => {\n  for (const ip of ['127.0.0.1', '127.8.8.8', '10.1.2.3', '172.16.0.1', '172.31.255.255', '192.168.0.9', '169.254.169.254', '0.0.0.0', '100.64.0.1', '224.0.0.1', '255.255.255.255', '::1', '::', 'fe80::1', 'fc00::1', 'fd12:3456::1', 'ff02::1', '::ffff:127.0.0.1', '::ffff:7f00:1', '::ffff:10.0.0.1', '2001:db8::1']) assert.equal(isPrivateAddress(ip), true, ip);\n  for (const ip of ['8.8.8.8', '93.184.216.34', '172.15.0.1', '172.32.0.1', '100.63.0.1', '2606:4700:4700::1111', '::ffff:8.8.8.8']) assert.equal(isPrivateAddress(ip), false, ip);\n  assert.equal(isPrivateAddress('not an address'), true, 'what cannot be read is treated as unsafe');\n});\n\ntest('a monitor refuses targets that would reach inside the network, unless told it may', () => {\n  const { mon } = rig();\n  for (const url of ['http://169.254.169.254/latest/meta-data/', 'http://localhost/', 'http://127.0.0.1:8080/', 'http://[::1]/', 'http://[::ffff:127.0.0.1]/', 'http://2130706433/', 'http://0x7f.1/', 'http://10.0.0.5/', 'http://intranet/', 'http://db.internal/', 'http://printer.local/', 'http://a.localhost/']) {\n    assert.throws(() => mon.add(web({ url })), /private|internal|local/, url);\n  }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/uptime-probes-711.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:12.291Z"
+}

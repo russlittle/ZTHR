@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "thumbnails",
+  "mutant": {
+    "id": "825",
+    "line": 421,
+    "column": 84,
+    "endLine": 421,
+    "endColumn": 90,
+    "mutator": "StringLiteral",
+    "original": "'avif'",
+    "replacement": "\"\"",
+    "lineText": "const EXT: Record<Format, string> = { png: 'png', jpeg: 'jpg', webp: 'webp', avif: 'avif' };",
+    "prevText": "",
+    "nextText": "export const MIME: Record<Format, string> = { png: 'image/png', jpeg: 'image/jpeg', webp: 'image/webp', avif: 'image/avif' };"
+  },
+  "mayEdit": [
+    "intent/blocks/thumbnails/thumbnails.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/thumbnails-825.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"thumbnails\". Mutant: line 421:84-421:90, mutator StringLiteral: \"'avif'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/thumbnails/index.ts (> marks the mutated line):\n   415  \n   416  // ---------------------------------------------------------------- cache keys\n   417  \n   418  /** Bumped when any rendering behaviour changes, so old derivatives are never served as if they were new. */\n   419  export const PIPELINE_VERSION = 'v1';\n   420  \n>  421  const EXT: Record<Format, string> = { png: 'png', jpeg: 'jpg', webp: 'webp', avif: 'avif' };\n   422  export const MIME: Record<Format, string> = { png: 'image/png', jpeg: 'image/jpeg', webp: 'image/webp', avif: 'image/avif' };\n   423  \n   424  /**\n   425   * The key a derivative is stored under. It depends on the source's id and version (so a changed source never\n   426   * matches an old derivative) and on the whole normalised spec (so every way of asking for the same picture lands\n   427   * on one key). The source id is hashed, so no id can climb out of the directory.\n\nTest file style (intent/blocks/thumbnails/thumbnails.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Cache } from '../cache/index.ts';\nimport { MIME, Refused, Thumbnailer, chooseFormat, crc32, crop, decodePng, derivativeKey, encodePng, normalizeSpec, orient, plan, raster, render, resize, snapToLadder } from './index.ts';\n\n/** Pillow 12 reference output for the 9x7 test image resized to 4x3 (each value may differ by 1 from fixed-point rounding). */\nconst PILLOW_4X3: Record<string, number[]> = {\n  box: [65, 118, 171, 157, 167, 135, 122, 111, 100, 68, 121, 174, 121, 132, 142, 100, 124, 120, 136, 146, 156, 124, 135, 145, 136, 125, 114, 100, 153, 163, 129, 118, 107, 139, 128, 117],\n  bilinear: [98, 128, 138, 130, 155, 131, 124, 128, 137, 106, 120, 149, 108, 129, 139, 113, 133, 133, 130, 149, 126, 123, 126, 144, 129, 136, 137, 111, 131, 149, 116, 130, 126, 130, 142, 126],\n  bicubic: [91, 124, 136, 132, 160, 132, 131, 128, 136, 101, 117, 147, 114, 131, 139, 108, 126, 126, 127, 152, 131, 129, 130, 149, 128, 135, 139, 112, 133, 153, 116, 129, 119, 128, 140, 128],\n  lanczos3: [86, 119, 132, 132, 164, 137, 136, 128, 137, 97, 113, 143, 121, 135, 138, 106, 121, 119, 122, 153, 134, 137, 135, 151, 124, 136, 142, 116, 134, 158, 114, 129, 112, 124, 139, 130],\n  nearest: [128, 181, 234, 202, 255, 52, 20, 73, 126, 94, 147, 200, 54, 107, 160, 128, 181, 234, 202, 255, 52, 20, 73, 126, 236, 33, 86, 54, 107, 160, 128, 181, 234, 202, 255, 52],\n};\n\nconst px = (x: number, y: number, c: number) => (x * 37 + y * 91 + c * 53) % 256;\nfunction testImage(w = 9, h = 7) {\n  const r = raster(w, h);\n  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) r.data.set([px(x, y, 0), px(x, y, 1), px(x, y, 2), 255], (y * w + x) * 4);\n  return r;\n}\nconst rgb = (r: { data: Uint8ClampedArray }) => { const o: number[] = []; for (let i = 0; i < r.data.length; i += 4) o.push(r.data[i]!, r.data[i + 1]!, r.data[i + 2]!); return o; };\n\ntest('every kernel agrees with Pillow on a 9x7 image shrunk to 4x3, within one level of rounding', () => {\n  for (const k of ['box', 'bilinear', 'bicubic', 'lanczos3', 'nearest'] as const) {\n    const got = rgb(resize(testImage(), 4, 3, k));\n    const want = PILLOW_4X3[k]!;\n    assert.equal(got.length, want.length);\n    got.forEach((g, i) => assert.ok(Math.abs(g - want[i]!) <= 1, `${k}[${i}] ${g} vs ${want[i]}`));\n  }\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/thumbnails-825.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:09.058Z"
+}

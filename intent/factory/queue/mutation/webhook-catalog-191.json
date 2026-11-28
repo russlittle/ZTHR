@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webhook-catalog",
+  "mutant": {
+    "id": "191",
+    "line": 87,
+    "column": 9,
+    "endLine": 87,
+    "endColumn": 39,
+    "mutator": "EqualityOperator",
+    "original": "schema.maxLength !== undefined",
+    "replacement": "schema.maxLength === undefined",
+    "lineText": "if (schema.maxLength !== undefined && value.length > schema.maxLength) out.push({ path, message: `must be at most ${schema.maxLength} characters` });",
+    "prevText": "if (schema.minLength !== undefined && value.length < schema.minLength) out.push({ path, message: `must be at least ${schema.minLength} characters` });",
+    "nextText": "if (schema.pattern !== undefined && !new RegExp(schema.pattern).test(value)) out.push({ path, message: `must match ${schema.pattern}` });"
+  },
+  "mayEdit": [
+    "intent/blocks/webhook-catalog/webhook-catalog.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webhook-catalog-191.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webhook-catalog\". Mutant: line 87:9-87:39, mutator EqualityOperator: \"schema.maxLength !== undefined\" becomes \"schema.maxLength === undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webhook-catalog/index.ts (> marks the mutated line):\n    81      if (!ok) return [{ path, message: `must be ${want.join(' or ')}, not ${kind}` }];\n    82    }\n    83    if (schema.const !== undefined && JSON.stringify(schema.const) !== JSON.stringify(value)) out.push({ path, message: `must be ${JSON.stringify(schema.const)}` });\n    84    if (schema.enum && !schema.enum.some((e) => JSON.stringify(e) === JSON.stringify(value))) out.push({ path, message: `must be one of ${schema.enum.map((e) => JSON.stringify(e)).join(', ')}` });\n    85    if (typeof value === 'string') {\n    86      if (schema.minLength !== undefined && value.length < schema.minLength) out.push({ path, message: `must be at least ${schema.minLength} characters` });\n>   87      if (schema.maxLength !== undefined && value.length > schema.maxLength) out.push({ path, message: `must be at most ${schema.maxLength} characters` });\n    88      if (schema.pattern !== undefined && !new RegExp(schema.pattern).test(value)) out.push({ path, message: `must match ${schema.pattern}` });\n    89      if (schema.format !== undefined && !FORMATS[schema.format](value)) out.push({ path, message: `must be a valid ${schema.format}` });\n    90    }\n    91    if (typeof value === 'number') {\n    92      if (!Number.isFinite(value)) out.push({ path, message: 'must be a finite number' });\n    93      if (schema.minimum !== undefined && value < schema.minimum) out.push({ path, message: `must be at least ${schema.minimum}` });\n\nTest file style (intent/blocks/webhook-catalog/webhook-catalog.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Catalog, CatalogError, DeliveryLog, InvalidPayload, check, redact, type EventDef } from './index.ts';\n\nconst NOW = new Date('2026-03-01T12:00:00Z');\nconst paid = (over: Partial<EventDef> = {}): EventDef => ({\n  type: 'invoice.paid',\n  version: 1,\n  summary: 'An invoice was paid in full',\n  schema: {\n    type: 'object',\n    required: ['invoice', 'amount', 'currency'],\n    additionalProperties: false,\n    properties: {\n      invoice: { type: 'string', format: 'uuid' },\n      amount: { type: 'integer', minimum: 1 },\n      currency: { type: 'string', enum: ['USD', 'EUR'] },\n      payer: { type: 'object', properties: { email: { type: 'string', format: 'email', 'x-sensitive': true }, name: { type: 'string' } }, required: ['name'] },\n      paidAt: { type: 'string', format: 'date-time' },\n    },\n  },\n  sample: { invoice: '3f2b8c1e-0a52-4f6e-9d1a-6c5a2b7e9f10', amount: 4200, currency: 'USD', payer: { email: 'ana@example.org', name: 'Ana' } },\n  ...over,\n});\nconst cat = () => {\n  const c = new Catalog();\n  c.define(paid());\n  c.define({ type: 'invoice.voided', version: 1, summary: 'An invoice was voided', schema: { type: 'object', required: ['invoice'], properties: { invoice: { type: 'string' } } }, sample: { invoice: 'inv-1' } });\n  c.define({ type: 'user.created', version: 1, summary: 'A user signed up', schema: { type: 'object', properties: { id: { type: 'string' } } }, sample: { id: 'u1' } });\n  return c;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webhook-catalog-191.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:14.149Z"
+}

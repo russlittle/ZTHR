@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "rich-text-collab",
+  "mutant": {
+    "id": "127",
+    "line": 214,
+    "column": 23,
+    "endLine": 214,
+    "endColumn": 42,
+    "mutator": "LogicalOperator",
+    "original": "o.maxHistory ?? 100",
+    "replacement": "o.maxHistory && 100",
+    "lineText": "this.maxHistory = o.maxHistory ?? 100;",
+    "prevText": "this.groupMs = o.groupMs ?? 500;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/rich-text-collab/rich-text-collab.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-collab-127.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"rich-text-collab\". Mutant: line 214:23-214:42, mutator LogicalOperator: \"o.maxHistory ?? 100\" becomes \"o.maxHistory && 100\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/rich-text-collab/index.ts (> marks the mutated line):\n   208      this.schema = schema;\n   209      this.current = doc;\n   210      this.ver = version;\n   211      this.clientID = o.clientID;\n   212      this.now = o.now ?? Date.now;\n   213      this.groupMs = o.groupMs ?? 500;\n>  214      this.maxHistory = o.maxHistory ?? 100;\n   215    }\n   216  \n   217    get doc(): Node {\n   218      return this.current;\n   219    }\n   220    /** The authority version this client has caught up to. */\n\nTest file style (intent/blocks/rich-text-collab/rich-text-collab.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Mapping, StepMap, basicSchema as S, fragSize, resolve, slice, textContent } from '../rich-text-doc/index.ts';\nimport type { Node } from '../rich-text-doc/index.ts';\nimport { Authority, Client, CollabError } from './index.ts';\n\nconst t = (s: string, marks?: Parameters<typeof S.text>[1]) => S.text(s, marks);\nconst p = (...c: Node[]) => S.node('paragraph', undefined, c);\nconst doc = (...c: Node[]) => S.node('doc', undefined, c);\nconst strong = S.mark('strong');\n\nconst start = () => doc(p(t('hello world')), p(t('second paragraph')));\n\nfunction setup(n = 2, o: { maxLog?: number; groupMs?: number } = {}) {\n  const auth = new Authority(S, start(), o.maxLog ? { maxLog: o.maxLog } : {});\n  let now = 0;\n  const clients = Array.from({ length: n }, (_, i) => new Client(S, auth.doc, 0, { clientID: `c${i + 1}`, now: () => now, groupMs: o.groupMs ?? 500 }));\n  /** Sends what a client has, then pulls what it is missing. Returns whether the authority accepted. */\n  const sync = (c: Client): boolean => {\n    const b = c.sendable();\n    let ok = true;\n    if (b) ok = auth.receiveSteps(b).ok;\n    pull(c);\n    return ok;\n  };\n  const pull = (c: Client) => {\n    const r = auth.stepsSince(c.version);\n    assert.ok(r.ok);\n    if (r.ok && r.steps.length) c.receiveJSON(r);\n  };\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-collab-127.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:59.838Z"
+}

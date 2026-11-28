@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "perceptual-hash",
+  "mutant": {
+    "id": "26",
+    "line": 30,
+    "column": 46,
+    "endLine": 30,
+    "endColumn": 51,
+    "mutator": "ArithmeticOperator",
+    "original": "i + 2",
+    "replacement": "i - 2",
+    "lineText": "out.data[i] = out.data[i + 1] = out.data[i + 2] = Math.round(y);",
+    "prevText": "const y = 0.299 * mix(src.data[i] as number) + 0.587 * mix(src.data[i + 1] as number) + 0.114 * mix(src.data[i + 2] as number);",
+    "nextText": "out.data[i + 3] = 255;"
+  },
+  "mayEdit": [
+    "intent/blocks/perceptual-hash/perceptual-hash.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/perceptual-hash-26.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"perceptual-hash\". Mutant: line 30:46-30:51, mutator ArithmeticOperator: \"i + 2\" becomes \"i - 2\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/perceptual-hash/index.ts (> marks the mutated line):\n    24  export function toGray(src: Raster): Raster {\n    25    const out = raster(src.width, src.height);\n    26    for (let i = 0; i < src.data.length; i += 4) {\n    27      const a = (src.data[i + 3] as number) / 255;\n    28      const mix = (c: number) => c * a + 255 * (1 - a);\n    29      const y = 0.299 * mix(src.data[i] as number) + 0.587 * mix(src.data[i + 1] as number) + 0.114 * mix(src.data[i + 2] as number);\n>   30      out.data[i] = out.data[i + 1] = out.data[i + 2] = Math.round(y);\n    31      out.data[i + 3] = 255;\n    32    }\n    33    return out;\n    34  }\n    35  \n    36  function lumaAt(src: Raster, w: number, h: number): Float64Array {\n\nTest file style (intent/blocks/perceptual-hash/perceptual-hash.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { raster, resize, type Raster } from '../thumbnails/index.ts';\nimport { ALGORITHMS, HashError, aHash, dHash, dct8, distance, distanceAnyOrientation, group, hash, judge, nearest, pHash, similarity, toGray, transforms } from './index.ts';\n\nconst rng = (seed: number) => () => {\n  seed = (seed * 1664525 + 1013904223) >>> 0;\n  return seed / 2 ** 32;\n};\n\n/** A picture of overlapping soft blocks: enough structure to hash, different per seed. */\nfunction scene(seed: number, w = 128, h = 96): Raster {\n  const r = rng(seed);\n  const blocks = Array.from({ length: 14 }, () => ({ x: r() * w, y: r() * h, w: 10 + r() * w * 0.45, h: 10 + r() * h * 0.45, v: r() * 255 }));\n  const out = raster(w, h);\n  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {\n    let v = 128;\n    for (const b of blocks) if (x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h) v = b.v;\n    out.data.set([v, v, v, 255], (y * w + x) * 4);\n  }\n  return out;\n}\nconst map = (src: Raster, f: (v: number, x: number, y: number) => number): Raster => {\n  const out = raster(src.width, src.height);\n  for (let i = 0; i < src.data.length; i += 4) {\n    const p = i / 4;\n    const v = f(src.data[i] as number, p % src.width, Math.floor(p / src.width));\n    out.data.set([v, v, v, 255], i);\n  }\n  return out;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/perceptual-hash-26.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:55.204Z"
+}

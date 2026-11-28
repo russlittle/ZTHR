@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "photo-library",
+  "mutant": {
+    "id": "577",
+    "line": 491,
+    "column": 9,
+    "endLine": 491,
+    "endColumn": 34,
+    "mutator": "LogicalOperator",
+    "original": "!al || al.owner !== owner",
+    "replacement": "!al && al.owner !== owner",
+    "lineText": "if (!al || al.owner !== owner) throw new LibraryError('not-found', 'no such album of yours');",
+    "prevText": "const al = this.albums.get(albumId);",
+    "nextText": "return this.grants.create({ resource: -albumId, resourceKind: 'folder', by: owner, giverHas: ALL, kind, to, permissions: role === 'editor' ? READ | UPDATE | CREATE : READ });"
+  },
+  "mayEdit": [
+    "intent/blocks/photo-library/photo-library.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/photo-library-577.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"photo-library\". Mutant: line 491:9-491:34, mutator LogicalOperator: \"!al || al.owner !== owner\" becomes \"!al && al.owner !== owner\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/photo-library/index.ts (> marks the mutated line):\n   485      for (const g of await this.grants.live((x) => x.resource === -albumId)) await this.grants.revoke(g.id, g.by);\n   486    }\n   487  \n   488    /** Shares an album with a person or a group. A viewer looks; an editor also adds their own assets. */\n   489    async share(owner: string, albumId: number, to: string, role: Role, kind: 'person' | 'group' = 'person'): Promise<Grant> {\n   490      const al = this.albums.get(albumId);\n>  491      if (!al || al.owner !== owner) throw new LibraryError('not-found', 'no such album of yours');\n   492      return this.grants.create({ resource: -albumId, resourceKind: 'folder', by: owner, giverHas: ALL, kind, to, permissions: role === 'editor' ? READ | UPDATE | CREATE : READ });\n   493    }\n   494  \n   495    async shareLink(owner: string, albumId: number, o: { password?: string; expires?: number } = {}): Promise<Grant> {\n   496      const al = this.albums.get(albumId);\n   497      if (!al || al.owner !== owner) throw new LibraryError('not-found', 'no such album of yours');\n\nTest file style (intent/blocks/photo-library/photo-library.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Grants, memoryGrants } from '../grants/index.ts';\nimport { Tree, memoryNodes } from '../tree/index.ts';\nimport { LibraryError, PhotoLibrary, bucketOf, checkTemplate, cleanStep, renderTemplate, withSuffix } from './index.ts';\n\nconst DAY = 86_400_000;\nconst at = (s: string) => Date.parse(s);\n\nconst make = (o: { template?: string; trashDays?: number; groups?: Record<string, string[]> } = {}) => {\n  let t = at('2024-06-01T00:00:00Z');\n  const now = () => t;\n  const tree = new Tree(memoryNodes(), { now: () => Math.floor(t / 1000) });\n  const grants = new Grants(memoryGrants(), { now });\n  const lib = new PhotoLibrary({ tree, grants, now, ...(o.template ? { template: o.template } : {}), ...(o.trashDays !== undefined ? { trashDays: o.trashDays } : {}), groupsOf: (p) => o.groups?.[p] ?? [] });\n  let n = 0;\n  const add = (owner: string, takenAt: string, filename = `IMG_${++n}.jpg`, checksum = `sum${n}`) => lib.add({ owner, filename, size: 100, blob: `b${n}`, checksum, mime: 'image/jpeg', takenAt: at(takenAt) });\n  return { lib, tree, grants, add, tick: (ms: number) => (t += ms) };\n};\nconst code = (e: unknown) => e instanceof LibraryError && e.code;\n\n// ------------------------------------------------------------ templates\n\ntest('a template fills dates in UTC, pads, and keeps the file name', () => {\n  const v = { takenAt: at('2024-03-09T07:05:03Z'), filename: 'Beach Day.JPG', assetId: 7, owner: 'ana' };\n  assert.equal(renderTemplate('{{y}}/{{MM}}/{{dd}}/{{filename}}', v), '/2024/03/09/Beach Day.JPG');\n  assert.equal(renderTemplate('{{yy}}{{MMM}}/{{HH}}{{mm}}{{ss}}-{{filenameNoExt}}.{{ext}}', v), '/24Mar/070503-Beach Day.jpg');\n  assert.equal(renderTemplate('{{owner}}/{{assetId}}.{{ext}}', v), '/ana/7.jpg');\n  assert.equal(renderTemplate('{{ y }}/{{filename}}', v), '/2024/Beach Day.JPG');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/photo-library-577.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:55.483Z"
+}

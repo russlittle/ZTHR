@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "plugin-manifest",
+  "mutant": {
+    "id": "758",
+    "line": 325,
+    "column": 24,
+    "endLine": 325,
+    "endColumn": 28,
+    "mutator": "BooleanLiteral",
+    "original": "true",
+    "replacement": "false",
+    "lineText": "rangeMap('requires', true);",
+    "prevText": "};",
+    "nextText": "if (o.requires && typeof o.requires === 'object' && !Object.hasOwn(o.requires, 'host')) out.push('requires.host is required: say which host versions it runs on');"
+  },
+  "mayEdit": [
+    "intent/blocks/plugin-manifest/plugin-manifest.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/plugin-manifest-758.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"plugin-manifest\". Mutant: line 325:24-325:28, mutator BooleanLiteral: \"true\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/plugin-manifest/index.ts (> marks the mutated line):\n   319            parseRange(r);\n   320          } catch {\n   321            out.push(`${k}.${n}: \"${r}\" is not a version range`);\n   322          }\n   323      }\n   324    };\n>  325    rangeMap('requires', true);\n   326    if (o.requires && typeof o.requires === 'object' && !Object.hasOwn(o.requires, 'host')) out.push('requires.host is required: say which host versions it runs on');\n   327    rangeMap('dependencies', false);\n   328    if (o.dependencies && typeof o.dependencies === 'object' && name && Object.hasOwn(o.dependencies, name)) out.push('an extension cannot depend on itself');\n   329    if (!Array.isArray(o.permissions)) out.push('permissions must be a list (it may be empty)');\n   330    else {\n   331      const seen = new Set<string>();\n\nTest file style (intent/blocks/plugin-manifest/plugin-manifest.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, verify } from 'node:crypto';\nimport { test } from 'node:test';\nimport {\n  BadPackage, BadVersion, ManifestError, bumpKind, canonicalJson, compareVersions, dependencyOrder, manifestProblems, maxSatisfying, parseVersion,\n  planInstall, planUpdates, publicKeyOf, readManifest, reviewPermissions, satisfies, signPackage, verifyPackage,\n} from './index.ts';\nimport type { Manifest, PackageEnvelope, TrustStore } from './index.ts';\n\nconst manifest = (o: Partial<Record<keyof Manifest, unknown>> = {}): Manifest =>\n  ({\n    name: 'acme-seo',\n    version: '1.2.3',\n    title: 'Acme SEO',\n    description: 'Search engine helpers',\n    author: { name: 'Acme', url: 'https://acme.example' },\n    license: 'GPL-2.0-or-later',\n    requires: { host: '>=4.2 <6' },\n    permissions: ['content:read'],\n    entry: 'main.js',\n    ...o,\n  }) as Manifest;\n\n// ------------------------------------------------------------ semantic versions\n\ntest('precedence follows the specification chain, ignores build metadata, and compares numbers as numbers', () => {\n  const chain = ['1.0.0-alpha', '1.0.0-alpha.1', '1.0.0-alpha.beta', '1.0.0-beta', '1.0.0-beta.2', '1.0.0-beta.11', '1.0.0-rc.1', '1.0.0', '1.0.1', '1.1.0', '2.0.0'];\n  for (let i = 0; i + 1 < chain.length; i++) {\n    assert.equal(compareVersions(chain[i]!, chain[i + 1]!), -1, `${chain[i]} < ${chain[i + 1]}`);\n    assert.equal(compareVersions(chain[i + 1]!, chain[i]!), 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/plugin-manifest-758.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.215Z"
+}

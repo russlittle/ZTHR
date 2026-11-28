@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "geoip",
+  "mutant": {
+    "id": "58",
+    "line": 68,
+    "column": 14,
+    "endLine": 68,
+    "endColumn": 34,
+    "mutator": "Regex",
+    "original": "/^[0-9a-fA-F]{1,4}$/",
+    "replacement": "/^[0-9a-fA-F]{1,4}/",
+    "lineText": "if (!/^[0-9a-fA-F]{1,4}$/.test(p)) bad();",
+    "prevText": "} else {",
+    "nextText": "out.push(parseInt(p, 16));"
+  },
+  "mayEdit": [
+    "intent/blocks/geoip/geoip.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/geoip-58.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"geoip\". Mutant: line 68:14-68:34, mutator Regex: \"/^[0-9a-fA-F]{1,4}$/\" becomes \"/^[0-9a-fA-F]{1,4}/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/geoip/index.ts (> marks the mutated line):\n    62      parts.forEach((p, i) => {\n    63        if (p.includes('.')) {\n    64          if (i !== parts.length - 1) bad();\n    65          const v4 = parseV4(p);\n    66          out.push((v4[0]! << 8) | v4[1]!, (v4[2]! << 8) | v4[3]!);\n    67        } else {\n>   68          if (!/^[0-9a-fA-F]{1,4}$/.test(p)) bad();\n    69          out.push(parseInt(p, 16));\n    70        }\n    71      });\n    72      return out;\n    73    };\n    74    const head = groups(halves[0]!);\n\nTest file style (intent/blocks/geoip/geoip.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { coarsen } from '../geo/index.ts';\nimport { AddressError, DatabaseError, Geolocator, MmdbReader, RangeTable, anonymize, classify, decodeValue, formatIp, isPublic, parseCidr, parseIp } from './index.ts';\nimport type { MmdbValue } from './index.ts';\n\n// ---- a small mmdb writer, only for building fixtures -------------------------------------------------------------\n\nclass Tag {\n  readonly kind: string;\n  readonly v: number | bigint;\n  constructor(kind: string, v: number | bigint) { this.kind = kind; this.v = v; }\n}\nconst u16 = (v: number) => new Tag('u16', v);\nconst u32 = (v: number) => new Tag('u32', v);\nconst u64 = (v: bigint) => new Tag('u64', v);\nconst i32 = (v: number) => new Tag('i32', v);\nconst dbl = (v: number) => new Tag('dbl', v);\nclass Ptr {\n  readonly offset: number;\n  constructor(offset: number) { this.offset = offset; }\n}\n\nconst head = (type: number, size: number): number[] => {\n  let sb: number; let extra: number[] = [];\n  if (size < 29) sb = size;\n  else if (size < 285) { sb = 29; extra = [size - 29]; }\n  else if (size < 65821) { sb = 30; const x = size - 285; extra = [x >> 8, x & 255]; }\n  else { sb = 31; const x = size - 65821; extra = [x >> 16, (x >> 8) & 255, x & 255]; }\n  return type <= 7 ? [(type << 5) | sb, ...extra] : [sb, type - 7, ...extra];\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/geoip-58.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:42.019Z"
+}

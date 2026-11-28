@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "sql-builder",
+  "mutant": {
+    "id": "2014",
+    "line": 744,
+    "column": 102,
+    "endLine": 744,
+    "endColumn": 116,
+    "mutator": "OptionalChaining",
+    "original": "body[j + 2]?.k",
+    "replacement": "body[j + 2].k",
+    "lineText": "while (body[j + 1]?.v === '.' && body[j + 1]?.k === 'punct' && (body[j + 2]?.k === 'word' || body[j + 2]?.k === 'qid')) {",
+    "prevText": "let j = i;",
+    "nextText": "parts.push(body[j + 2]!.v);"
+  },
+  "mayEdit": [
+    "intent/blocks/sql-builder/sql-builder.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sql-builder-2014.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sql-builder\". Mutant: line 744:102-744:116, mutator OptionalChaining: \"body[j + 2]?.k\" becomes \"body[j + 2].k\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sql-builder/index.ts (> marks the mutated line):\n   738      }\n   739      if (fr.from && fr.expectTable) {\n   740        if (t.k === 'punct' && t.v === '(') continue;\n   741        if (t.k === 'word' || t.k === 'qid') {\n   742          const parts = [t.v];\n   743          let j = i;\n>  744          while (body[j + 1]?.v === '.' && body[j + 1]?.k === 'punct' && (body[j + 2]?.k === 'word' || body[j + 2]?.k === 'qid')) {\n   745            parts.push(body[j + 2]!.v);\n   746            j += 2;\n   747          }\n   748          if (body[j + 1]?.v === '(') {\n   749            // A function: handled when the parenthesis is reached.\n   750            continue;\n\nTest file style (intent/blocks/sql-builder/sql-builder.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { selectSql, insertSql, updateSql, deleteSql, planToSql, placeholdersMatch, checkReadOnly, assertReadOnly, policyFor, limitTo, checkExplain, SqlError, UnsafeSql } from './index.ts';\nimport type { Collection } from '../query/index.ts';\n\nconst cols: Collection[] = [\n  { name: 'customers', fields: { id: { type: 'number' }, name: { type: 'string' }, email: { type: 'string', sensitive: true }, created: { type: 'date' }, vip: { type: 'boolean' } } },\n  { name: 'orders', fields: { id: { type: 'number' }, customer_id: { type: 'number' }, total: { type: 'number' }, status: { type: 'string' } } },\n];\nconst policy = policyFor(cols, { maxLimit: 500 });\n\ntest('select quotes names and binds every value (pg)', () => {\n  const b = selectSql({ from: 'orders', columns: ['id', 'total'], where: { and: [{ column: 'status', op: '=', value: 'open' }, { column: 'total', op: '>=', value: 10 }] }, limit: 20 }, cols);\n  assert.equal(b.text, 'SELECT \"orders\".\"id\", \"orders\".\"total\" FROM \"orders\" WHERE (\"orders\".\"status\" = $1 AND \"orders\".\"total\" >= $2) LIMIT $3');\n  assert.deepEqual(b.params, ['open', 10, 20]);\n  assert.ok(placeholdersMatch(b));\n});\n\ntest('mysql and sqlite use ? and their quoting', () => {\n  const b = selectSql({ from: 'orders', columns: ['id'], where: { column: 'id', op: 'in', value: [1, 2, 3] } }, cols, { dialect: 'mysql' });\n  assert.match(b.text, /^SELECT `orders`\\.`id` FROM `orders` WHERE `orders`\\.`id` IN \\(\\?, \\?, \\?\\) LIMIT \\?$/);\n  assert.deepEqual(b.params, [1, 2, 3, 100]);\n  assert.ok(placeholdersMatch(b, 'mysql'));\n});\n\ntest('injection text stays in the parameters', () => {\n  const evil = \"x'; DROP TABLE orders; --\";\n  const b = selectSql({ from: 'orders', columns: ['id'], where: { column: 'status', op: '=', value: evil } }, cols);\n  assert.ok(!b.text.includes('DROP'));\n  assert.deepEqual(b.params[0], evil);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sql-builder-2014.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:04.902Z"
+}

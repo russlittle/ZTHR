@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "execution-log",
+  "mutant": {
+    "id": "250",
+    "line": 228,
+    "column": 111,
+    "endLine": 228,
+    "endColumn": 160,
+    "mutator": "StringLiteral",
+    "original": "`more than ${p.maxPerFlow} runs kept for ${flow}`",
+    "replacement": "``",
+    "lineText": "for (const r of kept.slice(p.maxPerFlow)) if (!out.has(r.id)) out.set(r.id, { id: r.id, flow, reason: `more than ${p.maxPerFlow} runs kept for ${flow}` });",
+    "prevText": "const kept = rs.filter((r) => !r.pinned).sort((a, b) => b.startedAt.localeCompare(a.startedAt) || b.id.localeCompare(a.id));",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/execution-log/execution-log.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/execution-log-250.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"execution-log\". Mutant: line 228:111-228:160, mutator StringLiteral: \"`more than ${p.maxPerFlow} runs kept for ${flow}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/execution-log/index.ts (> marks the mutated line):\n   222      }\n   223      if (p.maxPerFlow !== undefined) {\n   224        const byFlow = new Map<string, Run[]>();\n   225        for (const r of this.store.list().filter((x) => x.status !== 'running')) byFlow.set(r.flow, [...(byFlow.get(r.flow) ?? []), r]);\n   226        for (const [flow, rs] of byFlow) {\n   227          const kept = rs.filter((r) => !r.pinned).sort((a, b) => b.startedAt.localeCompare(a.startedAt) || b.id.localeCompare(a.id));\n>  228          for (const r of kept.slice(p.maxPerFlow)) if (!out.has(r.id)) out.set(r.id, { id: r.id, flow, reason: `more than ${p.maxPerFlow} runs kept for ${flow}` });\n   229        }\n   230      }\n   231      return [...out.values()].sort((a, b) => a.id.localeCompare(b.id));\n   232    }\n   233  \n   234    /** Apply a prune plan and record it. Returns what was removed. */\n\nTest file style (intent/blocks/execution-log/execution-log.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Audit, memoryAudit } from '../audit/index.ts';\nimport { ExecutionLog, NotFound, NotReplayable, REDACTED, redact } from './index.ts';\n\nconst clock = (start = '2026-11-01T00:00:00Z') => {\n  let t = new Date(start).getTime();\n  return { now: () => new Date(t), advance: (ms: number) => void (t += ms) };\n};\nconst ids = () => { let n = 0; return () => `r${++n}`; };\n\ntest('sensitive keys are redacted at any depth, other values are kept', () => {\n  const r = redact({ user: 'ana', password: 'hunter2', nested: { Authorization: 'Bearer abc', list: [{ apiKey: 'k', ok: 1 }] }, 'X-Api-Key': 'z' });\n  assert.deepEqual(r.value, { user: 'ana', password: REDACTED, nested: { Authorization: REDACTED, list: [{ apiKey: REDACTED, ok: 1 }] }, 'X-Api-Key': REDACTED });\n  assert.equal(r.altered, true);\n  assert.deepEqual(redact({ a: 1 }), { value: { a: 1 }, altered: false });\n});\n\ntest('declared secret values are removed from inside strings, longest first', () => {\n  const r = redact({ url: 'https://x/?k=supersecret123&z=1', note: 'supersecret123456 and supersecret123' }, { secrets: ['supersecret123', 'supersecret123456'] });\n  assert.deepEqual(r.value, { url: `https://x/?k=${REDACTED}&z=1`, note: `${REDACTED} and ${REDACTED}` });\n  assert.equal(redact('abc', { secrets: ['abc'] }).altered, false, 'a secret shorter than 4 characters is ignored, not scrubbed everywhere');\n});\n\ntest('long strings, long arrays, deep nesting and cycles are cut with a marker', () => {\n  const r = redact({ s: 'x'.repeat(30), a: [1, 2, 3, 4] }, { maxString: 10, maxItems: 2 });\n  assert.deepEqual(r.value, { s: `${'x'.repeat(10)}…[cut 20 characters]`, a: [1, 2, '[cut 2 more items]'] });\n  const cyc: Record<string, unknown> = { name: 'c' };\n  cyc.self = cyc;\n  assert.deepEqual(redact(cyc).value, { name: 'c', self: '[circular]' });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/execution-log-250.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.302Z"
+}

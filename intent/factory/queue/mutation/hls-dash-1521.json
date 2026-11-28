@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "hls-dash",
+  "mutant": {
+    "id": "1521",
+    "line": 780,
+    "column": 48,
+    "endLine": 780,
+    "endColumn": 61,
+    "mutator": "StringLiteral",
+    "original": "'avc1.4d401e'",
+    "replacement": "\"\"",
+    "lineText": "if (codec === 'h264') return height <= 480 ? 'avc1.4d401e' : height <= 720 ? 'avc1.4d401f' : height <= 1080 ? 'avc1.640028' : 'avc1.640033';",
+    "prevText": "export function codecString(codec: VideoCodec, height: number): string {",
+    "nextText": "if (codec === 'hevc') return height <= 1080 ? 'hvc1.1.6.L120.90' : 'hvc1.1.6.L150.90';"
+  },
+  "mayEdit": [
+    "intent/blocks/hls-dash/hls-dash.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/hls-dash-1521.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"hls-dash\". Mutant: line 780:48-780:61, mutator StringLiteral: \"'avc1.4d401e'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/hls-dash/index.ts (> marks the mutated line):\n   774  const BASE: readonly { h: number; kbps: number }[] = [\n   775    { h: 240, kbps: 400 }, { h: 360, kbps: 800 }, { h: 480, kbps: 1400 }, { h: 720, kbps: 2800 }, { h: 1080, kbps: 5000 }, { h: 1440, kbps: 9000 }, { h: 2160, kbps: 16000 },\n   776  ];\n   777  const SCALE: Record<VideoCodec, number> = { h264: 1, hevc: 0.7, av1: 0.6 };\n   778  \n   779  export function codecString(codec: VideoCodec, height: number): string {\n>  780    if (codec === 'h264') return height <= 480 ? 'avc1.4d401e' : height <= 720 ? 'avc1.4d401f' : height <= 1080 ? 'avc1.640028' : 'avc1.640033';\n   781    if (codec === 'hevc') return height <= 1080 ? 'hvc1.1.6.L120.90' : 'hvc1.1.6.L150.90';\n   782    return height <= 1080 ? 'av01.0.08M.08' : 'av01.0.12M.08';\n   783  }\n   784  const even = (n: number) => Math.max(2, Math.round(n / 2) * 2);\n   785  \n   786  export function buildLadder(o: LadderOptions): Rung[] {\n\nTest file style (intent/blocks/hls-dash/hls-dash.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  buildLadder, dashLiveEdge, expandTimeline, fillTemplate, formatIsoDuration, ladderMaster, LivePlaylist, ManifestError, parseAttributes, parseIsoDuration,\n  parseMasterPlaylist, parseMediaPlaylist, parseMpd, parsePlaylist, requiredVersion, segmentName, segmentUrls, validateMedia, writeMasterPlaylist, writeMediaPlaylist, writeMpd,\n} from './index.ts';\nimport type { MediaPlaylist, Mpd } from './index.ts';\n\nconst vod = (): MediaPlaylist => ({\n  kind: 'media', targetDuration: 6, mediaSequence: 0, playlistType: 'VOD', endList: true,\n  segments: [{ uri: 'a.ts', duration: 6 }, { uri: 'b.ts', duration: 5.96 }, { uri: 'c.ts', duration: 2.5 }],\n});\n\n// ------------------------------------------------------------ HLS media\n\ntest('a VOD playlist is written in the shape of the RFC example, and the version follows what is used', () => {\n  assert.equal(writeMediaPlaylist(vod()), [\n    '#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-TARGETDURATION:6', '#EXT-X-PLAYLIST-TYPE:VOD', '#EXT-X-MEDIA-SEQUENCE:0',\n    '#EXTINF:6,', 'a.ts', '#EXTINF:5.96,', 'b.ts', '#EXTINF:2.5,', 'c.ts', '#EXT-X-ENDLIST', '',\n  ].join('\\n'));\n  const whole: MediaPlaylist = { ...vod(), segments: [{ uri: 'a.ts', duration: 6 }] };\n  assert.equal(requiredVersion(whole), 1);\n  assert.equal(requiredVersion(vod()), 3);\n  assert.equal(requiredVersion({ ...vod(), segments: [{ uri: 'a.ts', duration: 6, byteRange: { length: 10, offset: 0 } }] }), 4);\n  assert.equal(requiredVersion({ ...vod(), segments: [{ uri: 'a.m4s', duration: 6, map: { uri: 'init.mp4' } }] }), 6);\n  assert.equal(requiredVersion({ ...vod(), segments: [{ uri: 'a.m4s', duration: 6, key: { method: 'AES-128', uri: 'k', keyFormat: 'identity' } }] }), 5);\n});\n\ntest('write then parse gives the playlist back, with titles, discontinuities, keys, maps, dates and byte ranges', () => {\n  // key and map are sticky: they apply to every segment after the line, so they are on all four\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/hls-dash-1521.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.093Z"
+}

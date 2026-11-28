@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "trigger-polling",
+  "mutant": {
+    "id": "72",
+    "line": 169,
+    "column": 64,
+    "endLine": 169,
+    "endColumn": 100,
+    "mutator": "LogicalOperator",
+    "original": "s.deactivatedReason ?? 'deactivated'",
+    "replacement": "s.deactivatedReason && 'deactivated'",
+    "lineText": "if (!s.active) throw new Inactive(`trigger ${id} is off: ${s.deactivatedReason ?? 'deactivated'}`);",
+    "prevText": "const s = this.state(id);",
+    "nextText": "const now = this.#now();"
+  },
+  "mayEdit": [
+    "intent/blocks/trigger-polling/trigger-polling.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/trigger-polling-72.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"trigger-polling\". Mutant: line 169:64-169:100, mutator LogicalOperator: \"s.deactivatedReason ?? 'deactivated'\" becomes \"s.deactivatedReason && 'deactivated'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/trigger-polling/index.ts (> marks the mutated line):\n   163  \n   164    /** Poll once, if it is time. Items not seen before are queued as keyed jobs. */\n   165    async poll<T>(id: string, o: { force?: boolean } = {}): Promise<PollOutcome<T>> {\n   166      const t = this.#polls.get(id) as PollTrigger<T> | undefined;\n   167      if (!t) throw new UnknownTrigger(`no polling trigger ${id}`);\n   168      const s = this.state(id);\n>  169      if (!s.active) throw new Inactive(`trigger ${id} is off: ${s.deactivatedReason ?? 'deactivated'}`);\n   170      const now = this.#now();\n   171      if (s.polling) return { emitted: [], duplicates: 0, baseline: false, error: 'a poll is already running' };\n   172      if (!o.force && now < s.nextPollAt) return { emitted: [], duplicates: 0, baseline: false };\n   173      s.polling = true;\n   174      this.#store.set(s);\n   175      const ac = new AbortController();\n\nTest file style (intent/blocks/trigger-polling/trigger-polling.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Queue } from '../jobs/index.ts';\nimport { signature } from '../webhooks/index.ts';\nimport { Inactive, TriggerHost, Unverified, UnknownTrigger } from './index.ts';\nimport type { PollTrigger } from './index.ts';\n\ninterface Item { id: number; title: string }\n\nconst setup = () => {\n  let t = 1_800_000_000_000;\n  const queue = new Queue({ now: () => t, random: () => 0 });\n  const host = new TriggerHost({ queue, now: () => t });\n  const advance = (ms: number) => void (t += ms);\n  return { queue, host, advance, now: () => t };\n};\n\nconst source = (batches: Item[][]) => {\n  const calls: (string | undefined)[] = [];\n  let i = 0;\n  const fetch: PollTrigger<Item>['fetch'] = async (cursor) => {\n    calls.push(cursor);\n    const items = batches[Math.min(i, batches.length - 1)]!;\n    i++;\n    return { items, cursor: `c${i}` };\n  };\n  return { fetch, calls };\n};\n\nconst def = (fetch: PollTrigger<Item>['fetch'], more: Partial<PollTrigger<Item>> = {}): PollTrigger<Item> => ({ id: 'tickets', flow: 'on-ticket', intervalMs: 60_000, key: (x) => String(x.id), fetch, sample: [{ id: 0, title: 'sample' }], ...more });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/trigger-polling-72.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:10.735Z"
+}

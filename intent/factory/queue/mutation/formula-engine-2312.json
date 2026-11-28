@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "formula-engine",
+  "mutant": {
+    "id": "2312",
+    "line": 741,
+    "column": 144,
+    "endLine": 741,
+    "endColumn": 149,
+    "mutator": "BooleanLiteral",
+    "original": "false",
+    "replacement": "true",
+    "lineText": "def('EDATE', 2, 2, ([a, m]) => { const n = num1(a!); const k = num1(m!); return isError(n) ? n : isError(k) ? k : monthShift(n, Math.trunc(k), false); });",
+    "prevText": "};",
+    "nextText": "def('EOMONTH', 2, 2, ([a, m]) => { const n = num1(a!); const k = num1(m!); return isError(n) ? n : isError(k) ? k : monthShift(n, Math.trunc(k), true); });"
+  },
+  "mayEdit": [
+    "intent/blocks/formula-engine/formula-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/formula-engine-2312.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"formula-engine\". Mutant: line 741:144-741:149, mutator BooleanLiteral: \"false\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/formula-engine/index.ts (> marks the mutated line):\n   735    const d = dateOf(n); if (!d) return E.num;\n   736    const t = new Date(Date.UTC(d.y, d.m - 1 + months, endOfMonth ? 1 : d.d));\n   737    if (endOfMonth) t.setUTCMonth(t.getUTCMonth() + 1, 0);\n   738    else if (t.getUTCDate() !== d.d) t.setUTCDate(0);\n   739    return serialOf(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate());\n   740  };\n>  741  def('EDATE', 2, 2, ([a, m]) => { const n = num1(a!); const k = num1(m!); return isError(n) ? n : isError(k) ? k : monthShift(n, Math.trunc(k), false); });\n   742  def('EOMONTH', 2, 2, ([a, m]) => { const n = num1(a!); const k = num1(m!); return isError(n) ? n : isError(k) ? k : monthShift(n, Math.trunc(k), true); });\n   743  \n   744  export const FUNCTIONS: readonly string[] = Object.keys(D).sort();\n   745  \n   746  // ------------------------------------------------------------------------------------------------- evaluation\n   747  \n\nTest file style (intent/blocks/formula-engine/formula-engine.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { calc, colName, colNumber, compare, dateOf, display, formatText, FormulaError, FormulaSyntaxError, FUNCTIONS, fromTyped, isError, parse, parseRef, serialOf, Workbook, type Scalar } from './index.ts';\n\nconst clock = { now: () => new Date('2026-03-09T15:30:00Z'), random: () => 0.25 };\nconst c = (f: string, cells: Record<string, Scalar> = {}) => {\n  const v = calc(f, cells, { clock });\n  return isError(v) ? v.code : v;\n};\n\ntest('operators follow Excel precedence and associativity', () => {\n  assert.equal(c('=-2^2'), 4, 'unary minus binds tighter than ^');\n  assert.equal(c('=2^3^2'), 64, '^ is left to right');\n  assert.equal(c('=2+3*4'), 14);\n  assert.equal(c('=(2+3)*4'), 20);\n  assert.equal(c('=7-2-1'), 4);\n  assert.equal(c('=10/4'), 2.5);\n  assert.equal(c('=50%'), 0.5);\n  assert.equal(c('=200*10%'), 20);\n  assert.equal(c('=2^-1'), 0.5);\n  assert.equal(c('=\"a\"&\"b\"&1'), 'ab1');\n  assert.equal(c('=1+2&\"x\"'), '3x', '+ before &');\n  assert.equal(c('=1+1=2'), true, 'comparison last');\n  assert.equal(c('= 1 + 2 '), 3, 'spaces are ignored');\n  assert.equal(c('=1.5e2+.5'), 150.5);\n  assert.equal(c('=\"say \"\"hi\"\"\"'), 'say \"hi\"');\n});\n\ntest('errors are values that travel, and IFERROR catches them', () => {\n  assert.equal(c('=1/0'), '#DIV/0!');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/formula-engine-2312.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.608Z"
+}

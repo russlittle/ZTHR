@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "theme-resolver",
+  "mutant": {
+    "id": "106",
+    "line": 126,
+    "column": 10,
+    "endLine": 126,
+    "endColumn": 19,
+    "mutator": "StringLiteral",
+    "original": "'archive'",
+    "replacement": "\"\"",
+    "lineText": "case 'archive': {",
+    "prevText": "break;",
+    "nextText": "const t = slugPart(ctx.postType);"
+  },
+  "mayEdit": [
+    "intent/blocks/theme-resolver/theme-resolver.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/theme-resolver-106.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"theme-resolver\". Mutant: line 126:10-126:19, mutator StringLiteral: \"'archive'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/theme-resolver/index.ts (> marks the mutated line):\n   120        withKey('author', ctx.nicename, ctx.id);\n   121        add('author', 'archive');\n   122        break;\n   123      case 'date':\n   124        add('date', 'archive');\n   125        break;\n>  126      case 'archive': {\n   127        const t = slugPart(ctx.postType);\n   128        if (t) add(`archive-${t}`);\n   129        add('archive');\n   130        break;\n   131      }\n   132      case 'search':\n\nTest file style (intent/blocks/theme-resolver/theme-resolver.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  BadAssetPath, Resolver, TemplateLimitError, TemplateNotFound, TemplateSyntaxError, ThemeChainError, ThemeError,\n  escapeHtml, hierarchy, mergeSettings, slugPart, type Theme,\n} from './index.ts';\n\nconst parent: Theme = {\n  id: 'parent',\n  files: { 'index.html': 'P-index', 'single.html': 'P-single', 'page.html': 'P-page', 'parts/header.html': '<h1>{{ site }}</h1>', 'parts/footer.html': 'P-footer', 'layout.html': '[{% block body %}default{% endblock %}]' },\n  assets: { 'css/site.css': 'body{}', 'js/app.js': 'alert(1)' },\n  themeJson: { settings: { color: { palette: ['red'], link: 'blue' }, layout: { wide: '1200px' } } },\n};\nconst child: Theme = {\n  id: 'child',\n  parent: 'parent',\n  files: { 'single.html': 'C-single', 'parts/footer.html': 'C-footer', 'page.html': '{% extends \"layout\" %}{% block body %}C-page {{ title }}{% endblock %}' },\n  assets: { 'css/site.css': 'body{color:red}' },\n  themeJson: { settings: { color: { palette: ['green', 'pink'] }, layout: { narrow: '600px' } } },\n};\nconst R = () => new Resolver([parent, child], 'child');\n\ntest('hierarchy for posts, pages, terms, authors, search, 404 and attachments', () => {\n  assert.deepEqual(hierarchy({ kind: 'single', postType: 'post', slug: 'Hello World!' }), ['single-post-hello-world', 'single-post', 'single', 'singular', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'single', postType: 'product', slug: 'mug' }), ['single-product-mug', 'single-product', 'single', 'singular', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'page', slug: 'about', id: 7, template: 'wide.php' }), ['wide', 'page-about', 'page-7', 'page', 'singular', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'taxonomy', taxonomy: 'category', term: 'news', id: 3 }), ['category-news', 'category-3', 'category', 'archive', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'taxonomy', taxonomy: 'genre', term: 'jazz' }), ['taxonomy-genre-jazz', 'taxonomy-genre', 'taxonomy', 'archive', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'author', nicename: 'ann', id: 2 }), ['author-ann', 'author-2', 'author', 'archive', 'index']);\n  assert.deepEqual(hierarchy({ kind: 'search' }), ['search', 'index']);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/theme-resolver-106.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:08.843Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "wiki-pages",
+  "mutant": {
+    "id": "401",
+    "line": 314,
+    "column": 180,
+    "endLine": 314,
+    "endColumn": 184,
+    "mutator": "BooleanLiteral",
+    "original": "true",
+    "replacement": "false",
+    "lineText": "for (const [k, v] of Object.entries(input.vars ?? {})) if (typeof v === 'string') Object.defineProperty(vars, k, { value: v, enumerable: true, writable: true, configurable: true });",
+    "prevText": "const vars: Record<string, string> = Object.assign(Object.create(null) as Record<string, string>, { title: input.title ?? '', date: this.o.now().toISOString().slice(0, 10), user: u.id });",
+    "nextText": "title = this.fill(input.title ?? t.title, vars, 'title');"
+  },
+  "mayEdit": [
+    "intent/blocks/wiki-pages/wiki-pages.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/wiki-pages-401.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"wiki-pages\". Mutant: line 314:180-314:184, mutator BooleanLiteral: \"true\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/wiki-pages/index.ts (> marks the mutated line):\n   308      this.need(u, parent?.id ?? null, 'edit', parent ? `add pages under ${input.parent}` : 'add pages at the top level');\n   309      let title = input.title, body = input.body ?? '';\n   310      if (input.template !== undefined) {\n   311        const t = this.templates.get(input.template);\n   312        if (!t) throw new WikiError('not-found', `there is no template \"${input.template}\"`);\n   313        const vars: Record<string, string> = Object.assign(Object.create(null) as Record<string, string>, { title: input.title ?? '', date: this.o.now().toISOString().slice(0, 10), user: u.id });\n>  314        for (const [k, v] of Object.entries(input.vars ?? {})) if (typeof v === 'string') Object.defineProperty(vars, k, { value: v, enumerable: true, writable: true, configurable: true });\n   315        title = this.fill(input.title ?? t.title, vars, 'title');\n   316        body = this.fill(t.body, vars, 'body');\n   317      }\n   318      if (title === undefined) throw new WikiError('invalid', 'a page needs a title');\n   319      this.checkContent(title, body);\n   320      const slug = input.slug ?? slugify(title);\n\nTest file style (intent/blocks/wiki-pages/wiki-pages.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Wiki, WikiError, diffLines, extractLinks, type User } from './index.ts';\n\nconst ada: User = { id: 'ada' };\nconst bob: User = { id: 'bob', groups: ['staff'] };\nconst root: User = { id: 'root' };\n\nfunction setup(o: { defaultRole?: 'none' | 'read' | 'edit' | 'admin' } = {}) {\n  let t = Date.parse('2024-03-01T10:00:00Z');\n  let n = 0;\n  const clock = { advance: (s: number) => { t += s * 1000; } };\n  const w = new Wiki({ now: () => new Date(t), id: () => `p${++n}`, admins: ['root'], defaultRole: o.defaultRole ?? 'edit' });\n  return { w, clock };\n}\nconst code = (f: () => unknown): string | undefined => { try { f(); return undefined; } catch (e) { return e instanceof WikiError ? e.code : `other:${String(e)}`; } };\n\ntest('create builds a tree with slug paths and breadcrumbs', () => {\n  const { w } = setup();\n  const a = w.create(ada, { title: 'Handbook' });\n  assert.equal(a.path, 'handbook');\n  const b = w.create(ada, { parent: 'handbook', title: 'On boarding!' });\n  assert.equal(b.path, 'handbook/on-boarding');\n  const c = w.create(ada, { parent: 'handbook/on-boarding', title: 'Laptops', slug: 'laptops' });\n  assert.equal(c.path, 'handbook/on-boarding/laptops');\n  assert.deepEqual(w.breadcrumbs(ada, c.path).map((x) => x.title), ['Handbook', 'On boarding!', 'Laptops']);\n  assert.deepEqual(w.children(ada, 'handbook').map((x) => x.slug), ['on-boarding']);\n  assert.equal(w.get(ada, c.path).version, 1);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/wiki-pages-401.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.652Z"
+}

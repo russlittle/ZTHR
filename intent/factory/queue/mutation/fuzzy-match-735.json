@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "fuzzy-match",
+  "mutant": {
+    "id": "735",
+    "line": 343,
+    "column": 31,
+    "endLine": 343,
+    "endColumn": 70,
+    "mutator": "MethodExpression",
+    "original": "normalise(s).split(' ').filter(Boolean)",
+    "replacement": "normalise(s).split(' ')",
+    "lineText": "const tokens = (s: string) => normalise(s).split(' ').filter(Boolean);",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/fuzzy-match/fuzzy-match.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/fuzzy-match-735.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"fuzzy-match\". Mutant: line 343:31-343:70, mutator MethodExpression: \"normalise(s).split(' ').filter(Boolean)\" becomes \"normalise(s).split(' ')\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/fuzzy-match/index.ts (> marks the mutated line):\n   337    }\n   338    return out;\n   339  }\n   340  \n   341  // ---------------------------------------------------------------- token scores\n   342  \n>  343  const tokens = (s: string) => normalise(s).split(' ').filter(Boolean);\n   344  \n   345  /** Names in a different order: words sorted before comparing. */\n   346  export function tokenSort(a: string, b: string): number {\n   347    return similarity(tokens(a).sort().join(' '), tokens(b).sort().join(' '));\n   348  }\n   349  \n\nTest file style (intent/blocks/fuzzy-match/fuzzy-match.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { TooLong, TrigramIndex, allowedEdits, damerauLevenshtein, jaro, jaroWinkler, levenshtein, metaphone, normalise, osa, similarity, soundex, suggest, tokenSet, tokenSort, trigramSimilarity, trigrams } from './index.ts';\n\nconst close = (a: number, b: number, eps = 0.0001) => assert.ok(Math.abs(a - b) < eps, `${a} is not within ${eps} of ${b}`);\n\ntest('Levenshtein: the textbook cases', () => {\n  assert.equal(levenshtein('kitten', 'sitting'), 3);\n  assert.equal(levenshtein('flaw', 'lawn'), 2);\n  assert.equal(levenshtein('', 'abc'), 3);\n  assert.equal(levenshtein('abc', ''), 3);\n  assert.equal(levenshtein('same', 'same'), 0);\n  assert.equal(levenshtein('Saturday', 'Sunday'), 3);\n  assert.equal(levenshtein('😀a', '😀b'), 1, 'counts characters, not code units');\n});\n\ntest('Levenshtein with a cut-off stops early and reports \"more than max\"', () => {\n  assert.equal(levenshtein('kitten', 'sitting', 3), 3);\n  assert.equal(levenshtein('kitten', 'sitting', 2), 3);\n  assert.equal(levenshtein('abcdef', 'uvwxyz', 1), 2);\n  assert.equal(levenshtein('a', 'abcdefgh', 2), 3);\n});\n\ntest('the transposition cases that separate OSA from true Damerau-Levenshtein', () => {\n  assert.equal(levenshtein('ca', 'abc'), 3);\n  assert.equal(osa('ca', 'abc'), 3);\n  assert.equal(damerauLevenshtein('ca', 'abc'), 2);\n  assert.equal(damerauLevenshtein('teh', 'the'), 1);\n  assert.equal(osa('teh', 'the'), 1);\n  assert.equal(damerauLevenshtein('abcd', 'acbd'), 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/fuzzy-match-735.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.851Z"
+}

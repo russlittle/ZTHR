@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "bounce-classify",
+  "mutant": {
+    "id": "185",
+    "line": 135,
+    "column": 180,
+    "endLine": 135,
+    "endColumn": 183,
+    "mutator": "StringLiteral",
+    "original": "'4'",
+    "replacement": "\"\"",
+    "lineText": "return { cls: Number(m[1]) as 2 | 4 | 5, subject, detail: Number(m[3]), text: KNOWN[code] ?? `${SUBJECTS[subject] ?? 'unknown subject'}: ${m[1] === '5' ? 'permanent' : m[1] === '4' ? 'temporary' : 'success'} failure` };",
+    "prevText": "const code = `${m[1]}.${subject}.${Number(m[3])}`;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/bounce-classify/bounce-classify.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/bounce-classify-185.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"bounce-classify\". Mutant: line 135:180-135:183, mutator StringLiteral: \"'4'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/bounce-classify/index.ts (> marks the mutated line):\n   129  /** Parses \"5.1.1\". Refuses anything that is not class 2, 4 or 5 with one to three digits in each part. */\n   130  export function parseStatus(s: string): Status {\n   131    const m = /^([245])\\.(\\d{1,3})\\.(\\d{1,3})$/.exec(s.trim());\n   132    if (!m) throw new NotAReport(`${JSON.stringify(s.slice(0, 20))} is not an enhanced status code`);\n   133    const subject = Number(m[2]);\n   134    const code = `${m[1]}.${subject}.${Number(m[3])}`;\n>  135    return { cls: Number(m[1]) as 2 | 4 | 5, subject, detail: Number(m[3]), text: KNOWN[code] ?? `${SUBJECTS[subject] ?? 'unknown subject'}: ${m[1] === '5' ? 'permanent' : m[1] === '4' ? 'temporary' : 'success'} failure` };\n   136  }\n   137  \n   138  /** The enhanced code that a plain three-digit SMTP reply stands for when the server gave none (RFC 5321 section 4.2). */\n   139  export function statusFromReply(code: number): string | undefined {\n   140    const table: Readonly<Record<number, string>> = { 421: '4.4.2', 450: '4.2.0', 451: '4.3.0', 452: '4.2.2', 550: '5.1.1', 551: '5.1.6', 552: '5.2.2', 553: '5.1.3', 554: '5.0.0', 250: '2.0.0' };\n   141    return table[code];\n\nTest file style (intent/blocks/bounce-classify/bounce-classify.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Notify } from '../notify/index.ts';\nimport { NotAReport, SoftBounceTracker, classifyMessage, classifyRecipient, feedSuppression, isAutoReply, parseMime, parseStatus, statusFromReply } from './index.ts';\n\nconst dsn = (fields: string, extra = '') => [\n  'From: MAILER-DAEMON@mx.example.org',\n  'To: sender@example.com',\n  'Subject: Undelivered Mail Returned to Sender',\n  'Content-Type: multipart/report; report-type=delivery-status; boundary=\"BND\"',\n  '',\n  '--BND',\n  'Content-Type: text/plain',\n  '',\n  'This is the mail system. Delivery failed.',\n  '--BND',\n  'Content-Type: message/delivery-status',\n  '',\n  'Reporting-MTA: dns; mx.example.org',\n  'Arrival-Date: Mon, 3 Mar 2025 10:00:00 +0000',\n  '',\n  fields,\n  extra,\n  '--BND',\n  'Content-Type: text/rfc822-headers',\n  '',\n  'From: sender@example.com',\n  'To: ana@example.net',\n  '--BND--',\n  '',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/bounce-classify-185.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.251Z"
+}

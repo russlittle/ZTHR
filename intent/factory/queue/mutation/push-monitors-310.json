@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "push-monitors",
+  "mutant": {
+    "id": "310",
+    "line": 197,
+    "column": 90,
+    "endLine": 197,
+    "endColumn": 107,
+    "mutator": "ArithmeticOperator",
+    "original": "(now - due) / MIN",
+    "replacement": "(now - due) * MIN",
+    "lineText": "if (now > due) return { state: 'late', due, missed: 0, lastPing, detail: `${Math.round((now - due) / MIN)} minutes late, inside its grace` };",
+    "prevText": "if (lastEnd?.kind === 'fail') return { state: 'failed', due, missed: 0, lastPing, detail: 'the job reported failure' };",
+    "nextText": "return { state: lastEnd ? 'up' : 'new', due, missed: 0, lastPing, detail: lastEnd ? 'last run reported success' : 'waiting for the first ping' };"
+  },
+  "mayEdit": [
+    "intent/blocks/push-monitors/push-monitors.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/push-monitors-310.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"push-monitors\". Mutant: line 197:90-197:107, mutator ArithmeticOperator: \"(now - due) / MIN\" becomes \"(now - due) * MIN\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/push-monitors/index.ts (> marks the mutated line):\n   191    while (slot + grace < now && missed < 10_000) {\n   192      missed++;\n   193      slot = nextDue(m, slot);\n   194    }\n   195    if (missed > 0) return { state: 'down', due, missed, lastPing, detail: `${missed} expected ${missed === 1 ? 'ping' : 'pings'} did not arrive` };\n   196    if (lastEnd?.kind === 'fail') return { state: 'failed', due, missed: 0, lastPing, detail: 'the job reported failure' };\n>  197    if (now > due) return { state: 'late', due, missed: 0, lastPing, detail: `${Math.round((now - due) / MIN)} minutes late, inside its grace` };\n   198    return { state: lastEnd ? 'up' : 'new', due, missed: 0, lastPing, detail: lastEnd ? 'last run reported success' : 'waiting for the first ping' };\n   199  }\n   200  \n   201  // ---------------------------------------------------------------- alerts\n   202  \n   203  export interface Alert {\n\nTest file style (intent/blocks/push-monitors/push-monitors.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { check } from '../watchdog/index.ts';\nimport { AlertTracker, PushMonitorError, accept, asWatchdog, evaluate, nextCron, nextDue, parseCron, parsePingPath, pingToken, pingUrl, tokenValid, validate } from './index.ts';\nimport type { PushMonitor } from './index.ts';\n\nconst MIN = 60_000;\nconst T0 = Date.UTC(2026, 0, 5, 0, 0, 0); // a Monday\nconst key = 'unit-test-ping-signing-key';\nconst every = (n: number, over: Partial<PushMonitor> = {}): PushMonitor => ({ id: 'backup', schedule: { everyMin: n }, graceMin: 5, created: T0, tokenVersion: 1, ...over });\nconst at = (s: string) => Date.parse(s);\n\ntest('cron: lists, ranges, steps and names give the next matching minute', () => {\n  assert.equal(nextCron(parseCron('*/15 * * * *'), at('2026-01-05T10:07:30Z')), at('2026-01-05T10:15:00Z'));\n  assert.equal(nextCron(parseCron('0 9 * * mon-fri'), at('2026-01-09T09:00:00Z')), at('2026-01-12T09:00:00Z'), 'Friday 09:00 passed, next is Monday');\n  assert.equal(nextCron(parseCron('30 2 1 jan,jul *'), at('2026-01-01T02:30:00Z')), at('2026-07-01T02:30:00Z'));\n  assert.equal(nextCron(parseCron('5-10/2 0 * * *'), at('2026-01-05T00:05:00Z')), at('2026-01-05T00:07:00Z'));\n  assert.equal(nextCron(parseCron('0 0 * * 7'), at('2026-01-05T00:00:00Z')), at('2026-01-11T00:00:00Z'), 'day 7 is Sunday');\n});\n\ntest('cron: when both day fields are restricted, either may match', () => {\n  const c = parseCron('0 0 13 * fri');\n  assert.equal(nextCron(c, at('2026-02-01T00:00:00Z')), at('2026-02-06T00:00:00Z'), 'the first Friday');\n  assert.equal(nextCron(c, at('2026-02-12T12:00:00Z')), at('2026-02-13T00:00:00Z'));\n});\n\ntest('cron: leap day and impossible dates', () => {\n  assert.equal(nextCron(parseCron('0 0 29 2 *'), at('2026-03-01T00:00:00Z')), at('2028-02-29T00:00:00Z'));\n  assert.throws(() => nextCron(parseCron('0 0 31 2 *'), T0), /never happens/);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/push-monitors-310.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:57.121Z"
+}

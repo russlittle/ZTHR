@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "multipart-parse",
+  "mutant": {
+    "id": "978",
+    "line": 527,
+    "column": 170,
+    "endLine": 527,
+    "endColumn": 196,
+    "mutator": "StringLiteral",
+    "original": "'application/octet-stream'",
+    "replacement": "\"\"",
+    "lineText": "chunks.push(Buffer.from(`--${boundary}\\r\\nContent-Disposition: form-data; name=\"${esc(p.name)}\"; filename=\"${esc(p.filename)}\"\\r\\nContent-Type: ${p.contentType ?? 'application/octet-stream'}\\r\\n\\r\\n`), Buffer.from(p.bytes), CRLF);",
+    "prevText": "if ('filename' in p) {",
+    "nextText": "} else chunks.push(Buffer.from(`--${boundary}\\r\\nContent-Disposition: form-data; name=\"${esc(p.name)}\"\\r\\n\\r\\n${p.value}\\r\\n`));"
+  },
+  "mayEdit": [
+    "intent/blocks/multipart-parse/multipart-parse.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/multipart-parse-978.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"multipart-parse\". Mutant: line 527:170-527:196, mutator StringLiteral: \"'application/octet-stream'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/multipart-parse/index.ts (> marks the mutated line):\n   521  export function build(boundary: string, parts: readonly ({ name: string; value: string } | { name: string; filename: string; contentType?: string; bytes: Uint8Array })[]): Uint8Array {\n   522    checkBoundary(boundary);\n   523    const esc = (s: string) => s.replace(/\\r/g, '%0D').replace(/\\n/g, '%0A').replace(/\"/g, '%22');\n   524    const chunks: Buffer[] = [];\n   525    for (const p of parts) {\n   526      if ('filename' in p) {\n>  527        chunks.push(Buffer.from(`--${boundary}\\r\\nContent-Disposition: form-data; name=\"${esc(p.name)}\"; filename=\"${esc(p.filename)}\"\\r\\nContent-Type: ${p.contentType ?? 'application/octet-stream'}\\r\\n\\r\\n`), Buffer.from(p.bytes), CRLF);\n   528      } else chunks.push(Buffer.from(`--${boundary}\\r\\nContent-Disposition: form-data; name=\"${esc(p.name)}\"\\r\\n\\r\\n${p.value}\\r\\n`));\n   529    }\n   530    chunks.push(Buffer.from(`--${boundary}--\\r\\n`));\n   531    return new Uint8Array(Buffer.concat(chunks));\n   532  }\n   533  \n\nTest file style (intent/blocks/multipart-parse/multipart-parse.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { MultipartParser, MultipartError, parse, parseStream, collect, build, parseContentType, parseHeaderValue, decodeExtValue, sanitizeFilename } from './index.ts';\n\nconst CT = 'multipart/form-data; boundary=AaB03x';\nconst enc = (s: string) => new TextEncoder().encode(s);\nconst PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52, 1, 2, 3]);\nconst EXE = new Uint8Array([0x4d, 0x5a, ...new Array(30).fill(0x90)]);\nconst code = (f: () => unknown): string | undefined => { try { f(); return undefined; } catch (e) { return e instanceof MultipartError ? e.code : `other:${String(e)}`; } };\nconst file = (name: string, filename: string, bytes: Uint8Array, contentType?: string) => ({ name, filename, bytes, ...(contentType ? { contentType } : {}) });\n\n// RFC 7578 section 4.3 style example\nconst RFC = enc('--AaB03x\\r\\nContent-Disposition: form-data; name=\"submit-name\"\\r\\n\\r\\nLarry\\r\\n--AaB03x\\r\\nContent-Disposition: form-data; name=\"files\"; filename=\"file1.txt\"\\r\\nContent-Type: text/plain\\r\\n\\r\\n... contents of file1.txt ...\\r\\n--AaB03x--\\r\\n');\n\ntest('RFC 7578 example: a field and a file', () => {\n  const r = parse(RFC, CT);\n  assert.deepEqual(r.fields, [{ name: 'submit-name', value: 'Larry' }]);\n  assert.equal(r.files.length, 1);\n  const f = r.files[0]!;\n  assert.equal(f.name, 'files');\n  assert.equal(f.filename, 'file1.txt');\n  assert.equal(f.contentType, 'text/plain');\n  assert.equal(new TextDecoder().decode(f.bytes), '... contents of file1.txt ...');\n  assert.equal(f.size, 29);\n});\n\ntest('every way of splitting the body into two chunks gives the same result', () => {\n  const body = build('AaB03x', [{ name: 'a', value: 'x\\r\\n--AaB03 not a boundary' }, file('f', 'p.png', PNG, 'image/png'), { name: 'b', value: '' }]);\n  const whole = parse(body, CT);\n  for (let i = 0; i <= body.length; i++) {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/multipart-parse-978.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.511Z"
+}

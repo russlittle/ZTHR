@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "table-schema",
+  "mutant": {
+    "id": "22",
+    "line": 52,
+    "column": 173,
+    "endLine": 52,
+    "endColumn": 179,
+    "mutator": "StringLiteral",
+    "original": "'null'",
+    "replacement": "\"\"",
+    "lineText": "const RESERVED = new Set(['select', 'insert', 'update', 'delete', 'drop', 'table', 'from', 'where', 'order', 'group', 'user', 'create', 'alter', 'index', 'primary', 'key', 'null', 'default', 'check', 'unique', 'references', 'constraint', 'column', 'and', 'or', 'not', 'in', 'is', 'like', 'join', 'on', 'as', 'union', 'limit', 'offset', 'values', 'set', 'grant', 'all', 'case', 'when', 'then', 'else', 'end', 'exists', 'having', 'distinct', 'desc', 'asc', 'by', 'to', 'with', 'into', 'trigger', 'view', 'rename']);",
+    "prevText": "const IDENT = /^[a-z][a-z0-9_]{0,40}$/;",
+    "nextText": "const MAX_FIELDS = 200;"
+  },
+  "mayEdit": [
+    "intent/blocks/table-schema/table-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/table-schema-22.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"table-schema\". Mutant: line 52:173-52:179, mutator StringLiteral: \"'null'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/table-schema/index.ts (> marks the mutated line):\n    46  export interface Table {\n    47    readonly name: string;\n    48    readonly fields: readonly Field[];\n    49  }\n    50  \n    51  const IDENT = /^[a-z][a-z0-9_]{0,40}$/;\n>   52  const RESERVED = new Set(['select', 'insert', 'update', 'delete', 'drop', 'table', 'from', 'where', 'order', 'group', 'user', 'create', 'alter', 'index', 'primary', 'key', 'null', 'default', 'check', 'unique', 'references', 'constraint', 'column', 'and', 'or', 'not', 'in', 'is', 'like', 'join', 'on', 'as', 'union', 'limit', 'offset', 'values', 'set', 'grant', 'all', 'case', 'when', 'then', 'else', 'end', 'exists', 'having', 'distinct', 'desc', 'asc', 'by', 'to', 'with', 'into', 'trigger', 'view', 'rename']);\n    53  const MAX_FIELDS = 200;\n    54  \n    55  interface TypeDef {\n    56    readonly kind: 'string' | 'number' | 'boolean' | 'json';\n    57    readonly sql: Record<Dialect, (f: Field) => string>;\n    58    readonly schema: (f: Field) => v.Schema<unknown>;\n\nTest file style (intent/blocks/table-schema/table-schema.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { checkTable, checkRow, findDuplicates, conversion, convertValue, previewConversion, createTable, dropTable, diff, toMigration, needsApproval, fieldTypes, SchemaError } from './index.ts';\nimport type { Table, Field } from './index.ts';\nimport { plan } from '../migrations/index.ts';\n\nconst f = (o: Partial<Field> & Pick<Field, 'id' | 'name' | 'type'>): Field => o;\nconst contacts: Table = {\n  name: 'contacts',\n  fields: [\n    f({ id: 'a', name: 'full_name', type: 'text', required: true, maxLength: 80 }),\n    f({ id: 'b', name: 'email', type: 'email', unique: true }),\n    f({ id: 'c', name: 'age', type: 'integer', min: 0, max: 150 }),\n    f({ id: 'd', name: 'stage', type: 'select', options: ['lead', 'won', \"it's lost\"], default: 'lead' }),\n    f({ id: 'e', name: 'tags', type: 'multiselect', options: ['x', 'y'] }),\n  ],\n};\n\ntest('registry covers the documented types', () => {\n  assert.deepEqual(fieldTypes().sort(), ['boolean', 'date', 'datetime', 'decimal', 'email', 'integer', 'json', 'longtext', 'multiselect', 'select', 'text', 'url', 'uuid']);\n});\n\ntest('a sound table has no problems', () => assert.deepEqual(checkTable(contacts), []));\n\ntest('bad names, reserved words, duplicates and misplaced options are reported', () => {\n  const bad: Table = { name: 'Users;', fields: [f({ id: 'a', name: 'select', type: 'text' }), f({ id: 'a', name: 'x', type: 'text', options: ['a'] }), f({ id: 'c', name: 'x', type: 'weird' as never }), f({ id: 'd', name: 'p', type: 'select' }), f({ id: 'e', name: 'j', type: 'json', unique: true })] };\n  const p = checkTable(bad).join('\\n');\n  for (const s of ['table name', 'not allowed', 'two fields have id a', 'two fields have this name', 'unknown type', 'options are 1 to 200', 'cannot be unique', 'options does not apply']) assert.match(p, new RegExp(s));\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/table-schema-22.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:07.144Z"
+}

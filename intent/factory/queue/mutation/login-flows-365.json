@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "login-flows",
+  "mutant": {
+    "id": "365",
+    "line": 343,
+    "column": 16,
+    "endLine": 343,
+    "endColumn": 29,
+    "mutator": "OptionalChaining",
+    "original": "u?.attributes",
+    "replacement": "u.attributes",
+    "lineText": "return u?.attributes?.[c.name] === c.value;",
+    "prevText": "case 'attribute':",
+    "nextText": "case 'network': {"
+  },
+  "mayEdit": [
+    "intent/blocks/login-flows/login-flows.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/login-flows-365.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"login-flows\". Mutant: line 343:16-343:29, mutator OptionalChaining: \"u?.attributes\" becomes \"u.attributes\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/login-flows/index.ts (> marks the mutated line):\n   337    private cond(c: Condition): boolean {\n   338      const u = this.ctx.user;\n   339      switch (c.type) {\n   340        case 'role':\n   341          return !!u?.roles?.includes(c.role);\n   342        case 'attribute':\n>  343          return u?.attributes?.[c.name] === c.value;\n   344        case 'network': {\n   345          const hit = !!this.ctx.ip && !!this.d.inCidr && c.cidrs.some((n) => this.d.inCidr!(this.ctx.ip!, n));\n   346          return c.negate ? !hit : hit;\n   347        }\n   348        case 'requested-level':\n   349          return this.ctx.requestedLevel >= c.atLeast;\n\nTest file style (intent/blocks/login-flows/login-flows.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { base32, checkCode, hotp, unbase32 } from '../sessions/index.ts';\nimport { BruteForce, FlowRun, LoginFlowError, requiredActionsFor, validateFlow } from './index.ts';\nimport type { Authenticator, Condition, FlowDeps, Step, SubFlow, UserState } from './index.ts';\n\nconst NOW = 1_800_000_000_000;\nconst SECRET = base32(Uint8Array.from({ length: 20 }, (_, i) => i + 1));\nconst code = (at = NOW) => hotp(unbase32(SECRET), Math.floor(at / 30_000));\nconst PASSWORDS: Record<string, string> = { ana: 'correct horse', bo: 'battery staple', cy: 'pw' };\nconst USERS: Record<string, UserState> = {\n  ana: { id: 'ana', roles: ['admin'], configured: ['otp'], emailVerified: true },\n  bo: { id: 'bo', roles: [], configured: ['webauthn'], emailVerified: true },\n  cy: { id: 'cy', roles: [], configured: [], emailVerified: false, passwordChangedAt: NOW - 100 * 86_400_000, termsAccepted: 1 },\n};\n\nconst registry = (): Map<string, Authenticator> =>\n  new Map<string, Authenticator>([\n    ['username', { name: 'username', kind: 'identify' }],\n    ['password', { name: 'password', kind: 'credential', verify: (input, ctx) => (ctx.user && typeof input === 'object' && input !== null && (input as { password?: string }).password === PASSWORDS[ctx.username ?? ''] ? { ok: true } : { ok: false, code: 'bad' }) }],\n    ['otp', { name: 'otp', kind: 'second-factor', level: 2, configuredFor: (u) => !!u?.configured?.includes('otp'), setupAction: 'CONFIGURE_OTP', verify: (input) => (typeof input === 'string' && checkCode(SECRET, input, NOW) !== null ? { ok: true } : { ok: false }) }],\n    ['passkey', { name: 'passkey', kind: 'passwordless', level: 2, configuredFor: (u) => !!u?.configured?.includes('webauthn'), verify: (input, ctx) => (input === `signed-by-${ctx.username}` && ctx.user?.configured?.includes('webauthn') ? { ok: true, user: ctx.username ?? '' } : { ok: false }) }],\n    ['cookie', { name: 'cookie', kind: 'session', auto: (ctx) => (ctx.session && ctx.session.level >= ctx.requestedLevel ? { ok: true, user: ctx.session.user, amr: 'cookie' } : null) }],\n  ]);\n\nconst browser: SubFlow = {\n  id: 'browser',\n  requirement: 'REQUIRED',\n  executions: [\n    { id: 'cookie', authenticator: 'cookie', requirement: 'ALTERNATIVE' },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/login-flows-365.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.701Z"
+}

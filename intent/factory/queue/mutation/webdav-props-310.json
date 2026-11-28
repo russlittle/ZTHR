@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webdav-props",
+  "mutant": {
+    "id": "310",
+    "line": 243,
+    "column": 101,
+    "endLine": 243,
+    "endColumn": 103,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "ops.push({ op: group.name, ns: p.ns, name: p.name, value: group.name === 'set' ? p.text : '', status });",
+    "prevText": "else if (group.name === 'set' && p.text.length > this.o.maxPropValue) status = 409;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/webdav-props/webdav-props.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webdav-props-310.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webdav-props\". Mutant: line 243:101-243:103, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webdav-props/index.ts (> marks the mutated line):\n   237            let status: Status = 200;\n   238            const key = k(p.ns, p.name);\n   239            if (p.ns === '' || !isQName(p.name) || p.ns.length > 255 || p.name.length > 100) status = 409;\n   240            else if ((await this.liveProps(node, ctx)).has(key) || (await this.extensionProps(node, ctx)).has(key) || p.ns === DAV) status = 403;\n   241            else if (group.name === 'set' && p.children.length > 0) status = 409;\n   242            else if (group.name === 'set' && p.text.length > this.o.maxPropValue) status = 409;\n>  243            ops.push({ op: group.name, ns: p.ns, name: p.name, value: group.name === 'set' ? p.text : '', status });\n   244          }\n   245        }\n   246      }\n   247      if (ops.length === 0) return plain(400, 'the propertyupdate changes nothing');\n   248      // net result, in document order, to check the count limit\n   249      const final = new Map(Object.entries(node.props ?? {}));\n\nTest file style (intent/blocks/webdav-props/webdav-props.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { DAV, parseXml } from '../dav/index.ts';\nimport type { El } from '../dav/index.ts';\nimport { Tree, memoryNodes } from '../tree/index.ts';\nimport { CS, OC, WebdavProps, hrefFor, like, relPath } from './index.ts';\nimport type { Options } from './index.ts';\n\nconst BASE = '/remote.php/dav/files/ana';\nconst ctx = { owner: 'ana', base: BASE };\nconst MTIME = 1_700_000_000;\n\nfunction mk(o: Options = {}) {\n  let n = 0;\n  const tree = new Tree(memoryNodes(), { now: () => MTIME, etag: () => `e${++n}` });\n  const dav = new WebdavProps(tree, o);\n  return { tree, dav };\n}\nconst file = async (tree: Tree, path: string, size = 10, extra: { mime?: string; checksums?: string[] } = {}, owner = 'ana') => (await tree.put(owner, path, { size, blob: `blob:${path}`, mtime: MTIME, ...extra })).node;\n\ninterface Row { href: string; props: Map<string, string>; status: Map<string, number>; rawStatus: number[] }\nfunction rows(xml: string): Row[] {\n  const root = parseXml(xml);\n  assert.deepEqual([root.ns, root.name], [DAV, 'multistatus']);\n  return root.children.map((r) => {\n    const props = new Map<string, string>();\n    const status = new Map<string, number>();\n    const rawStatus: number[] = [];\n    for (const c of r.children) {\n      if (c.name === 'status') rawStatus.push(Number(/ (\\d{3})/.exec(c.text)![1]));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webdav-props-310.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:13.940Z"
+}

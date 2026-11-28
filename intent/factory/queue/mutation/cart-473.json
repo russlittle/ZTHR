@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "cart",
+  "mutant": {
+    "id": "473",
+    "line": 407,
+    "column": 21,
+    "endLine": 407,
+    "endColumn": 82,
+    "mutator": "ArrowFunction",
+    "original": "(a, b) => b.idleMs - a.idleMs || a.cart.localeCompare(b.cart)",
+    "replacement": "() => undefined",
+    "lineText": "return out.sort((a, b) => b.idleMs - a.idleMs || a.cart.localeCompare(b.cart));",
+    "prevText": "}",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/cart/cart.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/cart-473.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"cart\". Mutant: line 407:21-407:82, mutator ArrowFunction: \"(a, b) => b.idleMs - a.idleMs || a.cart.localeCompare(b.cart)\" becomes \"() => undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/cart/index.ts (> marks the mutated line):\n   401        if (c.status !== 'open' || !c.lines.length) continue;\n   402        if (c.owner.customer === undefined && !o.anonymousToo) continue;\n   403        const idle = now - c.updatedAt;\n   404        const stage = idle >= this.o.stagesMs[1] ? 2 : idle >= this.o.stagesMs[0] ? 1 : 0;\n   405        if (stage > c.remindedStage) out.push({ cart: c.id, stage: stage as 1 | 2, idleMs: idle, ...(c.owner.customer ? { customer: c.owner.customer } : {}) });\n   406      }\n>  407      return out.sort((a, b) => b.idleMs - a.idleMs || a.cart.localeCompare(b.cart));\n   408    }\n   409    markReminded(id: string, stage: 1 | 2): void {\n   410      const c = this.get(id);\n   411      c.remindedStage = Math.max(c.remindedStage, stage);\n   412    }\n   413    /** Close carts idle longer than the expiry, releasing their stock. */\n\nTest file style (intent/blocks/cart/cart.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Inventory } from '../inventory/index.ts';\nimport { money } from '../money/index.ts';\nimport { RedemptionLog, type Catalog } from '../pricing/index.ts';\nimport { CartError, Carts, type Options } from './index.ts';\n\nconst usd = (n: number) => money(n, 'USD');\nconst MIN = 60_000;\nconst HOUR = 60 * MIN;\nlet t = Date.parse('2026-06-15T12:00:00Z');\n\nfunction shop(extra: Partial<Options> = {}, catalogRef: { cat: Catalog } = { cat: baseCatalog() }) {\n  t = Date.parse('2026-06-15T12:00:00Z');\n  const inv = new Inventory({ now: () => new Date(t), currency: 'USD' });\n  inv.addPlace({ id: 'supplier', kind: 'supplier' });\n  inv.addPlace({ id: 'customer', kind: 'customer' });\n  inv.addPlace({ id: 'main', kind: 'internal' });\n  for (const sku of ['tee', 'mug', 'hat']) inv.addProduct({ sku, tracking: 'none', valuation: 'average' });\n  inv.receive({ sku: 'tee', qty: 10, to: 'main', unitCost: usd(500) });\n  inv.receive({ sku: 'mug', qty: 5, to: 'main', unitCost: usd(300) });\n  inv.receive({ sku: 'hat', qty: 2, to: 'main', unitCost: usd(300) });\n  let n = 0;\n  const log = new RedemptionLog();\n  const carts = new Carts({ catalog: () => catalogRef.cat, now: () => t, newId: () => `c${++n}`, currency: 'USD', inventory: inv, place: 'main', redemptions: log, customers: (id) => ({ id, groups: id === 'vera' ? ['vip'] : [] }), ...extra });\n  return { carts, inv, log, catalogRef };\n}\nfunction baseCatalog(): Catalog {\n  return {\n    lists: [\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/cart-473.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.763Z"
+}

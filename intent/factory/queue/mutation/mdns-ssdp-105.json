@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mdns-ssdp",
+  "mutant": {
+    "id": "105",
+    "line": 103,
+    "column": 7,
+    "endLine": 103,
+    "endColumn": 76,
+    "mutator": "LogicalOperator",
+    "original": "groups.length !== 8 || groups.some((g) => !/^[0-9a-f]{1,4}$/.test(g))",
+    "replacement": "groups.length !== 8 && groups.some(g => !/^[0-9a-f]{1,4}$/.test(g))",
+    "lineText": "if (groups.length !== 8 || groups.some((g) => !/^[0-9a-f]{1,4}$/.test(g))) throw new DiscoveryError(`${s} is not an IPv6 address`);",
+    "prevText": "const groups = [...head, ...Array(Math.max(fill, 0)).fill('0'), ...tail];",
+    "nextText": "a = '';"
+  },
+  "mayEdit": [
+    "intent/blocks/mdns-ssdp/mdns-ssdp.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mdns-ssdp-105.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mdns-ssdp\". Mutant: line 103:7-103:76, mutator LogicalOperator: \"groups.length !== 8 || groups.some((g) => !/^[0-9a-f]{1,4}$/.test(g))\" becomes \"groups.length !== 8 && groups.some(g => !/^[0-9a-f]{1,4}$/.test(g))\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mdns-ssdp/index.ts (> marks the mutated line):\n    97    if (!/^[0-9a-f:]+$/.test(a) || (a.match(/::/g) ?? []).length > 1) throw new DiscoveryError(`${s} is not an IPv6 address`);\n    98    const [h, t] = a.split('::');\n    99    const head = h ? h.split(':') : [];\n   100    const tail = t === undefined ? [] : t ? t.split(':') : [];\n   101    const fill = a.includes('::') ? 8 - head.length - tail.length : 0;\n   102    const groups = [...head, ...Array(Math.max(fill, 0)).fill('0'), ...tail];\n>  103    if (groups.length !== 8 || groups.some((g) => !/^[0-9a-f]{1,4}$/.test(g))) throw new DiscoveryError(`${s} is not an IPv6 address`);\n   104    a = '';\n   105    return Buffer.from(groups.map((g) => g.padStart(4, '0')).join(''), 'hex');\n   106  }\n   107  const showV6 = (b: Buffer) => {\n   108    const g = Array.from({ length: 8 }, (_, i) => b.readUInt16BE(i * 2).toString(16));\n   109    let best = -1, bl = 0;\n\nTest file style (intent/blocks/mdns-ssdp/mdns-ssdp.test.ts):\n28 test() blocks. Imports and the first tests, verbatim:\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  DiscoveryError, MdnsCache, SsdpCache, announce, answerQuery, browse, checkLocation, decodeMessage, decodeTxt, encodeMessage, encodeTxt, goodbye,\n  matchesSearch, msearch, notify, parseName, parseSsdp, resolve, searchResponse, serviceRecords, sameName, nameToString,\n  type Message, type Service,\n} from './index.ts';\n\nconst svc: Service = { instance: 'Front Printer', type: '_ipp._tcp', host: 'printer', port: 631, addresses: ['192.168.1.20', 'fe80::1'], txt: { rp: 'ipp/print', color: 'T', duplex: true } };\n\nlet t = 1_000_000;\nconst clock = () => t;\ntest.beforeEach(() => { t = 1_000_000; });\n\ntest('a query for _http._tcp.local has the bytes RFC 6762 gives (compression of the repeated name)', () => {\n  const b = encodeMessage({ id: 0, response: false, questions: [{ name: ['_http', '_tcp', 'local'], type: 'PTR' }], answers: [] });\n  assert.equal(b.toString('hex'), '000000000001000000000000' + '055f68747470045f746370056c6f63616c00' + '000c0001');\n});\n\ntest('the unicast-response bit is the top bit of a question class', () => {\n  const b = encodeMessage({ id: 0, response: false, questions: [{ name: ['a', 'local'], type: 'A', unicast: true }], answers: [] });\n  assert.equal(b.readUInt16BE(b.length - 2), 0x8001);\n  assert.equal(decodeMessage(b).questions[0]!.unicast, true);\n});\n\ntest('a message round-trips: A, AAAA, PTR, SRV, TXT and NSEC', () => {\n  const m: Message = {\n    id: 7, response: true, authoritative: true, questions: [],\n    answers: [\n      { name: ['h', 'local'], ttl: 120, flush: true, data: { type: 'A', address: '10.0.0.5' } },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mdns-ssdp-105.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:48.780Z"
+}

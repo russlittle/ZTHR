@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "scim",
+  "mutant": {
+    "id": "965",
+    "line": 404,
+    "column": 7,
+    "endLine": 404,
+    "endColumn": 59,
+    "mutator": "ConditionalExpression",
+    "original": "!winner || !isObj(winner) || winner.primary !== true",
+    "replacement": "false",
+    "lineText": "if (!winner || !isObj(winner) || winner.primary !== true) return;",
+    "prevText": "function fixPrimary(list: Json[], winner?: Json) {",
+    "nextText": "for (const e of list) if (isObj(e) && e !== winner && e.primary === true) e.primary = false;"
+  },
+  "mayEdit": [
+    "intent/blocks/scim/scim.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/scim-965.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"scim\". Mutant: line 404:7-404:59, mutator ConditionalExpression: \"!winner || !isObj(winner) || winner.primary !== true\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/scim/index.ts (> marks the mutated line):\n   398    return { urn, attr: parts[0]!, filter, sub };\n   399  }\n   400  \n   401  const sameValue = (a: Json, b: Json) => JSON.stringify(a) === JSON.stringify(b);\n   402  \n   403  function fixPrimary(list: Json[], winner?: Json) {\n>  404    if (!winner || !isObj(winner) || winner.primary !== true) return;\n   405    for (const e of list) if (isObj(e) && e !== winner && e.primary === true) e.primary = false;\n   406  }\n   407  \n   408  /** Applies one operation to a copy of the resource and returns it. */\n   409  function applyOne(res: { [k: string]: Json }, kind: Kind, o: PatchOperation): void {\n   410    const op = String(o.op ?? '').toLowerCase();\n\nTest file style (intent/blocks/scim/scim.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { SCHEMA_BULK_REQUEST, SCHEMA_ENTERPRISE, SCHEMA_PATCH, ScimError, ScimServer, applyPatch, matches, parseFilter } from './index.ts';\nimport type { Resource, ScimResponse } from './index.ts';\n\nfunction setup() {\n  let n = 0;\n  const t = { v: Date.UTC(2026, 10, 1) };\n  const passwords: [string, string][] = [];\n  const changes: string[] = [];\n  const s = new ScimServer({ baseUrl: 'https://app.example.org/scim/v2', now: () => t.v, newId: () => `id${++n}`, onPassword: (i, p) => passwords.push([i, p]), onChange: (e) => changes.push(`${e.action}:${e.kind}:${e.id}`) });\n  const call = (method: string, path: string, body?: unknown, extra: { query?: Record<string, string>; headers?: Record<string, string> } = {}) => s.handle({ method, path, ...(body === undefined ? {} : { body }), ...extra });\n  return { s, t, call, passwords, changes };\n}\nconst USER = (name: string, extra: object = {}) => ({ schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'], userName: name, ...extra });\nconst patch = (...ops: object[]) => ({ schemas: [SCHEMA_PATCH], Operations: ops });\nconst body = (r: ScimResponse) => r.body as Resource;\nconst err = (r: ScimResponse) => r.body as { status: string; scimType?: string; detail: string };\nconst people = [\n  { id: '1', userName: 'Ana', name: { givenName: 'Ana', familyName: 'Ruiz' }, active: true, emails: [{ value: 'ana@work.example', type: 'work', primary: true }, { value: 'ana@home.example', type: 'home' }], meta: { lastModified: '2026-01-02T00:00:00Z' } },\n  { id: '2', userName: 'bo', name: { givenName: 'Bo' }, active: false, emails: [{ value: 'bo@work.example', type: 'work' }], title: 'Chief' },\n  { id: '3', userName: 'Cy', externalId: 'ExT-9', active: true },\n];\nconst pick = (f: string) => people.filter((p) => matches(parseFilter(f), p)).map((p) => p.id).join(',');\n\ntest('filters: comparison operators, case-insensitive attribute names and strings, case-exact ids', () => {\n  assert.equal(pick('userName eq \"ana\"'), '1');\n  assert.equal(pick('USERNAME EQ \"BO\"'), '2');\n  assert.equal(pick('userName sw \"A\"'), '1');\n  assert.equal(pick('userName ew \"y\"'), '3');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/scim-965.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:01.220Z"
+}

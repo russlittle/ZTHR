@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "permalinks",
+  "mutant": {
+    "id": "48",
+    "line": 53,
+    "column": 24,
+    "endLine": 53,
+    "endColumn": 52,
+    "mutator": "Regex",
+    "original": "/^[a-z0-9]+(?:-[a-z0-9]+)*$/",
+    "replacement": "/^[a-z0-9]+(?:-[a-z0-9]+)*/",
+    "lineText": "slug: { test: (s) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s), number: false, rank: 2 },",
+    "prevText": "day: { test: (s) => /^(?:0[1-9]|[12]\\d|3[01])$/.test(s), number: false, rank: 2 },",
+    "nextText": "uuid: { test: (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(s), number: false, rank: 2 },"
+  },
+  "mayEdit": [
+    "intent/blocks/permalinks/permalinks.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/permalinks-48.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"permalinks\". Mutant: line 53:24-53:52, mutator Regex: \"/^[a-z0-9]+(?:-[a-z0-9]+)*$/\" becomes \"/^[a-z0-9]+(?:-[a-z0-9]+)*/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/permalinks/index.ts (> marks the mutated line):\n    47  const CONSTRAINTS: Readonly<Record<ConstraintName, Constraint>> = {\n    48    any: { test: (s) => s.length > 0, number: false, rank: 1 },\n    49    int: { test: (s) => /^(?:0|[1-9]\\d{0,14})$/.test(s), number: true, rank: 2 },\n    50    year: { test: (s) => /^\\d{4}$/.test(s), number: true, rank: 2 },\n    51    month: { test: (s) => /^(?:0[1-9]|1[0-2])$/.test(s), number: false, rank: 2 },\n    52    day: { test: (s) => /^(?:0[1-9]|[12]\\d|3[01])$/.test(s), number: false, rank: 2 },\n>   53    slug: { test: (s) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s), number: false, rank: 2 },\n    54    uuid: { test: (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(s), number: false, rank: 2 },\n    55    alpha: { test: (s) => /^[A-Za-z]+$/.test(s), number: false, rank: 2 },\n    56  };\n    57  \n    58  export interface RouteDef {\n    59    readonly name: string;\n\nTest file style (intent/blocks/permalinks/permalinks.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CannotBuild, InvalidPattern, Permalinks } from './index.ts';\nimport type { RouteDef } from './index.ts';\n\nconst routes: RouteDef[] = [\n  { name: 'home', pattern: '/', query: { type: 'home' }, paginate: true },\n  { name: 'post', pattern: '/:year<year>/:month<month>/:slug<slug>', query: { type: 'post', year: ':year', month: ':month', slug: ':slug' } },\n  { name: 'archive', pattern: '/:year<year>/:month<month>', query: { type: 'archive', year: ':year', month: ':month' }, paginate: true },\n  { name: 'category', pattern: '/category/:path<slug>*', query: { type: 'category', path: ':path' }, paginate: true },\n  { name: 'page', pattern: '/:slug<slug>', query: { type: 'page', slug: ':slug' } },\n  { name: 'user', pattern: '/u/:id<int>', query: { type: 'user', id: ':id' } },\n  { name: 'search', pattern: '/search/:term?', query: { type: 'search', term: ':term' } },\n];\nconst pl = (slash: 'always' | 'never' = 'always') => new Permalinks(routes, { trailingSlash: slash });\n\ntest('a path becomes a route, typed parameters and the content query', () => {\n  const m = pl().match('/2026/11/hello-world/')!;\n  assert.deepEqual({ route: m.route, params: m.params, query: m.query, page: m.page }, {\n    route: 'post',\n    params: { year: 2026, month: '11', slug: 'hello-world' },\n    query: { type: 'post', year: 2026, month: '11', slug: 'hello-world' },\n    page: 1,\n  });\n  assert.equal(m.canonical, '/2026/11/hello-world/');\n  assert.equal(m.redirectTo, undefined, 'already canonical');\n  const u = pl().match('/u/42/')!;\n  assert.deepEqual(u.params, { id: 42 }, 'int constraints give numbers');\n  assert.deepEqual(pl().match('/')!.query, { type: 'home', page: 1 });\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/permalinks-48.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:55.331Z"
+}

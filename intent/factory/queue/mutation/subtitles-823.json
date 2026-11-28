@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "subtitles",
+  "mutant": {
+    "id": "823",
+    "line": 336,
+    "column": 67,
+    "endLine": 336,
+    "endColumn": 76,
+    "mutator": "ConditionalExpression",
+    "original": "row === 2",
+    "replacement": "true",
+    "lineText": "set += ` line:${c.y !== undefined ? `${Math.round(c.y)}%` : row === 2 ? '10%' : row === 1 ? '50%' : '-1'}`;",
+    "prevText": "const row = Math.floor((a - 1) / 3);",
+    "nextText": "if (c.x !== undefined) set += ` position:${Math.round(c.x)}%`;"
+  },
+  "mayEdit": [
+    "intent/blocks/subtitles/subtitles.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/subtitles-823.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"subtitles\". Mutant: line 336:67-336:76, mutator ConditionalExpression: \"row === 2\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/subtitles/index.ts (> marks the mutated line):\n   330    const body = d.cues.map((c) => {\n   331      let set = '';\n   332      if (c.align !== undefined || c.y !== undefined) {\n   333        const a = c.align ?? 2;\n   334        const col = ((a - 1) % 3) + 1;\n   335        const row = Math.floor((a - 1) / 3);\n>  336        set += ` line:${c.y !== undefined ? `${Math.round(c.y)}%` : row === 2 ? '10%' : row === 1 ? '50%' : '-1'}`;\n   337        if (c.x !== undefined) set += ` position:${Math.round(c.x)}%`;\n   338        set += ` align:${col === 1 ? 'left' : col === 3 ? 'right' : 'center'}`;\n   339      }\n   340      const text = c.text.replace(/<font color=\"(#[0-9a-f]{6})\">/g, '<c.c$1>').replace(/<\\/font>/g, '</c>').replace(/\\n{2,}/g, '\\n');\n   341      return `${c.id && !c.id.includes('-->') && !/[\\r\\n]/.test(c.id) ? `${c.id}\\n` : ''}${formatTime(c.start)} --> ${formatTime(c.end)}${set}\\n${text.replace(/<c\\.c#([0-9a-f]{6})>/g, '<c.c$1>')}\\n`;\n   342    });\n\nTest file style (intent/blocks/subtitles/subtitles.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  SubtitleError, activeAt, assColour, burnInPlan, changeFrameRate, cleanText, convert, decodeBytes, detect, ffmpegEscape, formatTime, forceStyle, merge, overlaps, parse, parseAss, parseAssColour, parseMarkup, parseSrt, parseTime,\n  parseTtml, parseTtmlTime, parseVtt, plainText, repair, shift, stretch, subtitlesFilter, syncTwoPoints, toAss, toMarkup, toSrt, toTtml, toVtt, write,\n} from './index.ts';\nimport type { Doc, Format } from './index.ts';\n\nconst SRT = '﻿1\\r\\n00:00:01,000 --> 00:00:03,500\\r\\nHello, <i>world</i> &amp; all\\r\\n\\r\\n2\\r\\n00:00:04.5 --> 00:00:06,000\\r\\nLine one\\r\\nLine two\\r\\n\\r\\n3\\r\\n00:01:00,000 --> 00:01:02,000\\r\\n<font color=\"red\">Red</font> and <b>bold <u>both</u></b>\\r\\n';\n\ntest('parseTime: forms, fractions and limits', () => {\n  assert.equal(parseTime('00:00:01,000'), 1000);\n  assert.equal(parseTime('01:02:03.456'), 3_723_456);\n  assert.equal(parseTime('02:03.5'), 123_500);\n  assert.equal(parseTime('00:00:01,5'), 1500);\n  assert.equal(parseTime('x'), undefined);\n  assert.equal(parseTime('1:99:00,000'), undefined);\n  assert.equal(formatTime(3_723_456, ','), '01:02:03,456');\n  assert.equal(formatTime(-5), '00:00:00.000');\n});\n\ntest('markup: canonical, nested, entities, unknown tags dropped, lone < kept', () => {\n  assert.equal(cleanText('a < b & c'), 'a &lt; b &amp; c');\n  assert.equal(plainText({ text: cleanText('a < b & c') }), 'a < b & c');\n  assert.equal(cleanText('<b>x</i><i>y</b>z'), '<b>x</b><b><i>y</i></b><i>z</i>');\n  assert.equal(cleanText('<c.yellow>hi</c> <v Bob>there</v> <00:00:01.000>now'), 'hi there now');\n  assert.equal(cleanText('<font color=\"#F00\">x</font>'), '<font color=\"#ff0000\">x</font>');\n  assert.equal(cleanText('<font color=\"notacolour\">x</font>'), 'x');\n  assert.equal(cleanText('&nbsp;&#65;&#x42;&unknown;'), ' AB&amp;unknown;');\n  assert.equal(cleanText('<b>unclosed'), '<b>unclosed</b>');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/subtitles-823.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:06.362Z"
+}

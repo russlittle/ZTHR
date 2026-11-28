@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "block-markup",
+  "mutant": {
+    "id": "177",
+    "line": 172,
+    "column": 7,
+    "endLine": 172,
+    "endColumn": 34,
+    "mutator": "EqualityOperator",
+    "original": "markup.length > L.maxLength",
+    "replacement": "markup.length >= L.maxLength",
+    "lineText": "if (markup.length > L.maxLength) throw new LimitExceeded('characters', L.maxLength);",
+    "prevText": "if (typeof markup !== 'string') throw new TypeError('the document must be a string');",
+    "nextText": "const problems: Problem[] = [];"
+  },
+  "mayEdit": [
+    "intent/blocks/block-markup/block-markup.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/block-markup-177.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"block-markup\". Mutant: line 172:7-172:34, mutator EqualityOperator: \"markup.length > L.maxLength\" becomes \"markup.length >= L.maxLength\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/block-markup/index.ts (> marks the mutated line):\n   166  \n   167  /** Reads a document into blocks. */\n   168  export function parse(markup: string, o: ParseOptions = {}): Parsed {\n   169    const L = { ...DEFAULTS, ...o };\n   170    const prefix = o.prefix ?? 'wp';\n   171    if (typeof markup !== 'string') throw new TypeError('the document must be a string');\n>  172    if (markup.length > L.maxLength) throw new LimitExceeded('characters', L.maxLength);\n   173    const problems: Problem[] = [];\n   174    const top: Block[] = [];\n   175    type Frame = { block: Block };\n   176    const stack: Frame[] = [];\n   177    let count = 0;\n   178    let pending = '';\n\nTest file style (intent/blocks/block-markup/block-markup.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { block, encodeAttrs, LimitExceeded, MarkupError, normalise, parse, plainText, qualify, registry, serialize, short, validate, walkBlocks } from './index.ts';\nimport type { BlockType } from './index.ts';\n\nconst doc = `<!-- wp:heading {\"level\":3} -->\n<h3>Title</h3>\n<!-- /wp:heading -->\n\nSome loose <b>HTML</b> between.\n\n<!-- wp:group {\"className\":\"box\"} -->\n<div class=\"box\">\n<!-- wp:paragraph -->\n<p>One</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:separator /-->\n\n<!-- wp:acme/quote {\"cite\":\"Ann\"} -->\n<blockquote>Q</blockquote>\n<!-- /wp:acme/quote -->\n</div>\n<!-- /wp:group -->`;\n\ntest('a document parses into blocks, freeform HTML, and nested blocks, with attributes', () => {\n  const { blocks, problems } = parse(doc);\n  assert.deepEqual(problems, []);\n  assert.deepEqual(blocks.map((b) => b.name), ['core/heading', null, 'core/group']);\n  assert.deepEqual(blocks[0]!.attrs, { level: 3 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/block-markup-177.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.090Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "realm-model",
+  "mutant": {
+    "id": "341",
+    "line": 234,
+    "column": 12,
+    "endLine": 234,
+    "endColumn": 40,
+    "mutator": "Regex",
+    "original": "/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/",
+    "replacement": "/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+/",
+    "lineText": "if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) throw new RealmRefused('that email address is not valid');",
+    "prevText": "if (email !== undefined) {",
+    "nextText": "if ([...this.users.values()].some((u) => u.email === email)) throw new RealmRefused(`email ${email} is already used in realm ${this.name}`);"
+  },
+  "mayEdit": [
+    "intent/blocks/realm-model/realm-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/realm-model-341.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"realm-model\". Mutant: line 234:12-234:40, mutator Regex: \"/^[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+$/\" becomes \"/^[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/realm-model/index.ts (> marks the mutated line):\n   228    createUser(o: { username: string; email?: string; roles?: readonly string[]; groups?: readonly string[]; attrs?: Readonly<Record<string, readonly string[]>>; selfRegistered?: boolean }): User {\n   229      const username = (this.o.policy.emailAsUsername && o.email ? o.email : o.username).trim().toLowerCase();\n   230      if (!/^[^\\s\\x00-\\x1f]{1,128}$/u.test(username)) throw new RealmRefused('a username has no spaces or control characters and is at most 128 long');\n   231      if ([...this.users.values()].some((u) => u.username === username)) throw new RealmRefused(`username ${username} is taken in realm ${this.name}`);\n   232      const email = o.email?.trim().toLowerCase();\n   233      if (email !== undefined) {\n>  234        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) throw new RealmRefused('that email address is not valid');\n   235        if ([...this.users.values()].some((u) => u.email === email)) throw new RealmRefused(`email ${email} is already used in realm ${this.name}`);\n   236      }\n   237      if (o.selfRegistered) {\n   238        if (!this.o.policy.registrationAllowed) throw new RealmRefused(`realm ${this.name} does not allow self-registration`);\n   239        const dom = email?.split('@')[1];\n   240        if (this.o.policy.emailDomains && (!dom || !this.o.policy.emailDomains.includes(dom))) throw new RealmRefused(`self-registration needs an email in: ${this.o.policy.emailDomains.join(', ')}`);\n\nTest file style (intent/blocks/realm-model/realm-model.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { decide } from '../rbac/index.ts';\nimport { Realm, RealmRefused, Realms, checkPassword } from './index.ts';\nimport type { RealmPolicy } from './index.ts';\n\nconst policy: RealmPolicy = { password: { minLength: 10, requireUpper: true, requireDigit: true, notUsername: true }, registrationAllowed: true, emailDomains: ['acme.test'], lockout: { maxFailures: 3, lockMs: 60_000 } };\nconst clock = { t: 1_000_000 };\nlet n = 0;\nconst make = (name = 'acme', p: RealmPolicy = policy) =>\n  new Realm({ name, policy: p, now: () => clock.t, newId: () => `u${++n}`, attributes: [{ name: 'dept', required: true, pattern: '[A-Z]{2,4}' }, { name: 'phone', multivalued: true, editableBy: 'user', maxLength: 20 }, { name: 'region' }], defaultRoles: ['member'] });\nconst seeded = (): Realm => {\n  const r = make();\n  r.defineRole({ name: 'member', label: 'Member' });\n  r.defineRole({ name: 'editor', label: 'Editor', includes: ['member'] });\n  r.defineRole({ name: 'admin', label: 'Administrator', includes: ['editor'] });\n  r.addGroup('/eng', { roles: ['editor'], attrs: { region: ['emea'] } });\n  r.addGroup('/eng/platform', { attrs: { region: ['us'] } });\n  return r;\n};\n\ntest('roles compose: an administrator is also an editor and a member', () => {\n  const r = seeded();\n  const u = r.createUser({ username: 'Ana', roles: ['admin'], attrs: { dept: ['ENG'] } });\n  assert.deepEqual(r.effectiveRoles(u.id), ['admin', 'editor', 'member']);\n});\n\ntest('role composition cycles are refused and leave the earlier definition alone', () => {\n  const r = seeded();\n  assert.throws(() => r.defineRole({ name: 'member', label: 'Member', includes: ['admin'] }), /include itself/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/realm-model-341.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:58.541Z"
+}

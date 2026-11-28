@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "graphql-schema",
+  "mutant": {
+    "id": "1767",
+    "line": 1036,
+    "column": 5,
+    "endLine": 1038,
+    "endColumn": 20,
+    "mutator": "ConditionalExpression",
+    "original": "case 'Float':\n      if (typeof value !== 'number' || !Number.isFinite(value)) errs.push(`${path}: Float cannot represent non numeric value: ${JSON.stringify(value)}`);\n      return value;",
+    "replacement": "case 'Float':",
+    "lineText": "case 'Float':",
+    "prevText": "return value;",
+    "nextText": "if (typeof value !== 'number' || !Number.isFinite(value)) errs.push(`${path}: Float cannot represent non numeric value: ${JSON.stringify(value)}`);"
+  },
+  "mayEdit": [
+    "intent/blocks/graphql-schema/graphql-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-1767.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"graphql-schema\". Mutant: line 1036:5-1038:20, mutator ConditionalExpression: \"case 'Float':\\n      if (typeof value !== 'number' || !Number.isFinite(value)) errs.push(`${path}: Float cannot represent non numeric value: ${JSON.stringify(value)}`);\\n      return value;\" becomes \"case 'Float':\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/graphql-schema/index.ts (> marks the mutated line):\n  1030      }\n  1031    }\n  1032    switch (t.name) {\n  1033      case 'Int':\n  1034        if (typeof value !== 'number' || !Number.isInteger(value) || value < INT_MIN || value > INT_MAX) errs.push(`${path}: Int cannot represent non 32-bit signed integer value: ${JSON.stringify(value)}`);\n  1035        return value;\n> 1036      case 'Float':\n  1037        if (typeof value !== 'number' || !Number.isFinite(value)) errs.push(`${path}: Float cannot represent non numeric value: ${JSON.stringify(value)}`);\n  1038        return value;\n  1039      case 'String':\n  1040        if (typeof value !== 'string') errs.push(`${path}: String cannot represent a non string value: ${JSON.stringify(value)}`);\n  1041        return value;\n  1042      case 'Boolean':\n\nTest file style (intent/blocks/graphql-schema/graphql-schema.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { GraphQLError, GraphQLSyntaxError, analyze, buildSchema, execute, parse, plan, validate } from './index.ts';\nimport type { Schema } from './index.ts';\n\nconst SDL = `\n  \"\"\"The root.\"\"\"\n  type Query {\n    hello(name: String = \"world\"): String!\n    user(id: ID!): User\n    users(first: Int, after: String): [User!]!\n    search(text: String!): [SearchResult!]!\n    node(id: ID!): Node\n    flaky: String\n    must: String!\n    items: [Int!]\n    nested: Outer\n  }\n  type Mutation { bump(by: Int = 1): Int! rename(id: ID!, input: RenameInput!): User }\n  directive @auth(role: String!) on FIELD_DEFINITION\n  interface Node { id: ID! }\n  type User implements Node {\n    id: ID!\n    name: String\n    email: String @deprecated(reason: \"use contact\")\n    role: Role!\n    friends(first: Int): [User!]\n    posts(limit: Int = 20): [Post!]! @cost(value: 2, multipliers: [\"limit\"])\n  }\n  type Post implements Node { id: ID! title: String! author: User }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-1767.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:42.480Z"
+}

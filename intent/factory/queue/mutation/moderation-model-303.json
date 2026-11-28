@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "moderation-model",
+  "mutant": {
+    "id": "303",
+    "line": 298,
+    "column": 60,
+    "endLine": 298,
+    "endColumn": 81,
+    "mutator": "ConditionalExpression",
+    "original": "typeof v === 'number'",
+    "replacement": "true",
+    "lineText": "for (const [c, v] of Object.entries(scores)) if (!(typeof v === 'number' && v >= 0 && v <= 1)) throw new ModerationError('classifier', `the score for ${c} is outside 0 to 1`);",
+    "prevText": "scores = await this.#c.classify(prep.text, item.context ? { context: item.context } : {});",
+    "nextText": "this.#cache.set(key, { scores, policyKey });"
+  },
+  "mayEdit": [
+    "intent/blocks/moderation-model/moderation-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/moderation-model-303.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"moderation-model\". Mutant: line 298:60-298:81, mutator ConditionalExpression: \"typeof v === 'number'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/moderation-model/index.ts (> marks the mutated line):\n   292      if (cached) {\n   293        scores = cached.scores;\n   294        source = 'cache';\n   295      } else {\n   296        try {\n   297          scores = await this.#c.classify(prep.text, item.context ? { context: item.context } : {});\n>  298          for (const [c, v] of Object.entries(scores)) if (!(typeof v === 'number' && v >= 0 && v <= 1)) throw new ModerationError('classifier', `the score for ${c} is outside 0 to 1`);\n   299          this.#cache.set(key, { scores, policyKey });\n   300          if (this.#cache.size > this.#cacheSize) this.#cache.delete(this.#cache.keys().next().value!);\n   301        } catch (e) {\n   302          scores = undefined;\n   303          errorText = (e as Error).message;\n   304        }\n\nTest file style (intent/blocks/moderation-model/moderation-model.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Moderator, ModerationError, decideAction, lexiconClassifier, llmClassifier, normalizeText, policyHash, validatePolicy, type Classifier, type Policy } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst policy: Policy = {\n  id: 'community',\n  version: 1,\n  categories: {\n    harassment: { flag: 0.4, hold: 0.7, block: 0.9 },\n    violence: { flag: 0.5, block: 0.9 },\n    sexual_minors: { flag: 0.05, block: 0.2, zeroTolerance: true },\n  },\n  contexts: { kids: { harassment: { flag: 0.1, hold: 0.3, block: 0.6 } } },\n  onError: 'hold',\n  maxChars: 200,\n  appealWindowMs: 7 * DAY,\n  trustedAuthors: ['trusted'],\n};\nconst lexicon = {\n  harassment: ['idiot', 'loser', 'moron', 'worthless'],\n  violence: ['kill', 'stab'],\n  sexual_minors: ['csamword'],\n};\n\nfunction mod(opts: { classifier?: Classifier; p?: Policy } = {}) {\n  let t = T0;\n  const calls: string[] = [];\n  const base = lexiconClassifier(lexicon);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/moderation-model-303.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.094Z"
+}

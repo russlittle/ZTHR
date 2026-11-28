@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "embed-protocol",
+  "mutant": {
+    "id": "867",
+    "line": 382,
+    "column": 42,
+    "endLine": 382,
+    "endColumn": 81,
+    "mutator": "Regex",
+    "original": "/^https:\\/\\/\\*\\.[a-z0-9.-]+(?::\\d+)?$/i",
+    "replacement": "/^https:\\/\\/\\*\\.[a-z0-9.-]+(?::\\d)?$/i",
+    "lineText": "const list = o.hostOrigins.map((x) => (/^https:\\/\\/\\*\\.[a-z0-9.-]+(?::\\d+)?$/i.test(x) ? x.toLowerCase() : normalizeOrigin(x)));",
+    "prevText": "if (!o.hostOrigins.length) throw new EmbedRefused('an embeddable route needs at least one page origin');",
+    "nextText": "const h = secureHeaders({ ...(o.nonce ? { nonce: o.nonce } : {}) });"
+  },
+  "mayEdit": [
+    "intent/blocks/embed-protocol/embed-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/embed-protocol-867.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"embed-protocol\". Mutant: line 382:42-382:81, mutator Regex: \"/^https:\\\\/\\\\/\\\\*\\\\.[a-z0-9.-]+(?::\\\\d+)?$/i\" becomes \"/^https:\\\\/\\\\/\\\\*\\\\.[a-z0-9.-]+(?::\\\\d)?$/i\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/embed-protocol/index.ts (> marks the mutated line):\n   376   * Headers for a route that may be framed by the given page origins: the secure defaults with `frame-ancestors`\n   377   * set to the allow-list (X-Frame-Options removed, since it cannot name several origins and the CSP is the\n   378   * authority), and for popup embeds an opener policy that keeps `window.opener` so the popup can post back.\n   379   */\n   380  export function embeddableHeaders(o: { hostOrigins: readonly string[]; popup?: boolean; nonce?: string }): Record<string, string> {\n   381    if (!o.hostOrigins.length) throw new EmbedRefused('an embeddable route needs at least one page origin');\n>  382    const list = o.hostOrigins.map((x) => (/^https:\\/\\/\\*\\.[a-z0-9.-]+(?::\\d+)?$/i.test(x) ? x.toLowerCase() : normalizeOrigin(x)));\n   383    const h = secureHeaders({ ...(o.nonce ? { nonce: o.nonce } : {}) });\n   384    h['content-security-policy'] = h['content-security-policy']!.replace(\"frame-ancestors 'none'\", `frame-ancestors ${list.join(' ')}`);\n   385    delete h['x-frame-options'];\n   386    h['cross-origin-opener-policy'] = o.popup ? 'unsafe-none' : 'same-origin-allow-popups';\n   387    h['cross-origin-resource-policy'] = 'cross-origin';\n   388    return h;\n\nTest file style (intent/blocks/embed-protocol/embed-protocol.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  checkEmbedRequest, embeddableHeaders, embedUrl, Endpoint, EmbedRefused, frameCookie, hostPageNeeds, normalizeOrigin, originAllowed, parseMessage, pickHostOrigin, popupFeatures, ResizeController, snippet,\n  type Envelope, type Incoming,\n} from './index.ts';\n\nconst HOST = 'https://shop.example.com';\nconst FRAME = 'https://app.example.org';\n\n/** Two endpoints wired through fake windows; messages are queued so tests control delivery. */\nfunction pair() {\n  const hostWin = { name: 'host-window' };\n  const frameWin = { name: 'frame-window' };\n  const toHost: { m: Envelope; target: string }[] = [];\n  const toFrame: { m: Envelope; target: string }[] = [];\n  let n = 0;\n  const random = (len: number) => `chan${String(++n).padStart(len - 4, '0')}`;\n  const host = new Endpoint({ role: 'host', peerOrigin: FRAME, peerWindow: frameWin, post: (m, t) => toFrame.push({ m, target: t }), random });\n  const frame = new Endpoint({ role: 'frame', peerOrigin: HOST, peerWindow: hostWin, post: (m, t) => toHost.push({ m, target: t }), random });\n  const atHost = (m: unknown): Incoming => ({ origin: FRAME, source: frameWin, data: m });\n  const atFrame = (m: unknown): Incoming => ({ origin: HOST, source: hostWin, data: m });\n  return { host, frame, toHost, toFrame, atHost, atFrame, hostWin, frameWin };\n}\nfunction opened() {\n  const p = pair();\n  const ready = p.frame.send('ready');\n  p.host.receive(p.atHost(ready));\n  const init = p.host.send('init', { theme: 'dark' });\n  p.frame.receive(p.atFrame(init));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/embed-protocol-867.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.563Z"
+}

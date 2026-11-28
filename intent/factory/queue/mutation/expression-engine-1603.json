@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "expression-engine",
+  "mutant": {
+    "id": "1603",
+    "line": 599,
+    "column": 50,
+    "endLine": 599,
+    "endColumn": 53,
+    "mutator": "StringLiteral",
+    "original": "'>'",
+    "replacement": "\"\"",
+    "lineText": "return a.op === '<' ? x < y : a.op === '>' ? x > y : a.op === '<=' ? x <= y : x >= y;",
+    "prevText": "const [x, y] = both as [number, number];",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/expression-engine/expression-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1603.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"expression-engine\". Mutant: line 599:50-599:53, mutator StringLiteral: \"'>'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/expression-engine/index.ts (> marks the mutated line):\n   593          case '!==': return l !== r;\n   594          case '==': return typeof l === 'object' && l !== null || typeof r === 'object' && r !== null ? l === r : l == r; // eslint-disable-line eqeqeq\n   595          case '!=': return typeof l === 'object' && l !== null || typeof r === 'object' && r !== null ? l !== r : l != r; // eslint-disable-line eqeqeq\n   596          default: {\n   597            const both = (typeof l === 'string' && typeof r === 'string') ? [l, r] : [num(l, 'comparison'), num(r, 'comparison')];\n   598            const [x, y] = both as [number, number];\n>  599            return a.op === '<' ? x < y : a.op === '>' ? x > y : a.op === '<=' ? x <= y : x >= y;\n   600          }\n   601        }\n   602      }\n   603    }\n   604  }\n   605  \n\nTest file style (intent/blocks/expression-engine/expression-engine.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  compile, evaluate, references, render, resolve, resolveDeep, compileTemplate,\n  ExpressionSyntaxError, ExpressionRuntimeError, ExpressionLimitError, ExpressionForbidden,\n} from './index.ts';\n\nconst ev = (s: string, ctx: unknown = {}) => evaluate(s, ctx);\n\ntest('arithmetic and precedence', () => {\n  assert.equal(ev('1 + 2 * 3'), 7);\n  assert.equal(ev('(1 + 2) * 3'), 9);\n  assert.equal(ev('2 ** 3 ** 2'), 512);\n  assert.equal(ev('10 % 4'), 2);\n  assert.equal(ev('-3 + 5'), 2);\n});\n\ntest('strings, concatenation and comparison', () => {\n  assert.equal(ev('\"a\" + \"b\" + 1'), 'ab1');\n  assert.equal(ev('\"abc\" < \"abd\"'), true);\n  assert.equal(ev('1 === 1 && 2 !== 3'), true);\n});\n\ntest('logic operators return operands', () => {\n  assert.equal(ev('0 || \"x\"'), 'x');\n  assert.equal(ev('\"a\" && \"b\"'), 'b');\n  assert.equal(ev('null ?? 5'), 5);\n  assert.equal(ev('0 ?? 5'), 0);\n  assert.equal(ev('true ? 1 : 2'), 1);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1603.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.856Z"
+}

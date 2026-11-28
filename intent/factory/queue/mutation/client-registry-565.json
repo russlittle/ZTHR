@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "client-registry",
+  "mutant": {
+    "id": "565",
+    "line": 431,
+    "column": 81,
+    "endLine": 431,
+    "endColumn": 83,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "responseTypes: grantTypes.includes(GRANT_AUTHORIZATION_CODE) ? ['code'] : [],",
+    "prevText": "grantTypes,",
+    "nextText": "scopes: [...(input.scopes ?? this.policy.defaultScopes)],"
+  },
+  "mayEdit": [
+    "intent/blocks/client-registry/client-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-565.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"client-registry\". Mutant: line 431:81-431:83, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/client-registry/index.ts (> marks the mutated line):\n   425        clientId: id,\n   426        name: input.name,\n   427        applicationType,\n   428        authMethod,\n   429        redirectUris,\n   430        grantTypes,\n>  431        responseTypes: grantTypes.includes(GRANT_AUTHORIZATION_CODE) ? ['code'] : [],\n   432        scopes: [...(input.scopes ?? this.policy.defaultScopes)],\n   433        secrets: secret ? [secret.record] : [],\n   434        createdAt: this.now(),\n   435        contacts: [],\n   436        trusted: input.trusted ?? false,\n   437        disabled: false,\n\nTest file style (intent/blocks/client-registry/client-registry.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ClientError, ClientRegistry, checkRedirectUri, matchRedirectUri, parseBasicAuthorization } from './index.ts';\n\n/** Deterministic randomness: each call yields bytes counting up from a seed. */\nfunction counter() {\n  let n = 0;\n  return (len: number) => {\n    n += 1;\n    return Uint8Array.from({ length: len }, (_, i) => (n * 31 + i) & 0xff);\n  };\n}\nconst make = (o: { t?: { v: number }; policy?: object } = {}) => {\n  const t = o.t ?? { v: 1_800_000_000_000 };\n  return { t, reg: new ClientRegistry({ now: () => t.v, randomBytes: counter(), registrationEndpoint: 'https://as.example.org/register', ...(o.policy ? { policy: o.policy } : {}) }) };\n};\nconst code = (fn: () => unknown) => {\n  try {\n    fn();\n  } catch (e) {\n    assert.ok(e instanceof ClientError, String(e));\n    return e.code;\n  }\n  assert.fail('expected a ClientError');\n};\n\ntest('redirect URIs match exactly: no prefix, case, trailing-slash or query-parameter leniency', () => {\n  const reg = ['https://app.example.org/cb', 'https://app.example.org/cb2?x=1'];\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb'), true);\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb/'), false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-565.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.281Z"
+}

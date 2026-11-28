@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "state-store",
+  "mutant": {
+    "id": "380",
+    "line": 287,
+    "column": 36,
+    "endLine": 287,
+    "endColumn": 54,
+    "mutator": "LogicalOperator",
+    "original": "!old || !stateSame",
+    "replacement": "!old && !stateSame",
+    "lineText": "return { state: next, changed: !old || !stateSame, updated: true };",
+    "prevText": "this.emit('state.changed', entityId, { entity_id: entityId, new_state: { ...next }, ...(old ? { old_state: { ...old } } : {}) }, now);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/state-store/state-store.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/state-store-380.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"state-store\". Mutant: line 287:36-287:54, mutator LogicalOperator: \"!old || !stateSame\" becomes \"!old && !stateSame\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/state-store/index.ts (> marks the mutated line):\n   281        lastUpdated: now,\n   282        lastReported: now,\n   283      };\n   284      this.states.set(entityId, next);\n   285      this.history.record(entityId, { t: now, state, attributes: attrs });\n   286      this.emit('state.changed', entityId, { entity_id: entityId, new_state: { ...next }, ...(old ? { old_state: { ...old } } : {}) }, now);\n>  287      return { state: next, changed: !old || !stateSame, updated: true };\n   288    }\n   289  \n   290    get(entityId: string): State | undefined {\n   291      return this.states.get(entityId);\n   292    }\n   293  \n\nTest file style (intent/blocks/state-store/state-store.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { StateMachine, StateError, Timeseries, History, statistics, domainOf, MAX_STATE, type State } from './index.ts';\nimport { Hub } from '../events/index.ts';\n\nconst H = 3_600_000;\nlet t = 10 * H;\nconst mk = () => new StateMachine({ now: () => t });\ntest.beforeEach(() => { t = 10 * H; });\n\ntest('setting a new entity creates it with all three times equal', () => {\n  const m = mk();\n  const r = m.set('sensor.kitchen_temp', '21.5', { unit: 'C' });\n  assert.equal(r.changed, true);\n  assert.deepEqual({ ...r.state }, { entityId: 'sensor.kitchen_temp', state: '21.5', attributes: { unit: 'C' }, lastChanged: t, lastUpdated: t, lastReported: t });\n  assert.equal(m.get('sensor.kitchen_temp')!.state, '21.5');\n  assert.equal(m.count(), 1);\n});\n\ntest('the same state and attributes again moves only last_reported and publishes nothing', () => {\n  const m = mk();\n  m.set('light.hall', 'on');\n  const seen: unknown[] = [];\n  m.hub.subscribe(() => true, (e) => seen.push(e));\n  t += 5000;\n  const r = m.set('light.hall', 'on');\n  assert.equal(r.changed, false);\n  assert.equal(r.updated, false);\n  const s = m.get('light.hall')!;\n  assert.equal(s.lastReported, t);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/state-store-380.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.140Z"
+}

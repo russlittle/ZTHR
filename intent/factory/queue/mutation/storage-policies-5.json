@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "storage-policies",
+  "mutant": {
+    "id": "5",
+    "line": 66,
+    "column": 7,
+    "endLine": 66,
+    "endColumn": 52,
+    "mutator": "LogicalOperator",
+    "original": "typeof path !== 'string' || path.length === 0",
+    "replacement": "typeof path !== 'string' && path.length === 0",
+    "lineText": "if (typeof path !== 'string' || path.length === 0) throw new BadPath('the path is empty');",
+    "prevText": "export function cleanPath(path: string): string {",
+    "nextText": "if (path.length > 1024) throw new BadPath('the path is longer than 1024 characters');"
+  },
+  "mayEdit": [
+    "intent/blocks/storage-policies/storage-policies.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/storage-policies-5.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"storage-policies\". Mutant: line 66:7-66:52, mutator LogicalOperator: \"typeof path !== 'string' || path.length === 0\" becomes \"typeof path !== 'string' && path.length === 0\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/storage-policies/index.ts (> marks the mutated line):\n    60    readonly reason: string;\n    61    readonly policy?: string;\n    62  }\n    63  \n    64  /** Reject paths that could leave the bucket or confuse a store. Returns the path without a leading slash. */\n    65  export function cleanPath(path: string): string {\n>   66    if (typeof path !== 'string' || path.length === 0) throw new BadPath('the path is empty');\n    67    if (path.length > 1024) throw new BadPath('the path is longer than 1024 characters');\n    68    if (/[\\u0000-\\u001f\\u007f\\\\]/.test(path)) throw new BadPath('the path has a control character or a backslash');\n    69    const p = path.replace(/^\\/+/, '');\n    70    if (!p) throw new BadPath('the path is empty');\n    71    for (const seg of p.split('/')) {\n    72      if (seg === '' ) throw new BadPath('the path has an empty segment');\n\nTest file style (intent/blocks/storage-policies/storage-policies.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CREATE, DELETE, READ, UPDATE } from '../grants/index.ts';\nimport { BadPath, BadSignature, BadTransform, Refused, Signer, Storage, canonicalTransform, cleanPath, grantBit, outputSize, parseTransform, sniff } from './index.ts';\n\nconst PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);\nconst JPG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0]);\n\nconst store = () => {\n  const s = new Storage();\n  s.addBucket({ name: 'avatars', public: true, maxBytes: 1000, allowedTypes: ['image/*'], allowedExtensions: ['png', 'jpg'] });\n  s.addBucket({ name: 'docs' });\n  s.addPolicy({ id: 'own-folder', bucket: 'docs', effect: 'allow', actions: ['list', 'read', 'create', 'update', 'delete'], path: 'users/{id}/**' });\n  s.addPolicy({ id: 'tenant-read', bucket: 'docs', effect: 'allow', actions: ['read', 'list'], path: 'tenants/{tenant}/**' });\n  s.addPolicy({ id: 'admin-all', bucket: 'docs', effect: 'allow', actions: ['list', 'read', 'create', 'update', 'delete'], path: '**', roles: ['admin'] });\n  s.addPolicy({ id: 'no-locked', bucket: 'docs', effect: 'deny', actions: ['read', 'update', 'delete'], path: 'users/*/locked/**' });\n  s.addPolicy({ id: 'own-avatar', bucket: 'avatars', effect: 'allow', actions: ['create', 'update', 'delete'], path: '{id}/*' });\n  return s;\n};\nconst ana = { id: 'ana', tenant: 't1' };\n\ntest('a person reaches their own folder and not anyone else\\'s, and anonymous people reach nothing', () => {\n  const s = store();\n  assert.equal(s.decide(ana, 'read', 'docs', 'users/ana/cv.pdf').allowed, true);\n  assert.equal(s.decide(ana, 'read', 'docs', 'users/ben/cv.pdf').allowed, false);\n  assert.equal(s.decide({}, 'read', 'docs', 'users/ana/cv.pdf').reason, 'sign in first; no policy allows anonymous access to this');\n  assert.equal(s.decide(ana, 'create', 'docs', 'users/ana/a/b/c.txt').policy, 'own-folder');\n  assert.equal(s.decide(ana, 'read', 'docs', 'users/ana').allowed, false, '** needs at least one more segment');\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/storage-policies-5.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.637Z"
+}

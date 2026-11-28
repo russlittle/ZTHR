@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "token-count",
+  "mutant": {
+    "id": "539",
+    "line": 370,
+    "column": 93,
+    "endLine": 370,
+    "endColumn": 110,
+    "mutator": "LogicalOperator",
+    "original": "o.perMessage ?? 0",
+    "replacement": "o.perMessage && 0",
+    "lineText": "const others = countMessages(kept.filter((x) => x.i !== lastIdx).map((x) => x.m), o) + (o.perMessage ?? 0);",
+    "prevText": "const li = kept.findIndex((x) => x.i === lastIdx);",
+    "nextText": "const room = Math.max(0, budget - others);"
+  },
+  "mayEdit": [
+    "intent/blocks/token-count/token-count.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/token-count-539.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"token-count\". Mutant: line 370:93-370:110, mutator LogicalOperator: \"o.perMessage ?? 0\" becomes \"o.perMessage && 0\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/token-count/index.ts (> marks the mutated line):\n   364      kept.splice(k, 1);\n   365      dropped++;\n   366    }\n   367    let shortened = false;\n   368    if (total() > budget) {\n   369      const li = kept.findIndex((x) => x.i === lastIdx);\n>  370      const others = countMessages(kept.filter((x) => x.i !== lastIdx).map((x) => x.m), o) + (o.perMessage ?? 0);\n   371      const room = Math.max(0, budget - others);\n   372      const cut = truncate(kept[li]!.m.content, room, { count: o.count, strategy: 'middle', boundary: 'word', marker: o.marker ?? ' [...] ' });\n   373      kept[li] = { ...kept[li]!, m: { role: kept[li]!.m.role, content: cut.text } };\n   374      shortened = true;\n   375    }\n   376    return { messages: kept.map((k) => k.m), tokens: total(), dropped, shortened };\n\nTest file style (intent/blocks/token-count/token-count.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BpeTokenizer, TokenCountError, VENDORS, countMessages, estimate, estimator, fitMessages, parseTiktokenRanks, promptBudget, truncate, upperBound } from './index.ts';\n\nconst bytesKey = (s: string) => String.fromCharCode(...new TextEncoder().encode(s));\nconst vocabText = (merges: string[]) => {\n  const lines: string[] = [];\n  for (let b = 0; b < 256; b++) lines.push(`${Buffer.from([b]).toString('base64')} ${b}`);\n  merges.forEach((m, i) => lines.push(`${Buffer.from(m).toString('base64')} ${256 + i}`));\n  return lines.join('\\n');\n};\nconst ranks = (merges: string[]) => parseTiktokenRanks(vocabText(merges));\n\ntest('the byte bound is the UTF-8 length and no estimate exceeds it', () => {\n  assert.equal(upperBound(''), 0);\n  assert.equal(upperBound('abc'), 3);\n  assert.equal(upperBound('é'), 2);\n  assert.equal(upperBound('日本'), 6);\n  assert.equal(upperBound('😀'), 4);\n  for (const t of ['a', 'hello world', '日本語のテキスト', '😀😀😀', '12345678901234567890', '\\n\\n\\n']) {\n    for (const v of Object.keys(VENDORS)) assert.ok(estimate(t, v) <= upperBound(t), `${v} on ${JSON.stringify(t)}`);\n  }\n});\n\ntest('estimates for plain English land near four characters a token and grow with the text', () => {\n  const sentence = 'The quick brown fox jumps over the lazy dog while the rain keeps falling on the quiet town.';\n  const n = estimate(sentence, 'openai-o200k');\n  assert.ok(n >= 15 && n <= 25, `got ${n}`);\n  assert.equal(estimate('', 'anthropic'), 0);\n  assert.equal(estimate('a', 'anthropic'), 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/token-count-539.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:09.994Z"
+}

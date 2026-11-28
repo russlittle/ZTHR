@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "inventory",
+  "mutant": {
+    "id": "621",
+    "line": 378,
+    "column": 50,
+    "endLine": 378,
+    "endColumn": 65,
+    "mutator": "StringLiteral",
+    "original": "`no move ${id}`",
+    "replacement": "``",
+    "lineText": "if (!m) throw new StockError('unknown-move', `no move ${id}`);",
+    "prevText": "const m = this.moves[id - 1];",
+    "nextText": "if (!reason.trim()) throw new StockError('reason-required', 'a reversal needs a reason');"
+  },
+  "mayEdit": [
+    "intent/blocks/inventory/inventory.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/inventory-621.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"inventory\". Mutant: line 378:50-378:65, mutator StringLiteral: \"`no move ${id}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/inventory/index.ts (> marks the mutated line):\n   372      this.layerSeq = s.layerSeq;\n   373    }\n   374  \n   375    /** Undo a move by its mirror; the cost goes back where it came from. A receipt whose stock has been used cannot be reversed. */\n   376    reverse(id: number, reason: string): Move {\n   377      const m = this.moves[id - 1];\n>  378      if (!m) throw new StockError('unknown-move', `no move ${id}`);\n   379      if (!reason.trim()) throw new StockError('reason-required', 'a reversal needs a reason');\n   380      if (m.kind === 'reversal') throw new StockError('not-reversible', 'a reversal cannot be reversed');\n   381      if (this.reversedMoves.has(id)) throw new StockError('already-reversed', `move ${id} was already reversed`);\n   382      const snap = this.snapshotState();\n   383      try {\n   384        const r = this.move({ sku: m.sku, qty: m.qty, from: m.to, to: m.from, ...(m.lot !== undefined ? { lot: m.lot } : {}), ...(m.serial !== undefined ? { serial: m.serial } : {}), kind: 'reversal', reverses: id, undo: m, ref: `reversal of ${id}: ${reason.trim()}` });\n\nTest file style (intent/blocks/inventory/inventory.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Ledger } from '../ledger/index.ts';\nimport { money } from '../money/index.ts';\nimport { Inventory, StockError } from './index.ts';\n\nconst usd = (n: number) => money(n, 'USD');\nlet clock = new Date('2026-03-10T10:00:00Z');\nconst make = (valuation: 'fifo' | 'average' = 'fifo', tracking: 'none' | 'lot' | 'serial' = 'none') => {\n  clock = new Date('2026-03-10T10:00:00Z');\n  const inv = new Inventory({ now: () => clock, currency: 'USD' });\n  inv.addPlace({ id: 'supplier', kind: 'supplier' });\n  inv.addPlace({ id: 'customer', kind: 'customer' });\n  inv.addPlace({ id: 'loss', kind: 'loss' });\n  inv.addPlace({ id: 'main', kind: 'internal' });\n  inv.addPlace({ id: 'shop', kind: 'internal' });\n  inv.addPlace({ id: 'van', kind: 'transit' });\n  inv.addProduct({ sku: 'W', tracking, valuation });\n  return inv;\n};\nconst code = (f: () => unknown) => {\n  try {\n    f();\n    return 'no error';\n  } catch (e) {\n    return e instanceof StockError ? e.code : `other: ${(e as Error).message}`;\n  }\n};\n\ntest('quantity is the sum of moves; every receipt and issue is on record', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/inventory-621.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:44.771Z"
+}

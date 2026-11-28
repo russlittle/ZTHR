@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "signature-capture",
+  "mutant": {
+    "id": "589",
+    "line": 336,
+    "column": 116,
+    "endLine": 336,
+    "endColumn": 157,
+    "mutator": "StringLiteral",
+    "original": "'the intent text does not match its hash'",
+    "replacement": "\"\"",
+    "lineText": "if (createHash('sha256').update(r.intent.text).digest('hex') !== r.intent.textSha256) return { ok: false, why: 'the intent text does not match its hash' };",
+    "prevText": "if (!equal(createHmac('sha256', this.o.sealKey).update(text).digest('base64url'), seal)) return { ok: false, why: 'the seal does not match; the record was not made here' };",
+    "nextText": "return { ok: true };"
+  },
+  "mayEdit": [
+    "intent/blocks/signature-capture/signature-capture.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/signature-capture-589.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"signature-capture\". Mutant: line 336:116-336:157, mutator StringLiteral: \"'the intent text does not match its hash'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/signature-capture/index.ts (> marks the mutated line):\n   330    /** Whether a record is exactly as captured: its hash and its seal both hold. */\n   331    verify(r: SignatureRecord): { ok: boolean; why?: string } {\n   332      const { bundleSha256, seal, ...rest } = r;\n   333      const text = bodyOf(rest);\n   334      if (createHash('sha256').update(text).digest('hex') !== bundleSha256) return { ok: false, why: 'the record was changed after capture' };\n   335      if (!equal(createHmac('sha256', this.o.sealKey).update(text).digest('base64url'), seal)) return { ok: false, why: 'the seal does not match; the record was not made here' };\n>  336      if (createHash('sha256').update(r.intent.text).digest('hex') !== r.intent.textSha256) return { ok: false, why: 'the intent text does not match its hash' };\n   337      return { ok: true };\n   338    }\n   339  \n   340    /** Lets a signer start again, until the document is locked. */\n   341    clear(signerId: string, documentSha256: string): void {\n   342      if (this.locked.has(documentSha256)) throw new CaptureRefused('the document is locked');\n\nTest file style (intent/blocks/signature-capture/signature-capture.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, randomBytes } from 'node:crypto';\nimport { test } from 'node:test';\nimport { Consent } from '../consent/index.ts';\nimport { CaptureRefused, SignatureCapture, flagsOf, inspectImage, intentStatement, measure, strokesToSvg, typedToSvg } from './index.ts';\nimport type { DeviceEvidence, Point, SignatureBody, Stroke } from './index.ts';\n\nconst pad = { width: 400, height: 150 };\nconst docHash = createHash('sha256').update('the lease').digest('hex');\nconst evidence: DeviceEvidence = { ip: '203.0.113.7', userAgent: 'Mozilla/5.0 (X11; Linux)', timezone: 'America/New_York', locale: 'en-US', screen: { width: 1280, height: 800 }, pointer: 'touch' };\nconst wiggle = (n = 40, dt = 7): Stroke => Array.from({ length: n }, (_, i): Point => ({ x: 10 + i * 8, y: 75 + Math.sin(i / 3) * 30, t: i * dt + (i % 3) }));\n\nconst setup = () => {\n  const clock = { d: new Date('2025-03-03T12:00:00Z') };\n  const consent = new Consent(() => clock.d);\n  consent.publish({ doc: 'esign', version: 1, effective: '2025-01-01', requiresAgreement: true, required: true, summary: 'Electronic signature disclosure' });\n  consent.agree('s1', 'esign', 'signing page');\n  let n = 0;\n  const key = randomBytes(24).toString('hex');\n  const cap = new SignatureCapture({ consent, consentDoc: 'esign', sealKey: key, now: () => clock.d, newId: () => `sig${++n}` });\n  const base = (body: SignatureBody, o: Partial<Parameters<SignatureCapture['capture']>[0]> = {}) => ({ signerId: 's1', signerName: 'Ana Silva', documentSha256: docHash, documentTitle: 'Lease', intentShown: intentStatement('Ana Silva', 'Lease'), body, evidence, ...o });\n  return { clock, consent, cap, base, key };\n};\n\nconst png = (w: number, h: number) => {\n  const b = Buffer.alloc(33);\n  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(b);\n  b.writeUInt32BE(13, 8);\n  b.write('IHDR', 12, 'latin1');\n  b.writeUInt32BE(w, 16);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/signature-capture-589.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:02.592Z"
+}

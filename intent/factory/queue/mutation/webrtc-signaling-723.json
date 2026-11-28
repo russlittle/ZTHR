@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webrtc-signaling",
+  "mutant": {
+    "id": "723",
+    "line": 273,
+    "column": 45,
+    "endLine": 273,
+    "endColumn": 63,
+    "mutator": "ConditionalExpression",
+    "original": "x.type === r.media",
+    "replacement": "true",
+    "lineText": "for (const m of s.media.filter((x) => x.type === r.media)) {",
+    "prevText": "} else {",
+    "nextText": "const maps = rtpmaps(m);"
+  },
+  "mayEdit": [
+    "intent/blocks/webrtc-signaling/webrtc-signaling.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webrtc-signaling-723.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webrtc-signaling\". Mutant: line 273:45-273:63, mutator ConditionalExpression: \"x.type === r.media\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webrtc-signaling/index.ts (> marks the mutated line):\n   267        if (!Number.isInteger(r.kbps) || r.kbps < 8 || r.kbps > 100_000) throw new ForbiddenMunge('bitrate must be a whole number from 8 to 100000 kbps');\n   268        for (const m of s.media.filter((x) => x.type === r.media)) m.bandwidth = [...m.bandwidth.filter((b) => b.type !== 'AS'), { type: 'AS', kbps: r.kbps }];\n   269      } else if (r.kind === 'hide-host-candidates') {\n   270        const keep = (a: Attribute) => { if (a.name !== 'candidate') return true; try { const c = parseCandidate(`candidate:${a.value}`); return !(c.type === 'host' && isPrivateAddress(c.address)); } catch { return false; } };\n   271        for (const m of s.media) m.attributes = m.attributes.filter(keep);\n   272      } else {\n>  273        for (const m of s.media.filter((x) => x.type === r.media)) {\n   274          const maps = rtpmaps(m);\n   275          const want = maps.filter((x) => x.codec.toLowerCase() === r.codec.toLowerCase()).map((x) => x.payload);\n   276          // A payload type can also be named by an rtx/red fmtp \"apt=\" pointing at it; keep those with it.\n   277          const tied = m.attributes.filter((a) => a.name === 'fmtp' && want.includes(/apt=(\\d+)/.exec(a.value ?? '')?.[1] ?? '')).map((a) => a.value!.split(' ')[0]!);\n   278          const group = new Set([...want, ...tied]);\n   279          if (r.kind === 'prefer-codec') {\n\nTest file style (intent/blocks/webrtc-signaling/webrtc-signaling.test.ts):\n25 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHmac } from 'node:crypto';\nimport { test } from 'node:test';\nimport { BadSdp, BadToken, ERR, ForbiddenMunge, Signaling, attrOf, checkTurnCredential, formatCandidate, hasFingerprint, isPrivateAddress, munge, parseCandidate, parseSdp, rtpmaps, signJwt, turnCredentials, verifyJwt, writeSdp } from './index.ts';\n\n// RFC 8866 section 5 example.\nconst RFC8866 = [\n  'v=0',\n  'o=jdoe 2890844526 2890842807 IN IP4 10.47.16.5',\n  's=SDP Seminar',\n  'i=A Seminar on the session description protocol',\n  'u=http://www.example.com/seminars/sdp.pdf',\n  'e=j.doe@example.com (Jane Doe)',\n  'c=IN IP4 224.2.17.12/127',\n  't=2873397496 2873404696',\n  'a=recvonly',\n  'm=audio 49170 RTP/AVP 0',\n  'm=video 51372 RTP/AVP 99',\n  'c=IN IP4 203.0.113.1',\n  'a=rtpmap:99 h263-1998/90000',\n  '',\n].join('\\r\\n');\n\nconst offer = (o: { ufrag?: string; extra?: string[]; fingerprint?: boolean } = {}) => [\n  'v=0',\n  'o=- 4611731400430051336 2 IN IP4 127.0.0.1',\n  's=-',\n  't=0 0',\n  'a=group:BUNDLE 0 1',\n  ...(o.fingerprint === false ? [] : ['a=fingerprint:sha-256 AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89']),\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webrtc-signaling-723.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.077Z"
+}

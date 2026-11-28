@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "llm-provider",
+  "mutant": {
+    "id": "289",
+    "line": 238,
+    "column": 64,
+    "endLine": 238,
+    "endColumn": 66,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "export function redact(s: string, secrets: readonly string[] = []): string {",
+    "prevText": "/** Removes secrets (API keys, bearer tokens) from text that may reach a log or an error. */",
+    "nextText": "let out = s;"
+  },
+  "mayEdit": [
+    "intent/blocks/llm-provider/llm-provider.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/llm-provider-289.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"llm-provider\". Mutant: line 238:64-238:66, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/llm-provider/index.ts (> marks the mutated line):\n   232    if (req.responseSchema && !NAME.test(req.responseSchema.name)) throw new InvalidRequest('the response schema name must be letters, digits, _ and -');\n   233  }\n   234  \n   235  const textOf = (parts: readonly Part[]): string => parts.filter((p): p is Extract<Part, { type: 'text' }> => p.type === 'text').map((p) => p.text).join('');\n   236  \n   237  /** Removes secrets (API keys, bearer tokens) from text that may reach a log or an error. */\n>  238  export function redact(s: string, secrets: readonly string[] = []): string {\n   239    let out = s;\n   240    for (const k of secrets) if (k.length >= 6) out = out.split(k).join('[redacted]');\n   241    return out.replace(/\\b(sk-[A-Za-z0-9_-]{8,}|Bearer\\s+[A-Za-z0-9._~+/=-]{8,})/g, '[redacted]');\n   242  }\n   243  \n   244  // ------------------------------------------------------------------ server-sent events\n\nTest file style (intent/blocks/llm-provider/llm-provider.test.ts):\n30 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Meter } from '../costmeter/index.ts';\nimport {\n  LlmClient, TwinProvider, ProviderError, InvalidRequest, StructuredOutputError, openAiAdapter, anthropicAdapter,\n  toOpenAiBody, fromOpenAiResponse, toAnthropicBody, fromAnthropicResponse, parseSse, checkRequest, costOf, meterRates, httpError,\n  redact, safeJson, extractJson, estimateTokens, STRUCTURED_TOOL, type LlmRequest, type HttpRequest, type HttpResponse, type StreamEvent, type Transport,\n} from './index.ts';\n\nconst user = (text: string) => ({ role: 'user' as const, content: [{ type: 'text' as const, text }] });\nconst req = (o: Partial<LlmRequest> = {}): LlmRequest => ({ model: 'm', messages: [user('hi')], ...o });\nconst MODELS = [{ provider: 'a', id: 'big', inputPerMTok: 3, outputPerMTok: 15, cacheReadMultiple: 0.1 }, { provider: 'b', id: 'small', inputPerMTok: 1, outputPerMTok: 2 }];\nconst code = async (f: () => unknown): Promise<string | undefined> => { try { await f(); return undefined; } catch (e) { return e instanceof ProviderError ? e.kind : e instanceof Error ? `other:${e.constructor.name}` : 'other'; } };\nconst ok = (body: unknown, headers: Record<string, string> = {}): HttpResponse => ({ status: 200, headers, body: typeof body === 'string' ? body : JSON.stringify(body) });\nasync function* chunks(s: string, n: number): AsyncGenerator<Uint8Array> { const b = new TextEncoder().encode(s); for (let i = 0; i < b.length; i += n) yield b.subarray(i, i + n); }\nasync function all<T>(g: AsyncIterable<T>): Promise<T[]> { const o: T[] = []; for await (const x of g) o.push(x); return o; }\n\nfunction clientFor(providers: TwinProvider[], o: Record<string, unknown> = {}) {\n  let t = Date.parse('2024-05-01T00:00:00Z');\n  const sleeps: number[] = [];\n  const c = new LlmClient({\n    providers, models: MODELS, now: () => new Date(t), sleep: async (ms) => { sleeps.push(ms); t += ms; }, random: () => 0.5,\n    routes: { m: [{ provider: providers[0]!.name, model: 'big' }, ...providers.slice(1).map((p) => ({ provider: p.name, model: 'small' }))] },\n    ...o,\n  });\n  return { c, sleeps, advance: (ms: number) => { t += ms; } };\n}\n\ntest('OpenAI request body: system, tools, tool calls and results, structured output, stream options', () => {\n  const body = toOpenAiBody({\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/llm-provider-289.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.181Z"
+}

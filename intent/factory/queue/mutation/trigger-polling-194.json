@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "trigger-polling",
+  "mutant": {
+    "id": "194",
+    "line": 260,
+    "column": 9,
+    "endLine": 260,
+    "endColumn": 11,
+    "mutator": "ConditionalExpression",
+    "original": "!h",
+    "replacement": "false",
+    "lineText": "if (!h) throw new UnknownTrigger(`no webhook trigger ${id}`);",
+    "prevText": "const h = this.#hooks.get(id);",
+    "nextText": "const a = this.#armed.get(id);"
+  },
+  "mayEdit": [
+    "intent/blocks/trigger-polling/trigger-polling.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/trigger-polling-194.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"trigger-polling\". Mutant: line 260:9-260:11, mutator ConditionalExpression: \"!h\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/trigger-polling/index.ts (> marks the mutated line):\n   254      this.#armed.set(id, { until: this.#now() + ttlMs });\n   255    }\n   256  \n   257    /** The payload captured by test mode, once one has arrived. */\n   258    testResult(id: string): { waiting: boolean; payload?: unknown; sample: unknown } {\n   259      const h = this.#hooks.get(id);\n>  260      if (!h) throw new UnknownTrigger(`no webhook trigger ${id}`);\n   261      const a = this.#armed.get(id);\n   262      if (a?.captured !== undefined) return { waiting: false, payload: a.captured, sample: h.def.sample };\n   263      return { waiting: !!a && a.until > this.#now(), sample: h.def.sample };\n   264    }\n   265  \n   266    /**\n\nTest file style (intent/blocks/trigger-polling/trigger-polling.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Queue } from '../jobs/index.ts';\nimport { signature } from '../webhooks/index.ts';\nimport { Inactive, TriggerHost, Unverified, UnknownTrigger } from './index.ts';\nimport type { PollTrigger } from './index.ts';\n\ninterface Item { id: number; title: string }\n\nconst setup = () => {\n  let t = 1_800_000_000_000;\n  const queue = new Queue({ now: () => t, random: () => 0 });\n  const host = new TriggerHost({ queue, now: () => t });\n  const advance = (ms: number) => void (t += ms);\n  return { queue, host, advance, now: () => t };\n};\n\nconst source = (batches: Item[][]) => {\n  const calls: (string | undefined)[] = [];\n  let i = 0;\n  const fetch: PollTrigger<Item>['fetch'] = async (cursor) => {\n    calls.push(cursor);\n    const items = batches[Math.min(i, batches.length - 1)]!;\n    i++;\n    return { items, cursor: `c${i}` };\n  };\n  return { fetch, calls };\n};\n\nconst def = (fetch: PollTrigger<Item>['fetch'], more: Partial<PollTrigger<Item>> = {}): PollTrigger<Item> => ({ id: 'tickets', flow: 'on-ticket', intervalMs: 60_000, key: (x) => String(x.id), fetch, sample: [{ id: 0, title: 'sample' }], ...more });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/trigger-polling-194.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:10.738Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "sql-builder",
+  "mutant": {
+    "id": "2448",
+    "line": 858,
+    "column": 82,
+    "endLine": 858,
+    "endColumn": 144,
+    "mutator": "StringLiteral",
+    "original": "`the estimated cost ${cost} is more than ${caps.maxTotalCost}`",
+    "replacement": "``",
+    "lineText": "if (caps.maxTotalCost !== undefined && cost > caps.maxTotalCost) problems.push(`the estimated cost ${cost} is more than ${caps.maxTotalCost}`);",
+    "prevText": "if (cost === undefined || rows === undefined) throw new SqlError('the plan has no Total Cost or Plan Rows');",
+    "nextText": "if (caps.maxRows !== undefined && rows > caps.maxRows) problems.push(`the estimated ${rows} rows are more than ${caps.maxRows}`);"
+  },
+  "mayEdit": [
+    "intent/blocks/sql-builder/sql-builder.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sql-builder-2448.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sql-builder\". Mutant: line 858:82-858:144, mutator StringLiteral: \"`the estimated cost ${cost} is more than ${caps.maxTotalCost}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sql-builder/index.ts (> marks the mutated line):\n   852    if (!plan || typeof plan !== 'object') throw new SqlError('that is not an EXPLAIN (FORMAT JSON) result');\n   853    const problems: string[] = [];\n   854    const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);\n   855    const cost = num(plan['Total Cost']);\n   856    const rows = num(plan['Plan Rows']);\n   857    if (cost === undefined || rows === undefined) throw new SqlError('the plan has no Total Cost or Plan Rows');\n>  858    if (caps.maxTotalCost !== undefined && cost > caps.maxTotalCost) problems.push(`the estimated cost ${cost} is more than ${caps.maxTotalCost}`);\n   859    if (caps.maxRows !== undefined && rows > caps.maxRows) problems.push(`the estimated ${rows} rows are more than ${caps.maxRows}`);\n   860    const walk = (p: Record<string, unknown>, depth: number) => {\n   861      if (depth > 64) throw new SqlError('the plan is nested too deeply');\n   862      if (caps.maxSeqScanRows !== undefined && p['Node Type'] === 'Seq Scan') {\n   863        const r = num(p['Plan Rows']);\n   864        if (r !== undefined && r > caps.maxSeqScanRows) problems.push(`a sequential scan of ${String(p['Relation Name'] ?? 'a table')} reads an estimated ${r} rows, more than ${caps.maxSeqScanRows}`);\n\nTest file style (intent/blocks/sql-builder/sql-builder.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { selectSql, insertSql, updateSql, deleteSql, planToSql, placeholdersMatch, checkReadOnly, assertReadOnly, policyFor, limitTo, checkExplain, SqlError, UnsafeSql } from './index.ts';\nimport type { Collection } from '../query/index.ts';\n\nconst cols: Collection[] = [\n  { name: 'customers', fields: { id: { type: 'number' }, name: { type: 'string' }, email: { type: 'string', sensitive: true }, created: { type: 'date' }, vip: { type: 'boolean' } } },\n  { name: 'orders', fields: { id: { type: 'number' }, customer_id: { type: 'number' }, total: { type: 'number' }, status: { type: 'string' } } },\n];\nconst policy = policyFor(cols, { maxLimit: 500 });\n\ntest('select quotes names and binds every value (pg)', () => {\n  const b = selectSql({ from: 'orders', columns: ['id', 'total'], where: { and: [{ column: 'status', op: '=', value: 'open' }, { column: 'total', op: '>=', value: 10 }] }, limit: 20 }, cols);\n  assert.equal(b.text, 'SELECT \"orders\".\"id\", \"orders\".\"total\" FROM \"orders\" WHERE (\"orders\".\"status\" = $1 AND \"orders\".\"total\" >= $2) LIMIT $3');\n  assert.deepEqual(b.params, ['open', 10, 20]);\n  assert.ok(placeholdersMatch(b));\n});\n\ntest('mysql and sqlite use ? and their quoting', () => {\n  const b = selectSql({ from: 'orders', columns: ['id'], where: { column: 'id', op: 'in', value: [1, 2, 3] } }, cols, { dialect: 'mysql' });\n  assert.match(b.text, /^SELECT `orders`\\.`id` FROM `orders` WHERE `orders`\\.`id` IN \\(\\?, \\?, \\?\\) LIMIT \\?$/);\n  assert.deepEqual(b.params, [1, 2, 3, 100]);\n  assert.ok(placeholdersMatch(b, 'mysql'));\n});\n\ntest('injection text stays in the parameters', () => {\n  const evil = \"x'; DROP TABLE orders; --\";\n  const b = selectSql({ from: 'orders', columns: ['id'], where: { column: 'status', op: '=', value: evil } }, cols);\n  assert.ok(!b.text.includes('DROP'));\n  assert.deepEqual(b.params[0], evil);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sql-builder-2448.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:04.935Z"
+}

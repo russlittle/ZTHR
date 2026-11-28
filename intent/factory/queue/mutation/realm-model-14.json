@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "realm-model",
+  "mutant": {
+    "id": "14",
+    "line": 74,
+    "column": 46,
+    "endLine": 74,
+    "endColumn": 59,
+    "mutator": "StringLiteral",
+    "original": "'constructor'",
+    "replacement": "\"\"",
+    "lineText": "const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);",
+    "prevText": "const PATH = /^(?:\\/[a-zA-Z0-9][a-zA-Z0-9 _.-]{0,62}){1,16}$/;",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/realm-model/realm-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/realm-model-14.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"realm-model\". Mutant: line 74:46-74:59, mutator StringLiteral: \"'constructor'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/realm-model/index.ts (> marks the mutated line):\n    68    readonly roles: readonly string[];\n    69    readonly attrs: Readonly<Record<string, readonly string[]>>;\n    70  }\n    71  \n    72  const NAME = /^[a-z][a-z0-9_.-]{0,62}$/;\n    73  const PATH = /^(?:\\/[a-zA-Z0-9][a-zA-Z0-9 _.-]{0,62}){1,16}$/;\n>   74  const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);\n    75  \n    76  const parentOf = (path: string) => path.slice(0, path.lastIndexOf('/')) || undefined;\n    77  \n    78  export function checkPassword(p: PasswordPolicy, password: string, who: { username?: string; email?: string } = {}): string[] {\n    79    const out: string[] = [];\n    80    if ([...password].length < p.minLength) out.push(`at least ${p.minLength} characters`);\n\nTest file style (intent/blocks/realm-model/realm-model.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { decide } from '../rbac/index.ts';\nimport { Realm, RealmRefused, Realms, checkPassword } from './index.ts';\nimport type { RealmPolicy } from './index.ts';\n\nconst policy: RealmPolicy = { password: { minLength: 10, requireUpper: true, requireDigit: true, notUsername: true }, registrationAllowed: true, emailDomains: ['acme.test'], lockout: { maxFailures: 3, lockMs: 60_000 } };\nconst clock = { t: 1_000_000 };\nlet n = 0;\nconst make = (name = 'acme', p: RealmPolicy = policy) =>\n  new Realm({ name, policy: p, now: () => clock.t, newId: () => `u${++n}`, attributes: [{ name: 'dept', required: true, pattern: '[A-Z]{2,4}' }, { name: 'phone', multivalued: true, editableBy: 'user', maxLength: 20 }, { name: 'region' }], defaultRoles: ['member'] });\nconst seeded = (): Realm => {\n  const r = make();\n  r.defineRole({ name: 'member', label: 'Member' });\n  r.defineRole({ name: 'editor', label: 'Editor', includes: ['member'] });\n  r.defineRole({ name: 'admin', label: 'Administrator', includes: ['editor'] });\n  r.addGroup('/eng', { roles: ['editor'], attrs: { region: ['emea'] } });\n  r.addGroup('/eng/platform', { attrs: { region: ['us'] } });\n  return r;\n};\n\ntest('roles compose: an administrator is also an editor and a member', () => {\n  const r = seeded();\n  const u = r.createUser({ username: 'Ana', roles: ['admin'], attrs: { dept: ['ENG'] } });\n  assert.deepEqual(r.effectiveRoles(u.id), ['admin', 'editor', 'member']);\n});\n\ntest('role composition cycles are refused and leave the earlier definition alone', () => {\n  const r = seeded();\n  assert.throws(() => r.defineRole({ name: 'member', label: 'Member', includes: ['admin'] }), /include itself/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/realm-model-14.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:58.535Z"
+}

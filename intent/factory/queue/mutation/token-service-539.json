@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "token-service",
+  "mutant": {
+    "id": "539",
+    "line": 415,
+    "column": 73,
+    "endLine": 415,
+    "endColumn": 95,
+    "mutator": "ObjectLiteral",
+    "original": "{ binding: o.binding }",
+    "replacement": "{}",
+    "lineText": "const i = this.introspect(o.subjectToken, o.binding !== undefined ? { binding: o.binding } : {});",
+    "prevText": "exchange(o: { subjectToken: string; clientId: string; scope?: readonly string[]; audience?: string; actor?: string; binding?: string }): { access_token: string; issued_token_type: 'urn:ietf:params:oauth:token-type:access_token'; token_type: 'Bearer'; expires_in: number; scope: string } {",
+    "nextText": "if (!i.active || i.token_type !== 'access_token') throw new TokenRefused('unknown', 'the subject token is not valid');"
+  },
+  "mayEdit": [
+    "intent/blocks/token-service/token-service.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/token-service-539.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"token-service\". Mutant: line 415:73-415:95, mutator ObjectLiteral: \"{ binding: o.binding }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/token-service/index.ts (> marks the mutated line):\n   409    /**\n   410     * RFC 8693 token exchange for access tokens: a service holding a person's token asks for one of its own, for another\n   411     * audience and/or narrower scope, optionally recording who acts for them. It cannot outlive the original, cannot\n   412     * widen scope, and ends with the same session, so revoking the session ends it too.\n   413     */\n   414    exchange(o: { subjectToken: string; clientId: string; scope?: readonly string[]; audience?: string; actor?: string; binding?: string }): { access_token: string; issued_token_type: 'urn:ietf:params:oauth:token-type:access_token'; token_type: 'Bearer'; expires_in: number; scope: string } {\n>  415      const i = this.introspect(o.subjectToken, o.binding !== undefined ? { binding: o.binding } : {});\n   416      if (!i.active || i.token_type !== 'access_token') throw new TokenRefused('unknown', 'the subject token is not valid');\n   417      const have = (i.scope ?? '').split(' ').filter(Boolean);\n   418      const want = o.scope ? [...new Set(o.scope)] : have;\n   419      if (!want.every((s) => have.includes(s))) throw new TokenRefused('scope_widened', 'an exchange cannot add scope');\n   420      const audience = o.audience ?? i.aud!;\n   421      if (audience !== i.aud && !(this.o.exchangeAudiences ?? []).includes(audience)) throw new TokenRefused('not_allowed', 'that audience is not available by exchange');\n\nTest file style (intent/blocks/token-service/token-service.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, createHmac } from 'node:crypto';\nimport { test } from 'node:test';\nimport { BadJwt, TokenRefused, TokenService, decodeJwt, encodeJwt, hs256, jwks } from './index.ts';\nimport type { JwtKey, Options } from './index.ts';\n\nconst ec = generateKeyPairSync('ec', { namedCurve: 'P-256' });\nconst ES: JwtKey = { alg: 'ES256', publicKey: ec.publicKey, privateKey: ec.privateKey };\nconst HS: JwtKey = { alg: 'HS256', secret: Buffer.from('0123456789abcdef0123456789abcdef') };\nlet n = 0;\nconst rnd = (len: number) => Buffer.alloc(len, 0).fill(String.fromCharCode(97 + (n++ % 26)));\nconst make = (o: Partial<Options> = {}) => {\n  const t = { now: 1_700_000_000_000 };\n  const svc = new TokenService({ issuer: 'https://id.example.org', audience: 'api', keys: { k1: ES, h1: HS }, currentKid: 'k1', now: () => t.now, random: rnd, ...o });\n  return { svc, t };\n};\nconst grant = { sub: 'ana', clientId: 'web', scope: ['read', 'write'] };\nconst refused = (f: () => unknown) => {\n  try {\n    f();\n  } catch (e) {\n    assert.ok(e instanceof TokenRefused, String(e));\n    return e.why;\n  }\n  return 'ok';\n};\n\ntest('RFC 7515 appendix A.1: the published HS256 token verifies, and one changed character does not', () => {\n  const key = Buffer.from('AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow', 'base64url');\n  // RFC 7515 A.1: header and payload are built from the RFC's JSON texts and signed with the RFC key; the computed signature must equal the published segment.\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/token-service-539.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:10.171Z"
+}

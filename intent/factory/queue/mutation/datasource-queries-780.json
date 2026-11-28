@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "datasource-queries",
+  "mutant": {
+    "id": "780",
+    "line": 469,
+    "column": 67,
+    "endLine": 469,
+    "endColumn": 104,
+    "mutator": "StringLiteral",
+    "original": "'that cursor does not fit this query'",
+    "replacement": "\"\"",
+    "lineText": "if (vals.length !== order.length) throw new BadCursor('that cursor does not fit this query');",
+    "prevText": "const vals = this.readCursor(q, args, s, r.cursor);",
+    "nextText": "const ors: Where[] = order.map((o, i) => ({"
+  },
+  "mayEdit": [
+    "intent/blocks/datasource-queries/datasource-queries.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-780.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"datasource-queries\". Mutant: line 469:67-469:104, mutator StringLiteral: \"'that cursor does not fit this query'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/datasource-queries/index.ts (> marks the mutated line):\n   463        if (q.spec) {\n   464          let keyset: Where | undefined;\n   465          if (pg?.mode === 'keyset') {\n   466            order = q.spec.orderBy!.map((o) => ({ column: o.column, dir: o.dir === 'desc' ? ('desc' as const) : ('asc' as const) }));\n   467            if (r.cursor) {\n   468              const vals = this.readCursor(q, args, s, r.cursor);\n>  469              if (vals.length !== order.length) throw new BadCursor('that cursor does not fit this query');\n   470              const ors: Where[] = order.map((o, i) => ({\n   471                and: [...order.slice(0, i).map((p, j) => ({ column: p.column, op: '=' as const, value: vals[j] as Scalar })), { column: o.column, op: o.dir === 'asc' ? ('>' as const) : ('<' as const), value: vals[i] as Scalar }],\n   472              }));\n   473              keyset = ors.length === 1 ? ors[0]! : { or: ors };\n   474            }\n   475          }\n\nTest file style (intent/blocks/datasource-queries/datasource-queries.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { randomBytes } from 'node:crypto';\nimport { Engine, QueryDefError, BadArguments, Forbidden, BadCursor } from './index.ts';\nimport type { DataSource, Session } from './index.ts';\nimport type { Built } from '../sql-builder/index.ts';\nimport type { Collection } from '../query/index.ts';\n\nconst collections: Collection[] = [\n  { name: 'orders', fields: { id: { type: 'number' }, owner_id: { type: 'string' }, status: { type: 'string' }, total: { type: 'number' }, created: { type: 'date' }, note: { type: 'string', sensitive: true } } },\n  { name: 'customers', fields: { id: { type: 'number' }, name: { type: 'string' }, email: { type: 'string' } } },\n];\nconst ana: Session = { user: 'ana', roles: ['sales'], attrs: { team: 'north' } };\nconst boss: Session = { user: 'boss', roles: ['manager'] };\nconst nobody: Session = { user: 'x', roles: [] };\n\nfunction setup(rowsFor: (b: Built, n: number) => Record<string, unknown>[] = () => []) {\n  const calls: Built[] = [];\n  const src: DataSource = {\n    name: 'main',\n    dialect: 'pg',\n    collections,\n    policy: {\n      orders: { roles: ['sales', 'manager'], columns: { sales: ['id', 'status', 'total', 'created', 'owner_id'] }, rowFilter: (s) => (s.roles.includes('manager') ? undefined : { column: 'owner_id', op: '=', value: s.user }) },\n      customers: { roles: ['sales', 'manager'], columns: { sales: ['id', 'name'] } },\n    },\n    run: async (b) => {\n      calls.push(b);\n      return rowsFor(b, calls.length);\n    },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-780.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.960Z"
+}

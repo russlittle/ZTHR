@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "link-preview",
+  "mutant": {
+    "id": "234",
+    "line": 114,
+    "column": 7,
+    "endLine": 114,
+    "endColumn": 34,
+    "mutator": "ConditionalExpression",
+    "original": "(g[0]! & 0xffc0) === 0xfe80",
+    "replacement": "false",
+    "lineText": "if ((g[0]! & 0xffc0) === 0xfe80) return false; // link local",
+    "prevText": "if ((g[0]! & 0xfe00) === 0xfc00) return false; // unique local",
+    "nextText": "if ((g[0]! & 0xffc0) === 0xfec0) return false; // site local (deprecated)"
+  },
+  "mayEdit": [
+    "intent/blocks/link-preview/link-preview.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/link-preview-234.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"link-preview\". Mutant: line 114:7-114:34, mutator ConditionalExpression: \"(g[0]! & 0xffc0) === 0xfe80\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/link-preview/index.ts (> marks the mutated line):\n   108    if (g.slice(0, 5).every((x) => x === 0) && (g[5] === 0xffff || g[5] === 0)) return publicV4(embedded(g[6]!, g[7]!)) && !(g[5] === 0 && g[6] === 0 && g[7]! <= 1); // ::ffff:a.b.c.d, ::a.b.c.d, ::, ::1\n   109    if (g[0] === 0x64 && g[1] === 0xff9b && g.slice(2, 6).every((x) => x === 0)) return publicV4(embedded(g[6]!, g[7]!)); // NAT64\n   110    if (g[0] === 0x2002) return publicV4(embedded(g[1]!, g[2]!)); // 6to4\n   111    if (g[0] === 0x2001 && g[1] === 0) return false; // Teredo\n   112    if (g[0] === 0x2001 && g[1] === 0xdb8) return false; // documentation\n   113    if ((g[0]! & 0xfe00) === 0xfc00) return false; // unique local\n>  114    if ((g[0]! & 0xffc0) === 0xfe80) return false; // link local\n   115    if ((g[0]! & 0xffc0) === 0xfec0) return false; // site local (deprecated)\n   116    if ((g[0]! & 0xff00) === 0xff00) return false; // multicast\n   117    if ((g[0]! & 0xe000) !== 0x2000) return false; // only global unicast 2000::/3 is public\n   118    return true;\n   119  }\n   120  \n\nTest file style (intent/blocks/link-preview/link-preview.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Blocked, checkUrl, clean, cleanUrl, embedIframe, FetchFailed, InvalidOEmbed, isPublicAddress, matchProvider, oembedRequestUrl, parseOEmbed, readCard, safeFetch, withOEmbed } from './index.ts';\nimport type { Deps, Response } from './index.ts';\n\nconst page = (head: string) => `<!doctype html><html><head>${head}</head><body>x</body></html>`;\nconst enc = (s: string) => new TextEncoder().encode(s);\nasync function* chunks(...parts: Uint8Array[]) {\n  for (const p of parts) yield p;\n}\nconst ok = (body: string | Uint8Array[], headers: Record<string, string> = {}): Response => ({\n  status: 200,\n  headers: { 'content-type': 'text/html; charset=utf-8', ...headers },\n  body: chunks(...(typeof body === 'string' ? [enc(body)] : body)),\n});\n\ntest('Open Graph fields are read, with structured image properties attached to the image they follow', () => {\n  const c = readCard(\n    page(`<meta property=\"og:title\" content=\"  The Title  \"><meta property=\"og:description\" content=\"A &amp; B\">\n      <meta property=\"og:site_name\" content=\"Example\"><meta property=\"og:type\" content=\"article\">\n      <meta property=\"og:image\" content=\"/a.png\"><meta property=\"og:image:width\" content=\"1200\"><meta property=\"og:image:height\" content=\"630\"><meta property=\"og:image:alt\" content=\"First\">\n      <meta property=\"og:image\" content=\"https://cdn.example.com/b.png\"><meta property=\"og:image:width\" content=\"800\">\n      <meta property=\"article:published_time\" content=\"2026-11-01T10:00:00Z\"><meta property=\"og:locale\" content=\"en_GB\"><meta property=\"og:url\" content=\"https://example.com/post\">`),\n    'https://example.com/post?utm=1',\n  );\n  assert.deepEqual(c.images, [\n    { url: 'https://example.com/a.png', width: 1200, height: 630, alt: 'First' },\n    { url: 'https://cdn.example.com/b.png', width: 800 },\n  ]);\n  assert.equal(c.title, 'The Title');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/link-preview-234.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.001Z"
+}

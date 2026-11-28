@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "websocket-frames",
+  "mutant": {
+    "id": "50",
+    "line": 69,
+    "column": 77,
+    "endLine": 69,
+    "endColumn": 130,
+    "mutator": "StringLiteral",
+    "original": "'Sec-WebSocket-Key must be 16 random bytes in base64'",
+    "replacement": "\"\"",
+    "lineText": "if (!/^[A-Za-z0-9+/]{22}==$/.test(key)) throw new WsHandshakeRefused(400, 'Sec-WebSocket-Key must be 16 random bytes in base64');",
+    "prevText": "const key = h['sec-websocket-key'] ?? '';",
+    "nextText": "const origin = h['origin'];"
+  },
+  "mayEdit": [
+    "intent/blocks/websocket-frames/websocket-frames.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/websocket-frames-50.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"websocket-frames\". Mutant: line 69:77-69:130, mutator StringLiteral: \"'Sec-WebSocket-Key must be 16 random bytes in base64'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/websocket-frames/index.ts (> marks the mutated line):\n    63    const h = req.headers;\n    64    if (req.method !== 'GET') throw new WsHandshakeRefused(405, 'a WebSocket opens with GET');\n    65    if (!tokens(h['connection']).includes('upgrade')) throw new WsHandshakeRefused(400, 'Connection must include Upgrade');\n    66    if (!tokens(h['upgrade']).includes('websocket')) throw new WsHandshakeRefused(400, 'Upgrade must be websocket');\n    67    if (h['sec-websocket-version'] !== '13') throw new WsHandshakeRefused(426, 'only WebSocket version 13 is spoken (send Sec-WebSocket-Version: 13)');\n    68    const key = h['sec-websocket-key'] ?? '';\n>   69    if (!/^[A-Za-z0-9+/]{22}==$/.test(key)) throw new WsHandshakeRefused(400, 'Sec-WebSocket-Key must be 16 random bytes in base64');\n    70    const origin = h['origin'];\n    71    if (o.origins) {\n    72      if (origin === undefined ? !o.allowMissingOrigin : !o.origins.includes(origin)) throw new WsHandshakeRefused(403, 'that Origin may not open a socket here');\n    73    }\n    74    return { key, protocols: (h['sec-websocket-protocol'] ?? '').split(',').map((s) => s.trim()).filter(Boolean), origin };\n    75  }\n\nTest file style (intent/blocks/websocket-frames/websocket-frames.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { FrameDecoder, OP, Session, WsHandshakeRefused, WsProtocolError, WsSendRefused, acceptKey, applyMask, checkUpgrade, decodeClosePayload, encodeClosePayload, encodeFrame, upgradeResponse, validCloseCode } from './index.ts';\nimport type { SessionEvent } from './index.ts';\n\nconst hex = (s: string) => Buffer.from(s.replace(/\\s+/g, ''), 'hex');\nconst KEY = hex('37fa213d');\n\ntest('the accept key is the RFC 6455 example', () => {\n  assert.equal(acceptKey('dGhlIHNhbXBsZSBub25jZQ=='), 's3pPLMBiTxaQ9kYGzzhZRbK+xOo=');\n});\n\ntest('RFC 6455 5.7 examples encode byte for byte', () => {\n  assert.deepEqual(encodeFrame({ opcode: OP.text, payload: Buffer.from('Hello') }), hex('81 05 48 65 6c 6c 6f'));\n  assert.deepEqual(encodeFrame({ opcode: OP.text, payload: Buffer.from('Hello'), mask: KEY }), hex('81 85 37 fa 21 3d 7f 9f 4d 51 58'));\n  assert.deepEqual(encodeFrame({ fin: false, opcode: OP.text, payload: Buffer.from('Hel') }), hex('01 03 48 65 6c'));\n  assert.deepEqual(encodeFrame({ opcode: OP.continuation, payload: Buffer.from('lo') }), hex('80 02 6c 6f'));\n  assert.deepEqual(encodeFrame({ opcode: OP.ping, payload: Buffer.from('Hello') }), hex('89 05 48 65 6c 6c 6f'));\n  assert.deepEqual(encodeFrame({ opcode: OP.pong, payload: Buffer.from('Hello'), mask: KEY }), hex('8a 85 37 fa 21 3d 7f 9f 4d 51 58'));\n  const b256 = encodeFrame({ opcode: OP.binary, payload: Buffer.alloc(256) });\n  assert.deepEqual(b256.subarray(0, 4), hex('82 7e 01 00'));\n  assert.equal(b256.length, 4 + 256);\n  const b64k = encodeFrame({ opcode: OP.binary, payload: Buffer.alloc(65536) });\n  assert.deepEqual(b64k.subarray(0, 10), hex('82 7f 00 00 00 00 00 01 00 00'));\n});\n\ntest('the decoder reads the RFC examples, masked and not, and unmasks the payload', () => {\n  const server = new FrameDecoder({ role: 'server' });\n  const [f] = server.push(hex('81 85 37 fa 21 3d 7f 9f 4d 51 58'));\n  assert.equal(f!.payload.toString(), 'Hello');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/websocket-frames-50.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.272Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pricing",
+  "mutant": {
+    "id": "294",
+    "line": 243,
+    "column": 33,
+    "endLine": 243,
+    "endColumn": 38,
+    "mutator": "BooleanLiteral",
+    "original": "false",
+    "replacement": "true",
+    "lineText": "const a = amountsFor(p, ws, false);",
+    "prevText": "cands = cands.filter((p) => {",
+    "nextText": "if (!a.eligible) {"
+  },
+  "mayEdit": [
+    "intent/blocks/pricing/pricing.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pricing-294.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pricing\". Mutant: line 243:33-243:38, mutator BooleanLiteral: \"false\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pricing/index.ts (> marks the mutated line):\n   237      else explain.push(`coupon ${code}: refused, ${r.reason}`);\n   238    }\n   239  \n   240    let cands = cat.promotions.filter((p) => live(p, req.now) && inGroups(p.groups, req.customer.groups) && (!p.requiresCoupon || unlocked.has(p.id)));\n   241    const scored = new Map<string, Money>();\n   242    cands = cands.filter((p) => {\n>  243      const a = amountsFor(p, ws, false);\n   244      if (!a.eligible) {\n   245        explain.push(`${p.id}: not applied, ${a.why}`);\n   246        return false;\n   247      }\n   248      scored.set(p.id, worth(a.amounts, cur));\n   249      return true;\n\nTest file style (intent/blocks/pricing/pricing.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { money } from '../money/index.ts';\nimport type { Policy } from '../rbac/index.ts';\nimport { checkCoupon, NoPrice, NotAllowed, overrideUnit, priceOf, quote, redeem, RedemptionLog, type Catalog, type Customer, type Promotion } from './index.ts';\n\nconst usd = (n: number) => money(n, 'USD');\nconst NOW = new Date('2026-06-15T12:00:00Z');\nconst alice: Customer = { id: 'alice', groups: [] };\nconst vip: Customer = { id: 'vera', groups: ['vip'] };\n\nconst base: Catalog = {\n  lists: [\n    { id: 'retail', currency: 'USD', priority: 1, entries: { tee: [{ minQty: 1, unit: usd(2000) }, { minQty: 10, unit: usd(1800) }, { minQty: 50, unit: usd(1500) }], mug: [{ minQty: 1, unit: usd(1000) }] } },\n    { id: 'vip', currency: 'USD', priority: 1, groups: ['vip'], entries: { tee: [{ minQty: 1, unit: usd(1700) }] } },\n    { id: 'summer', currency: 'USD', priority: 5, from: '2026-06-01', to: '2026-06-30', entries: { mug: [{ minQty: 1, unit: usd(900) }] } },\n    { id: 'euro', currency: 'EUR', priority: 1, entries: { tee: [{ minQty: 1, unit: money(1900, 'EUR') }] } },\n  ],\n  promotions: [],\n  coupons: [],\n};\nconst promo = (p: Partial<Promotion> & { id: string }): Promotion => ({ label: p.id, effect: { kind: 'percent', bps: 1000 }, stacking: 'stack', priority: 10, ...p });\nconst withPromos = (promotions: Promotion[], coupons: Catalog['coupons'] = []): Catalog => ({ ...base, promotions, coupons });\nconst req = (lines: { sku: string; qty: number }[], extra: { customer?: Customer; coupons?: string[] } = {}) => ({ customer: extra.customer ?? alice, currency: 'USD', lines, now: NOW, ...(extra.coupons ? { coupons: extra.coupons } : {}) });\n\ntest('quantity tiers set the unit price from the highest tier reached', () => {\n  assert.equal(priceOf(base, 'tee', 1, alice, 'USD', NOW).tier.unit.minor, 2000n);\n  assert.equal(priceOf(base, 'tee', 9, alice, 'USD', NOW).tier.unit.minor, 2000n);\n  assert.equal(priceOf(base, 'tee', 10, alice, 'USD', NOW).tier.unit.minor, 1800n);\n  assert.equal(priceOf(base, 'tee', 500, alice, 'USD', NOW).tier.unit.minor, 1500n);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pricing-294.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.366Z"
+}

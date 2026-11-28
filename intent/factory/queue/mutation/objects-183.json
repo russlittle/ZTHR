@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "objects",
+  "mutant": {
+    "id": "183",
+    "line": 206,
+    "column": 13,
+    "endLine": 206,
+    "endColumn": 17,
+    "mutator": "ConditionalExpression",
+    "original": "made",
+    "replacement": "true",
+    "lineText": "if (made) {",
+    "prevText": "// Fan-out folders made for this object are entries in their own parents, which are forced too.",
+    "nextText": "const top = resolve(made, '..');"
+  },
+  "mayEdit": [
+    "intent/blocks/objects/objects.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/objects-183.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"objects\". Mutant: line 206:13-206:17, mutator ConditionalExpression: \"made\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/objects/index.ts (> marks the mutated line):\n   200        const d = new Digest(o.algos ?? DEFAULT);\n   201        try {\n   202          await pipeline(Readable.from(limit(data instanceof Uint8Array ? once(data) : data, d, o.maxBytes)), createWriteStream(path));\n   203          await fsync(path);\n   204          await fsync(leaf);\n   205          // Fan-out folders made for this object are entries in their own parents, which are forced too.\n>  206          if (made) {\n   207            const top = resolve(made, '..');\n   208            for (let p = resolve(leaf); p !== top && join(p, '..') !== p; ) {\n   209              p = join(p, '..');\n   210              await fsync(p);\n   211            }\n   212          }\n\nTest file style (intent/blocks/objects/objects.test.ts):\n8 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { mkdtemp, open, rm } from 'node:fs/promises';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { mock, test } from 'node:test';\nimport { Adler32, Missing, TooLarge, diskKeys, diskObjects, memoryObjects, parseChecksums, parseRange, readAll, type ObjectStore } from './index.ts';\n\nconst bytes = (s: string) => new TextEncoder().encode(s);\n\ntest('Adler-32 matches the published value for \"Wikipedia\"', () => {\n  assert.equal(new Adler32().update(bytes('Wikipedia')).hex(), '11e60398');\n  // Split across updates gives the same answer as one pass.\n  assert.equal(new Adler32().update(bytes('Wiki')).update(bytes('pedia')).hex(), '11e60398');\n  // Long input exercises the modulo, which a wrong implementation gets wrong only past 3,800 bytes.\n  const long = new Uint8Array(100_000).fill(255);\n  const one = new Adler32().update(long).hex();\n  const two = new Adler32().update(long.subarray(0, 5000)).update(long.subarray(5000)).hex();\n  assert.equal(one, two);\n  assert.equal(one, '149a302c', \"zlib's value for 100,000 bytes of 0xff\");\n  // Sixteen 0xff bytes put the top bit of the result on, where a signed shift goes negative.\n  assert.equal(new Adler32().update(new Uint8Array(16).fill(255)).hex(), '87880ff1');\n});\n\ntest('a byte range is parsed as HTTP means it, and an impossible one is unsatisfiable', () => {\n  assert.deepEqual(parseRange('bytes=0-9', 100), { start: 0, end: 9 });\n  assert.deepEqual(parseRange('bytes=90-', 100), { start: 90, end: 99 });\n  assert.deepEqual(parseRange('bytes=-10', 100), { start: 90, end: 99 });\n  assert.deepEqual(parseRange('bytes=50-500', 100), { start: 50, end: 99 });\n  assert.equal(parseRange('bytes=100-', 100), 'unsatisfiable');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/objects-183.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.651Z"
+}

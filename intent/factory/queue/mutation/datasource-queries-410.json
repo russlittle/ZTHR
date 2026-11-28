@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "datasource-queries",
+  "mutant": {
+    "id": "410",
+    "line": 308,
+    "column": 11,
+    "endLine": 308,
+    "endColumn": 58,
+    "mutator": "LogicalOperator",
+    "original": "raw === undefined || raw === null || raw === ''",
+    "replacement": "(raw === undefined || raw === null) && raw === ''",
+    "lineText": "if (raw === undefined || raw === null || raw === '') raw = p.default !== undefined ? (p.list ? [p.default] : p.default) : undefined;",
+    "prevText": "let raw = Object.hasOwn(args, p.name) ? args[p.name] : undefined;",
+    "nextText": "if (raw === undefined) {"
+  },
+  "mayEdit": [
+    "intent/blocks/datasource-queries/datasource-queries.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-410.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"datasource-queries\". Mutant: line 308:11-308:58, mutator LogicalOperator: \"raw === undefined || raw === null || raw === ''\" becomes \"(raw === undefined || raw === null) && raw === ''\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/datasource-queries/index.ts (> marks the mutated line):\n   302      const out: Record<string, unknown> = {};\n   303      const problems: v.Problem[] = [];\n   304      const defs = new Map((q.params ?? []).map((p) => [p.name, p]));\n   305      for (const k of Object.keys(args)) if (!defs.has(k)) problems.push({ path: k, code: 'unknown', message: `${k} is not a parameter of ${q.id}` });\n   306      for (const p of defs.values()) {\n   307        let raw = Object.hasOwn(args, p.name) ? args[p.name] : undefined;\n>  308        if (raw === undefined || raw === null || raw === '') raw = p.default !== undefined ? (p.list ? [p.default] : p.default) : undefined;\n   309        if (raw === undefined) {\n   310          if (p.required) problems.push({ path: p.name, code: 'required', message: `${p.name} is needed` });\n   311          continue;\n   312        }\n   313        const r = paramSchema(p).check(raw, p.name);\n   314        if (r.ok) out[p.name] = r.value;\n\nTest file style (intent/blocks/datasource-queries/datasource-queries.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { randomBytes } from 'node:crypto';\nimport { Engine, QueryDefError, BadArguments, Forbidden, BadCursor } from './index.ts';\nimport type { DataSource, Session } from './index.ts';\nimport type { Built } from '../sql-builder/index.ts';\nimport type { Collection } from '../query/index.ts';\n\nconst collections: Collection[] = [\n  { name: 'orders', fields: { id: { type: 'number' }, owner_id: { type: 'string' }, status: { type: 'string' }, total: { type: 'number' }, created: { type: 'date' }, note: { type: 'string', sensitive: true } } },\n  { name: 'customers', fields: { id: { type: 'number' }, name: { type: 'string' }, email: { type: 'string' } } },\n];\nconst ana: Session = { user: 'ana', roles: ['sales'], attrs: { team: 'north' } };\nconst boss: Session = { user: 'boss', roles: ['manager'] };\nconst nobody: Session = { user: 'x', roles: [] };\n\nfunction setup(rowsFor: (b: Built, n: number) => Record<string, unknown>[] = () => []) {\n  const calls: Built[] = [];\n  const src: DataSource = {\n    name: 'main',\n    dialect: 'pg',\n    collections,\n    policy: {\n      orders: { roles: ['sales', 'manager'], columns: { sales: ['id', 'status', 'total', 'created', 'owner_id'] }, rowFilter: (s) => (s.roles.includes('manager') ? undefined : { column: 'owner_id', op: '=', value: s.user }) },\n      customers: { roles: ['sales', 'manager'], columns: { sales: ['id', 'name'] } },\n    },\n    run: async (b) => {\n      calls.push(b);\n      return rowsFor(b, calls.length);\n    },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-410.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.944Z"
+}

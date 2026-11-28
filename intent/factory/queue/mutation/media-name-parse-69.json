@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "media-name-parse",
+  "mutant": {
+    "id": "69",
+    "line": 120,
+    "column": 146,
+    "endLine": 120,
+    "endColumn": 151,
+    "mutator": "StringLiteral",
+    "original": "'jpg'",
+    "replacement": "\"\"",
+    "lineText": "if (m && m[1] && (VIDEO_EXT.has(m[2]!.toLowerCase()) || AUDIO_EXT.has(m[2]!.toLowerCase()) || SUBTITLE_EXT.has(m[2]!.toLowerCase()) || ['nfo', 'jpg', 'jpeg', 'png', 'txt'].includes(m[2]!.toLowerCase()))) return { base: m[1], ext: m[2]!.toLowerCase() };",
+    "prevText": "const m = /^(.*)\\.([A-Za-z0-9]{1,5})$/.exec(name);",
+    "nextText": "return { base: name, ext: '' };"
+  },
+  "mayEdit": [
+    "intent/blocks/media-name-parse/media-name-parse.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/media-name-parse-69.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"media-name-parse\". Mutant: line 120:146-120:151, mutator StringLiteral: \"'jpg'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/media-name-parse/index.ts (> marks the mutated line):\n   114  export const VIDEO_EXT: ReadonlySet<string> = new Set(['mkv', 'mp4', 'avi', 'm4v', 'mov', 'wmv', 'ts', 'm2ts', 'mpg', 'mpeg', 'webm', 'flv', 'iso', 'ogm', 'ogv', 'divx', 'vob', '3gp']);\n   115  export const AUDIO_EXT: ReadonlySet<string> = new Set(['mp3', 'flac', 'm4a', 'm4b', 'aac', 'ogg', 'oga', 'opus', 'wav', 'wma', 'alac', 'ape', 'wv', 'aiff', 'aif', 'dsf', 'mka']);\n   116  export const SUBTITLE_EXT: ReadonlySet<string> = new Set(['srt', 'vtt', 'ass', 'ssa', 'sub', 'idx', 'sup', 'ttml', 'smi']);\n   117  \n   118  export function splitExt(name: string): { base: string; ext: string } {\n   119    const m = /^(.*)\\.([A-Za-z0-9]{1,5})$/.exec(name);\n>  120    if (m && m[1] && (VIDEO_EXT.has(m[2]!.toLowerCase()) || AUDIO_EXT.has(m[2]!.toLowerCase()) || SUBTITLE_EXT.has(m[2]!.toLowerCase()) || ['nfo', 'jpg', 'jpeg', 'png', 'txt'].includes(m[2]!.toLowerCase()))) return { base: m[1], ext: m[2]!.toLowerCase() };\n   121    return { base: name, ext: '' };\n   122  }\n   123  \n   124  // ---------------------------------------------------------------- text\n   125  \n   126  /** A title as a comparison key: no case, accents, leading article or punctuation; & is \"and\". */\n\nTest file style (intent/blocks/media-name-parse/media-name-parse.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { identify, parseAlbumDir, parseDiscDir, parseQuality, parseSeasonDir, parseSidecar, parseTrackName, splitExt, titleKey, episodeKey, movieKey } from './index.ts';\nimport type { Episode, Extra, Movie, Options, Track } from './index.ts';\n\nconst NOW = Date.UTC(2026, 5, 1);\nconst O: Options = { now: () => NOW };\nconst mov = (p: string, o: Options = O) => {\n  const r = identify(p, o);\n  assert.equal(r.kind, 'movie', `${p} -> ${JSON.stringify(r)}`);\n  return r as Movie;\n};\nconst ep = (p: string, o: Options = O) => {\n  const r = identify(p, o);\n  assert.equal(r.kind, 'episode', `${p} -> ${JSON.stringify(r)}`);\n  return r as Episode;\n};\n\ntest('splitExt only strips extensions that are media or sidecars', () => {\n  assert.deepEqual(splitExt('Movie.2019.mkv'), { base: 'Movie.2019', ext: 'mkv' });\n  assert.deepEqual(splitExt('Dr. Strangelove'), { base: 'Dr. Strangelove', ext: '' });\n  assert.deepEqual(splitExt('Mr.Robot.S01E01.1080p'), { base: 'Mr.Robot.S01E01.1080p', ext: '' });\n  assert.deepEqual(splitExt('song.FLAC'), { base: 'song', ext: 'flac' });\n});\n\ntest('movies: release names, brackets, year as title, the title keeps its own numbers', () => {\n  const rows: [string, string, number | undefined][] = [\n    ['The.Matrix.1999.1080p.BluRay.x264-GRP.mkv', 'The Matrix', 1999],\n    ['Blade Runner 2049 (2017) 2160p.mkv', 'Blade Runner 2049', 2017],\n    ['Blade.Runner.2049.2017.UHD.BluRay.mkv', 'Blade Runner 2049', 2017],\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/media-name-parse-69.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:49.170Z"
+}

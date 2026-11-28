@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "menus",
+  "mutant": {
+    "id": "328",
+    "line": 213,
+    "column": 98,
+    "endLine": 213,
+    "endColumn": 141,
+    "mutator": "ArithmeticOperator",
+    "original": "(own === path ? 10_000 : 1000) + own.length",
+    "replacement": "(own === path ? 10_000 : 1000) - own.length",
+    "lineText": "if (own !== undefined && (own === path || own === '/' || path.startsWith(`${own}/`))) best = (own === path ? 10_000 : 1000) + own.length;",
+    "prevText": "} else if (rule === 'prefix') {",
+    "nextText": "} else {"
+  },
+  "mayEdit": [
+    "intent/blocks/menus/menus.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/menus-328.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"menus\". Mutant: line 213:98-213:141, mutator ArithmeticOperator: \"(own === path ? 10_000 : 1000) + own.length\" becomes \"(own === path ? 10_000 : 1000) - own.length\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/menus/index.ts (> marks the mutated line):\n   207    const rule: MatchRule = item.match ?? 'exact';\n   208    let best = 0;\n   209    const own = href !== undefined && !/^[a-z][a-z0-9+.-]*:/i.test(href) && !href.startsWith('#') && !href.startsWith('//') ? normPath(href) : undefined;\n   210    if (rule === 'exact') {\n   211      if (own !== undefined && own === path) best = 10_000 + own.length;\n   212    } else if (rule === 'prefix') {\n>  213      if (own !== undefined && (own === path || own === '/' || path.startsWith(`${own}/`))) best = (own === path ? 10_000 : 1000) + own.length;\n   214    } else {\n   215      for (const pat of rule) {\n   216        if (pat.endsWith('/*')) {\n   217          const base = normPath(pat.slice(0, -2));\n   218          if (path === base || path.startsWith(`${base}/`)) best = Math.max(best, 1000 + base.length);\n   219        } else if (normPath(pat) === path) best = Math.max(best, 10_000 + pat.length);\n\nTest file style (intent/blocks/menus/menus.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { breadcrumbs, check, evaluate, find, insert, InvalidCondition, InvalidMenu, move, pick, remove, resolve, safeHref } from './index.ts';\nimport type { Condition, Context, MenuItem } from './index.ts';\n\nconst menu: MenuItem[] = [\n  { id: 'home', label: { en: 'Home', fr: 'Accueil', de: 'Start' }, href: '/' },\n  {\n    id: 'docs',\n    label: 'Docs',\n    href: '/docs',\n    match: 'prefix',\n    children: [\n      { id: 'docs-start', label: 'Getting started', href: '/docs/start' },\n      { id: 'docs-api', label: 'API', href: '/docs/api', children: [{ id: 'docs-api-auth', label: 'Auth', href: '/docs/api/auth' }] },\n      { id: 'docs-internal', label: 'Internal', href: '/docs/internal', permission: 'docs.internal' },\n    ],\n  },\n  {\n    id: 'account',\n    label: 'Account',\n    when: { authenticated: true },\n    children: [\n      { id: 'profile', label: 'Profile', href: '/me' },\n      { id: 'admin', label: 'Admin', href: '/admin', when: { role: ['admin', 'owner'] }, match: ['/admin/*', '/settings'] },\n      { id: 'beta', label: 'Beta', href: '/beta', when: { all: [{ flag: 'beta' }, { not: { locale: 'fr' } }] } },\n    ],\n  },\n  { id: 'login', label: 'Sign in', href: '/login', when: { authenticated: false } },\n  { id: 'ext', label: 'Blog', href: 'https://blog.example.com', target: '_blank', order: -1 },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/menus-328.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:49.409Z"
+}

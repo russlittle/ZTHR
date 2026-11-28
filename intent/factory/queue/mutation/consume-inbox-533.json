@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "consume-inbox",
+  "mutant": {
+    "id": "533",
+    "line": 417,
+    "column": 105,
+    "endLine": 417,
+    "endColumn": 124,
+    "mutator": "EqualityOperator",
+    "original": "p.asn !== undefined",
+    "replacement": "p.asn === undefined",
+    "lineText": "await this.o.store({ id, name: p.name, checksum: own, kind, bytes: p.bytes, decision, path, ...(p.asn !== undefined ? { asn: p.asn } : {}), source: item.source, text });",
+    "prevText": "const own = parts.length === 1 ? checksum : sha256(p.bytes);",
+    "nextText": "this.o.seen.set(own, id);"
+  },
+  "mayEdit": [
+    "intent/blocks/consume-inbox/consume-inbox.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/consume-inbox-533.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"consume-inbox\". Mutant: line 417:105-417:124, mutator EqualityOperator: \"p.asn !== undefined\" becomes \"p.asn === undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/consume-inbox/index.ts (> marks the mutated line):\n   411          const text = this.o.extractText ? await this.o.extractText(p.bytes, kind) : kind === 'text' ? Buffer.from(p.bytes).toString('utf8') : '';\n   412          const doc: Document = { title: p.name.replace(/\\.[^.]+$/, ''), content: text, filename: p.name, created: this.o.now().toISOString(), added: this.o.now().toISOString(), ...(p.asn !== undefined ? { asn: p.asn } : {}) };\n   413          const decision = this.o.classifier.classify(doc);\n   414          const path = this.o.classifier.pathFor(doc, decision);\n   415          const id = this.o.newId();\n   416          const own = parts.length === 1 ? checksum : sha256(p.bytes);\n>  417          await this.o.store({ id, name: p.name, checksum: own, kind, bytes: p.bytes, decision, path, ...(p.asn !== undefined ? { asn: p.asn } : {}), source: item.source, text });\n   418          this.o.seen.set(own, id);\n   419          docs.push({ id, name: p.name, ...(p.asn !== undefined ? { asn: p.asn } : {}), path });\n   420        }\n   421        if (parts.length > 1) this.o.seen.set(checksum, docs[0]!.id);\n   422      } catch (e) {\n   423        return finish({ ...fail('failed', `storing failed: ${e instanceof Error ? e.message : String(e)}`, hooks, problems), documents: docs });\n\nTest file style (intent/blocks/consume-inbox/consume-inbox.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { mkdir, mkdtemp, readdir, rm, symlink, utimes, writeFile } from 'node:fs/promises';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { Classifier } from '../doc-classify/index.ts';\nimport { Queue } from '../jobs/index.ts';\nimport { FolderSource, Inbox, MailSource, Rejected, checkHook, hookEnv, memorySeen, nodeRunner, runHooks, sha256, sniff, splitPages } from './index.ts';\nimport type { Hook, MailMessage, PageInfo, Runner, Stored } from './index.ts';\n\nconst pdf = (s = 'one') => Buffer.from(`%PDF-1.7\\n${s}\\n%%EOF`);\nconst pngBytes = (n: number) => Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(n)]);\nconst clock = () => ({ t: Date.parse('2025-05-05T10:00:00Z') });\n\nconst classifier = new Classifier({\n  correspondents: [{ id: 'c-bank', name: 'First Bank', rule: { algorithm: 'any', pattern: 'firstbank' } }],\n  types: [{ id: 't-stmt', name: 'Statement', rule: { algorithm: 'any', pattern: 'statement' } }],\n  storagePaths: [{ id: 'p', name: 'Money', rule: { algorithm: 'any', pattern: 'statement' }, template: '{correspondent}/{created_year}/{title}' }],\n});\n\nconst make = (o: Partial<ConstructorParameters<typeof Inbox>[0]> = {}, sources: ConstructorParameters<typeof Inbox>[1] = []) => {\n  const c = clock();\n  const stored: Stored[] = [];\n  let n = 0;\n  const inbox = new Inbox({ classifier, seen: memorySeen(), store: async (d) => void stored.push(d), now: () => new Date(c.t), newId: () => `doc${++n}`, ...o }, sources);\n  return { inbox, stored, c };\n};\nconst mem = (name: string, bytes: Uint8Array, source = 'mem') => ({ source, name, size: bytes.length, modified: 1, read: async () => bytes });\nconst nullSource = { name: 'mem', list: async () => [], done: async () => {} };\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/consume-inbox-533.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.767Z"
+}

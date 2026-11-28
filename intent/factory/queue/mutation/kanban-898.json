@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "kanban",
+  "mutant": {
+    "id": "898",
+    "line": 476,
+    "column": 55,
+    "endLine": 476,
+    "endColumn": 83,
+    "mutator": "ArrowFunction",
+    "original": "(c) => c.labels.length === 0",
+    "replacement": "() => undefined",
+    "lineText": "rows.push({ row: null, title: 'No label', test: (c) => c.labels.length === 0 });",
+    "prevText": "for (const t of [...new Set(all.flatMap((c) => c.labels))].sort()) rows.push({ row: t, title: t, test: (c) => c.labels.includes(t) });",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/kanban/kanban.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/kanban-898.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"kanban\". Mutant: line 476:55-476:83, mutator ArrowFunction: \"(c) => c.labels.length === 0\" becomes \"() => undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/kanban/index.ts (> marks the mutated line):\n   470        rows.push({ row: null, title: 'No lane', test: (c) => c.lane === null || !this.lanes().some((l) => l.id === c.lane) });\n   471      } else if (by === 'assignee') {\n   472        for (const a of [...new Set(all.map((c) => c.assignee).filter((a): a is string => a !== null))].sort()) rows.push({ row: a, title: a, test: (c) => c.assignee === a });\n   473        rows.push({ row: null, title: 'Unassigned', test: (c) => c.assignee === null });\n   474      } else {\n   475        for (const t of [...new Set(all.flatMap((c) => c.labels))].sort()) rows.push({ row: t, title: t, test: (c) => c.labels.includes(t) });\n>  476        rows.push({ row: null, title: 'No label', test: (c) => c.labels.length === 0 });\n   477      }\n   478      return rows.map((r) => ({ row: r.row, title: r.title, cells: Object.fromEntries(lists.map((l) => [l.id, all.filter((c) => c.list === l.id && r.test(c))])) }));\n   479    }\n   480  \n   481    /** Lists over their limit, whatever the mode: concurrent moves can pass a \"block\" check on two clients at once. */\n   482    violations(): { list: string; count: number; limit: number; mode: 'block' | 'warn' }[] {\n\nTest file style (intent/blocks/kanban/kanban.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { checkOrder } from '../fractional-index/index.ts';\nimport { BadOp, Blocked, Board, NotFound, WipLimit } from './index.ts';\nimport type { Op } from './index.ts';\n\nconst seeded = (seed: number) => () => ((seed = (seed * 48271) % 2147483647) / 2147483647);\nconst mk = (actor: string, seed = 1) => new Board({ actor, random: seeded(seed) });\n\nfunction basic(b = mk('ana')) {\n  b.addList('todo', 'To do');\n  b.addList('doing', 'Doing', { kind: 'doing', after: 'todo' });\n  b.addList('done', 'Done', { kind: 'done', after: 'doing' });\n  return b;\n}\n\ntest('lists keep their order, cards keep theirs, and a move puts a card exactly where it was dropped', () => {\n  const b = basic();\n  assert.deepEqual(b.lists().map((l) => l.id), ['todo', 'doing', 'done']);\n  b.addCard('c1', 'todo', 'One');\n  b.addCard('c2', 'todo', 'Two');\n  b.addCard('c3', 'todo', 'Three');\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c1', 'c2', 'c3']);\n  b.moveCard('c3', 'todo', { before: 'c1' });\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c1', 'c2']);\n  b.moveCard('c1', 'todo', { after: 'c2' });\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c2', 'c1']);\n  b.moveCard('c2', 'doing');\n  assert.deepEqual(b.cards('doing').map((c) => c.id), ['c2']);\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c1']);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/kanban-898.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:46.362Z"
+}

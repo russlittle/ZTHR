@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "hls-dash",
+  "mutant": {
+    "id": "1611",
+    "line": 799,
+    "column": 51,
+    "endLine": 799,
+    "endColumn": 59,
+    "mutator": "EqualityOperator",
+    "original": "b.h <= h",
+    "replacement": "b.h < h",
+    "lineText": "const below = [...BASE].reverse().find((b) => b.h <= h) ?? (BASE[0] as { h: number; kbps: number });",
+    "prevText": "// a source size off the list gets a bitrate by pixel count from the nearest rung below",
+    "nextText": "const kbps = base ? base.kbps : below.kbps * ((h * h * aspect) / (below.h * below.h * (16 / 9)));"
+  },
+  "mayEdit": [
+    "intent/blocks/hls-dash/hls-dash.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/hls-dash-1611.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"hls-dash\". Mutant: line 799:51-799:59, mutator EqualityOperator: \"b.h <= h\" becomes \"b.h < h\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/hls-dash/index.ts (> marks the mutated line):\n   793    if ((o.includeSource ?? true) && !heights.includes(o.height) && o.height > (heights.at(-1) ?? 0)) heights.push(o.height);\n   794    if (heights.length === 0) heights.push(o.height); // smaller than the smallest rung: just the source\n   795    const rungs: Rung[] = [];\n   796    for (const h of heights) {\n   797      const base = BASE.find((b) => b.h === h);\n   798      // a source size off the list gets a bitrate by pixel count from the nearest rung below\n>  799      const below = [...BASE].reverse().find((b) => b.h <= h) ?? (BASE[0] as { h: number; kbps: number });\n   800      const kbps = base ? base.kbps : below.kbps * ((h * h * aspect) / (below.h * below.h * (16 / 9)));\n   801      let video = Math.round(kbps * 1000 * SCALE[codec] * (fps > 30 ? 1.4 : 1));\n   802      if (o.maxBitrate !== undefined) video = Math.min(video, o.maxBitrate);\n   803      const width = h === o.height ? o.width : even(h * aspect);\n   804      const maxrate = Math.round(video * 1.5);\n   805      rungs.push({\n\nTest file style (intent/blocks/hls-dash/hls-dash.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  buildLadder, dashLiveEdge, expandTimeline, fillTemplate, formatIsoDuration, ladderMaster, LivePlaylist, ManifestError, parseAttributes, parseIsoDuration,\n  parseMasterPlaylist, parseMediaPlaylist, parseMpd, parsePlaylist, requiredVersion, segmentName, segmentUrls, validateMedia, writeMasterPlaylist, writeMediaPlaylist, writeMpd,\n} from './index.ts';\nimport type { MediaPlaylist, Mpd } from './index.ts';\n\nconst vod = (): MediaPlaylist => ({\n  kind: 'media', targetDuration: 6, mediaSequence: 0, playlistType: 'VOD', endList: true,\n  segments: [{ uri: 'a.ts', duration: 6 }, { uri: 'b.ts', duration: 5.96 }, { uri: 'c.ts', duration: 2.5 }],\n});\n\n// ------------------------------------------------------------ HLS media\n\ntest('a VOD playlist is written in the shape of the RFC example, and the version follows what is used', () => {\n  assert.equal(writeMediaPlaylist(vod()), [\n    '#EXTM3U', '#EXT-X-VERSION:3', '#EXT-X-TARGETDURATION:6', '#EXT-X-PLAYLIST-TYPE:VOD', '#EXT-X-MEDIA-SEQUENCE:0',\n    '#EXTINF:6,', 'a.ts', '#EXTINF:5.96,', 'b.ts', '#EXTINF:2.5,', 'c.ts', '#EXT-X-ENDLIST', '',\n  ].join('\\n'));\n  const whole: MediaPlaylist = { ...vod(), segments: [{ uri: 'a.ts', duration: 6 }] };\n  assert.equal(requiredVersion(whole), 1);\n  assert.equal(requiredVersion(vod()), 3);\n  assert.equal(requiredVersion({ ...vod(), segments: [{ uri: 'a.ts', duration: 6, byteRange: { length: 10, offset: 0 } }] }), 4);\n  assert.equal(requiredVersion({ ...vod(), segments: [{ uri: 'a.m4s', duration: 6, map: { uri: 'init.mp4' } }] }), 6);\n  assert.equal(requiredVersion({ ...vod(), segments: [{ uri: 'a.m4s', duration: 6, key: { method: 'AES-128', uri: 'k', keyFormat: 'identity' } }] }), 5);\n});\n\ntest('write then parse gives the playlist back, with titles, discontinuities, keys, maps, dates and byte ranges', () => {\n  // key and map are sticky: they apply to every segment after the line, so they are on all four\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/hls-dash-1611.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:43.101Z"
+}

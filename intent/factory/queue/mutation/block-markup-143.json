@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "block-markup",
+  "mutant": {
+    "id": "143",
+    "line": 157,
+    "column": 45,
+    "endLine": 157,
+    "endColumn": 52,
+    "mutator": "StringLiteral",
+    "original": "'close'",
+    "replacement": "\"\"",
+    "lineText": "let kind: Delimiter['kind'] = closing ? 'close' : 'open';",
+    "prevText": "}",
+    "nextText": "if (src[j] === '/' && src.startsWith('/-->', j) && !closing) {"
+  },
+  "mayEdit": [
+    "intent/blocks/block-markup/block-markup.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/block-markup-143.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"block-markup\". Mutant: line 157:45-157:52, mutator StringLiteral: \"'close'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/block-markup/index.ts (> marks the mutated line):\n   151        if (!f) continue;\n   152        attrsText = src.slice(j, f.index + 1);\n   153        if (attrsText.length > maxAttr) return 'badjson';\n   154        j = f.index + 1;\n   155        while (/\\s/.test(src[j] ?? '')) j++;\n   156      }\n>  157      let kind: Delimiter['kind'] = closing ? 'close' : 'open';\n   158      if (src[j] === '/' && src.startsWith('/-->', j) && !closing) {\n   159        kind = 'void';\n   160        j += 1;\n   161      }\n   162      if (!src.startsWith('-->', j)) continue;\n   163      return { kind, name, attrsText, start: at, end: j + 3 };\n\nTest file style (intent/blocks/block-markup/block-markup.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { block, encodeAttrs, LimitExceeded, MarkupError, normalise, parse, plainText, qualify, registry, serialize, short, validate, walkBlocks } from './index.ts';\nimport type { BlockType } from './index.ts';\n\nconst doc = `<!-- wp:heading {\"level\":3} -->\n<h3>Title</h3>\n<!-- /wp:heading -->\n\nSome loose <b>HTML</b> between.\n\n<!-- wp:group {\"className\":\"box\"} -->\n<div class=\"box\">\n<!-- wp:paragraph -->\n<p>One</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:separator /-->\n\n<!-- wp:acme/quote {\"cite\":\"Ann\"} -->\n<blockquote>Q</blockquote>\n<!-- /wp:acme/quote -->\n</div>\n<!-- /wp:group -->`;\n\ntest('a document parses into blocks, freeform HTML, and nested blocks, with attributes', () => {\n  const { blocks, problems } = parse(doc);\n  assert.deepEqual(problems, []);\n  assert.deepEqual(blocks.map((b) => b.name), ['core/heading', null, 'core/group']);\n  assert.deepEqual(blocks[0]!.attrs, { level: 3 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/block-markup-143.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.089Z"
+}

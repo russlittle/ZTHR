@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "graphql-schema",
+  "mutant": {
+    "id": "1279",
+    "line": 855,
+    "column": 27,
+    "endLine": 855,
+    "endColumn": 48,
+    "mutator": "StringLiteral",
+    "original": "`${t.name}.${f.name}`",
+    "replacement": "``",
+    "lineText": "if (known(f.type, `${t.name}.${f.name}`) && !isOutput(named(f.type))) errors.push(`The type of ${t.name}.${f.name} must be an output type.`);",
+    "prevText": "if (f.name.startsWith('__') && !t.name.startsWith('__')) errors.push(`Name \"${t.name}.${f.name}\" must not begin with \"__\".`);",
+    "nextText": "for (const a of f.args.values()) if (known(a.type, `${t.name}.${f.name}(${a.name}:)`) && !isInput(named(a.type))) errors.push(`The type of ${t.name}.${f.name}(${a.name}:) must be an input type.`);"
+  },
+  "mayEdit": [
+    "intent/blocks/graphql-schema/graphql-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-1279.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"graphql-schema\". Mutant: line 855:27-855:48, mutator StringLiteral: \"`${t.name}.${f.name}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/graphql-schema/index.ts (> marks the mutated line):\n   849    for (const t of types.values()) {\n   850      if (t.name.startsWith('__') && !INTROSPECTION.includes(`type ${t.name} `) && !INTROSPECTION.includes(`enum ${t.name} `)) errors.push(`Name \"${t.name}\" must not begin with \"__\".`);\n   851      if (t.kind === 'object' || t.kind === 'interface') {\n   852        if (t.fields.size === 0) errors.push(`Type ${t.name} must define one or more fields.`);\n   853        for (const f of t.fields.values()) {\n   854          if (f.name.startsWith('__') && !t.name.startsWith('__')) errors.push(`Name \"${t.name}.${f.name}\" must not begin with \"__\".`);\n>  855          if (known(f.type, `${t.name}.${f.name}`) && !isOutput(named(f.type))) errors.push(`The type of ${t.name}.${f.name} must be an output type.`);\n   856          for (const a of f.args.values()) if (known(a.type, `${t.name}.${f.name}(${a.name}:)`) && !isInput(named(a.type))) errors.push(`The type of ${t.name}.${f.name}(${a.name}:) must be an input type.`);\n   857        }\n   858        for (const iname of t.interfaces) {\n   859          const it = types.get(iname);\n   860          if (!it) errors.push(`Type ${t.name} implements unknown type ${iname}.`);\n   861          else if (it.kind !== 'interface') errors.push(`Type ${t.name} must only implement interface types, it cannot implement ${iname}.`);\n\nTest file style (intent/blocks/graphql-schema/graphql-schema.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { GraphQLError, GraphQLSyntaxError, analyze, buildSchema, execute, parse, plan, validate } from './index.ts';\nimport type { Schema } from './index.ts';\n\nconst SDL = `\n  \"\"\"The root.\"\"\"\n  type Query {\n    hello(name: String = \"world\"): String!\n    user(id: ID!): User\n    users(first: Int, after: String): [User!]!\n    search(text: String!): [SearchResult!]!\n    node(id: ID!): Node\n    flaky: String\n    must: String!\n    items: [Int!]\n    nested: Outer\n  }\n  type Mutation { bump(by: Int = 1): Int! rename(id: ID!, input: RenameInput!): User }\n  directive @auth(role: String!) on FIELD_DEFINITION\n  interface Node { id: ID! }\n  type User implements Node {\n    id: ID!\n    name: String\n    email: String @deprecated(reason: \"use contact\")\n    role: Role!\n    friends(first: Int): [User!]\n    posts(limit: Int = 20): [Post!]! @cost(value: 2, multipliers: [\"limit\"])\n  }\n  type Post implements Node { id: ID! title: String! author: User }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-1279.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:42.371Z"
+}

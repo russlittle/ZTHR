@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "automation-engine",
+  "mutant": {
+    "id": "1244",
+    "line": 690,
+    "column": 21,
+    "endLine": 690,
+    "endColumn": 57,
+    "mutator": "ConditionalExpression",
+    "original": "to === undefined || to.trim() === ''",
+    "replacement": "false",
+    "lineText": "const n = to === undefined || to.trim() === '' ? NaN : Number(to);",
+    "prevText": "if (t.platform === 'numeric_state' && t.entity === entity) {",
+    "nextText": "const inside = !Number.isNaN(n) && (t.above === undefined || n > t.above) && (t.below === undefined || n < t.below);"
+  },
+  "mayEdit": [
+    "intent/blocks/automation-engine/automation-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-1244.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"automation-engine\". Mutant: line 690:21-690:57, mutator ConditionalExpression: \"to === undefined || to.trim() === ''\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/automation-engine/index.ts (> marks the mutated line):\n   684            if (t.forSeconds && t.forSeconds > 0) {\n   685              this.cancelHold(a.id, index);\n   686              this.holds.push({ auto: a, trigger: t, index, due: this.env.now() + t.forSeconds * 1000, vars });\n   687            } else out.push(this.fire(a, vars));\n   688          }\n   689          if (t.platform === 'numeric_state' && t.entity === entity) {\n>  690            const n = to === undefined || to.trim() === '' ? NaN : Number(to);\n   691            const inside = !Number.isNaN(n) && (t.above === undefined || n > t.above) && (t.below === undefined || n < t.below);\n   692            const was = this.lastNumeric.get(key) ?? false;\n   693            this.lastNumeric.set(key, inside);\n   694            if (inside && !was) out.push(this.fire(a, this.triggerVars(t, index, { entity_id: entity, from_state: from, to_state: to, ...extra })));\n   695          }\n   696        });\n\nTest file style (intent/blocks/automation-engine/automation-engine.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AutomationError, Engine, TemplateError, evaluate, render, renderData } from './index.ts';\nimport type { Automation } from './index.ts';\n\nconst flush = () => new Promise<void>((r) => setImmediate(r));\n\nfunction rig(start = Date.UTC(2026, 0, 5, 12, 0, 0), offsetMinutes = 0) {\n  const states = new Map<string, string>();\n  const calls: { service: string; data: Record<string, unknown> }[] = [];\n  const events: { type: string; data: unknown }[] = [];\n  const clock = { now: start };\n  let n = 0;\n  const engine = new Engine({\n    now: () => clock.now,\n    state: (e) => states.get(e),\n    call: async (service, data) => {\n      calls.push({ service, data: { ...data } });\n      return { ok: true, service };\n    },\n    fire: (type, data) => events.push({ type, data }),\n    newId: () => `run${++n}`,\n    zoneOffsetMinutes: () => offsetMinutes,\n  });\n  return { engine, states, calls, events, clock };\n}\n\nconst lamp: Automation = {\n  id: 'a1',\n  alias: 'Lamp',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-1244.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.869Z"
+}

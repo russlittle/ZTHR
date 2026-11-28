@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "assignment-rules",
+  "mutant": {
+    "id": "331",
+    "line": 251,
+    "column": 51,
+    "endLine": 251,
+    "endColumn": 104,
+    "mutator": "StringLiteral",
+    "original": "`has ${need.join(', ')} with the fewest other skills`",
+    "replacement": "``",
+    "lineText": "return { agent: a, because: need.length ? `has ${need.join(', ')} with the fewest other skills` : 'no skills needed; fewest other skills' };",
+    "prevText": "const a = [...eligible].sort((x, y) => (x.skills?.length ?? 0) - (y.skills?.length ?? 0) || ratio(x) - ratio(y) || leastRecent(x, y) || byId(x, y))[0]!;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/assignment-rules/assignment-rules.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/assignment-rules-331.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"assignment-rules\". Mutant: line 251:51-251:104, mutator StringLiteral: \"`has ${need.join(', ')} with the fewest other skills`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/assignment-rules/index.ts (> marks the mutated line):\n   245          const a = [...eligible].sort((x, y) => ratio(x) - ratio(y) || leastRecent(x, y) || byId(x, y))[0]!;\n   246          return { agent: a, because: `least loaded (${this.open(a.id)} of ${a.capacity})` };\n   247        }\n   248        case 'skills': {\n   249          const need = item.needs ?? [];\n   250          const a = [...eligible].sort((x, y) => (x.skills?.length ?? 0) - (y.skills?.length ?? 0) || ratio(x) - ratio(y) || leastRecent(x, y) || byId(x, y))[0]!;\n>  251          return { agent: a, because: need.length ? `has ${need.join(', ')} with the fewest other skills` : 'no skills needed; fewest other skills' };\n   252        }\n   253        case 'weighted': {\n   254          const free = eligible.map((a) => (a.weight ?? 1) * (a.capacity - this.open(a.id)));\n   255          const total = free.reduce((s, x) => s + x, 0);\n   256          let r = random() * total;\n   257          for (const [i, a] of eligible.entries()) {\n\nTest file style (intent/blocks/assignment-rules/assignment-rules.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Forbidden } from '../rbac/index.ts';\nimport type { Policy } from '../rbac/index.ts';\nimport { AssignmentError, Assigner, checkRules, matches, onShift } from './index.ts';\nimport type { Agent, Item, Rule } from './index.ts';\n\nconst MON_10 = Date.UTC(2026, 0, 5, 10, 0); // Monday 10:00 UTC\nconst item = (id: string, fields: Item['fields'] = {}, needs?: string[]): Item => ({ id, fields, ...(needs ? { needs } : {}) });\nconst agent = (id: string, over: Partial<Agent> = {}): Agent => ({ id, capacity: 3, teams: ['support'], ...over });\nconst rr: Rule = { id: 'all', pool: { team: 'support' }, strategy: 'round-robin' };\nconst policy: Policy = { roles: { lead: { label: 'Lead' }, agent: { label: 'Agent' } }, grants: [{ role: 'lead', kind: 'assignment', actions: ['override'] }] };\n\ntest('round robin goes in id order, wraps, and skips whoever cannot take it', () => {\n  const a = new Assigner([rr]);\n  const team = [agent('c'), agent('a'), agent('b', { available: false })];\n  const got = ['1', '2', '3', '4'].map((i) => a.assign(item(i), team, MON_10).agent);\n  assert.deepEqual(got, ['a', 'c', 'a', 'c']);\n});\n\ntest('every person passed over is listed with the reason', () => {\n  const a = new Assigner([rr]);\n  const team = [agent('a', { available: false }), agent('b', { shifts: [{ days: [2], from: '09:00', to: '17:00' }] }), agent('c', { capacity: 0 }), agent('d')];\n  const o = a.assign(item('x'), team, MON_10);\n  assert.equal(o.agent, 'd');\n  assert.deepEqual(o.passedOver, [{ agent: 'a', reason: 'marked unavailable' }, { agent: 'b', reason: 'off shift' }, { agent: 'c', reason: 'at capacity (0 of 0)' }]);\n});\n\ntest('nobody can take it: no agent, and why', () => {\n  const a = new Assigner([rr]);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/assignment-rules-331.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.357Z"
+}

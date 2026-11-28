@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf-sign",
+  "mutant": {
+    "id": "140",
+    "line": 130,
+    "column": 12,
+    "endLine": 130,
+    "endColumn": 28,
+    "mutator": "ConditionalExpression",
+    "original": "i < v.length - 1",
+    "replacement": "true",
+    "lineText": "while (i < v.length - 1 && v[i] === 0) i++;",
+    "prevText": "let i = 0;",
+    "nextText": "b = v.subarray(i);"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf-sign/pdf-sign.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-sign-140.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf-sign\". Mutant: line 130:12-130:28, mutator ConditionalExpression: \"i < v.length - 1\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf-sign/index.ts (> marks the mutated line):\n   124        bytes.unshift(Number(n & 0xffn));\n   125        n >>= 8n;\n   126      } while (n > 0n);\n   127      b = Uint8Array.from(bytes);\n   128    } else {\n   129      let i = 0;\n>  130      while (i < v.length - 1 && v[i] === 0) i++;\n   131      b = v.subarray(i);\n   132    }\n   133    return tlv(0x02, b[0]! & 0x80 ? concat([Uint8Array.of(0), b]) : b);\n   134  }\n   135  \n   136  const asciiTime = (d: Date): string => d.toISOString().replace(/[-:T]/g, '').slice(0, 14);\n\nTest file style (intent/blocks/pdf-sign/pdf-sign.test.ts):\n38 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { X509Certificate, createHash, generateKeyPairSync } from 'node:crypto';\nimport type { KeyObject } from 'node:crypto';\nimport { deflateSync } from 'node:zlib';\nimport { pdf } from '../pdf/index.ts';\nimport {\n  PdfSignError, embedSignature, issueCertificate, integer, keySigner, name, cmsParts, oid, oidOf, octets, parseDer, parseDerPadded, prepareSignature, readDoc, pageRefs, seq, serialize, setOf, signPdf, signedBytes, textOf, textString, tlv, utf8, verifyPdf,\n} from './index.ts';\nimport type { Der, Signer, SignOptions } from './index.ts';\nimport { test } from 'node:test';\n\nconst hex = (b: Uint8Array) => Buffer.from(b).toString('hex');\nconst NOW = new Date('2026-06-15T12:00:00Z');\nconst SIGNED_AT = new Date('2026-06-15T11:30:00Z');\nconst YEAR = 365 * 86_400_000;\n\n// Keys are made once, at run time; nothing secret is written in this file.\nconst rsaKeys = generateKeyPairSync('rsa', { modulusLength: 2048 });\nconst ecKeys = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });\nconst ec384 = generateKeyPairSync('ec', { namedCurve: 'secp384r1' });\nconst caKeys = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });\n\nconst cert = (cn: string, k: { publicKey: KeyObject; privateKey: KeyObject }, over: { from?: Date; to?: Date; serial?: number } = {}) =>\n  issueCertificate({ commonName: cn, publicKey: k.publicKey, privateKey: k.privateKey, serial: over.serial ?? 1001, notBefore: over.from ?? new Date(NOW.getTime() - YEAR), notAfter: over.to ?? new Date(NOW.getTime() + YEAR) });\n\nconst rsaCert = cert('Ana Rivera', rsaKeys);\nconst ecCert = cert('Bo Chen', ecKeys, { serial: 2002 });\nconst rsaSigner: Signer = keySigner(rsaKeys.privateKey, rsaCert);\nconst ecSigner: Signer = keySigner(ecKeys.privateKey, ecCert);\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-sign-140.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:54.761Z"
+}

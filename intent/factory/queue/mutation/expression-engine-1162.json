@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "expression-engine",
+  "mutant": {
+    "id": "1162",
+    "line": 488,
+    "column": 60,
+    "endLine": 488,
+    "endColumn": 78,
+    "mutator": "EqualityOperator",
+    "original": "a[1] === undefined",
+    "replacement": "a[1] !== undefined",
+    "lineText": "parseInt: new Fn('parseInt', (a) => parseInt(show(a[0]), a[1] === undefined ? 10 : num(a[1], 'parseInt'))),",
+    "prevText": "Boolean: new Fn('Boolean', (a) => truthy(a[0])),",
+    "nextText": "parseFloat: new Fn('parseFloat', (a) => parseFloat(show(a[0]))),"
+  },
+  "mayEdit": [
+    "intent/blocks/expression-engine/expression-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1162.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"expression-engine\". Mutant: line 488:60-488:78, mutator EqualityOperator: \"a[1] === undefined\" becomes \"a[1] !== undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/expression-engine/index.ts (> marks the mutated line):\n   482    values: new Fn('values', (a, rt) => (a[0] && typeof a[0] === 'object' && !Array.isArray(a[0]) ? rt.arr(Object.values(checkData(a[0]) as object)) : [])),\n   483    entries: new Fn('entries', (a, rt) => (a[0] && typeof a[0] === 'object' && !Array.isArray(a[0]) ? rt.arr(Object.entries(checkData(a[0]) as object)) : [])),\n   484    range: new Fn('range', (a, rt) => { const lo = a.length > 1 ? num(a[0], 'range') : 0; const hi = num(a.length > 1 ? a[1] : a[0], 'range'); const st = a[2] === undefined ? 1 : num(a[2], 'range'); if (st === 0) throw err('range needs a step other than 0'); rt.alloc(Math.max(0, Math.ceil((hi - lo) / st))); const out: number[] = []; for (let i = lo; st > 0 ? i < hi : i > hi; i += st) out.push(i); return out; }),\n   485    String: new Fn('String', (a, rt) => rt.str(show(a[0]))),\n   486    Number: new Fn('Number', (a) => (typeof a[0] === 'string' && a[0].trim() === '' ? 0 : typeof a[0] === 'number' ? a[0] : typeof a[0] === 'string' || typeof a[0] === 'boolean' || a[0] === null ? Number(a[0]) : NaN)),\n   487    Boolean: new Fn('Boolean', (a) => truthy(a[0])),\n>  488    parseInt: new Fn('parseInt', (a) => parseInt(show(a[0]), a[1] === undefined ? 10 : num(a[1], 'parseInt'))),\n   489    parseFloat: new Fn('parseFloat', (a) => parseFloat(show(a[0]))),\n   490    isNaN: new Fn('isNaN', (a) => Number.isNaN(typeof a[0] === 'number' ? a[0] : Number(a[0]))),\n   491    json: new Fn('json', (a, rt) => rt.str(show(a[0]))),\n   492    isEmpty: new Fn('isEmpty', (a) => a[0] === undefined || a[0] === null || a[0] === '' || (Array.isArray(a[0]) && a[0].length === 0) || (typeof a[0] === 'object' && !Array.isArray(a[0]) && Object.keys(a[0] as object).length === 0)),\n   493  };\n   494  const BUILTIN_NAMES = new Set([...Object.keys(BUILTINS), 'now', 'undefined']);\n\nTest file style (intent/blocks/expression-engine/expression-engine.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  compile, evaluate, references, render, resolve, resolveDeep, compileTemplate,\n  ExpressionSyntaxError, ExpressionRuntimeError, ExpressionLimitError, ExpressionForbidden,\n} from './index.ts';\n\nconst ev = (s: string, ctx: unknown = {}) => evaluate(s, ctx);\n\ntest('arithmetic and precedence', () => {\n  assert.equal(ev('1 + 2 * 3'), 7);\n  assert.equal(ev('(1 + 2) * 3'), 9);\n  assert.equal(ev('2 ** 3 ** 2'), 512);\n  assert.equal(ev('10 % 4'), 2);\n  assert.equal(ev('-3 + 5'), 2);\n});\n\ntest('strings, concatenation and comparison', () => {\n  assert.equal(ev('\"a\" + \"b\" + 1'), 'ab1');\n  assert.equal(ev('\"abc\" < \"abd\"'), true);\n  assert.equal(ev('1 === 1 && 2 !== 3'), true);\n});\n\ntest('logic operators return operands', () => {\n  assert.equal(ev('0 || \"x\"'), 'x');\n  assert.equal(ev('\"a\" && \"b\"'), 'b');\n  assert.equal(ev('null ?? 5'), 5);\n  assert.equal(ev('0 ?? 5'), 0);\n  assert.equal(ev('true ? 1 : 2'), 1);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1162.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.825Z"
+}

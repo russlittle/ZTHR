@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "sketches",
+  "mutant": {
+    "id": "855",
+    "line": 541,
+    "column": 28,
+    "endLine": 541,
+    "endColumn": 39,
+    "mutator": "ArithmeticOperator",
+    "original": "2 ** 31 - 1",
+    "replacement": "2 ** 31 + 1",
+    "lineText": "if (bits < 8 || bits > 2 ** 31 - 1 || hashes < 1 || hashes > 64) throw new SketchError('the saved Bloom filter has an impossible shape');",
+    "prevText": "const seed = r.u32();",
+    "nextText": "const raw = r.bytes(Math.ceil(bits / 32) * 4);"
+  },
+  "mayEdit": [
+    "intent/blocks/sketches/sketches.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/sketches-855.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"sketches\". Mutant: line 541:28-541:39, mutator ArithmeticOperator: \"2 ** 31 - 1\" becomes \"2 ** 31 + 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/sketches/index.ts (> marks the mutated line):\n   535    static load(buf: Uint8Array): BloomFilter {\n   536      const r = new Reader(buf, 'Bloom filter');\n   537      r.tag('BLM1', 1);\n   538      const bits = r.u32();\n   539      const hashes = r.u8();\n   540      const seed = r.u32();\n>  541      if (bits < 8 || bits > 2 ** 31 - 1 || hashes < 1 || hashes > 64) throw new SketchError('the saved Bloom filter has an impossible shape');\n   542      const raw = r.bytes(Math.ceil(bits / 32) * 4);\n   543      r.done();\n   544      const words = new Uint32Array(Math.ceil(bits / 32));\n   545      const dv = new DataView(raw.buffer, raw.byteOffset, raw.byteLength);\n   546      for (let i = 0; i < words.length; i++) words[i] = dv.getUint32(i * 4);\n   547      const spare = words.length * 32 - bits;\n\nTest file style (intent/blocks/sketches/sketches.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BloomFilter, CountMin, HyperLogLog, SketchError, TDigest, hash64 } from './index.ts';\n\nconst within = (got: number, want: number, rel: number, what: string) => assert.ok(Math.abs(got - want) <= want * rel, `${what}: got ${got}, wanted ${want} within ${rel * 100}%`);\n\ntest('the hash is SHA-256 of the seed then the item, so it is the same everywhere', () => {\n  // sha256(00000000 || \"abc\") = 0a834ab0 4b1628b0 b4ec20ca ..., computed independently with openssl.\n  assert.deepEqual(hash64('abc'), { hi: 0x0a834ab0, lo: 0x4b1628b0 });\n  assert.deepEqual(hash64('abc'), hash64(new TextEncoder().encode('abc')));\n  assert.notDeepEqual(hash64('abc', 1), hash64('abc', 0));\n  assert.deepEqual(hash64('abc', 5), hash64('abc', 5));\n});\n\ntest('HyperLogLog: small sets are counted exactly, large ones within a few standard errors', () => {\n  const h = new HyperLogLog(14);\n  assert.equal(h.count(), 0);\n  for (let i = 0; i < 10; i++) h.add(`user-${i}`);\n  assert.equal(h.count(), 10);\n  for (let i = 0; i < 10; i++) h.add(`user-${i}`);\n  assert.equal(h.count(), 10, 'seeing the same ones again changes nothing');\n  const big = new HyperLogLog(14);\n  for (let i = 0; i < 200_000; i++) big.add(`id-${i}`);\n  within(big.count(), 200_000, 3 * big.standardError, '200k distinct');\n  assert.equal(big.registers, 16384);\n  assert.ok(Math.abs(big.standardError - 0.0081) < 0.0001);\n});\n\ntest('HyperLogLog: precision trades memory for error', () => {\n  const lo = new HyperLogLog(6);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/sketches-855.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.220Z"
+}

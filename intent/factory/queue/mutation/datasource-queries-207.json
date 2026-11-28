@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "datasource-queries",
+  "mutant": {
+    "id": "207",
+    "line": 220,
+    "column": 222,
+    "endLine": 220,
+    "endColumn": 224,
+    "mutator": "UnaryOperator",
+    "original": "-1",
+    "replacement": "+1",
+    "lineText": "const stable = (x: unknown): string => JSON.stringify(x, (_k, val) => (val && typeof val === 'object' && !Array.isArray(val) ? Object.fromEntries(Object.entries(val as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : 1))) : val));",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/datasource-queries/datasource-queries.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-207.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"datasource-queries\". Mutant: line 220:222-220:224, mutator UnaryOperator: \"-1\" becomes \"+1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/datasource-queries/index.ts (> marks the mutated line):\n   214      }\n   215      return { column: w.column, op: w.op, value: a as Scalar | readonly Scalar[] };\n   216    }\n   217    return { column: w.column, op: w.op, ...(val !== undefined ? { value: val as Scalar | readonly Scalar[] } : {}) };\n   218  }\n   219  \n>  220  const stable = (x: unknown): string => JSON.stringify(x, (_k, val) => (val && typeof val === 'object' && !Array.isArray(val) ? Object.fromEntries(Object.entries(val as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : 1))) : val));\n   221  \n   222  export interface EngineOptions {\n   223    readonly signingKey: Uint8Array | string;\n   224    readonly now?: () => number;\n   225    readonly defaultTtlMs?: number;\n   226  }\n\nTest file style (intent/blocks/datasource-queries/datasource-queries.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { randomBytes } from 'node:crypto';\nimport { Engine, QueryDefError, BadArguments, Forbidden, BadCursor } from './index.ts';\nimport type { DataSource, Session } from './index.ts';\nimport type { Built } from '../sql-builder/index.ts';\nimport type { Collection } from '../query/index.ts';\n\nconst collections: Collection[] = [\n  { name: 'orders', fields: { id: { type: 'number' }, owner_id: { type: 'string' }, status: { type: 'string' }, total: { type: 'number' }, created: { type: 'date' }, note: { type: 'string', sensitive: true } } },\n  { name: 'customers', fields: { id: { type: 'number' }, name: { type: 'string' }, email: { type: 'string' } } },\n];\nconst ana: Session = { user: 'ana', roles: ['sales'], attrs: { team: 'north' } };\nconst boss: Session = { user: 'boss', roles: ['manager'] };\nconst nobody: Session = { user: 'x', roles: [] };\n\nfunction setup(rowsFor: (b: Built, n: number) => Record<string, unknown>[] = () => []) {\n  const calls: Built[] = [];\n  const src: DataSource = {\n    name: 'main',\n    dialect: 'pg',\n    collections,\n    policy: {\n      orders: { roles: ['sales', 'manager'], columns: { sales: ['id', 'status', 'total', 'created', 'owner_id'] }, rowFilter: (s) => (s.roles.includes('manager') ? undefined : { column: 'owner_id', op: '=', value: s.user }) },\n      customers: { roles: ['sales', 'manager'], columns: { sales: ['id', 'name'] } },\n    },\n    run: async (b) => {\n      calls.push(b);\n      return rowsFor(b, calls.length);\n    },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-207.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.936Z"
+}

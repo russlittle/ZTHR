@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "formula-engine",
+  "mutant": {
+    "id": "591",
+    "line": 346,
+    "column": 7,
+    "endLine": 346,
+    "endColumn": 16,
+    "mutator": "Regex",
+    "original": "/^true$/i",
+    "replacement": "/true$/i",
+    "lineText": "if (/^true$/i.test(v.trim())) return true;",
+    "prevText": "if (isError(v)) return v;",
+    "nextText": "if (/^false$/i.test(v.trim())) return false;"
+  },
+  "mayEdit": [
+    "intent/blocks/formula-engine/formula-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/formula-engine-591.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"formula-engine\". Mutant: line 346:7-346:16, mutator Regex: \"/^true$/i\" becomes \"/true$/i\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/formula-engine/index.ts (> marks the mutated line):\n   340  }\n   341  function toBool(v: Scalar): boolean | FormulaError {\n   342    if (typeof v === 'boolean') return v;\n   343    if (typeof v === 'number') return v !== 0;\n   344    if (v === null) return false;\n   345    if (isError(v)) return v;\n>  346    if (/^true$/i.test(v.trim())) return true;\n   347    if (/^false$/i.test(v.trim())) return false;\n   348    return E.value;\n   349  }\n   350  const rank = (v: Scalar) => (typeof v === 'number' ? 1 : typeof v === 'string' ? 2 : 3);\n   351  /** Excel's ordering: numbers, then text (case-blind), then booleans; a blank takes the type of what it meets. */\n   352  export function compare(a: Scalar, b: Scalar): number {\n\nTest file style (intent/blocks/formula-engine/formula-engine.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { calc, colName, colNumber, compare, dateOf, display, formatText, FormulaError, FormulaSyntaxError, FUNCTIONS, fromTyped, isError, parse, parseRef, serialOf, Workbook, type Scalar } from './index.ts';\n\nconst clock = { now: () => new Date('2026-03-09T15:30:00Z'), random: () => 0.25 };\nconst c = (f: string, cells: Record<string, Scalar> = {}) => {\n  const v = calc(f, cells, { clock });\n  return isError(v) ? v.code : v;\n};\n\ntest('operators follow Excel precedence and associativity', () => {\n  assert.equal(c('=-2^2'), 4, 'unary minus binds tighter than ^');\n  assert.equal(c('=2^3^2'), 64, '^ is left to right');\n  assert.equal(c('=2+3*4'), 14);\n  assert.equal(c('=(2+3)*4'), 20);\n  assert.equal(c('=7-2-1'), 4);\n  assert.equal(c('=10/4'), 2.5);\n  assert.equal(c('=50%'), 0.5);\n  assert.equal(c('=200*10%'), 20);\n  assert.equal(c('=2^-1'), 0.5);\n  assert.equal(c('=\"a\"&\"b\"&1'), 'ab1');\n  assert.equal(c('=1+2&\"x\"'), '3x', '+ before &');\n  assert.equal(c('=1+1=2'), true, 'comparison last');\n  assert.equal(c('= 1 + 2 '), 3, 'spaces are ignored');\n  assert.equal(c('=1.5e2+.5'), 150.5);\n  assert.equal(c('=\"say \"\"hi\"\"\"'), 'say \"hi\"');\n});\n\ntest('errors are values that travel, and IFERROR catches them', () => {\n  assert.equal(c('=1/0'), '#DIV/0!');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/formula-engine-591.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.513Z"
+}

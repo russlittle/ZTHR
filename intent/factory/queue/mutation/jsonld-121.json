@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "jsonld",
+  "mutant": {
+    "id": "121",
+    "line": 81,
+    "column": 8,
+    "endLine": 81,
+    "endColumn": 43,
+    "mutator": "ObjectLiteral",
+    "original": "{ '@id': 'as:url', '@type': '@id' }",
+    "replacement": "{}",
+    "lineText": "url: { '@id': 'as:url', '@type': '@id' },",
+    "prevText": "target: ref('as:target'),",
+    "nextText": "orderedItems: refs('as:items', { '@container': '@list' }),"
+  },
+  "mayEdit": [
+    "intent/blocks/jsonld/jsonld.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/jsonld-121.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"jsonld\". Mutant: line 81:8-81:43, mutator ObjectLiteral: \"{ '@id': 'as:url', '@type': '@id' }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/jsonld/index.ts (> marks the mutated line):\n    75    preview: ref('as:preview'),\n    76    replies: ref('as:replies'),\n    77    result: ref('as:result'),\n    78    partOf: ref('as:partOf'),\n    79    tag: ref('as:tag'),\n    80    target: ref('as:target'),\n>   81    url: { '@id': 'as:url', '@type': '@id' },\n    82    orderedItems: refs('as:items', { '@container': '@list' }),\n    83    content: 'as:content',\n    84    contentMap: { '@id': 'as:content', '@container': '@language' },\n    85    name: 'as:name',\n    86    nameMap: { '@id': 'as:name', '@container': '@language' },\n    87    summary: 'as:summary',\n\nTest file style (intent/blocks/jsonld/jsonld.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  AS, AS_PUBLIC, ContextLoader, FEDERATION_CONTEXT, JsonLdError, SECURITY, assertSameOrigin, asArray, compact, expand, hasType, idOf, idsOf, normalise, typesOf, type Json,\n} from './index.ts';\n\nconst code = (c: string) => (e: unknown) => e instanceof JsonLdError && e.code === c;\n\nconst mastodonNote = (): Json => ({\n  '@context': [AS, SECURITY, { toot: 'http://joinmastodon.org/ns#', sensitive: 'as:sensitive', Hashtag: 'as:Hashtag', discoverable: 'toot:discoverable' }],\n  id: 'https://remote.example/users/ana/statuses/1/activity',\n  type: 'Create',\n  actor: 'https://remote.example/users/ana',\n  published: '2024-05-01T12:00:00Z',\n  to: [AS_PUBLIC],\n  cc: ['https://remote.example/users/ana/followers'],\n  object: {\n    id: 'https://remote.example/users/ana/statuses/1',\n    type: 'Note',\n    attributedTo: 'https://remote.example/users/ana',\n    content: '<p>Hello</p>',\n    contentMap: { en: '<p>Hello</p>', fr: '<p>Bonjour</p>' },\n    sensitive: false,\n    tag: [{ type: 'Hashtag', href: 'https://remote.example/tags/hi', name: '#hi' }],\n  },\n});\n\ntest('expansion gives full IRIs, arrays everywhere, and typed values and references', async () => {\n  const [a] = await expand(mastodonNote());\n  const AS_NS = 'https://www.w3.org/ns/activitystreams#';\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/jsonld-121.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:45.762Z"
+}

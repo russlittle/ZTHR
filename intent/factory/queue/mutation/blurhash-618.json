@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "blurhash",
+  "mutant": {
+    "id": "618",
+    "line": 312,
+    "column": 82,
+    "endLine": 312,
+    "endColumn": 102,
+    "mutator": "ArithmeticOperator",
+    "original": "(PI / h) * (y + 0.5)",
+    "replacement": "PI / h / (y + 0.5)",
+    "lineText": "for (let cy = 0, n = max(ly, hasAlpha ? 5 : 3); cy < n; cy++) fy[cy] = cos((PI / h) * (y + 0.5) * cy);",
+    "prevText": "for (let cx = 0, n = max(lx, hasAlpha ? 5 : 3); cx < n; cx++) fx[cx] = cos((PI / w) * (x + 0.5) * cx);",
+    "nextText": "for (let cy = 0, j = 0; cy < ly; cy++) for (let cx = cy ? 0 : 1, fy2 = (fy[cy] as number) * 2; cx * ly < lx * (ly - cy); cx++, j++) l += (lAc[j] as number) * (fx[cx] as number) * fy2;"
+  },
+  "mayEdit": [
+    "intent/blocks/blurhash/blurhash.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/blurhash-618.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"blurhash\". Mutant: line 312:82-312:102, mutator ArithmeticOperator: \"(PI / h) * (y + 0.5)\" becomes \"PI / h / (y + 0.5)\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/blurhash/index.ts (> marks the mutated line):\n   306    const fx: number[] = [];\n   307    const fy: number[] = [];\n   308    for (let y = 0, i = 0; y < h; y++) {\n   309      for (let x = 0; x < w; x++, i += 4) {\n   310        let l = lDc, p = pDc, q = qDc, a = aDc;\n   311        for (let cx = 0, n = max(lx, hasAlpha ? 5 : 3); cx < n; cx++) fx[cx] = cos((PI / w) * (x + 0.5) * cx);\n>  312        for (let cy = 0, n = max(ly, hasAlpha ? 5 : 3); cy < n; cy++) fy[cy] = cos((PI / h) * (y + 0.5) * cy);\n   313        for (let cy = 0, j = 0; cy < ly; cy++) for (let cx = cy ? 0 : 1, fy2 = (fy[cy] as number) * 2; cx * ly < lx * (ly - cy); cx++, j++) l += (lAc[j] as number) * (fx[cx] as number) * fy2;\n   314        for (let cy = 0, j = 0; cy < 3; cy++) {\n   315          for (let cx = cy ? 0 : 1, fy2 = (fy[cy] as number) * 2; cx < 3 - cy; cx++, j++) {\n   316            const f = (fx[cx] as number) * fy2;\n   317            p += (pAc[j] as number) * f;\n   318            q += (qAc[j] as number) * f;\n\nTest file style (intent/blocks/blurhash/blurhash.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  blurhashColour, blurhashDecode, blurhashEncode, blurhashInfo, decode83, downscale, encode83, fromBase64, HashError, thumbhashAspectRatio, thumbhashColour, thumbhashDecode, thumbhashEncode, toBase64,\n} from './index.ts';\n\nfunction solid(w: number, h: number, r: number, g: number, b: number, a = 255): Uint8ClampedArray {\n  const px = new Uint8ClampedArray(w * h * 4);\n  for (let i = 0; i < w * h; i++) px.set([r, g, b, a], i * 4);\n  return px;\n}\n/** Red on the left to blue on the right. */\nfunction gradient(w: number, h: number): Uint8ClampedArray {\n  const px = new Uint8ClampedArray(w * h * 4);\n  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) px.set([Math.round(255 * (1 - x / (w - 1))), 20, Math.round(255 * (x / (w - 1))), 255], (y * w + x) * 4);\n  return px;\n}\nconst at = (b: { width: number; pixels: Uint8ClampedArray }, x: number, y: number) => Array.from(b.pixels.subarray((y * b.width + x) * 4, (y * b.width + x) * 4 + 4));\n\n// ------------------------------------------------------------ blurhash\n\ntest('base 83 uses the published alphabet and round trips', () => {\n  assert.equal(decode83('0'), 0);\n  assert.equal(decode83('~'), 82);\n  assert.equal(decode83('10'), 83);\n  assert.equal(encode83(16711680, 4), 'TI:j');\n  assert.equal(decode83('TI:j'), 16711680);\n  assert.equal(encode83(0, 2), '00');\n  for (const n of [1, 82, 83, 6888, 6889, 571786, 571787]) assert.equal(decode83(encode83(n, 4)), n);\n  assert.throws(() => decode83('a b'), /not a base 83 character/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/blurhash-618.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.157Z"
+}

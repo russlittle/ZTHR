@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "snapshot-restore",
+  "mutant": {
+    "id": "158",
+    "line": 141,
+    "column": 66,
+    "endLine": 141,
+    "endColumn": 92,
+    "mutator": "ConditionalExpression",
+    "original": "typeof s.root !== 'string'",
+    "replacement": "false",
+    "lineText": "if (!s || typeof s !== 'object' || typeof s.id !== 'string' || typeof s.root !== 'string' || typeof s.collections !== 'object' || s.collections === null) throw new SnapshotError('that is not a snapshot');",
+    "prevText": "try { s = JSON.parse(text) as Snapshot; } catch { throw new SnapshotError('that is not a snapshot'); }",
+    "nextText": "const v = verifySnapshot(s);"
+  },
+  "mayEdit": [
+    "intent/blocks/snapshot-restore/snapshot-restore.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/snapshot-restore-158.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"snapshot-restore\". Mutant: line 141:66-141:92, mutator ConditionalExpression: \"typeof s.root !== 'string'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/snapshot-restore/index.ts (> marks the mutated line):\n   135  }\n   136  \n   137  /** Reads a serialised snapshot and refuses it if its hashes do not hold. */\n   138  export function deserialize(text: string): Snapshot {\n   139    let s: Snapshot;\n   140    try { s = JSON.parse(text) as Snapshot; } catch { throw new SnapshotError('that is not a snapshot'); }\n>  141    if (!s || typeof s !== 'object' || typeof s.id !== 'string' || typeof s.root !== 'string' || typeof s.collections !== 'object' || s.collections === null) throw new SnapshotError('that is not a snapshot');\n   142    const v = verifySnapshot(s);\n   143    if (!v.ok) throw new SnapshotError(`the snapshot is damaged: ${v.problems[0]}`);\n   144    return s;\n   145  }\n   146  \n   147  // ---------------------------------------------------------------- the history of snapshots\n\nTest file style (intent/blocks/snapshot-restore/snapshot-restore.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { digest, memoryStore } from '../backups/index.ts';\nimport type { Data } from '../backups/index.ts';\nimport { SnapshotError, SnapshotLog, applyPlan, deserialize, diff, matchesSnapshot, planRestore, serialize, snapshotOf, takeSnapshot, verifySnapshot } from './index.ts';\n\nconst T = (s: string) => new Date(`2026-11-${s}T10:00:00Z`);\nconst base = (): Record<string, Record<string, unknown>[]> => ({\n  users: [{ id: 'u1', name: 'Ana', role: 'admin', updatedAt: '2026-11-01' }, { id: 'u2', name: 'Bo', role: 'user', updatedAt: '2026-11-01' }, { id: 'u3', name: 'Cy', role: 'user', updatedAt: '2026-11-01' }],\n  posts: [{ id: 1, author: 'u1', title: 'Hello' }, { id: 2, author: 'u2', title: 'World' }],\n  sessions: [{ id: 's1', token: 'secret' }],\n});\nconst KEYS = {};\n\ntest('a snapshot keeps every row by key with its hash, and its collection hash is the backups block digest', () => {\n  const s = snapshotOf(base(), { at: T('01'), id: 'a' });\n  assert.deepEqual(Object.keys(s.collections).sort(), ['posts', 'sessions', 'users']);\n  assert.deepEqual(Object.keys(s.collections.users!.rows), ['u1', 'u2', 'u3']);\n  assert.deepEqual(Object.keys(s.collections.posts!.rows), ['1', '2'], 'numeric keys are kept as text');\n  assert.deepEqual(s.collections.users!.digest, digest(base()).users);\n  assert.match(s.root, /^[0-9a-f]{64}$/);\n  assert.equal(s.at, '2026-11-01T10:00:00.000Z');\n  assert.equal(snapshotOf(base(), { at: T('01'), id: 'a' }).root, s.root, 'the same data gives the same root');\n  const reordered = base();\n  reordered.users = [...reordered.users!].reverse();\n  assert.equal(snapshotOf(reordered, { at: T('01'), id: 'a' }).root, s.root, 'row order does not matter');\n});\n\ntest('exclusions and omitted fields keep secrets and noise out of a snapshot', () => {\n  const s = snapshotOf(base(), { at: T('01'), exclude: ['sessions'], omitFields: ['users.role'] });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/snapshot-restore-158.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:04.177Z"
+}

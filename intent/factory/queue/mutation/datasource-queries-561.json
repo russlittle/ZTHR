@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "datasource-queries",
+  "mutant": {
+    "id": "561",
+    "line": 379,
+    "column": 21,
+    "endLine": 379,
+    "endColumn": 32,
+    "mutator": "MethodExpression",
+    "original": "nm.slice(8)",
+    "replacement": "nm",
+    "lineText": "const k = nm.slice(8);",
+    "prevText": "if (nm.startsWith('session.')) {",
+    "nextText": "const val = k === 'user' ? s.user : s.attrs?.[k];"
+  },
+  "mayEdit": [
+    "intent/blocks/datasource-queries/datasource-queries.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-561.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"datasource-queries\". Mutant: line 379:21-379:32, mutator MethodExpression: \"nm.slice(8)\" becomes \"nm\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/datasource-queries/index.ts (> marks the mutated line):\n   373      };\n   374      for (const pc of pieces) {\n   375        if (pc.lit !== undefined) text += pc.lit;\n   376        else {\n   377          const nm = pc.param!;\n   378          if (nm.startsWith('session.')) {\n>  379            const k = nm.slice(8);\n   380            const val = k === 'user' ? s.user : s.attrs?.[k];\n   381            if (val === undefined) throw new Forbidden(`the session has no ${k}`);\n   382            text += bind(val);\n   383          } else {\n   384            const a = args[nm];\n   385            if (Array.isArray(a)) {\n\nTest file style (intent/blocks/datasource-queries/datasource-queries.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { randomBytes } from 'node:crypto';\nimport { Engine, QueryDefError, BadArguments, Forbidden, BadCursor } from './index.ts';\nimport type { DataSource, Session } from './index.ts';\nimport type { Built } from '../sql-builder/index.ts';\nimport type { Collection } from '../query/index.ts';\n\nconst collections: Collection[] = [\n  { name: 'orders', fields: { id: { type: 'number' }, owner_id: { type: 'string' }, status: { type: 'string' }, total: { type: 'number' }, created: { type: 'date' }, note: { type: 'string', sensitive: true } } },\n  { name: 'customers', fields: { id: { type: 'number' }, name: { type: 'string' }, email: { type: 'string' } } },\n];\nconst ana: Session = { user: 'ana', roles: ['sales'], attrs: { team: 'north' } };\nconst boss: Session = { user: 'boss', roles: ['manager'] };\nconst nobody: Session = { user: 'x', roles: [] };\n\nfunction setup(rowsFor: (b: Built, n: number) => Record<string, unknown>[] = () => []) {\n  const calls: Built[] = [];\n  const src: DataSource = {\n    name: 'main',\n    dialect: 'pg',\n    collections,\n    policy: {\n      orders: { roles: ['sales', 'manager'], columns: { sales: ['id', 'status', 'total', 'created', 'owner_id'] }, rowFilter: (s) => (s.roles.includes('manager') ? undefined : { column: 'owner_id', op: '=', value: s.user }) },\n      customers: { roles: ['sales', 'manager'], columns: { sales: ['id', 'name'] } },\n    },\n    run: async (b) => {\n      calls.push(b);\n      return rowsFor(b, calls.length);\n    },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-561.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.951Z"
+}

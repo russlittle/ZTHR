@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "status-pages",
+  "mutant": {
+    "id": "339",
+    "line": 299,
+    "column": 82,
+    "endLine": 299,
+    "endColumn": 92,
+    "mutator": "StringLiteral",
+    "original": "'degraded'",
+    "replacement": "\"\"",
+    "lineText": "const WORDS: Record<Status | 'unknown', string> = { ok: 'operational', degraded: 'degraded', down: 'down', unknown: 'unknown' };",
+    "prevText": "const COLOURS: Record<Status | 'unknown', string> = { ok: '#2e7d32', degraded: '#b26a00', down: '#c62828', unknown: '#5f6368' };",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/status-pages/status-pages.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/status-pages-339.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"status-pages\". Mutant: line 299:82-299:92, mutator StringLiteral: \"'degraded'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/status-pages/index.ts (> marks the mutated line):\n   293    }\n   294  }\n   295  \n   296  // ---------------------------------------------------------------- badge\n   297  \n   298  const COLOURS: Record<Status | 'unknown', string> = { ok: '#2e7d32', degraded: '#b26a00', down: '#c62828', unknown: '#5f6368' };\n>  299  const WORDS: Record<Status | 'unknown', string> = { ok: 'operational', degraded: 'degraded', down: 'down', unknown: 'unknown' };\n   300  \n   301  /** A flat two-part badge: the label on grey, the state on its colour. Text is escaped; width follows the text. */\n   302  export function badge(label: string, status: Status | 'unknown'): string {\n   303    const value = WORDS[status];\n   304    const w = (s: string) => Math.ceil(s.length * 6.4) + 12;\n   305    const lw = w(label);\n\nTest file style (intent/blocks/status-pages/status-pages.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Subscribers, StatusPageError, atomFeed, badge, badgeKeyOk, dailyBars, escapeXml, jsonFeed, monitorStatus, pageView, uptime } from './index.ts';\nimport type { Beat, Group, Incident, Monitor } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T = Date.UTC(2026, 5, 10, 12, 0, 0);\nconst beats = (...ups: boolean[]): Beat[] => ups.map((up, i) => ({ at: T - (ups.length - i) * 60_000, up, ms: 100 }));\nconst groups: Group[] = [\n  { name: 'Core', components: [{ id: 'api', name: 'API', monitors: ['m-api'] }, { id: 'web', name: 'Website', monitors: ['m-web'] }] },\n  { name: 'Extras', components: [{ id: 'mail', name: 'Email', monitors: ['m-mail'] }] },\n];\nconst inc = (over: Partial<Incident> = {}): Incident => ({ id: 'i1', title: 'API errors', components: ['api'], impact: 'degraded', updates: [{ at: T - 1000, state: 'investigating', text: 'Looking into it' }], ...over });\n\ntest('three failures in a row are down, one is degraded, and a pass after them clears it', () => {\n  assert.equal(monitorStatus(beats(true, true, false, false, false)), 'down');\n  assert.equal(monitorStatus(beats(true, true, true, false)), 'degraded');\n  assert.equal(monitorStatus(beats(false, false, false, true)), 'ok');\n  assert.equal(monitorStatus([]), 'ok');\n});\n\ntest('a slow newest answer is degraded', () => {\n  const b: Beat[] = [{ at: 1, up: true, ms: 5000 }];\n  assert.equal(monitorStatus(b), 'degraded');\n  assert.equal(monitorStatus(b, { downAfter: 3, slowMs: 6000 }), 'ok');\n});\n\ntest('beats are read newest first whatever order they arrive in', () => {\n  const b = beats(false, false, false, true).reverse();\n  assert.equal(monitorStatus(b), 'ok');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/status-pages-339.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.488Z"
+}

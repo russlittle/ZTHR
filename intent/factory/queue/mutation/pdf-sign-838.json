@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf-sign",
+  "mutant": {
+    "id": "838",
+    "line": 427,
+    "column": 77,
+    "endLine": 427,
+    "endColumn": 92,
+    "mutator": "Regex",
+    "original": "/^\\s*endstream/",
+    "replacement": "/\\s*endstream/",
+    "lineText": "if (typeof len === 'number' && len >= 0 && start + len <= bytes.length && /^\\s*endstream/.test(latin1(bytes.subarray(start + len, start + len + 16)))) raw = bytes.subarray(start, start + len);",
+    "prevText": "let raw: Uint8Array;",
+    "nextText": "else {"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf-sign/pdf-sign.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-sign-838.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf-sign\". Mutant: line 427:77-427:92, mutator Regex: \"/^\\\\s*endstream/\" becomes \"/\\\\s*endstream/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf-sign/index.ts (> marks the mutated line):\n   421  }\n   422  \n   423  function streamData(bytes: Uint8Array, d: PdfDict, start: number, doc?: { resolve(o: PdfObj | undefined): PdfObj }): Uint8Array {\n   424    let len = d.entries.get('Length');\n   425    if (doc) len = doc.resolve(len);\n   426    let raw: Uint8Array;\n>  427    if (typeof len === 'number' && len >= 0 && start + len <= bytes.length && /^\\s*endstream/.test(latin1(bytes.subarray(start + len, start + len + 16)))) raw = bytes.subarray(start, start + len);\n   428    else {\n   429      const end = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.length).indexOf('endstream', start, 'latin1');\n   430      if (end < 0) throw new PdfSignError('a stream has no end');\n   431      raw = bytes.subarray(start, end);\n   432    }\n   433    let filter = d.entries.get('Filter');\n\nTest file style (intent/blocks/pdf-sign/pdf-sign.test.ts):\n38 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { X509Certificate, createHash, generateKeyPairSync } from 'node:crypto';\nimport type { KeyObject } from 'node:crypto';\nimport { deflateSync } from 'node:zlib';\nimport { pdf } from '../pdf/index.ts';\nimport {\n  PdfSignError, embedSignature, issueCertificate, integer, keySigner, name, cmsParts, oid, oidOf, octets, parseDer, parseDerPadded, prepareSignature, readDoc, pageRefs, seq, serialize, setOf, signPdf, signedBytes, textOf, textString, tlv, utf8, verifyPdf,\n} from './index.ts';\nimport type { Der, Signer, SignOptions } from './index.ts';\nimport { test } from 'node:test';\n\nconst hex = (b: Uint8Array) => Buffer.from(b).toString('hex');\nconst NOW = new Date('2026-06-15T12:00:00Z');\nconst SIGNED_AT = new Date('2026-06-15T11:30:00Z');\nconst YEAR = 365 * 86_400_000;\n\n// Keys are made once, at run time; nothing secret is written in this file.\nconst rsaKeys = generateKeyPairSync('rsa', { modulusLength: 2048 });\nconst ecKeys = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });\nconst ec384 = generateKeyPairSync('ec', { namedCurve: 'secp384r1' });\nconst caKeys = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });\n\nconst cert = (cn: string, k: { publicKey: KeyObject; privateKey: KeyObject }, over: { from?: Date; to?: Date; serial?: number } = {}) =>\n  issueCertificate({ commonName: cn, publicKey: k.publicKey, privateKey: k.privateKey, serial: over.serial ?? 1001, notBefore: over.from ?? new Date(NOW.getTime() - YEAR), notAfter: over.to ?? new Date(NOW.getTime() + YEAR) });\n\nconst rsaCert = cert('Ana Rivera', rsaKeys);\nconst ecCert = cert('Bo Chen', ecKeys, { serial: 2002 });\nconst rsaSigner: Signer = keySigner(rsaKeys.privateKey, rsaCert);\nconst ecSigner: Signer = keySigner(ecKeys.privateKey, ecCert);\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-sign-838.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:54.821Z"
+}

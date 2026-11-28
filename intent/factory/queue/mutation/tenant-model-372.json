@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "tenant-model",
+  "mutant": {
+    "id": "372",
+    "line": 425,
+    "column": 9,
+    "endLine": 425,
+    "endColumn": 10,
+    "mutator": "ConditionalExpression",
+    "original": "i",
+    "replacement": "true",
+    "lineText": "if (i) this.events.splice(0, i);",
+    "prevText": "while (i < this.events.length && this.events[i]!.at <= cut) i++;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/tenant-model/tenant-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/tenant-model-372.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"tenant-model\". Mutant: line 425:9-425:10, mutator ConditionalExpression: \"i\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/tenant-model/index.ts (> marks the mutated line):\n   419      this.trim();\n   420    }\n   421    private trim(): void {\n   422      const cut = this.now() - this.windowMs;\n   423      let i = 0;\n   424      while (i < this.events.length && this.events[i]!.at <= cut) i++;\n>  425      if (i) this.events.splice(0, i);\n   426    }\n   427    /** Tenants over `maxShare` of all usage, when at least `minTenants` are active (one busy tenant alone is not noisy). */\n   428    noisy(maxShare = 0.5, minTenants = 3): { tenant: string; share: number; cost: number }[] {\n   429      this.trim();\n   430      const by = new Map<string, number>();\n   431      let total = 0;\n\nTest file style (intent/blocks/tenant-model/tenant-model.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { setTimeout as sleep } from 'node:timers/promises';\nimport type { Policy } from '../rbac/index.ts';\nimport { CrossTenant, FairShare, MemoryBacking, Memberships, NoTenant, QuotaExceeded, Quotas, ScopedStore, TenantError, TenantRate, TooBusy, UsageWindow, assertScoped, can, currentTenant, keyBelongsTo, parseTenantKey, scopeFilter, scopeSql, tenantId, tenantKey, tenantSecret, withTenant, type Row } from './index.ts';\n\ninterface Doc extends Row {\n  title: string;\n}\n\ntest('tenant ids are checked once, strictly', () => {\n  assert.equal(tenantId('acme-co'), 'acme-co');\n  for (const bad of ['', 'a', 'A', 'acme co', '-acme', 'a--b', 'a:b', 'a/b', '../x', 'x'.repeat(64), 'ünï']) assert.throws(() => tenantId(bad), TenantError, bad);\n});\n\ntest('the context follows async work, nests, and has no default', async () => {\n  assert.throws(() => currentTenant(), NoTenant);\n  const seen: string[] = [];\n  await Promise.all([\n    withTenant({ tenant: 'one', actor: 'ana' }, async () => {\n      await sleep(5);\n      seen.push(`${currentTenant().tenant}/${currentTenant().actor}`);\n      await withTenant({ tenant: 'inner' }, async () => {\n        await sleep(1);\n        seen.push(currentTenant().tenant);\n      });\n      seen.push(currentTenant().tenant);\n    }),\n    withTenant({ tenant: 'two' }, async () => {\n      await sleep(1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/tenant-model-372.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:08.331Z"
+}

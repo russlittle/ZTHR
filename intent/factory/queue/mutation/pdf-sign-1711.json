@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf-sign",
+  "mutant": {
+    "id": "1711",
+    "line": 930,
+    "column": 7,
+    "endLine": 930,
+    "endColumn": 29,
+    "mutator": "EqualityOperator",
+    "original": "cms.length > p.reserve",
+    "replacement": "cms.length >= p.reserve",
+    "lineText": "if (cms.length > p.reserve) throw new PdfSignError(`the signature needs ${cms.length} bytes but ${p.reserve} were reserved; prepare again with a larger reserve`);",
+    "prevText": "export function embedSignature(p: Prepared, cms: Uint8Array): Uint8Array {",
+    "nextText": "const out = Uint8Array.from(p.pdf);"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf-sign/pdf-sign.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-sign-1711.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf-sign\". Mutant: line 930:7-930:29, mutator EqualityOperator: \"cms.length > p.reserve\" becomes \"cms.length >= p.reserve\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf-sign/index.ts (> marks the mutated line):\n   924  \n   925  /** The bytes the signature covers: everything but the /Contents value. */\n   926  export const signedBytes = (p: Pick<Prepared, 'pdf' | 'byteRange'>): Uint8Array => concat([p.pdf.subarray(p.byteRange[0], p.byteRange[0] + p.byteRange[1]), p.pdf.subarray(p.byteRange[2], p.byteRange[2] + p.byteRange[3])]);\n   927  \n   928  /** Puts a finished CMS into the placeholder. */\n   929  export function embedSignature(p: Prepared, cms: Uint8Array): Uint8Array {\n>  930    if (cms.length > p.reserve) throw new PdfSignError(`the signature needs ${cms.length} bytes but ${p.reserve} were reserved; prepare again with a larger reserve`);\n   931    const out = Uint8Array.from(p.pdf);\n   932    Buffer.from(out.buffer, out.byteOffset, out.length).write(Buffer.from(cms).toString('hex').toUpperCase().padEnd(p.reserve * 2, '0'), p.contentsStart + 1, 'latin1');\n   933    return out;\n   934  }\n   935  \n   936  /** Signs a PDF in one step. */\n\nTest file style (intent/blocks/pdf-sign/pdf-sign.test.ts):\n38 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { X509Certificate, createHash, generateKeyPairSync } from 'node:crypto';\nimport type { KeyObject } from 'node:crypto';\nimport { deflateSync } from 'node:zlib';\nimport { pdf } from '../pdf/index.ts';\nimport {\n  PdfSignError, embedSignature, issueCertificate, integer, keySigner, name, cmsParts, oid, oidOf, octets, parseDer, parseDerPadded, prepareSignature, readDoc, pageRefs, seq, serialize, setOf, signPdf, signedBytes, textOf, textString, tlv, utf8, verifyPdf,\n} from './index.ts';\nimport type { Der, Signer, SignOptions } from './index.ts';\nimport { test } from 'node:test';\n\nconst hex = (b: Uint8Array) => Buffer.from(b).toString('hex');\nconst NOW = new Date('2026-06-15T12:00:00Z');\nconst SIGNED_AT = new Date('2026-06-15T11:30:00Z');\nconst YEAR = 365 * 86_400_000;\n\n// Keys are made once, at run time; nothing secret is written in this file.\nconst rsaKeys = generateKeyPairSync('rsa', { modulusLength: 2048 });\nconst ecKeys = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });\nconst ec384 = generateKeyPairSync('ec', { namedCurve: 'secp384r1' });\nconst caKeys = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });\n\nconst cert = (cn: string, k: { publicKey: KeyObject; privateKey: KeyObject }, over: { from?: Date; to?: Date; serial?: number } = {}) =>\n  issueCertificate({ commonName: cn, publicKey: k.publicKey, privateKey: k.privateKey, serial: over.serial ?? 1001, notBefore: over.from ?? new Date(NOW.getTime() - YEAR), notAfter: over.to ?? new Date(NOW.getTime() + YEAR) });\n\nconst rsaCert = cert('Ana Rivera', rsaKeys);\nconst ecCert = cert('Bo Chen', ecKeys, { serial: 2002 });\nconst rsaSigner: Signer = keySigner(rsaKeys.privateKey, rsaCert);\nconst ecSigner: Signer = keySigner(ecKeys.privateKey, ecCert);\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-sign-1711.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:54.892Z"
+}

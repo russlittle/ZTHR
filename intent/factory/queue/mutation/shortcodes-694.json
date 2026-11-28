@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "shortcodes",
+  "mutant": {
+    "id": "694",
+    "line": 484,
+    "column": 11,
+    "endLine": 484,
+    "endColumn": 46,
+    "mutator": "LogicalOperator",
+    "original": "typeof v === 'object' && v !== null",
+    "replacement": "typeof v === 'object' || v !== null",
+    "lineText": "v = typeof v === 'object' && v !== null && Object.hasOwn(v, part) ? (v as Record<string, unknown>)[part] : undefined;",
+    "prevText": "for (const part of name.split('.')) {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/shortcodes/shortcodes.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/shortcodes-694.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"shortcodes\". Mutant: line 484:11-484:46, mutator LogicalOperator: \"typeof v === 'object' && v !== null\" becomes \"typeof v === 'object' || v !== null\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/shortcodes/index.ts (> marks the mutated line):\n   478        i = at + open.length;\n   479        continue;\n   480      }\n   481      out += text.slice(i, at);\n   482      let v: unknown = values;\n   483      for (const part of name.split('.')) {\n>  484        v = typeof v === 'object' && v !== null && Object.hasOwn(v, part) ? (v as Record<string, unknown>)[part] : undefined;\n   485      }\n   486      if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') out += esc(String(v));\n   487      else if (o.missing === 'throw') throw new MissingValue(name);\n   488      else if (o.missing === 'empty') out += '';\n   489      else out += text.slice(at, end + close.length);\n   490      i = end + close.length;\n\nTest file style (intent/blocks/shortcodes/shortcodes.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { build, escapeHtml, expand, expandTags, has, LimitExceeded, MissingValue, parse, parseAttributes, strip } from './index.ts';\nimport type { Context, Handlers } from './index.ts';\n\nconst h = {\n  b: (c: Context) => `<b>${c.content ?? ''}</b>`,\n  quote: (c: Context) => `<q cite=\"${escapeHtml(c.attrs['cite'] ?? '')}\">${c.content}</q>`,\n  button: (c: Context) => `<a class=\"${c.positional.includes('primary') ? 'p' : 's'}\">${escapeHtml(c.positional[0] ?? '')}</a>`,\n  gallery: (c: Context) => `<gallery ids=\"${c.attrs['ids'] ?? ''}\" cols=\"${c.attrs['columns'] ?? '3'}\">`,\n};\nconst out = (text: string, handlers: Handlers = h, o = {}) => expand(text, handlers, o).text;\n\ntest('a self-closing and an enclosing shortcode expand with their attributes', () => {\n  assert.equal(out('A [gallery ids=\"1,2,3\" columns=2] B'), 'A <gallery ids=\"1,2,3\" cols=\"2\"> B');\n  assert.equal(out(\"[quote cite='Ann Lee']Words[/quote]\"), '<q cite=\"Ann Lee\">Words</q>');\n  assert.equal(out('[gallery /]'), '<gallery ids=\"\" cols=\"3\">');\n  assert.equal(out('[gallery/]'), '<gallery ids=\"\" cols=\"3\">');\n  assert.equal(out('[b]x[/b] and [b]y[/b]'), '<b>x</b> and <b>y</b>');\n});\n\ntest('attributes: named, quoted both ways, unquoted, positional and bare flags', () => {\n  const a = parseAttributes(`id=7 title=\"Two words\" alt='single' \"first pos\" flag x:y=\"1\"`);\n  assert.deepEqual(a, { attrs: { id: '7', title: 'Two words', alt: 'single', 'x:y': '1' }, positional: ['first pos', 'flag'] });\n  assert.equal(out('[button \"Buy now\" primary /]'), '<a class=\"p\">Buy now</a>');\n  assert.equal(out('[button \"Read\" /]'), '<a class=\"s\">Read</a>');\n  assert.deepEqual(parseAttributes('a=1 a=2').attrs, { a: '2' }, 'the later of two equal names wins');\n  assert.deepEqual(parseAttributes('__proto__=x ok=1').attrs, { ok: '1' });\n  assert.equal(({} as Record<string, unknown>)['x'], undefined);\n  assert.deepEqual(parseAttributes('title=\"a ] b\"').attrs, { title: 'a ] b' });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/shortcodes-694.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:02.430Z"
+}

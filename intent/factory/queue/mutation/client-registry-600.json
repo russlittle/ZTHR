@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "client-registry",
+  "mutant": {
+    "id": "600",
+    "line": 472,
+    "column": 50,
+    "endLine": 472,
+    "endColumn": 52,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "if (requested === undefined || requested === '') {",
+    "prevText": "if (c.disabled) throw new ClientError('invalid_client', 'that client is disabled');",
+    "nextText": "if (c.redirectUris.length === 1) return c.redirectUris[0]!;"
+  },
+  "mayEdit": [
+    "intent/blocks/client-registry/client-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-600.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"client-registry\". Mutant: line 472:50-472:52, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/client-registry/index.ts (> marks the mutated line):\n   466     * URI exactly; when it names none, the client must have registered exactly one. Anything else is an error the\n   467     * server shows the person and never redirects (RFC 6749 section 3.1.2.4).\n   468     */\n   469    resolveRedirect(clientId: string, requested: string | undefined): string {\n   470      const c = this.must(clientId);\n   471      if (c.disabled) throw new ClientError('invalid_client', 'that client is disabled');\n>  472      if (requested === undefined || requested === '') {\n   473        if (c.redirectUris.length === 1) return c.redirectUris[0]!;\n   474        throw new ClientError('invalid_redirect_uri', 'the request names no redirect_uri and the client has not registered exactly one');\n   475      }\n   476      if (!matchRedirectUri(c.redirectUris, requested)) throw new ClientError('invalid_redirect_uri', 'that redirect_uri is not registered for this client');\n   477      return requested;\n   478    }\n\nTest file style (intent/blocks/client-registry/client-registry.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ClientError, ClientRegistry, checkRedirectUri, matchRedirectUri, parseBasicAuthorization } from './index.ts';\n\n/** Deterministic randomness: each call yields bytes counting up from a seed. */\nfunction counter() {\n  let n = 0;\n  return (len: number) => {\n    n += 1;\n    return Uint8Array.from({ length: len }, (_, i) => (n * 31 + i) & 0xff);\n  };\n}\nconst make = (o: { t?: { v: number }; policy?: object } = {}) => {\n  const t = o.t ?? { v: 1_800_000_000_000 };\n  return { t, reg: new ClientRegistry({ now: () => t.v, randomBytes: counter(), registrationEndpoint: 'https://as.example.org/register', ...(o.policy ? { policy: o.policy } : {}) }) };\n};\nconst code = (fn: () => unknown) => {\n  try {\n    fn();\n  } catch (e) {\n    assert.ok(e instanceof ClientError, String(e));\n    return e.code;\n  }\n  assert.fail('expected a ClientError');\n};\n\ntest('redirect URIs match exactly: no prefix, case, trailing-slash or query-parameter leniency', () => {\n  const reg = ['https://app.example.org/cb', 'https://app.example.org/cb2?x=1'];\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb'), true);\n  assert.equal(matchRedirectUri(reg, 'https://app.example.org/cb/'), false);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/client-registry-600.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.282Z"
+}

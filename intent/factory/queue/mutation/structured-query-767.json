@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "structured-query",
+  "mutant": {
+    "id": "767",
+    "line": 491,
+    "column": 97,
+    "endLine": 491,
+    "endColumn": 112,
+    "mutator": "ConditionalExpression",
+    "original": "type === 'full'",
+    "replacement": "true",
+    "lineText": "if ((type === 'right' || type === 'full') && (d.name === 'sqlite' || (d.name === 'mysql' && type === 'full'))) {",
+    "prevText": "if (!['inner', 'left', 'right', 'full'].includes(type)) throw new QueryModelError(`unknown join type \"${String(type)}\"`);",
+    "nextText": "throw new QueryModelError(`${d.name} does not support ${type.toUpperCase()} JOIN`);"
+  },
+  "mayEdit": [
+    "intent/blocks/structured-query/structured-query.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/structured-query-767.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"structured-query\". Mutant: line 491:97-491:112, mutator ConditionalExpression: \"type === 'full'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/structured-query/index.ts (> marks the mutated line):\n   485    const selectText = selectParts.map((p) => p()).join(', ');\n   486    let sql = `SELECT ${selectText} FROM ${d.quote(sourceName)}`;\n   487    if (sourceAlias !== sourceName) sql += ` AS ${d.quote(sourceAlias)}`;\n   488    for (const j of query.joins ?? []) {\n   489      const type = j.type ?? 'inner';\n   490      if (!['inner', 'left', 'right', 'full'].includes(type)) throw new QueryModelError(`unknown join type \"${String(type)}\"`);\n>  491      if ((type === 'right' || type === 'full') && (d.name === 'sqlite' || (d.name === 'mysql' && type === 'full'))) {\n   492        throw new QueryModelError(`${d.name} does not support ${type.toUpperCase()} JOIN`);\n   493      }\n   494      if (j.on.length === 0) throw new QueryModelError(`join of \"${j.table}\" needs at least one pair of columns to match`);\n   495      const al = j.alias ?? j.table;\n   496      const on = j.on.map((p) => `${fieldSql(p.left, none)} = ${fieldSql(p.right, none)}`).join(' AND ');\n   497      sql += ` ${type.toUpperCase()} JOIN ${d.quote(j.table)}${al !== j.table ? ` AS ${d.quote(al)}` : ''} ON ${on}`;\n\nTest file style (intent/blocks/structured-query/structured-query.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { DatabaseSync } from 'node:sqlite';\nimport { compile, DIALECTS, QueryModelError } from './index.ts';\nimport type { StructuredQuery } from './index.ts';\n\nconst schema = {\n  orders: ['id', 'customer_id', 'total', 'status', 'created_at', 'note'],\n  customers: ['id', 'name', 'country'],\n};\n\nfunction db(): DatabaseSync {\n  const d = new DatabaseSync(':memory:');\n  d.exec(`\n    create table customers (id integer primary key, name text, country text);\n    create table orders (id integer primary key, customer_id integer, total real, status text, created_at text, note text);\n    insert into customers values (1,'Ada','UK'),(2,'Grace','US'),(3,'Linus','FI'),(4,'Nobody','US');\n    insert into orders values\n      (1,1,10,'paid','2026-01-05 10:00:00','50% off'),\n      (2,1,35,'paid','2026-01-20 11:30:00',null),\n      (3,2,5,'open','2026-02-02 09:00:00','a_b'),\n      (4,2,95,'paid','2026-02-14 23:59:00',null),\n      (5,3,0,'void','2026-04-01 00:00:00',null);\n  `);\n  return d;\n}\nconst run = (q: StructuredQuery, values?: Record<string, never>) => {\n  const c = compile(q, { dialect: 'sqlite', schema, ...(values ? { values } : {}) });\n  return db().prepare(c.sql).all(...(c.params as never[])) as Record<string, unknown>[];\n};\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/structured-query-767.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.830Z"
+}

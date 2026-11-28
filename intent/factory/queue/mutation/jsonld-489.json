@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "jsonld",
+  "mutant": {
+    "id": "489",
+    "line": 307,
+    "column": 56,
+    "endLine": 307,
+    "endColumn": 68,
+    "mutator": "StringLiteral",
+    "original": "'@protected'",
+    "replacement": "\"\"",
+    "lineText": "if (!['@id', '@type', '@container', '@prefix', '@protected', '@language', '@index'].includes(k)) throw new JsonLdError('invalid-term', `${k} is not valid in the definition of ${key}`);",
+    "prevText": "if (UNSUPPORTED.has(k) || k === '@context') throw new JsonLdError('unsupported', `${k} in a term definition is not supported`);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/jsonld/jsonld.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/jsonld-489.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"jsonld\". Mutant: line 307:56-307:68, mutator StringLiteral: \"'@protected'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/jsonld/index.ts (> marks the mutated line):\n   301        }\n   302        const def: Obj = typeof raw === 'string' ? { '@id': raw } : isObj(raw) ? raw : (() => {\n   303          throw new JsonLdError('invalid-term', `the definition of ${key} is not a string, object or null`);\n   304        })();\n   305        for (const k of Object.keys(def)) {\n   306          if (UNSUPPORTED.has(k) || k === '@context') throw new JsonLdError('unsupported', `${k} in a term definition is not supported`);\n>  307          if (!['@id', '@type', '@container', '@prefix', '@protected', '@language', '@index'].includes(k)) throw new JsonLdError('invalid-term', `${k} is not valid in the definition of ${key}`);\n   308        }\n   309        // prefixes defined later in this same context must be available to expand a compact IRI\n   310        const expandPart = (s: string): string => {\n   311          if (s.startsWith('@')) {\n   312            if (!KEYWORDS.has(s)) throw new JsonLdError('invalid-iri', `${s} is not a keyword`);\n   313            return s;\n\nTest file style (intent/blocks/jsonld/jsonld.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  AS, AS_PUBLIC, ContextLoader, FEDERATION_CONTEXT, JsonLdError, SECURITY, assertSameOrigin, asArray, compact, expand, hasType, idOf, idsOf, normalise, typesOf, type Json,\n} from './index.ts';\n\nconst code = (c: string) => (e: unknown) => e instanceof JsonLdError && e.code === c;\n\nconst mastodonNote = (): Json => ({\n  '@context': [AS, SECURITY, { toot: 'http://joinmastodon.org/ns#', sensitive: 'as:sensitive', Hashtag: 'as:Hashtag', discoverable: 'toot:discoverable' }],\n  id: 'https://remote.example/users/ana/statuses/1/activity',\n  type: 'Create',\n  actor: 'https://remote.example/users/ana',\n  published: '2024-05-01T12:00:00Z',\n  to: [AS_PUBLIC],\n  cc: ['https://remote.example/users/ana/followers'],\n  object: {\n    id: 'https://remote.example/users/ana/statuses/1',\n    type: 'Note',\n    attributedTo: 'https://remote.example/users/ana',\n    content: '<p>Hello</p>',\n    contentMap: { en: '<p>Hello</p>', fr: '<p>Bonjour</p>' },\n    sensitive: false,\n    tag: [{ type: 'Hashtag', href: 'https://remote.example/tags/hi', name: '#hi' }],\n  },\n});\n\ntest('expansion gives full IRIs, arrays everywhere, and typed values and references', async () => {\n  const [a] = await expand(mastodonNote());\n  const AS_NS = 'https://www.w3.org/ns/activitystreams#';\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/jsonld-489.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:45.779Z"
+}

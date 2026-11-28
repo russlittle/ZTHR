@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "rag",
+  "mutant": {
+    "id": "326",
+    "line": 297,
+    "column": 13,
+    "endLine": 297,
+    "endColumn": 74,
+    "mutator": "ConditionalExpression",
+    "original": "cur.length && it.c.index === cur[cur.length - 1]!.c.index + 1",
+    "replacement": "true",
+    "lineText": "if (cur.length && it.c.index === cur[cur.length - 1]!.c.index + 1) cur.push(it);",
+    "prevText": "for (const it of items) {",
+    "nextText": "else {"
+  },
+  "mayEdit": [
+    "intent/blocks/rag/rag.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/rag-326.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"rag\". Mutant: line 297:13-297:74, mutator ConditionalExpression: \"cur.length && it.c.index === cur[cur.length - 1]!.c.index + 1\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/rag/index.ts (> marks the mutated line):\n   291      for (const p of picked) byDoc.set(p.c.docId, [...(byDoc.get(p.c.docId) ?? []), p]);\n   292      const groups: { items: { c: Stored; s: number }[] }[] = [];\n   293      for (const items of byDoc.values()) {\n   294        items.sort((a, b) => a.c.index - b.c.index);\n   295        let cur: { c: Stored; s: number }[] = [];\n   296        for (const it of items) {\n>  297          if (cur.length && it.c.index === cur[cur.length - 1]!.c.index + 1) cur.push(it);\n   298          else {\n   299            if (cur.length) groups.push({ items: cur });\n   300            cur = [it];\n   301          }\n   302        }\n   303        if (cur.length) groups.push({ items: cur });\n\nTest file style (intent/blocks/rag/rag.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { KnowledgeBase, RagError, assessEvidence, buildPrompt, checkCitations, fitContext, hashingEmbedder, lexicalRerank, rrf, type Llm, type Passage, type SourceDoc } from './index.ts';\n\nconst bytes = (t: string) => Math.ceil(new TextEncoder().encode(t).length / 4);\nconst DOCS: SourceDoc[] = [\n  { id: 'vpn.md', title: 'VPN guide', text: '# VPN guide\\n\\n## Setup\\n\\nInstall the VPN client from the software portal. Sign in with your work account and choose the Dayton gateway.\\n\\n## Troubleshooting\\n\\nIf the VPN client shows error 809, open UDP ports 500 and 4500 on your router.', meta: { space: 'it' } },\n  { id: 'leave.md', title: 'Leave policy', text: '# Leave policy\\n\\n## Annual leave\\n\\nFull-time staff receive 25 days of annual leave each year. Unused days carry over up to 5 days.\\n\\n## Sick leave\\n\\nSick leave is paid for up to 10 days a year with a doctor note after 3 days.', meta: { space: 'hr' } },\n  { id: 'payroll.md', title: 'Payroll calendar', text: '# Payroll calendar\\n\\nPayroll runs on the 25th of each month. Salary changes are effective from the next run.', meta: { space: 'hr-private' } },\n  { id: 'cafe.md', title: 'Cafe menu', text: '# Cafe menu\\n\\nThe cafe serves coffee, tea and sandwiches from 8am to 3pm on weekdays.', meta: { space: 'general' } },\n];\n\nasync function kb(opts: { max?: number; docs?: SourceDoc[] } = {}) {\n  const k = new KnowledgeBase({ embed: hashingEmbedder(256), chunk: { maxTokens: opts.max ?? 60, overlapTokens: 0, minTokens: 8, count: bytes }, count: bytes });\n  for (const d of opts.docs ?? DOCS) await k.addDocument(d);\n  return k;\n}\n\ntest('the hashing embedder is deterministic, unit length, and puts related text closer than unrelated', async () => {\n  const e = hashingEmbedder(128);\n  const [a, b, c] = await e(['reset your vpn password', 'how to reset a vpn password', 'sandwiches and coffee at the cafe']);\n  const [a2] = await e(['reset your vpn password']);\n  assert.deepEqual(a, a2);\n  assert.ok(Math.abs(Math.hypot(...a!) - 1) < 1e-9);\n  const dot = (x: number[], y: number[]) => x.reduce((s, v, i) => s + v * y[i]!, 0);\n  assert.ok(dot(a!, b!) > dot(a!, c!) + 0.3, `${dot(a!, b!)} vs ${dot(a!, c!)}`);\n});\n\ntest('reciprocal rank fusion adds 1/(60+rank) across rankings', () => {\n  const r = rrf([['a', 'b', 'c'], ['b', 'a', 'd']]);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/rag-326.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:57.838Z"
+}

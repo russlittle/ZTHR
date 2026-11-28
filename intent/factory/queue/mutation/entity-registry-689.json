@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "entity-registry",
+  "mutant": {
+    "id": "689",
+    "line": 511,
+    "column": 53,
+    "endLine": 511,
+    "endColumn": 72,
+    "mutator": "StringLiteral",
+    "original": "`no area ${areaId}`",
+    "replacement": "``",
+    "lineText": "if (!this.areas.has(areaId)) throw new NotFound(`no area ${areaId}`);",
+    "prevText": "entitiesInArea(areaId: string, o: { deep?: boolean; includeDisabled?: boolean; includeHidden?: boolean } = {}): Entity[] {",
+    "nextText": "const ids = new Set([areaId, ...(o.deep ? this.descendantAreas(areaId).map((a) => a.id) : [])]);"
+  },
+  "mayEdit": [
+    "intent/blocks/entity-registry/entity-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/entity-registry-689.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"entity-registry\". Mutant: line 511:53-511:72, mutator StringLiteral: \"`no area ${areaId}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/entity-registry/index.ts (> marks the mutated line):\n   505      if (x.areaId !== undefined) return x.areaId;\n   506      return x.deviceId === undefined ? undefined : this.devs.get(x.deviceId)?.areaId;\n   507    }\n   508  \n   509    /** Entities in an area (and below it when asked); disabled ones are left out unless requested. */\n   510    entitiesInArea(areaId: string, o: { deep?: boolean; includeDisabled?: boolean; includeHidden?: boolean } = {}): Entity[] {\n>  511      if (!this.areas.has(areaId)) throw new NotFound(`no area ${areaId}`);\n   512      const ids = new Set([areaId, ...(o.deep ? this.descendantAreas(areaId).map((a) => a.id) : [])]);\n   513      return [...this.ents.values()].filter((x) => {\n   514        const a = this.effectiveArea(x.id);\n   515        return a !== undefined && ids.has(a) && (o.includeDisabled || !x.disabledBy) && (o.includeHidden || !x.hiddenBy);\n   516      });\n   517    }\n\nTest file style (intent/blocks/entity-registry/entity-registry.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Conflict, InvalidId, NotFound, Registry, RegistryError, slugify, splitEntityId } from './index.ts';\n\nconst make = () => {\n  let n = 0;\n  let t = 1000;\n  return new Registry({ newId: () => `id${++n}`, now: () => ++t });\n};\n\ntest('slugify folds accents and symbols and never returns an empty id', () => {\n  assert.equal(slugify('Kitchen Lamp #2'), 'kitchen_lamp_2');\n  assert.equal(slugify('Café Lumière'), 'cafe_lumiere');\n  assert.equal(slugify('  ---  '), 'unnamed');\n});\n\ntest('entity ids must be domain.object_id', () => {\n  assert.deepEqual(splitEntityId('light.kitchen_lamp'), { domain: 'light', objectId: 'kitchen_lamp' });\n  for (const bad of ['light', 'Light.x', 'light.', '.x', 'light.a.b', 'light.Bad', '']) assert.throws(() => splitEntityId(bad), InvalidId);\n});\n\ntest('the same platform and unique id is the same entity, and a name clash gets a number', () => {\n  const r = make();\n  const a = r.getOrCreateEntity({ domain: 'light', platform: 'hue', uniqueId: 'u1', originalName: 'Lamp' });\n  const again = r.getOrCreateEntity({ domain: 'light', platform: 'hue', uniqueId: 'u1', originalName: 'Different' });\n  assert.equal(again.id, a.id);\n  assert.equal(a.entityId, 'light.lamp');\n  const b = r.getOrCreateEntity({ domain: 'light', platform: 'hue', uniqueId: 'u2', originalName: 'Lamp' });\n  const c = r.getOrCreateEntity({ domain: 'light', platform: 'hue', uniqueId: 'u3', originalName: 'Lamp' });\n  assert.equal(b.entityId, 'light.lamp_2');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/entity-registry-689.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.955Z"
+}

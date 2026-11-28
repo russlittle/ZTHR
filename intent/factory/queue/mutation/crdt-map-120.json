@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crdt-map",
+  "mutant": {
+    "id": "120",
+    "line": 122,
+    "column": 52,
+    "endLine": 122,
+    "endColumn": 70,
+    "mutator": "ConditionalExpression",
+    "original": "k.length > MAX_KEY",
+    "replacement": "false",
+    "lineText": "if (typeof k !== 'string' || k.length === 0 || k.length > MAX_KEY) throw new CrdtError('a key is a non-empty string of at most 256 characters');",
+    "prevText": "for (const k of p) {",
+    "nextText": "if (k === '__proto__') throw new CrdtError('\"__proto__\" is not a usable key');"
+  },
+  "mayEdit": [
+    "intent/blocks/crdt-map/crdt-map.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crdt-map-120.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crdt-map\". Mutant: line 122:52-122:70, mutator ConditionalExpression: \"k.length > MAX_KEY\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crdt-map/index.ts (> marks the mutated line):\n   116    return JSON.stringify(v);\n   117  }\n   118  \n   119  function checkPath(p: Path): void {\n   120    if (!Array.isArray(p) || p.length > MAX_DEPTH) throw new CrdtError(`a path has at most ${MAX_DEPTH} keys`);\n   121    for (const k of p) {\n>  122      if (typeof k !== 'string' || k.length === 0 || k.length > MAX_KEY) throw new CrdtError('a key is a non-empty string of at most 256 characters');\n   123      if (k === '__proto__') throw new CrdtError('\"__proto__\" is not a usable key');\n   124    }\n   125  }\n   126  \n   127  function checkValue(v: Json): string {\n   128    const text = canonical(v);\n\nTest file style (intent/blocks/crdt-map/crdt-map.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CrdtError, CrdtMap, compare, covers, fingerprint, mergeClocks, type Op } from './index.ts';\n\nconst rng = (seed: number) => () => {\n  seed = (seed + 0x6d2b79f5) | 0;\n  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);\n  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;\n  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;\n};\nconst clone = (m: CrdtMap, name = 'clone') => CrdtMap.from(name, m.state());\nconst join = (...ms: CrdtMap[]) => {\n  const out = new CrdtMap('join');\n  for (const m of ms) out.merge(m);\n  return out;\n};\n/** Deliver every operation to a replica in the given order; causal delivery sorts out the rest. */\nconst deliver = (to: CrdtMap, ops: readonly Op[]) => ops.forEach((o) => (o.replica === to.replica ? undefined : to.apply(o)));\n\ntest('vector clocks: order, merge and the causal delivery test', () => {\n  assert.equal(compare({ a: 1 }, { a: 1 }), 'equal');\n  assert.equal(compare({ a: 1 }, { a: 2, b: 1 }), 'before');\n  assert.equal(compare({ a: 3 }, { a: 2 }), 'after');\n  assert.equal(compare({ a: 2 }, { b: 1 }), 'concurrent');\n  assert.equal(compare({}, {}), 'equal');\n  assert.deepEqual(mergeClocks({ a: 2, b: 1 }, { a: 1, c: 4 }), { a: 2, b: 1, c: 4 });\n  assert.equal(covers({ a: 2, b: 1 }, { a: 2 }), true);\n  assert.equal(covers({ a: 2 }, { a: 3 }), false);\n  assert.equal(covers({}, {}), true);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crdt-map-120.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.164Z"
+}

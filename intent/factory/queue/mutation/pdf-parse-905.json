@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf-parse",
+  "mutant": {
+    "id": "905",
+    "line": 563,
+    "column": 16,
+    "endLine": 563,
+    "endColumn": 63,
+    "mutator": "Regex",
+    "original": "/(?:^|[\\r\\n\\s])(\\d{1,10})\\s+(\\d{1,5})\\s+obj\\b/g",
+    "replacement": "/(?:^|[\\r\\n\\S])(\\d{1,10})\\s+(\\d{1,5})\\s+obj\\b/g",
+    "lineText": "const re = /(?:^|[\\r\\n\\s])(\\d{1,10})\\s+(\\d{1,5})\\s+obj\\b/g;",
+    "prevText": "const s = this.bytes.toString('latin1');",
+    "nextText": "let count = 0;"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf-parse/pdf-parse.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-parse-905.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf-parse\". Mutant: line 563:16-563:63, mutator Regex: \"/(?:^|[\\\\r\\\\n\\\\s])(\\\\d{1,10})\\\\s+(\\\\d{1,5})\\\\s+obj\\\\b/g\" becomes \"/(?:^|[\\\\r\\\\n\\\\S])(\\\\d{1,10})\\\\s+(\\\\d{1,5})\\\\s+obj\\\\b/g\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf-parse/index.ts (> marks the mutated line):\n   557      return st.dict;\n   558    }\n   559  \n   560    /** Last resort: find every \"n g obj\" by scanning, and the trailer or catalog. */\n   561    private rebuild(): void {\n   562      const s = this.bytes.toString('latin1');\n>  563      const re = /(?:^|[\\r\\n\\s])(\\d{1,10})\\s+(\\d{1,5})\\s+obj\\b/g;\n   564      let count = 0;\n   565      for (let m = re.exec(s); m; m = re.exec(s)) {\n   566        if (++count > this.limits.maxObjects) throw new PdfError('too many objects');\n   567        this.xref.set(Number(m[1]), { type: 1, a: m.index + m[0].indexOf(m[1]!), b: Number(m[2]) });\n   568      }\n   569      let t: Dict | undefined;\n\nTest file style (intent/blocks/pdf-parse/pdf-parse.test.ts):\n25 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { deflateSync } from 'node:zlib';\nimport { pdf } from '../pdf/index.ts';\nimport { Encrypted, Name, PdfDocument, PdfError, PdfString, Ref, UnsupportedFilter, decodeStream, execute, itemsToText, mergePlan, parseObjectText, parseRanges, parseToUnicode, rotatePlan, splitPlan } from './index.ts';\nimport type { Dict, Stream } from './index.ts';\n\nconst lat = (s: string) => Buffer.from(s, 'latin1');\n\n/** A small PDF written by hand: numbered object bodies, a classic cross-reference table, and the given trailer entries. */\nconst handmade = (objs: Record<number, string | Buffer>, trailer = '/Root 1 0 R', o: { header?: string } = {}): Buffer => {\n  const parts: Buffer[] = [lat(o.header ?? '%PDF-1.7\\n')];\n  let len = parts[0]!.length;\n  const offs: Record<number, number> = {};\n  const max = Math.max(...Object.keys(objs).map(Number));\n  for (const n of Object.keys(objs).map(Number)) {\n    offs[n] = len;\n    const b = Buffer.concat([lat(`${n} 0 obj\\n`), Buffer.isBuffer(objs[n]) ? (objs[n] as Buffer) : lat(objs[n] as string), lat('\\nendobj\\n')]);\n    parts.push(b);\n    len += b.length;\n  }\n  let x = `xref\\n0 ${max + 1}\\n0000000000 65535 f \\n`;\n  for (let n = 1; n <= max; n++) x += n in offs ? `${String(offs[n]).padStart(10, '0')} 00000 n \\n` : '0000000000 00000 f \\n';\n  parts.push(lat(`${x}trailer\\n<< /Size ${max + 1} ${trailer} >>\\nstartxref\\n${len}\\n%%EOF\\n`));\n  return Buffer.concat(parts);\n};\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-parse-905.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:54.477Z"
+}

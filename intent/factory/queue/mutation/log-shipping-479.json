@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "log-shipping",
+  "mutant": {
+    "id": "479",
+    "line": 364,
+    "column": 118,
+    "endLine": 364,
+    "endColumn": 124,
+    "mutator": "Regex",
+    "original": "/^0+$/",
+    "replacement": "/^0+/",
+    "lineText": "const isId = (s: string | undefined, len: number) => s !== undefined && new RegExp(`^[0-9a-f]{${len}}$`).test(s) && !/^0+$/.test(s);",
+    "prevText": "const scopeOf = (r: OtlpResource) => ({ name: r.scope?.name ?? 'log-shipping', ...(r.scope?.version ? { version: r.scope.version } : {}) });",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/log-shipping/log-shipping.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/log-shipping-479.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"log-shipping\". Mutant: line 364:118-364:124, mutator Regex: \"/^0+$/\" becomes \"/^0+/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/log-shipping/index.ts (> marks the mutated line):\n   358      .filter((k) => o[k] !== undefined)\n   359      .map((key) => ({ key, value: anyValue(o[key], depth) }));\n   360  }\n   361  \n   362  const resourceOf = (r: OtlpResource) => ({ attributes: attrs(r.attributes) });\n   363  const scopeOf = (r: OtlpResource) => ({ name: r.scope?.name ?? 'log-shipping', ...(r.scope?.version ? { version: r.scope.version } : {}) });\n>  364  const isId = (s: string | undefined, len: number) => s !== undefined && new RegExp(`^[0-9a-f]{${len}}$`).test(s) && !/^0+$/.test(s);\n   365  \n   366  export function otlpLogs(entries: readonly LogEntry[], resource: OtlpResource, o: { redactKeys?: readonly string[] } = {}) {\n   367    return {\n   368      resourceLogs: [\n   369        {\n   370          resource: resourceOf(resource),\n\nTest file style (intent/blocks/log-shipping/log-shipping.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Batcher, LabelGuard, lokiPush, otlpLogs, otlpSpans, anyValue, severityNumber, ShipError } from './index.ts';\nimport type { LogEntry } from './index.ts';\nimport type { SpanRecord } from '../observe/index.ts';\n\nconst e = (time: number, message = 'm', extra: Partial<LogEntry> = {}): LogEntry => ({ time, severity: 'INFO', message, ...extra });\nconst ok = async () => {};\n\ntest('a batch is due by count, by bytes and by age, not before', () => {\n  const b = new Batcher<number>({ maxBatchItems: 3, maxAgeMs: 1000, maxBatchBytes: 1000 }, () => 10);\n  b.add(1, 0);\n  assert.equal(b.due(500), false);\n  assert.equal(b.due(1000), true);\n  const c = new Batcher<number>({ maxBatchItems: 3, maxAgeMs: 99999 }, () => 1);\n  c.add(1, 0), c.add(2, 0);\n  assert.equal(c.due(1), false);\n  c.add(3, 0);\n  assert.equal(c.due(1), true);\n  const d = new Batcher<number>({ maxBatchBytes: 25, maxAgeMs: 99999 }, () => 10);\n  d.add(1, 0), d.add(2, 0);\n  assert.equal(d.due(0), false);\n  d.add(3, 0);\n  assert.equal(d.due(0), true);\n});\n\ntest('flush sends in order, respects batch size, and counts sent', async () => {\n  const b = new Batcher<number>({ maxBatchItems: 2, maxAgeMs: 0 }, () => 1);\n  [1, 2, 3, 4, 5].forEach((n) => b.add(n, 0));\n  const got: number[][] = [];\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/log-shipping-479.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.593Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "kanban",
+  "mutant": {
+    "id": "682",
+    "line": 369,
+    "column": 35,
+    "endLine": 369,
+    "endColumn": 46,
+    "mutator": "ConditionalExpression",
+    "original": "l.id === id",
+    "replacement": "true",
+    "lineText": "if (!this.lanes().some((l) => l.id === id)) throw new NotFound('lane');",
+    "prevText": "deleteLane(id: string): Op[] {",
+    "nextText": "return this.write('lane', id, { deleted: true });"
+  },
+  "mayEdit": [
+    "intent/blocks/kanban/kanban.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/kanban-682.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"kanban\". Mutant: line 369:35-369:46, mutator ConditionalExpression: \"l.id === id\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/kanban/index.ts (> marks the mutated line):\n   363  \n   364    addLane(id: string, title: string, o: { after?: string | null } = {}): Op[] {\n   365      if (this.exists('lane', id)) throw new BadOp('that lane id is taken');\n   366      return this.write('lane', id, { create: true, title, key: this.keyIn(this.view().lanes, undefined, o.after === undefined ? {} : { after: o.after }) });\n   367    }\n   368    deleteLane(id: string): Op[] {\n>  369      if (!this.lanes().some((l) => l.id === id)) throw new NotFound('lane');\n   370      return this.write('lane', id, { deleted: true });\n   371    }\n   372  \n   373    /** Counts for a list: cards in it, its limit, and whether it is over. */\n   374    wip(listId: string): { count: number; limit: number | null; over: boolean; mode: 'block' | 'warn' | null } {\n   375      const l = this.list(listId);\n\nTest file style (intent/blocks/kanban/kanban.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { checkOrder } from '../fractional-index/index.ts';\nimport { BadOp, Blocked, Board, NotFound, WipLimit } from './index.ts';\nimport type { Op } from './index.ts';\n\nconst seeded = (seed: number) => () => ((seed = (seed * 48271) % 2147483647) / 2147483647);\nconst mk = (actor: string, seed = 1) => new Board({ actor, random: seeded(seed) });\n\nfunction basic(b = mk('ana')) {\n  b.addList('todo', 'To do');\n  b.addList('doing', 'Doing', { kind: 'doing', after: 'todo' });\n  b.addList('done', 'Done', { kind: 'done', after: 'doing' });\n  return b;\n}\n\ntest('lists keep their order, cards keep theirs, and a move puts a card exactly where it was dropped', () => {\n  const b = basic();\n  assert.deepEqual(b.lists().map((l) => l.id), ['todo', 'doing', 'done']);\n  b.addCard('c1', 'todo', 'One');\n  b.addCard('c2', 'todo', 'Two');\n  b.addCard('c3', 'todo', 'Three');\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c1', 'c2', 'c3']);\n  b.moveCard('c3', 'todo', { before: 'c1' });\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c1', 'c2']);\n  b.moveCard('c1', 'todo', { after: 'c2' });\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c2', 'c1']);\n  b.moveCard('c2', 'doing');\n  assert.deepEqual(b.cards('doing').map((c) => c.id), ['c2']);\n  assert.deepEqual(b.cards('todo').map((c) => c.id), ['c3', 'c1']);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/kanban-682.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:46.358Z"
+}

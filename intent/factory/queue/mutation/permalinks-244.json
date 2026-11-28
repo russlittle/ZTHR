@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "permalinks",
+  "mutant": {
+    "id": "244",
+    "line": 168,
+    "column": 39,
+    "endLine": 168,
+    "endColumn": 41,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "const bare = path.replace(/\\/+$/, '');",
+    "prevText": "if (path === '/') return '/';",
+    "nextText": "return this.o.trailingSlash === 'always' ? `${bare}/` : bare;"
+  },
+  "mayEdit": [
+    "intent/blocks/permalinks/permalinks.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/permalinks-244.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"permalinks\". Mutant: line 168:39-168:41, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/permalinks/index.ts (> marks the mutated line):\n   162      }\n   163      this.routes = [...compiled].sort((a, b) => b.literals - a.literals || b.constrained - a.constrained || a.order - b.order);\n   164    }\n   165  \n   166    private slash(path: string): string {\n   167      if (path === '/') return '/';\n>  168      const bare = path.replace(/\\/+$/, '');\n   169      return this.o.trailingSlash === 'always' ? `${bare}/` : bare;\n   170    }\n   171  \n   172    /** Matches a request path (without its query string). Null when no route takes it. */\n   173    match(rawPath: string): Match | null {\n   174      if (typeof rawPath !== 'string' || rawPath.length > this.maxPath || !rawPath.startsWith('/')) return null;\n\nTest file style (intent/blocks/permalinks/permalinks.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CannotBuild, InvalidPattern, Permalinks } from './index.ts';\nimport type { RouteDef } from './index.ts';\n\nconst routes: RouteDef[] = [\n  { name: 'home', pattern: '/', query: { type: 'home' }, paginate: true },\n  { name: 'post', pattern: '/:year<year>/:month<month>/:slug<slug>', query: { type: 'post', year: ':year', month: ':month', slug: ':slug' } },\n  { name: 'archive', pattern: '/:year<year>/:month<month>', query: { type: 'archive', year: ':year', month: ':month' }, paginate: true },\n  { name: 'category', pattern: '/category/:path<slug>*', query: { type: 'category', path: ':path' }, paginate: true },\n  { name: 'page', pattern: '/:slug<slug>', query: { type: 'page', slug: ':slug' } },\n  { name: 'user', pattern: '/u/:id<int>', query: { type: 'user', id: ':id' } },\n  { name: 'search', pattern: '/search/:term?', query: { type: 'search', term: ':term' } },\n];\nconst pl = (slash: 'always' | 'never' = 'always') => new Permalinks(routes, { trailingSlash: slash });\n\ntest('a path becomes a route, typed parameters and the content query', () => {\n  const m = pl().match('/2026/11/hello-world/')!;\n  assert.deepEqual({ route: m.route, params: m.params, query: m.query, page: m.page }, {\n    route: 'post',\n    params: { year: 2026, month: '11', slug: 'hello-world' },\n    query: { type: 'post', year: 2026, month: '11', slug: 'hello-world' },\n    page: 1,\n  });\n  assert.equal(m.canonical, '/2026/11/hello-world/');\n  assert.equal(m.redirectTo, undefined, 'already canonical');\n  const u = pl().match('/u/42/')!;\n  assert.deepEqual(u.params, { id: 42 }, 'int constraints give numbers');\n  assert.deepEqual(pl().match('/')!.query, { type: 'home', page: 1 });\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/permalinks-244.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:55.337Z"
+}

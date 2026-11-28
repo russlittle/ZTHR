@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "graphql-schema",
+  "mutant": {
+    "id": "3002",
+    "line": 1660,
+    "column": 19,
+    "endLine": 1660,
+    "endColumn": 54,
+    "mutator": "LogicalOperator",
+    "original": "e instanceof GraphQLError && e.path",
+    "replacement": "e instanceof GraphQLError || e.path",
+    "lineText": "const err = e instanceof GraphQLError && e.path ? e : new GraphQLError(e instanceof Error ? e.message : String(e), { path, locations: [node.loc], ...(e instanceof GraphQLError && e.extensions ? { extensions: e.extensions as Record<string, unknown> } : {}) });",
+    "prevText": "} catch (e) {",
+    "nextText": "if (!nullable) throw err;"
+  },
+  "mayEdit": [
+    "intent/blocks/graphql-schema/graphql-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-3002.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"graphql-schema\". Mutant: line 1660:19-1660:54, mutator LogicalOperator: \"e instanceof GraphQLError && e.path\" becomes \"e instanceof GraphQLError || e.path\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/graphql-schema/index.ts (> marks the mutated line):\n  1654            const p = (source as Record<string, unknown>)[node.name];\n  1655            result = typeof p === 'function' ? await (p as Resolver).call(source, source, args, this.o.context, info) : p;\n  1656          } else result = undefined;\n  1657        }\n  1658        return await this.complete(def.type, nodes, result, path);\n  1659      } catch (e) {\n> 1660        const err = e instanceof GraphQLError && e.path ? e : new GraphQLError(e instanceof Error ? e.message : String(e), { path, locations: [node.loc], ...(e instanceof GraphQLError && e.extensions ? { extensions: e.extensions as Record<string, unknown> } : {}) });\n  1661        if (!nullable) throw err;\n  1662        this.errors.push(err);\n  1663        void retNamed;\n  1664        return null;\n  1665      }\n  1666    }\n\nTest file style (intent/blocks/graphql-schema/graphql-schema.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { GraphQLError, GraphQLSyntaxError, analyze, buildSchema, execute, parse, plan, validate } from './index.ts';\nimport type { Schema } from './index.ts';\n\nconst SDL = `\n  \"\"\"The root.\"\"\"\n  type Query {\n    hello(name: String = \"world\"): String!\n    user(id: ID!): User\n    users(first: Int, after: String): [User!]!\n    search(text: String!): [SearchResult!]!\n    node(id: ID!): Node\n    flaky: String\n    must: String!\n    items: [Int!]\n    nested: Outer\n  }\n  type Mutation { bump(by: Int = 1): Int! rename(id: ID!, input: RenameInput!): User }\n  directive @auth(role: String!) on FIELD_DEFINITION\n  interface Node { id: ID! }\n  type User implements Node {\n    id: ID!\n    name: String\n    email: String @deprecated(reason: \"use contact\")\n    role: Role!\n    friends(first: Int): [User!]\n    posts(limit: Int = 20): [Post!]! @cost(value: 2, multipliers: [\"limit\"])\n  }\n  type Post implements Node { id: ID! title: String! author: User }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-3002.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:42.658Z"
+}

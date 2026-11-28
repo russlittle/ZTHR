@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "doc-classify",
+  "mutant": {
+    "id": "349",
+    "line": 198,
+    "column": 88,
+    "endLine": 198,
+    "endColumn": 93,
+    "mutator": "ArithmeticOperator",
+    "original": "t + v",
+    "replacement": "t - v",
+    "lineText": "for (const w of f) if (this.vocab.has(w)) s += Math.log(((c.get(w) ?? 0) + 1) / (t + v));",
+    "prevText": "const t = this.totals.get(l)!;",
+    "nextText": "logs.set(l, s);"
+  },
+  "mayEdit": [
+    "intent/blocks/doc-classify/doc-classify.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/doc-classify-349.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"doc-classify\". Mutant: line 198:88-198:93, mutator ArithmeticOperator: \"t + v\" becomes \"t - v\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/doc-classify/index.ts (> marks the mutated line):\n   192      const v = this.vocab.size;\n   193      const logs = new Map<string, number>();\n   194      for (const l of this.docs.keys()) {\n   195        let s = Math.log(this.docs.get(l)! / n);\n   196        const c = this.counts.get(l)!;\n   197        const t = this.totals.get(l)!;\n>  198        for (const w of f) if (this.vocab.has(w)) s += Math.log(((c.get(w) ?? 0) + 1) / (t + v));\n   199        logs.set(l, s);\n   200      }\n   201      const max = Math.max(...logs.values());\n   202      const exp = new Map([...logs].map(([l, s]) => [l, Math.exp(s - max)] as const));\n   203      const sum = [...exp.values()].reduce((a, b) => a + b, 0);\n   204      return new Map([...exp].map(([l, e]) => [l, e / sum] as const));\n\nTest file style (intent/blocks/doc-classify/doc-classify.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadRule, Classifier, checkRegex, checkTemplate, matches, renderPath, safeSegment, validateRule } from './index.ts';\nimport type { Document, Entity, MatchRule } from './index.ts';\n\nconst doc = (content: string, o: Partial<Document> = {}): Document => ({ title: 'scan 001', content, created: '2024-03-17', ...o });\nconst m = (rule: MatchRule, text: string) => matches(rule, text);\n\ntest('any: one of the words, whole words only, ignoring case and accents', () => {\n  assert.equal(m({ algorithm: 'any', pattern: 'invoice rechnung' }, 'Your RECHNUNG for March').matched, true);\n  assert.equal(m({ algorithm: 'any', pattern: 'invoice' }, 'invoices attached').matched, false, 'a word inside another word is not a match');\n  assert.equal(m({ algorithm: 'any', pattern: 'cafe' }, 'Café menu').matched, true);\n  assert.equal(m({ algorithm: 'any', pattern: 'Cafe', insensitive: false }, 'cafe menu').matched, false);\n  assert.equal(m({ algorithm: 'any', pattern: 'a b' }, 'a b b a').strength, 2);\n});\n\ntest('all: every word must be there, in any order', () => {\n  assert.equal(m({ algorithm: 'all', pattern: 'electric bill' }, 'the bill for electric service').matched, true);\n  assert.equal(m({ algorithm: 'all', pattern: 'electric bill' }, 'the bill for gas').matched, false);\n});\n\ntest('literal: the exact phrase, across line breaks and punctuation', () => {\n  assert.equal(m({ algorithm: 'literal', pattern: 'Amount due' }, 'Total\\nAmount   due: $5').matched, true);\n  assert.equal(m({ algorithm: 'literal', pattern: 'amount due' }, 'due amount').matched, false);\n  assert.equal(m({ algorithm: 'literal', pattern: 'amount due' }, 'discount amount duelling').matched, false);\n});\n\ntest('regex: matches and says where; case option; bad patterns are refused when the rule is made', () => {\n  const r = m({ algorithm: 'regex', pattern: 'INV-\\\\d{4,}' }, 'Ref inv-20431 today');\n  assert.equal(r.matched, true);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/doc-classify-349.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.551Z"
+}

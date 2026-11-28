@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "expression-engine",
+  "mutant": {
+    "id": "1022",
+    "line": 472,
+    "column": 114,
+    "endLine": 472,
+    "endColumn": 137,
+    "mutator": "StringLiteral",
+    "original": "'an exponent over 1000'",
+    "replacement": "\"\"",
+    "lineText": "pow: new Fn('pow', (a) => { const e = num(a[1], 'pow'); if (Math.abs(e) > 1000) throw new ExpressionLimitError('an exponent over 1000'); return num(a[0], 'pow') ** e; }),",
+    "prevText": "sqrt: mathFn('sqrt', Math.sqrt), min: mathFn('min', Math.min), max: mathFn('max', Math.max), sign: mathFn('sign', Math.sign),",
+    "nextText": "});"
+  },
+  "mayEdit": [
+    "intent/blocks/expression-engine/expression-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1022.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"expression-engine\". Mutant: line 472:114-472:137, mutator StringLiteral: \"'an exponent over 1000'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/expression-engine/index.ts (> marks the mutated line):\n   466  \n   467  const mathFn = (name: string, f: (...n: number[]) => number) => new Fn(name, (a) => f(...a.map((x) => num(x, name))));\n   468  const MATH = new Namespace({\n   469    PI: Math.PI, E: Math.E,\n   470    abs: mathFn('abs', Math.abs), round: mathFn('round', Math.round), floor: mathFn('floor', Math.floor), ceil: mathFn('ceil', Math.ceil), trunc: mathFn('trunc', Math.trunc),\n   471    sqrt: mathFn('sqrt', Math.sqrt), min: mathFn('min', Math.min), max: mathFn('max', Math.max), sign: mathFn('sign', Math.sign),\n>  472    pow: new Fn('pow', (a) => { const e = num(a[1], 'pow'); if (Math.abs(e) > 1000) throw new ExpressionLimitError('an exponent over 1000'); return num(a[0], 'pow') ** e; }),\n   473  });\n   474  \n   475  const BUILTINS: Record<string, unknown> = {\n   476    Math: MATH, NaN: NaN, Infinity: Infinity,\n   477    min: MATH.members.min, max: MATH.members.max, abs: MATH.members.abs, round: MATH.members.round, floor: MATH.members.floor, ceil: MATH.members.ceil, sqrt: MATH.members.sqrt, pow: MATH.members.pow,\n   478    sum: new Fn('sum', (a) => needArr(a[0], 'sum').reduce<number>((s, x) => s + num(x, 'sum'), 0)),\n\nTest file style (intent/blocks/expression-engine/expression-engine.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  compile, evaluate, references, render, resolve, resolveDeep, compileTemplate,\n  ExpressionSyntaxError, ExpressionRuntimeError, ExpressionLimitError, ExpressionForbidden,\n} from './index.ts';\n\nconst ev = (s: string, ctx: unknown = {}) => evaluate(s, ctx);\n\ntest('arithmetic and precedence', () => {\n  assert.equal(ev('1 + 2 * 3'), 7);\n  assert.equal(ev('(1 + 2) * 3'), 9);\n  assert.equal(ev('2 ** 3 ** 2'), 512);\n  assert.equal(ev('10 % 4'), 2);\n  assert.equal(ev('-3 + 5'), 2);\n});\n\ntest('strings, concatenation and comparison', () => {\n  assert.equal(ev('\"a\" + \"b\" + 1'), 'ab1');\n  assert.equal(ev('\"abc\" < \"abd\"'), true);\n  assert.equal(ev('1 === 1 && 2 !== 3'), true);\n});\n\ntest('logic operators return operands', () => {\n  assert.equal(ev('0 || \"x\"'), 'x');\n  assert.equal(ev('\"a\" && \"b\"'), 'b');\n  assert.equal(ev('null ?? 5'), 5);\n  assert.equal(ev('0 ?? 5'), 0);\n  assert.equal(ev('true ? 1 : 2'), 1);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/expression-engine-1022.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.811Z"
+}

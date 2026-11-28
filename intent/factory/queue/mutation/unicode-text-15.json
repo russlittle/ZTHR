@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "unicode-text",
+  "mutant": {
+    "id": "15",
+    "line": 24,
+    "column": 7,
+    "endLine": 24,
+    "endColumn": 21,
+    "mutator": "EqualityOperator",
+    "original": "s.length > MAX",
+    "replacement": "s.length >= MAX",
+    "lineText": "if (s.length > MAX) throw new BadText('text longer than a million code units is refused');",
+    "prevText": "if (typeof s !== 'string') throw new BadText('that is not text');",
+    "nextText": "if (LONE.test(s)) throw new BadText('text has a lone surrogate (ill-formed UTF-16)');"
+  },
+  "mayEdit": [
+    "intent/blocks/unicode-text/unicode-text.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/unicode-text-15.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"unicode-text\". Mutant: line 24:7-24:21, mutator EqualityOperator: \"s.length > MAX\" becomes \"s.length >= MAX\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/unicode-text/index.ts (> marks the mutated line):\n    18  \n    19  const MAX = 1_000_000;\n    20  const LONE = /[\\uD800-\\uDBFF](?![\\uDC00-\\uDFFF])|(?<![\\uD800-\\uDBFF])[\\uDC00-\\uDFFF]/;\n    21  \n    22  function guard(s: string): string {\n    23    if (typeof s !== 'string') throw new BadText('that is not text');\n>   24    if (s.length > MAX) throw new BadText('text longer than a million code units is refused');\n    25    if (LONE.test(s)) throw new BadText('text has a lone surrogate (ill-formed UTF-16)');\n    26    return s;\n    27  }\n    28  \n    29  export type Form = 'NFC' | 'NFD' | 'NFKC' | 'NFKD';\n    30  \n\nTest file style (intent/blocks/unicode-text/unicode-text.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadText, checkIdentifier, collator, confusable, equalFolded, fold, graphemeLength, graphemes, isMixedScript, isNormalised, lookalikes, normalise, reverse, scriptsOf, skeleton, sortedFor, truncate } from './index.ts';\n\nconst cps = (s: string) => [...s].map((c) => c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')).join(' ');\nconst from = (hex: string) => String.fromCodePoint(...hex.split(' ').map((h) => parseInt(h, 16)));\n\ntest('UCD NormalizationTest: U+1E9B U+0323 in all four forms', () => {\n  const s = from('1E9B 0323');\n  assert.equal(cps(normalise(s, 'NFC')), '1E9B 0323');\n  assert.equal(cps(normalise(s, 'NFD')), '017F 0323 0307');\n  assert.equal(cps(normalise(s, 'NFKC')), '1E69');\n  assert.equal(cps(normalise(s, 'NFKD')), '0073 0323 0307');\n});\n\ntest('NFC composes and NFD decomposes; a precomposed and a combined e-acute differ until normalised', () => {\n  assert.notEqual('é', 'é');\n  assert.equal(normalise('é'), 'é');\n  assert.equal(normalise('é', 'NFD'), 'é');\n  assert.equal(isNormalised('é'), false);\n  assert.equal(isNormalised('é'), true);\n  assert.equal(normalise('Ａﬁ', 'NFKC'), 'Afi', 'full-width A and the fi ligature');\n  assert.equal(cps(normalise('한', 'NFD')), '1112 1161 11AB', 'Hangul syllable to jamo');\n});\n\ntest('ill-formed and oversized text is refused', () => {\n  assert.throws(() => normalise('a\\uD800b'), /lone surrogate/);\n  assert.throws(() => graphemes('\\uDC00'), BadText);\n  assert.throws(() => fold('x'.repeat(1_000_001)), /million/);\n  assert.throws(() => normalise(5 as never), /not text/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/unicode-text-15.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:11.526Z"
+}

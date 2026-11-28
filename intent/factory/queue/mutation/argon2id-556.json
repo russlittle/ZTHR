@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "argon2id",
+  "mutant": {
+    "id": "556",
+    "line": 390,
+    "column": 15,
+    "endLine": 390,
+    "endColumn": 40,
+    "mutator": "ConditionalExpression",
+    "original": "pass === 0 && slice === 0",
+    "replacement": "false",
+    "lineText": "if (pass === 0 && slice === 0) refLane = lane;",
+    "prevText": "let refLane = j2 % lanes;",
+    "nextText": "const same = refLane === lane;"
+  },
+  "mayEdit": [
+    "intent/blocks/argon2id/argon2id.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/argon2id-556.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"argon2id\". Mutant: line 390:15-390:40, mutator ConditionalExpression: \"pass === 0 && slice === 0\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/argon2id/index.ts (> marks the mutated line):\n   384              j2 = addr[2 * (i % 128) + 1]!;\n   385            } else {\n   386              j1 = mem[prev * BLOCK_WORDS]!;\n   387              j2 = mem[prev * BLOCK_WORDS + 1]!;\n   388            }\n   389            let refLane = j2 % lanes;\n>  390            if (pass === 0 && slice === 0) refLane = lane;\n   391            const same = refLane === lane;\n   392            let area: number;\n   393            if (pass === 0) {\n   394              if (slice === 0) area = i - 1;\n   395              else if (same) area = slice * segLen + i - 1;\n   396              else area = slice * segLen + (i === 0 ? -1 : 0);\n\nTest file style (intent/blocks/argon2id/argon2id.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport * as nodeCrypto from 'node:crypto';\nimport { blake2b, hPrime, argon2, argon2id, argon2Async, argon2idAsync, checkParams, encode, parseEncoded, equalBytes, Argon2Refused, Argon2OutOfTime, DEFAULT_LIMITS, PRESETS } from './index.ts';\n\nconst hex = (b: Uint8Array) => Buffer.from(b).toString('hex');\nconst fill = (n: number, x: number) => new Uint8Array(n).fill(x);\nconst utf8 = (s: string) => new TextEncoder().encode(s);\nconst rfc = { memoryKiB: 32, passes: 3, lanes: 4, tagLength: 32, secret: fill(8, 3), associatedData: fill(12, 4) };\n\ntest('BLAKE2b RFC 7693 appendix A: \"abc\"', () => {\n  assert.equal(hex(blake2b(utf8('abc'))), 'ba80a53f981c4d0d6a2797b69f12f6e94c212f14685ac4b74b12bb6fdbffa2d17d87c5392aab792dc252d5de4533cc9518d38aa8dbf1925ab92386edd4009923');\n});\n\ntest('BLAKE2b of the empty message', () => {\n  assert.equal(hex(blake2b(new Uint8Array(0))), '786a02f742015903c6c6fd852552d272912f4740e15847618a86e217f71f5419d25e1031afee585313896444934eb04b903a685b1448b755d56f701afe9be2ce');\n});\n\ntest('BLAKE2b agrees with node blake2b512 at block boundaries', () => {\n  for (const n of [1, 63, 64, 127, 128, 129, 255, 256, 257, 1000, 5000]) {\n    const data = Uint8Array.from({ length: n }, (_, i) => (i * 7 + 3) & 0xff);\n    assert.equal(hex(blake2b(data)), nodeCrypto.createHash('blake2b512').update(data).digest('hex'), `n=${n}`);\n  }\n});\n\ntest('BLAKE2b with a key and shorter outputs', () => {\n  const key = Uint8Array.from({ length: 64 }, (_, i) => i);\n  assert.equal(hex(blake2b(new Uint8Array(0), 64, key)), '10ebb67700b1868efb4417987acf4690ae9d972fb7a590c2f02871799aaa4786b5e996e8f0f4eb981fc214b005f42d2ff4233499391653df7aefcbc13fc51568');\n  const short = blake2b(utf8('abc'), 20);\n  assert.equal(short.length, 20);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/argon2id-556.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.272Z"
+}

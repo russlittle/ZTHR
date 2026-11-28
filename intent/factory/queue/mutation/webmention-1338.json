@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webmention",
+  "mutant": {
+    "id": "1338",
+    "line": 540,
+    "column": 21,
+    "endLine": 540,
+    "endColumn": 38,
+    "mutator": "EqualityOperator",
+    "original": "out.length > 5000",
+    "replacement": "out.length >= 5000",
+    "lineText": "if (depth > 20 || out.length > 5000) return;",
+    "prevText": "function jsonStrings(v: unknown, out: string[], depth = 0): void {",
+    "nextText": "if (typeof v === 'string') out.push(v);"
+  },
+  "mayEdit": [
+    "intent/blocks/webmention/webmention.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webmention-1338.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webmention\". Mutant: line 540:21-540:38, mutator EqualityOperator: \"out.length > 5000\" becomes \"out.length >= 5000\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webmention/index.ts (> marks the mutated line):\n   534      }\n   535    });\n   536    return out;\n   537  }\n   538  \n   539  function jsonStrings(v: unknown, out: string[], depth = 0): void {\n>  540    if (depth > 20 || out.length > 5000) return;\n   541    if (typeof v === 'string') out.push(v);\n   542    else if (Array.isArray(v)) for (const x of v) jsonStrings(x, out, depth + 1);\n   543    else if (typeof v === 'object' && v !== null) for (const x of Object.values(v)) jsonStrings(x, out, depth + 1);\n   544  }\n   545  \n   546  /** Does this fetched source document link to the target? */\n\nTest file style (intent/blocks/webmention/webmention.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport {\n  Inbox, WebmentionRejected, checkUrl, decodeEntities, discover, findEndpoint, interpret, isPrivateHost, linksTo,\n  normalize, outgoingTargets, parseLinkHeader, parseMf2, send, type Fetch, type FetchInit, type FetchResult,\n} from './index.ts';\n\ntype Reply = Partial<FetchResult> & { status?: number };\nconst html = (body: string, extra: Reply = {}): Reply => ({ status: 200, headers: { 'content-type': 'text/html; charset=utf-8' }, body, ...extra });\nfunction world(pages: Record<string, Reply | ((i: FetchInit) => Reply)>) {\n  const calls: { url: string; init: FetchInit }[] = [];\n  const fetch: Fetch = async (url, init) => {\n    calls.push({ url, init });\n    const p = pages[url];\n    if (!p) return { status: 404, headers: {}, body: '' };\n    const r = typeof p === 'function' ? p(init) : p;\n    return { status: r.status ?? 200, headers: r.headers ?? {}, body: r.body ?? '' };\n  };\n  return { fetch, calls };\n}\nconst T0 = Date.UTC(2024, 4, 6, 12, 0, 0);\nconst ours = (u: URL) => u.hostname === 'me.example';\n\ntest('Link header parsing handles several links, commas in URLs and quoted rels', () => {\n  const l = parseLinkHeader('<https://a.example/x,y>; rel=\"webmention\", <https://b.example/>; rel=\"stylesheet preload\"; title=\"a, b\", </wm>; REL=webmention');\n  assert.deepEqual(l.map((x) => x.url), ['https://a.example/x,y', 'https://b.example/', '/wm']);\n  assert.deepEqual(l[1]!.rels, ['stylesheet', 'preload']);\n  assert.deepEqual(l[2]!.rels, ['webmention']);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webmention-1338.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:14.627Z"
+}

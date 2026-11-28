@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "microblog",
+  "mutant": {
+    "id": "129",
+    "line": 195,
+    "column": 9,
+    "endLine": 195,
+    "endColumn": 29,
+    "mutator": "ConditionalExpression",
+    "original": "viewer !== undefined",
+    "replacement": "true",
+    "lineText": "if (viewer !== undefined && viewer === s.author) return true;",
+    "prevText": "if (s.deleted) return false;",
+    "nextText": "if (viewer !== undefined && (this.#o.relations.blocks(s.author, viewer) || this.#o.relations.blocks(viewer, s.author))) return false;"
+  },
+  "mayEdit": [
+    "intent/blocks/microblog/microblog.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/microblog-129.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"microblog\". Mutant: line 195:9-195:29, mutator ConditionalExpression: \"viewer !== undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/microblog/index.ts (> marks the mutated line):\n   189      return s;\n   190    }\n   191  \n   192    /** Who may read a status. A deleted one nobody may. */\n   193    canSee(viewer: string | undefined, s: Status): boolean {\n   194      if (s.deleted) return false;\n>  195      if (viewer !== undefined && viewer === s.author) return true;\n   196      if (viewer !== undefined && (this.#o.relations.blocks(s.author, viewer) || this.#o.relations.blocks(viewer, s.author))) return false;\n   197      if (s.visibility === 'public' || s.visibility === 'unlisted') return true;\n   198      if (viewer === undefined) return false;\n   199      if (s.mentions.includes(viewer)) return true;\n   200      return s.visibility === 'private' && this.#o.relations.follows(viewer, s.author);\n   201    }\n\nTest file style (intent/blocks/microblog/microblog.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { PUBLIC } from '../activitypub/index.ts';\nimport { MicroblogError, Microblog, addressing, fromNote, parseText, renderHtml, toActivity, visibilityFrom, type Relations, type Status } from './index.ts';\n\nconst A = 'https://a.example/users/alice';\nconst B = 'https://b.example/users/bob';\nconst C = 'https://c.example/users/carol';\nconst D = 'https://d.example/users/dan';\n\nfunction setup(follows: [string, string][] = [], blocks: [string, string][] = []) {\n  let t = Date.UTC(2026, 10, 28, 12, 0, 0);\n  let n = 0;\n  const f = new Set(follows.map(([a, b]) => `${a}>${b}`));\n  const bl = new Set(blocks.map(([a, b]) => `${a}>${b}`));\n  const relations: Relations = { follows: (a, b) => f.has(`${a}>${b}`), blocks: (a, b) => bl.has(`${a}>${b}`) };\n  const handles: Record<string, string> = { alice: A, bob: B, carol: C, dan: D };\n  const mb = new Microblog({ now: () => t, newId: () => `s${++n}`, relations, resolveMention: (u) => handles[u] });\n  return { mb, tick: (ms: number) => (t += ms), now: () => t, follow: (a: string, b: string) => f.add(`${a}>${b}`) };\n}\n\ntest('mentions and hashtags are found in text; tags are lower-cased and unique; e-mail addresses and urls are not mentions', () => {\n  const p = parseText('Hi @bob and @carol@c.example! #Fediverse #fediverse #日本語 mail me@x.org http://x.org/@nobody#frag');\n  assert.deepEqual(p.mentions, [{ user: 'bob', host: undefined }, { user: 'carol', host: 'c.example' }]);\n  assert.deepEqual(p.tags, ['fediverse', '日本語']);\n});\n\ntest('html rendering escapes everything, then links urls, mentions and tags, and keeps line breaks', () => {\n  const html = renderHtml('<b>x</b> & @bob see https://x.example/a?b=1&c=2. #Tag\\nnext @ghost', {\n    tagUrl: (t) => `https://a.example/tags/${t}`,\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/microblog-129.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "9d6e9ecc48f6ca8ed37fbe9de4f717ba2c10ac8f"
+  },
+  "createdAt": "2026-11-28T09:59:51.103Z"
+}

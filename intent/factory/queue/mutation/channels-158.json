@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "channels",
+  "mutant": {
+    "id": "158",
+    "line": 157,
+    "column": 82,
+    "endLine": 157,
+    "endColumn": 84,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "const c: Channel = { id: this.newId(), kind: o.kind, name, topic: o.topic ?? '', createdBy: by, createdAt: this.now(), archived: false, members: new Map(), pins: [], retentionDays: o.retentionDays, broadcastRole: o.broadcastRole ?? 'member' };",
+    "prevText": "if ((o.topic?.length ?? 0) > 250) throw new ChannelError('a topic is at most 250 characters');",
+    "nextText": "this.chans.set(c.id, c);"
+  },
+  "mayEdit": [
+    "intent/blocks/channels/channels.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/channels-158.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"channels\". Mutant: line 157:82-157:84, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/channels/index.ts (> marks the mutated line):\n   151      const name = o.name.trim().toLowerCase();\n   152      if (!NAME.test(name)) throw new ChannelError('a channel name is 1 to 40 lower-case letters, digits, - or _');\n   153      if ([...this.chans.values()].some((c) => c.kind !== 'direct' && c.name === name)) throw new ChannelError(`the name ${name} is taken`);\n   154      if (o.kind !== 'public' && o.kind !== 'private') throw new ChannelError('a channel is public or private');\n   155      if (o.retentionDays !== undefined && (!Number.isInteger(o.retentionDays) || o.retentionDays < 1)) throw new ChannelError('retention is a whole number of days');\n   156      if ((o.topic?.length ?? 0) > 250) throw new ChannelError('a topic is at most 250 characters');\n>  157      const c: Channel = { id: this.newId(), kind: o.kind, name, topic: o.topic ?? '', createdBy: by, createdAt: this.now(), archived: false, members: new Map(), pins: [], retentionDays: o.retentionDays, broadcastRole: o.broadcastRole ?? 'member' };\n   158      this.chans.set(c.id, c);\n   159      this.add(c, by, 'owner');\n   160      for (const w of new Set(o.members ?? [])) if (w !== by) this.add(c, w, 'member');\n   161      this.emit('channels.channel.created', { channel: c.id, kind: c.kind, by }, c.id);\n   162      return c;\n   163    }\n\nTest file style (intent/blocks/channels/channels.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Catalogue, Hub } from '../events/index.ts';\nimport { ChannelError, Channels, eventTypes } from './index.ts';\n\nconst DAY = 86_400_000;\nconst USERS = ['ana', 'bo', 'cy', 'di', 'channel'];\nfunction mk(o: Partial<ConstructorParameters<typeof Channels>[0]> = {}) {\n  let t = Date.UTC(2026, 0, 5, 12);\n  const ch = new Channels({ person: (h) => (USERS.includes(h) ? h : undefined), now: () => t, ...o });\n  return { ch, tick: (ms: number) => void (t += ms), now: () => t };\n}\n\ntest('names: normalised, validated and unique among channels; direct channels do not take names', () => {\n  const { ch } = mk();\n  assert.equal(ch.create('ana', { name: ' General ', kind: 'public' }).name, 'general');\n  assert.throws(() => ch.create('bo', { name: 'general', kind: 'private' }), /taken/);\n  for (const bad of ['', 'has space', '-lead', 'x'.repeat(41), '#general', 'a/b', 'ünï'])\n    assert.throws(() => ch.create('ana', { name: bad, kind: 'public' }), /1 to 40 lower-case/, bad);\n  assert.throws(() => ch.create('ana', { name: 'x', kind: 'direct' as 'public' }), /public or private/);\n  assert.throws(() => ch.create('ana', { name: 'x', kind: 'public', retentionDays: 0 }), /whole number of days/);\n  assert.throws(() => ch.create('ana', { name: 'x', kind: 'public', topic: 'y'.repeat(251) }), /250/);\n  ch.open('ana', 'bo');\n  assert.ok(ch.create('ana', { name: 'bo', kind: 'public' }));\n});\n\ntest('visibility: public is listed for all, private and direct only for members', () => {\n  const { ch } = mk();\n  const pub = ch.create('ana', { name: 'pub', kind: 'public' });\n  const priv = ch.create('ana', { name: 'priv', kind: 'private', members: ['bo'] });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/channels-158.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.055Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "jsonld",
+  "mutant": {
+    "id": "1086",
+    "line": 520,
+    "column": 9,
+    "endLine": 520,
+    "endColumn": 21,
+    "mutator": "ConditionalExpression",
+    "original": "!isObj(item)",
+    "replacement": "false",
+    "lineText": "if (!isObj(item)) continue;",
+    "prevText": "for (const item of items) {",
+    "nextText": "const r = await expandNode(ctx, item, st, 0);"
+  },
+  "mayEdit": [
+    "intent/blocks/jsonld/jsonld.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/jsonld-1086.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"jsonld\". Mutant: line 520:9-520:21, mutator ConditionalExpression: \"!isObj(item)\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/jsonld/index.ts (> marks the mutated line):\n   514    else if (isObj(doc)) items = [doc];\n   515    else throw new JsonLdError('invalid-document', 'a JSON-LD document is an object or an array');\n   516    const result: Expanded[] = [];\n   517    let ctx = start;\n   518    if (isObj(doc) && '@context' in doc) ctx = await processContext(start, doc['@context'], st);\n   519    for (const item of items) {\n>  520      if (!isObj(item)) continue;\n   521      const r = await expandNode(ctx, item, st, 0);\n   522      if (!r) continue;\n   523      const keys = Object.keys(r);\n   524      if (keys.length === 1 && keys[0] === '@graph') result.push(...((r['@graph'] as Expanded[]) ?? []));\n   525      else if (keys.length === 0 || (keys.length === 1 && keys[0] === '@id') || '@value' in r) continue; // free floating\n   526      else result.push(r);\n\nTest file style (intent/blocks/jsonld/jsonld.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport {\n  AS, AS_PUBLIC, ContextLoader, FEDERATION_CONTEXT, JsonLdError, SECURITY, assertSameOrigin, asArray, compact, expand, hasType, idOf, idsOf, normalise, typesOf, type Json,\n} from './index.ts';\n\nconst code = (c: string) => (e: unknown) => e instanceof JsonLdError && e.code === c;\n\nconst mastodonNote = (): Json => ({\n  '@context': [AS, SECURITY, { toot: 'http://joinmastodon.org/ns#', sensitive: 'as:sensitive', Hashtag: 'as:Hashtag', discoverable: 'toot:discoverable' }],\n  id: 'https://remote.example/users/ana/statuses/1/activity',\n  type: 'Create',\n  actor: 'https://remote.example/users/ana',\n  published: '2024-05-01T12:00:00Z',\n  to: [AS_PUBLIC],\n  cc: ['https://remote.example/users/ana/followers'],\n  object: {\n    id: 'https://remote.example/users/ana/statuses/1',\n    type: 'Note',\n    attributedTo: 'https://remote.example/users/ana',\n    content: '<p>Hello</p>',\n    contentMap: { en: '<p>Hello</p>', fr: '<p>Bonjour</p>' },\n    sensitive: false,\n    tag: [{ type: 'Hashtag', href: 'https://remote.example/tags/hi', name: '#hi' }],\n  },\n});\n\ntest('expansion gives full IRIs, arrays everywhere, and typed values and references', async () => {\n  const [a] = await expand(mastodonNote());\n  const AS_NS = 'https://www.w3.org/ns/activitystreams#';\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/jsonld-1086.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:45.812Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mqtt",
+  "mutant": {
+    "id": "972",
+    "line": 542,
+    "column": 43,
+    "endLine": 542,
+    "endColumn": 72,
+    "mutator": "StringLiteral",
+    "original": "'retain handling cannot be 3'",
+    "replacement": "\"\"",
+    "lineText": "if (rh === 3) throw new MqttError('retain handling cannot be 3');",
+    "prevText": "const rh = (o >> 4) & 3;",
+    "nextText": "subscriptions.push({ filter, qos: qos as 0 | 1 | 2, ...(v === 5 ? { noLocal: !!(o & 4), retainAsPublished: !!(o & 8), retainHandling: rh as 0 | 1 | 2 } : {}) });"
+  },
+  "mayEdit": [
+    "intent/blocks/mqtt/mqtt.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mqtt-972.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mqtt\". Mutant: line 542:43-542:72, mutator StringLiteral: \"'retain handling cannot be 3'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mqtt/index.ts (> marks the mutated line):\n   536          const o = r.u8();\n   537          const qos = o & 3;\n   538          if (qos === 3) throw new MqttError('the subscription QoS cannot be 3');\n   539          if (v === 4 && o & 0xfc) throw new MqttError('the reserved subscription bits must be 0');\n   540          if (v === 5 && o & 0xc0) throw new MqttError('the reserved subscription bits must be 0');\n   541          const rh = (o >> 4) & 3;\n>  542          if (rh === 3) throw new MqttError('retain handling cannot be 3');\n   543          subscriptions.push({ filter, qos: qos as 0 | 1 | 2, ...(v === 5 ? { noLocal: !!(o & 4), retainAsPublished: !!(o & 8), retainHandling: rh as 0 | 1 | 2 } : {}) });\n   544        }\n   545        if (!subscriptions.length) throw new MqttError('a subscribe has no topic filters');\n   546        return withProps({ type: 'subscribe', packetId, subscriptions } as Packet, p);\n   547      }\n   548      case 'suback': {\n\nTest file style (intent/blocks/mqtt/mqtt.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MqttError, PacketStream, RetainedStore, Session, SubscriptionTree, decode, decodeVarInt, encode, encodeVarInt, shared, topicMatches, validateTopicFilter, validateTopicName } from './index.ts';\nimport type { Packet } from './index.ts';\n\nconst hex = (s: string) => Buffer.from(s.replace(/\\s+/g, ''), 'hex');\nconst h = (b: Buffer) => b.toString('hex');\n\ntest('MQTT 3.1.1 section 2.2.3: variable-length integers at every boundary', () => {\n  const v: [number, string][] = [[0, '00'], [127, '7f'], [128, '8001'], [16383, 'ff7f'], [16384, '808001'], [2097151, 'ffff7f'], [2097152, '80808001'], [268435455, 'ffffff7f']];\n  for (const [n, e] of v) {\n    assert.equal(h(encodeVarInt(n)), e);\n    assert.deepEqual(decodeVarInt(hex(e)), { value: n, length: e.length / 2 });\n  }\n  assert.throws(() => encodeVarInt(268435456), /0 to 268435455/);\n  assert.throws(() => encodeVarInt(-1), MqttError);\n  assert.throws(() => decodeVarInt(hex('ffffffff7f')), /longer than four bytes/);\n  assert.throws(() => decodeVarInt(hex('8000')), /shortest form/);\n  assert.equal(decodeVarInt(hex('80')), undefined, 'incomplete is not an error');\n});\n\ntest('3.1.1 CONNECT, CONNACK, PINGREQ, DISCONNECT bytes', () => {\n  const c: Packet = { type: 'connect', protocolLevel: 4, clean: true, keepAlive: 60, clientId: '' };\n  assert.equal(h(encode(c, 4)), '100c00044d5154540402003c0000');\n  assert.deepEqual(decode(encode(c, 4), 4), c);\n  assert.equal(h(encode({ type: 'connack', sessionPresent: false, code: 0 }, 4)), '20020000');\n  assert.equal(h(encode({ type: 'pingreq' }, 4)), 'c000');\n  assert.equal(h(encode({ type: 'pingresp' }, 4)), 'd000');\n  assert.equal(h(encode({ type: 'disconnect' }, 4)), 'e000');\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mqtt-972.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.350Z"
+}

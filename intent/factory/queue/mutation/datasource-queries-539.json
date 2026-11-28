@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "datasource-queries",
+  "mutant": {
+    "id": "539",
+    "line": 364,
+    "column": 203,
+    "endLine": 364,
+    "endColumn": 220,
+    "mutator": "LogicalOperator",
+    "original": "q.maxRows ?? 1000",
+    "replacement": "q.maxRows && 1000",
+    "lineText": "return selectSql({ ...rest, columns: cols, ...(where ? { where } : {}), limit: size, ...(offset ? { offset } : {}) } as SelectSpec, src.collections, { dialect: src.dialect, maxLimit: Math.max(size, q.maxRows ?? 1000), maxOffset: 1_000_000 });",
+    "prevText": "void _unbound;",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/datasource-queries/datasource-queries.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-539.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"datasource-queries\". Mutant: line 364:203-364:220, mutator LogicalOperator: \"q.maxRows ?? 1000\" becomes \"q.maxRows && 1000\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/datasource-queries/index.ts (> marks the mutated line):\n   358      }\n   359      const base = spec.where ? bindWhere(spec.where, args) : undefined;\n   360      const conds = [...(base ? [base] : []), ...filters, ...(keyset ? [keyset] : [])];\n   361      const where: Where | undefined = conds.length === 0 ? undefined : conds.length === 1 ? conds[0]! : { and: conds };\n   362      const { where: _unbound, ...rest } = spec;\n   363      void _unbound;\n>  364      return selectSql({ ...rest, columns: cols, ...(where ? { where } : {}), limit: size, ...(offset ? { offset } : {}) } as SelectSpec, src.collections, { dialect: src.dialect, maxLimit: Math.max(size, q.maxRows ?? 1000), maxOffset: 1_000_000 });\n   365    }\n   366  \n   367    private compileTemplate(pieces: readonly Piece[], args: Readonly<Record<string, unknown>>, s: Session, dialect: Dialect): Built {\n   368      let text = '';\n   369      const params: (string | number | boolean | null)[] = [];\n   370      const bind = (x: unknown) => {\n\nTest file style (intent/blocks/datasource-queries/datasource-queries.test.ts):\n13 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { randomBytes } from 'node:crypto';\nimport { Engine, QueryDefError, BadArguments, Forbidden, BadCursor } from './index.ts';\nimport type { DataSource, Session } from './index.ts';\nimport type { Built } from '../sql-builder/index.ts';\nimport type { Collection } from '../query/index.ts';\n\nconst collections: Collection[] = [\n  { name: 'orders', fields: { id: { type: 'number' }, owner_id: { type: 'string' }, status: { type: 'string' }, total: { type: 'number' }, created: { type: 'date' }, note: { type: 'string', sensitive: true } } },\n  { name: 'customers', fields: { id: { type: 'number' }, name: { type: 'string' }, email: { type: 'string' } } },\n];\nconst ana: Session = { user: 'ana', roles: ['sales'], attrs: { team: 'north' } };\nconst boss: Session = { user: 'boss', roles: ['manager'] };\nconst nobody: Session = { user: 'x', roles: [] };\n\nfunction setup(rowsFor: (b: Built, n: number) => Record<string, unknown>[] = () => []) {\n  const calls: Built[] = [];\n  const src: DataSource = {\n    name: 'main',\n    dialect: 'pg',\n    collections,\n    policy: {\n      orders: { roles: ['sales', 'manager'], columns: { sales: ['id', 'status', 'total', 'created', 'owner_id'] }, rowFilter: (s) => (s.roles.includes('manager') ? undefined : { column: 'owner_id', op: '=', value: s.user }) },\n      customers: { roles: ['sales', 'manager'], columns: { sales: ['id', 'name'] } },\n    },\n    run: async (b) => {\n      calls.push(b);\n      return rowsFor(b, calls.length);\n    },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/datasource-queries-539.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.950Z"
+}

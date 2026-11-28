@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "moderation-model",
+  "mutant": {
+    "id": "284",
+    "line": 286,
+    "column": 48,
+    "endLine": 286,
+    "endColumn": 66,
+    "mutator": "LogicalOperator",
+    "original": "item.context ?? ''",
+    "replacement": "item.context && ''",
+    "lineText": "const key = createHash('sha256').update(`${item.context ?? ''}\\0${prep.text}`).digest('hex');",
+    "prevText": "const prep = this.#prepare(item.text);",
+    "nextText": "const policyKey = policyHash(this.#policy);"
+  },
+  "mayEdit": [
+    "intent/blocks/moderation-model/moderation-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/moderation-model-284.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"moderation-model\". Mutant: line 286:48-286:66, mutator LogicalOperator: \"item.context ?? ''\" becomes \"item.context && ''\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/moderation-model/index.ts (> marks the mutated line):\n   280      return { text: `${t.slice(0, half)} [...] ${t.slice(-half)}`, truncated: true };\n   281    }\n   282  \n   283    /** Classify an item and record the decision. A classifier failure follows the policy's `onError`. */\n   284    async moderate(item: Item): Promise<Decision> {\n   285      const prep = this.#prepare(item.text);\n>  286      const key = createHash('sha256').update(`${item.context ?? ''}\\0${prep.text}`).digest('hex');\n   287      const policyKey = policyHash(this.#policy);\n   288      const cached = this.#cache.get(key);\n   289      let scores: Scores | undefined;\n   290      let source: Decision['source'] = 'classifier';\n   291      let errorText: string | undefined;\n   292      if (cached) {\n\nTest file style (intent/blocks/moderation-model/moderation-model.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Moderator, ModerationError, decideAction, lexiconClassifier, llmClassifier, normalizeText, policyHash, validatePolicy, type Classifier, type Policy } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 10, 28, 12, 0, 0);\nconst policy: Policy = {\n  id: 'community',\n  version: 1,\n  categories: {\n    harassment: { flag: 0.4, hold: 0.7, block: 0.9 },\n    violence: { flag: 0.5, block: 0.9 },\n    sexual_minors: { flag: 0.05, block: 0.2, zeroTolerance: true },\n  },\n  contexts: { kids: { harassment: { flag: 0.1, hold: 0.3, block: 0.6 } } },\n  onError: 'hold',\n  maxChars: 200,\n  appealWindowMs: 7 * DAY,\n  trustedAuthors: ['trusted'],\n};\nconst lexicon = {\n  harassment: ['idiot', 'loser', 'moron', 'worthless'],\n  violence: ['kill', 'stab'],\n  sexual_minors: ['csamword'],\n};\n\nfunction mod(opts: { classifier?: Classifier; p?: Policy } = {}) {\n  let t = T0;\n  const calls: string[] = [];\n  const base = lexiconClassifier(lexicon);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/moderation-model-284.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.094Z"
+}

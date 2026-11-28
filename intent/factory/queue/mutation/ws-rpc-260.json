@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "ws-rpc",
+  "mutant": {
+    "id": "260",
+    "line": 246,
+    "column": 9,
+    "endLine": 246,
+    "endColumn": 31,
+    "mutator": "ConditionalExpression",
+    "original": "this.stage !== 'ready'",
+    "replacement": "false",
+    "lineText": "if (this.stage !== 'ready') return;",
+    "prevText": "private deliver(sub: string, seq: number, event: CloudEvent): void {",
+    "nextText": "if (this.o.backedUp?.()) {"
+  },
+  "mayEdit": [
+    "intent/blocks/ws-rpc/ws-rpc.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/ws-rpc-260.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"ws-rpc\". Mutant: line 246:9-246:31, mutator ConditionalExpression: \"this.stage !== 'ready'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/ws-rpc/index.ts (> marks the mutated line):\n   240      );\n   241      this.subs.set(def.id, { def, stop: h.stop });\n   242      return h.missed ? 'missed' : 'ok';\n   243    }\n   244  \n   245    private deliver(sub: string, seq: number, event: CloudEvent): void {\n>  246      if (this.stage !== 'ready') return;\n   247      if (this.o.backedUp?.()) {\n   248        // A client that cannot keep up is let go, not buffered without end; it resumes and is replayed what it missed.\n   249        this.end(4429, 'too slow: reconnect and resume');\n   250        return;\n   251      }\n   252      this.reply({ t: 'evt', sub, seq, event });\n\nTest file style (intent/blocks/ws-rpc/ws-rpc.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Catalogue, Hub } from '../events/index.ts';\nimport type { CloudEvent } from '../events/index.ts';\nimport { Failures } from '../ratelimit/index.ts';\nimport { Connection, RpcClient, RpcError, RpcFailed } from './index.ts';\nimport type { ConnectionOptions, Principal } from './index.ts';\n\nconst cat = new Catalogue([\n  { type: 'files.file.created', version: 1, owner: 'files', description: 'a file was made', fields: { id: 'string', owner: 'string' } },\n  { type: 'files.file.deleted', version: 1, owner: 'files', description: 'a file was removed', fields: { id: 'string', owner: 'string' } },\n  { type: 'chat.message.sent', version: 1, owner: 'chat', description: 'a message', fields: { id: 'string', owner: 'string' } },\n]);\nconst ev = (type: string, id: string, owner = 'ana') => cat.make('urn:test', type, { id, owner }, { now: new Date(0) });\n\nconst people: Record<string, Principal> = { 'tok-ana': { id: 'ana' }, 'tok-bo': { id: 'bo' } };\n\ninterface Rig {\n  hub: Hub;\n  t: { now: number };\n  toClient: string[];\n  toServer: string[];\n  closed: { code: number; reason: string }[];\n  conn: () => Connection;\n  client: RpcClient;\n  server: Connection;\n  pump: () => Promise<void>;\n  newServer: (o?: Partial<ConnectionOptions>) => Connection;\n  resyncs: string[];\n}\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/ws-rpc-260.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:16.244Z"
+}

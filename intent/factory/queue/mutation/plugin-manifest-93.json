@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "plugin-manifest",
+  "mutant": {
+    "id": "93",
+    "line": 71,
+    "column": 103,
+    "endLine": 71,
+    "endColumn": 131,
+    "mutator": "StringLiteral",
+    "original": "`-${v.prerelease.join('.')}`",
+    "replacement": "``",
+    "lineText": "export const formatVersion = (v: Version) => `${v.major}.${v.minor}.${v.patch}${v.prerelease.length ? `-${v.prerelease.join('.')}` : ''}${v.build.length ? `+${v.build.join('.')}` : ''}`;",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/plugin-manifest/plugin-manifest.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/plugin-manifest-93.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"plugin-manifest\". Mutant: line 71:103-71:131, mutator StringLiteral: \"`-${v.prerelease.join('.')}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/plugin-manifest/index.ts (> marks the mutated line):\n    65      return true;\n    66    } catch {\n    67      return false;\n    68    }\n    69  };\n    70  \n>   71  export const formatVersion = (v: Version) => `${v.major}.${v.minor}.${v.patch}${v.prerelease.length ? `-${v.prerelease.join('.')}` : ''}${v.build.length ? `+${v.build.join('.')}` : ''}`;\n    72  \n    73  /** Precedence by the specification: build metadata is ignored, and a release is above its own pre-releases. */\n    74  export function compareVersions(a: Version | string, b: Version | string): -1 | 0 | 1 {\n    75    const x = typeof a === 'string' ? parseVersion(a) : a;\n    76    const y = typeof b === 'string' ? parseVersion(b) : b;\n    77    for (const [p, q] of [[x.major, y.major], [x.minor, y.minor], [x.patch, y.patch]] as const) if (p !== q) return p < q ? -1 : 1;\n\nTest file style (intent/blocks/plugin-manifest/plugin-manifest.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync, verify } from 'node:crypto';\nimport { test } from 'node:test';\nimport {\n  BadPackage, BadVersion, ManifestError, bumpKind, canonicalJson, compareVersions, dependencyOrder, manifestProblems, maxSatisfying, parseVersion,\n  planInstall, planUpdates, publicKeyOf, readManifest, reviewPermissions, satisfies, signPackage, verifyPackage,\n} from './index.ts';\nimport type { Manifest, PackageEnvelope, TrustStore } from './index.ts';\n\nconst manifest = (o: Partial<Record<keyof Manifest, unknown>> = {}): Manifest =>\n  ({\n    name: 'acme-seo',\n    version: '1.2.3',\n    title: 'Acme SEO',\n    description: 'Search engine helpers',\n    author: { name: 'Acme', url: 'https://acme.example' },\n    license: 'GPL-2.0-or-later',\n    requires: { host: '>=4.2 <6' },\n    permissions: ['content:read'],\n    entry: 'main.js',\n    ...o,\n  }) as Manifest;\n\n// ------------------------------------------------------------ semantic versions\n\ntest('precedence follows the specification chain, ignores build metadata, and compares numbers as numbers', () => {\n  const chain = ['1.0.0-alpha', '1.0.0-alpha.1', '1.0.0-alpha.beta', '1.0.0-beta', '1.0.0-beta.2', '1.0.0-beta.11', '1.0.0-rc.1', '1.0.0', '1.0.1', '1.1.0', '2.0.0'];\n  for (let i = 0; i + 1 < chain.length; i++) {\n    assert.equal(compareVersions(chain[i]!, chain[i + 1]!), -1, `${chain[i]} < ${chain[i + 1]}`);\n    assert.equal(compareVersions(chain[i + 1]!, chain[i]!), 1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/plugin-manifest-93.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.189Z"
+}

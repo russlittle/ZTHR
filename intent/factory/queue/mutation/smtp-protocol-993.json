@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "smtp-protocol",
+  "mutant": {
+    "id": "993",
+    "line": 525,
+    "column": 15,
+    "endLine": 525,
+    "endColumn": 55,
+    "mutator": "EqualityOperator",
+    "original": "Number(cmd.params.SIZE) > this.o.maxSize",
+    "replacement": "Number(cmd.params.SIZE) >= this.o.maxSize",
+    "lineText": "if (Number(cmd.params.SIZE) > this.o.maxSize) return this.bad(552, `message size exceeds the limit of ${this.o.maxSize}`, '5.3.4');",
+    "prevText": "if (!/^\\d{1,12}$/.test(cmd.params.SIZE)) return this.bad(501, 'SIZE must be a number', '5.5.4');",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/smtp-protocol/smtp-protocol.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-993.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"smtp-protocol\". Mutant: line 525:15-525:55, mutator EqualityOperator: \"Number(cmd.params.SIZE) > this.o.maxSize\" becomes \"Number(cmd.params.SIZE) >= this.o.maxSize\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/smtp-protocol/index.ts (> marks the mutated line):\n   519          if (this.state !== 'hello') return this.bad(503, 'a mail transaction is already open', '5.5.1');\n   520          if (this.o.requireTls && !this.tls) return this.bad(530, 'must issue STARTTLS first', '5.7.0');\n   521          if (this.o.requireAuth && !this.user) return this.bad(530, 'authentication required', '5.7.0');\n   522          for (const k of Object.keys(cmd.params)) if (!['SIZE', 'BODY', 'SMTPUTF8', 'AUTH'].includes(k)) return this.bad(555, `${k} is not supported`, '5.5.4');\n   523          if (cmd.params.SIZE !== undefined) {\n   524            if (!/^\\d{1,12}$/.test(cmd.params.SIZE)) return this.bad(501, 'SIZE must be a number', '5.5.4');\n>  525            if (Number(cmd.params.SIZE) > this.o.maxSize) return this.bad(552, `message size exceeds the limit of ${this.o.maxSize}`, '5.3.4');\n   526          }\n   527          if (cmd.params.BODY !== undefined && !['7BIT', '8BITMIME'].includes(cmd.params.BODY.toUpperCase())) return this.bad(501, 'BODY must be 7BIT or 8BITMIME', '5.5.4');\n   528          if (cmd.params.SMTPUTF8 !== undefined && cmd.params.SMTPUTF8 !== '') return this.bad(501, 'SMTPUTF8 takes no value', '5.5.4');\n   529          const from = cmd.from?.address ?? '';\n   530          const v = this.o.onSender?.(from, this.env());\n   531          if (v) {\n\nTest file style (intent/blocks/smtp-protocol/smtp-protocol.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadCommand, ClientSession, ProtocolError, ReplyParser, ServerSession, classify, endsGroup, formatReply, parseCommand, parsePath, parsePlain, parseXoauth2, pipelineGroups, plainInitial, prepareBody, xoauth2Initial, type ClientOptions, type ClientResult, type Envelope, type ServerOptions } from './index.ts';\n\nconst mkServer = (o: Partial<ServerOptions> = {}) => {\n  const got: { env: Envelope; body: string }[] = [];\n  const s = new ServerSession({ hostname: 'mx.example.org', onMessage: (env, body) => void got.push({ env, body: body.toString('latin1') }), ...o });\n  return { s, got };\n};\nconst talk = (s: ServerSession, ...lines: string[]) => s.feed(lines.join(''));\nconst replies = (text: string) => new ReplyParser().push(text);\nconst codes = (text: string) => replies(text).map((r) => r.code);\n\n/** Runs a client against a server in memory, answering STARTTLS when asked. */\nfunction run(server: ServerSession, opts: ClientOptions) {\n  const client = new ClientSession(opts);\n  const parser = new ReplyParser();\n  const wire: string[] = [];\n  let inbox = server.greeting();\n  let result: ClientResult | undefined;\n  for (let guard = 0; guard < 200 && !result; guard++) {\n    wire.push(`S: ${inbox}`);\n    let outgoing = '';\n    let tls = false;\n    for (const r of parser.push(inbox)) {\n      const step = client.receive(r);\n      outgoing += step.send;\n      if (step.startTls) tls = true;\n      if (step.done) result = step.done;\n    }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/smtp-protocol-993.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.963Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "s3-api",
+  "mutant": {
+    "id": "1187",
+    "line": 524,
+    "column": 193,
+    "endLine": 524,
+    "endColumn": 200,
+    "mutator": "Regex",
+    "original": "/^\\d+$/",
+    "replacement": "/\\d+$/",
+    "lineText": "data = decodeChunked(raw, v.signature, this.o.secretFor(v.accessKeyId)!, v.amzDate, { region: v.region, service: v.service }, { maxChunk: 16 * 1024 * 1024, ...(declared !== undefined && /^\\d+$/.test(declared) ? { decodedLength: Number(declared) } : {}) });",
+    "prevText": "const declared = h.get('x-amz-decoded-content-length');",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/s3-api/s3-api.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/s3-api-1187.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"s3-api\". Mutant: line 524:193-524:200, mutator Regex: \"/^\\\\d+$/\" becomes \"/\\\\d+$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/s3-api/index.ts (> marks the mutated line):\n   518      if (lenHeader !== undefined && /^\\d+$/.test(lenHeader) && Number(lenHeader) > limit) throw new S3Error('EntityTooLarge', 400, `the object is larger than ${limit} bytes`, { MaxSizeAllowed: String(limit) });\n   519      let data: Uint8Array | AsyncIterable<Uint8Array> = req.body ?? new Uint8Array(0);\n   520      const v = vr;\n   521      if (v?.streaming) {\n   522        const raw = await collect(data, limit + Math.ceil(limit / 65_536) * 200 + 1024);\n   523        const declared = h.get('x-amz-decoded-content-length');\n>  524        data = decodeChunked(raw, v.signature, this.o.secretFor(v.accessKeyId)!, v.amzDate, { region: v.region, service: v.service }, { maxChunk: 16 * 1024 * 1024, ...(declared !== undefined && /^\\d+$/.test(declared) ? { decodedLength: Number(declared) } : {}) });\n   525      }\n   526      const w = await this.o.objects.put(data, { algos: ['MD5', 'SHA256'], maxBytes: limit });\n   527      const md5 = w.checksums.find((c) => c.startsWith('MD5:'))!.slice(4);\n   528      const sha = w.checksums.find((c) => c.startsWith('SHA256:'))!.slice(7);\n   529      const bad = async (code: string, msg: string): Promise<never> => {\n   530        await this.o.objects.delete(w.key);\n\nTest file style (intent/blocks/s3-api/s3-api.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, randomBytes } from 'node:crypto';\nimport { test } from 'node:test';\nimport { memoryObjects, readAll } from '../objects/index.ts';\nimport { encodeChunked, presign, sign } from '../sigv4/index.ts';\nimport { S3, S3Error, validBucketName, validKey } from './index.ts';\nimport type { S3Options, S3Response } from './index.ts';\n\nconst NOW = new Date('2026-03-01T12:00:00Z');\nconst ALICE = { accessKeyId: 'ALICEKEY', secretAccessKey: randomBytes(30).toString('base64') };\nconst BOB = { accessKeyId: 'BOBKEY', secretAccessKey: randomBytes(30).toString('base64') };\nconst secrets: Record<string, string> = { ALICEKEY: ALICE.secretAccessKey, BOBKEY: BOB.secretAccessKey };\nconst SCOPE = { region: 'us-east-1', service: 's3' };\nconst md5 = (b: string | Uint8Array) => createHash('md5').update(b).digest('hex');\n\nfunction mk(o: Partial<S3Options> = {}) {\n  const objects = memoryObjects();\n  let n = 0;\n  const s3 = new S3({ objects, secretFor: (id) => secrets[id], now: () => NOW, newId: () => `upload-${++n}`, minPartBytes: 5, ...o });\n  return { s3, objects };\n}\n\ninterface CallOpts { query?: string; headers?: Record<string, string>; body?: string | Uint8Array; creds?: typeof ALICE; signAs?: Date }\nasync function call(s3: S3, method: string, path: string, o: CallOpts = {}): Promise<S3Response> {\n  const url = `https://s3.test${path}${o.query ? `?${o.query}` : ''}`;\n  const s = sign({ method, url, headers: o.headers ?? {}, ...(o.body !== undefined ? { body: o.body } : {}) }, o.creds ?? ALICE, { now: o.signAs ?? NOW, ...SCOPE });\n  return s3.handle({ method, url, headers: s.headers, body: typeof o.body === 'string' ? Buffer.from(o.body) : o.body });\n}\nconst text = async (r: S3Response) => (r.stream ? (await readAll(r.stream)).toString('utf8') : (r.body?.toString('utf8') ?? ''));\nconst all = (xml: string, name: string) => [...xml.matchAll(new RegExp(`<${name}>([^<]*)</${name}>`, 'g'))].map((m) => m[1]!);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/s3-api-1187.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.601Z"
+}

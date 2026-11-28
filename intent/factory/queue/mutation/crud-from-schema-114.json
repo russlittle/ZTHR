@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crud-from-schema",
+  "mutant": {
+    "id": "114",
+    "line": 163,
+    "column": 29,
+    "endLine": 163,
+    "endColumn": 81,
+    "mutator": "ConditionalExpression",
+    "original": "typeof v === 'string' && typeof w.value === 'string'",
+    "replacement": "true",
+    "lineText": "case 'contains': return typeof v === 'string' && typeof w.value === 'string' && v.toLowerCase().includes(w.value.toLowerCase());",
+    "prevText": "case 'in': return Array.isArray(w.value) && w.value.includes(v);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/crud-from-schema/crud-from-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crud-from-schema-114.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crud-from-schema\". Mutant: line 163:29-163:81, mutator ConditionalExpression: \"typeof v === 'string' && typeof w.value === 'string'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crud-from-schema/index.ts (> marks the mutated line):\n   157      case 'ne': return !(v === w.value || (v === undefined && w.value === null));\n   158      case 'lt': return v != null && cmp(v, w.value) < 0;\n   159      case 'lte': return v != null && cmp(v, w.value) <= 0;\n   160      case 'gt': return v != null && cmp(v, w.value) > 0;\n   161      case 'gte': return v != null && cmp(v, w.value) >= 0;\n   162      case 'in': return Array.isArray(w.value) && w.value.includes(v);\n>  163      case 'contains': return typeof v === 'string' && typeof w.value === 'string' && v.toLowerCase().includes(w.value.toLowerCase());\n   164    }\n   165  }\n   166  \n   167  /** An in-memory store: the reference for the interface, and enough for tests and small tools. */\n   168  export function memoryStore(seed: Readonly<Record<string, readonly Rec[]>> = {}, unique: Readonly<Record<string, readonly string[]>> = {}): Store {\n   169    const tables = new Map<string, Map<string, Rec>>();\n\nTest file style (intent/blocks/crud-from-schema/crud-from-schema.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { BadSchema, StoreConflict, crud, declare, memoryStore } from './index.ts';\nimport type { Entity, Req } from './index.ts';\nimport type { Policy, Subject } from '../rbac/index.ts';\nimport { check, contract, verifyResponse } from '../openapi/index.ts';\n\nconst User: Entity = {\n  name: 'User', plural: 'users',\n  fields: {\n    name: { type: 'string', required: true, minLength: 1, maxLength: 50, filterable: true, sortable: true },\n    email: { type: 'string', required: true, format: 'email', unique: true, filterable: true },\n    salary: { type: 'integer', nullable: true, readAction: 'read-salary', writeAction: 'write-salary', filterable: true, sortable: true },\n  },\n};\nconst Post: Entity = {\n  name: 'Post', plural: 'posts',\n  fields: {\n    title: { type: 'string', required: true, maxLength: 80, filterable: true, sortable: true },\n    status: { type: 'string', enum: ['draft', 'published'], default: 'draft', filterable: true },\n    views: { type: 'integer', default: 0, minimum: 0, filterable: true, sortable: true },\n    authorId: { type: 'string', required: true, filterable: true },\n    meta: { type: 'json' },\n  },\n  relations: { author: { entity: 'User', kind: 'one', field: 'authorId' }, comments: { entity: 'Comment', kind: 'many', field: 'postId' } },\n};\nconst Comment: Entity = { name: 'Comment', plural: 'comments', fields: { postId: { type: 'string', required: true, filterable: true }, text: { type: 'string', required: true } }, operations: ['list', 'get', 'create'] };\n\nconst policy: Policy = {\n  roles: { member: { label: 'Member' }, admin: { label: 'Admin', inherits: ['member'] } },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crud-from-schema-114.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.491Z"
+}

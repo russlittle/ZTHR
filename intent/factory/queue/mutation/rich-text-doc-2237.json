@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "rich-text-doc",
+  "mutant": {
+    "id": "2237",
+    "line": 1532,
+    "column": 22,
+    "endLine": 1532,
+    "endColumn": 41,
+    "mutator": "ConditionalExpression",
+    "original": "$from.depth > depth",
+    "replacement": "false",
+    "lineText": "const gapStart = $from.depth > depth ? $from.before(depth + 1) : from;",
+    "prevText": "if (depth < 1) throw new TransformError('there is nothing to lift out of');",
+    "nextText": "const gapEnd = $to.depth > depth ? $to.after(depth + 1) : to;"
+  },
+  "mayEdit": [
+    "intent/blocks/rich-text-doc/rich-text-doc.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-doc-2237.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"rich-text-doc\". Mutant: line 1532:22-1532:41, mutator ConditionalExpression: \"$from.depth > depth\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/rich-text-doc/index.ts (> marks the mutated line):\n  1526    /** Lifts the children of one parent between from and to out of it, splitting the parent if the range is not all of it. */\n  1527    lift(from: number, to: number): this {\n  1528      const $from = resolve(this.doc, from);\n  1529      const $to = resolve(this.doc, to);\n  1530      const depth = $from.sharedDepth(to);\n  1531      if (depth < 1) throw new TransformError('there is nothing to lift out of');\n> 1532      const gapStart = $from.depth > depth ? $from.before(depth + 1) : from;\n  1533      const gapEnd = $to.depth > depth ? $to.after(depth + 1) : to;\n  1534      let start = gapStart;\n  1535      let end = gapEnd;\n  1536      let before: Node[] = [];\n  1537      let openStart = 0;\n  1538      let splitting = false;\n\nTest file style (intent/blocks/rich-text-doc/rich-text-doc.test.ts):\n21 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AddMarkStep, AttrStep, InvalidContent, Mapping, ReplaceAroundStep, ReplaceError, ReplaceStep, RemoveMarkStep, Schema, StepMap, Transform, TransformError, basicSchema as S, cut, emptySlice, fragSize, fromHTML, nodeSize, nodesBetween, replace, resolve, slice, sliceOf, stepFromJSON, textBetween, textContent, toHTML } from './index.ts';\nimport type { Node, Step } from './index.ts';\n\nconst t = (s: string, marks?: Parameters<typeof S.text>[1]) => S.text(s, marks);\nconst p = (...c: Node[]) => S.node('paragraph', undefined, c);\nconst h = (level: number, ...c: Node[]) => S.node('heading', { level }, c);\nconst doc = (...c: Node[]) => S.node('doc', undefined, c);\nconst li = (...c: Node[]) => S.node('list_item', undefined, c);\nconst ul = (...c: Node[]) => S.node('bullet_list', undefined, c);\nconst bq = (...c: Node[]) => S.node('blockquote', undefined, c);\nconst strong = S.mark('strong');\nconst em = S.mark('em');\nconst link = (href: string) => S.mark('link', { href });\nconst same = (a: Node, b: Node) => assert.deepEqual(a, b);\nconst valid = (d: Node) => assert.deepEqual(S.check(d), []);\n\nfunction run(d: Node, f: (tr: Transform) => void): Transform {\n  const tr = new Transform(S, d);\n  f(tr);\n  valid(tr.doc);\n  return tr;\n}\nfunction undo(tr: Transform): Node {\n  const back = new Transform(S, tr.doc);\n  for (const s of tr.inverted()) back.step(s);\n  return back.doc;\n}\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/rich-text-doc-2237.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.149Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "campaigns",
+  "mutant": {
+    "id": "370",
+    "line": 266,
+    "column": 11,
+    "endLine": 266,
+    "endColumn": 65,
+    "mutator": "ConditionalExpression",
+    "original": "!(def.ab.testPercent >= 1 && def.ab.testPercent <= 50)",
+    "replacement": "false",
+    "lineText": "if (!(def.ab.testPercent >= 1 && def.ab.testPercent <= 50)) throw new CampaignError('testPercent must be from 1 to 50');",
+    "prevText": "if (!def.variants) throw new CampaignError('an A/B test needs variants');",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/campaigns/campaigns.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/campaigns-370.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"campaigns\". Mutant: line 266:11-266:65, mutator ConditionalExpression: \"!(def.ab.testPercent >= 1 && def.ab.testPercent <= 50)\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/campaigns/index.ts (> marks the mutated line):\n   260          if (v.weight !== undefined && !(v.weight > 0)) throw new CampaignError('a variant weight must be above zero');\n   261        }\n   262      }\n   263      for (const v of variants) if (!unsub.test((v as Variant).html ?? def.html)) throw new CampaignError('the html must contain {{unsubscribe_url}}');\n   264      if (def.ab) {\n   265        if (!def.variants) throw new CampaignError('an A/B test needs variants');\n>  266        if (!(def.ab.testPercent >= 1 && def.ab.testPercent <= 50)) throw new CampaignError('testPercent must be from 1 to 50');\n   267      }\n   268      this.all.set(def.id, { def, variants, items: [], planned: false, paused: false, cancelled: false, tokens: null, refilled: 0 });\n   269    }\n   270  \n   271    /** Choose who is mailed. Everyone who must not be mailed is left out, and the reasons are returned. */\n   272    plan(id: string, contacts: readonly Contact[]): { planned: number; notInSegment: number; excluded: { id: string; why: string }[] } {\n\nTest file style (intent/blocks/campaigns/campaigns.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { randomBytes } from 'node:crypto';\nimport { test } from 'node:test';\nimport { Recorder, Tracker, type Hit } from '../mail-tracking/index.ts';\nimport { CampaignError, Campaigns, matches, render, SendFailure, type CampaignDef, type Contact, type Message, type Segment } from './index.ts';\n\nconst T0 = Date.UTC(2026, 5, 1, 9, 0, 0);\nconst human = (at: number): Hit => ({ at, method: 'GET', userAgent: 'Mozilla/5.0 (X11; Linux x86_64) Firefox/126.0', ip: '203.0.113.5' });\n\nfunction rig(o: { send?: (m: Message) => Promise<void>; unsub?: (c: Contact) => string } = {}) {\n  const clock = { now: T0 };\n  const sent: Message[] = [];\n  const tracker = new Tracker({ secret: randomBytes(32).toString('base64'), baseUrl: 'https://t.example.com', now: () => clock.now });\n  const recorder = new Recorder({ tracker, now: () => clock.now });\n  const camp = new Campaigns({\n    tracker,\n    recorder,\n    now: () => clock.now,\n    domain: 'mail.example.com',\n    unsubscribeUrl: o.unsub ?? ((c) => `https://app.example.com/unsub?c=${encodeURIComponent(c.id)}`),\n    send: o.send ?? (async (m) => void sent.push(m)),\n  });\n  return { clock, sent, tracker, recorder, camp };\n}\nconst def = (o: Partial<CampaignDef> = {}): CampaignDef => ({\n  id: 'spring',\n  name: 'Spring sale',\n  from: { email: 'news@mail.example.com', name: 'Example' },\n  subject: 'Hello {{first_name|friend}}',\n  html: '<html><body><p>Hi {{first_name|there}}</p><a href=\"https://shop.example.org/sale?a=1&amp;b=2\">Sale</a> <a href=\"{{unsubscribe_url}}\">Unsubscribe</a></body></html>',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/campaigns-370.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.563Z"
+}

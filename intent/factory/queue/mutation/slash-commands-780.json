@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "slash-commands",
+  "mutant": {
+    "id": "780",
+    "line": 487,
+    "column": 36,
+    "endLine": 487,
+    "endColumn": 60,
+    "mutator": "EqualityOperator",
+    "original": "this.d.now() > r.expires",
+    "replacement": "this.d.now() >= r.expires",
+    "lineText": "if (r.expires !== undefined && this.d.now() > r.expires) throw new BadToken('the token has expired');",
+    "prevText": "if (r.revoked) throw new BadToken('the token was revoked');",
+    "nextText": "if (scope !== undefined && !r.scopes.includes(scope)) throw new BadToken(`the token lacks the ${scope} scope`);"
+  },
+  "mayEdit": [
+    "intent/blocks/slash-commands/slash-commands.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/slash-commands-780.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"slash-commands\". Mutant: line 487:36-487:60, mutator EqualityOperator: \"this.d.now() > r.expires\" becomes \"this.d.now() >= r.expires\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/slash-commands/index.ts (> marks the mutated line):\n   481    /** The record behind a token, if it is genuine, not revoked, not expired and (when asked) holds the scope. */\n   482    verify(token: string, scope?: string): BotRecord {\n   483      if (!/^zbot_[0-9a-f]{48}$/.test(token)) throw new BadToken('not a bot token');\n   484      const r = this.byHash.get(hex(sha256(token)));\n   485      if (!r) throw new BadToken('unknown token');\n   486      if (r.revoked) throw new BadToken('the token was revoked');\n>  487      if (r.expires !== undefined && this.d.now() > r.expires) throw new BadToken('the token has expired');\n   488      if (scope !== undefined && !r.scopes.includes(scope)) throw new BadToken(`the token lacks the ${scope} scope`);\n   489      return r;\n   490    }\n   491  \n   492    revoke(id: string): void {\n   493      for (const r of this.byHash.values()) if (r.id === id) r.revoked = true;\n\nTest file style (intent/blocks/slash-commands/slash-commands.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, createHmac } from 'node:crypto';\nimport { test } from 'node:test';\nimport { signature } from '../webhooks/index.ts';\nimport { ActionSigner, BadSignature, BadToken, BotTokens, Dispatcher, InteractiveReceiver, MemoryDirectory, Modals, ResponseUrls, SlashError, blockProblems, escapeMarkup, later, mention, parseCommandLine, parseForm, replyJson, signRequest, tokenize, verifyRequest, viewProblems, type Block, type Deps, type View } from './index.ts';\n\n// Everything secret is derived when the test runs; nothing credential-shaped is written in the file.\nconst derive = (label: string) => createHash('sha256').update(`slash-commands test ${label}`).digest('hex');\nconst KEY = derive('request signing');\nconst KEY2 = derive('rotated signing');\n\nfunction deps(start = 1_700_000_000_000): Deps & { t: number } {\n  let n = 0;\n  const d = {\n    t: start,\n    now: () => d.t,\n    random: (len: number) => {\n      let out = Buffer.alloc(0);\n      while (out.length < len) out = Buffer.concat([out, createHash('sha256').update(`r${++n}`).digest()]);\n      return out.subarray(0, len);\n    },\n  };\n  return d;\n}\n\nconst form = (o: Record<string, string>) => Object.entries(o).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');\nconst signed = (d: { t: number }, body: string, key = KEY) => {\n  const ts = Math.floor(d.t / 1000);\n  return { body, headers: { 'x-slack-request-timestamp': String(ts), 'x-slack-signature': signRequest(key, ts, body) } };\n};\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/slash-commands-780.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.420Z"
+}

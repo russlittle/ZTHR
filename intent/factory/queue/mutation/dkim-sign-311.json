@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "dkim-sign",
+  "mutant": {
+    "id": "311",
+    "line": 176,
+    "column": 181,
+    "endLine": 176,
+    "endColumn": 199,
+    "mutator": "StringLiteral",
+    "original": "'list-unsubscribe'",
+    "replacement": "\"\"",
+    "lineText": "const DEFAULT_HEADERS = ['from', 'to', 'cc', 'subject', 'date', 'message-id', 'reply-to', 'in-reply-to', 'references', 'mime-version', 'content-type', 'content-transfer-encoding', 'list-unsubscribe', 'list-unsubscribe-post'];",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/dkim-sign/dkim-sign.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/dkim-sign-311.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"dkim-sign\". Mutant: line 176:181-176:199, mutator StringLiteral: \"'list-unsubscribe'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/dkim-sign/index.ts (> marks the mutated line):\n   170    readonly oversign?: boolean;\n   171    readonly canon?: { readonly header: Canon; readonly body: Canon };\n   172    /** Seconds the signature stays valid; omit for no expiry. */\n   173    readonly expiresInSeconds?: number;\n   174  }\n   175  \n>  176  const DEFAULT_HEADERS = ['from', 'to', 'cc', 'subject', 'date', 'message-id', 'reply-to', 'in-reply-to', 'references', 'mime-version', 'content-type', 'content-transfer-encoding', 'list-unsubscribe', 'list-unsubscribe-post'];\n   177  \n   178  const fold = (s: string, width = 76): string => {\n   179    const lines: string[] = [];\n   180    let cur = '';\n   181    for (const word of s.split(' ')) {\n   182      if (cur && cur.length + 1 + word.length > width) {\n\nTest file style (intent/blocks/dkim-sign/dkim-sign.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, generateKeyPairSync } from 'node:crypto';\nimport type { KeyObject } from 'node:crypto';\nimport { test } from 'node:test';\nimport { DkimRefused, aligned, bodyHash, canonBody, canonHeader, fromDomain, parseKeyRecord, rotationPlan, selectorRecord, sign, splitMessage, txtChunks, verify } from './index.ts';\nimport type { Algorithm } from './index.ts';\n\nconst NOW = Date.parse('2025-06-01T12:00:00Z');\nconst msg = (extra = '') => `From: Ann Lee <ann@example.com>\\r\\nTo: bob@example.org\\r\\nSubject: Hello   there\\r\\nDate: Sun, 01 Jun 2025 11:59:00 +0000\\r\\nMessage-ID: <1@example.com>\\r\\n${extra}\\r\\nHi Bob,\\r\\n\\r\\nSee you at noon.  \\r\\n\\r\\n\\r\\n`;\n\nconst keys: Record<Algorithm, { priv: KeyObject; pub: KeyObject }> = {\n  'rsa-sha256': (() => { const k = generateKeyPairSync('rsa', { modulusLength: 2048 }); return { priv: k.privateKey, pub: k.publicKey }; })(),\n  'ed25519-sha256': (() => { const k = generateKeyPairSync('ed25519'); return { priv: k.privateKey, pub: k.publicKey }; })(),\n};\nconst dns = (alg: Algorithm, o: { testing?: boolean } = {}) => ({ 'sel1._domainkey.example.com': [selectorRecord(keys[alg].pub, alg, o)] }) as Record<string, string[]>;\nconst lookupOf = (zone: Record<string, readonly string[]>) => async (n: string) => zone[n] ?? [];\nconst opts = (zone: Record<string, readonly string[]>, now = NOW) => ({ lookup: lookupOf(zone), now: () => now });\nconst signer = (alg: Algorithm) => ({ domain: 'example.com', selector: 'sel1', privateKey: keys[alg].priv, algorithm: alg });\nconst signed = (alg: Algorithm, m = msg(), o: Partial<Parameters<typeof sign>[2]> = {}) => `${sign(m, signer(alg), { now: () => NOW, ...o })}\\r\\n${m}`;\n\ntest('RFC 6376 section 3.4.5: the simple and relaxed body examples', () => {\n  const body = ' C \\r\\nD \\t E\\r\\n\\r\\n\\r\\n';\n  assert.equal(canonBody(body, 'simple'), ' C \\r\\nD \\t E\\r\\n');\n  assert.equal(canonBody(body, 'relaxed'), ' C\\r\\nD E\\r\\n');\n});\n\ntest('RFC 6376 section 3.4.5: the relaxed header example, and simple keeps headers as written', () => {\n  const { headers } = splitMessage('A: X\\r\\nB : Y\\t\\r\\n\\tZ  \\r\\n\\r\\n C \\r\\nD \\t E\\r\\n\\r\\n\\r\\n');\n  assert.equal(headers.map((h) => canonHeader(h, 'relaxed')).join(''), 'a:X\\r\\nb:Y Z\\r\\n');\n  assert.equal(headers.map((h) => canonHeader(h, 'simple')).join(''), 'A: X\\r\\nB : Y\\t\\r\\n\\tZ  \\r\\n');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/dkim-sign-311.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.213Z"
+}

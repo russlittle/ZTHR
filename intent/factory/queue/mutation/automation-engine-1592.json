@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "automation-engine",
+  "mutant": {
+    "id": "1592",
+    "line": 907,
+    "column": 13,
+    "endLine": 907,
+    "endColumn": 30,
+    "mutator": "ConditionalExpression",
+    "original": "e instanceof Stop",
+    "replacement": "true",
+    "lineText": "if (e instanceof Stop) return finish(e.isError ? 'error' : 'stopped', e.reason);",
+    "prevText": "if (e instanceof Aborted || live.aborted) return finish('aborted', 'stopped by a newer run or by removal');",
+    "nextText": "return finish('error', e instanceof Error ? e.message : String(e));"
+  },
+  "mayEdit": [
+    "intent/blocks/automation-engine/automation-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-1592.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"automation-engine\". Mutant: line 907:13-907:30, mutator ConditionalExpression: \"e instanceof Stop\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/automation-engine/index.ts (> marks the mutated line):\n   901            if (!verdict.ok) return finish('condition-failed', verdict.why);\n   902          }\n   903          await this.runSeq(live, a.actions, 'action', vars, step);\n   904          return finish('finished');\n   905        } catch (e) {\n   906          if (e instanceof Aborted || live.aborted) return finish('aborted', 'stopped by a newer run or by removal');\n>  907          if (e instanceof Stop) return finish(e.isError ? 'error' : 'stopped', e.reason);\n   908          return finish('error', e instanceof Error ? e.message : String(e));\n   909        }\n   910      })();\n   911    }\n   912  \n   913    private async runSeq(run: Live, actions: readonly Action[], path: string, vars: Record<string, unknown>, step: { n: number }): Promise<void> {\n\nTest file style (intent/blocks/automation-engine/automation-engine.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AutomationError, Engine, TemplateError, evaluate, render, renderData } from './index.ts';\nimport type { Automation } from './index.ts';\n\nconst flush = () => new Promise<void>((r) => setImmediate(r));\n\nfunction rig(start = Date.UTC(2026, 0, 5, 12, 0, 0), offsetMinutes = 0) {\n  const states = new Map<string, string>();\n  const calls: { service: string; data: Record<string, unknown> }[] = [];\n  const events: { type: string; data: unknown }[] = [];\n  const clock = { now: start };\n  let n = 0;\n  const engine = new Engine({\n    now: () => clock.now,\n    state: (e) => states.get(e),\n    call: async (service, data) => {\n      calls.push({ service, data: { ...data } });\n      return { ok: true, service };\n    },\n    fire: (type, data) => events.push({ type, data }),\n    newId: () => `run${++n}`,\n    zoneOffsetMinutes: () => offsetMinutes,\n  });\n  return { engine, states, calls, events, clock };\n}\n\nconst lamp: Automation = {\n  id: 'a1',\n  alias: 'Lamp',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-1592.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.883Z"
+}

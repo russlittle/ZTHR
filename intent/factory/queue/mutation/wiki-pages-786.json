@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "wiki-pages",
+  "mutant": {
+    "id": "786",
+    "line": 527,
+    "column": 51,
+    "endLine": 532,
+    "endColumn": 4,
+    "mutator": "BlockStatement",
+    "original": "{\n    const p = this.open(u, path);\n    const l = this.locks.get(p.id);\n    if (!l || l.expires <= this.o.now()) return undefined;\n    return { page: this.pathOf(p.id), by: l.by, since: l.since.toISOString(), expires: l.expires.toISOString() };\n  }",
+    "replacement": "{}",
+    "lineText": "lockOf(u: User, path: string): Lock | undefined {",
+    "prevText": "",
+    "nextText": "const p = this.open(u, path);"
+  },
+  "mayEdit": [
+    "intent/blocks/wiki-pages/wiki-pages.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/wiki-pages-786.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"wiki-pages\". Mutant: line 527:51-532:4, mutator BlockStatement: \"{\\n    const p = this.open(u, path);\\n    const l = this.locks.get(p.id);\\n    if (!l || l.expires <= this.o.now()) return undefined;\\n    return { page: this.pathOf(p.id), by: l.by, since: l.since.toISOString(), expires: l.expires.toISOString() };\\n  }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/wiki-pages/index.ts (> marks the mutated line):\n   521    breakLock(u: User, path: string): boolean {\n   522      const p = this.open(u, path);\n   523      this.need(u, p.id, 'admin', `break the lock on ${path}`);\n   524      return this.locks.delete(p.id);\n   525    }\n   526  \n>  527    lockOf(u: User, path: string): Lock | undefined {\n   528      const p = this.open(u, path);\n   529      const l = this.locks.get(p.id);\n   530      if (!l || l.expires <= this.o.now()) return undefined;\n   531      return { page: this.pathOf(p.id), by: l.by, since: l.since.toISOString(), expires: l.expires.toISOString() };\n   532    }\n   533  \n\nTest file style (intent/blocks/wiki-pages/wiki-pages.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Wiki, WikiError, diffLines, extractLinks, type User } from './index.ts';\n\nconst ada: User = { id: 'ada' };\nconst bob: User = { id: 'bob', groups: ['staff'] };\nconst root: User = { id: 'root' };\n\nfunction setup(o: { defaultRole?: 'none' | 'read' | 'edit' | 'admin' } = {}) {\n  let t = Date.parse('2024-03-01T10:00:00Z');\n  let n = 0;\n  const clock = { advance: (s: number) => { t += s * 1000; } };\n  const w = new Wiki({ now: () => new Date(t), id: () => `p${++n}`, admins: ['root'], defaultRole: o.defaultRole ?? 'edit' });\n  return { w, clock };\n}\nconst code = (f: () => unknown): string | undefined => { try { f(); return undefined; } catch (e) { return e instanceof WikiError ? e.code : `other:${String(e)}`; } };\n\ntest('create builds a tree with slug paths and breadcrumbs', () => {\n  const { w } = setup();\n  const a = w.create(ada, { title: 'Handbook' });\n  assert.equal(a.path, 'handbook');\n  const b = w.create(ada, { parent: 'handbook', title: 'On boarding!' });\n  assert.equal(b.path, 'handbook/on-boarding');\n  const c = w.create(ada, { parent: 'handbook/on-boarding', title: 'Laptops', slug: 'laptops' });\n  assert.equal(c.path, 'handbook/on-boarding/laptops');\n  assert.deepEqual(w.breadcrumbs(ada, c.path).map((x) => x.title), ['Handbook', 'On boarding!', 'Laptops']);\n  assert.deepEqual(w.children(ada, 'handbook').map((x) => x.slug), ['on-boarding']);\n  assert.equal(w.get(ada, c.path).version, 1);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/wiki-pages-786.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.670Z"
+}

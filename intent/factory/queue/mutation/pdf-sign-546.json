@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf-sign",
+  "mutant": {
+    "id": "546",
+    "line": 305,
+    "column": 31,
+    "endLine": 305,
+    "endColumn": 40,
+    "mutator": "EqualityOperator",
+    "original": "n <= 0x37",
+    "replacement": "n > 0x37",
+    "lineText": "else if (n >= 0x30 && n <= 0x37) {",
+    "prevText": "if (n in map) out.push(map[n]!);",
+    "nextText": "let v = n - 0x30;"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf-sign/pdf-sign.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-sign-546.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf-sign\". Mutant: line 305:31-305:40, mutator EqualityOperator: \"n <= 0x37\" becomes \"n > 0x37\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf-sign/index.ts (> marks the mutated line):\n   299        if (c === undefined) throw new PdfSignError('a string is not closed');\n   300        if (c === 0x5c) {\n   301          const n = this.b[this.pos++];\n   302          if (n === undefined) throw new PdfSignError('a string is not closed');\n   303          const map: Record<number, number> = { 0x6e: 10, 0x72: 13, 0x74: 9, 0x62: 8, 0x66: 12 };\n   304          if (n in map) out.push(map[n]!);\n>  305          else if (n >= 0x30 && n <= 0x37) {\n   306            let v = n - 0x30;\n   307            for (let i = 0; i < 2 && this.b[this.pos]! >= 0x30 && this.b[this.pos]! <= 0x37; i++) v = v * 8 + this.b[this.pos++]! - 0x30;\n   308            out.push(v & 0xff);\n   309          } else if (n === 13) {\n   310            if (this.b[this.pos] === 10) this.pos++;\n   311          } else if (n !== 10) out.push(n);\n\nTest file style (intent/blocks/pdf-sign/pdf-sign.test.ts):\n38 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { X509Certificate, createHash, generateKeyPairSync } from 'node:crypto';\nimport type { KeyObject } from 'node:crypto';\nimport { deflateSync } from 'node:zlib';\nimport { pdf } from '../pdf/index.ts';\nimport {\n  PdfSignError, embedSignature, issueCertificate, integer, keySigner, name, cmsParts, oid, oidOf, octets, parseDer, parseDerPadded, prepareSignature, readDoc, pageRefs, seq, serialize, setOf, signPdf, signedBytes, textOf, textString, tlv, utf8, verifyPdf,\n} from './index.ts';\nimport type { Der, Signer, SignOptions } from './index.ts';\nimport { test } from 'node:test';\n\nconst hex = (b: Uint8Array) => Buffer.from(b).toString('hex');\nconst NOW = new Date('2026-06-15T12:00:00Z');\nconst SIGNED_AT = new Date('2026-06-15T11:30:00Z');\nconst YEAR = 365 * 86_400_000;\n\n// Keys are made once, at run time; nothing secret is written in this file.\nconst rsaKeys = generateKeyPairSync('rsa', { modulusLength: 2048 });\nconst ecKeys = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });\nconst ec384 = generateKeyPairSync('ec', { namedCurve: 'secp384r1' });\nconst caKeys = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });\n\nconst cert = (cn: string, k: { publicKey: KeyObject; privateKey: KeyObject }, over: { from?: Date; to?: Date; serial?: number } = {}) =>\n  issueCertificate({ commonName: cn, publicKey: k.publicKey, privateKey: k.privateKey, serial: over.serial ?? 1001, notBefore: over.from ?? new Date(NOW.getTime() - YEAR), notAfter: over.to ?? new Date(NOW.getTime() + YEAR) });\n\nconst rsaCert = cert('Ana Rivera', rsaKeys);\nconst ecCert = cert('Bo Chen', ecKeys, { serial: 2002 });\nconst rsaSigner: Signer = keySigner(rsaKeys.privateKey, rsaCert);\nconst ecSigner: Signer = keySigner(ecKeys.privateKey, ecCert);\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-sign-546.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:54.789Z"
+}

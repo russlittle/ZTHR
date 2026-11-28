@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "qr-barcode",
+  "mutant": {
+    "id": "1710",
+    "line": 851,
+    "column": 80,
+    "endLine": 851,
+    "endColumn": 112,
+    "mutator": "StringLiteral",
+    "original": "'the check digit does not match'",
+    "replacement": "\"\"",
+    "lineText": "if (gs1Check(full.slice(0, 12)) !== Number(full[12])) throw new BarcodeError('the check digit does not match');",
+    "prevText": "const full = `${first}${out}`;",
+    "nextText": "return first === 0 ? { kind: 'upca', digits: full.slice(1) } : { kind: 'ean13', digits: full };"
+  },
+  "mayEdit": [
+    "intent/blocks/qr-barcode/qr-barcode.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/qr-barcode-1710.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"qr-barcode\". Mutant: line 851:80-851:112, mutator StringLiteral: \"'the check digit does not match'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/qr-barcode/index.ts (> marks the mutated line):\n   845      out += r.d;\n   846    }\n   847    const first = EAN13_PARITY.indexOf(parity);\n   848    if (first < 0) throw new BarcodeError('the left half parity is not valid');\n   849    for (let i = 0; i < 6; i++) out += dig(s.slice(50 + i * 7, 57 + i * 7), [R_CODE]).d;\n   850    const full = `${first}${out}`;\n>  851    if (gs1Check(full.slice(0, 12)) !== Number(full[12])) throw new BarcodeError('the check digit does not match');\n   852    return first === 0 ? { kind: 'upca', digits: full.slice(1) } : { kind: 'ean13', digits: full };\n   853  }\n   854  \n   855  // --- Data Matrix ECC 200 -------------------------------------------------------------------------------------------\n   856  \n   857  export interface DmSize {\n\nTest file style (intent/blocks/qr-barcode/qr-barcode.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BarcodeError, CODE128_PATTERNS, DM_SIZES, FNC1, barsToSvg, code128, code128Check, code128Decode, code128Values, dataMatrixDecode, dataMatrixEncode, dmAsciiCodewords, gridToSvg, gridToText, gs1Check, qrDataCodewords, qrTotalCodewords, qrDecode, qrEncode, qrFormatBits, qrVersionBits, retailCode, retailDecode, rsCorrect, rsEncode, runLengths, segmentFor } from './index.ts';\n\ntest('QR data capacities match the standard for versions and levels (ISO 18004 table 7)', () => {\n  // Byte-mode capacities from the standard's table (characters); a segment needs 2 (versions 1-9) or 3 codewords for mode and count.\n  const byteCap: Record<string, number> = { '1L': 17, '1M': 14, '1Q': 11, '1H': 7, '10L': 271, '10M': 213, '10Q': 151, '10H': 119, '15L': 520, '15M': 412, '15Q': 292, '15H': 220, '20L': 858, '20M': 666, '20Q': 482, '20H': 382, '40L': 2953, '40M': 2331, '40Q': 1663, '40H': 1273 };\n  for (const [k, v] of Object.entries(byteCap)) {\n    const ver = Number(k.slice(0, -1));\n    assert.equal(qrDataCodewords(ver, k.slice(-1) as 'L') - (ver <= 9 ? 2 : 3), v, `version ${k}`);\n  }\n  const data: Record<string, number> = { '7L': 156, '7M': 124, '7Q': 88, '7H': 66, '40L': 2956, '40M': 2334, '40Q': 1666, '40H': 1276 };\n  for (const [k, v] of Object.entries(data)) assert.equal(qrDataCodewords(Number(k.slice(0, -1)), k.slice(-1) as 'L'), v, `version ${k}`);\n  const total: Record<number, number> = { 1: 26, 7: 196, 10: 346, 15: 655, 20: 1085, 25: 1588, 30: 2185, 40: 3706 };\n  for (const [v, n] of Object.entries(total)) assert.equal(qrTotalCodewords(Number(v)), n, `total codewords in version ${v}`);\n  for (let v = 1; v <= 40; v++) {\n    const [l, m, q, h] = (['L', 'M', 'Q', 'H'] as const).map((e) => qrDataCodewords(v, e)) as [number, number, number, number];\n    assert.ok(l > m && m > q && q > h && h > 0, `version ${v}: more correction, less data`);\n  }\n});\n\ntest('QR format and version bits match the standard', () => {\n  const b = (n: number) => n.toString(2).padStart(15, '0');\n  assert.equal(b(qrFormatBits('L', 0)), '111011111000100');\n  assert.equal(b(qrFormatBits('M', 0)), '101010000010010');\n  assert.equal(b(qrFormatBits('Q', 0)), '011010101011111');\n  assert.equal(b(qrFormatBits('H', 0)), '001011010001001');\n  assert.equal(b(qrFormatBits('M', 5)), '100000011001110');\n  assert.equal(qrVersionBits(7).toString(2).padStart(18, '0'), '000111110010010100');\n  assert.equal(qrVersionBits(40).toString(2).padStart(18, '0'), '101000110001101001');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/qr-barcode-1710.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:57.474Z"
+}

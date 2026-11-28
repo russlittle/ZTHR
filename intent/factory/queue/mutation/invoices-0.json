@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "invoices",
+  "mutant": {
+    "id": "0",
+    "line": 29,
+    "column": 14,
+    "endLine": 29,
+    "endColumn": 41,
+    "mutator": "Regex",
+    "original": "/^(\\d{4})-(\\d{2})-(\\d{2})$/",
+    "replacement": "/(\\d{4})-(\\d{2})-(\\d{2})$/",
+    "lineText": "const DATE = /^(\\d{4})-(\\d{2})-(\\d{2})$/;",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/invoices/invoices.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/invoices-0.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"invoices\". Mutant: line 29:14-29:41, mutator Regex: \"/^(\\\\d{4})-(\\\\d{2})-(\\\\d{2})$/\" becomes \"/(\\\\d{4})-(\\\\d{2})-(\\\\d{2})$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/invoices/index.ts (> marks the mutated line):\n    23  export class InvoiceError extends Error {}\n    24  export class OutOfOrder extends InvoiceError {}\n    25  export class NotAllowed extends InvoiceError {}\n    26  \n    27  // ---------------------------------------------------------------- dates\n    28  \n>   29  const DATE = /^(\\d{4})-(\\d{2})-(\\d{2})$/;\n    30  \n    31  /** Read a YYYY-MM-DD date as a UTC day number, refusing impossible days such as 2026-02-30. */\n    32  function dayOf(s: string): number {\n    33    const m = DATE.exec(s);\n    34    if (!m) throw new InvoiceError(`not a date (YYYY-MM-DD): ${s}`);\n    35    const t = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));\n\nTest file style (intent/blocks/invoices/invoices.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { parseXml, child, children } from '../dav/index.ts';\nimport { money, format } from '../money/index.ts';\nimport { InvoiceBook, InvoiceError, NotAllowed, Numbering, OutOfOrder, computeTotals, dueDate, earlyDiscount, gaps, parseQuantity, parseTerms, toPdf, toUbl, type DraftInput, type LineInput, type TaxRate } from './index.ts';\n\nconst RATES: Record<string, TaxRate> = {\n  VAT20: { code: 'VAT20', name: 'VAT', rateBp: 2000 },\n  VAT5: { code: 'VAT5', name: 'VAT reduced', rateBp: 500 },\n  ZERO: { code: 'ZERO', name: 'Zero rated', rateBp: 0 },\n  EXEMPT: { code: 'EXEMPT', name: 'Exempt', rateBp: 0, exemptReason: 'Education is exempt' },\n  US: { code: 'US', name: 'Sales tax', rateBp: 825 },\n};\nconst usd = (n: number) => money(n, 'USD');\nconst line = (description: string, quantity: string | number, price: number, tax = 'VAT20', extra: Partial<LineInput> = {}): LineInput => ({ description, quantity, unitPrice: usd(price), tax, ...extra });\nconst seller = { name: 'Acme & Sons <Ltd>', address: ['1 High Street'], country: 'GB', taxId: 'GB123456789', email: 'billing@example.test' };\nconst buyer = { name: 'Buyer plc', address: ['2 Low Road'], country: 'GB' };\nconst draftOf = (lines: LineInput[], extra: Partial<DraftInput> = {}): DraftInput => ({ seller, buyer, currency: 'USD', lines, terms: 'net 30', ...extra });\nconst newBook = () => {\n  let n = 0;\n  return new InvoiceBook({ rates: RATES, newId: () => `id${++n}` });\n};\n\ntest('totals: tax is rounded once per rate, half-even, from whole minor units', () => {\n  const t = computeTotals({ currency: 'USD', lines: [line('Widget', 2, 1999)] }, RATES);\n  assert.equal(t.net.minor, 3998n);\n  assert.equal(t.tax.minor, 800n, '3998 at 20% is 799.6, rounded to 800');\n  assert.equal(t.total.minor, 4798n);\n  assert.equal(t.lines[0]!.net.minor, 3998n);\n  assert.equal(t.taxes[0]!.taxable.minor, 3998n);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/invoices-0.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:44.881Z"
+}

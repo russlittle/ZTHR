@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "options-store",
+  "mutant": {
+    "id": "354",
+    "line": 357,
+    "column": 54,
+    "endLine": 357,
+    "endColumn": 66,
+    "mutator": "ArithmeticOperator",
+    "original": "attempts - 1",
+    "replacement": "attempts + 1",
+    "lineText": "if (!(e instanceof VersionConflict) || i === attempts - 1) throw e;",
+    "prevText": "} catch (e) {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/options-store/options-store.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/options-store-354.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"options-store\". Mutant: line 357:54-357:66, mutator ArithmeticOperator: \"attempts - 1\" becomes \"attempts + 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/options-store/index.ts (> marks the mutated line):\n   351      for (let i = 0; i < attempts; i++) {\n   352        const cur = await this.backend.read(scope, key);\n   353        const next = fn(cur ? structuredClone(cur.value) : structuredClone(d.default));\n   354        try {\n   355          return await this.set(key, scope, next, { ...(o.by !== undefined ? { by: o.by } : {}), expectedVersion: cur ? cur.version : null });\n   356        } catch (e) {\n>  357          if (!(e instanceof VersionConflict) || i === attempts - 1) throw e;\n   358        }\n   359      }\n   360      throw new VersionConflict(key, scope);\n   361    }\n   362  \n   363    /** Removes the value at a scope, so reads fall back to the next scope or the default. */\n\nTest file style (intent/blocks/options-store/options-store.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { InvalidValue, memoryBackend, NotLoaded, OptionsStore, ScopeNotAllowed, UnknownOption, VersionConflict, scopeKind } from './index.ts';\nimport type { Backend, Change, OptionDef } from './index.ts';\n\nconst defs: OptionDef[] = [\n  { key: 'site.title', type: 'string', default: 'Untitled', autoload: true, maxLength: 20 },\n  { key: 'posts.per_page', type: 'integer', default: 10, min: 1, max: 100, scopes: ['site', 'tenant'] },\n  { key: 'ui.theme', type: 'enum', default: 'light', values: ['light', 'dark'], autoload: true, scopes: ['site', 'tenant', 'user'] },\n  { key: 'mail.enabled', type: 'boolean', default: false, scopes: ['site', 'tenant'] },\n  { key: 'tax.rate', type: 'number', default: 0.2, min: 0, max: 1, scopes: ['site', 'tenant'] },\n  { key: 'menu.links', type: 'json', default: [], scopes: ['site'] },\n  { key: 'smtp.token', type: 'string', default: '', secret: true },\n  { key: 'site.slogan', type: 'string', default: '', validate: (v) => (typeof v === 'string' && /<script/i.test(v) ? 'no scripts in the slogan' : null) },\n];\nconst make = (backend: Backend = memoryBackend(), now = () => 1_000) => ({ store: new OptionsStore(defs, { backend, now }), backend });\n\ntest('an option nobody set answers with its default and says so', async () => {\n  const { store } = make();\n  assert.deepEqual(await store.resolve('posts.per_page'), { value: 10, source: 'default' });\n  assert.equal(await store.get('site.title'), 'Untitled');\n  assert.deepEqual(await store.get('menu.links'), []);\n});\n\ntest('scopes: the most specific scope that has a value wins, and each falls back to the next', async () => {\n  const { store } = make();\n  await store.set('ui.theme', 'site', 'dark');\n  assert.deepEqual(await store.resolve('ui.theme', ['user:7', 'tenant:acme', 'site']), { value: 'dark', source: 'site', version: 1 });\n  await store.set('ui.theme', 'tenant:acme', 'light');\n  assert.equal((await store.resolve('ui.theme', ['user:7', 'tenant:acme', 'site'])).source, 'tenant:acme');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/options-store-354.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:52.828Z"
+}

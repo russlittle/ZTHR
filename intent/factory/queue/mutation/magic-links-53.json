@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "magic-links",
+  "mutant": {
+    "id": "53",
+    "line": 143,
+    "column": 106,
+    "endLine": 143,
+    "endColumn": 149,
+    "mutator": "StringLiteral",
+    "original": "'too many sign-in requests for this person'",
+    "replacement": "\"\"",
+    "lineText": "this.bySubject = new Limiter(o.perSubject ?? { burst: 3, perSecond: 1 / 60 }, { now: this.now, what: 'too many sign-in requests for this person' });",
+    "prevText": "if (this.digits < 6 || this.digits > 9) throw new RangeError('a code is 6 to 9 digits');",
+    "nextText": "this.byAddress = new Limiter(o.perAddress ?? { burst: 10, perSecond: 1 / 10 }, { now: this.now, what: 'too many sign-in requests from this address' });"
+  },
+  "mayEdit": [
+    "intent/blocks/magic-links/magic-links.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/magic-links-53.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"magic-links\". Mutant: line 143:106-143:149, mutator StringLiteral: \"'too many sign-in requests for this person'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/magic-links/index.ts (> marks the mutated line):\n   137      this.o = o;\n   138      this.now = o.now ?? Date.now;\n   139      this.random = o.random ?? randomBytes;\n   140      this.store = o.store ?? new MemoryStore();\n   141      this.digits = o.codeDigits ?? 6;\n   142      if (this.digits < 6 || this.digits > 9) throw new RangeError('a code is 6 to 9 digits');\n>  143      this.bySubject = new Limiter(o.perSubject ?? { burst: 3, perSecond: 1 / 60 }, { now: this.now, what: 'too many sign-in requests for this person' });\n   144      this.byAddress = new Limiter(o.perAddress ?? { burst: 10, perSecond: 1 / 10 }, { now: this.now, what: 'too many sign-in requests from this address' });\n   145      const f = o.failuresPerAddress ?? { limit: 20, windowMs: 15 * 60_000 };\n   146      this.redeemFailures = new Failures(f.limit, f.windowMs, { now: this.now, what: 'too many invalid links or codes from this address' });\n   147    }\n   148  \n   149    private mac(...parts: string[]): string {\n\nTest file style (intent/blocks/magic-links/magic-links.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Limited, MagicLinks, MemoryStore, NotValid, maskSubject } from './index.ts';\nimport type { Ask } from './index.ts';\n\nconst SECRET = 'long-enough-0123456';\nlet seed = 0;\nconst det = (n: number) => {\n  const b = Buffer.alloc(n);\n  for (let i = 0; i < n; i++) b[i] = (seed = (seed * 1103515245 + 12345) & 0x7fffffff) >> 16;\n  return b;\n};\nconst make = (o: Partial<ConstructorParameters<typeof MagicLinks>[0]> = {}) => {\n  const t = { now: 1_000_000 };\n  const store = new MemoryStore();\n  const m = new MagicLinks({ secret: SECRET, now: () => t.now, store, random: det, ...o });\n  return { m, t, store };\n};\nconst ask = (o: Partial<Ask> = {}): Ask => ({ subject: 'ana@example.org', purpose: 'sign-in', device: 'dev-1', address: '203.0.113.5', ...o });\nconst reason = (f: () => unknown) => {\n  try {\n    f();\n  } catch (e) {\n    assert.ok(e instanceof NotValid, String(e));\n    return e.reason;\n  }\n  return 'ok';\n};\n\ntest('a link is issued, redeemed once, and says who and what it was for', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/magic-links-53.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.819Z"
+}

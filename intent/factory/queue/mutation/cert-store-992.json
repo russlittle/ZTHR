@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "cert-store",
+  "mutant": {
+    "id": "992",
+    "line": 514,
+    "column": 39,
+    "endLine": 514,
+    "endColumn": 42,
+    "mutator": "StringLiteral",
+    "original": "'.'",
+    "replacement": "\"\"",
+    "lineText": "if (!h || h.length > 253 || h.split('.').some((l) => l.length === 0 || l.length > 63)) return undefined;",
+    "prevText": "h = /^[\\x00-\\x7f]*$/.test(h) ? h.toLowerCase() : domainToASCII(h);",
+    "nextText": "return h;"
+  },
+  "mayEdit": [
+    "intent/blocks/cert-store/cert-store.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/cert-store-992.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"cert-store\". Mutant: line 514:39-514:42, mutator StringLiteral: \"'.'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/cert-store/index.ts (> marks the mutated line):\n   508  export function normalizeHost(host: string): string | undefined {\n   509    if (typeof host !== 'string' || host.length === 0 || host.length > 253 * 2) return undefined;\n   510    let h = host.endsWith('.') ? host.slice(0, -1) : host;\n   511    if (parseIp(h)) return h.toLowerCase();\n   512    if (/[\\s/@:?#\\\\\\u0000-\\u001f]/.test(h) || h.includes('..') || h.startsWith('.')) return undefined;\n   513    h = /^[\\x00-\\x7f]*$/.test(h) ? h.toLowerCase() : domainToASCII(h);\n>  514    if (!h || h.length > 253 || h.split('.').some((l) => l.length === 0 || l.length > 63)) return undefined;\n   515    return h;\n   516  }\n   517  \n   518  function dnsMatches(pattern: string, host: string): boolean {\n   519    const p = pattern.toLowerCase().replace(/\\.$/, '');\n   520    if (!p.includes('*')) return p === host;\n\nTest file style (intent/blocks/cert-store/cert-store.test.ts):\n23 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CertError, CertStore, buildChain, certificateCoversHost, nameKey, nameToString, normalizeHost, parseCertificate, parseIp, parsePem, verifySignature } from './index.ts';\n\n// Generated once with OpenSSL; every certificate here is a throwaway test certificate.\nexport const PEM = {\n  ca: `-----BEGIN CERTIFICATE-----\nMIIB0DCCAXagAwIBAgIBATAKBggqhkjOPQQDAjA/MQswCQYDVQQGEwJVUzEWMBQG\nA1UECgwNRXhhbXBsZSBUcnVzdDEYMBYGA1UEAwwPRXhhbXBsZSBSb290IENBMB4X\nDTI2MTEyODA2NDk1MVoXDTM2MTEyNTA2NDk1MVowPzELMAkGA1UEBhMCVVMxFjAU\nBgNVBAoMDUV4YW1wbGUgVHJ1c3QxGDAWBgNVBAMMD0V4YW1wbGUgUm9vdCBDQTBZ\nMBMGByqGSM49AgEGCCqGSM49AwEHA0IABI0DXcPRwMXxQ14obQw2VTgc71tyUpKZ\nkWsxvl37gBZDRrPWdMvS9qHG7Tv6swo/FavGVyXgVrP3IXYznUfTBnqjYzBhMB8G\nA1UdIwQYMBaAFC0eqNIFuEyCZivxF89crzoMURK+MA8GA1UdEwEB/wQFMAMBAf8w\nDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBQtHqjSBbhMgmYr8RfPXK86DFESvjAK\nBggqhkjOPQQDAgNIADBFAiAIxfD/UaF7JwZgXA/OuL4p7QcFswvJNZZujGgMJRbl\nCgIhAKYqbBRoECqFt+cejmpIZo3FhQ/4D5fkXrryTVxMKBsN\n-----END CERTIFICATE-----\n`,\n  int: `-----BEGIN CERTIFICATE-----\nMIIB1zCCAX6gAwIBAgIBAjAKBggqhkjOPQQDAjA/MQswCQYDVQQGEwJVUzEWMBQG\nA1UECgwNRXhhbXBsZSBUcnVzdDEYMBYGA1UEAwwPRXhhbXBsZSBSb290IENBMB4X\nDTI2MTEyODA2NDk1MloXDTMxMTEwMjA2NDk1MlowRDELMAkGA1UEBhMCVVMxFjAU\nBgNVBAoMDUV4YW1wbGUgVHJ1c3QxHTAbBgNVBAMMFEV4YW1wbGUgSXNzdWluZyBD\nQSAxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAECCw1w08ZW+Q7jklDizWvL7Ut\nIod1FXhLqbyVKCzyOUOs9ylOEkjQ+2AWSd4513Ovp5BrGyUPLS65A9uxpOMAWKNm\nMGQwEgYDVR0TAQH/BAgwBgEB/wIBADAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYE\nFKnVKnfH4aiQX73M/n3XRZmsYIi7MB8GA1UdIwQYMBaAFC0eqNIFuEyCZivxF89c\nrzoMURK+MAoGCCqGSM49BAMCA0cAMEQCID4bUnIr1n3w+4SVEpCKp0z+Fl8LcCdO\nC5awI5xAnxbkAiARsrV9NQi8LUyczo/vCqpw5W0Aubur0ATR48OwK0Ge6A==\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/cert-store-992.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.880Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "channels",
+  "mutant": {
+    "id": "230",
+    "line": 188,
+    "column": 155,
+    "endLine": 188,
+    "endColumn": 166,
+    "mutator": "ConditionalExpression",
+    "original": "a.id < b.id",
+    "replacement": "true",
+    "lineText": "return [...this.chans.values()].filter((c) => c.kind === 'public' || c.members.has(who)).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : a.id < b.id ? -1 : 1));",
+    "prevText": "visible(who: string): Channel[] {",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/channels/channels.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/channels-230.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"channels\". Mutant: line 188:155-188:166, mutator ConditionalExpression: \"a.id < b.id\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/channels/index.ts (> marks the mutated line):\n   182      if (c.kind !== 'public' && !c.members.has(who)) throw new ChannelError(`no channel ${id}`);\n   183      return c;\n   184    }\n   185  \n   186    /** Channels this person may see: public ones, and private or direct ones they belong to. */\n   187    visible(who: string): Channel[] {\n>  188      return [...this.chans.values()].filter((c) => c.kind === 'public' || c.members.has(who)).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : a.id < b.id ? -1 : 1));\n   189    }\n   190  \n   191    join(who: string, id: string): Channel {\n   192      const c = this.ch(id);\n   193      if (c.kind !== 'public') throw new ChannelError(`no channel ${id}`);\n   194      if (c.archived) throw new ChannelError('this channel is archived');\n\nTest file style (intent/blocks/channels/channels.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Catalogue, Hub } from '../events/index.ts';\nimport { ChannelError, Channels, eventTypes } from './index.ts';\n\nconst DAY = 86_400_000;\nconst USERS = ['ana', 'bo', 'cy', 'di', 'channel'];\nfunction mk(o: Partial<ConstructorParameters<typeof Channels>[0]> = {}) {\n  let t = Date.UTC(2026, 0, 5, 12);\n  const ch = new Channels({ person: (h) => (USERS.includes(h) ? h : undefined), now: () => t, ...o });\n  return { ch, tick: (ms: number) => void (t += ms), now: () => t };\n}\n\ntest('names: normalised, validated and unique among channels; direct channels do not take names', () => {\n  const { ch } = mk();\n  assert.equal(ch.create('ana', { name: ' General ', kind: 'public' }).name, 'general');\n  assert.throws(() => ch.create('bo', { name: 'general', kind: 'private' }), /taken/);\n  for (const bad of ['', 'has space', '-lead', 'x'.repeat(41), '#general', 'a/b', 'ünï'])\n    assert.throws(() => ch.create('ana', { name: bad, kind: 'public' }), /1 to 40 lower-case/, bad);\n  assert.throws(() => ch.create('ana', { name: 'x', kind: 'direct' as 'public' }), /public or private/);\n  assert.throws(() => ch.create('ana', { name: 'x', kind: 'public', retentionDays: 0 }), /whole number of days/);\n  assert.throws(() => ch.create('ana', { name: 'x', kind: 'public', topic: 'y'.repeat(251) }), /250/);\n  ch.open('ana', 'bo');\n  assert.ok(ch.create('ana', { name: 'bo', kind: 'public' }));\n});\n\ntest('visibility: public is listed for all, private and direct only for members', () => {\n  const { ch } = mk();\n  const pub = ch.create('ana', { name: 'pub', kind: 'public' });\n  const priv = ch.create('ana', { name: 'priv', kind: 'private', members: ['bo'] });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/channels-230.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:36.058Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "login-flows",
+  "mutant": {
+    "id": "481",
+    "line": 384,
+    "column": 46,
+    "endLine": 384,
+    "endColumn": 55,
+    "mutator": "StringLiteral",
+    "original": "'pending'",
+    "replacement": "\"\"",
+    "lineText": "if (a.kind === 'session') return { kind: 'pending', candidates: [] };",
+    "prevText": "// A session authenticator never asks the person for anything: when it cannot vouch, it simply steps aside.",
+    "nextText": "// For a name with no account the answer is always \"set up\", so nothing offered reveals that it does not exist."
+  },
+  "mayEdit": [
+    "intent/blocks/login-flows/login-flows.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/login-flows-481.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"login-flows\". Mutant: line 384:46-384:55, mutator StringLiteral: \"'pending'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/login-flows/index.ts (> marks the mutated line):\n   378        if (r?.ok) {\n   379          this.accept(n, a, r);\n   380          return { kind: 'satisfied' };\n   381        }\n   382      }\n   383      // A session authenticator never asks the person for anything: when it cannot vouch, it simply steps aside.\n>  384      if (a.kind === 'session') return { kind: 'pending', candidates: [] };\n   385      // For a name with no account the answer is always \"set up\", so nothing offered reveals that it does not exist.\n   386      const real = this.ctx.user === null || !a.configuredFor ? true : a.configuredFor(this.ctx.user);\n   387      if (!real) {\n   388        if (n.requirement === 'REQUIRED') {\n   389          if (a.setupAction) {\n   390            (this.queued ??= []).push(a.setupAction);\n\nTest file style (intent/blocks/login-flows/login-flows.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { base32, checkCode, hotp, unbase32 } from '../sessions/index.ts';\nimport { BruteForce, FlowRun, LoginFlowError, requiredActionsFor, validateFlow } from './index.ts';\nimport type { Authenticator, Condition, FlowDeps, Step, SubFlow, UserState } from './index.ts';\n\nconst NOW = 1_800_000_000_000;\nconst SECRET = base32(Uint8Array.from({ length: 20 }, (_, i) => i + 1));\nconst code = (at = NOW) => hotp(unbase32(SECRET), Math.floor(at / 30_000));\nconst PASSWORDS: Record<string, string> = { ana: 'correct horse', bo: 'battery staple', cy: 'pw' };\nconst USERS: Record<string, UserState> = {\n  ana: { id: 'ana', roles: ['admin'], configured: ['otp'], emailVerified: true },\n  bo: { id: 'bo', roles: [], configured: ['webauthn'], emailVerified: true },\n  cy: { id: 'cy', roles: [], configured: [], emailVerified: false, passwordChangedAt: NOW - 100 * 86_400_000, termsAccepted: 1 },\n};\n\nconst registry = (): Map<string, Authenticator> =>\n  new Map<string, Authenticator>([\n    ['username', { name: 'username', kind: 'identify' }],\n    ['password', { name: 'password', kind: 'credential', verify: (input, ctx) => (ctx.user && typeof input === 'object' && input !== null && (input as { password?: string }).password === PASSWORDS[ctx.username ?? ''] ? { ok: true } : { ok: false, code: 'bad' }) }],\n    ['otp', { name: 'otp', kind: 'second-factor', level: 2, configuredFor: (u) => !!u?.configured?.includes('otp'), setupAction: 'CONFIGURE_OTP', verify: (input) => (typeof input === 'string' && checkCode(SECRET, input, NOW) !== null ? { ok: true } : { ok: false }) }],\n    ['passkey', { name: 'passkey', kind: 'passwordless', level: 2, configuredFor: (u) => !!u?.configured?.includes('webauthn'), verify: (input, ctx) => (input === `signed-by-${ctx.username}` && ctx.user?.configured?.includes('webauthn') ? { ok: true, user: ctx.username ?? '' } : { ok: false }) }],\n    ['cookie', { name: 'cookie', kind: 'session', auto: (ctx) => (ctx.session && ctx.session.level >= ctx.requestedLevel ? { ok: true, user: ctx.session.user, amr: 'cookie' } : null) }],\n  ]);\n\nconst browser: SubFlow = {\n  id: 'browser',\n  requirement: 'REQUIRED',\n  executions: [\n    { id: 'cookie', authenticator: 'cookie', requirement: 'ALTERNATIVE' },\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/login-flows-481.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.706Z"
+}

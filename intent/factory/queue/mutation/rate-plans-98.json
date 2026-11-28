@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "rate-plans",
+  "mutant": {
+    "id": "98",
+    "line": 151,
+    "column": 11,
+    "endLine": 151,
+    "endColumn": 76,
+    "mutator": "ConditionalExpression",
+    "original": "s.cost !== undefined && (!Number.isInteger(s.cost) || s.cost < 0)",
+    "replacement": "false",
+    "lineText": "if (s.cost !== undefined && (!Number.isInteger(s.cost) || s.cost < 0)) out.push(`plan ${p.name}: route ${r} cost is a whole number from 0`);",
+    "prevText": "for (const [r, s] of Object.entries(p.routes ?? {})) {",
+    "nextText": "okRate(s.rate, `${p.name} route ${r}`, out);"
+  },
+  "mayEdit": [
+    "intent/blocks/rate-plans/rate-plans.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/rate-plans-98.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"rate-plans\". Mutant: line 151:11-151:76, mutator ConditionalExpression: \"s.cost !== undefined && (!Number.isInteger(s.cost) || s.cost < 0)\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/rate-plans/index.ts (> marks the mutated line):\n   145        wn.add(w.name);\n   146      }\n   147      if (p.concurrency !== undefined && (!Number.isInteger(p.concurrency) || p.concurrency < 1)) out.push(`plan ${p.name}: concurrency is a whole number from 1`);\n   148      if (p.quota && !hasEntitlements) out.push(`plan ${p.name} names a quota but no entitlements were given`);\n   149      if (p.throttle && !p.quota) out.push(`plan ${p.name}: a throttle only applies after a quota`);\n   150      for (const [r, s] of Object.entries(p.routes ?? {})) {\n>  151        if (s.cost !== undefined && (!Number.isInteger(s.cost) || s.cost < 0)) out.push(`plan ${p.name}: route ${r} cost is a whole number from 0`);\n   152        okRate(s.rate, `${p.name} route ${r}`, out);\n   153        if (s.rate && s.cost !== undefined && s.cost > s.rate.burst) out.push(`plan ${p.name}: route ${r} costs more than its own burst, so it could never run`);\n   154      }\n   155      for (const [r, s] of Object.entries(p.routes ?? {})) if ((s.cost ?? 1) > p.rate.burst && !s.exempt) out.push(`plan ${p.name}: route ${r} costs more than the plan's burst, so it could never run`);\n   156      if (p.penalty && !(p.penalty.strikes >= 1 && p.penalty.withinMs > 0 && p.penalty.cooldownMs > 0)) out.push(`plan ${p.name}: a penalty needs strikes, a window and a cooldown`);\n   157    }\n\nTest file style (intent/blocks/rate-plans/rate-plans.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Entitlements, type Account, type Catalog } from '../entitlements/index.ts';\nimport { RatePlanError, RatePlans, checkPlans, type RatePlan } from './index.ts';\n\nconst T0 = Date.UTC(2026, 10, 28, 12, 0, 0);\n\nconst catalog: Catalog = {\n  plans: {\n    free: { name: 'free', limits: { 'api.calls': { included: 200, period: 'month', overage: { mode: 'block' } } } },\n    pro: { name: 'pro', limits: { 'api.calls': { included: 100, period: 'month', overage: { mode: 'charge', price: 100, perUnits: 50 } } } },\n    open: { name: 'open', limits: { 'api.calls': { included: 10, period: 'month', overage: { mode: 'allow' } } } },\n  },\n  features: [],\n  limits: ['api.calls'],\n};\nconst acct = (id: string, plan: string): Account => ({ id, plan, anchorDay: 1 });\n\nfunction make(plans: RatePlan[], o: { pool?: { capacityPerSecond: number; windowSeconds?: number; highWatermark?: number; shareFactor?: number }; leaseMs?: number } = {}) {\n  let t = T0;\n  const ent = new Entitlements(catalog);\n  const rp = new RatePlans({ plans, now: () => t, entitlements: ent, ...o });\n  let n = 0;\n  return { rp, ent, tick: (ms: number) => (t += ms), now: () => t, id: () => `req-${++n}` };\n}\n\nconst FREE: RatePlan = { name: 'free', rate: { perSecond: 2, burst: 5 }, windows: [{ name: 'minute', seconds: 60, limit: 60 }], quota: 'api.calls' };\n\ntest('burst then sustained: five at once, the sixth waits half a second, and refills continuously', () => {\n  const { rp, tick, id } = make([FREE]);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/rate-plans-98.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:57.998Z"
+}

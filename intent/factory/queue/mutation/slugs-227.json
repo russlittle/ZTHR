@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "slugs",
+  "mutant": {
+    "id": "227",
+    "line": 114,
+    "column": 46,
+    "endLine": 114,
+    "endColumn": 76,
+    "mutator": "StringLiteral",
+    "original": "'maxLength must be at least 1'",
+    "replacement": "\"\"",
+    "lineText": "if (!(max >= 1)) throw new InvalidSlug('', 'maxLength must be at least 1');",
+    "prevText": "const max = o.maxLength ?? 80;",
+    "nextText": "const apostrophes = /['\\u2019\\u02bc\\u2018`]/g;"
+  },
+  "mayEdit": [
+    "intent/blocks/slugs/slugs.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/slugs-227.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"slugs\". Mutant: line 114:46-114:76, mutator StringLiteral: \"'maxLength must be at least 1'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/slugs/index.ts (> marks the mutated line):\n   108  \n   109  /** A slug for a title. Deterministic: the same title always gives the same slug. */\n   110  export function slugify(title: string, o: SlugOptions = {}): string {\n   111    const sep = o.separator ?? '-';\n   112    if (!/^[a-z0-9_.~-]$/.test(sep)) throw new InvalidSlug(sep, 'the separator must be one of a-z 0-9 _ . ~ -');\n   113    const max = o.maxLength ?? 80;\n>  114    if (!(max >= 1)) throw new InvalidSlug('', 'maxLength must be at least 1');\n   115    const apostrophes = /['\\u2019\\u02bc\\u2018`]/g;\n   116    const t = transliterate((title.length > 10_000 ? title.slice(0, 10_000) : title).replace(apostrophes, ''), { ...(o.locale ? { locale: o.locale } : {}), ...(o.allowUnicode ? { keepUnicode: true } : {}) }).toLowerCase();\n   117    const words = (o.allowUnicode ? t.match(/[\\p{L}\\p{N}\\p{M}]+/gu) : t.match(/[a-z0-9]+/g)) ?? [];\n   118    let slug = words.join(sep);\n   119    if ([...slug].length > max) {\n   120      const cut = [...slug].slice(0, max).join('');\n\nTest file style (intent/blocks/slugs/slugs.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { InvalidSlug, isValidSlug, NotFound, reserved, reservedReason, SlugRegistry, SlugTaken, slugify, transliterate, uniqueSlug } from './index.ts';\n\ntest('plain titles become lower-case words joined by hyphens', () => {\n  assert.equal(slugify('Hello, World!'), 'hello-world');\n  assert.equal(slugify('  --Foo__Bar--  '), 'foo-bar');\n  assert.equal(slugify('One   two\\tthree\\nfour'), 'one-two-three-four');\n  assert.equal(slugify('Version 2.0 (final)'), 'version-2-0-final');\n  assert.equal(slugify(\"It's Bob’s book\"), 'its-bobs-book', 'apostrophes vanish instead of splitting words');\n  assert.equal(slugify('50% off & more'), '50-percent-off-and-more');\n  assert.equal(slugify('Mix_of.separators/and\\\\slashes'), 'mix-of-separators-and-slashes');\n  assert.equal(slugify('Hello World', { separator: '_' }), 'hello_world');\n});\n\ntest('accents and special letters fold to ASCII', () => {\n  assert.equal(slugify('Crème Brûlée à la Mode'), 'creme-brulee-a-la-mode');\n  assert.equal(slugify('Straße'), 'strasse');\n  assert.equal(slugify('København Ærø Œuvre'), 'kobenhavn-aero-oeuvre');\n  assert.equal(slugify('Łódź Đà Nẵng'), 'lodz-da-nang');\n  assert.equal(slugify('Þórr and Ðe'), 'thorr-and-de');\n  assert.equal(slugify('Ｆｕｌｌｗｉｄｔｈ ①'), 'fullwidth-1', 'compatibility forms are folded');\n  assert.equal(slugify('école'), 'ecole', 'combining accents too');\n});\n\ntest('German umlauts are spelled out only when the locale asks', () => {\n  assert.equal(slugify('Müller Böhm Äpfel'), 'muller-bohm-apfel');\n  assert.equal(slugify('Müller Böhm Äpfel', { locale: 'de' }), 'mueller-boehm-aepfel');\n  assert.equal(slugify('Müller', { locale: 'de-AT' }), 'mueller');\n  assert.equal(slugify('Müller', { locale: 'sv' }), 'muller');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/slugs-227.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:03.728Z"
+}

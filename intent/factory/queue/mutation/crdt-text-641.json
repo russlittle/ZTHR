@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crdt-text",
+  "mutant": {
+    "id": "641",
+    "line": 543,
+    "column": 7,
+    "endLine": 543,
+    "endColumn": 12,
+    "mutator": "ConditionalExpression",
+    "original": "f > 3",
+    "replacement": "false",
+    "lineText": "if (f > 3) throw new Refused('unknown cursor flags');",
+    "prevText": "const f = r.byte();",
+    "nextText": "const id = f & 1 ? { client: r.uint(), clock: r.uint() } : null;"
+  },
+  "mayEdit": [
+    "intent/blocks/crdt-text/crdt-text.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crdt-text-641.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crdt-text\". Mutant: line 543:7-543:12, mutator ConditionalExpression: \"f > 3\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crdt-text/index.ts (> marks the mutated line):\n   537    return w.bytes();\n   538  }\n   539  \n   540  export function decodeRelativePosition(b: Uint8Array): RelativePosition {\n   541    const r = new Reader(b);\n   542    const f = r.byte();\n>  543    if (f > 3) throw new Refused('unknown cursor flags');\n   544    const id = f & 1 ? { client: r.uint(), clock: r.uint() } : null;\n   545    if (!r.done) throw new Refused('there are bytes after the end');\n   546    return { id, assoc: ((f >> 1) & 1) as 0 | 1 };\n   547  }\n   548  \n\nTest file style (intent/blocks/crdt-text/crdt-text.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Doc, Refused, decodeRelativePosition, decodeStateVector, encodeRelativePosition, encodeStateVector, mergeUpdates, sync } from './index.ts';\n\nfunction rng(seed: number) {\n  return () => {\n    seed = (seed + 0x6d2b79f5) | 0;\n    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);\n    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;\n    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;\n  };\n}\n\ntest('local inserts and deletes edit the text by code point index', () => {\n  const d = new Doc(1);\n  d.insert(0, 'hello world');\n  d.insert(5, ',');\n  d.delete(6, 1);\n  assert.equal(d.toString(), 'hello,world');\n  assert.equal(d.length, 11);\n  d.insert(11, '!');\n  d.insert(0, '>> ');\n  assert.equal(d.toString(), '>> hello,world!');\n  assert.throws(() => d.insert(99, 'x'), /past the end/);\n  assert.throws(() => d.delete(10, 99), /past the end/);\n});\n\ntest('astral characters count as one and are never split', () => {\n  const d = new Doc(1);\n  d.insert(0, 'a😀b');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crdt-text-641.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.243Z"
+}

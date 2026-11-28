@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webpush",
+  "mutant": {
+    "id": "382",
+    "line": 231,
+    "column": 23,
+    "endLine": 231,
+    "endColumn": 28,
+    "mutator": "StringLiteral",
+    "original": "'low'",
+    "replacement": "\"\"",
+    "lineText": "if (!['very-low', 'low', 'normal', 'high'].includes(so.urgency)) throw new PushError('urgency', 'bad urgency');",
+    "prevText": "if (so.urgency) {",
+    "nextText": "headers.Urgency = so.urgency;"
+  },
+  "mayEdit": [
+    "intent/blocks/webpush/webpush.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webpush-382.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webpush\". Mutant: line 231:23-231:28, mutator StringLiteral: \"'low'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webpush/index.ts (> marks the mutated line):\n   225  export function buildRequest(sub: { endpoint: string; keys: Keys }, payload: Uint8Array | string | null, vapid: VapidKeys, vo: VapidOptions, so: SendOptions, eo: EncryptOptions = {}): PushRequest {\n   226    checkEndpoint(sub.endpoint);\n   227    if (!Number.isInteger(so.ttl) || so.ttl < 0 || so.ttl > 2 ** 31 - 1) throw new PushError('ttl', 'ttl must be a whole number of seconds, 0 or more');\n   228    if (so.topic !== undefined && !/^[A-Za-z0-9_-]{1,32}$/.test(so.topic)) throw new PushError('topic', 'a topic is up to 32 characters of A-Z a-z 0-9 - _');\n   229    const headers: Record<string, string> = { Authorization: vapidAuthorization(vapid, sub.endpoint, vo), TTL: String(so.ttl) };\n   230    if (so.urgency) {\n>  231      if (!['very-low', 'low', 'normal', 'high'].includes(so.urgency)) throw new PushError('urgency', 'bad urgency');\n   232      headers.Urgency = so.urgency;\n   233    }\n   234    if (so.topic) headers.Topic = so.topic;\n   235    let body: Buffer = Buffer.alloc(0);\n   236    if (payload !== null && !(typeof payload === 'string' && payload === '')) {\n   237      body = encryptPayload(sub.keys, payload, eo);\n\nTest file style (intent/blocks/webpush/webpush.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { createECDH, createPublicKey, createVerify, randomBytes } from 'node:crypto';\nimport { newKey } from '../crypto/index.ts';\nimport { generateVapid, checkVapid, sealVapid, openVapid, vapidToken, vapidAuthorization, encryptPayload, decryptPayload, buildRequest, checkEndpoint, SubscriptionStore, PushSender, PushError, retryAfterMs, pushWorkerSnippet, MAX_PLAINTEXT, type Keys, type PushRequest, type PushResponse } from './index.ts';\n\nconst ring = () => ({ current: 'k1', keys: { k1: newKey() } });\nconst browser = () => {\n  const e = createECDH('prime256v1');\n  e.generateKeys();\n  const auth = randomBytes(16);\n  return { priv: e.getPrivateKey(), keys: { p256dh: e.getPublicKey().toString('base64url'), auth: auth.toString('base64url') } as Keys, auth };\n};\nconst EP = 'https://push.example.net/wpush/v2/abc';\n\ntest('RFC 8291 appendix A example reproduces byte for byte', () => {\n  const body = encryptPayload(\n    { p256dh: 'BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4', auth: 'BTBZMqHH6r4Tts7J_aSIgg' },\n    'When I grow up, I want to be a watermelon',\n    { salt: Buffer.from('DGv6ra1nlYgDCS1FRnbzlw', 'base64url'), senderPrivate: Buffer.from('yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw', 'base64url') },\n  );\n  assert.equal(body.toString('base64url'), 'DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN');\n  const plain = decryptPayload(body, Buffer.from('q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94', 'base64url'), Buffer.from('BTBZMqHH6r4Tts7J_aSIgg', 'base64url'));\n  assert.equal(plain.toString(), 'When I grow up, I want to be a watermelon');\n});\n\ntest('encrypt then decrypt round trip, with padding and binary data', () => {\n  const b = browser();\n  for (const data of ['', 'hi', 'é'.repeat(500), Buffer.from([0, 2, 0, 0, 255])]) {\n    const body = encryptPayload(b.keys, data, { padding: 10 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webpush-382.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:14.864Z"
+}

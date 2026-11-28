@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "storage-policies",
+  "mutant": {
+    "id": "167",
+    "line": 110,
+    "column": 99,
+    "endLine": 110,
+    "endColumn": 103,
+    "mutator": "StringLiteral",
+    "original": "'/*'",
+    "replacement": "\"\"",
+    "lineText": "const typeAllowed = (allowed: readonly string[], type: string) => allowed.some((a) => (a.endsWith('/*') ? type.startsWith(a.slice(0, -1)) : a === type));",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/storage-policies/storage-policies.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/storage-policies-167.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"storage-policies\". Mutant: line 110:99-110:103, mutator StringLiteral: \"'/*'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/storage-policies/index.ts (> marks the mutated line):\n   104    if (b.subarray(0, 5).toString('latin1') === '%PDF-') return 'application/pdf';\n   105    if (starts(0x50, 0x4b, 0x03, 0x04)) return 'application/zip';\n   106    if (/^\\s*<(!doctype html|html|script|svg)/i.test(b.toString('latin1'))) return 'text/html';\n   107    return undefined;\n   108  }\n   109  \n>  110  const typeAllowed = (allowed: readonly string[], type: string) => allowed.some((a) => (a.endsWith('/*') ? type.startsWith(a.slice(0, -1)) : a === type));\n   111  \n   112  export class Storage {\n   113    readonly #buckets = new Map<string, Bucket>();\n   114    readonly #policies: Policy[] = [];\n   115  \n   116    addBucket(b: Bucket): void {\n\nTest file style (intent/blocks/storage-policies/storage-policies.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CREATE, DELETE, READ, UPDATE } from '../grants/index.ts';\nimport { BadPath, BadSignature, BadTransform, Refused, Signer, Storage, canonicalTransform, cleanPath, grantBit, outputSize, parseTransform, sniff } from './index.ts';\n\nconst PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);\nconst JPG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0]);\n\nconst store = () => {\n  const s = new Storage();\n  s.addBucket({ name: 'avatars', public: true, maxBytes: 1000, allowedTypes: ['image/*'], allowedExtensions: ['png', 'jpg'] });\n  s.addBucket({ name: 'docs' });\n  s.addPolicy({ id: 'own-folder', bucket: 'docs', effect: 'allow', actions: ['list', 'read', 'create', 'update', 'delete'], path: 'users/{id}/**' });\n  s.addPolicy({ id: 'tenant-read', bucket: 'docs', effect: 'allow', actions: ['read', 'list'], path: 'tenants/{tenant}/**' });\n  s.addPolicy({ id: 'admin-all', bucket: 'docs', effect: 'allow', actions: ['list', 'read', 'create', 'update', 'delete'], path: '**', roles: ['admin'] });\n  s.addPolicy({ id: 'no-locked', bucket: 'docs', effect: 'deny', actions: ['read', 'update', 'delete'], path: 'users/*/locked/**' });\n  s.addPolicy({ id: 'own-avatar', bucket: 'avatars', effect: 'allow', actions: ['create', 'update', 'delete'], path: '{id}/*' });\n  return s;\n};\nconst ana = { id: 'ana', tenant: 't1' };\n\ntest('a person reaches their own folder and not anyone else\\'s, and anonymous people reach nothing', () => {\n  const s = store();\n  assert.equal(s.decide(ana, 'read', 'docs', 'users/ana/cv.pdf').allowed, true);\n  assert.equal(s.decide(ana, 'read', 'docs', 'users/ben/cv.pdf').allowed, false);\n  assert.equal(s.decide({}, 'read', 'docs', 'users/ana/cv.pdf').reason, 'sign in first; no policy allows anonymous access to this');\n  assert.equal(s.decide(ana, 'create', 'docs', 'users/ana/a/b/c.txt').policy, 'own-folder');\n  assert.equal(s.decide(ana, 'read', 'docs', 'users/ana').allowed, false, '** needs at least one more segment');\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/storage-policies-167.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.641Z"
+}

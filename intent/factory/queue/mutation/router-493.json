@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "router",
+  "mutant": {
+    "id": "493",
+    "line": 355,
+    "column": 142,
+    "endLine": 355,
+    "endColumn": 179,
+    "mutator": "StringLiteral",
+    "original": "` outside ${[...exclude].join(', ')}`",
+    "replacement": "``",
+    "lineText": "return { stop: true, reason: 'no-model', detail: `no model from ${start} up can take a ${kind} task of ${largest} tokens${exclude.size ? ` outside ${[...exclude].join(', ')}` : ''}` };",
+    "prevText": "if (overBudget) return { stop: true, reason: 'budget', detail: `no model fits the ${budgetLeftUsd.toFixed(4)} USD left` };",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/router/router.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/router-493.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"router\". Mutant: line 355:142-355:179, mutator StringLiteral: \"` outside ${[...exclude].join(', ')}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/router/index.ts (> marks the mutated line):\n   349        const leastTried = [...cheaper].sort((a, b) => a.stat.attempts - b.stat.attempts || a.est - b.est || a.m.id.localeCompare(b.m.id))[0];\n   350        if (trusted) return leastTried && this.random() < this.policy.explore ? pick(leastTried, 'explore') : pick(trusted, 'trusted');\n   351        if (leastTried) return pick(leastTried, 'not-yet-proven');\n   352        if (o.anyLevel) break;\n   353      }\n   354      if (overBudget) return { stop: true, reason: 'budget', detail: `no model fits the ${budgetLeftUsd.toFixed(4)} USD left` };\n>  355      return { stop: true, reason: 'no-model', detail: `no model from ${start} up can take a ${kind} task of ${largest} tokens${exclude.size ? ` outside ${[...exclude].join(', ')}` : ''}` };\n   356    }\n   357  \n   358    /** A judge for a claim: any level, cheapest proven, and never of the claimant's family. */\n   359    chooseJudge(claimantFamily: string, est: number | Estimate = 20_000, budgetLeftUsd = Number.POSITIVE_INFINITY, kind = 'judge'): Choice | Stop {\n   360      if (!claimantFamily.trim()) throw new Error('the claimant family is required');\n   361      const c = this.choose(kind, est, budgetLeftUsd, { excludeFamilies: [claimantFamily], level: 'worker', anyLevel: true });\n\nTest file style (intent/blocks/router/router.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { readFileSync } from 'node:fs';\nimport { test } from 'node:test';\nimport { CATALOGUE, LEVELS, POLICY, Router, cost, failuresOf, measure, models, spentOn, staleness, statOf, wilson, type Choice, type PriceTable, type Result, type Stop } from './index.ts';\n\nconst TABLE = JSON.parse(readFileSync(new URL('../../factory/prices.json', import.meta.url), 'utf8')) as PriceTable;\nconst NOW = new Date('2026-11-27T12:00:00Z');\nconst never = () => 0.99; // never explores\nconst always = () => 0; // always explores when it may\n\nconst r = (model: string, kind: string, pass: boolean | null, extra: Partial<Result> = {}): Result => ({ at: '2026-11-27T01:00:00Z', model, kind, pass, inputTokens: 1000, outputTokens: 100, costUsd: 0.001, ...extra });\nconst times = (n: number, f: () => Result) => Array.from({ length: n }, f);\nconst router = (results: Result[] = [], random = never, policy = {}) => new Router(TABLE, results, { now: NOW, random, policy });\nconst chosen = (c: Choice | Stop): Choice => {\n  assert.equal(c.stop, false, c.stop ? `${c.reason}: ${c.detail}` : '');\n  return c as Choice;\n};\nconst stopped = (c: Choice | Stop): Stop => {\n  assert.equal(c.stop, true, c.stop ? '' : `chose ${c.model.id}`);\n  return c as Stop;\n};\n\ntest('the price table is no more than 30 days old, every row is sourced, and no promotional rate has lapsed', () => {\n  assert.deepEqual(staleness(TABLE, new Date()), [], 'intent/factory/prices.json needs re-reading from the sources it names');\n  assert.deepEqual(staleness(TABLE, NOW), []);\n  assert.deepEqual(staleness(TABLE, new Date('2026-12-27T00:00:00Z')), [], 'exactly 30 days is still fresh');\n  const old = staleness(TABLE, new Date('2026-12-28T00:00:01Z'));\n  assert.ok(old.includes('price table checked 2026-11-27, more than 30 days ago'), old.join('\\n'));\n  assert.ok(old.includes('claude-haiku-5-5: price checked 2026-11-27, more than 30 days ago'));\n  const lapsed = staleness({ ...TABLE, checked: '2027-01-02', models: TABLE.models.map((m) => ({ ...m, checked: '2027-01-02' })) }, new Date('2027-01-02T00:00:00Z'));\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/router-493.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:00.355Z"
+}

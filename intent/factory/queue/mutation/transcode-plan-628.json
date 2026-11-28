@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "transcode-plan",
+  "mutant": {
+    "id": "628",
+    "line": 337,
+    "column": 7,
+    "endLine": 337,
+    "endColumn": 28,
+    "mutator": "ConditionalExpression",
+    "original": "typeof p !== 'string'",
+    "replacement": "false",
+    "lineText": "if (typeof p !== 'string' || p === '') throw new PlanError(`${what} path is empty`);",
+    "prevText": "function safePath(p: string, what: string): string {",
+    "nextText": "if (p.startsWith('-')) throw new PlanError(`${what} path \"${p.slice(0, 20)}\" begins with \"-\" and would be read as an option`);"
+  },
+  "mayEdit": [
+    "intent/blocks/transcode-plan/transcode-plan.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/transcode-plan-628.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"transcode-plan\". Mutant: line 337:7-337:28, mutator ConditionalExpression: \"typeof p !== 'string'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/transcode-plan/index.ts (> marks the mutated line):\n   331  export function escapeFilterValue(s: string): string {\n   332    if (/[\\u0000-\\u001f]/.test(s)) throw new PlanError('control characters cannot go in a filter');\n   333    return s.replace(/[\\\\':,;\\[\\]=]/g, (c) => `\\\\${c}`);\n   334  }\n   335  \n   336  function safePath(p: string, what: string): string {\n>  337    if (typeof p !== 'string' || p === '') throw new PlanError(`${what} path is empty`);\n   338    if (p.startsWith('-')) throw new PlanError(`${what} path \"${p.slice(0, 20)}\" begins with \"-\" and would be read as an option`);\n   339    if (/[\\u0000]/.test(p)) throw new PlanError(`${what} path has a NUL byte`);\n   340    if (/^[A-Za-z][A-Za-z0-9+.-]*:/.test(p) && !/^file:/.test(p) && !/^[A-Za-z]:[\\\\/]/.test(p)) throw new PlanError(`${what} path \"${p.slice(0, 20)}\" looks like a URL or protocol; give a local file path`);\n   341    return p;\n   342  }\n   343  \n\nTest file style (intent/blocks/transcode-plan/transcode-plan.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { probe } from '../iso-bmff-probe/index.ts';\nimport { escapeFilterValue, ffmpegArgs, ladderFor, mediaFromProbe, plan, PlanError, PROFILES } from './index.ts';\nimport type { MediaInfo } from './index.ts';\n\nconst h264 = (over: Partial<NonNullable<MediaInfo['video']>> = {}): NonNullable<MediaInfo['video']> => ({ codec: 'h264', profile: 'high', level: 40, width: 1920, height: 1080, fps: 30, bitrate: 6_000_000, bitDepth: 8, ...over });\nconst media = (over: Partial<MediaInfo> = {}): MediaInfo => ({ container: 'mp4', durationSeconds: 100, video: h264(), audio: [{ codec: 'aac', channels: 2, bitrate: 128_000 }], subtitles: [], ...over });\nconst chrome = PROFILES['chrome']!;\nconst { hls: _noHls, ...chromeNoHls } = chrome;\nconst bare = (codec: 'hevc' | 'h264'): NonNullable<MediaInfo['video']> => ({ codec, width: 1920, height: 1080, fps: 30, bitrate: 6_000_000, bitDepth: 8 });\nconst safari = PROFILES['safari']!;\nconst tv = PROFILES['android-tv-basic']!;\nconst codes = (p: ReturnType<typeof plan>) => p.reasons.map((x) => x.code);\n\n// ------------------------------------------------------------ the decision\n\ntest('direct play when the container, video and audio are all taken as they are', () => {\n  const p = plan(media(), chrome);\n  assert.equal(p.mode, 'direct-play');\n  assert.deepEqual([p.videoAction, p.audioAction, p.subtitleAction], ['copy', 'copy', 'none']);\n  assert.deepEqual(p.reasons, []);\n  assert.equal(p.target, undefined);\n});\n\ntest('remux when only the container is wrong: video and audio are copied into one the device plays', () => {\n  const p = plan(media({ container: 'mkv' }), chrome);\n  assert.equal(p.mode, 'remux');\n  assert.deepEqual(codes(p), ['ContainerNotSupported']);\n  assert.equal(p.container, 'mp4');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/transcode-plan-628.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:10.375Z"
+}

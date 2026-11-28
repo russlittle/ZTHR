@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "transcode-plan",
+  "mutant": {
+    "id": "111",
+    "line": 139,
+    "column": 44,
+    "endLine": 139,
+    "endColumn": 63,
+    "mutator": "ArrowFunction",
+    "original": "(b) => b === 'qt  '",
+    "replacement": "() => undefined",
+    "lineText": "const container: Container = brands.some((b) => b === 'qt  ') ? 'mov' : 'mp4';",
+    "prevText": "const brands = [p.majorBrand ?? '', ...p.brands];",
+    "nextText": "const v = p.tracks.find((t) => t.kind === 'video' && t.enabled) ?? p.tracks.find((t) => t.kind === 'video');"
+  },
+  "mayEdit": [
+    "intent/blocks/transcode-plan/transcode-plan.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/transcode-plan-111.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"transcode-plan\". Mutant: line 139:44-139:63, mutator ArrowFunction: \"(b) => b === 'qt  '\" becomes \"() => undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/transcode-plan/index.ts (> marks the mutated line):\n   133  \n   134  const PROFILE_RANK = { baseline: 0, main: 1, high: 2 } as const;\n   135  \n   136  /** Turn what the iso-bmff-probe block found into media information. Codec strings give the h264 profile and level. */\n   137  export function mediaFromProbe(p: Probe): MediaInfo {\n   138    const brands = [p.majorBrand ?? '', ...p.brands];\n>  139    const container: Container = brands.some((b) => b === 'qt  ') ? 'mov' : 'mp4';\n   140    const v = p.tracks.find((t) => t.kind === 'video' && t.enabled) ?? p.tracks.find((t) => t.kind === 'video');\n   141    let video: MediaVideo | undefined;\n   142    if (v && v.width && v.height) {\n   143      const cs = v.codecString ?? '';\n   144      const codec: VideoCodec | undefined = v.codec === 'avc1' || v.codec === 'avc3' ? 'h264' : v.codec === 'hvc1' || v.codec === 'hev1' ? 'hevc' : v.codec === 'av01' ? 'av1' : v.codec === 'vp09' ? 'vp9' : v.codec === 'mp4v' ? 'mpeg4' : undefined;\n   145      if (!codec) throw new PlanError(`video codec \"${v.codec ?? 'unknown'}\" is not one this planner knows`);\n\nTest file style (intent/blocks/transcode-plan/transcode-plan.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { probe } from '../iso-bmff-probe/index.ts';\nimport { escapeFilterValue, ffmpegArgs, ladderFor, mediaFromProbe, plan, PlanError, PROFILES } from './index.ts';\nimport type { MediaInfo } from './index.ts';\n\nconst h264 = (over: Partial<NonNullable<MediaInfo['video']>> = {}): NonNullable<MediaInfo['video']> => ({ codec: 'h264', profile: 'high', level: 40, width: 1920, height: 1080, fps: 30, bitrate: 6_000_000, bitDepth: 8, ...over });\nconst media = (over: Partial<MediaInfo> = {}): MediaInfo => ({ container: 'mp4', durationSeconds: 100, video: h264(), audio: [{ codec: 'aac', channels: 2, bitrate: 128_000 }], subtitles: [], ...over });\nconst chrome = PROFILES['chrome']!;\nconst { hls: _noHls, ...chromeNoHls } = chrome;\nconst bare = (codec: 'hevc' | 'h264'): NonNullable<MediaInfo['video']> => ({ codec, width: 1920, height: 1080, fps: 30, bitrate: 6_000_000, bitDepth: 8 });\nconst safari = PROFILES['safari']!;\nconst tv = PROFILES['android-tv-basic']!;\nconst codes = (p: ReturnType<typeof plan>) => p.reasons.map((x) => x.code);\n\n// ------------------------------------------------------------ the decision\n\ntest('direct play when the container, video and audio are all taken as they are', () => {\n  const p = plan(media(), chrome);\n  assert.equal(p.mode, 'direct-play');\n  assert.deepEqual([p.videoAction, p.audioAction, p.subtitleAction], ['copy', 'copy', 'none']);\n  assert.deepEqual(p.reasons, []);\n  assert.equal(p.target, undefined);\n});\n\ntest('remux when only the container is wrong: video and audio are copied into one the device plays', () => {\n  const p = plan(media({ container: 'mkv' }), chrome);\n  assert.equal(p.mode, 'remux');\n  assert.deepEqual(codes(p), ['ContainerNotSupported']);\n  assert.equal(p.container, 'mp4');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/transcode-plan-111.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:10.344Z"
+}

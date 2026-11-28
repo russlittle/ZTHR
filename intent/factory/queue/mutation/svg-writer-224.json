@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "svg-writer",
+  "mutant": {
+    "id": "224",
+    "line": 100,
+    "column": 107,
+    "endLine": 100,
+    "endColumn": 116,
+    "mutator": "StringLiteral",
+    "original": "'ellipse'",
+    "replacement": "\"\"",
+    "lineText": "export const ellipse = (cx: number, cy: number, rx: number, ry: number, attrs: Attrs = {}): SvgNode => el('ellipse', { cx, cy, rx, ry, ...attrs });",
+    "prevText": "};",
+    "nextText": "export const line = (x1: number, y1: number, x2: number, y2: number, attrs: Attrs = {}): SvgNode => el('line', { x1, y1, x2, y2, ...attrs });"
+  },
+  "mayEdit": [
+    "intent/blocks/svg-writer/svg-writer.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/svg-writer-224.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"svg-writer\". Mutant: line 100:107-100:116, mutator StringLiteral: \"'ellipse'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/svg-writer/index.ts (> marks the mutated line):\n    94    return el('rect', { x, y, width, height, ...attrs });\n    95  };\n    96  export const circle = (cx: number, cy: number, r: number, attrs: Attrs = {}): SvgNode => {\n    97    if (r < 0) throw new SvgError('a circle cannot have a negative radius');\n    98    return el('circle', { cx, cy, r, ...attrs });\n    99  };\n>  100  export const ellipse = (cx: number, cy: number, rx: number, ry: number, attrs: Attrs = {}): SvgNode => el('ellipse', { cx, cy, rx, ry, ...attrs });\n   101  export const line = (x1: number, y1: number, x2: number, y2: number, attrs: Attrs = {}): SvgNode => el('line', { x1, y1, x2, y2, ...attrs });\n   102  const pts = (points: readonly (readonly [number, number])[]) => points.map(([x, y]) => `${num(x)},${num(y)}`).join(' ');\n   103  export const polyline = (points: readonly (readonly [number, number])[], attrs: Attrs = {}): SvgNode => el('polyline', { points: pts(points), fill: 'none', ...attrs });\n   104  export const polygon = (points: readonly (readonly [number, number])[], attrs: Attrs = {}): SvgNode => el('polygon', { points: pts(points), ...attrs });\n   105  export const group = (attrs: Attrs = {}, ...children: (SvgNode | string | undefined)[]): SvgNode => el('g', attrs, ...children);\n   106  export const pathEl = (d: Path | string, attrs: Attrs = {}): SvgNode => el('path', { d: typeof d === 'string' ? serializePath(parsePath(d)) : d.toString(), ...attrs });\n\nTest file style (intent/blocks/svg-writer/svg-writer.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Path, Svg, SvgError, circle, el, escapeAttr, escapeText, estimateTextWidth, group, labelled, line, num, paint, parsePath, pathEl, polygon, polyline, rect, serializePath, text, write } from './index.ts';\n\n/** A small well-formedness check: tags nest and close, attributes are quoted and unique, and no stray \"<\" or \"&\" remains. */\nfunction wellFormed(xml: string): void {\n  const body = xml.replace(/^<\\?xml[^>]*\\?>\\s*/, '');\n  const stack: string[] = [];\n  const re = /<(\\/?)([A-Za-z][\\w:-]*)((?:\\s+[\\w:-]+=\"[^\"<]*\")*)\\s*(\\/?)>|([^<]+)/g;\n  let m: RegExpExecArray | null;\n  let consumed = 0;\n  while ((m = re.exec(body))) {\n    consumed += m[0].length;\n    if (m[5] !== undefined) {\n      assert.ok(!/&(?!amp;|lt;|gt;|quot;|apos;|#\\d+;)/.test(m[5]), `bare ampersand in text: ${m[5]}`);\n      continue;\n    }\n    const names = [...m[3]!.matchAll(/\\s+([\\w:-]+)=/g)].map((x) => x[1]);\n    assert.equal(new Set(names).size, names.length, `duplicate attribute in ${m[0]}`);\n    if (m[1]) assert.equal(stack.pop(), m[2], `mismatched </${m[2]}>`);\n    else if (!m[4]) stack.push(m[2]!);\n  }\n  assert.equal(consumed, body.length, 'unparsed content left in the document');\n  assert.deepEqual(stack, [], 'unclosed elements');\n}\n\ntest('numbers: bounded precision, no trailing zeros, no -0, never NaN or infinity', () => {\n  assert.equal(num(1), '1');\n  assert.equal(num(1.5), '1.5');\n  assert.equal(num(1 / 3), '0.333');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/svg-writer-224.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:06.813Z"
+}

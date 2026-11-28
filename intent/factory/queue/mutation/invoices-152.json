@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "invoices",
+  "mutant": {
+    "id": "152",
+    "line": 142,
+    "column": 7,
+    "endLine": 142,
+    "endColumn": 29,
+    "mutator": "LogicalOperator",
+    "original": "bp <= 0 || bp >= 10000",
+    "replacement": "bp <= 0 && bp >= 10000",
+    "lineText": "if (bp <= 0 || bp >= 10000) throw new InvoiceError('an early payment discount is between 0 and 100 percent');",
+    "prevText": "const bp = Math.round(Number(m[1]) * 100);",
+    "nextText": "if (Number(m[2]) >= base.days) throw new InvoiceError('the discount period must be shorter than the net period');"
+  },
+  "mayEdit": [
+    "intent/blocks/invoices/invoices.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/invoices-152.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"invoices\". Mutant: line 142:7-142:29, mutator LogicalOperator: \"bp <= 0 || bp >= 10000\" becomes \"bp <= 0 && bp >= 10000\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/invoices/index.ts (> marks the mutated line):\n   136    if (/^(due )?(on|upon) receipt$|^immediate(ly)?$/.test(t)) return { days: 0, endOfMonth: false, text };\n   137    const m = /^(?:(\\d{1,2}(?:\\.\\d{1,2})?)\\/(\\d{1,3}) )?net (\\d{1,3})(?: days?)?( eom)?$/.exec(t);\n   138    if (!m) throw new InvoiceError(`payment terms not understood: ${text}`);\n   139    const base = { days: Number(m[3]), endOfMonth: m[4] !== undefined, text };\n   140    if (m[1] === undefined) return base;\n   141    const bp = Math.round(Number(m[1]) * 100);\n>  142    if (bp <= 0 || bp >= 10000) throw new InvoiceError('an early payment discount is between 0 and 100 percent');\n   143    if (Number(m[2]) >= base.days) throw new InvoiceError('the discount period must be shorter than the net period');\n   144    return { ...base, discountBp: bp, discountDays: Number(m[2]) };\n   145  }\n   146  \n   147  export function dueDate(issued: string, terms: Terms): string {\n   148    const from = terms.endOfMonth ? endOfMonth(issued) : issued;\n\nTest file style (intent/blocks/invoices/invoices.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { parseXml, child, children } from '../dav/index.ts';\nimport { money, format } from '../money/index.ts';\nimport { InvoiceBook, InvoiceError, NotAllowed, Numbering, OutOfOrder, computeTotals, dueDate, earlyDiscount, gaps, parseQuantity, parseTerms, toPdf, toUbl, type DraftInput, type LineInput, type TaxRate } from './index.ts';\n\nconst RATES: Record<string, TaxRate> = {\n  VAT20: { code: 'VAT20', name: 'VAT', rateBp: 2000 },\n  VAT5: { code: 'VAT5', name: 'VAT reduced', rateBp: 500 },\n  ZERO: { code: 'ZERO', name: 'Zero rated', rateBp: 0 },\n  EXEMPT: { code: 'EXEMPT', name: 'Exempt', rateBp: 0, exemptReason: 'Education is exempt' },\n  US: { code: 'US', name: 'Sales tax', rateBp: 825 },\n};\nconst usd = (n: number) => money(n, 'USD');\nconst line = (description: string, quantity: string | number, price: number, tax = 'VAT20', extra: Partial<LineInput> = {}): LineInput => ({ description, quantity, unitPrice: usd(price), tax, ...extra });\nconst seller = { name: 'Acme & Sons <Ltd>', address: ['1 High Street'], country: 'GB', taxId: 'GB123456789', email: 'billing@example.test' };\nconst buyer = { name: 'Buyer plc', address: ['2 Low Road'], country: 'GB' };\nconst draftOf = (lines: LineInput[], extra: Partial<DraftInput> = {}): DraftInput => ({ seller, buyer, currency: 'USD', lines, terms: 'net 30', ...extra });\nconst newBook = () => {\n  let n = 0;\n  return new InvoiceBook({ rates: RATES, newId: () => `id${++n}` });\n};\n\ntest('totals: tax is rounded once per rate, half-even, from whole minor units', () => {\n  const t = computeTotals({ currency: 'USD', lines: [line('Widget', 2, 1999)] }, RATES);\n  assert.equal(t.net.minor, 3998n);\n  assert.equal(t.tax.minor, 800n, '3998 at 20% is 799.6, rounded to 800');\n  assert.equal(t.total.minor, 4798n);\n  assert.equal(t.lines[0]!.net.minor, 3998n);\n  assert.equal(t.taxes[0]!.taxable.minor, 3998n);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/invoices-152.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:44.887Z"
+}

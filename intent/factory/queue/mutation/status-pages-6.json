@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "status-pages",
+  "mutant": {
+    "id": "6",
+    "line": 56,
+    "column": 50,
+    "endLine": 56,
+    "endColumn": 67,
+    "mutator": "EqualityOperator",
+    "original": "rank[b] > rank[a]",
+    "replacement": "rank[b] >= rank[a]",
+    "lineText": "const worst = (a: Status, b: Status): Status => (rank[b] > rank[a] ? b : a);",
+    "prevText": "const rank: Record<Status, number> = { ok: 0, degraded: 1, down: 2 };",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/status-pages/status-pages.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/status-pages-6.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"status-pages\". Mutant: line 56:50-56:67, mutator EqualityOperator: \"rank[b] > rank[a]\" becomes \"rank[b] >= rank[a]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/status-pages/index.ts (> marks the mutated line):\n    50    readonly slowMs: number;\n    51  }\n    52  \n    53  export const DEFAULT_RULES: Rules = { downAfter: 3, slowMs: 2000 };\n    54  \n    55  const rank: Record<Status, number> = { ok: 0, degraded: 1, down: 2 };\n>   56  const worst = (a: Status, b: Status): Status => (rank[b] > rank[a] ? b : a);\n    57  \n    58  /** One monitor's state from its beats, newest decides: failures in a row are down, one failure or a slow answer is degraded. */\n    59  export function monitorStatus(beats: readonly Beat[], rules: Rules = DEFAULT_RULES): Status {\n    60    if (!beats.length) return 'ok';\n    61    const newest = [...beats].sort((a, b) => b.at - a.at);\n    62    let fails = 0;\n\nTest file style (intent/blocks/status-pages/status-pages.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Subscribers, StatusPageError, atomFeed, badge, badgeKeyOk, dailyBars, escapeXml, jsonFeed, monitorStatus, pageView, uptime } from './index.ts';\nimport type { Beat, Group, Incident, Monitor } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T = Date.UTC(2026, 5, 10, 12, 0, 0);\nconst beats = (...ups: boolean[]): Beat[] => ups.map((up, i) => ({ at: T - (ups.length - i) * 60_000, up, ms: 100 }));\nconst groups: Group[] = [\n  { name: 'Core', components: [{ id: 'api', name: 'API', monitors: ['m-api'] }, { id: 'web', name: 'Website', monitors: ['m-web'] }] },\n  { name: 'Extras', components: [{ id: 'mail', name: 'Email', monitors: ['m-mail'] }] },\n];\nconst inc = (over: Partial<Incident> = {}): Incident => ({ id: 'i1', title: 'API errors', components: ['api'], impact: 'degraded', updates: [{ at: T - 1000, state: 'investigating', text: 'Looking into it' }], ...over });\n\ntest('three failures in a row are down, one is degraded, and a pass after them clears it', () => {\n  assert.equal(monitorStatus(beats(true, true, false, false, false)), 'down');\n  assert.equal(monitorStatus(beats(true, true, true, false)), 'degraded');\n  assert.equal(monitorStatus(beats(false, false, false, true)), 'ok');\n  assert.equal(monitorStatus([]), 'ok');\n});\n\ntest('a slow newest answer is degraded', () => {\n  const b: Beat[] = [{ at: 1, up: true, ms: 5000 }];\n  assert.equal(monitorStatus(b), 'degraded');\n  assert.equal(monitorStatus(b, { downAfter: 3, slowMs: 6000 }), 'ok');\n});\n\ntest('beats are read newest first whatever order they arrive in', () => {\n  const b = beats(false, false, false, true).reverse();\n  assert.equal(monitorStatus(b), 'ok');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/status-pages-6.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:05.478Z"
+}

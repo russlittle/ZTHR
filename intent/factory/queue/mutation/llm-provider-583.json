@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "llm-provider",
+  "mutant": {
+    "id": "583",
+    "line": 387,
+    "column": 162,
+    "endLine": 387,
+    "endColumn": 171,
+    "mutator": "ConditionalExpression",
+    "original": "c !== hit",
+    "replacement": "false",
+    "lineText": "if (structuredTool) { const hit = calls.find((c) => c.name === structuredTool); if (hit) { text = JSON.stringify(hit.arguments); calls = calls.filter((c) => c !== hit); this.finish = 'stop'; } }",
+    "prevText": "let text = this.text;",
+    "nextText": "return makeResponse(provider, models, this.id, this.model || requestedModel, text, calls, this.finish, this.usage);"
+  },
+  "mayEdit": [
+    "intent/blocks/llm-provider/llm-provider.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/llm-provider-583.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"llm-provider\". Mutant: line 387:162-387:171, mutator ConditionalExpression: \"c !== hit\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/llm-provider/index.ts (> marks the mutated line):\n   381    finish: FinishReason = 'stop';\n   382    id = '';\n   383    model = '';\n   384    build(provider: string, models: readonly ModelInfo[], requestedModel: string, structuredTool?: string): LlmResponse {\n   385      let calls = [...this.calls.values()].map((c) => toolCall(c.id, c.name, c.args));\n   386      let text = this.text;\n>  387      if (structuredTool) { const hit = calls.find((c) => c.name === structuredTool); if (hit) { text = JSON.stringify(hit.arguments); calls = calls.filter((c) => c !== hit); this.finish = 'stop'; } }\n   388      return makeResponse(provider, models, this.id, this.model || requestedModel, text, calls, this.finish, this.usage);\n   389    }\n   390  }\n   391  \n   392  function makeResponse(provider: string, models: readonly ModelInfo[], id: string, model: string, text: string, calls: readonly ToolCall[], finish: FinishReason, usage: Usage): LlmResponse {\n   393    const info = models.find((m) => m.id === model);\n\nTest file style (intent/blocks/llm-provider/llm-provider.test.ts):\n30 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Meter } from '../costmeter/index.ts';\nimport {\n  LlmClient, TwinProvider, ProviderError, InvalidRequest, StructuredOutputError, openAiAdapter, anthropicAdapter,\n  toOpenAiBody, fromOpenAiResponse, toAnthropicBody, fromAnthropicResponse, parseSse, checkRequest, costOf, meterRates, httpError,\n  redact, safeJson, extractJson, estimateTokens, STRUCTURED_TOOL, type LlmRequest, type HttpRequest, type HttpResponse, type StreamEvent, type Transport,\n} from './index.ts';\n\nconst user = (text: string) => ({ role: 'user' as const, content: [{ type: 'text' as const, text }] });\nconst req = (o: Partial<LlmRequest> = {}): LlmRequest => ({ model: 'm', messages: [user('hi')], ...o });\nconst MODELS = [{ provider: 'a', id: 'big', inputPerMTok: 3, outputPerMTok: 15, cacheReadMultiple: 0.1 }, { provider: 'b', id: 'small', inputPerMTok: 1, outputPerMTok: 2 }];\nconst code = async (f: () => unknown): Promise<string | undefined> => { try { await f(); return undefined; } catch (e) { return e instanceof ProviderError ? e.kind : e instanceof Error ? `other:${e.constructor.name}` : 'other'; } };\nconst ok = (body: unknown, headers: Record<string, string> = {}): HttpResponse => ({ status: 200, headers, body: typeof body === 'string' ? body : JSON.stringify(body) });\nasync function* chunks(s: string, n: number): AsyncGenerator<Uint8Array> { const b = new TextEncoder().encode(s); for (let i = 0; i < b.length; i += n) yield b.subarray(i, i + n); }\nasync function all<T>(g: AsyncIterable<T>): Promise<T[]> { const o: T[] = []; for await (const x of g) o.push(x); return o; }\n\nfunction clientFor(providers: TwinProvider[], o: Record<string, unknown> = {}) {\n  let t = Date.parse('2024-05-01T00:00:00Z');\n  const sleeps: number[] = [];\n  const c = new LlmClient({\n    providers, models: MODELS, now: () => new Date(t), sleep: async (ms) => { sleeps.push(ms); t += ms; }, random: () => 0.5,\n    routes: { m: [{ provider: providers[0]!.name, model: 'big' }, ...providers.slice(1).map((p) => ({ provider: p.name, model: 'small' }))] },\n    ...o,\n  });\n  return { c, sleeps, advance: (ms: number) => { t += ms; } };\n}\n\ntest('OpenAI request body: system, tools, tool calls and results, structured output, stream options', () => {\n  const body = toOpenAiBody({\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/llm-provider-583.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:47.214Z"
+}

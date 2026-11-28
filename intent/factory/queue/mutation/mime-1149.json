@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "mime",
+  "mutant": {
+    "id": "1149",
+    "line": 626,
+    "column": 48,
+    "endLine": 626,
+    "endColumn": 70,
+    "mutator": "Regex",
+    "original": "/%(?![0-9A-Fa-f]{2})/g",
+    "replacement": "/%(?![0-9A-Fa-f])/g",
+    "lineText": "const cid = decodeURIComponent(raw.replace(/%(?![0-9A-Fa-f]{2})/g, '%25'));",
+    "prevText": "return html.replace(/\\b(src|href|background)\\s*=\\s*([\"'])cid:([^\"']+)\\2/gi, (m, attr: string, q: string, raw: string) => {",
+    "nextText": "const part = ids.get(cid);"
+  },
+  "mayEdit": [
+    "intent/blocks/mime/mime.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/mime-1149.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"mime\". Mutant: line 626:48-626:70, mutator Regex: \"/%(?![0-9A-Fa-f]{2})/g\" becomes \"/%(?![0-9A-Fa-f])/g\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/mime/index.ts (> marks the mutated line):\n   620  }\n   621  \n   622  /** Replaces cid: references in html (RFC 2392) with whatever `to` returns for that part; unknown ids are left for the caller to drop. */\n   623  export function rewriteCids(html: string, root: Part, to: (part: Part, cid: string) => string | undefined): string {\n   624    const ids = contentIds(root);\n   625    return html.replace(/\\b(src|href|background)\\s*=\\s*([\"'])cid:([^\"']+)\\2/gi, (m, attr: string, q: string, raw: string) => {\n>  626      const cid = decodeURIComponent(raw.replace(/%(?![0-9A-Fa-f]{2})/g, '%25'));\n   627      const part = ids.get(cid);\n   628      const url = part && to(part, cid);\n   629      return url === undefined ? m : `${attr}=${q}${url.replace(/\"/g, '&quot;')}${q}`;\n   630    });\n   631  }\n   632  \n\nTest file style (intent/blocks/mime/mime.test.ts):\n23 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { MimeError, attachments, bodies, buildMessage, contentIds, decodeQuotedPrintable, decodeWords, encodeBase64Lines, encodeQuotedPrintable, encodeWords, foldHeader, formatMailbox, formatParam, header, headerText, parseAddresses, parseMessage, parseParams, rewriteCids, safeFilename, textValue } from './index.ts';\nimport type { OutMessage } from './index.ts';\n\nconst crlf = (s: string) => s.replace(/\\n/g, '\\r\\n');\n\ntest('RFC 2047 section 8: the published encoded-word examples', () => {\n  const cases: [string, string][] = [\n    ['(=?ISO-8859-1?Q?a?=)', '(a)'],\n    ['(=?ISO-8859-1?Q?a?= b)', '(a b)'],\n    ['(=?ISO-8859-1?Q?a?= =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a?=  =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a?=\\r\\n    =?ISO-8859-1?Q?b?=)', '(ab)'],\n    ['(=?ISO-8859-1?Q?a_b?=)', '(a b)'],\n    ['(=?ISO-8859-1?Q?a?= =?ISO-8859-2?Q?_b?=)', '(a b)'],\n    ['=?US-ASCII?Q?Keith_Moore?=', 'Keith Moore'],\n    ['=?ISO-8859-1?Q?Keld_J=F8rn_Simonsen?=', 'Keld Jørn Simonsen'],\n    ['=?ISO-8859-1?Q?Andr=E9?= Pirard', 'André Pirard'],\n    ['=?ISO-8859-1?B?SWYgeW91IGNhbiByZWFkIHRoaXMgeW8=?= =?ISO-8859-2?B?dSB1bmRlcnN0YW5kIHRoZSBleGFtcGxlLg==?=', 'If you can read this you understand the example.'],\n    ['=?ISO-8859-1?Q?Olle_J=E4rnefors?=', 'Olle Järnefors'],\n  ];\n  for (const [src, want] of cases) assert.equal(decodeWords(src), want, src);\n});\n\ntest('encoded words: not decoded when malformed, charsets honoured, and a language tag allowed', () => {\n  assert.equal(decodeWords('=?UTF-8?Q?caf=C3=A9?='), 'café');\n  assert.equal(decodeWords('=?utf-8*en?B?Y2Fmw6k=?='), 'café');\n  assert.equal(decodeWords('=?UTF-8?X?abc?='), '=?UTF-8?X?abc?=');\n  assert.equal(decodeWords('plain text, no words'), 'plain text, no words');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/mime-1149.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:49.955Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "email-address",
+  "mutant": {
+    "id": "259",
+    "line": 136,
+    "column": 29,
+    "endLine": 136,
+    "endColumn": 47,
+    "mutator": "Regex",
+    "original": "/^[0-9A-Fa-f]{2}$/",
+    "replacement": "/^[0-9A-Fa-f]{2}/",
+    "lineText": "if (q[i] === '=' && /^[0-9A-Fa-f]{2}$/.test(q.slice(i + 1, i + 3))) {",
+    "prevText": "for (let i = 0; i < q.length; i++) {",
+    "nextText": "arr.push(parseInt(q.slice(i + 1, i + 3), 16));"
+  },
+  "mayEdit": [
+    "intent/blocks/email-address/email-address.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/email-address-259.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"email-address\". Mutant: line 136:29-136:47, mutator Regex: \"/^[0-9A-Fa-f]{2}$/\" becomes \"/^[0-9A-Fa-f]{2}/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/email-address/index.ts (> marks the mutated line):\n   130      let bytes: Buffer;\n   131      if (m[2]!.toUpperCase() === 'B') bytes = Buffer.from(m[3]!, 'base64');\n   132      else {\n   133        const q = m[3]!.replace(/_/g, ' ');\n   134        const arr: number[] = [];\n   135        for (let i = 0; i < q.length; i++) {\n>  136          if (q[i] === '=' && /^[0-9A-Fa-f]{2}$/.test(q.slice(i + 1, i + 3))) {\n   137            arr.push(parseInt(q.slice(i + 1, i + 3), 16));\n   138            i += 2;\n   139          } else arr.push(q.charCodeAt(i) & 0xff);\n   140        }\n   141        bytes = Buffer.from(arr);\n   142      }\n\nTest file style (intent/blocks/email-address/email-address.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { BadAddress, canonical, decodeWords, domainToAscii, domainToUnicode, flatten, formatList, formatMailbox, isGroup, isNoReply, isRoleAddress, parseAddress, parseAddressList, plusTag, punycodeDecode, punycodeEncode } from './index.ts';\n\ntest('RFC 3492 section 7.1 sample strings encode and decode to the published Punycode', () => {\n  const v: [string, string][] = [\n    ['ليهمابتكلموشعربي؟', 'egbpdaj6bu4bxfgehfvwxn'],\n    ['他们为什么不说中文', 'ihqwcrb4cv8a8dqg056pqjye'],\n    ['他們爲什麽不說中文', 'ihqwctvzc91f659drss3x8bo0yb'],\n    ['Pročprostěnemluvíčesky', 'Proprostnemluvesky-uyb24dma41a'],\n    ['למההםפשוטלאמדבריםעברית', '4dbcagdahymbxekheh6e0a7fei0b'],\n  ];\n  for (const [u, p] of v) {\n    assert.equal(punycodeEncode(u), p);\n    assert.equal(punycodeDecode(p), u);\n  }\n  assert.equal(punycodeEncode('bücher'), 'bcher-kva');\n  assert.equal(punycodeEncode('mañana'), 'maana-pta');\n  assert.equal(punycodeEncode('München'), 'Mnchen-3ya');\n  assert.equal(punycodeDecode('maana-pta'), 'mañana');\n});\n\ntest('domains: non-ASCII labels become xn-- labels and back; ASCII is lower-cased', () => {\n  assert.equal(domainToAscii('Bücher.Example'), 'xn--bcher-kva.example');\n  assert.equal(domainToAscii('EXAMPLE.com'), 'example.com');\n  assert.equal(domainToUnicode('xn--bcher-kva.example'), 'bücher.example');\n  assert.throws(() => punycodeDecode('éé-x'), /bad punycode/);\n  assert.throws(() => punycodeDecode('a-!!'), /bad punycode/);\n  assert.throws(() => domainToAscii('a​bü.com'), /invisible/);\n});\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/email-address-259.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.883Z"
+}

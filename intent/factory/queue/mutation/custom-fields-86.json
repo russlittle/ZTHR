@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "custom-fields",
+  "mutant": {
+    "id": "86",
+    "line": 100,
+    "column": 18,
+    "endLine": 100,
+    "endColumn": 87,
+    "mutator": "Regex",
+    "original": "/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2})$/",
+    "replacement": "/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\D+)?)?(Z|[+-]\\d{2}:\\d{2})$/",
+    "lineText": "const DATETIME = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2})$/;",
+    "prevText": "",
+    "nextText": ""
+  },
+  "mayEdit": [
+    "intent/blocks/custom-fields/custom-fields.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/custom-fields-86.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"custom-fields\". Mutant: line 100:18-100:87, mutator Regex: \"/^\\\\d{4}-\\\\d{2}-\\\\d{2}T\\\\d{2}:\\\\d{2}(:\\\\d{2}(\\\\.\\\\d+)?)?(Z|[+-]\\\\d{2}:\\\\d{2})$/\" becomes \"/^\\\\d{4}-\\\\d{2}-\\\\d{2}T\\\\d{2}:\\\\d{2}(:\\\\d{2}(\\\\.\\\\D+)?)?(Z|[+-]\\\\d{2}:\\\\d{2})$/\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/custom-fields/index.ts (> marks the mutated line):\n    94      return new RegExp(p, 'u');\n    95    } catch {\n    96      throw new FieldError('that pattern is not a valid regular expression');\n    97    }\n    98  }\n    99  \n>  100  const DATETIME = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2})$/;\n   101  \n   102  function datetime(): Schema<string> {\n   103    const base = text({ trim: true });\n   104    return {\n   105      ...base,\n   106      check: (v, p): Result<string> => {\n\nTest file style (intent/blocks/custom-fields/custom-fields.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CustomFields, FieldError, checkPattern } from './index.ts';\n\nfunction setup() {\n  const cf = new CustomFields({ now: () => 1000 });\n  cf.define({ key: 'warranty_end', recordKind: 'asset', kind: 'date', label: 'Warranty ends' });\n  cf.define({ key: 'serial', recordKind: 'asset', kind: 'text', label: 'Serial number', required: true, unique: true, pattern: '^[A-Z]{2}-\\\\d{4}$' });\n  cf.define({ key: 'cost', recordKind: 'asset', kind: 'number', label: 'Cost', min: 0, max: 1_000_000 });\n  cf.define({ key: 'floor', recordKind: 'asset', kind: 'integer', label: 'Floor', min: -2, max: 90 });\n  cf.define({ key: 'status', recordKind: 'asset', kind: 'select', label: 'Status', choices: [{ value: 'live', label: 'In service' }, { value: 'spare', label: 'Spare' }, 'broken'], default: 'live' });\n  cf.define({ key: 'tags', recordKind: 'asset', kind: 'multiselect', label: 'Tags', choices: ['red', 'blue', 'green'], max: 2 });\n  cf.define({ key: 'salary_band', recordKind: 'asset', kind: 'text', label: 'Band', readRoles: ['hr'], writeRoles: ['hr'] });\n  cf.define({ key: 'owner_email', recordKind: 'asset', kind: 'email', label: 'Owner email' });\n  cf.define({ key: 'manual', recordKind: 'asset', kind: 'url', label: 'Manual' });\n  cf.define({ key: 'seen_at', recordKind: 'asset', kind: 'datetime', label: 'Last seen' });\n  cf.define({ key: 'insured', recordKind: 'asset', kind: 'boolean', label: 'Insured' });\n  return cf;\n}\nconst problems = (r: ReturnType<CustomFields['validate']>) => (r.ok ? [] : r.problems.map((p) => `${p.path}:${p.code}`));\n\ntest('valid values come back cleaned and typed, defaults fill in, and the key set is closed', () => {\n  const cf = setup();\n  const r = cf.validate('asset', { serial: ' AB-1234 ', cost: '199.5', floor: 3, warranty_end: '2027-02-28', tags: ['red', 'blue'], seen_at: '2026-11-26T14:30:00+02:00', insured: 'on', manual: 'https://example.org/m.pdf', owner_email: 'a@example.org' });\n  assert.deepEqual(r.ok && { ...r.value }, { serial: 'AB-1234', cost: 199.5, floor: 3, warranty_end: '2027-02-28', tags: ['red', 'blue'], seen_at: '2026-11-26T12:30:00.000Z', insured: true, manual: 'https://example.org/m.pdf', owner_email: 'a@example.org', status: 'live' });\n});\n\ntest('every problem is reported at once, with the path custom.<key> and the field label in the message', () => {\n  const cf = setup();\n  const r = cf.validate('asset', { cost: -1, floor: 1.5, warranty_end: '2027-02-30', tags: ['red', 'blue', 'green'], status: 'gone', owner_email: 'nope', manual: 'http://insecure.example', seen_at: 'yesterday', nonsense: 1 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/custom-fields-86.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.670Z"
+}

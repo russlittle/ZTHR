@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crm-pipeline",
+  "mutant": {
+    "id": "840",
+    "line": 534,
+    "column": 12,
+    "endLine": 534,
+    "endColumn": 91,
+    "mutator": "MethodExpression",
+    "original": "out.sort((x, y) => y.lateByDays - x.lateByDays || x.deal.localeCompare(y.deal))",
+    "replacement": "out",
+    "lineText": "return out.sort((x, y) => y.lateByDays - x.lateByDays || x.deal.localeCompare(y.deal));",
+    "prevText": "for (const d of this.deals.values()) for (const a of d.activities) if (a.kind === 'task' && !a.done && a.dueAt !== undefined && a.dueAt < now) out.push({ deal: d.id, task: a, lateByDays: Math.floor((now - a.dueAt) / DAY) });",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/crm-pipeline/crm-pipeline.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crm-pipeline-840.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crm-pipeline\". Mutant: line 534:12-534:91, mutator MethodExpression: \"out.sort((x, y) => y.lateByDays - x.lateByDays || x.deal.localeCompare(y.deal))\" becomes \"out\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crm-pipeline/index.ts (> marks the mutated line):\n   528    }\n   529  \n   530    overdueTasks(): { deal: string; task: Activity; lateByDays: number }[] {\n   531      const now = this.now();\n   532      const out: { deal: string; task: Activity; lateByDays: number }[] = [];\n   533      for (const d of this.deals.values()) for (const a of d.activities) if (a.kind === 'task' && !a.done && a.dueAt !== undefined && a.dueAt < now) out.push({ deal: d.id, task: a, lateByDays: Math.floor((now - a.dueAt) / DAY) });\n>  534      return out.sort((x, y) => y.lateByDays - x.lateByDays || x.deal.localeCompare(y.deal));\n   535    }\n   536  \n   537    /** Open deals with no activity (or none since entering the stage) for longer than their stage allows. */\n   538    rotting(): { deal: string; stage: string; idleDays: number; limit: number }[] {\n   539      const now = this.now();\n   540      const out: { deal: string; stage: string; idleDays: number; limit: number }[] = [];\n\nTest file style (intent/blocks/crm-pipeline/crm-pipeline.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Pipeline, Assigner, checkPipeline, scoreLead, CrmError, Duplicate, Refused, stageOf } from './index.ts';\nimport type { PipelineDef, Scoring } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 0, 10);\nconst def: PipelineDef = {\n  name: 'sales',\n  stages: [\n    { id: 'new', name: 'New', probability: 0.1, rotAfterDays: 7 },\n    { id: 'qualified', name: 'Qualified', probability: 0.3, rotAfterDays: 14 },\n    { id: 'proposal', name: 'Proposal', probability: 0.6, requires: ['proposalUrl'], rotAfterDays: 14 },\n    { id: 'negotiation', name: 'Negotiation', probability: 0.8, requires: ['proposalUrl', 'budget'] },\n    { id: 'won', name: 'Won', probability: 1, kind: 'won' },\n    { id: 'lost', name: 'Lost', probability: 0, kind: 'lost' },\n  ],\n};\nconst S = ['sales'];\nconst M = ['manager'];\nfunction mk(): { p: Pipeline; clock: { t: number } } {\n  const clock = { t: T0 };\n  return { p: new Pipeline(def, { now: () => clock.t }), clock };\n}\nconst deal = (p: Pipeline, amount = 100_00, close = '2026-02-15', owner = 'ana') => p.createDeal({ title: 'Acme', amount, currency: 'USD', owner, expectedClose: close });\n\ntest('a sound pipeline has no problems; bad ones are reported', () => {\n  assert.deepEqual(checkPipeline(def), []);\n  const bad = checkPipeline({ name: 'x', stages: [{ id: 'a', name: 'A', probability: 0.5 }, { id: 'b', name: 'B', probability: 0.2 }, { id: 'w', name: 'W', probability: 0.9, kind: 'won' }, { id: 'a', name: 'dup', probability: 2 }] });\n  const t = bad.join('\\n');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crm-pipeline-840.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.418Z"
+}

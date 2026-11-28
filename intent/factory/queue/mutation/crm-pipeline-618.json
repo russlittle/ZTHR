@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "crm-pipeline",
+  "mutant": {
+    "id": "618",
+    "line": 416,
+    "column": 45,
+    "endLine": 416,
+    "endColumn": 65,
+    "mutator": "StringLiteral",
+    "original": "'a deal has a title'",
+    "replacement": "\"\"",
+    "lineText": "if (!i.title.trim()) throw new CrmError('a deal has a title');",
+    "prevText": "createDeal(i: { title: string; amount: number; currency: string; owner: string; expectedClose?: string; leadId?: string }): Deal {",
+    "nextText": "if (!Number.isInteger(i.amount) || i.amount < 0 || i.amount > Number.MAX_SAFE_INTEGER / 1000) throw new CrmError('the amount is a whole number of minor units (cents), 0 or more');"
+  },
+  "mayEdit": [
+    "intent/blocks/crm-pipeline/crm-pipeline.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/crm-pipeline-618.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"crm-pipeline\". Mutant: line 416:45-416:65, mutator StringLiteral: \"'a deal has a title'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/crm-pipeline/index.ts (> marks the mutated line):\n   410      return deal;\n   411    }\n   412  \n   413    // ---- deals\n   414  \n   415    createDeal(i: { title: string; amount: number; currency: string; owner: string; expectedClose?: string; leadId?: string }): Deal {\n>  416      if (!i.title.trim()) throw new CrmError('a deal has a title');\n   417      if (!Number.isInteger(i.amount) || i.amount < 0 || i.amount > Number.MAX_SAFE_INTEGER / 1000) throw new CrmError('the amount is a whole number of minor units (cents), 0 or more');\n   418      if (!/^[A-Z]{3}$/.test(i.currency)) throw new CrmError('the currency is a three-letter code like USD');\n   419      if (i.expectedClose !== undefined && !validDate(i.expectedClose)) throw new CrmError('expectedClose is a real date like 2026-12-31');\n   420      const t = this.now();\n   421      const id = this.newId('deal');\n   422      const wf = this.wf.start(id, i.owner, { amount: i.amount, ...(i.expectedClose ? { expectedClose: i.expectedClose } : {}) });\n\nTest file style (intent/blocks/crm-pipeline/crm-pipeline.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Pipeline, Assigner, checkPipeline, scoreLead, CrmError, Duplicate, Refused, stageOf } from './index.ts';\nimport type { PipelineDef, Scoring } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 0, 10);\nconst def: PipelineDef = {\n  name: 'sales',\n  stages: [\n    { id: 'new', name: 'New', probability: 0.1, rotAfterDays: 7 },\n    { id: 'qualified', name: 'Qualified', probability: 0.3, rotAfterDays: 14 },\n    { id: 'proposal', name: 'Proposal', probability: 0.6, requires: ['proposalUrl'], rotAfterDays: 14 },\n    { id: 'negotiation', name: 'Negotiation', probability: 0.8, requires: ['proposalUrl', 'budget'] },\n    { id: 'won', name: 'Won', probability: 1, kind: 'won' },\n    { id: 'lost', name: 'Lost', probability: 0, kind: 'lost' },\n  ],\n};\nconst S = ['sales'];\nconst M = ['manager'];\nfunction mk(): { p: Pipeline; clock: { t: number } } {\n  const clock = { t: T0 };\n  return { p: new Pipeline(def, { now: () => clock.t }), clock };\n}\nconst deal = (p: Pipeline, amount = 100_00, close = '2026-02-15', owner = 'ana') => p.createDeal({ title: 'Acme', amount, currency: 'USD', owner, expectedClose: close });\n\ntest('a sound pipeline has no problems; bad ones are reported', () => {\n  assert.deepEqual(checkPipeline(def), []);\n  const bad = checkPipeline({ name: 'x', stages: [{ id: 'a', name: 'A', probability: 0.5 }, { id: 'b', name: 'B', probability: 0.2 }, { id: 'w', name: 'W', probability: 0.9, kind: 'won' }, { id: 'a', name: 'dup', probability: 2 }] });\n  const t = bad.join('\\n');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/crm-pipeline-618.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:37.408Z"
+}

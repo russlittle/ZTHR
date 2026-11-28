@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "tenant-model",
+  "mutant": {
+    "id": "186",
+    "line": 226,
+    "column": 35,
+    "endLine": 226,
+    "endColumn": 50,
+    "mutator": "ConditionalExpression",
+    "original": "patch.id !== id",
+    "replacement": "true",
+    "lineText": "if (patch.id !== undefined && patch.id !== id) throw new TenantError('a record cannot change its id');",
+    "prevText": "if (patch.tenant !== undefined && patch.tenant !== this.tenant) throw new CrossTenant('a record cannot be moved to another tenant');",
+    "nextText": "const next = { ...cur, ...patch, id, tenant: this.tenant } as T;"
+  },
+  "mayEdit": [
+    "intent/blocks/tenant-model/tenant-model.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/tenant-model-186.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"tenant-model\". Mutant: line 226:35-226:50, mutator ConditionalExpression: \"patch.id !== id\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/tenant-model/index.ts (> marks the mutated line):\n   220    }\n   221    /** Changes a record; the tenant cannot be changed, and nothing is changed when the id is another tenant's. */\n   222    update(id: string, patch: Partial<Omit<T, 'id' | 'tenant'>> & { tenant?: string; id?: string }): T | undefined {\n   223      const cur = this.m().get(id);\n   224      if (!cur) return undefined;\n   225      if (patch.tenant !== undefined && patch.tenant !== this.tenant) throw new CrossTenant('a record cannot be moved to another tenant');\n>  226      if (patch.id !== undefined && patch.id !== id) throw new TenantError('a record cannot change its id');\n   227      const next = { ...cur, ...patch, id, tenant: this.tenant } as T;\n   228      this.m().set(id, next);\n   229      this.store._backing().put(next);\n   230      return next;\n   231    }\n   232    delete(id: string): boolean {\n\nTest file style (intent/blocks/tenant-model/tenant-model.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { setTimeout as sleep } from 'node:timers/promises';\nimport type { Policy } from '../rbac/index.ts';\nimport { CrossTenant, FairShare, MemoryBacking, Memberships, NoTenant, QuotaExceeded, Quotas, ScopedStore, TenantError, TenantRate, TooBusy, UsageWindow, assertScoped, can, currentTenant, keyBelongsTo, parseTenantKey, scopeFilter, scopeSql, tenantId, tenantKey, tenantSecret, withTenant, type Row } from './index.ts';\n\ninterface Doc extends Row {\n  title: string;\n}\n\ntest('tenant ids are checked once, strictly', () => {\n  assert.equal(tenantId('acme-co'), 'acme-co');\n  for (const bad of ['', 'a', 'A', 'acme co', '-acme', 'a--b', 'a:b', 'a/b', '../x', 'x'.repeat(64), 'ünï']) assert.throws(() => tenantId(bad), TenantError, bad);\n});\n\ntest('the context follows async work, nests, and has no default', async () => {\n  assert.throws(() => currentTenant(), NoTenant);\n  const seen: string[] = [];\n  await Promise.all([\n    withTenant({ tenant: 'one', actor: 'ana' }, async () => {\n      await sleep(5);\n      seen.push(`${currentTenant().tenant}/${currentTenant().actor}`);\n      await withTenant({ tenant: 'inner' }, async () => {\n        await sleep(1);\n        seen.push(currentTenant().tenant);\n      });\n      seen.push(currentTenant().tenant);\n    }),\n    withTenant({ tenant: 'two' }, async () => {\n      await sleep(1);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/tenant-model-186.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:08.327Z"
+}

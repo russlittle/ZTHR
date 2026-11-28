@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "entitlements",
+  "mutant": {
+    "id": "129",
+    "line": 156,
+    "column": 61,
+    "endLine": 156,
+    "endColumn": 77,
+    "mutator": "EqualityOperator",
+    "original": "spec.warnAt <= 1",
+    "replacement": "spec.warnAt < 1",
+    "lineText": "if (spec.warnAt !== undefined && !(spec.warnAt > 0 && spec.warnAt <= 1)) out.push(`plan ${key}: ${l} warnAt is above 0 and at most 1`);",
+    "prevText": "if (spec.period === 'gauge' && o && o.mode !== 'block') out.push(`plan ${key}: ${l} is a gauge, which can only block`);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/entitlements/entitlements.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/entitlements-129.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"entitlements\". Mutant: line 156:61-156:77, mutator EqualityOperator: \"spec.warnAt <= 1\" becomes \"spec.warnAt < 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/entitlements/index.ts (> marks the mutated line):\n   150        if (spec.included !== null && (!Number.isInteger(spec.included) || spec.included < 0)) out.push(`plan ${key}: ${l} must be null or a whole number from 0`);\n   151        const o = spec.overage;\n   152        if (o?.mode === 'charge' && (!Number.isInteger(o.price) || o.price! < 0 || !Number.isInteger(o.perUnits) || o.perUnits! < 1)) out.push(`plan ${key}: ${l} charges overage but has no whole price and block size`);\n   153        if (o && o.mode !== 'charge' && (o.price !== undefined || o.perUnits !== undefined)) out.push(`plan ${key}: ${l} has a price but its overage mode is ${o.mode}`);\n   154        if (o?.cap !== undefined && (!Number.isInteger(o.cap) || o.cap < 0)) out.push(`plan ${key}: ${l} overage cap must be a whole number`);\n   155        if (spec.period === 'gauge' && o && o.mode !== 'block') out.push(`plan ${key}: ${l} is a gauge, which can only block`);\n>  156        if (spec.warnAt !== undefined && !(spec.warnAt > 0 && spec.warnAt <= 1)) out.push(`plan ${key}: ${l} warnAt is above 0 and at most 1`);\n   157      }\n   158      if (p.trialDays !== undefined && (!Number.isInteger(p.trialDays) || p.trialDays < 1 || p.trialDays > 365)) out.push(`plan ${key}: trialDays is 1 to 365`);\n   159    }\n   160    return out;\n   161  }\n   162  \n\nTest file style (intent/blocks/entitlements/entitlements.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Flags } from '../flags/index.ts';\nimport { EntitlementError, Entitlements, Ledger, checkCatalog, flatten, periodOf, resolve } from './index.ts';\nimport type { Account, Catalog } from './index.ts';\n\nconst D = 86_400_000;\nconst at = (s: string) => Date.parse(s);\nconst T = at('2026-03-10T12:00:00Z');\n\nconst catalog: Catalog = {\n  features: ['sso', 'audit-log', 'api', 'beta-editor'],\n  limits: ['seats', 'emails', 'storage', 'exports'],\n  plans: {\n    free: { name: 'free', features: { api: false }, limits: { seats: { included: 3, period: 'gauge' }, emails: { included: 100, period: 'month', overage: { mode: 'block' } }, exports: { included: 5, period: 'day' } } },\n    pro: {\n      name: 'pro',\n      extends: 'free',\n      trialDays: 14,\n      features: { api: true, 'audit-log': true, 'beta-editor': { enabled: true, flag: 'beta-editor' } },\n      limits: { seats: { included: 10, period: 'gauge' }, emails: { included: 1000, period: 'month', overage: { mode: 'charge', price: 200, perUnits: 500, cap: 5000 } }, storage: { included: 50, period: 'lifetime', overage: { mode: 'allow' } } },\n    },\n    team: { name: 'team', extends: 'pro', features: { sso: true }, limits: { seats: { included: null, period: 'gauge' } } },\n  },\n};\n\nconst acct = (over: Partial<Account> = {}): Account => ({ id: 'acme', plan: 'pro', anchorDay: 15, ...over });\nconst make = (flags?: Flags) => new Entitlements(catalog, new Ledger(), flags);\n\ntest('a catalog is checked as a whole: unknown names, loops, bad numbers and prices that do not add up', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/entitlements-129.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.842Z"
+}

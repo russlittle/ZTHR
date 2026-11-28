@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "bounce-classify",
+  "mutant": {
+    "id": "455",
+    "line": 243,
+    "column": 7,
+    "endLine": 243,
+    "endColumn": 49,
+    "mutator": "ConditionalExpression",
+    "original": "auto && auto.trim().toLowerCase() !== 'no'",
+    "replacement": "false",
+    "lineText": "if (auto && auto.trim().toLowerCase() !== 'no') return true;",
+    "prevText": "const auto = h.get('auto-submitted');",
+    "nextText": "if (h.has('x-autoreply') || h.has('x-autorespond')) return true;"
+  },
+  "mayEdit": [
+    "intent/blocks/bounce-classify/bounce-classify.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/bounce-classify-455.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"bounce-classify\". Mutant: line 243:7-243:49, mutator ConditionalExpression: \"auto && auto.trim().toLowerCase() !== 'no'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/bounce-classify/index.ts (> marks the mutated line):\n   237    return { feedbackType: ft.toLowerCase(), ...(address ? { address } : {}), ...(g.get('user-agent') ? { userAgent: g.get('user-agent')! } : {}), ...(g.get('source-ip') ? { sourceIp: g.get('source-ip')! } : {}) };\n   238  }\n   239  \n   240  /** Whether headers mark a message as machine-made and not a person's reply (RFC 3834 and the common extensions). */\n   241  export function isAutoReply(h: ReadonlyMap<string, string>): boolean {\n   242    const auto = h.get('auto-submitted');\n>  243    if (auto && auto.trim().toLowerCase() !== 'no') return true;\n   244    if (h.has('x-autoreply') || h.has('x-autorespond')) return true;\n   245    if (/^(auto_reply|auto-reply|bulk|junk)$/i.test((h.get('precedence') ?? '').trim()) && /auto/i.test(h.get('precedence') ?? '')) return true;\n   246    if (/\\b(?:out of office|automatic reply|auto(?:matic)?[- ]?reply|autoreply|vacation)\\b/i.test(h.get('subject') ?? '')) return true;\n   247    return false;\n   248  }\n   249  \n\nTest file style (intent/blocks/bounce-classify/bounce-classify.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Notify } from '../notify/index.ts';\nimport { NotAReport, SoftBounceTracker, classifyMessage, classifyRecipient, feedSuppression, isAutoReply, parseMime, parseStatus, statusFromReply } from './index.ts';\n\nconst dsn = (fields: string, extra = '') => [\n  'From: MAILER-DAEMON@mx.example.org',\n  'To: sender@example.com',\n  'Subject: Undelivered Mail Returned to Sender',\n  'Content-Type: multipart/report; report-type=delivery-status; boundary=\"BND\"',\n  '',\n  '--BND',\n  'Content-Type: text/plain',\n  '',\n  'This is the mail system. Delivery failed.',\n  '--BND',\n  'Content-Type: message/delivery-status',\n  '',\n  'Reporting-MTA: dns; mx.example.org',\n  'Arrival-Date: Mon, 3 Mar 2025 10:00:00 +0000',\n  '',\n  fields,\n  extra,\n  '--BND',\n  'Content-Type: text/rfc822-headers',\n  '',\n  'From: sender@example.com',\n  'To: ana@example.net',\n  '--BND--',\n  '',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/bounce-classify-455.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.263Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "feed-write",
+  "mutant": {
+    "id": "972",
+    "line": 421,
+    "column": 15,
+    "endLine": 421,
+    "endColumn": 38,
+    "mutator": "ConditionalExpression",
+    "original": "f.updated !== undefined",
+    "replacement": "true",
+    "lineText": "const upd = f.updated !== undefined ? toDate(f.updated) : newest(f);",
+    "prevText": "const f = prepare(feed, o);",
+    "nextText": "if (!upd) throw new FeedError(['an Atom feed needs a date: give the feed or an item an updated time']);"
+  },
+  "mayEdit": [
+    "intent/blocks/feed-write/feed-write.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/feed-write-972.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"feed-write\". Mutant: line 421:15-421:38, mutator ConditionalExpression: \"f.updated !== undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/feed-write/index.ts (> marks the mutated line):\n   415  }\n   416  \n   417  // ================================================================== Atom 1.0\n   418  \n   419  export function writeAtom(feed: Feed, o: WriteOptions = {}): string {\n   420    const f = prepare(feed, o);\n>  421    const upd = f.updated !== undefined ? toDate(f.updated) : newest(f);\n   422    if (!upd) throw new FeedError(['an Atom feed needs a date: give the feed or an item an updated time']);\n   423    const itemsMissing = f.items.filter((i) => !toDate(i.updated ?? i.published ?? Number.NaN)).map((i) => i.id);\n   424    if (itemsMissing.length) throw new FeedError([`Atom entries need an updated or published date: ${itemsMissing.slice(0, 5).join(', ')}`]);\n   425    const usesMedia = f.items.some((i) => i.media);\n   426    const L: string[] = [`<?xml version=\"1.0\" encoding=\"UTF-8\"?>`, `<feed xmlns=\"http://www.w3.org/2005/Atom\"${f.language ? ` xml:lang=\"${escapeAttr(f.language)}\"` : ''}${usesMedia ? ' xmlns:media=\"http://search.yahoo.com/mrss/\"' : ''}>`];\n   427    L.push(tag('id', f.id ?? f.selfUrl ?? f.link), tag('title', f.title, { type: 'text' }), tag('subtitle', f.description, { type: 'text' }), tag('updated', rfc3339(upd)));\n\nTest file style (intent/blocks/feed-write/feed-write.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { parseXml, type El } from '../dav/index.ts';\nimport {\n  FeedError, cdata, durationSeconds, escapeAttr, escapeText, etagOf, feedProblems, itunesDuration, rfc3339, rfc822,\n  respond, toDate, write, writeAtom, writeJsonFeed, writeRss, xmlSafe, type Feed,\n} from './index.ts';\n\nconst T0 = Date.UTC(2024, 4, 6, 12, 30, 5);\ntype Mut<T> = { -readonly [K in keyof T]: T[K] };\nconst base = (): Mut<Feed> => ({\n  title: 'Notes & Things',\n  link: 'https://example.com/',\n  selfUrl: 'https://example.com/feed.xml',\n  description: 'Writing <on> the web',\n  language: 'en-GB',\n  updated: T0,\n  items: [\n    { id: 'https://example.com/a', link: 'https://example.com/a', title: 'First', published: T0 - 86_400_000, contentHtml: '<p>Hello</p>', summary: 'Hi', authors: [{ name: 'Ann' }], categories: ['x', 'y'] },\n    { id: 'https://example.com/b', link: 'https://example.com/b', title: 'Second', published: T0, updated: T0 + 1000 },\n  ],\n});\nconst find = (e: El, name: string): El[] => [...(e.name === name ? [e] : []), ...e.children.flatMap((c) => find(c, name))];\n\ntest('RFC 822 and RFC 3339 dates match the specs examples', () => {\n  assert.equal(rfc822(new Date(Date.UTC(2002, 8, 7, 0, 0, 1))), 'Sat, 07 Sep 2002 00:00:01 GMT');\n  assert.equal(rfc3339(new Date(Date.UTC(2003, 11, 13, 18, 30, 2, 900))), '2003-12-13T18:30:02Z');\n});\n\ntest('toDate takes dates, numbers and ISO strings and refuses nonsense', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/feed-write-972.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:41.181Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "json-schema",
+  "mutant": {
+    "id": "397",
+    "line": 143,
+    "column": 32,
+    "endLine": 143,
+    "endColumn": 34,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "'json-pointer': (s) => s === '' || (/^(\\/([^~/]|~[01])*)+$/.test(s)),",
+    "prevText": "'hostname': validHostname,",
+    "nextText": "'regex': (s) => { try { new RegExp(s, 'u'); return true; } catch { return false; } },"
+  },
+  "mayEdit": [
+    "intent/blocks/json-schema/json-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/json-schema-397.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"json-schema\". Mutant: line 143:32-143:34, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/json-schema/index.ts (> marks the mutated line):\n   137    'uuid': (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s),\n   138    'uri': (s) => /^[a-z][a-z0-9+.-]*:[^\\s]*$/i.test(s) && !/[<>\"\\\\^`{|}]/.test(s),\n   139    'uri-reference': (s) => !/[\\s<>\"\\\\^`{|}]/.test(s),\n   140    'ipv4': validIPv4,\n   141    'ipv6': validIPv6,\n   142    'hostname': validHostname,\n>  143    'json-pointer': (s) => s === '' || (/^(\\/([^~/]|~[01])*)+$/.test(s)),\n   144    'regex': (s) => { try { new RegExp(s, 'u'); return true; } catch { return false; } },\n   145    'duration': (s) => /^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+(\\.\\d+)?S)?)?$/.test(s),\n   146  };\n   147  export const formatNames = (): string[] => Object.keys(FORMATS);\n   148  \n   149  // ------------------------------------------------------------------ registry\n\nTest file style (intent/blocks/json-schema/json-schema.test.ts):\n29 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { compile, validate, infer, example, diff, isCompatible, jsonEqual, SchemaError, SchemaLimitError, type SchemaValue } from './index.ts';\n\nconst ok = (s: SchemaValue, i: unknown, o = {}) => validate(s, i, o).valid;\nconst msgs = (s: SchemaValue, i: unknown) => validate(s, i).problems.map((p) => `${p.path}|${p.code}`);\n\ntest('type keyword including integer and arrays of types', () => {\n  assert.equal(ok({ type: 'string' }, 'a'), true);\n  assert.equal(ok({ type: 'string' }, 1), false);\n  assert.equal(ok({ type: 'integer' }, 3), true);\n  assert.equal(ok({ type: 'integer' }, 3.0), true);\n  assert.equal(ok({ type: 'integer' }, 3.5), false);\n  assert.equal(ok({ type: 'number' }, 3), true);\n  assert.equal(ok({ type: ['string', 'null'] }, null), true);\n  assert.equal(ok({ type: 'object' }, []), false);\n  assert.equal(ok({ type: 'array' }, {}), false);\n  assert.equal(ok({ type: 'number' }, NaN), false);\n});\n\ntest('enum and const use deep equality', () => {\n  assert.equal(ok({ enum: [1, 'a', { x: [1, 2] }] }, { x: [1, 2] }), true);\n  assert.equal(ok({ enum: [1, 'a'] }, 2), false);\n  assert.equal(ok({ const: { a: 1, b: 2 } }, { b: 2, a: 1 }), true);\n  assert.equal(ok({ const: 1 }, '1'), false);\n  assert.equal(jsonEqual([1, { a: 2 }], [1, { a: 2 }]), true);\n});\n\ntest('numeric keywords', () => {\n  assert.equal(ok({ minimum: 5 }, 5), true);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/json-schema-397.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:45.478Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webpush",
+  "mutant": {
+    "id": "151",
+    "line": 144,
+    "column": 58,
+    "endLine": 144,
+    "endColumn": 85,
+    "mutator": "StringLiteral",
+    "original": "'the salt must be 16 bytes'",
+    "replacement": "\"\"",
+    "lineText": "if (salt.length !== 16) throw new PushError('payload', 'the salt must be 16 bytes');",
+    "prevText": "const salt = o.salt ?? randomBytes(16);",
+    "nextText": "const { cek, nonce } = keySchedule(e.computeSecret(ua), auth, ua, asPublic, salt);"
+  },
+  "mayEdit": [
+    "intent/blocks/webpush/webpush.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webpush-151.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webpush\". Mutant: line 144:58-144:85, mutator StringLiteral: \"'the salt must be 16 bytes'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webpush/index.ts (> marks the mutated line):\n   138    if (auth.length !== 16) throw new PushError('key', 'the auth secret must be 16 bytes');\n   139    const e = createECDH('prime256v1');\n   140    if (o.senderPrivate) e.setPrivateKey(o.senderPrivate);\n   141    else e.generateKeys();\n   142    const asPublic = e.getPublicKey();\n   143    const salt = o.salt ?? randomBytes(16);\n>  144    if (salt.length !== 16) throw new PushError('payload', 'the salt must be 16 bytes');\n   145    const { cek, nonce } = keySchedule(e.computeSecret(ua), auth, ua, asPublic, salt);\n   146    const c = createCipheriv('aes-128-gcm', cek, nonce);\n   147    const record = Buffer.concat([c.update(Buffer.concat([pt, Buffer.from([0x02]), Buffer.alloc(padding)])), c.final(), c.getAuthTag()]);\n   148    const header = Buffer.alloc(21 + asPublic.length);\n   149    salt.copy(header, 0);\n   150    header.writeUInt32BE(rs, 16);\n\nTest file style (intent/blocks/webpush/webpush.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { createECDH, createPublicKey, createVerify, randomBytes } from 'node:crypto';\nimport { newKey } from '../crypto/index.ts';\nimport { generateVapid, checkVapid, sealVapid, openVapid, vapidToken, vapidAuthorization, encryptPayload, decryptPayload, buildRequest, checkEndpoint, SubscriptionStore, PushSender, PushError, retryAfterMs, pushWorkerSnippet, MAX_PLAINTEXT, type Keys, type PushRequest, type PushResponse } from './index.ts';\n\nconst ring = () => ({ current: 'k1', keys: { k1: newKey() } });\nconst browser = () => {\n  const e = createECDH('prime256v1');\n  e.generateKeys();\n  const auth = randomBytes(16);\n  return { priv: e.getPrivateKey(), keys: { p256dh: e.getPublicKey().toString('base64url'), auth: auth.toString('base64url') } as Keys, auth };\n};\nconst EP = 'https://push.example.net/wpush/v2/abc';\n\ntest('RFC 8291 appendix A example reproduces byte for byte', () => {\n  const body = encryptPayload(\n    { p256dh: 'BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4', auth: 'BTBZMqHH6r4Tts7J_aSIgg' },\n    'When I grow up, I want to be a watermelon',\n    { salt: Buffer.from('DGv6ra1nlYgDCS1FRnbzlw', 'base64url'), senderPrivate: Buffer.from('yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw', 'base64url') },\n  );\n  assert.equal(body.toString('base64url'), 'DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN');\n  const plain = decryptPayload(body, Buffer.from('q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94', 'base64url'), Buffer.from('BTBZMqHH6r4Tts7J_aSIgg', 'base64url'));\n  assert.equal(plain.toString(), 'When I grow up, I want to be a watermelon');\n});\n\ntest('encrypt then decrypt round trip, with padding and binary data', () => {\n  const b = browser();\n  for (const data of ['', 'hi', 'é'.repeat(500), Buffer.from([0, 2, 0, 0, 255])]) {\n    const body = encryptPayload(b.keys, data, { padding: 10 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webpush-151.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:14.849Z"
+}

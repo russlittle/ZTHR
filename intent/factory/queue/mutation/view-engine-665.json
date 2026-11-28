@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "view-engine",
+  "mutant": {
+    "id": "665",
+    "line": 353,
+    "column": 89,
+    "endLine": 353,
+    "endColumn": 97,
+    "mutator": "StringLiteral",
+    "original": "'starts'",
+    "replacement": "\"\"",
+    "lineText": "if (!['eq', 'ne', 'lt', 'lte', 'gt', 'gte', 'in', 'nin', 'contains', 'icontains', 'starts', 'istarts', 'ends', 'iends', 'null', 'between'].includes(n.op)) throw new ViewError(`${n.op} is not a filter operator`);",
+    "prevText": "if (n.kind === 'cmp' && Array.isArray(n.path) && n.path.every((p) => typeof p === 'string') && typeof n.op === 'string') {",
+    "nextText": "return { kind: 'cmp', path: n.path as string[], op: n.op as never, value: n.value };"
+  },
+  "mayEdit": [
+    "intent/blocks/view-engine/view-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/view-engine-665.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"view-engine\". Mutant: line 353:89-353:97, mutator StringLiteral: \"'starts'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/view-engine/index.ts (> marks the mutated line):\n   347    #node(x: unknown, depth: number): Node {\n   348      if (depth > 8 || !x || typeof x !== 'object') throw new ViewError('a filter in a view file is malformed or nested too deeply');\n   349      const n = x as Record<string, unknown>;\n   350      if (n.kind === 'and' || n.kind === 'or') { if (!Array.isArray(n.children) || n.children.length > 50) throw new ViewError('a group in a filter needs a list of up to 50 children'); return { kind: n.kind, children: n.children.map((c) => this.#node(c, depth + 1)) }; }\n   351      if (n.kind === 'not') return { kind: 'not', child: this.#node(n.child, depth + 1) };\n   352      if (n.kind === 'cmp' && Array.isArray(n.path) && n.path.every((p) => typeof p === 'string') && typeof n.op === 'string') {\n>  353        if (!['eq', 'ne', 'lt', 'lte', 'gt', 'gte', 'in', 'nin', 'contains', 'icontains', 'starts', 'istarts', 'ends', 'iends', 'null', 'between'].includes(n.op)) throw new ViewError(`${n.op} is not a filter operator`);\n   354        return { kind: 'cmp', path: n.path as string[], op: n.op as never, value: n.value };\n   355      }\n   356      throw new ViewError('a filter in a view file is malformed');\n   357    }\n   358  }\n   359  \n\nTest file style (intent/blocks/view-engine/view-engine.test.ts):\n15 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { FieldDenied, NotAllowed, NotFound, VersionConflict, ViewEngine, ViewError } from './index.ts';\nimport type { Node, Person, TableDef } from './index.ts';\n\nconst TASKS: TableDef = { name: 'tasks', fields: [{ name: 'id', type: 'number' }, { name: 'title', type: 'text' }, { name: 'status', type: 'select' }, { name: 'owner', type: 'text' }, { name: 'due', type: 'date' }, { name: 'points', type: 'number' }, { name: 'salary', type: 'number', sensitive: true }] };\nconst ana: Person = { id: 'ana', canPublish: true };\nconst ben: Person = { id: 'ben' };\nconst cy: Person = { id: 'cy' };\nconst root: Person = { id: 'root', admin: true, canPublish: true };\n\nconst rows = [\n  { id: 1, title: 'Write spec', status: 'open', owner: 'ana', due: '2026-06-01', points: 3, salary: 100 },\n  { id: 2, title: 'Review spec', status: 'open', owner: 'ben', due: '2026-06-02', points: 5, salary: 200 },\n  { id: 3, title: 'Ship', status: 'done', owner: 'ana', due: null, points: 8, salary: 300 },\n  { id: 4, title: 'Retro', status: 'done', owner: 'cy', due: '2026-05-01', points: 1, salary: 400 },\n];\n\nconst make = (denied: Record<string, string[]> = { cy: ['salary'], ben: ['salary'] }) => {\n  let n = 0;\n  return new ViewEngine({ tables: [TASKS], access: { canRead: (who, _t, f) => !(denied[who]?.includes(f)) }, id: () => `v${++n}`, now: () => new Date('2026-06-15T12:00:00Z') });\n};\nconst eq = (path: string, value: unknown): Node => ({ kind: 'cmp', path: [path], op: 'eq', value });\n\ntest('a new view is private to its owner and invisible to everyone else', () => {\n  const e = make();\n  const v = e.create(ana, 'tasks', { name: 'Mine', filter: eq('owner', 'ana') });\n  assert.deepEqual([v.id, v.owner, v.visibility, v.version], ['v1', 'ana', 'private', 1]);\n  assert.equal(e.get('v1').name, 'Mine');\n  assert.equal(e.see(ana, 'v1').id, 'v1');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/view-engine-665.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:13.051Z"
+}

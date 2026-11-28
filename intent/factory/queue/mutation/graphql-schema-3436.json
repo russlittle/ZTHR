@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "graphql-schema",
+  "mutant": {
+    "id": "3436",
+    "line": 1859,
+    "column": 71,
+    "endLine": 1859,
+    "endColumn": 88,
+    "mutator": "ConditionalExpression",
+    "original": "d.kind === 'enum'",
+    "replacement": "true",
+    "lineText": "enumValues: (_s: unknown, a: { includeDeprecated?: boolean }) => (d.kind === 'enum' ? [...d.values].filter(([, v]) => dep(!!a.includeDeprecated, v)).map(([n, v]) => ({ name: n, description: v.description ?? null, isDeprecated: v.deprecated !== undefined, deprecationReason: v.deprecated ?? null })) : null),",
+    "prevText": "possibleTypes: () => (d.kind === 'interface' || d.kind === 'union' ? schema.possibleTypes(d.name).map((i) => typeObj(schema, { kind: 'named', name: i })) : null),",
+    "nextText": "inputFields: (_s: unknown, a: { includeDeprecated?: boolean }) => (d.kind === 'input' ? [...d.inputFields.values()].filter((f) => dep(!!a.includeDeprecated, f)).map((f) => inputValueObj(schema, f)) : null),"
+  },
+  "mayEdit": [
+    "intent/blocks/graphql-schema/graphql-schema.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-3436.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"graphql-schema\". Mutant: line 1859:71-1859:88, mutator ConditionalExpression: \"d.kind === 'enum'\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/graphql-schema/index.ts (> marks the mutated line):\n  1853      fields: (_s: unknown, a: { includeDeprecated?: boolean }) =>\n  1854        d.kind === 'object' || d.kind === 'interface'\n  1855          ? [...d.fields.values()].filter((f) => dep(!!a.includeDeprecated, f)).map((f) => ({ name: f.name, description: f.description ?? null, args: [...f.args.values()].map((x) => inputValueObj(schema, x)), type: () => typeObj(schema, f.type), isDeprecated: f.deprecated !== undefined, deprecationReason: f.deprecated ?? null }))\n  1856          : null,\n  1857      interfaces: () => (d.kind === 'object' || d.kind === 'interface' ? d.interfaces.map((i) => typeObj(schema, { kind: 'named', name: i })) : null),\n  1858      possibleTypes: () => (d.kind === 'interface' || d.kind === 'union' ? schema.possibleTypes(d.name).map((i) => typeObj(schema, { kind: 'named', name: i })) : null),\n> 1859      enumValues: (_s: unknown, a: { includeDeprecated?: boolean }) => (d.kind === 'enum' ? [...d.values].filter(([, v]) => dep(!!a.includeDeprecated, v)).map(([n, v]) => ({ name: n, description: v.description ?? null, isDeprecated: v.deprecated !== undefined, deprecationReason: v.deprecated ?? null })) : null),\n  1860      inputFields: (_s: unknown, a: { includeDeprecated?: boolean }) => (d.kind === 'input' ? [...d.inputFields.values()].filter((f) => dep(!!a.includeDeprecated, f)).map((f) => inputValueObj(schema, f)) : null),\n  1861    };\n  1862  }\n  1863  \n  1864  function introspectionSchema(schema: Schema): Record<string, unknown> {\n  1865    const hidden = (n: string) => n.startsWith('__');\n\nTest file style (intent/blocks/graphql-schema/graphql-schema.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { GraphQLError, GraphQLSyntaxError, analyze, buildSchema, execute, parse, plan, validate } from './index.ts';\nimport type { Schema } from './index.ts';\n\nconst SDL = `\n  \"\"\"The root.\"\"\"\n  type Query {\n    hello(name: String = \"world\"): String!\n    user(id: ID!): User\n    users(first: Int, after: String): [User!]!\n    search(text: String!): [SearchResult!]!\n    node(id: ID!): Node\n    flaky: String\n    must: String!\n    items: [Int!]\n    nested: Outer\n  }\n  type Mutation { bump(by: Int = 1): Int! rename(id: ID!, input: RenameInput!): User }\n  directive @auth(role: String!) on FIELD_DEFINITION\n  interface Node { id: ID! }\n  type User implements Node {\n    id: ID!\n    name: String\n    email: String @deprecated(reason: \"use contact\")\n    role: Role!\n    friends(first: Int): [User!]\n    posts(limit: Int = 20): [Post!]! @cost(value: 2, multipliers: [\"limit\"])\n  }\n  type Post implements Node { id: ID! title: String! author: User }\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/graphql-schema-3436.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:42.738Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "pdf-parse",
+  "mutant": {
+    "id": "896",
+    "line": 553,
+    "column": 18,
+    "endLine": 553,
+    "endColumn": 28,
+    "mutator": "ConditionalExpression",
+    "original": "type === 2",
+    "replacement": "true",
+    "lineText": "else if (type === 2) this.xref.set(num, { type: 2, a, b });",
+    "prevText": "if (type === 1) this.xref.set(num, { type: 1, a: a + this.offset, b });",
+    "nextText": "else this.xref.set(num, { type: 0, a: 0, b });"
+  },
+  "mayEdit": [
+    "intent/blocks/pdf-parse/pdf-parse.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-parse-896.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"pdf-parse\". Mutant: line 553:18-553:28, mutator ConditionalExpression: \"type === 2\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/pdf-parse/index.ts (> marks the mutated line):\n   547          const type = field(w[0]!, 1);\n   548          const a = field(w[1]!, 0);\n   549          const b = field(w[2]!, 0);\n   550          const num = index[s]! + k;\n   551          if (this.xref.has(num)) continue;\n   552          if (type === 1) this.xref.set(num, { type: 1, a: a + this.offset, b });\n>  553          else if (type === 2) this.xref.set(num, { type: 2, a, b });\n   554          else this.xref.set(num, { type: 0, a: 0, b });\n   555        }\n   556      }\n   557      return st.dict;\n   558    }\n   559  \n\nTest file style (intent/blocks/pdf-parse/pdf-parse.test.ts):\n25 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { deflateSync } from 'node:zlib';\nimport { pdf } from '../pdf/index.ts';\nimport { Encrypted, Name, PdfDocument, PdfError, PdfString, Ref, UnsupportedFilter, decodeStream, execute, itemsToText, mergePlan, parseObjectText, parseRanges, parseToUnicode, rotatePlan, splitPlan } from './index.ts';\nimport type { Dict, Stream } from './index.ts';\n\nconst lat = (s: string) => Buffer.from(s, 'latin1');\n\n/** A small PDF written by hand: numbered object bodies, a classic cross-reference table, and the given trailer entries. */\nconst handmade = (objs: Record<number, string | Buffer>, trailer = '/Root 1 0 R', o: { header?: string } = {}): Buffer => {\n  const parts: Buffer[] = [lat(o.header ?? '%PDF-1.7\\n')];\n  let len = parts[0]!.length;\n  const offs: Record<number, number> = {};\n  const max = Math.max(...Object.keys(objs).map(Number));\n  for (const n of Object.keys(objs).map(Number)) {\n    offs[n] = len;\n    const b = Buffer.concat([lat(`${n} 0 obj\\n`), Buffer.isBuffer(objs[n]) ? (objs[n] as Buffer) : lat(objs[n] as string), lat('\\nendobj\\n')]);\n    parts.push(b);\n    len += b.length;\n  }\n  let x = `xref\\n0 ${max + 1}\\n0000000000 65535 f \\n`;\n  for (let n = 1; n <= max; n++) x += n in offs ? `${String(offs[n]).padStart(10, '0')} 00000 n \\n` : '0000000000 00000 f \\n';\n  parts.push(lat(`${x}trailer\\n<< /Size ${max + 1} ${trailer} >>\\nstartxref\\n${len}\\n%%EOF\\n`));\n  return Buffer.concat(parts);\n};\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/pdf-parse-896.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:54.476Z"
+}

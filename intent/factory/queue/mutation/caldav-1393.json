@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "caldav",
+  "mutant": {
+    "id": "1393",
+    "line": 523,
+    "column": 55,
+    "endLine": 523,
+    "endColumn": 87,
+    "mutator": "StringLiteral",
+    "original": "'Depth: infinity is not allowed'",
+    "replacement": "\"\"",
+    "lineText": "if (d === 'infinity') throw new DavError(403, 'Depth: infinity is not allowed', { ns: DAV, name: 'propfind-finite-depth' });",
+    "prevText": "const d = davDepth(h('depth'), 0);",
+    "nextText": "const out: Out[] = [];"
+  },
+  "mayEdit": [
+    "intent/blocks/caldav/caldav.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/caldav-1393.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"caldav\". Mutant: line 523:55-523:87, mutator StringLiteral: \"'Depth: infinity is not allowed'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/caldav/index.ts (> marks the mutated line):\n   517        }\n   518        case 'PROPFIND': {\n   519          const { col, name } = this.#splitMaybeRes(req.path);\n   520          const pr = propfindRequest(req.body);\n   521          const want = pr.kind === 'prop' ? pr.props : 'all';\n   522          const d = davDepth(h('depth'), 0);\n>  523          if (d === 'infinity') throw new DavError(403, 'Depth: infinity is not allowed', { ns: DAV, name: 'propfind-finite-depth' });\n   524          const out: Out[] = [];\n   525          if (name) { const r = col.resources.get(name); if (!r) throw new DavError(404, 'no such object'); const { found, missing } = this.#resourceProps(col, r, want); out.push(propstatResponse(`${col.path}${name}`, found, missing)); }\n   526          else {\n   527            const { found, missing } = this.#collectionProps(col, want);\n   528            out.push(propstatResponse(col.path, found, missing));\n   529            if (d === 1) for (const r of [...col.resources.values()].sort((a, b) => a.name.localeCompare(b.name))) { const f = this.#resourceProps(col, r, want); out.push(propstatResponse(`${col.path}${r.name}`, f.found, f.missing)); }\n\nTest file style (intent/blocks/caldav/caldav.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { child, children, parseXml } from '../dav/index.ts';\nimport { CALDAV, CalDav, CS } from './index.ts';\nimport type { Reply } from './index.ts';\n\nconst NS = 'xmlns:d=\"DAV:\" xmlns:c=\"urn:ietf:params:xml:ns:caldav\" xmlns:cs=\"http://calendarserver.org/ns/\"';\nconst HOME = '/calendars/ana/';\nconst CAL = `${HOME}work/`;\nconst INBOX = `${HOME}inbox/`;\n\nconst ics = (uid: string, lines: string[] = [], o: { method?: string; kind?: string; version?: string } = {}) => ['BEGIN:VCALENDAR', `VERSION:${o.version ?? '2.0'}`, 'PRODID:-//test//EN', ...(o.method ? [`METHOD:${o.method}`] : []), `BEGIN:${o.kind ?? 'VEVENT'}`, `UID:${uid}`, 'DTSTAMP:20260101T000000Z', ...lines, `END:${o.kind ?? 'VEVENT'}`, 'END:VCALENDAR', ''].join('\\r\\n');\nconst ev = (uid: string, start: string, end: string, more: string[] = []) => ics(uid, [`DTSTART:${start}`, `DTEND:${end}`, ...more]);\n\nconst setup = (o: ConstructorParameters<typeof CalDav>[0] = {}) => {\n  const dav = new CalDav({ now: () => 1_800_000_000_000, ...o });\n  dav.create(CAL, { displayName: 'Work' });\n  const req = (method: string, path: string, body = '', headers: Record<string, string> = {}): Reply => dav.handle({ method, path, headers, body });\n  const put = (name: string, text: string) => req('PUT', `${CAL}${name}`, text, { 'content-type': 'text/calendar; charset=utf-8' });\n  return { dav, req, put };\n};\n\nconst responses = (r: Reply) => children(parseXml(r.body), 'DAV:', 'response').map((x) => ({ href: child(x, 'DAV:', 'href')!.text, status: child(x, 'DAV:', 'status')?.text, el: x }));\nconst hrefs = (r: Reply) => responses(r).map((x) => x.href.replace(CAL, ''));\nconst query = (filter: string, prop = '<d:getetag/>') => `<c:calendar-query ${NS}><d:prop>${prop}</d:prop><c:filter><c:comp-filter name=\"VCALENDAR\">${filter}</c:comp-filter></c:filter></c:calendar-query>`;\nconst range = (a: string, b: string) => `<c:time-range start=\"${a}\" end=\"${b}\"/>`;\n\ntest('OPTIONS advertises calendar access and MKCALENDAR creates a calendar from its body', () => {\n  const { req, dav } = setup();\n  const o = req('OPTIONS', CAL);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/caldav-1393.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:35.421Z"
+}

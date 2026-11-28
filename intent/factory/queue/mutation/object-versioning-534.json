@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "object-versioning",
+  "mutant": {
+    "id": "534",
+    "line": 409,
+    "column": 11,
+    "endLine": 409,
+    "endColumn": 42,
+    "mutator": "ConditionalExpression",
+    "original": "!key.startsWith(o.prefix ?? '')",
+    "replacement": "false",
+    "lineText": "if (!key.startsWith(o.prefix ?? '')) continue;",
+    "prevText": "for (const key of [...this.keys.keys()].sort(byteCompare)) {",
+    "nextText": "const head = this.chain(key)[0]!;"
+  },
+  "mayEdit": [
+    "intent/blocks/object-versioning/object-versioning.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/object-versioning-534.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"object-versioning\". Mutant: line 409:11-409:42, mutator ConditionalExpression: \"!key.startsWith(o.prefix ?? '')\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/object-versioning/index.ts (> marks the mutated line):\n   403    }\n   404  \n   405    /** Current objects only (no delete markers, no history), as a plain list. */\n   406    list(o: { prefix?: string } = {}): Entry[] {\n   407      const out: Entry[] = [];\n   408      for (const key of [...this.keys.keys()].sort(byteCompare)) {\n>  409        if (!key.startsWith(o.prefix ?? '')) continue;\n   410        const head = this.chain(key)[0]!;\n   411        if (!head.isDeleteMarker) out.push({ key, versionId: head.versionId, isLatest: true, isDeleteMarker: false, size: head.size, etag: head.etag, modified: head.modified });\n   412      }\n   413      return out;\n   414    }\n   415  \n\nTest file style (intent/blocks/object-versioning/object-versioning.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { memoryObjects, readAll } from '../objects/index.ts';\nimport { VersionError, VersionedBucket } from './index.ts';\nimport type { Options } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 0, 1);\n\nfunction mk(o: Options = {}, state: 'enabled' | 'suspended' | 'unversioned' = 'enabled') {\n  const objects = memoryObjects();\n  let t = T0;\n  const b = new VersionedBucket(objects, { now: () => t, ...o });\n  if (state !== 'unversioned' && !o.objectLock) b.setVersioning(state);\n  return { b, objects, tick: (ms: number) => void (t += ms), now: () => t };\n}\nconst body = async (b: VersionedBucket, key: string, versionId?: string) => (await readAll((await b.get(key, versionId ? { versionId } : {})).stream)).toString();\nconst fails = async (f: () => Promise<unknown> | unknown, code: string, msg?: RegExp) => {\n  try {\n    await f();\n  } catch (e) {\n    assert.ok(e instanceof VersionError, `a VersionError, got ${String(e)}`);\n    assert.equal(e.code, code);\n    if (msg) assert.match(e.message, msg);\n    return e;\n  }\n  assert.fail(`expected ${code}`);\n};\n\ntest('unversioned: a write replaces, a delete deletes, and the bytes go with them', async () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/object-versioning-534.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.529Z"
+}

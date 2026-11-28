@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "wiki-pages",
+  "mutant": {
+    "id": "871",
+    "line": 579,
+    "column": 30,
+    "endLine": 579,
+    "endColumn": 32,
+    "mutator": "ArrayDeclaration",
+    "original": "[]",
+    "replacement": "[\"Stryker was here\"]",
+    "lineText": "const next: MdNode[] = [];",
+    "prevText": "if (!n.children) return;",
+    "nextText": "for (const c of n.children) {"
+  },
+  "mayEdit": [
+    "intent/blocks/wiki-pages/wiki-pages.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/wiki-pages-871.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"wiki-pages\". Mutant: line 579:30-579:32, mutator ArrayDeclaration: \"[]\" becomes \"[\\\"Stryker was here\\\"]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/wiki-pages/index.ts (> marks the mutated line):\n   573        const r = this.resolveLink(p, target);\n   574        const url = base + r.path.split('/').map(encodeURIComponent).join('/') + (r.id ? '' : '?new=1');\n   575        return { type: 'link', url, children: [{ type: 'text', value: label }] };\n   576      };\n   577      const rewrite = (n: MdNode): void => {\n   578        if (!n.children) return;\n>  579        const next: MdNode[] = [];\n   580        for (const c of n.children) {\n   581          if (c.type === 'text' && c.value !== undefined && c.value.includes('[[')) {\n   582            let last = 0;\n   583            for (const m of c.value.matchAll(WIKILINK)) {\n   584              if (m.index > last) next.push({ type: 'text', value: c.value.slice(last, m.index) });\n   585              next.push(link(m[1]!.trim(), (m[2] ?? m[1])!.trim()));\n\nTest file style (intent/blocks/wiki-pages/wiki-pages.test.ts):\n24 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Wiki, WikiError, diffLines, extractLinks, type User } from './index.ts';\n\nconst ada: User = { id: 'ada' };\nconst bob: User = { id: 'bob', groups: ['staff'] };\nconst root: User = { id: 'root' };\n\nfunction setup(o: { defaultRole?: 'none' | 'read' | 'edit' | 'admin' } = {}) {\n  let t = Date.parse('2024-03-01T10:00:00Z');\n  let n = 0;\n  const clock = { advance: (s: number) => { t += s * 1000; } };\n  const w = new Wiki({ now: () => new Date(t), id: () => `p${++n}`, admins: ['root'], defaultRole: o.defaultRole ?? 'edit' });\n  return { w, clock };\n}\nconst code = (f: () => unknown): string | undefined => { try { f(); return undefined; } catch (e) { return e instanceof WikiError ? e.code : `other:${String(e)}`; } };\n\ntest('create builds a tree with slug paths and breadcrumbs', () => {\n  const { w } = setup();\n  const a = w.create(ada, { title: 'Handbook' });\n  assert.equal(a.path, 'handbook');\n  const b = w.create(ada, { parent: 'handbook', title: 'On boarding!' });\n  assert.equal(b.path, 'handbook/on-boarding');\n  const c = w.create(ada, { parent: 'handbook/on-boarding', title: 'Laptops', slug: 'laptops' });\n  assert.equal(c.path, 'handbook/on-boarding/laptops');\n  assert.deepEqual(w.breadcrumbs(ada, c.path).map((x) => x.title), ['Handbook', 'On boarding!', 'Laptops']);\n  assert.deepEqual(w.children(ada, 'handbook').map((x) => x.slug), ['on-boarding']);\n  assert.equal(w.get(ada, c.path).version, 1);\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/wiki-pages-871.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:15.674Z"
+}

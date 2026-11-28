@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "relations",
+  "mutant": {
+    "id": "611",
+    "line": 474,
+    "column": 35,
+    "endLine": 474,
+    "endColumn": 50,
+    "mutator": "ConditionalExpression",
+    "original": "l.left === left",
+    "replacement": "true",
+    "lineText": "const i = ls.findIndex((l) => l.left === left && l.right === right);",
+    "prevText": "const ls = this.links.get(name)!;",
+    "nextText": "if (i < 0) return false;"
+  },
+  "mayEdit": [
+    "intent/blocks/relations/relations.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/relations-611.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"relations\". Mutant: line 474:35-474:50, mutator ConditionalExpression: \"l.left === left\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/relations/index.ts (> marks the mutated line):\n   468      ls.push({ left, right, posL: pl, posR: pr });\n   469    }\n   470  \n   471    unlink(name: string, left: string, right: string): boolean {\n   472      this.m2m(name);\n   473      const ls = this.links.get(name)!;\n>  474      const i = ls.findIndex((l) => l.left === left && l.right === right);\n   475      if (i < 0) return false;\n   476      ls.splice(i, 1);\n   477      this.renumber(name);\n   478      return true;\n   479    }\n   480  \n\nTest file style (intent/blocks/relations/relations.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { IntegrityError, Restricted, SchemaError, Store, cascadeLoops, checkSchema } from './index.ts';\nimport type { Schema } from './index.ts';\n\nconst schema: Schema = {\n  types: ['user', 'post', 'comment', 'tag', 'folder', 'profile', 'page'],\n  relations: [\n    { kind: 'belongsTo', name: 'post.author', from: 'post', field: 'authorId', to: 'user', onDelete: 'restrict', required: true },\n    { kind: 'belongsTo', name: 'comment.post', from: 'comment', field: 'postId', to: 'post', onDelete: 'cascade', required: true },\n    { kind: 'belongsTo', name: 'comment.author', from: 'comment', field: 'authorId', to: 'user', onDelete: 'set-null' },\n    { kind: 'belongsTo', name: 'folder.parent', from: 'folder', field: 'parentId', to: 'folder', onDelete: 'cascade', acyclic: true },\n    { kind: 'oneToOne', name: 'profile.user', from: 'profile', field: 'userId', to: 'user', onDelete: 'cascade', required: true },\n    { kind: 'manyToMany', name: 'post.tags', left: 'post', right: 'tag', ordered: 'left' },\n    { kind: 'manyToMany', name: 'post.related', left: 'post', right: 'post' },\n    { kind: 'soft', name: 'post.seeAlso', from: 'post', field: 'seeAlso', to: ['post'], toField: 'slug' },\n    { kind: 'soft', name: 'comment.target', from: 'comment', field: 'target', to: ['post', 'page'] },\n  ],\n};\n\nconst seed = () => {\n  const s = new Store(schema);\n  s.insert('user', { id: 'u1' });\n  s.insert('user', { id: 'u2' });\n  s.insert('post', { id: 'p1', authorId: 'u1', slug: 'hello' });\n  s.insert('post', { id: 'p2', authorId: 'u1', slug: 'world', seeAlso: 'hello' });\n  s.insert('comment', { id: 'c1', postId: 'p1', authorId: 'u2' });\n  s.insert('comment', { id: 'c2', postId: 'p1', authorId: 'u1' });\n  for (const t of ['a', 'b', 'c']) s.insert('tag', { id: t });\n  return s;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/relations-611.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:59.198Z"
+}

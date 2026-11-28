@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "subscriber-lists",
+  "mutant": {
+    "id": "698",
+    "line": 521,
+    "column": 9,
+    "endLine": 521,
+    "endColumn": 29,
+    "mutator": "EqualityOperator",
+    "original": "this.o.now() > t.exp",
+    "replacement": "this.o.now() >= t.exp",
+    "lineText": "if (this.o.now() > t.exp) return { ok: false, reason: 'expired' };",
+    "prevText": "if (!t) return { ok: false, reason: 'invalid' };",
+    "nextText": "const l = this.lists.get(t.list);"
+  },
+  "mayEdit": [
+    "intent/blocks/subscriber-lists/subscriber-lists.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/subscriber-lists-698.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"subscriber-lists\". Mutant: line 521:9-521:29, mutator EqualityOperator: \"this.o.now() > t.exp\" becomes \"this.o.now() >= t.exp\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/subscriber-lists/index.ts (> marks the mutated line):\n   515    }\n   516  \n   517    /** The person opens the link in the confirmation mail. */\n   518    confirm(token: string, ev: { readonly ip?: string; readonly userAgent?: string } = {}): { ok: true; list: string; email: string; alreadyConfirmed: boolean } | { ok: false; reason: 'invalid' | 'expired' | 'superseded' } {\n   519      const t = this.readToken('confirm', token);\n   520      if (!t) return { ok: false, reason: 'invalid' };\n>  521      if (this.o.now() > t.exp) return { ok: false, reason: 'expired' };\n   522      const l = this.lists.get(t.list);\n   523      const s = l?.subs.get(t.email);\n   524      if (!l || !s || this.suppressions.has(this.hash(t.email))) return { ok: false, reason: 'invalid' };\n   525      if (s.epoch !== t.epoch) return { ok: false, reason: 'superseded' };\n   526      if (s.state === 'subscribed') return { ok: true, list: t.list, email: s.email, alreadyConfirmed: true };\n   527      if (s.state !== 'pending') return { ok: false, reason: 'superseded' };\n\nTest file style (intent/blocks/subscriber-lists/subscriber-lists.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ListError, SubscriberLists, addressFingerprint, csvCell, isRoleAddress, normalizeEmail, parseCsv } from './index.ts';\nimport type { ListsOptions } from './index.ts';\nimport type { Message } from '../notify/index.ts';\nimport type { Record_ } from '../consent/index.ts';\n\nconst T0 = Date.UTC(2026, 5, 1, 9, 0, 0);\nconst DAY = 86_400_000;\n\ninterface Rig {\n  readonly lists: SubscriberLists;\n  readonly sent: Message[];\n  readonly consents: Record_[];\n  clock: { t: number };\n}\n\nfunction rig(over: Partial<ListsOptions> = {}, double = true): Rig {\n  const sent: Message[] = [];\n  const consents: Record_[] = [];\n  const clock = { t: T0 };\n  const lists = new SubscriberLists({\n    secret: 'test-secret-01234', now: () => clock.t, send: async (m) => { sent.push(m); }, onConsent: (r) => consents.push(r),\n    confirmUrl: 'https://example.org/confirm', unsubscribeUrl: 'https://example.org/unsub?src=mail', preferencesUrl: 'https://example.org/prefs',\n    ...over,\n  });\n  lists.createList({ id: 'news', name: 'Monthly news', doubleOptIn: double, consentText: 'Send me the monthly news by email.', topics: [{ id: 'product', name: 'Product', defaultOn: true }, { id: 'events', name: 'Events', defaultOn: false }], frequencies: ['weekly', 'monthly'] });\n  return { lists, sent, consents, clock };\n}\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/subscriber-lists-698.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:06.019Z"
+}

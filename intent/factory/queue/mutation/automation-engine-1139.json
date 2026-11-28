@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "automation-engine",
+  "mutant": {
+    "id": "1139",
+    "line": 651,
+    "column": 49,
+    "endLine": 651,
+    "endColumn": 92,
+    "mutator": "StringLiteral",
+    "original": "`${a.alias}: actions are nested too deeply`",
+    "replacement": "``",
+    "lineText": "if (depth > 10) throw new AutomationError(`${a.alias}: actions are nested too deeply`);",
+    "prevText": "const walk = (actions: readonly Action[], depth: number) => {",
+    "nextText": "for (const x of actions) {"
+  },
+  "mayEdit": [
+    "intent/blocks/automation-engine/automation-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-1139.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"automation-engine\". Mutant: line 651:49-651:92, mutator StringLiteral: \"`${a.alias}: actions are nested too deeply`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/automation-engine/index.ts (> marks the mutated line):\n   645        if (t.platform === 'time') clockMinutes(t.at);\n   646        if (t.platform === 'time_pattern' && (!Number.isInteger(t.everySeconds) || t.everySeconds < 1)) throw new AutomationError(`${a.alias}: a time pattern needs whole seconds of 1 or more`);\n   647        if (t.platform === 'template') compile(t.valueTemplate);\n   648        if (t.platform === 'numeric_state' && t.above === undefined && t.below === undefined) throw new AutomationError(`${a.alias}: a numeric trigger needs above or below`);\n   649      }\n   650      const walk = (actions: readonly Action[], depth: number) => {\n>  651        if (depth > 10) throw new AutomationError(`${a.alias}: actions are nested too deeply`);\n   652        for (const x of actions) {\n   653          if ('delay' in x) seconds(x.delay);\n   654          if ('if' in x) (walk(x.then, depth + 1), walk(x.else ?? [], depth + 1));\n   655          if ('choose' in x) (x.choose.forEach((c) => walk(c.sequence, depth + 1)), walk(x.default ?? [], depth + 1));\n   656          if ('repeat' in x) {\n   657            const r = x.repeat;\n\nTest file style (intent/blocks/automation-engine/automation-engine.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AutomationError, Engine, TemplateError, evaluate, render, renderData } from './index.ts';\nimport type { Automation } from './index.ts';\n\nconst flush = () => new Promise<void>((r) => setImmediate(r));\n\nfunction rig(start = Date.UTC(2026, 0, 5, 12, 0, 0), offsetMinutes = 0) {\n  const states = new Map<string, string>();\n  const calls: { service: string; data: Record<string, unknown> }[] = [];\n  const events: { type: string; data: unknown }[] = [];\n  const clock = { now: start };\n  let n = 0;\n  const engine = new Engine({\n    now: () => clock.now,\n    state: (e) => states.get(e),\n    call: async (service, data) => {\n      calls.push({ service, data: { ...data } });\n      return { ok: true, service };\n    },\n    fire: (type, data) => events.push({ type, data }),\n    newId: () => `run${++n}`,\n    zoneOffsetMinutes: () => offsetMinutes,\n  });\n  return { engine, states, calls, events, clock };\n}\n\nconst lamp: Automation = {\n  id: 'a1',\n  alias: 'Lamp',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-1139.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.863Z"
+}

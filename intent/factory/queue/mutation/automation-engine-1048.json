@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "automation-engine",
+  "mutant": {
+    "id": "1048",
+    "line": 625,
+    "column": 55,
+    "endLine": 625,
+    "endColumn": 61,
+    "mutator": "EqualityOperator",
+    "original": "i >= 0",
+    "replacement": "i > 0",
+    "lineText": "if (!enabled) for (let i = this.holds.length - 1; i >= 0; i--) if (this.holds[i]!.auto.id === id) this.holds.splice(i, 1);",
+    "prevText": "this.autos.set(id, { ...a, enabled });",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/automation-engine/automation-engine.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-1048.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"automation-engine\". Mutant: line 625:55-625:61, mutator EqualityOperator: \"i >= 0\" becomes \"i > 0\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/automation-engine/index.ts (> marks the mutated line):\n   619    }\n   620  \n   621    setEnabled(id: string, enabled: boolean): void {\n   622      const a = this.autos.get(id);\n   623      if (!a) throw new AutomationError(`no automation ${id}`);\n   624      this.autos.set(id, { ...a, enabled });\n>  625      if (!enabled) for (let i = this.holds.length - 1; i >= 0; i--) if (this.holds[i]!.auto.id === id) this.holds.splice(i, 1);\n   626    }\n   627  \n   628    /** The kept traces of an automation, newest last. */\n   629    tracesOf(id: string): readonly Trace[] {\n   630      return this.traces.get(id) ?? [];\n   631    }\n\nTest file style (intent/blocks/automation-engine/automation-engine.test.ts):\n27 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { AutomationError, Engine, TemplateError, evaluate, render, renderData } from './index.ts';\nimport type { Automation } from './index.ts';\n\nconst flush = () => new Promise<void>((r) => setImmediate(r));\n\nfunction rig(start = Date.UTC(2026, 0, 5, 12, 0, 0), offsetMinutes = 0) {\n  const states = new Map<string, string>();\n  const calls: { service: string; data: Record<string, unknown> }[] = [];\n  const events: { type: string; data: unknown }[] = [];\n  const clock = { now: start };\n  let n = 0;\n  const engine = new Engine({\n    now: () => clock.now,\n    state: (e) => states.get(e),\n    call: async (service, data) => {\n      calls.push({ service, data: { ...data } });\n      return { ok: true, service };\n    },\n    fire: (type, data) => events.push({ type, data }),\n    newId: () => `run${++n}`,\n    zoneOffsetMinutes: () => offsetMinutes,\n  });\n  return { engine, states, calls, events, clock };\n}\n\nconst lamp: Automation = {\n  id: 'a1',\n  alias: 'Lamp',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/automation-engine-1048.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.860Z"
+}

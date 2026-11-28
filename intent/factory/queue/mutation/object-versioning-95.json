@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "object-versioning",
+  "mutant": {
+    "id": "95",
+    "line": 190,
+    "column": 24,
+    "endLine": 190,
+    "endColumn": 47,
+    "mutator": "EqualityOperator",
+    "original": "v.retention.until > now",
+    "replacement": "v.retention.until >= now",
+    "lineText": "if (v.retention && v.retention.until > now) return v.retention.mode === 'COMPLIANCE' ? 'compliance' : 'governance';",
+    "prevText": "if (v.legalHold) return 'hold';",
+    "nextText": "return undefined;"
+  },
+  "mayEdit": [
+    "intent/blocks/object-versioning/object-versioning.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/object-versioning-95.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"object-versioning\". Mutant: line 190:24-190:47, mutator EqualityOperator: \"v.retention.until > now\" becomes \"v.retention.until >= now\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/object-versioning/index.ts (> marks the mutated line):\n   184    private chain(key: string): Version[] {\n   185      return this.keys.get(key) ?? [];\n   186    }\n   187  \n   188    private locked(v: Version, now: number): 'compliance' | 'governance' | 'hold' | undefined {\n   189      if (v.legalHold) return 'hold';\n>  190      if (v.retention && v.retention.until > now) return v.retention.mode === 'COMPLIANCE' ? 'compliance' : 'governance';\n   191      return undefined;\n   192    }\n   193  \n   194    private checkRetention(r: Retention | undefined, now: number) {\n   195      if (!r) return;\n   196      if (!this.lock) throw new VersionError('InvalidState', 'object lock is not enabled on this bucket');\n\nTest file style (intent/blocks/object-versioning/object-versioning.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { memoryObjects, readAll } from '../objects/index.ts';\nimport { VersionError, VersionedBucket } from './index.ts';\nimport type { Options } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 0, 1);\n\nfunction mk(o: Options = {}, state: 'enabled' | 'suspended' | 'unversioned' = 'enabled') {\n  const objects = memoryObjects();\n  let t = T0;\n  const b = new VersionedBucket(objects, { now: () => t, ...o });\n  if (state !== 'unversioned' && !o.objectLock) b.setVersioning(state);\n  return { b, objects, tick: (ms: number) => void (t += ms), now: () => t };\n}\nconst body = async (b: VersionedBucket, key: string, versionId?: string) => (await readAll((await b.get(key, versionId ? { versionId } : {})).stream)).toString();\nconst fails = async (f: () => Promise<unknown> | unknown, code: string, msg?: RegExp) => {\n  try {\n    await f();\n  } catch (e) {\n    assert.ok(e instanceof VersionError, `a VersionError, got ${String(e)}`);\n    assert.equal(e.code, code);\n    if (msg) assert.match(e.message, msg);\n    return e;\n  }\n  assert.fail(`expected ${code}`);\n};\n\ntest('unversioned: a write replaces, a delete deletes, and the bytes go with them', async () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/object-versioning-95.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.510Z"
+}

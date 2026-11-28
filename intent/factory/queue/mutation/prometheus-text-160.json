@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "prometheus-text",
+  "mutant": {
+    "id": "160",
+    "line": 180,
+    "column": 11,
+    "endLine": 180,
+    "endColumn": 45,
+    "mutator": "LogicalOperator",
+    "original": "kind === 'histogram' && l === 'le'",
+    "replacement": "kind === 'histogram' || l === 'le'",
+    "lineText": "if (kind === 'histogram' && l === 'le') throw new MetricsError('\"le\" is reserved for histogram buckets');",
+    "prevText": "if (!LABEL_NAME.test(l) || l.startsWith('__')) throw new MetricsError(`\"${l}\" is not a usable label name`);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/prometheus-text/prometheus-text.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/prometheus-text-160.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"prometheus-text\". Mutant: line 180:11-180:45, mutator LogicalOperator: \"kind === 'histogram' && l === 'le'\" becomes \"kind === 'histogram' || l === 'le'\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/prometheus-text/index.ts (> marks the mutated line):\n   174    private add<T extends Metric>(kind: 'counter' | 'gauge' | 'histogram', name: string, help: string, labelNames: readonly string[], make: (family: string) => T, derived: (family: string) => string[]): T {\n   175      if (!METRIC_NAME.test(name)) throw new MetricsError(`\"${name}\" is not a valid metric name`);\n   176      const family = kind === 'counter' ? name.replace(/_total$/, '') : name;\n   177      if (!family) throw new MetricsError('a counter needs a name besides \"_total\"');\n   178      for (const l of labelNames) {\n   179        if (!LABEL_NAME.test(l) || l.startsWith('__')) throw new MetricsError(`\"${l}\" is not a usable label name`);\n>  180        if (kind === 'histogram' && l === 'le') throw new MetricsError('\"le\" is reserved for histogram buckets');\n   181      }\n   182      if (new Set(labelNames).size !== labelNames.length) throw new MetricsError('label names must be distinct');\n   183      const names = derived(family);\n   184      for (const n of names) if (this.taken.has(n)) throw new MetricsError(`\"${n}\" collides with a metric already registered`);\n   185      const m = make(family);\n   186      for (const n of names) this.taken.add(n);\n\nTest file style (intent/blocks/prometheus-text/prometheus-text.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { CardinalityError, MetricsError, ParseError, Registry, checkHistogram, findSample, formatValue, histogramBuckets, histogramQuantile, parseExposition } from './index.ts';\n\nconst SPEC = `# HELP http_requests_total The total number of HTTP requests.\n# TYPE http_requests_total counter\nhttp_requests_total{method=\"post\",code=\"200\"} 1027 1395066363000\nhttp_requests_total{method=\"post\",code=\"400\"}    3 1395066363000\n\n# Escaping in label values:\nmsdos_file_access_time_seconds{path=\"C:\\\\\\\\DIR\\\\\\\\FILE.TXT\",error=\"Cannot find file:\\\\n\\\\\"FILE.TXT\\\\\"\"} 1.458255915e9\n\n# Minimalistic line:\nmetric_without_timestamp_and_labels 12.47\n\n# A weird metric from before the epoch:\nsomething_weird{problem=\"division by zero\"} +Inf -3982045\n\n# A histogram, which has a pretty complex representation in the text format:\n# HELP http_request_duration_seconds A histogram of the request duration.\n# TYPE http_request_duration_seconds histogram\nhttp_request_duration_seconds_bucket{le=\"0.05\"} 24054\nhttp_request_duration_seconds_bucket{le=\"0.1\"} 33444\nhttp_request_duration_seconds_bucket{le=\"0.2\"} 100392\nhttp_request_duration_seconds_bucket{le=\"0.5\"} 129389\nhttp_request_duration_seconds_bucket{le=\"1\"} 133988\nhttp_request_duration_seconds_bucket{le=\"+Inf\"} 144320\nhttp_request_duration_seconds_sum 53423\nhttp_request_duration_seconds_count 144320\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/prometheus-text-160.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.618Z"
+}

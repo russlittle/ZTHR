@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "email-threading",
+  "mutant": {
+    "id": "630",
+    "line": 443,
+    "column": 28,
+    "endLine": 443,
+    "endColumn": 47,
+    "mutator": "ArrayDeclaration",
+    "original": "[rootBefore, other]",
+    "replacement": "[]",
+    "lineText": "for (const gone of [rootBefore, other]) if (gone !== id && gone !== own && !merged.includes(gone)) merged.push(gone);",
+    "prevText": "id = this.union(own, prior.id);",
+    "nextText": "via = 'subject';"
+  },
+  "mayEdit": [
+    "intent/blocks/email-threading/email-threading.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/email-threading-630.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"email-threading\". Mutant: line 443:28-443:47, mutator ArrayDeclaration: \"[rootBefore, other]\" becomes \"[]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/email-threading/index.ts (> marks the mutated line):\n   437      if (via === 'new' && key && isReply(m.subject)) {\n   438        const prior = this.bySubject.get(key);\n   439        if (prior && Math.abs(m.date - prior.date) <= (this.o.subjectWindowMs ?? 30 * 86_400_000) && this.parent.has(prior.id)) {\n   440          const rootBefore = this.find(id);\n   441          const other = this.find(prior.id);\n   442          id = this.union(own, prior.id);\n>  443          for (const gone of [rootBefore, other]) if (gone !== id && gone !== own && !merged.includes(gone)) merged.push(gone);\n   444          via = 'subject';\n   445        }\n   446      }\n   447      if (key && !isReply(m.subject)) this.bySubject.set(key, { id: own, date: m.date });\n   448      else if (key && !this.bySubject.has(key)) this.bySubject.set(key, { id: own, date: m.date });\n   449      const threadId = this.find(own);\n\nTest file style (intent/blocks/email-threading/email-threading.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ThreadIndex, ThreadingError, addressOf, autoReplyHeaders, baseSubject, buildThreads, decodeWords, detectAuto, flatten, generateMessageId, hopCount, isReply, mayAutoReply, messageFromHeaders, parseHeaders, parseIdList, replyReferences, replySubject, subjectKey } from './index.ts';\nimport type { Message, ThreadNode } from './index.ts';\n\nconst m = (id: string, subject: string, date: number, refs: string[] = [], over: Partial<Message> = {}): Message => ({ id, messageId: `<${id}@x.example>`, subject, date, references: refs.map((r) => `<${r}@x.example>`), ...over });\nconst ids = (n: ThreadNode): unknown => (n.children.length ? [n.message?.id ?? `~${n.messageId}`, n.children.map(ids)] : n.message?.id ?? `~${n.messageId}`);\n\ntest('headers: folded lines are joined, names are case-insensitive to look up, and parsing stops at the blank line', () => {\n  const raw = 'Subject: A long\\r\\n subject that\\r\\n\\tcontinues\\r\\nFrom: Ana <ana@example.com>\\r\\nbroken line\\r\\nReceived: a\\r\\nReceived: b\\r\\n\\r\\nBody: not a header\\r\\n';\n  const hs = parseHeaders(raw);\n  assert.deepEqual(hs, [{ name: 'Subject', value: 'A long subject that continues' }, { name: 'From', value: 'Ana <ana@example.com>' }, { name: 'Received', value: 'a' }, { name: 'Received', value: 'b' }]);\n  assert.equal(hopCount(hs), 2);\n  assert.deepEqual(parseHeaders('Bad Name: x\\nGood-Name: y'), [{ name: 'Good-Name', value: 'y' }]);\n  assert.throws(() => parseHeaders('x'.repeat(300_000)), ThreadingError);\n});\n\ntest('message ids: all of them in order, once each, ignoring comments and junk', () => {\n  assert.deepEqual(parseIdList('<a@x> <b@y.example> (a comment) <c@z>'), ['<a@x>', '<b@y.example>', '<c@z>']);\n  assert.deepEqual(parseIdList('<a@x>,\\r\\n <a@x> <b@y>'), ['<a@x>', '<b@y>']);\n  assert.deepEqual(parseIdList('<no-at-sign> <> <a b@x> plain@text.example'), []);\n  assert.deepEqual(parseIdList(undefined), []);\n  assert.equal(parseIdList('x'.repeat(70_000)).length, 0, 'an absurd header is ignored');\n  assert.equal(generateMessageId('Mail.Example.COM', Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 255])), '<01020304050607ff@mail.example.com>');\n  assert.throws(() => generateMessageId('bad domain', new Uint8Array(8)), /not a domain/);\n  assert.throws(() => generateMessageId('a.example', new Uint8Array(4)), /at least 8/);\n});\n\ntest('RFC 2047 encoded words: UTF-8 and Latin-1, B and Q, adjacent words joined, damage left alone', () => {\n  assert.equal(decodeWords('=?UTF-8?B?w4RwZmVs?= und Birnen'), 'Äpfel und Birnen');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/email-threading-630.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.444Z"
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "webhook-catalog",
+  "mutant": {
+    "id": "243",
+    "line": 96,
+    "column": 7,
+    "endLine": 96,
+    "endColumn": 27,
+    "mutator": "ConditionalExpression",
+    "original": "Array.isArray(value)",
+    "replacement": "true",
+    "lineText": "if (Array.isArray(value)) {",
+    "prevText": "}",
+    "nextText": "if (schema.minItems !== undefined && value.length < schema.minItems) out.push({ path, message: `must have at least ${schema.minItems} items` });"
+  },
+  "mayEdit": [
+    "intent/blocks/webhook-catalog/webhook-catalog.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webhook-catalog-243.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webhook-catalog\". Mutant: line 96:7-96:27, mutator ConditionalExpression: \"Array.isArray(value)\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webhook-catalog/index.ts (> marks the mutated line):\n    90    }\n    91    if (typeof value === 'number') {\n    92      if (!Number.isFinite(value)) out.push({ path, message: 'must be a finite number' });\n    93      if (schema.minimum !== undefined && value < schema.minimum) out.push({ path, message: `must be at least ${schema.minimum}` });\n    94      if (schema.maximum !== undefined && value > schema.maximum) out.push({ path, message: `must be at most ${schema.maximum}` });\n    95    }\n>   96    if (Array.isArray(value)) {\n    97      if (schema.minItems !== undefined && value.length < schema.minItems) out.push({ path, message: `must have at least ${schema.minItems} items` });\n    98      if (schema.maxItems !== undefined && value.length > schema.maxItems) out.push({ path, message: `must have at most ${schema.maxItems} items` });\n    99      if (schema.items) value.forEach((v, i) => out.push(...check(schema.items!, v, `${path}[${i}]`, depth + 1)));\n   100    }\n   101    if (kind === 'object') {\n   102      const o = value as Record<string, unknown>;\n\nTest file style (intent/blocks/webhook-catalog/webhook-catalog.test.ts):\n17 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Catalog, CatalogError, DeliveryLog, InvalidPayload, check, redact, type EventDef } from './index.ts';\n\nconst NOW = new Date('2026-03-01T12:00:00Z');\nconst paid = (over: Partial<EventDef> = {}): EventDef => ({\n  type: 'invoice.paid',\n  version: 1,\n  summary: 'An invoice was paid in full',\n  schema: {\n    type: 'object',\n    required: ['invoice', 'amount', 'currency'],\n    additionalProperties: false,\n    properties: {\n      invoice: { type: 'string', format: 'uuid' },\n      amount: { type: 'integer', minimum: 1 },\n      currency: { type: 'string', enum: ['USD', 'EUR'] },\n      payer: { type: 'object', properties: { email: { type: 'string', format: 'email', 'x-sensitive': true }, name: { type: 'string' } }, required: ['name'] },\n      paidAt: { type: 'string', format: 'date-time' },\n    },\n  },\n  sample: { invoice: '3f2b8c1e-0a52-4f6e-9d1a-6c5a2b7e9f10', amount: 4200, currency: 'USD', payer: { email: 'ana@example.org', name: 'Ana' } },\n  ...over,\n});\nconst cat = () => {\n  const c = new Catalog();\n  c.define(paid());\n  c.define({ type: 'invoice.voided', version: 1, summary: 'An invoice was voided', schema: { type: 'object', required: ['invoice'], properties: { invoice: { type: 'string' } } }, sample: { invoice: 'inv-1' } });\n  c.define({ type: 'user.created', version: 1, summary: 'A user signed up', schema: { type: 'object', properties: { id: { type: 'string' } } }, sample: { id: 'u1' } });\n  return c;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webhook-catalog-243.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:06:14.152Z"
+}

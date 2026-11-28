@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "esign-envelope",
+  "mutant": {
+    "id": "518",
+    "line": 354,
+    "column": 110,
+    "endLine": 354,
+    "endColumn": 131,
+    "mutator": "ConditionalExpression",
+    "original": "s.role === 'approver'",
+    "replacement": "false",
+    "lineText": "out.push({ kind: 'request', to: s.email, subject: `${this.sender.name} sent you \"${this.subject}\" to ${s.role === 'approver' ? 'approve' : 'sign'}`, link: this.link(s) });",
+    "prevText": "this.log('system', 'request sent', `${s.id} ${s.email}`);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/esign-envelope/esign-envelope.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/esign-envelope-518.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"esign-envelope\". Mutant: line 354:110-354:131, mutator ConditionalExpression: \"s.role === 'approver'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/esign-envelope/index.ts (> marks the mutated line):\n   348      const out: Message[] = [];\n   349      if (o === null) return out;\n   350      for (const s of this.signers.filter((x) => x.order === o && x.role !== 'viewer' && x.status === 'pending')) {\n   351        s.status = 'notified';\n   352        s.lastNotified = this.deps.now();\n   353        this.log('system', 'request sent', `${s.id} ${s.email}`);\n>  354        out.push({ kind: 'request', to: s.email, subject: `${this.sender.name} sent you \"${this.subject}\" to ${s.role === 'approver' ? 'approve' : 'sign'}`, link: this.link(s) });\n   355      }\n   356      return out;\n   357    }\n   358  \n   359    private readyProblems(): string[] {\n   360      const p: string[] = [];\n\nTest file style (intent/blocks/esign-envelope/esign-envelope.test.ts):\n20 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { test } from 'node:test';\nimport { sign as signLink } from '../crypto/index.ts';\nimport { pdf } from '../pdf/index.ts';\nimport { readForm } from '../pdf-forms/index.ts';\nimport { Envelope, EnvelopeError } from './index.ts';\nimport type { Certificate, FieldSpec, Message } from './index.ts';\n\nconst T0 = Date.UTC(2026, 2, 2, 9, 0, 0);\nconst HOUR = 3_600_000;\nconst SECRET = createHash('sha256').update('esign-envelope test key 1').digest('hex');\n\nfunction clock() {\n  const c = { t: T0 };\n  return { c, now: () => c.t };\n}\n\nfunction make(opts: { days?: number } = {}) {\n  const { c, now } = clock();\n  let n = 0;\n  const env = new Envelope({ now, secret: SECRET, baseUrl: 'https://sign.example.com', ids: () => `env${++n}` }, { subject: 'Services agreement', sender: { name: 'Sam Ortiz', email: 'Sam@Example.com' }, ...(opts.days ? { expiresInDays: opts.days } : {}) });\n  return { env, c };\n}\n\nconst DOC = pdf([{ h: 'Services agreement' }, { p: 'The supplier will deliver the services described.' }, { p: 'Signed by both parties.' }], { title: 'Agreement', size: 'Letter' });\nconst sha = (b: Uint8Array) => createHash('sha256').update(b).digest('hex');\nconst place = { x: 72, y: 600, width: 200, height: 30 };\nconst sigField = (id: string, signer: string, over: Partial<FieldSpec> = {}): FieldSpec => ({ id, signer, document: 'd1', page: 0, at: place, kind: 'signature', ...over });\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/esign-envelope-518.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:40.051Z"
+}

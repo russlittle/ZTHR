@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "entity-registry",
+  "mutant": {
+    "id": "768",
+    "line": 550,
+    "column": 50,
+    "endLine": 550,
+    "endColumn": 123,
+    "mutator": "StringLiteral",
+    "original": "`unknown snapshot version ${String((s as { version: unknown }).version)}`",
+    "replacement": "``",
+    "lineText": "if (s.version !== 1) throw new RegistryError(`unknown snapshot version ${String((s as { version: unknown }).version)}`);",
+    "prevText": "static restore(s: Snapshot, o: RegistryOptions): Registry {",
+    "nextText": "const r = new Registry(o);"
+  },
+  "mayEdit": [
+    "intent/blocks/entity-registry/entity-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/entity-registry-768.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"entity-registry\". Mutant: line 550:50-550:123, mutator StringLiteral: \"`unknown snapshot version ${String((s as { version: unknown }).version)}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/entity-registry/index.ts (> marks the mutated line):\n   544        areas: [...this.areas.values()],\n   545      };\n   546    }\n   547  \n   548    /** Loads a snapshot, refusing one that points at things that are not in it or repeats an id. */\n   549    static restore(s: Snapshot, o: RegistryOptions): Registry {\n>  550      if (s.version !== 1) throw new RegistryError(`unknown snapshot version ${String((s as { version: unknown }).version)}`);\n   551      const r = new Registry(o);\n   552      for (const e of s.configEntries) r.entries.set(e.id, e);\n   553      for (const a of s.areas) r.areas.set(a.id, a);\n   554      for (const d of s.devices) r.devs.set(d.id, d);\n   555      const seen = new Set<string>();\n   556      for (const x of s.entities) {\n\nTest file style (intent/blocks/entity-registry/entity-registry.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Conflict, InvalidId, NotFound, Registry, RegistryError, slugify, splitEntityId } from './index.ts';\n\nconst make = () => {\n  let n = 0;\n  let t = 1000;\n  return new Registry({ newId: () => `id${++n}`, now: () => ++t });\n};\n\ntest('slugify folds accents and symbols and never returns an empty id', () => {\n  assert.equal(slugify('Kitchen Lamp #2'), 'kitchen_lamp_2');\n  assert.equal(slugify('Café Lumière'), 'cafe_lumiere');\n  assert.equal(slugify('  ---  '), 'unnamed');\n});\n\ntest('entity ids must be domain.object_id', () => {\n  assert.deepEqual(splitEntityId('light.kitchen_lamp'), { domain: 'light', objectId: 'kitchen_lamp' });\n  for (const bad of ['light', 'Light.x', 'light.', '.x', 'light.a.b', 'light.Bad', '']) assert.throws(() => splitEntityId(bad), InvalidId);\n});\n\ntest('the same platform and unique id is the same entity, and a name clash gets a number', () => {\n  const r = make();\n  const a = r.getOrCreateEntity({ domain: 'light', platform: 'hue', uniqueId: 'u1', originalName: 'Lamp' });\n  const again = r.getOrCreateEntity({ domain: 'light', platform: 'hue', uniqueId: 'u1', originalName: 'Different' });\n  assert.equal(again.id, a.id);\n  assert.equal(a.entityId, 'light.lamp');\n  const b = r.getOrCreateEntity({ domain: 'light', platform: 'hue', uniqueId: 'u2', originalName: 'Lamp' });\n  const c = r.getOrCreateEntity({ domain: 'light', platform: 'hue', uniqueId: 'u3', originalName: 'Lamp' });\n  assert.equal(b.entityId, 'light.lamp_2');\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/entity-registry-768.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:39.958Z"
+}

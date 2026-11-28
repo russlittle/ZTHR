@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "promql-lite",
+  "mutant": {
+    "id": "1047",
+    "line": 549,
+    "column": 9,
+    "endLine": 549,
+    "endColumn": 28,
+    "mutator": "ConditionalExpression",
+    "original": "v.type !== 'vector'",
+    "replacement": "false",
+    "lineText": "if (v.type !== 'vector') throw new PromQLError(`${what} must be an instant vector`);",
+    "prevText": "const v = this.eval(n, t);",
+    "nextText": "return v.samples;"
+  },
+  "mayEdit": [
+    "intent/blocks/promql-lite/promql-lite.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/promql-lite-1047.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"promql-lite\". Mutant: line 549:9-549:28, mutator ConditionalExpression: \"v.type !== 'vector'\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/promql-lite/index.ts (> marks the mutated line):\n   543      const v = this.eval(n, t);\n   544      if (v.type !== 'scalar') throw new PromQLError(`${what} must be a scalar`);\n   545      return v.value;\n   546    }\n   547    private vectorArg(n: Node, t: number, what: string): VectorSample[] {\n   548      const v = this.eval(n, t);\n>  549      if (v.type !== 'vector') throw new PromQLError(`${what} must be an instant vector`);\n   550      return v.samples;\n   551    }\n   552  \n   553    private call(n: Extract<Node, { t: 'call' }>, t: number): V {\n   554      const fn = n.fn;\n   555      if (RANGE_FUNCS.has(fn)) {\n\nTest file style (intent/blocks/promql-lite/promql-lite.test.ts):\n28 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { alignRange, instantQuery, parse, parseDuration, PromQLError, rangeQuery, SeriesStore } from './index.ts';\nimport type { Result } from './index.ts';\n\nconst S = 1000;\nconst approx = (a: number, b: number, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${a} is not ${b}`);\n\n/** A counter growing 1 per second: samples every 10 s from 0 to 120 s. */\nfunction counters(): SeriesStore {\n  const st = new SeriesStore();\n  for (let i = 0; i <= 12; i++) {\n    st.ingest('http_requests_total', { job: 'api', code: '200' }, i * 10 * S, i * 10);\n    st.ingest('http_requests_total', { job: 'api', code: '500' }, i * 10 * S, i);\n    st.ingest('http_requests_total', { job: 'web', code: '200' }, i * 10 * S, i * 20);\n  }\n  return st;\n}\nconst vec = (r: Result) => {\n  assert.equal(r.type, 'vector');\n  return (r as Extract<Result, { type: 'vector' }>).samples.map((s) => ({ labels: { ...s.labels }, value: s.value }));\n};\nconst scalar = (r: Result) => {\n  assert.equal(r.type, 'scalar');\n  return (r as Extract<Result, { type: 'scalar' }>).value;\n};\n\n// ------------------------------------------------------------ parsing\n\ntest('durations: units, compound forms, and refusal of nonsense', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/promql-lite-1047.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:56.970Z"
+}

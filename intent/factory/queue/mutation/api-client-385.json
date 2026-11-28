@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "api-client",
+  "mutant": {
+    "id": "385",
+    "line": 276,
+    "column": 34,
+    "endLine": 276,
+    "endColumn": 103,
+    "mutator": "StringLiteral",
+    "original": "`${this.safeUrl(u)} announced ${declared} bytes; the limit is ${max}`",
+    "replacement": "``",
+    "lineText": "throw new ResponseTooLarge(`${this.safeUrl(u)} announced ${declared} bytes; the limit is ${max}`);",
+    "prevText": "await res.body?.cancel();",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/api-client/api-client.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/api-client-385.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"api-client\". Mutant: line 276:34-276:103, mutator StringLiteral: \"`${this.safeUrl(u)} announced ${declared} bytes; the limit is ${max}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/api-client/index.ts (> marks the mutated line):\n   270  \n   271    private async readBody(res: Response, u: URL): Promise<string> {\n   272      const max = this.o.maxResponseBytes ?? 10 * 1024 * 1024;\n   273      const declared = Number(res.headers.get('content-length'));\n   274      if (Number.isFinite(declared) && declared > max) {\n   275        await res.body?.cancel();\n>  276        throw new ResponseTooLarge(`${this.safeUrl(u)} announced ${declared} bytes; the limit is ${max}`);\n   277      }\n   278      if (!res.body) return '';\n   279      const chunks: Uint8Array[] = [];\n   280      let size = 0;\n   281      const reader = res.body.getReader();\n   282      for (;;) {\n\nTest file style (intent/blocks/api-client/api-client.test.ts):\n19 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { ApiClient, ApiError, BreakerOpen, EgressDenied, MockApi, PaginationLoop, RateLimited, ResponseTooLarge, parseLinkHeader, parseRateLimit, pick, type Auth, type ClientOptions, type Transport } from './index.ts';\nimport { TimedOut } from '../resilience/index.ts';\n\nconst BASE = 'https://api.example.com/v1/';\nconst ITEMS = Array.from({ length: 25 }, (_, i) => ({ id: i + 1 }));\n\nfunction env(o: Partial<ClientOptions> & { transport: Transport }) {\n  const clock = { t: Date.UTC(2026, 2, 1) };\n  const sleeps: number[] = [];\n  const client = new ApiClient({ baseUrl: BASE, now: () => clock.t, sleep: async (ms) => void (sleeps.push(ms), (clock.t += ms)), random: () => 0.5, ...o });\n  return { client, clock, sleeps };\n}\nconst ids = async (g: AsyncGenerator<unknown>) => {\n  const out: number[] = [];\n  for await (const x of g) out.push((x as { id: number }).id);\n  return out;\n};\nconst reply = (status: number, body: unknown = {}, headers: Record<string, string> = {}) => new Response(typeof body === 'string' ? body : JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } });\n\ntest('rate limit headers in every common dialect', () => {\n  const now = Date.UTC(2026, 2, 1);\n  const h = (o: Record<string, string>) => new Headers(o);\n  assert.deepEqual(parseRateLimit(h({ 'retry-after': '120' }), now), { retryAfterMs: 120_000 });\n  assert.deepEqual(parseRateLimit(h({ 'retry-after': new Date(now + 30_000).toUTCString() }), now), { retryAfterMs: 30_000 });\n  assert.deepEqual(parseRateLimit(h({ 'retry-after': new Date(now - 30_000).toUTCString() }), now), { retryAfterMs: 0 });\n  assert.deepEqual(parseRateLimit(h({ 'x-ratelimit-limit': '5000', 'x-ratelimit-remaining': '4999', 'x-ratelimit-reset': String(now / 1000 + 60) }), now), { limit: 5000, remaining: 4999, resetAt: now + 60_000 });\n  assert.deepEqual(parseRateLimit(h({ 'ratelimit-limit': '100', 'ratelimit-remaining': '0', 'ratelimit-reset': '30' }), now), { limit: 100, remaining: 0, resetAt: now + 30_000 });\n  assert.deepEqual(parseRateLimit(h({ ratelimit: 'limit=10, remaining=3, reset=7' }), now), { limit: 10, remaining: 3, resetAt: now + 7000 });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/api-client-385.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:34.122Z"
+}

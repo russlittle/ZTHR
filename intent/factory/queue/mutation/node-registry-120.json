@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "node-registry",
+  "mutant": {
+    "id": "120",
+    "line": 70,
+    "column": 91,
+    "endLine": 70,
+    "endColumn": 121,
+    "mutator": "StringLiteral",
+    "original": "`must match ${schema.pattern}`",
+    "replacement": "``",
+    "lineText": "if (schema.pattern !== undefined && !new RegExp(schema.pattern, 'u').test(value)) bad(`must match ${schema.pattern}`);",
+    "prevText": "if (schema.maxLength !== undefined && value.length > schema.maxLength) bad(`must be at most ${schema.maxLength} characters`);",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/node-registry/node-registry.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/node-registry-120.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"node-registry\". Mutant: line 70:91-70:121, mutator StringLiteral: \"`must match ${schema.pattern}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/node-registry/index.ts (> marks the mutated line):\n    64      if (schema.minimum !== undefined && value < schema.minimum) bad(`must be at least ${schema.minimum}`);\n    65      if (schema.maximum !== undefined && value > schema.maximum) bad(`must be at most ${schema.maximum}`);\n    66    }\n    67    if (typeof value === 'string') {\n    68      if (schema.minLength !== undefined && value.length < schema.minLength) bad(`must be at least ${schema.minLength} characters`);\n    69      if (schema.maxLength !== undefined && value.length > schema.maxLength) bad(`must be at most ${schema.maxLength} characters`);\n>   70      if (schema.pattern !== undefined && !new RegExp(schema.pattern, 'u').test(value)) bad(`must match ${schema.pattern}`);\n    71    }\n    72    if (Array.isArray(value)) {\n    73      if (schema.minItems !== undefined && value.length < schema.minItems) bad(`must have at least ${schema.minItems} items`);\n    74      if (schema.maxItems !== undefined && value.length > schema.maxItems) bad(`must have at most ${schema.maxItems} items`);\n    75      if (schema.items) value.forEach((v, i) => out.push(...checkSchema(schema.items!, v, `${path}/${i}`)));\n    76    }\n\nTest file style (intent/blocks/node-registry/node-registry.test.ts):\n14 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { InvalidDefinition, InvalidParameters, Registry, UnknownNode, checkSchema, withDefaults } from './index.ts';\nimport type { CredentialType, JsonSchema, NodeType } from './index.ts';\n\nconst apiKey: CredentialType = {\n  name: 'slackApi',\n  displayName: 'Slack API',\n  schema: { type: 'object', required: ['token'], additionalProperties: false, properties: { token: { type: 'string', minLength: 8, description: 'Bot token' }, workspace: { type: 'string' } } },\n  secretFields: ['token'],\n  authenticate: { kind: 'bearer', field: 'token' },\n};\n\nconst slack: NodeType = {\n  name: 'slack',\n  displayName: 'Slack',\n  group: 'action',\n  versions: [\n    {\n      version: 1,\n      credentials: ['slackApi'],\n      operations: [{ name: 'post', description: 'Post a message', parameters: { type: 'object', required: ['channel', 'text'], properties: { channel: { type: 'string' }, text: { type: 'string' } } } }],\n    },\n    {\n      version: 2,\n      credentials: ['slackApi'],\n      migrateFromPrevious: [{ rename: { channel: 'channelId' } }, { set: { unfurl: false } }],\n      operations: [\n        {\n          name: 'post',\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/node-registry-120.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:50.625Z"
+}

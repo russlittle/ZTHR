@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "document-templates",
+  "mutant": {
+    "id": "161",
+    "line": 143,
+    "column": 17,
+    "endLine": 143,
+    "endColumn": 85,
+    "mutator": "ArrowFunction",
+    "original": "(s) => s === '__proto__' || s === 'constructor' || s === 'prototype'",
+    "replacement": "() => undefined",
+    "lineText": "if (segs.some((s) => s === '__proto__' || s === 'constructor' || s === 'prototype')) return undefined;",
+    "prevText": "const segs = path.split('.');",
+    "nextText": "let v: unknown;"
+  },
+  "mayEdit": [
+    "intent/blocks/document-templates/document-templates.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/document-templates-161.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"document-templates\". Mutant: line 143:17-143:85, mutator ArrowFunction: \"(s) => s === '__proto__' || s === 'constructor' || s === 'prototype'\" becomes \"() => undefined\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/document-templates/index.ts (> marks the mutated line):\n   137  \n   138  const own = (o: unknown, k: string): unknown => (typeof o === 'object' && o !== null && Object.hasOwn(o, k) ? (o as Record<string, unknown>)[k] : undefined);\n   139  \n   140  /** Reads a dotted path from the innermost scope that has its first segment; never reaches inherited properties. */\n   141  export function lookup(scope: Scope, path: string): unknown {\n   142    const segs = path.split('.');\n>  143    if (segs.some((s) => s === '__proto__' || s === 'constructor' || s === 'prototype')) return undefined;\n   144    let v: unknown;\n   145    for (let i = scope.length - 1; i >= 0; i--)\n   146      if (Object.hasOwn(scope[i]!, segs[0]!)) {\n   147        v = scope[i]![segs[0]!];\n   148        break;\n   149      }\n\nTest file style (intent/blocks/document-templates/document-templates.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { TemplateLibrary, TemplateProblems, checkData, checkTemplate, fillRole, hashTemplate, lookup, merge, parseMerge, renderBlocks } from './index.ts';\nimport type { Problem, Template } from './index.ts';\n\nconst invoice: Template = {\n  id: 'invoice',\n  name: 'Invoice {{number}}',\n  roles: [{ id: 'issuer', label: 'Issuer' }, { id: 'client', label: 'Client' }],\n  fields: [\n    { name: 'number', type: 'text', label: 'Invoice number', role: 'issuer', required: true },\n    { name: 'date', type: 'date', label: 'Date', role: 'issuer', required: true },\n    { name: 'client', type: 'text', label: 'Client name', role: 'issuer', required: true },\n    { name: 'note', type: 'text', label: 'Note', role: 'issuer' },\n    { name: 'terms', type: 'choice', label: 'Terms', role: 'issuer', choices: ['net15', 'net30'] },\n    { name: 'total', type: 'money', label: 'Total', role: 'issuer', required: true },\n    { name: 'items', type: 'list', label: 'Line items', role: 'issuer', required: true, item: [{ name: 'description', type: 'text', label: 'Description', required: true }, { name: 'qty', type: 'number', label: 'Quantity', required: true }, { name: 'price', type: 'money', label: 'Price', required: true }] },\n    { name: 'signedBy', type: 'text', label: 'Signed by', role: 'client', required: true },\n  ],\n  body: [\n    { h: 'Invoice {{number}}' },\n    { p: 'Billed to {{client | upper}} on {{date | date:\"long\"}}.' },\n    { if: { exists: 'note' }, then: [{ p: 'Note: {{note}}' }] },\n    { table: { header: ['#', 'Description', 'Qty', 'Price'], widths: [1, 6, 1, 2], repeat: { over: 'items', as: 'item', cells: ['{{loop.index}}', '{{item.description}}', '{{item.qty | number:0}}', '{{item.price | money}}'] } } },\n    { p: 'Total due: {{total | money}}' },\n    { if: { eq: ['terms', 'net30'] }, then: [{ p: 'Payable within 30 days.' }], else: [{ p: 'Payable within 15 days.' }] },\n    { p: 'Signed: {{signedBy | default:\"(unsigned)\"}}' },\n  ],\n};\nconst money = (minor: number, currency = 'USD') => ({ minor, currency });\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/document-templates-161.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:38.767Z"
+}

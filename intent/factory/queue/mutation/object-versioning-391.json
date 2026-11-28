@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "object-versioning",
+  "mutant": {
+    "id": "391",
+    "line": 336,
+    "column": 11,
+    "endLine": 336,
+    "endColumn": 31,
+    "mutator": "ConditionalExpression",
+    "original": "e instanceof Missing",
+    "replacement": "true",
+    "lineText": "if (e instanceof Missing) throw new VersionError('InvalidState', 'the stored bytes are missing');",
+    "prevText": "} catch (e) {",
+    "nextText": "throw e;"
+  },
+  "mayEdit": [
+    "intent/blocks/object-versioning/object-versioning.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/object-versioning-391.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"object-versioning\". Mutant: line 336:11-336:31, mutator ConditionalExpression: \"e instanceof Missing\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/object-versioning/index.ts (> marks the mutated line):\n   330      const r = parseRange(o.rangeHeader, v.size);\n   331      if (r === 'unsatisfiable') throw new VersionError('InvalidRange', 'the requested range is not satisfiable');\n   332      try {\n   333        const stream = v.size === 0 ? (async function* () {})() : await this.store.get(v.blob!, r ?? undefined);\n   334        return { version: v, range: r ?? undefined, stream };\n   335      } catch (e) {\n>  336        if (e instanceof Missing) throw new VersionError('InvalidState', 'the stored bytes are missing');\n   337        throw e;\n   338      }\n   339    }\n   340  \n   341    /** Every version and delete marker, keys in UTF-8 byte order, newest version first. */\n   342    listVersions(o: { prefix?: string; delimiter?: string; keyMarker?: string; versionIdMarker?: string; maxKeys?: number } = {}): Listing {\n\nTest file style (intent/blocks/object-versioning/object-versioning.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { memoryObjects, readAll } from '../objects/index.ts';\nimport { VersionError, VersionedBucket } from './index.ts';\nimport type { Options } from './index.ts';\n\nconst DAY = 86_400_000;\nconst T0 = Date.UTC(2026, 0, 1);\n\nfunction mk(o: Options = {}, state: 'enabled' | 'suspended' | 'unversioned' = 'enabled') {\n  const objects = memoryObjects();\n  let t = T0;\n  const b = new VersionedBucket(objects, { now: () => t, ...o });\n  if (state !== 'unversioned' && !o.objectLock) b.setVersioning(state);\n  return { b, objects, tick: (ms: number) => void (t += ms), now: () => t };\n}\nconst body = async (b: VersionedBucket, key: string, versionId?: string) => (await readAll((await b.get(key, versionId ? { versionId } : {})).stream)).toString();\nconst fails = async (f: () => Promise<unknown> | unknown, code: string, msg?: RegExp) => {\n  try {\n    await f();\n  } catch (e) {\n    assert.ok(e instanceof VersionError, `a VersionError, got ${String(e)}`);\n    assert.equal(e.code, code);\n    if (msg) assert.match(e.message, msg);\n    return e;\n  }\n  assert.fail(`expected ${code}`);\n};\n\ntest('unversioned: a write replaces, a delete deletes, and the bytes go with them', async () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/object-versioning-391.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "1fe95d2f62d3b203633c74fba297a107d5cbdb3c"
+  },
+  "createdAt": "2026-11-28T18:05:51.524Z"
+}
