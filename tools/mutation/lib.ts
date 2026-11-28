@@ -445,7 +445,7 @@ export function runStryker(block: string, o: { mutate?: string; incrementalFile?
   writeJson(conf, strykerConfig(block, { out, tmp: join(dir, 'sandbox'), mutate: o.mutate, incrementalFile: o.incrementalFile }));
   if (o.incrementalFile) mkdirSync(dirname(o.incrementalFile), { recursive: true });
   const r = spawnSync(STRYKER, ['run', conf], { cwd: INTENT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
-  if (!existsSync(out)) throw new Error(`stryker produced no report for ${block} (exit ${r.status}): ${(r.stdout + r.stderr).slice(-1500)}`);
+  if (!existsSync(out)) throw new Error(`stryker produced no report for ${block} (exit ${r.status}): ${((t) => (t.length > 3000 ? `${t.slice(0, 1500)}\n…\n${t.slice(-1500)}` : t))(r.stdout + r.stderr)}`);
   const report = JSON.parse(readFileSync(out, 'utf8'));
   // Stryker's copy of the source is the one the mutants were cut from; prefer the disk copy only if absent.
   return parseStryker(report, block, new Date().toISOString(), undefined);
