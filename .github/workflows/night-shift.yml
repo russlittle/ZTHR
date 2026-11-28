@@ -86,7 +86,7 @@ jobs:
     needs: calibrate
     if: always() && needs.calibrate.result != 'skipped'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: write # to commit the certificates and work orders
     steps:
@@ -97,19 +97,13 @@ jobs:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: certificate-*
-          path: intent/eval/mutation
+          path: ${{ runner.temp }}/certificates
           merge-multiple: true
-      - name: Work orders for every survivor
-        shell: bash
-        run: |
-          set -euo pipefail
-          blocks=$(ls intent/eval/mutation/*.json | xargs -n1 basename | sed 's/\.json$//' | grep -v '^loop' || true)
-          [ -n "$blocks" ] && node tools/mutation/tasks.ts $blocks
-      - name: Regenerate the docs that read the certificates
+      - name: Install what the docs generator needs
         working-directory: intent
-        run: |
-          npm ci --no-audit --no-fund
-          node tools/docs.ts --write && node tools/docs.ts --write && node tools/docs.ts --check
+        run: npm ci --no-audit --no-fund
+      - name: Lay the certificates on this commit
+        run: cp -r "$RUNNER_TEMP/certificates/." intent/eval/mutation/
       - name: No block's score fell
         id: ratchet
         continue-on-error: true
@@ -120,11 +114,11 @@ jobs:
           {
             echo '| Block | Score | Survivors |'
             echo '|---|---|---|'
-            for f in intent/eval/mutation/*.json; do
+            for f in "$RUNNER_TEMP"/certificates/*.json; do
               jq -r 'select(.block) | "| \(.block) | \(.score) | \(.survived) |"' "$f"
             done
           } >> "$GITHUB_STEP_SUMMARY"
-      - name: Commit certificates and work orders
+      - name: Commit certificates, work orders and the docs that read them
         shell: bash
         run: |
           set -euo pipefail
@@ -132,10 +126,22 @@ jobs:
           if [ "$h" -ge 0630 ] && [ "$h" -lt 0830 ]; then echo "Inside the 06:30-08:30 UTC no-push window; results are in the artefacts."; exit 0; fi
           git config user.name 'zthr-night-shift'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add intent/eval/mutation intent/factory/queue/mutation intent/docs intent/blocks/README.md intent/papers docs
-          git diff --cached --quiet && { echo 'Nothing changed.'; exit 0; }
-          git commit -q -m "Night shift: gauge certificates and work orders (${{ github.event_name }})"
-          for i in 1 2 3; do git pull --rebase -q origin intent-surface && git push -q origin HEAD:intent-surface && exit 0; sleep 5; done
+          # Generated files are never rebased: each attempt starts from the branch as it is now, lays the
+          # certificates on it, and regenerates the work orders and docs from scratch.
+          for attempt in 1 2 3 4; do
+            git fetch -q origin intent-surface
+            git checkout -q -B shift FETCH_HEAD
+            cp -r "$RUNNER_TEMP/certificates/." intent/eval/mutation/
+            blocks=$(ls "$RUNNER_TEMP"/certificates/*.json | xargs -n1 basename | sed 's/\.json$//')
+            node tools/mutation/tasks.ts $blocks
+            (cd intent && node tools/docs.ts --write >/dev/null && node tools/docs.ts --write >/dev/null && node tools/docs.ts --check)
+            git add intent/eval/mutation intent/factory/queue/mutation intent/docs intent/blocks/README.md intent/papers docs
+            if git diff --cached --quiet; then echo 'Nothing changed.'; exit 0; fi
+            git commit -q -m "Night shift: gauge certificates and work orders (${{ github.event_name }})"
+            if git push -q origin HEAD:intent-surface; then exit 0; fi
+            echo "The branch moved during attempt $attempt; starting again from its new head."
+            sleep $((attempt * 10))
+          done
           exit 1
       - name: Fail the shift if a score fell
         if: steps.ratchet.outcome == 'failure'
