@@ -113,7 +113,7 @@ flowchart LR
   r -.->|next round, until no survivors but recorded equivalents| m
 ```
 
-Scores per block, from metrology's certificates (85 blocks scored, 2 with no survivors but recorded equivalents):
+Scores per block, from metrology's certificates (85 blocks scored, 3 with no survivors but recorded equivalents):
 
 | Block | Score | Floor | Survived | Recorded equivalent |
 | --- | --- | --- | --- | --- |
@@ -145,13 +145,13 @@ Scores per block, from metrology's certificates (85 blocks scored, 2 with no sur
 | `events` | 72.9% | none | 39 | 0 |
 | `expiry` | 72.3% | none | 18 | 0 |
 | `factoryreports` | 99.3% | none | 6 | 0 |
-| `feedback` | 63.3% | none | 91 | 0 |
+| `feedback` | 100.0% | none | 0 | 0 |
 | `flags` | 77.7% | none | 21 | 0 |
 | `geo` | 78.8% | none | 44 | 0 |
 | `grants` | 60.5% | none | 123 | 0 |
 | `health` | 75.8% | none | 37 | 0 |
 | `history` | 81.6% | none | 18 | 0 |
-| `i18n` | 58.6% | none | 94 | 0 |
+| `i18n` | 98.2% | none | 4 | 0 |
 | `idempotency` | 86.4% | none | 8 | 0 |
 | `imagemeta` | 63.8% | none | 135 | 0 |
 | `importer` | 78.1% | none | 223 | 0 |
