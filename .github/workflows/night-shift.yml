@@ -70,17 +70,17 @@ jobs:
           node-version: 22
       - name: Install the mutation tester (pinned)
         run: npm install --no-save --no-package-lock --prefix . @stryker-mutator/core@9.6.1 typescript@5.9.3 typescript@5.9.3
+      # Every calibration is a full run. Incremental runs reuse a mutant's last verdict when its code is unchanged,
+      # but with the command runner Stryker cannot see which tests changed, so a new test that kills an old survivor
+      # would never be credited.
       - name: Calibrate ${{ matrix.block }}
         env:
           MUTATION_CONCURRENCY: '4'
-        run: node tools/mutation/run.ts ${{ matrix.block }} --incremental
+        run: node tools/mutation/run.ts ${{ matrix.block }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: certificate-${{ matrix.block }}
-          path: |
-            intent/eval/mutation/${{ matrix.block }}.json
-            intent/eval/mutation/.incremental/${{ matrix.block }}.json
-          include-hidden-files: true
+          path: intent/eval/mutation/${{ matrix.block }}.json
 
   record:
     needs: calibrate
