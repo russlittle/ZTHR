@@ -331,7 +331,7 @@ test('OpenSSL accepts the CSR we build, and reads the same subject and SAN', () 
     assert.equal(v.status, 0, v.stderr);
     assert.match(v.stderr + v.stdout, /verify OK/);
     const t = spawnSync('openssl', ['req', '-in', f, '-noout', '-text'], { encoding: 'utf8' }).stdout;
-    assert.match(t, /Subject: C = US, O = Example, CN = interop\.example\.org/);
+    assert.match(t, /Subject: C ?= ?US, O ?= ?Example, CN ?= ?interop\.example\.org/);
     assert.match(t, /DNS:interop\.example\.org, IP Address:192\.0\.2\.9, email:x@example\.org/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
