@@ -11,37 +11,29 @@ const table = (r: Rand, c: (r: Rand) => string = cell) => r.array(1, 6, () => r.
 /** Shrinking stays inside the domain: at least one row, no empty rows (an empty row has no CSV form). */
 const rectangular = (rows: string[][]) => rows.length > 0 && rows.every((r) => r.length > 0);
 
-/** A lone empty cell on the last row is written as nothing, and nothing reads back as no row (see the todo below). */
-const lastRowIsLoneEmpty = (rows: string[][]) => rows.length > 0 && rows.at(-1)!.length === 1 && rows.at(-1)![0] === '';
-/** A first cell starting with a byte-order mark is written bare, and the reader strips a leading BOM. */
-const startsWithBom = (rows: string[][]) => rows[0]?.[0]?.startsWith('﻿') === true;
-
 test('parseCsv(toCsv(rows)) round-trips quotes, commas, CR, LF, unicode and empty cells (300 cases)', async () => {
   await forAll('csv round trip', {
     cases: 300,
     gen: (r) => table(r),
     valid: (rows) => rectangular(rows),
-    check: (rows) => {
-      if (lastRowIsLoneEmpty(rows) || startsWithBom(rows)) return;
-      assert.deepEqual(parseCsv(toCsv(rows, { defuse: false })), rows);
-    },
-  });
-});
-
-test('round trip keeps a final row that holds one empty cell (200 cases)', { todo: 'a final row holding one empty cell is lost: toCsv ends the text with nothing for it and parseCsv reads no row' }, async () => {
-  await forAll('csv round trip, lone empty last row', {
-    cases: 200,
-    gen: (r) => [...table(r), ['']],
-    valid: (rows) => rectangular(rows) && lastRowIsLoneEmpty(rows),
     check: (rows) => assert.deepEqual(parseCsv(toCsv(rows, { defuse: false })), rows),
   });
 });
 
-test('round trip keeps a first cell that starts with U+FEFF (200 cases)', { todo: 'toCsv writes a leading U+FEFF bare and parseCsv strips it as a byte-order mark' }, async () => {
+test('round trip keeps a final row that holds one empty cell (200 cases)', async () => {
+  await forAll('csv round trip, lone empty last row', {
+    cases: 200,
+    gen: (r) => [...table(r), ['']],
+    valid: (rows) => rectangular(rows) && rows.at(-1)!.length === 1 && rows.at(-1)![0] === '',
+    check: (rows) => assert.deepEqual(parseCsv(toCsv(rows, { defuse: false })), rows),
+  });
+});
+
+test('round trip keeps a first cell that starts with U+FEFF (200 cases)', async () => {
   await forAll('csv round trip, leading BOM', {
     cases: 200,
     gen: (r) => { const t = table(r); t[0]![0] = `\uFEFF${t[0]![0]}`; return t; },
-    valid: (rows) => rectangular(rows) && startsWithBom(rows) && !lastRowIsLoneEmpty(rows),
+    valid: (rows) => rectangular(rows) && rows[0]![0]!.startsWith('\uFEFF'),
     check: (rows) => assert.deepEqual(parseCsv(toCsv(rows, { defuse: false })), rows),
   });
 });
@@ -64,7 +56,7 @@ test('defused export: no string cell reads back starting with = + - @ tab or CR 
   });
 });
 
-test('defused export also covers values that are not primitive strings but print as formulas (200 cases)', { todo: 'toCsv only defuses typeof "string": a String object or any object whose toString() starts with = + - @ is written unescaped' }, async () => {
+test('defused export also covers values that are not primitive strings but print as formulas (200 cases)', async () => {
   await forAll('csv defuse non-strings', {
     cases: 200,
     gen: (r) => r.array(1, 4, () => r.pick(['=', '+', '@', '-']) + r.str(1, 6, ['1', 'A', '(', ')', 'cmd', '|'])),
