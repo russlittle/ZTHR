@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
+import { createHash, scryptSync } from 'node:crypto';
 import { test } from 'node:test';
-import { Expired, Sessions, base32, checkCode, enrol, hashRecovery, hotp, recoveryCodes, totp, unbase32, useRecovery } from './index.ts';
+import { DEFAULT_POLICY, Expired, Sessions, base32, checkCode, enrol, hashRecovery, hotp, matchesRecovery, recoveryCodes, totp, unbase32, useRecovery } from './index.ts';
 
 test('RFC 6238 test vectors: the codes match the published values for SHA-1, SHA-256 and SHA-512', () => {
   const s1 = Buffer.from('12345678901234567890');
@@ -97,4 +97,215 @@ test('recovery codes are kept as salted scrypt hashes, so a leaked list cannot b
   assert.equal(useRecovery(peppered.codes[0]!, peppered.hashes), null, 'without the pepper the code does not match');
   assert.deepEqual(useRecovery(peppered.codes[0]!, peppered.hashes, { pepper: 'server-secret' }), []);
   assert.equal(useRecovery(codes[0]!, ['scrypt$1099511627776$8$1$AAAA$AAAA']), null, 'a stored hash naming an absurd cost is refused, not run');
+});
+
+const POLICY = { idleMs: 1000, absoluteMs: 5000, warnMs: 200 };
+const clocked = (policy = POLICY) => {
+  const clock = { t: 0 };
+  return { clock, s: new Sessions({ policy, now: () => clock.t }) };
+};
+
+test('the default policy is 30 minutes idle, 12 hours absolute, a 2 minute warning, and a session starts without a second factor', () => {
+  assert.deepEqual(DEFAULT_POLICY, { idleMs: 1_800_000, absoluteMs: 43_200_000, warnMs: 120_000 });
+  const clock = { t: 0 };
+  const s = new Sessions({ now: () => clock.t });
+  const a = s.start('ana', 'laptop');
+  assert.equal(a.mfa, false);
+  assert.equal(s.start('ana', 'phone', true).mfa, true);
+  clock.t = 29 * 60_000;
+  assert.equal(s.use(a.id).id, a.id, 'still signed in after 29 idle minutes');
+  clock.t += 30 * 60_000;
+  assert.throws(() => s.use(a.id), /without activity/, 'signed out after 30 idle minutes');
+});
+
+test('use says why a person is signed out, and exactly when', () => {
+  const { clock, s } = clocked();
+  const exact = (m: string) => (e: unknown) => e instanceof Expired && e.message === m;
+  assert.throws(() => s.use('no-such-session'), exact('you are signed out'));
+  const a = s.start('ana', 'laptop');
+  clock.t = 999;
+  assert.equal(s.use(a.id).lastSeen, 999);
+  clock.t = 1998;
+  assert.equal(s.use(a.id).lastSeen, 1998, 'activity just before the idle limit keeps it going');
+  clock.t = 2997;
+  s.use(a.id);
+  clock.t = 3996;
+  s.use(a.id);
+  clock.t = 4995;
+  assert.equal(s.use(a.id).id, a.id);
+  const b = s.start('ana', 'phone');
+  clock.t += 1000;
+  assert.throws(() => s.use(b.id), exact('you were signed out after a while without activity'));
+  assert.equal(s.all.has(b.id), false, 'an expired session is forgotten');
+});
+
+test('end signs one session out, and nothing else', () => {
+  const { s } = clocked();
+  const a = s.start('ana', 'laptop');
+  const b = s.start('ana', 'phone');
+  s.end(a.id);
+  assert.equal(s.all.has(a.id), false);
+  assert.throws(() => s.use(a.id), /signed out/);
+  assert.equal(s.use(b.id).id, b.id);
+});
+
+test('the warning appears from the warning time up to the end, and never for an unknown or ended session', () => {
+  const { clock, s } = clocked();
+  assert.equal(s.warning('nope'), null);
+  const a = s.start('ana', 'laptop');
+  clock.t = 799;
+  assert.equal(s.warning(a.id), null, 'more than the warning time left');
+  clock.t = 800;
+  assert.deepEqual(s.warning(a.id), { secondsLeft: 1, canExtend: true }, 'exactly the warning time left');
+  clock.t = 999;
+  assert.deepEqual(s.warning(a.id), { secondsLeft: 1, canExtend: true });
+  clock.t = 1000;
+  assert.equal(s.warning(a.id), null, 'at the end there is nothing left to warn about');
+  clock.t = 1100;
+  assert.equal(s.warning(a.id), null, 'and after it, nothing either');
+});
+
+test('a session whose idle limit coincides with its absolute limit cannot be extended by staying active', () => {
+  const { clock, s } = clocked();
+  const a = s.start('ana', 'laptop');
+  for (clock.t = 900; clock.t <= 3600; clock.t += 900) s.use(a.id);
+  clock.t = 4000;
+  assert.equal(s.use(a.id).lastSeen, 4000);
+  clock.t = 4850;
+  assert.deepEqual(s.warning(a.id), { secondsLeft: 1, canExtend: false });
+});
+
+test('sweep forgets exactly the sessions that have ended, and says how many', () => {
+  const { clock, s } = clocked();
+  s.start('ana', 'laptop');
+  s.start('ben', 'phone');
+  clock.t = 500;
+  assert.equal(s.sweep(), 0);
+  assert.equal(s.all.size, 2, 'live sessions stay');
+  clock.t = 999;
+  assert.equal(s.sweep(), 0);
+  clock.t = 1000;
+  assert.equal(s.sweep(), 2, 'a session has ended at the very instant of its limit');
+  assert.equal(s.all.size, 0);
+});
+
+test('starting a session sweeps abandoned ones, but only once per idle period', () => {
+  const { clock, s } = clocked();
+  const x = s.start('ana', 'laptop');
+  clock.t = 500;
+  s.sweep();
+  clock.t = 1100;
+  s.start('ben', 'phone');
+  assert.equal(s.all.has(x.id), true, 'swept 600ms ago, so not swept again yet');
+  clock.t = 1500;
+  s.start('cy', 'tablet');
+  assert.equal(s.all.has(x.id), false, 'a full idle period after the last sweep it is swept');
+  assert.equal(s.all.size, 2);
+});
+
+test('a person\'s sessions are listed most recently used first, and not at the instant they end', () => {
+  const { clock, s } = clocked({ idleMs: 10_000, absoluteMs: 100_000, warnMs: 200 });
+  const a = s.start('ana', 'a');
+  clock.t = 1;
+  const b = s.start('ana', 'b');
+  clock.t = 2;
+  const c = s.start('ana', 'c');
+  clock.t = 10;
+  s.use(c.id);
+  clock.t = 20;
+  s.use(a.id);
+  clock.t = 30;
+  s.use(b.id);
+  assert.deepEqual(s.list('ana').map((x) => x.device), ['b', 'a', 'c']);
+  const short = clocked();
+  short.s.start('ana', 'x');
+  short.clock.t = 999;
+  assert.equal(short.s.list('ana').length, 1);
+  short.clock.t = 1000;
+  assert.equal(short.s.list('ana').length, 0);
+});
+
+test('base32 matches RFC 4648, ignores padding, spaces, hyphens and case, and refuses other characters', () => {
+  const vectors: [string, string][] = [['f', 'MY'], ['fo', 'MZXQ'], ['foo', 'MZXW6'], ['foob', 'MZXW6YQ'], ['fooba', 'MZXW6YTB'], ['foobar', 'MZXW6YTBOI']];
+  for (const [plain, enc] of vectors) {
+    assert.equal(base32(Buffer.from(plain)), enc);
+    assert.equal(unbase32(enc).toString(), plain);
+  }
+  assert.equal(unbase32('mzxq====').toString(), 'fo');
+  assert.equal(unbase32('mzxw 6ytb-oi==').toString(), 'foobar');
+  assert.throws(() => unbase32('MZ1!'), (e: unknown) => e instanceof Error && e.message === 'not base32');
+});
+
+test('a code must be exactly six digits, and a code from before the last used step is fine', () => {
+  const { secret } = enrol('ana@example.org', 'Files');
+  const t = 1_700_000_000_000;
+  const code = totp(unbase32(secret), t);
+  const step = Math.floor(t / 30_000);
+  assert.equal(checkCode(secret, `x${code}`, t), null);
+  assert.equal(checkCode(secret, `${code}x`, t), null);
+  assert.equal(checkCode(secret, code, t, step - 5), step, 'an older last-used step does not block a newer code');
+  assert.equal(checkCode(secret, code, t, step), null);
+  assert.equal(checkCode(secret, totp(unbase32(secret), t + 30_000), t), step + 1, 'the next step is allowed too');
+  assert.equal(checkCode(secret, totp(unbase32(secret), t - 30_000), t), step - 1);
+});
+
+const KDF = { N: 1024 };
+const hashOf = (stored: string) => Buffer.from(stored.split('$')[5]!, 'base64url');
+const saltOf = (stored: string) => Buffer.from(stored.split('$')[4]!, 'base64url');
+
+test('a recovery code is hashed in its canonical form with the cost it names, so the hash can be reproduced independently', () => {
+  const stored = hashRecovery('1234567890', KDF);
+  assert.deepEqual(hashOf(stored), scryptSync('12345-67890', saltOf(stored), 32, { N: 1024, r: 8, p: 1 }));
+  const other = hashRecovery('12345 67890', { N: 2048, r: 4, p: 2 });
+  assert.match(other, /^scrypt\$2048\$4\$2\$/);
+  assert.deepEqual(hashOf(other), scryptSync('12345-67890', saltOf(other), 32, { N: 2048, r: 4, p: 2 }));
+  const word = hashRecovery('  open-sesame ', KDF);
+  assert.deepEqual(hashOf(word), scryptSync('open-sesame', saltOf(word), 32, { N: 1024, r: 8, p: 1 }), 'a code that is not ten digits is kept as typed, trimmed');
+  assert.equal(matchesRecovery('open-sesame  ', word), true);
+});
+
+test('only ten digits are re-spaced: longer or lettered codes are compared as typed', () => {
+  const hyphenated = hashRecovery('abc12-34567890', KDF);
+  assert.equal(matchesRecovery('abc1234567890', hyphenated), false);
+  const long = hashRecovery('12345-678901234', KDF);
+  assert.equal(matchesRecovery('12345678901234', long), false);
+  assert.equal(matchesRecovery('12345-678901234', long), true);
+});
+
+test('recovery codes are always ten digits, with leading zeros kept', () => {
+  const { codes } = recoveryCodes(600, KDF);
+  assert.ok(codes.every((c) => /^\d{5}-\d{5}$/.test(c)));
+});
+
+test('a stored recovery hash is run only when it is well formed and its cost is within bounds', () => {
+  const code = '12345-67890';
+  const good = hashRecovery(code, KDF);
+  assert.equal(matchesRecovery(code, good), true);
+  assert.equal(matchesRecovery(code, `x${good}`), false, 'nothing may precede it');
+  assert.equal(matchesRecovery(code, `${good}!`), false, 'nothing may follow it');
+  assert.equal(matchesRecovery(code, 'garbage'), false);
+  assert.equal(matchesRecovery(code, 'scrypt$1024$8$1$AAAA$AAAA'), false, 'a short hash is not a match, and does not crash');
+  assert.equal(matchesRecovery(code, 'scrypt$3000$8$1$AAAA$AAAA'), false, 'a cost that is not a power of two is refused');
+  assert.equal(matchesRecovery(code, 'scrypt$1024$0$1$AAAA$AAAA'), false);
+  assert.equal(matchesRecovery(code, 'scrypt$1024$8$0$AAAA$AAAA'), false);
+  const cost = (o: { N?: number; r?: number; p?: number }) => matchesRecovery(code, hashRecovery(code, o));
+  assert.equal(cost({ N: 512 }), false, 'below 2^10 is too cheap to trust');
+  assert.equal(cost({ N: 1024 }), true);
+  assert.equal(cost({ N: 1024, r: 1 }), true);
+  assert.equal(cost({ N: 1024, r: 16 }), true, 'a two-digit r is read whole');
+  assert.equal(cost({ N: 1024, r: 32 }), true);
+  assert.equal(cost({ N: 1024, r: 33 }), false);
+  assert.equal(cost({ N: 1024, p: 10 }), true, 'a two-digit p is read whole');
+  assert.equal(cost({ N: 1024, p: 16 }), true);
+  assert.equal(cost({ N: 1024, p: 17 }), false);
+  assert.equal(cost({ N: 2 ** 20, r: 2 }), true, 'exactly 2^20 is the largest accepted');
+});
+
+test('using a recovery code removes the first matching hash only', () => {
+  const code = '12345-67890';
+  const h1 = hashRecovery(code, KDF);
+  const h2 = hashRecovery(code, KDF);
+  const h3 = hashRecovery('11111-22222', KDF);
+  assert.deepEqual(useRecovery(code, [h1, h2, h3]), [h2, h3]);
+  assert.deepEqual(useRecovery(code, [h3, h1, h2]), [h3, h2]);
 });

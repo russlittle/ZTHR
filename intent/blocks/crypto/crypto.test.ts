@@ -59,3 +59,41 @@ test('a signed token with anything appended is not the token that was signed', (
   const t = sign('s1', 'p', { user: 'ana' }, 60_000, 1000);
   assert.throws(() => verify('s1', 'p', `${t}.extra`, 2000), BadToken);
 });
+
+test('a ring key that is empty, not text, or not 32 bytes is refused with a message that says which', () => {
+  const good = newKey();
+  const sealed = seal({ current: 'k1', keys: { k1: good } }, 'secret');
+  assert.throws(() => seal({ current: 'k1', keys: { k1: '' } }, 'x'), /key k1 is not in the ring/);
+  assert.throws(() => seal({ current: 'k1', keys: { k1: 5 as unknown as string } }, 'x'), /key k1 is not in the ring/);
+  const short = Buffer.alloc(16, 1).toString('base64');
+  assert.throws(() => seal({ current: 'k1', keys: { k1: short } }, 'x'), (e: unknown) => e instanceof Unopenable && e.message === 'cannot open: key k1 is not 32 bytes');
+  assert.throws(() => open({ current: 'k1', keys: { k1: short } }, sealed), (e: unknown) => e instanceof Unopenable && e.message === 'cannot open: key k1 is not 32 bytes');
+});
+
+test('open refuses anything that is not a v1 sealed value, with the reason given', () => {
+  const ring = { current: 'k1', keys: { k1: newKey() } };
+  const parts = seal(ring, 'secret', 'ctx').split('.');
+  const notSealed = (e: unknown) => e instanceof Unopenable && e.message === 'cannot open: not a sealed value';
+  assert.throws(() => open(ring, ['v2', ...parts.slice(1)].join('.'), 'ctx'), notSealed, 'another version is not opened as v1');
+  assert.throws(() => open(ring, 'garbage', 'ctx'), notSealed);
+  const longIv = [...parts];
+  longIv[2] = randomId(16);
+  assert.throws(() => open(ring, longIv.join('.'), 'ctx'), notSealed, 'a nonce that is not 12 bytes is refused up front');
+  const shortTag = [...parts];
+  shortTag[4] = randomId(4);
+  assert.throws(() => open(ring, shortTag.join('.'), 'ctx'), notSealed);
+});
+
+test('tampering is reported as changed-or-elsewhere, and empty and non-ASCII values round-trip', () => {
+  const ring = { current: 'k1', keys: { k1: newKey() } };
+  assert.equal(open(ring, seal(ring, '', 'c'), 'c'), '');
+  assert.equal(open(ring, seal(ring, 'héllo € 日本', 'c'), 'c'), 'héllo € 日本');
+  assert.throws(() => open(ring, seal(ring, 'x', 'a'), 'b'), (e: unknown) => e instanceof Unopenable && e.message === 'cannot open: it was changed, or belongs somewhere else');
+});
+
+test('a malformed token is refused with the form message, and a token is good through its expiry instant', () => {
+  assert.throws(() => verify('s1', 'p', 'nodot'), (e: unknown) => e instanceof BadToken && e.message === 'that token is not in the expected form');
+  const t = sign('s1', 'p', { a: 1 }, 60_000, 1000);
+  assert.deepEqual(verify('s1', 'p', t, 61_000), { a: 1 }, 'valid exactly at its expiry');
+  assert.throws(() => verify('s1', 'p', t, 61_001), /expired/);
+});
