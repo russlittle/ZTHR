@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "webhooks",
+  "mutant": {
+    "id": "235",
+    "line": 274,
+    "column": 30,
+    "endLine": 274,
+    "endColumn": 47,
+    "mutator": "StringLiteral",
+    "original": "`refused: ${why}`",
+    "replacement": "``",
+    "lineText": "if (why) throw new Error(`refused: ${why}`);",
+    "prevText": "const why = this.refuseHost(u);",
+    "nextText": "if (this.allow.has(host) || isIP(host) || !this.o.resolve) return;"
+  },
+  "mayEdit": [
+    "intent/blocks/webhooks/webhooks.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/webhooks-235.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"webhooks\". Mutant: line 274:30-274:47, mutator StringLiteral: \"`refused: ${why}`\" becomes \"``\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/webhooks/index.ts (> marks the mutated line):\n   268  \n   269    /** Refuses a send whose host now resolves to an internal address, unless the host is allowed. */\n   270    private async checkResolved(url: string): Promise<void> {\n   271      const u = new URL(url);\n   272      const host = hostOf(u);\n   273      const why = this.refuseHost(u);\n>  274      if (why) throw new Error(`refused: ${why}`);\n   275      if (this.allow.has(host) || isIP(host) || !this.o.resolve) return;\n   276      const addrs = await this.o.resolve(host);\n   277      if (!addrs.length) throw new Error(`refused: ${host} did not resolve`);\n   278      const bad = addrs.find(internalAddress);\n   279      if (bad) throw new Error(`refused: ${host} resolves to the internal address ${bad}`);\n   280    }\n\nTest file style (intent/blocks/webhooks/webhooks.test.ts):\n8 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Inbound, Outbound, Unverified, signature } from './index.ts';\n\ntest('an inbound webhook is believed only signed, recent and not seen before', () => {\n  let t = 1_800_000_000_000;\n  const body = '{\"type\":\"payment.succeeded\"}';\n  const sec = Math.floor(t / 1000);\n  const inb = new Inbound(['new-secret', 'old-secret'], { now: () => t });\n  inb.verify(body, signature('old-secret', body, sec), 'evt-1');\n  assert.throws(() => inb.verify(body, signature('old-secret', body, sec), 'evt-1'), /already received/, 'a replay is refused');\n  assert.throws(() => inb.verify(`${body} `, signature('new-secret', body, sec), 'evt-2'), /does not match/, 'one changed byte breaks it');\n  assert.throws(() => inb.verify(body, signature('wrong', body, sec), 'evt-3'), Unverified);\n  assert.throws(() => inb.verify(body, undefined, 'evt-4'), /no signature/);\n  t += 301_000;\n  assert.throws(() => inb.verify(body, signature('new-secret', body, sec), 'evt-5'), /too old/);\n});\n\ntest('outbound: signed, retried with backoff, parked with the last answer, and replayed after a fix', async () => {\n  let t = 0;\n  let status = 500;\n  const got: { sig: string; body: string }[] = [];\n  const f = (async (_url: string, init?: RequestInit) => {\n    const h = init!.headers as Record<string, string>;\n    got.push({ sig: h['webhook-signature']!, body: String(init!.body) });\n    return new Response(status === 204 ? null : '', { status });\n  }) as unknown as typeof fetch;\n  const paused: string[] = [];\n  const out = new Outbound({ fetch: f, now: () => t, maxAttempts: 3, baseMs: 100, pauseAfter: 3, onPaused: (e) => paused.push(e.id) });\n  assert.throws(() => out.subscribe('ana', 'http://insecure.example', ['*'], 's'), /https/);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/webhooks-235.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:39:38.506Z"
+}

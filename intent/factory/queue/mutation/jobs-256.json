@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "jobs",
+  "mutant": {
+    "id": "256",
+    "line": 261,
+    "column": 10,
+    "endLine": 261,
+    "endColumn": 22,
+    "mutator": "ArrayDeclaration",
+    "original": "[a, b, step]",
+    "replacement": "[]",
+    "lineText": "if (![a, b, step].every(Number.isInteger) || a < lo || b > hi || a > b || step < 1) throw new Error(`\"${spec}\" is not a valid cron field`);",
+    "prevText": "}",
+    "nextText": "for (let v = a; v <= b; v += step) out.add(v);"
+  },
+  "mayEdit": [
+    "intent/blocks/jobs/jobs.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/jobs-256.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"jobs\". Mutant: line 261:10-261:22, mutator ArrayDeclaration: \"[a, b, step]\" becomes \"[]\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/jobs/index.ts (> marks the mutated line):\n   255      let b = hi;\n   256      if (range !== '*') {\n   257        const [x, y] = range!.split('-').map(Number);\n   258        a = x!;\n   259        b = y ?? (stepS ? hi : x!);\n   260      }\n>  261      if (![a, b, step].every(Number.isInteger) || a < lo || b > hi || a > b || step < 1) throw new Error(`\"${spec}\" is not a valid cron field`);\n   262      for (let v = a; v <= b; v += step) out.add(v);\n   263    }\n   264    return out;\n   265  }\n   266  \n   267  /**\n\nTest file style (intent/blocks/jobs/jobs.test.ts):\n10 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Queue, backfill, cron } from './index.ts';\n\nconst setup = () => {\n  let t = 0;\n  const q = new Queue({ now: () => t, baseMs: 100, maxMs: 1000, random: () => 0.999 });\n  return { q, tick: (ms: number) => (t += ms) };\n};\n\ntest('a failing job retries with backoff, then waits as a dead letter until replayed after a fix', async () => {\n  const { q, tick } = setup();\n  let broken = true;\n  q.handle('send', async () => {\n    if (broken) throw new Error('mail server refused');\n    return 'sent';\n  });\n  const j = q.enqueue('send', { to: 'ana' }, { maxAttempts: 3 });\n  await q.tick();\n  assert.equal(j.state, 'waiting');\n  assert.equal(j.runAt, 99, 'the first retry waits up to the base delay');\n  assert.equal(await q.tick(), 0, 'not due yet');\n  tick(100);\n  await q.tick();\n  assert.equal(j.runAt, 100 + 199);\n  tick(300);\n  await q.tick();\n  assert.equal(j.state, 'dead');\n  assert.equal(j.lastError, 'mail server refused');\n  broken = false;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/jobs-256.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:35:24.699Z"
+}

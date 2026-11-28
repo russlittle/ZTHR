@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "loadsoak",
+  "mutant": {
+    "id": "122",
+    "line": 102,
+    "column": 54,
+    "endLine": 102,
+    "endColumn": 76,
+    "mutator": "ArithmeticOperator",
+    "original": "(now() - start) / 1000",
+    "replacement": "(now() - start) * 1000",
+    "lineText": "return { ...judge(lat, errors, Math.max(o.seconds, (now() - start) / 1000), o.limits), timeouts };",
+    "prevText": "// Throughput over the time the run really took: a service that cannot keep up stretches it past the plan.",
+    "nextText": "}"
+  },
+  "mayEdit": [
+    "intent/blocks/loadsoak/loadsoak.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/loadsoak-122.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"loadsoak\". Mutant: line 102:54-102:76, mutator ArithmeticOperator: \"(now() - start) / 1000\" becomes \"(now() - start) * 1000\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/loadsoak/index.ts (> marks the mutated line):\n    96          );\n    97        }),\n    98      );\n    99    }\n   100    await Promise.all(running);\n   101    // Throughput over the time the run really took: a service that cannot keep up stretches it past the plan.\n>  102    return { ...judge(lat, errors, Math.max(o.seconds, (now() - start) / 1000), o.limits), timeouts };\n   103  }\n   104  \n   105  /** Least-squares slope of samples over time, per hour. */\n   106  export function slope(samples: readonly { at: number; value: number }[]): number {\n   107    const n = samples.length;\n   108    if (n < 2) return 0;\n\nTest file style (intent/blocks/loadsoak/loadsoak.test.ts):\n7 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { judge, load, percentile, soak } from './index.ts';\n\ntest('percentiles and thresholds', () => {\n  const s = Array.from({ length: 100 }, (_, i) => i + 1);\n  assert.deepEqual([percentile(s, 50), percentile(s, 95), percentile(s, 99)], [50, 95, 99]);\n  const r = judge(s, 3, 10, { p95Ms: 90, maxErrorRate: 0.01, minRps: 20 });\n  assert.equal(r.pass, false);\n  assert.deepEqual(r.failures, ['p95 95 ms is over 90 ms', '2.91% errors is over 1.00%', '10.3 requests a second is under 20']);\n  assert.equal(judge(s, 0, 1, { p99Ms: 100 }).pass, true);\n});\n\ntest('load keeps the arrival rate even when the target is slow (open model)', async () => {\n  let clock = 0;\n  const starts: number[] = [];\n  const target = () => {\n    starts.push(clock);\n    return new Promise<void>((r) => setTimeout(r, 1));\n  };\n  const r = await load(target, { rps: 10, seconds: 1, limits: { maxErrorRate: 0 }, now: () => clock, sleep: async (ms) => void (clock += ms) });\n  assert.equal(r.sent, 10);\n  assert.deepEqual(starts, [0, 100, 200, 300, 400, 500, 600, 700, 800, 900]);\n  let n = 0;\n  const flaky = await load(() => (++n % 5 ? Promise.resolve() : Promise.reject(new Error('503'))), { rps: 20, seconds: 1, limits: { maxErrorRate: 0.1 }, now: () => clock, sleep: async (ms) => void (clock += ms) });\n  assert.equal(flaky.errors, 4);\n  assert.equal(flaky.pass, false);\n});\n\ntest('a soak finds a steady climb that no single sample would flag, and ignores noise', () => {\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/loadsoak-122.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:35:28.914Z"
+}

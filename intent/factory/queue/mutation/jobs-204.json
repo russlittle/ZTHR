@@ -1,0 +1,27 @@
+{
+  "kind": "kill-mutant",
+  "block": "jobs",
+  "mutant": {
+    "id": "204",
+    "line": 227,
+    "column": 9,
+    "endLine": 227,
+    "endColumn": 27,
+    "mutator": "ConditionalExpression",
+    "original": "next !== undefined",
+    "replacement": "true",
+    "lineText": "if (next !== undefined) run.checkpoint = next;",
+    "prevText": "}",
+    "nextText": "else delete run.checkpoint;"
+  },
+  "mayEdit": [
+    "intent/blocks/jobs/jobs.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/jobs-204.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"jobs\". Mutant: line 227:9-227:27, mutator ConditionalExpression: \"next !== undefined\" becomes \"true\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/jobs/index.ts (> marks the mutated line):\n   221            run.changed++;\n   222          }\n   223        } catch (e) {\n   224          run.failed.push({ item: o.idOf ? o.idOf(it) : String(run.seen), error: e instanceof Error ? e.message : String(e) });\n   225        }\n   226      }\n>  227      if (next !== undefined) run.checkpoint = next;\n   228      else delete run.checkpoint;\n   229      if (next === undefined) run.finished = true;\n   230      await o.save?.(run);\n   231      if (run.finished) return run;\n   232    }\n   233  }\n\nTest file style (intent/blocks/jobs/jobs.test.ts):\n10 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { Queue, backfill, cron } from './index.ts';\n\nconst setup = () => {\n  let t = 0;\n  const q = new Queue({ now: () => t, baseMs: 100, maxMs: 1000, random: () => 0.999 });\n  return { q, tick: (ms: number) => (t += ms) };\n};\n\ntest('a failing job retries with backoff, then waits as a dead letter until replayed after a fix', async () => {\n  const { q, tick } = setup();\n  let broken = true;\n  q.handle('send', async () => {\n    if (broken) throw new Error('mail server refused');\n    return 'sent';\n  });\n  const j = q.enqueue('send', { to: 'ana' }, { maxAttempts: 3 });\n  await q.tick();\n  assert.equal(j.state, 'waiting');\n  assert.equal(j.runAt, 99, 'the first retry waits up to the base delay');\n  assert.equal(await q.tick(), 0, 'not due yet');\n  tick(100);\n  await q.tick();\n  assert.equal(j.runAt, 100 + 199);\n  tick(300);\n  await q.tick();\n  assert.equal(j.state, 'dead');\n  assert.equal(j.lastError, 'mail server refused');\n  broken = false;\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/jobs-204.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {},
+  "createdAt": "2026-11-28T00:35:24.372Z"
+}
