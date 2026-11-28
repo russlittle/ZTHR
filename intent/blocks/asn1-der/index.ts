@@ -150,8 +150,9 @@ function checkUniversal(tag: number, constructed: boolean, c: Buffer): void {
 }
 
 const isU = (n: Der, tag: number) => n.cls === 0 && n.tag === tag;
-const expect = (n: Der, tag: number, what: string): Der => {
-  if (!isU(n, tag)) throw new DerError(`expected ${what}`);
+/** A node of the given universal type; a missing node (a destructured child that is not there) is a DerError too. */
+const expect = (n: Der | undefined, tag: number, what: string): Der => {
+  if (!n || !isU(n, tag)) throw new DerError(`expected ${what}`);
   return n;
 };
 
@@ -208,6 +209,7 @@ export function asString(n: Der): string {
 }
 
 export function asTime(n: Der): Date {
+  if (!n) throw new DerError('expected a time');
   const s = n.content.toString('latin1');
   let m: RegExpExecArray | null;
   let y: number;
@@ -432,14 +434,18 @@ export function nameToString(n: Der): string {
     return rdn.children
       .map((atv) => {
         const [t, v] = expect(atv, UT.sequence, 'an AttributeTypeAndValue').children as [Der, Der];
+        if (!t || !v) throw new DerError('an AttributeTypeAndValue has a type and a value');
         const key = oidName(asOid(t));
         let val: string;
+        let binary = false;
         try {
           val = asString(v);
         } catch {
           val = `#${hex(v.raw)}`;
+          binary = true;
         }
-        if (!val.startsWith('#')) val = val.replace(/[,+"\\<>;=]/g, (c) => `\\${c}`).replace(/^([ #])/, '\\$1').replace(/ $/, '\\ ');
+        // A string that begins with '#' is escaped so it cannot be mistaken for the hex form of a value we could not decode.
+        if (!binary) val = val.replace(/[,+"\\<>;=]/g, (c) => `\\${c}`).replace(/^([ #])/, '\\$1').replace(/ $/, '\\ ');
         return `${key}=${val}`;
       })
       .join('+');
@@ -626,6 +632,12 @@ const sameIp = (a: string, b: string) => {
   return norm(a) === norm(b);
 };
 function parseIp6(s: string): Buffer {
+  // An embedded IPv4 tail ("::ffff:192.0.2.1") stands for the last two groups.
+  const dot = s.lastIndexOf('.') < 0 ? -1 : s.lastIndexOf(':');
+  if (dot >= 0) {
+    const q = s.slice(dot + 1).split('.').map(Number) as [number, number, number, number];
+    s = `${s.slice(0, dot + 1)}${((q[0] << 8) | q[1]).toString(16)}:${((q[2] << 8) | q[3]).toString(16)}`;
+  }
   const [head, tail] = s.split('::');
   const h = head ? head.split(':') : [];
   const t = tail === undefined ? [] : tail ? tail.split(':') : [];
@@ -650,7 +662,7 @@ const SIG_HASH: Readonly<Record<string, string | null>> = {
 
 /** Checks the signature on `data` with a public key; SHA-1 and unknown algorithms are refused. */
 export function checkSignature(alg: string, data: Uint8Array, signature: Uint8Array, spki: Uint8Array, o: { allowSha1?: boolean } = {}): boolean {
-  if (!(alg in SIG_HASH)) {
+  if (!Object.hasOwn(SIG_HASH, alg)) {
     if (o.allowSha1 && (alg === 'sha1WithRSAEncryption' || alg === 'ecdsa-with-SHA1')) return cryptoVerify('sha1', data, createPublicKey({ key: Buffer.from(spki), format: 'der', type: 'spki' }), signature);
     throw new DerError(`the signature algorithm ${alg} is not accepted`);
   }
@@ -749,9 +761,11 @@ export function parseCsr(der: Uint8Array): Csr {
   if (!info || !algId || !sig || top.children.length !== 3) throw new DerError('a CertificationRequest has three parts');
   const [ver, subject, spki, attrs] = expect(info, UT.sequence, 'CertificationRequestInfo').children as [Der, Der, Der, Der | undefined];
   if (asInteger(ver) !== 0n) throw new DerError('an unknown request version');
+  if (!subject || !spki) throw new DerError('a CertificationRequestInfo is missing fields');
   const san: GeneralName[] = [];
   for (const a of attrs?.children ?? []) {
     const [type, values] = a.children as [Der, Der];
+    if (!type || !values) throw new DerError('an Attribute has a type and values');
     if (asOid(type) !== '1.2.840.113549.1.9.14') continue;
     for (const ext of values.children[0]?.children ?? []) {
       const [o, ...rest] = ext.children as [Der, ...Der[]];
