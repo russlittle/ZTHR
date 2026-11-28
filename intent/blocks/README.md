@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->235<!-- /fact --> blocks, <!-- fact:blocks.tests -->4061<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->250<!-- /fact --> blocks, <!-- fact:blocks.tests -->4281<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -244,6 +244,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [campaigns](campaigns/index.ts) | Email campaigns: segments, escaped templates, scheduling, throttled sending with retries, A/B variants, unsubscribe headers and reports | 17 |
 | [experiments](experiments/index.ts) | Experiments: stable assignment behind flags, exposures logged, tests that stay valid while you watch, ratio checks, guardrails and a verdict | 17 |
 | [uptime-probes](uptime-probes/index.ts) | Uptime probes over HTTP, keywords, JSON, TCP, DNS and certificates, with retries, flap damping, maintenance windows and private addresses refused | 22 |
+| [activitypub](activitypub/index.ts) | ActivityPub: actors, WebFinger, activities built and checked, inboxes that refuse spoofing, delivery plans, and HTTP signatures with digests | 18 |
+| [microblog](microblog/index.ts) | Posts with visibility and addressing, mentions and tags, safe HTML, and conversion to and from ActivityPub notes | 15 |
+| [timeline-assembly](timeline-assembly/index.ts) | Home and list timelines by fan-out on write, read or both, with keyset paging and gaps found and repaired | 14 |
+| [session-replay-plan](session-replay-plan/index.ts) | Session replay recorded safely: masking, scrubbing and sampling rules, rolling buffers led by snapshots, chunks and storage tiers | 16 |
+| [dns-filter](dns-filter/index.ts) | DNS filtering: blocklists in hosts, domain and adblock forms, client groups, answers built, CNAME cloaking caught, snooze and a log | 15 |
+| [adblock-rules](adblock-rules/index.ts) | Adblock filter lists parsed and matched by host, cosmetic selectors, and registrable domains | 14 |
+| [chunker](chunker/index.ts) | Documents split into chunks along headings, each anchored to its exact source text for citations | 13 |
+| [rag](rag/index.ts) | Retrieval for answers: keyword and embedding search fused, an evidence check that refuses weak answers, context fitted and citations checked | 17 |
+| [message-search](message-search/index.ts) | Message search with operators, snippets, cursors and results trimmed to what the person may see | 13 |
+| [token-count](token-count/index.ts) | Token counts per model vendor with an upper bound, BPE from tiktoken vocabularies, truncation and budgets | 14 |
+| [prompt-store](prompt-store/index.ts) | Prompts versioned with labels and diffs, rolled out behind flags, evaluated, and promoted only through a gate | 12 |
+| [moderation-model](moderation-model/index.ts) | Moderation: word lists and model classifiers under a checked policy, actions, review and appeals, calibration and a hash-chained log | 15 |
+| [rate-plans](rate-plans/index.ts) | Rate limits by plan: bursts, route costs, windows, concurrency, cooldowns, fair shares and quota overage | 14 |
+| [wiki-links](wiki-links/index.ts) | Wiki links read into a graph with backlinks, orphans and broken links, and renames planned and rewritten | 13 |
+| [tax-engine](tax-engine/index.ts) | Tax by dated rules for place, category and customer: stacking levels, inclusive or exclusive prices, reverse charge, exemptions, rounding and withholding | 17 |
 <!-- /gen -->
 
 ```mermaid

@@ -2059,6 +2059,137 @@
       ],
       "tests": 22,
       "home": "intent/blocks/uptime-probes"
+    },
+    {
+      "name": "activitypub",
+      "purpose": "ActivityPub: actors, WebFinger, activities built and checked, inboxes that refuse spoofing, delivery plans, and HTTP signatures with digests",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/activitypub"
+    },
+    {
+      "name": "microblog",
+      "purpose": "Posts with visibility and addressing, mentions and tags, safe HTML, and conversion to and from ActivityPub notes",
+      "requires": [
+        "activitypub"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/microblog"
+    },
+    {
+      "name": "timeline-assembly",
+      "purpose": "Home and list timelines by fan-out on write, read or both, with keyset paging and gaps found and repaired",
+      "requires": [
+        "paging",
+        "microblog"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/timeline-assembly"
+    },
+    {
+      "name": "session-replay-plan",
+      "purpose": "Session replay recorded safely: masking, scrubbing and sampling rules, rolling buffers led by snapshots, chunks and storage tiers",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/session-replay-plan"
+    },
+    {
+      "name": "dns-filter",
+      "purpose": "DNS filtering: blocklists in hosts, domain and adblock forms, client groups, answers built, CNAME cloaking caught, snooze and a log",
+      "requires": [
+        "dns-wire"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/dns-filter"
+    },
+    {
+      "name": "adblock-rules",
+      "purpose": "Adblock filter lists parsed and matched by host, cosmetic selectors, and registrable domains",
+      "requires": [],
+      "tests": 14,
+      "home": "intent/blocks/adblock-rules"
+    },
+    {
+      "name": "chunker",
+      "purpose": "Documents split into chunks along headings, each anchored to its exact source text for citations",
+      "requires": [
+        "markdown"
+      ],
+      "tests": 13,
+      "home": "intent/blocks/chunker"
+    },
+    {
+      "name": "rag",
+      "purpose": "Retrieval for answers: keyword and embedding search fused, an evidence check that refuses weak answers, context fitted and citations checked",
+      "requires": [
+        "chunker",
+        "search"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/rag"
+    },
+    {
+      "name": "message-search",
+      "purpose": "Message search with operators, snippets, cursors and results trimmed to what the person may see",
+      "requires": [
+        "search"
+      ],
+      "tests": 13,
+      "home": "intent/blocks/message-search"
+    },
+    {
+      "name": "token-count",
+      "purpose": "Token counts per model vendor with an upper bound, BPE from tiktoken vocabularies, truncation and budgets",
+      "requires": [],
+      "tests": 14,
+      "home": "intent/blocks/token-count"
+    },
+    {
+      "name": "prompt-store",
+      "purpose": "Prompts versioned with labels and diffs, rolled out behind flags, evaluated, and promoted only through a gate",
+      "requires": [
+        "flags"
+      ],
+      "tests": 12,
+      "home": "intent/blocks/prompt-store"
+    },
+    {
+      "name": "moderation-model",
+      "purpose": "Moderation: word lists and model classifiers under a checked policy, actions, review and appeals, calibration and a hash-chained log",
+      "requires": [
+        "llm-provider"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/moderation-model"
+    },
+    {
+      "name": "rate-plans",
+      "purpose": "Rate limits by plan: bursts, route costs, windows, concurrency, cooldowns, fair shares and quota overage",
+      "requires": [
+        "ratelimit",
+        "entitlements"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/rate-plans"
+    },
+    {
+      "name": "wiki-links",
+      "purpose": "Wiki links read into a graph with backlinks, orphans and broken links, and renames planned and rewritten",
+      "requires": [
+        "markdown"
+      ],
+      "tests": 13,
+      "home": "intent/blocks/wiki-links"
+    },
+    {
+      "name": "tax-engine",
+      "purpose": "Tax by dated rules for place, category and customer: stacking levels, inclusive or exclusive prices, reverse charge, exemptions, rounding and withholding",
+      "requires": [
+        "money",
+        "refdata"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/tax-engine"
     }
   ]
 }
