@@ -2450,6 +2450,118 @@
       "requires": [],
       "tests": 16,
       "home": "intent/blocks/outbound"
+    },
+    {
+      "name": "structured-query",
+      "purpose": "Structured queries as Metabase builds them, compiled to parameterised SQL for Postgres, MySQL, SQLite and BigQuery, within a schema allow-list",
+      "requires": [],
+      "tests": 22,
+      "home": "intent/blocks/structured-query"
+    },
+    {
+      "name": "trace-store",
+      "purpose": "Traces assembled from spans with self time, the critical path and orphans, a service graph, and tail sampling",
+      "requires": [],
+      "tests": 21,
+      "home": "intent/blocks/trace-store"
+    },
+    {
+      "name": "promql-lite",
+      "purpose": "A PromQL subset parsed and evaluated over a series store",
+      "requires": [
+        "timeseries",
+        "prometheus-text"
+      ],
+      "tests": 28,
+      "home": "intent/blocks/promql-lite"
+    },
+    {
+      "name": "lifecycle-hooks",
+      "purpose": "Before and after hooks on create, update and delete, run inside the transaction with a depth limit",
+      "requires": [],
+      "tests": 24,
+      "home": "intent/blocks/lifecycle-hooks"
+    },
+    {
+      "name": "content-types",
+      "purpose": "Content types with components and dynamic zones, locales, draft and publish, and slug fields",
+      "requires": [],
+      "tests": 24,
+      "home": "intent/blocks/content-types"
+    },
+    {
+      "name": "hls-dash",
+      "purpose": "HLS and DASH playlists written and read, live playlists, and bitrate ladders",
+      "requires": [],
+      "tests": 24,
+      "home": "intent/blocks/hls-dash"
+    },
+    {
+      "name": "iso-bmff-probe",
+      "purpose": "MP4, MOV and HEIF boxes read for codecs, rotation, location, motion photos and fragments",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/iso-bmff-probe"
+    },
+    {
+      "name": "transcode-plan",
+      "purpose": "Direct play, remux or transcode decided with reasons, and ffmpeg arguments built safely",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/transcode-plan"
+    },
+    {
+      "name": "blurhash",
+      "purpose": "Blurhash encoded and decoded against published examples, and Thumbhash",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/blurhash"
+    },
+    {
+      "name": "image-plan",
+      "purpose": "Responsive images: srcset and sizes, picture markup, focal-point crops, metadata stripped, and formats by Accept",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/image-plan"
+    },
+    {
+      "name": "photo-library",
+      "purpose": "A photo library: files placed by template, albums shared by grants, stacks, trash with retention and a timeline",
+      "requires": [
+        "grants"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/photo-library"
+    },
+    {
+      "name": "perceptual-hash",
+      "purpose": "Perceptual hashes (aHash, dHash, pHash) compared across orientations and grouped for near duplicates",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/perceptual-hash"
+    },
+    {
+      "name": "face-cluster",
+      "purpose": "Faces clustered, named people kept through merges, splits and re-clustering, and recognition with a confidence margin",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/face-cluster"
+    },
+    {
+      "name": "http-signatures",
+      "purpose": "HTTP message signatures (RFC 9421 and the cavage draft) with digests, key caches, replay, skew and a signing policy",
+      "requires": [
+        "crypto"
+      ],
+      "tests": 24,
+      "home": "intent/blocks/http-signatures"
+    },
+    {
+      "name": "jsonld",
+      "purpose": "JSON-LD expanded, compacted and normalised for federation, with allowed contexts only and limits on size",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/jsonld"
     }
   ]
 }

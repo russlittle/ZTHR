@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->280<!-- /fact --> blocks, <!-- fact:blocks.tests -->4785<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->295<!-- /fact --> blocks, <!-- fact:blocks.tests -->5090<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -289,6 +289,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [webdav-props](webdav-props/index.ts) | WebDAV properties and search: PROPFIND, atomic PROPPATCH, COPY and MOVE with depth and quota, and DASL search | 18 |
 | [vcard](vcard/index.ts) | vCard 3.0 and 4.0 read and written with folding, escapes and groups, photos checked, converted and merged three ways | 13 |
 | [outbound](outbound/index.ts) | The one door out to the internet for app code: allowed hosts with named purposes, internal and resolved addresses refused, redirects re-checked, byte caps and a redacted log | 16 |
+| [structured-query](structured-query/index.ts) | Structured queries as Metabase builds them, compiled to parameterised SQL for Postgres, MySQL, SQLite and BigQuery, within a schema allow-list | 22 |
+| [trace-store](trace-store/index.ts) | Traces assembled from spans with self time, the critical path and orphans, a service graph, and tail sampling | 21 |
+| [promql-lite](promql-lite/index.ts) | A PromQL subset parsed and evaluated over a series store | 28 |
+| [lifecycle-hooks](lifecycle-hooks/index.ts) | Before and after hooks on create, update and delete, run inside the transaction with a depth limit | 24 |
+| [content-types](content-types/index.ts) | Content types with components and dynamic zones, locales, draft and publish, and slug fields | 24 |
+| [hls-dash](hls-dash/index.ts) | HLS and DASH playlists written and read, live playlists, and bitrate ladders | 24 |
+| [iso-bmff-probe](iso-bmff-probe/index.ts) | MP4, MOV and HEIF boxes read for codecs, rotation, location, motion photos and fragments | 20 |
+| [transcode-plan](transcode-plan/index.ts) | Direct play, remux or transcode decided with reasons, and ffmpeg arguments built safely | 18 |
+| [blurhash](blurhash/index.ts) | Blurhash encoded and decoded against published examples, and Thumbhash | 16 |
+| [image-plan](image-plan/index.ts) | Responsive images: srcset and sizes, picture markup, focal-point crops, metadata stripped, and formats by Accept | 18 |
+| [photo-library](photo-library/index.ts) | A photo library: files placed by template, albums shared by grants, stacks, trash with retention and a timeline | 18 |
+| [perceptual-hash](perceptual-hash/index.ts) | Perceptual hashes (aHash, dHash, pHash) compared across orientations and grouped for near duplicates | 15 |
+| [face-cluster](face-cluster/index.ts) | Faces clustered, named people kept through merges, splits and re-clustering, and recognition with a confidence margin | 15 |
+| [http-signatures](http-signatures/index.ts) | HTTP message signatures (RFC 9421 and the cavage draft) with digests, key caches, replay, skew and a signing policy | 24 |
+| [jsonld](jsonld/index.ts) | JSON-LD expanded, compacted and normalised for federation, with allowed contexts only and limits on size | 18 |
 <!-- /gen -->
 
 ```mermaid
