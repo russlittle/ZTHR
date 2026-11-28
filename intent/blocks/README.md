@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->190<!-- /fact --> blocks, <!-- fact:blocks.tests -->3049<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->205<!-- /fact --> blocks, <!-- fact:blocks.tests -->3348<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -199,6 +199,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [mqtt](mqtt/index.ts) | MQTT 3.1.1 and 5: packets encoded and decoded, topics matched, shared subscriptions, retained messages, and QoS 1 and 2 sessions | 22 |
 | [mdns-ssdp](mdns-ssdp/index.ts) | Local discovery: mDNS and DNS-SD announced, browsed and resolved with caches, and SSDP searches with the device's address checked | 28 |
 | [state-store](state-store/index.ts) | Entity states with attributes and change times, change events published, history compacted, and statistics that survive meter resets | 22 |
+| [status-pages](status-pages/index.ts) | Status pages: components from monitors, uptime bars, incident feeds in Atom and JSON, subscribers with signed links, and a badge | 18 |
+| [push-monitors](push-monitors/index.ts) | Heartbeat monitors: cron schedules and next runs, late, down and overlong runs found, alerts tracked, and signed ping links | 15 |
+| [assignment-rules](assignment-rules/index.ts) | Work assigned round-robin, least-loaded, by skill or by weight, within shifts and capacity, with fair shares and overrides | 14 |
+| [ua-parse](ua-parse/index.ts) | User agents and client hints read by a versioned rule table, bots detected, with input capped | 16 |
+| [sketches](sketches/index.ts) | Probabilistic summaries: HyperLogLog, t-digest, count-min and Bloom filters, serialised and checked | 21 |
+| [pdf-sign](pdf-sign/index.ts) | PDF signing to PAdES-B-B with CMS SignedData and incremental updates, verified by OpenSSL, qpdf and pdfsig | 38 |
+| [pdf-forms](pdf-forms/index.ts) | PDF forms read, filled, flattened and added, with required fields checked | 30 |
+| [esign-envelope](esign-envelope/index.ts) | Signing envelopes: routing order, field checks, signed links, access codes with lockout, reminders, a hash-chained trail and a sealed certificate | 20 |
+| [entitlements](entitlements/index.ts) | Plans and entitlements: features resolved, usage metered once per event, overage, trials and safe downgrades | 19 |
+| [vault-model](vault-model/index.ts) | A password vault as Bitwarden keeps one: cipher strings, the key hierarchy, items, folders, organisations with key rotation, Send and emergency access | 25 |
+| [secret-sharing](secret-sharing/index.ts) | Shamir secret sharing over GF(256) with checksummed shares and a commitment that names a bad share | 15 |
+| [password-generator](password-generator/index.ts) | Passwords, passphrases, PINs and usernames generated without bias, with exact strength and site rules | 16 |
+| [sequences](sequences/index.ts) | Outreach sequences: email, task and call steps with waits and send windows, a daily cap, and stops on reply, unsubscribe or bounce | 19 |
+| [cohorts](cohorts/index.ts) | Cohort analysis: retention by period, growth accounting, churn and Kaplan-Meier survival, with small cells suppressed | 17 |
+| [segments](segments/index.ts) | Audience segments as rule trees with references, previewed with counts, refreshed as snapshots, and exported safely with an audit log | 16 |
 <!-- /gen -->
 
 ```mermaid

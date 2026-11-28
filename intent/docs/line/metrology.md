@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 84 of 190 blocks calibrated; 0 certified, 82 with survivors still to close, 2 capable but not yet checked for repeatability and reproducibility.
+QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 84 of 205 blocks calibrated; 0 certified, 82 with survivors still to close, 2 capable but not yet checked for repeatability and reproducibility.
 
 ```mermaid
 flowchart LR
@@ -72,7 +72,7 @@ flowchart LR
   k -.->|the block changes: calibrate again| x
 ```
 
-The 84 blocks calibrated so far, of 190:
+The 84 blocks calibrated so far, of 205:
 
 | Block | Certificate | Capability | Survivors | Ruled equivalent | Issued |
 | --- | --- | --- | --- | --- | --- |

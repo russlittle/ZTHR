@@ -1694,6 +1694,126 @@
       ],
       "tests": 22,
       "home": "intent/blocks/state-store"
+    },
+    {
+      "name": "status-pages",
+      "purpose": "Status pages: components from monitors, uptime bars, incident feeds in Atom and JSON, subscribers with signed links, and a badge",
+      "requires": [
+        "health"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/status-pages"
+    },
+    {
+      "name": "push-monitors",
+      "purpose": "Heartbeat monitors: cron schedules and next runs, late, down and overlong runs found, alerts tracked, and signed ping links",
+      "requires": [
+        "watchdog"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/push-monitors"
+    },
+    {
+      "name": "assignment-rules",
+      "purpose": "Work assigned round-robin, least-loaded, by skill or by weight, within shifts and capacity, with fair shares and overrides",
+      "requires": [
+        "rbac"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/assignment-rules"
+    },
+    {
+      "name": "ua-parse",
+      "purpose": "User agents and client hints read by a versioned rule table, bots detected, with input capped",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/ua-parse"
+    },
+    {
+      "name": "sketches",
+      "purpose": "Probabilistic summaries: HyperLogLog, t-digest, count-min and Bloom filters, serialised and checked",
+      "requires": [],
+      "tests": 21,
+      "home": "intent/blocks/sketches"
+    },
+    {
+      "name": "pdf-sign",
+      "purpose": "PDF signing to PAdES-B-B with CMS SignedData and incremental updates, verified by OpenSSL, qpdf and pdfsig",
+      "requires": [],
+      "tests": 38,
+      "home": "intent/blocks/pdf-sign"
+    },
+    {
+      "name": "pdf-forms",
+      "purpose": "PDF forms read, filled, flattened and added, with required fields checked",
+      "requires": [],
+      "tests": 30,
+      "home": "intent/blocks/pdf-forms"
+    },
+    {
+      "name": "esign-envelope",
+      "purpose": "Signing envelopes: routing order, field checks, signed links, access codes with lockout, reminders, a hash-chained trail and a sealed certificate",
+      "requires": [
+        "workflow",
+        "pdf-forms"
+      ],
+      "tests": 20,
+      "home": "intent/blocks/esign-envelope"
+    },
+    {
+      "name": "entitlements",
+      "purpose": "Plans and entitlements: features resolved, usage metered once per event, overage, trials and safe downgrades",
+      "requires": [
+        "flags"
+      ],
+      "tests": 19,
+      "home": "intent/blocks/entitlements"
+    },
+    {
+      "name": "vault-model",
+      "purpose": "A password vault as Bitwarden keeps one: cipher strings, the key hierarchy, items, folders, organisations with key rotation, Send and emergency access",
+      "requires": [
+        "crypto"
+      ],
+      "tests": 25,
+      "home": "intent/blocks/vault-model"
+    },
+    {
+      "name": "secret-sharing",
+      "purpose": "Shamir secret sharing over GF(256) with checksummed shares and a commitment that names a bad share",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/secret-sharing"
+    },
+    {
+      "name": "password-generator",
+      "purpose": "Passwords, passphrases, PINs and usernames generated without bias, with exact strength and site rules",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/password-generator"
+    },
+    {
+      "name": "sequences",
+      "purpose": "Outreach sequences: email, task and call steps with waits and send windows, a daily cap, and stops on reply, unsubscribe or bounce",
+      "requires": [],
+      "tests": 19,
+      "home": "intent/blocks/sequences"
+    },
+    {
+      "name": "cohorts",
+      "purpose": "Cohort analysis: retention by period, growth accounting, churn and Kaplan-Meier survival, with small cells suppressed",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/cohorts"
+    },
+    {
+      "name": "segments",
+      "purpose": "Audience segments as rule trees with references, previewed with counts, refreshed as snapshots, and exported safely with an audit log",
+      "requires": [
+        "query"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/segments"
     }
   ]
 }

@@ -143,21 +143,21 @@ Every area turns its work into **fixtures**: things the next product does not ha
 | Mission control | one view of every product, and what waits on a person | none | 0 |
 | Product lines | spec-sheet defaults a product line hands every product in it | 7 | 7 |
 | Intent studio | intake forms, design-lexicon terms and derivation rules | 21 | 28 |
-| Product engineering | catalogued parts, information patterns, compliance controls, platform outcomes and library blocks | 562 | 590 |
-| Manufacturing engineering | required checks and proven gates in the control plan | 18 | 608 |
-| Factory floor | agent tools and the models the router chooses between | 39 | 647 |
-| QA | gauges generated from every intent, and the review families | 4 | 651 |
-| Shipping | delivery stages, each with its gate, and the service levels the example is held to | 10 | 661 |
-| Fleet | connectors and the sensitive-data classes every app is governed by | 24 | 685 |
-| Metrology | measures defined once, and the reference standards they trace to | 8 | 693 |
-| Maintenance | maintenance stations and task kinds, each with what it must prove before a change is accepted | 15 | 708 |
+| Product engineering | catalogued parts, information patterns, compliance controls, platform outcomes and library blocks | 577 | 605 |
+| Manufacturing engineering | required checks and proven gates in the control plan | 18 | 623 |
+| Factory floor | agent tools and the models the router chooses between | 39 | 662 |
+| QA | gauges generated from every intent, and the review families | 4 | 666 |
+| Shipping | delivery stages, each with its gate, and the service levels the example is held to | 10 | 676 |
+| Fleet | connectors and the sensitive-data classes every app is governed by | 24 | 700 |
+| Metrology | measures defined once, and the reference standards they trace to | 8 | 708 |
+| Maintenance | maintenance stations and task kinds, each with what it must prove before a change is accepted | 15 | 723 |
 
 ```mermaid
 xychart-beta
   title "Fixtures every later product inherits, in all, as each area joins the plant."
   x-axis ["Mission control", "Product lines", "Intent studio", "Product engineering", "Manufacturing engineering", "Factory floor", "QA", "Shipping", "Fleet", "Metrology", "Maintenance"]
   y-axis "fixtures" 0 --> 750
-  bar [0, 7, 28, 590, 608, 647, 651, 661, 685, 693, 708]
+  bar [0, 7, 28, 605, 623, 662, 666, 676, 700, 708, 723]
 ```
 
 The effect shows in a single product. For the worked example (five rough lines about bill reminders), 98% of its 131 manifest lines are already specified by the catalogue or the library before anyone designs anything, and 120 of those are already built. 3 are new. As the library grows, lines of its manifest move from *still to make* to *used as is*.
