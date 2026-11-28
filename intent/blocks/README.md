@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->145<!-- /fact --> blocks, <!-- fact:blocks.tests -->2117<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->160<!-- /fact --> blocks, <!-- fact:blocks.tests -->2417<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -154,6 +154,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [password-hash](password-hash/index.ts) | Password hashing over Argon2id, scrypt and PBKDF2 with a rotating pepper, rehash on sign-in, and equal timing for unknown users | 16 |
 | [xml-dsig](xml-dsig/index.ts) | XML signatures: exclusive canonicalisation, signing and verifying, with signature wrapping refused | 19 |
 | [saml](saml/index.ts) | A SAML 2.0 service provider: signed requests, strict response checks, replay refused, and metadata written and read | 20 |
+| [client-registry](client-registry/index.ts) | OAuth clients registered (RFC 7591, 7592), secrets rotated with an overlap, redirect addresses matched exactly, and scopes filtered | 16 |
+| [oauth2-server](oauth2-server/index.ts) | An OAuth 2.1 authorisation server: PKCE, the device flow, rotating refresh tokens with reuse detection, introspection and revocation | 24 |
+| [thumbnails](thumbnails/index.ts) | Images resized five ways with orientation applied, crop and fit planned, derivatives keyed for the cache, and PNG built in | 18 |
+| [markdown](markdown/index.ts) | CommonMark and GitHub-flavoured Markdown read to a tree and written to safe HTML, with heading ids and front matter | 11 |
+| [custom-fields](custom-fields/index.ts) | Custom fields people add to records: typed, stored, indexed, redacted and kept unique where asked | 15 |
+| [toc-outline](toc-outline/index.ts) | Tables of contents and outlines with stable anchors, section ranges, word counts, reading time and excerpts | 14 |
+| [scim](scim/index.ts) | A SCIM 2.0 server (RFC 7643, 7644): filters, patch operations, ETags, bulk requests and discovery | 19 |
+| [snapshot-restore](snapshot-restore/index.ts) | Snapshots hashed and compared, and a restore planned, confirmed by code, applied and verified | 13 |
+| [expression-engine](expression-engine/index.ts) | A sandboxed expression language for templates and workflows, with allowed methods only and limits on steps, size and memory | 24 |
+| [json-schema](json-schema/index.ts) | JSON Schema 2020-12: validation with references and error paths, schemas inferred from samples, examples generated, and breaking changes found | 29 |
+| [wiki-pages](wiki-pages/index.ts) | Wiki pages in a tree with revisions, templates, inherited permissions, edit locks and backlinks | 24 |
+| [multipart-parse](multipart-parse/index.ts) | Form uploads (RFC 7578) parsed as they stream, with limits enforced as bytes arrive, real types checked and file names made safe | 24 |
+| [llm-provider](llm-provider/index.ts) | One request shape over model vendors: streaming, tool calls, structured output with repair, retries and fallbacks, a twin, and cost records | 30 |
+| [agent-loop](agent-loop/index.ts) | A bounded agent loop: budgets for steps, tools, cost, tokens and time, repeats caught, tools checked, approvals that suspend and resume, and a trace | 22 |
+| [jsonpath](jsonpath/index.ts) | JSONPath (RFC 9535) with slices, filters and typed functions, normalised paths and limits, and a jq-like transform | 17 |
 <!-- /gen -->
 
 ```mermaid

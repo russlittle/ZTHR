@@ -1335,6 +1335,136 @@
       ],
       "tests": 20,
       "home": "intent/blocks/saml"
+    },
+    {
+      "name": "client-registry",
+      "purpose": "OAuth clients registered (RFC 7591, 7592), secrets rotated with an overlap, redirect addresses matched exactly, and scopes filtered",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/client-registry"
+    },
+    {
+      "name": "oauth2-server",
+      "purpose": "An OAuth 2.1 authorisation server: PKCE, the device flow, rotating refresh tokens with reuse detection, introspection and revocation",
+      "requires": [
+        "client-registry"
+      ],
+      "tests": 24,
+      "home": "intent/blocks/oauth2-server"
+    },
+    {
+      "name": "thumbnails",
+      "purpose": "Images resized five ways with orientation applied, crop and fit planned, derivatives keyed for the cache, and PNG built in",
+      "requires": [
+        "cache",
+        "imagemeta"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/thumbnails"
+    },
+    {
+      "name": "markdown",
+      "purpose": "CommonMark and GitHub-flavoured Markdown read to a tree and written to safe HTML, with heading ids and front matter",
+      "requires": [],
+      "tests": 11,
+      "home": "intent/blocks/markdown"
+    },
+    {
+      "name": "custom-fields",
+      "purpose": "Custom fields people add to records: typed, stored, indexed, redacted and kept unique where asked",
+      "requires": [
+        "validate"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/custom-fields"
+    },
+    {
+      "name": "toc-outline",
+      "purpose": "Tables of contents and outlines with stable anchors, section ranges, word counts, reading time and excerpts",
+      "requires": [
+        "markdown"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/toc-outline"
+    },
+    {
+      "name": "scim",
+      "purpose": "A SCIM 2.0 server (RFC 7643, 7644): filters, patch operations, ETags, bulk requests and discovery",
+      "requires": [],
+      "tests": 19,
+      "home": "intent/blocks/scim"
+    },
+    {
+      "name": "snapshot-restore",
+      "purpose": "Snapshots hashed and compared, and a restore planned, confirmed by code, applied and verified",
+      "requires": [
+        "backups"
+      ],
+      "tests": 13,
+      "home": "intent/blocks/snapshot-restore"
+    },
+    {
+      "name": "expression-engine",
+      "purpose": "A sandboxed expression language for templates and workflows, with allowed methods only and limits on steps, size and memory",
+      "requires": [],
+      "tests": 24,
+      "home": "intent/blocks/expression-engine"
+    },
+    {
+      "name": "json-schema",
+      "purpose": "JSON Schema 2020-12: validation with references and error paths, schemas inferred from samples, examples generated, and breaking changes found",
+      "requires": [
+        "validate"
+      ],
+      "tests": 29,
+      "home": "intent/blocks/json-schema"
+    },
+    {
+      "name": "wiki-pages",
+      "purpose": "Wiki pages in a tree with revisions, templates, inherited permissions, edit locks and backlinks",
+      "requires": [
+        "history",
+        "markdown"
+      ],
+      "tests": 24,
+      "home": "intent/blocks/wiki-pages"
+    },
+    {
+      "name": "multipart-parse",
+      "purpose": "Form uploads (RFC 7578) parsed as they stream, with limits enforced as bytes arrive, real types checked and file names made safe",
+      "requires": [
+        "uploadsafe"
+      ],
+      "tests": 24,
+      "home": "intent/blocks/multipart-parse"
+    },
+    {
+      "name": "llm-provider",
+      "purpose": "One request shape over model vendors: streaming, tool calls, structured output with repair, retries and fallbacks, a twin, and cost records",
+      "requires": [
+        "resilience",
+        "costmeter",
+        "json-schema"
+      ],
+      "tests": 30,
+      "home": "intent/blocks/llm-provider"
+    },
+    {
+      "name": "agent-loop",
+      "purpose": "A bounded agent loop: budgets for steps, tools, cost, tokens and time, repeats caught, tools checked, approvals that suspend and resume, and a trace",
+      "requires": [
+        "llm-provider",
+        "mcp"
+      ],
+      "tests": 22,
+      "home": "intent/blocks/agent-loop"
+    },
+    {
+      "name": "jsonpath",
+      "purpose": "JSONPath (RFC 9535) with slices, filters and typed functions, normalised paths and limits, and a jq-like transform",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/jsonpath"
     }
   ]
 }
