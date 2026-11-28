@@ -85,16 +85,24 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/out"
+          failed=0
           for b in $SHARD; do
-            node tools/mutation/run.ts "$b"
-            cp "intent/eval/mutation/$b.json" "$RUNNER_TEMP/out/"
+            # Each block's certificate is handed in as soon as it is made; one block that cannot be calibrated does
+            # not cost the others theirs, and the shard still fails so the block is seen.
+            if node tools/mutation/run.ts "$b"; then cp "intent/eval/mutation/$b.json" "$RUNNER_TEMP/out/"
+            else echo "::error::$b could not be calibrated"; failed=1; fi
           done
+          exit "$failed"
       - id: name
+        if: always()
         env:
           SHARD: ${{ matrix.shard }}
         run: echo "name=certificate-$(printf '%s' "$SHARD" | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+      # A shard the runner stops partway still hands in the certificates it finished.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
         with:
+          if-no-files-found: ignore
           name: ${{ steps.name.outputs.name }}
           path: ${{ runner.temp }}/out
 
