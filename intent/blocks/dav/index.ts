@@ -29,39 +29,109 @@ const START = 'A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u03
 const CHAR = `${START}\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040`;
 const NCNAME = `[${START}][${CHAR}]*`;
 const QNAME = new RegExp(`^${NCNAME}(?::${NCNAME})?$`, 'u');
-const ATTRS = new RegExp(`^(?:\\s+[^\\s=]+\\s*=\\s*(?:"[^"]*"|'[^']*'))*\\s*$`, 'u');
 
 /** A name with at most one colon, each side an XML name, as element and attribute names must be with namespaces. */
 export const isQName = (s: string) => QNAME.test(s);
 
-const ENT: Record<string, string> = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
-const unescape = (s: string) =>
-  s.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-z]+);/g, (m, e: string) => {
-    if (e[0] === '#') {
-      const cp = e[1] === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
-      if (!Number.isFinite(cp) || cp > 0x10ffff) throw new BadXml(`bad character reference ${m}`);
+const ENT = new Map<string, string>([
+  ['lt', '<'],
+  ['gt', '>'],
+  ['amp', '&'],
+  ['quot', '"'],
+  ['apos', "'"],
+]);
+
+/** XML 1.0's Char production: what a character reference may name. */
+const isXmlChar = (cp: number) => cp === 0x9 || cp === 0xa || cp === 0xd || (cp >= 0x20 && cp <= 0xd7ff) || (cp >= 0xe000 && cp <= 0xfffd) || (cp >= 0x10000 && cp <= 0x10ffff);
+
+/**
+ * Replaces references in text or an attribute value. Every & must begin one: one of the five predefined entities,
+ * or a character reference to a character XML allows. Anything else (another entity, a bare &) is refused.
+ */
+const unescape = (s: string) => {
+  if (!s.includes('&')) return s;
+  return s.replace(/&([^&;]*)(;?)/g, (m, e: string, semi: string) => {
+    if (!semi) throw new BadXml(`an & that does not begin a reference: ${JSON.stringify(m.slice(0, 20))}`);
+    const ref = /^#(?:x([0-9a-fA-F]{1,8})|([0-9]{1,10}))$/.exec(e);
+    if (ref) {
+      const cp = ref[1] !== undefined ? parseInt(ref[1], 16) : parseInt(ref[2]!, 10);
+      if (!isXmlChar(cp)) throw new BadXml(`the character reference ${m} names a character XML does not allow`);
       return String.fromCodePoint(cp);
     }
-    const v = ENT[e];
-    if (v === undefined) throw new BadXml(`unknown entity ${m}`);
+    const v = ENT.get(e);
+    if (v === undefined) throw new BadXml(`unknown entity ${m.slice(0, 40)}`);
     return v;
   });
+};
+
+/**
+ * Namespace bindings as a chain: an element that declares nothing shares its parent's scope, one that declares
+ * some adds a link with only those, so declaring k prefixes costs k once, not k for every element below. Lookups
+ * walk at most the nesting depth. Maps, so a prefix named like an Object member is only ever a prefix.
+ */
+interface Scope {
+  readonly parent: Scope | null;
+  readonly own: ReadonlyMap<string, string>;
+}
+const lookup = (scope: Scope | null, prefix: string): string | undefined => {
+  for (let s = scope; s; s = s.parent) {
+    const v = s.own.get(prefix);
+    if (v !== undefined) return v;
+  }
+  return undefined;
+};
+
+const XML_NS = 'http://www.w3.org/XML/1998/namespace';
+const isSpace = (c: string | undefined) => c === ' ' || c === '\t' || c === '\n' || c === '\r';
+
+/** The attributes after an element's name, read in one pass: whitespace, name, =, a quoted value; nothing else. */
+function readAttrs(rest: string, tag: string): [string, string][] {
+  const out: [string, string][] = [];
+  const seen = new Set<string>();
+  let p = 0;
+  for (;;) {
+    const before = p;
+    while (isSpace(rest[p])) p++;
+    if (p >= rest.length) return out;
+    if (p === before) throw new BadXml(`the attributes of <${tag}> are not well formed`);
+    const start = p;
+    while (p < rest.length && !isSpace(rest[p]) && rest[p] !== '=') p++;
+    const k = rest.slice(start, p);
+    while (isSpace(rest[p])) p++;
+    if (rest[p] !== '=') throw new BadXml(`the attributes of <${tag}> are not well formed`);
+    p++;
+    while (isSpace(rest[p])) p++;
+    const q = rest[p];
+    if (q !== '"' && q !== "'") throw new BadXml(`the attributes of <${tag}> are not well formed`);
+    const end = rest.indexOf(q, p + 1);
+    if (end < 0) throw new BadXml(`the attributes of <${tag}> are not well formed`);
+    const raw = rest.slice(p + 1, end);
+    p = end + 1;
+    if (!isQName(k)) throw new BadXml(`${JSON.stringify(k.slice(0, 40))} is not an attribute name`);
+    if (seen.has(k)) throw new BadXml(`the attribute ${k} is given twice`);
+    if (raw.includes('<')) throw new BadXml(`the value of ${k} contains <`);
+    seen.add(k);
+    out.push([k, unescape(raw)]);
+  }
+}
 
 /** Parses one XML document. Namespaces resolve to their URIs; prefixes are not kept. */
 export function parseXml(src: string, o: { maxBytes?: number; maxDepth?: number } = {}): El {
-  if (src.length > (o.maxBytes ?? 1_000_000)) throw new BadXml('too large');
+  const maxBytes = o.maxBytes ?? 1_000_000;
+  // UTF-8 bytes, as the body arrived: a UTF-16 unit is one to three bytes, so the length alone undercounts.
+  if (src.length > maxBytes || Buffer.byteLength(src, 'utf8') > maxBytes) throw new BadXml('too large');
   const maxDepth = o.maxDepth ?? 64;
   if (/<!DOCTYPE|<!ENTITY/i.test(src)) throw new BadXml('document type declarations are not accepted');
   let i = 0;
-  type Frame = { ns: string; name: string; attrs: Record<string, string>; children: El[]; text: string; scope: Record<string, string>; raw: string };
+  type Frame = { ns: string; name: string; attrs: Record<string, string>; children: El[]; text: string; scope: Scope; raw: string };
   const stack: Frame[] = [];
   let root: El | undefined;
-  const base: Record<string, string> = { xml: 'http://www.w3.org/XML/1998/namespace' };
-  const resolve = (qname: string, scope: Record<string, string>, isAttr: boolean) => {
+  const base: Scope = { parent: null, own: new Map([['xml', XML_NS]]) };
+  const resolve = (qname: string, scope: Scope, isAttr: boolean) => {
     const c = qname.indexOf(':');
-    if (c < 0) return { ns: isAttr ? '' : (scope[''] ?? ''), name: qname };
+    if (c < 0) return { ns: isAttr ? '' : (lookup(scope, '') ?? ''), name: qname };
     const p = qname.slice(0, c);
-    const ns = scope[p];
+    const ns = lookup(scope, p);
     if (ns === undefined) throw new BadXml(`undeclared prefix ${p}`);
     return { ns, name: qname.slice(c + 1) };
   };
@@ -89,7 +159,7 @@ export function parseXml(src: string, o: { maxBytes?: number; maxDepth?: number 
       if (e < 0) throw new BadXml('unclosed end tag');
       const name = src.slice(lt + 2, e).trim();
       const f = stack.pop();
-      if (!f || f.raw !== name) throw new BadXml(`unexpected </${name}>`);
+      if (!f || f.raw !== name) throw new BadXml(`unexpected </${name.slice(0, 40)}>`);
       const el: El = { ns: f.ns, name: f.name, attrs: f.attrs, children: f.children, text: f.text };
       if (stack.length) stack[stack.length - 1]!.children.push(el);
       else root = el;
@@ -109,39 +179,32 @@ export function parseXml(src: string, o: { maxBytes?: number; maxDepth?: number 
       let inner = src.slice(lt + 1, j);
       const selfClose = inner.endsWith('/');
       if (selfClose) inner = inner.slice(0, -1);
-      const m = /^([^\s/>]+)/.exec(inner);
-      if (!m) throw new BadXml('a tag without a name');
-      const raw = m[1]!;
-      if (!isQName(raw)) throw new BadXml(`${JSON.stringify(raw)} is not an element name`);
-      const rawAttrs: [string, string][] = [];
-      const rest = inner.slice(raw.length);
-      // Every character between the name and the end of the tag must belong to an attribute: nothing is skipped.
-      if (!ATTRS.test(rest)) throw new BadXml(`the attributes of <${raw}> are not well formed`);
-      const re = /([^\s=]+)\s*=\s*("([^"]*)"|'([^']*)')/g;
-      let a: RegExpExecArray | null;
-      while ((a = re.exec(rest))) {
-        const k = a[1]!;
-        if (!isQName(k)) throw new BadXml(`${JSON.stringify(k)} is not an attribute name`);
-        if (rawAttrs.some(([x]) => x === k)) throw new BadXml(`the attribute ${k} is given twice`);
-        rawAttrs.push([k, unescape(a[3] ?? a[4] ?? '')]);
-      }
-      const scope = { ...(stack.length ? stack[stack.length - 1]!.scope : base) };
+      let n = 0;
+      while (n < inner.length && !isSpace(inner[n]) && inner[n] !== '/' && inner[n] !== '>') n++;
+      if (!n) throw new BadXml('a tag without a name');
+      const raw = inner.slice(0, n);
+      if (!isQName(raw)) throw new BadXml(`${JSON.stringify(raw.slice(0, 40))} is not an element name`);
+      const rawAttrs = readAttrs(inner.slice(n), raw.slice(0, 40));
+      const parentScope = stack.length ? stack[stack.length - 1]!.scope : base;
+      let own: Map<string, string> | undefined;
       for (const [k, v] of rawAttrs) {
-        if (k === 'xmlns') scope[''] = v;
+        if (k === 'xmlns') (own ??= new Map()).set('', v);
         else if (k.startsWith('xmlns:')) {
           const p = k.slice(6);
           // Namespaces in XML 1.0: a prefix cannot be bound to the empty name, and xml and xmlns are reserved.
           if (v === '') throw new BadXml(`invalid namespace declaration: the prefix ${p} is bound to an empty namespace`);
-          if (p === 'xmlns' || (p === 'xml') !== (v === base['xml'])) throw new BadXml(`invalid namespace declaration for the prefix ${p}`);
-          scope[p] = v;
+          if (p === 'xmlns' || (p === 'xml') !== (v === XML_NS)) throw new BadXml(`invalid namespace declaration for the prefix ${p}`);
+          (own ??= new Map()).set(p, v);
         }
       }
-      const attrs: Record<string, string> = {};
+      const scope: Scope = own ? { parent: parentScope, own } : parentScope;
+      // No prototype, so an attribute named __proto__ is an attribute like any other.
+      const attrs = Object.create(null) as Record<string, string>;
       for (const [k, v] of rawAttrs) {
         if (k === 'xmlns' || k.startsWith('xmlns:')) continue;
         const r = resolve(k, scope, true);
         const ek = r.ns ? `{${r.ns}}${r.name}` : r.name;
-        if (ek in attrs) throw new BadXml(`the attribute ${ek} is given twice`);
+        if (Object.hasOwn(attrs, ek)) throw new BadXml(`the attribute ${ek} is given twice`);
         attrs[ek] = v;
       }
       const { ns, name } = resolve(raw, scope, false);

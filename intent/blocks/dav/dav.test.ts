@@ -148,3 +148,63 @@ test('PROPPATCH instructions apply in document order: a remove then a set leaves
   const back = proppatchOps('<propertyupdate xmlns="DAV:" xmlns:z="urn:z"><set><prop><z:p>x</z:p></prop></set><remove><prop><z:p/></prop></remove></propertyupdate>');
   assert.deepEqual(netPropChanges(back), { set: {}, clear: ['{urn:z}p'] });
 });
+
+test('only the five predefined entities and character references are references: any other is refused', () => {
+  for (const e of ['lol2', 'AMP', 'Xxe', 'x_y', 'a.b', 'a-b', 'Lt', 'e1', 'constructor', 'toString', '__proto__'])
+    for (const src of [`<a>&${e};</a>`, `<a b="&${e};"/>`]) assert.throws(() => parseXml(src), BadXml, src);
+  assert.throws(() => parseXml('<a>fish & chips</a>'), BadXml, 'a bare ampersand');
+  assert.throws(() => parseXml('<a>&amp</a>'), BadXml, 'a reference without its semicolon');
+  assert.equal(parseXml('<a b="&lt;&#38;&#x26;">&quot;&apos;&gt;</a>').text, `"'>`);
+  assert.equal(parseXml('<a b="&lt;&#38;&#x26;"/>').attrs['b'], '<&&');
+});
+
+test('maxBytes counts UTF-8 bytes, not UTF-16 units', () => {
+  const src = `<a>${'€'.repeat(100)}</a>`;
+  assert.equal(src.length, 107);
+  assert.equal(Buffer.byteLength(src), 307);
+  assert.throws(() => parseXml(src, { maxBytes: 200 }), /too large/);
+  assert.equal(parseXml(src, { maxBytes: 307 }).text.length, 100);
+  assert.throws(() => parseXml(`<a>${'😀'.repeat(60)}</a>`, { maxBytes: 200 }), /too large/, '4 bytes in 2 units');
+});
+
+test('character references to characters outside XML’s Char production are refused, in text and attributes', () => {
+  for (const cp of [0, 1, 8, 0x0b, 0x0c, 0x1f, 0xd800, 0xdbff, 0xdc00, 0xdfff, 0xfffe, 0xffff, 0x110000])
+    for (const ref of [`&#${cp};`, `&#x${cp.toString(16)};`])
+      for (const src of [`<a>${ref}</a>`, `<a b="${ref}"/>`]) assert.throws(() => parseXml(src), BadXml, src);
+  assert.equal(parseXml('<a>&#9;&#xA;&#13;&#x20;&#xD7FF;&#xE000;&#xFFFD;&#x10000;&#x10FFFF;</a>').text, '\t\n\r ퟿�\u{10000}\u{10FFFF}');
+});
+
+test('prefixes named like Object.prototype members are undeclared unless declared, and then plain strings', () => {
+  for (const p of ['constructor', 'toString', '__proto__', 'hasOwnProperty', 'valueOf', 'isPrototypeOf']) {
+    assert.throws(() => parseXml(`<${p}:a/>`), BadXml, `undeclared ${p}`);
+    assert.throws(() => parseXml(`<a ${p}:x="v"/>`), BadXml, `undeclared ${p} on an attribute`);
+    const el = parseXml(`<a xmlns:${p}="urn:x" ${p}:x="v"><${p}:b/></a>`);
+    assert.equal(el.children[0]!.ns, 'urn:x');
+    assert.deepEqual(Object.entries(el.attrs), [['{urn:x}x', 'v']]);
+  }
+  const proto = parseXml('<a __proto__="v"/>');
+  assert.deepEqual(Object.entries(proto.attrs), [['__proto__', 'v']], 'an attribute named __proto__ is kept as an attribute');
+  assert.equal(({} as Record<string, unknown>)['polluted'], undefined);
+});
+
+test('many namespace declarations with many children, and one huge run of attribute text, parse in linear time', () => {
+  for (const k of [4000, 8000]) {
+    const src = `<r${Array.from({ length: k }, (_, i) => ` xmlns:p${i}="u"`).join('')}>${'<a/>'.repeat(k)}</r>`;
+    const t = performance.now();
+    assert.equal(parseXml(src).children.length, k);
+    const took = performance.now() - t;
+    assert.ok(took < 250, `k=${k} took ${took.toFixed(0)} ms`);
+  }
+  for (const ch of ['x', 'a:b', '-']) {
+    const t = performance.now();
+    assert.throws(() => parseXml(`<a ${ch.repeat(Math.ceil(60_000 / ch.length))}/>`), BadXml);
+    const took = performance.now() - t;
+    assert.ok(took < 250, `a 60 kB run of ${ch} took ${took.toFixed(0)} ms`);
+  }
+  // Prefixes declared further up still resolve below, and a nearer declaration hides a farther one.
+  const deep = parseXml('<a xmlns:p="u1" xmlns="d"><b xmlns:p="u2"><p:c/></b><p:e/><f/></a>');
+  assert.deepEqual(
+    [deep.children[0]!.children[0]!.ns, deep.children[1]!.ns, deep.children[2]!.ns, deep.children[0]!.ns],
+    ['u2', 'u1', 'd', 'd'],
+  );
+});

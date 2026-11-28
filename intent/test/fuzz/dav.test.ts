@@ -38,7 +38,7 @@ test('an entity in lower-case letters other than the five predefined is refused 
   });
 });
 
-test('any other entity-shaped reference (digits, capitals, _ . -) is refused, not kept as literal text (300 cases)', { todo: 'unescape only matches &[a-z]+; so &lol2;, &AMP;, &Xxe; and &x_y; are neither refused nor expanded: they pass through as literal text' }, async () => {
+test('any other entity-shaped reference (digits, capitals, _ . -) is refused, not kept as literal text (300 cases)', async () => {
   await forAll('dav other entities', {
     cases: 300,
     gen: (r) => {
@@ -78,7 +78,7 @@ test('a document longer than maxBytes characters is refused before parsing (300 
   });
 });
 
-test('maxBytes bounds UTF-8 bytes, not UTF-16 units: multi-byte text past the cap is refused (300 cases)', { todo: 'parseXml compares src.length (UTF-16 code units) with maxBytes, so text of multi-byte characters (é is 2 bytes in 1 unit, € and 中 3 bytes in 1 unit) up to 3x the byte cap is accepted' }, async () => {
+test('maxBytes bounds UTF-8 bytes, not UTF-16 units: multi-byte text past the cap is refused (300 cases)', async () => {
   await forAll('dav size in bytes', {
     cases: 300,
     gen: (r) => ({ n: r.int(1, 1500), ch: r.pick(['€', '中', 'é', '😀']), maxBytes: r.int(100, 2000) }),
@@ -90,7 +90,7 @@ test('maxBytes bounds UTF-8 bytes, not UTF-16 units: multi-byte text past the ca
   });
 });
 
-test('character references to characters XML forbids (NUL, C0 controls, surrogates, U+FFFE/FFFF) are refused (300 cases)', { todo: 'unescape accepts any code point up to 0x10FFFF, so &#0;, &#x1;, &#xD800; and &#xFFFE; put NUL, controls and lone surrogates into the text' }, async () => {
+test('character references to characters XML forbids (NUL, C0 controls, surrogates, U+FFFE/FFFF) are refused (300 cases)', async () => {
   await forAll('dav forbidden character references', {
     cases: 300,
     gen: (r) => {
@@ -103,7 +103,7 @@ test('character references to characters XML forbids (NUL, C0 controls, surrogat
   });
 });
 
-test('element and attribute prefixes named like Object.prototype members resolve to strings or are refused (300 cases)', { todo: 'the namespace scope is a plain object, so an undeclared prefix "constructor" or "toString" resolves to a Function, and "__proto__" (declared or not) to Object.prototype, giving El.ns that is not a string instead of "undeclared prefix"' }, async () => {
+test('element and attribute prefixes named like Object.prototype members resolve to strings or are refused (300 cases)', async () => {
   await bounded({ module: jobs, fn: 'prototypePrefixes', cases: 300, ms: 5000 });
 });
 
@@ -111,6 +111,6 @@ test('one start tag with a 30-60 kB attribute run is parsed or refused in under 
   await bounded({ module: jobs, fn: 'hugeAttribute', cases: 4, ms: 2000 });
 });
 
-test('thousands of namespace declarations with thousands of children parse in under 250 ms (3 cases, 2 s deadline)', { todo: 'each element copies its parent scope ({...scope}) and walks it, so k declarations times k children is O(k^2): k=4000 (72 kB) takes about 3 s, k=8000 (144 kB) about 14 s' }, async () => {
+test('thousands of namespace declarations with thousands of children parse in under 250 ms (3 cases, 2 s deadline)', async () => {
   await bounded({ module: jobs, fn: 'manyNamespaces', cases: 3, ms: 2000 });
 });
