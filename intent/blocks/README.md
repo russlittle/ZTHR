@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->205<!-- /fact --> blocks, <!-- fact:blocks.tests -->3348<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->220<!-- /fact --> blocks, <!-- fact:blocks.tests -->3578<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -214,6 +214,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [sequences](sequences/index.ts) | Outreach sequences: email, task and call steps with waits and send windows, a daily cap, and stops on reply, unsubscribe or bounce | 19 |
 | [cohorts](cohorts/index.ts) | Cohort analysis: retention by period, growth accounting, churn and Kaplan-Meier survival, with small cells suppressed | 17 |
 | [segments](segments/index.ts) | Audience segments as rule trees with references, previewed with counts, refreshed as snapshots, and exported safely with an audit log | 16 |
+| [slugs](slugs/index.ts) | Slugs made by transliteration, kept unique, and remembered across renames so old addresses redirect | 14 |
+| [permalinks](permalinks/index.ts) | Route patterns that match and build addresses, canonical URLs, paging links and one trailing-slash rule | 14 |
+| [options-store](options-store/index.ts) | Typed site settings by scope: autoloaded, versioned, announced on change, and snapshotted | 14 |
+| [menus](menus/index.ts) | Menus as trees with conditions and permissions, language, safe links, the active trail and breadcrumbs | 13 |
+| [shortcodes](shortcodes/index.ts) | Shortcodes from an allow-list parsed and expanded with limits and escaping | 13 |
+| [semver](semver/index.ts) | Semantic versions: strict parsing, npm ranges, a solver that explains conflicts, and calendar versions | 14 |
+| [reading-time](reading-time/index.ts) | Reading and listening time across scripts and images, and excerpts cut at sentence, word or grapheme boundaries | 13 |
+| [openapi](openapi/index.ts) | OpenAPI 3.1 built from routes and checked, breaking changes found, contract tests generated and responses verified | 15 |
+| [crud-from-schema](crud-from-schema/index.ts) | Create, read, update and delete routes from one entity declaration, with validation, filters, paging, relations and field permissions | 14 |
+| [html-parse](html-parse/index.ts) | A tolerant HTML reader with limits, CSS selectors, serialising, diffing and entities | 17 |
+| [link-preview](link-preview/index.ts) | Link previews fetched safely (private addresses, DNS pinning, every redirect checked), cards read and oEmbed | 15 |
+| [accessibility-checks](accessibility-checks/index.ts) | WCAG checks on HTML: contrast, accessible names, focus order and a report | 16 |
+| [block-markup](block-markup/index.ts) | Block editor markup as Gutenberg has it: parsed and written, validated by a registry, plain text and a walker | 15 |
+| [delta-sync](delta-sync/index.ts) | File sync by rolling checksums as rsync does it, three-way comparison with conflicts named, and ignore rules | 20 |
+| [http-cache](http-cache/index.ts) | HTTP caching: dates, ETags, preconditions, Cache-Control and freshness, Vary, ranges and multipart byte ranges | 23 |
 <!-- /gen -->
 
 ```mermaid

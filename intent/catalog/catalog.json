@@ -1814,6 +1814,124 @@
       ],
       "tests": 16,
       "home": "intent/blocks/segments"
+    },
+    {
+      "name": "slugs",
+      "purpose": "Slugs made by transliteration, kept unique, and remembered across renames so old addresses redirect",
+      "requires": [],
+      "tests": 14,
+      "home": "intent/blocks/slugs"
+    },
+    {
+      "name": "permalinks",
+      "purpose": "Route patterns that match and build addresses, canonical URLs, paging links and one trailing-slash rule",
+      "requires": [],
+      "tests": 14,
+      "home": "intent/blocks/permalinks"
+    },
+    {
+      "name": "options-store",
+      "purpose": "Typed site settings by scope: autoloaded, versioned, announced on change, and snapshotted",
+      "requires": [
+        "cache"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/options-store"
+    },
+    {
+      "name": "menus",
+      "purpose": "Menus as trees with conditions and permissions, language, safe links, the active trail and breadcrumbs",
+      "requires": [],
+      "tests": 13,
+      "home": "intent/blocks/menus"
+    },
+    {
+      "name": "shortcodes",
+      "purpose": "Shortcodes from an allow-list parsed and expanded with limits and escaping",
+      "requires": [],
+      "tests": 13,
+      "home": "intent/blocks/shortcodes"
+    },
+    {
+      "name": "semver",
+      "purpose": "Semantic versions: strict parsing, npm ranges, a solver that explains conflicts, and calendar versions",
+      "requires": [],
+      "tests": 14,
+      "home": "intent/blocks/semver"
+    },
+    {
+      "name": "reading-time",
+      "purpose": "Reading and listening time across scripts and images, and excerpts cut at sentence, word or grapheme boundaries",
+      "requires": [],
+      "tests": 13,
+      "home": "intent/blocks/reading-time"
+    },
+    {
+      "name": "openapi",
+      "purpose": "OpenAPI 3.1 built from routes and checked, breaking changes found, contract tests generated and responses verified",
+      "requires": [
+        "apiver"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/openapi"
+    },
+    {
+      "name": "crud-from-schema",
+      "purpose": "Create, read, update and delete routes from one entity declaration, with validation, filters, paging, relations and field permissions",
+      "requires": [
+        "rbac",
+        "openapi"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/crud-from-schema"
+    },
+    {
+      "name": "html-parse",
+      "purpose": "A tolerant HTML reader with limits, CSS selectors, serialising, diffing and entities",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/html-parse"
+    },
+    {
+      "name": "link-preview",
+      "purpose": "Link previews fetched safely (private addresses, DNS pinning, every redirect checked), cards read and oEmbed",
+      "requires": [
+        "html-parse"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/link-preview"
+    },
+    {
+      "name": "accessibility-checks",
+      "purpose": "WCAG checks on HTML: contrast, accessible names, focus order and a report",
+      "requires": [
+        "html-parse"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/accessibility-checks"
+    },
+    {
+      "name": "block-markup",
+      "purpose": "Block editor markup as Gutenberg has it: parsed and written, validated by a registry, plain text and a walker",
+      "requires": [
+        "html-parse"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/block-markup"
+    },
+    {
+      "name": "delta-sync",
+      "purpose": "File sync by rolling checksums as rsync does it, three-way comparison with conflicts named, and ignore rules",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/delta-sync"
+    },
+    {
+      "name": "http-cache",
+      "purpose": "HTTP caching: dates, ETags, preconditions, Cache-Control and freshness, Vary, ranges and multipart byte ranges",
+      "requires": [],
+      "tests": 23,
+      "home": "intent/blocks/http-cache"
     }
   ]
 }
