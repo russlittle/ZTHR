@@ -4,101 +4,120 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The plant · ZTHR</title>
-<meta name="description" content="The ZTHR software factory laid out as a plant: eight departments on the line, a metrology lab and a maintenance shop beneath it, and where each stands today.">
+<meta name="description" content="The ZTHR software factory as a plant: the front office, engineering, the production hall, QA, shipping and the field, with the crews that keep them running, and where each stands today.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%227%22 fill=%22%231f7a4d%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+/* VOICE: a plant manager walking a visitor round the floor: plain, exact, proud of what runs, straight about what doesn't.
+   IDEA: a cutaway of the plant, roofs off, seen from the mezzanine; the work flows office to field.
+   PICTURE: an isometric plant: office block, engineering, the production hall and its line, QA, the dock, the road
+   to the field, the maintenance shop beside the hall and the metrology lab beside QA. Day shift and night shift.
+   COLOUR and TYPE: sealed-concrete floor, painted steel, safety-yellow aisle lines, andon lamps; Barlow Semi
+   Condensed as the plant's lettering, Atkinson Hyperlegible for reading.
+   LAYOUT: the plant fills the first screen; the traveler for the area you pick sits under it. */
 :root {
   color-scheme: light dark;
-  --board: light-dark(#cfd8cc, #111a15);
-  --sheet: light-dark(#fbfcfa, #18221d);
+  --board: light-dark(#cfd8cc, #0f1713);
+  --paper: light-dark(#fbfcfa, #18221d);
   --ink: light-dark(#16201c, #e6ede8);
   --muted: light-dark(#46544d, #aab9b0);
   --rule: light-dark(#9fb0a6, #3d4d44);
-  --faint: light-dark(#dfe6e0, #26322c);
   --blue: light-dark(#1b4fa8, #9cc0ff);
   --on-blue: light-dark(#ffffff, #0d1a12);
-  --go: light-dark(#1f7a4d, #6fd19f);
-  --part: light-dark(#a8660b, #f0b65a);
-  --stop: light-dark(#b3122a, #ff8a95);
-  --off: light-dark(#8a978f, #5d6b63);
+  --go: #23955e; --part: #e09a1a; --stop: #d8263f; --off: #8a978f;
   --focus: light-dark(#b3122a, #ffb3ba);
   --body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif;
   --letter: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
 }
 :root[data-theme=light] { color-scheme: light; }
 :root[data-theme=dark] { color-scheme: dark; }
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--board); color: var(--ink); font: 17px/1.55 var(--body); }
+* { box-sizing: border-box; min-width: 0; }
+body { margin: 0; background: var(--board); color: var(--ink); font: 17px/1.55 var(--body); overflow-x: clip; }
 a { color: var(--blue); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
-.wrap { max-width: 1320px; margin: 0 auto; padding: 28px 24px 56px; }
-.head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 32px; margin-bottom: 18px; }
-.head h1 { margin: 0; font: 600 clamp(34px, 5vw, 56px)/1 var(--letter); letter-spacing: -0.01em; }
-.head p { margin: 8px 0 0; max-width: 62ch; color: var(--muted); }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; list-style: none; font: 500 15px var(--letter); color: var(--muted); }
-.legend li { display: flex; align-items: center; gap: 7px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex: none; }
-.go { background: var(--go); } .part { background: var(--part); } .stop { background: var(--stop); } .off { background: transparent; border: 2px solid var(--off); }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 24px 20px 56px; }
+.head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 28px; margin-bottom: 14px; }
+.head h1 { margin: 0; font: 600 clamp(34px, 5vw, 54px)/1 var(--letter); }
+.head p { margin: 8px 0 0; max-width: 64ch; color: var(--muted); }
+.shift { display: inline-flex; border: 1.5px solid var(--ink); border-radius: 8px; overflow: hidden; }
+.shift button { min-height: 44px; padding: 6px 16px; border: 0; background: transparent; color: var(--ink); font: 600 16px var(--letter); cursor: pointer; }
+.shift button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 
-.sheet { background: var(--sheet); border: 2px solid var(--ink); padding: 10px; }
-.sheet svg { display: block; width: 100%; height: auto; }
-svg text { font-family: var(--letter); fill: var(--ink); }
-.grid text { font-size: 13px; fill: var(--muted); }
-.belt { fill: none; stroke: var(--ink); stroke-width: 2; }
-.belt-in { fill: none; stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 10; }
-.route { fill: none; stroke: var(--blue); stroke-width: 5; stroke-linecap: round; opacity: .85; }
-.service { fill: none; stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 6 5; transition: stroke .15s; }
-.service.lit { stroke: var(--blue); stroke-width: 2.2; }
-.bay { cursor: pointer; }
-.bay rect.box { fill: var(--sheet); stroke: var(--ink); stroke-width: 1.6; transition: fill .15s; }
-.bay:hover rect.box { fill: var(--faint); }
-.bay[aria-pressed="true"] rect.box { stroke-width: 3.5; fill: var(--faint); }
-.bay:focus { outline: none; }
-.bay:focus-visible rect.box { stroke: var(--focus); stroke-width: 3.5; }
-.bay .n { font-size: 15px; fill: var(--muted); }
-.bay .name { font-size: 23px; font-weight: 600; }
-.bay .fig { font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.bay .figl { font-family: var(--body); font-size: 13px; fill: var(--muted); }
-.lamp-go { fill: var(--go); } .lamp-part { fill: var(--part); } .lamp-stop { fill: var(--stop); } .lamp-off { fill: none; stroke: var(--off); stroke-width: 2.5; }
-.lamp-halo { fill: none; stroke-width: 6; opacity: .25; }
-.zone-label { font-size: 15px; fill: var(--muted); }
-.token rect { fill: var(--blue); }
-.token text { fill: var(--on-blue); font-size: 15px; font-weight: 600; }
-.tb line, .tb rect { stroke: var(--ink); fill: none; stroke-width: 1.2; }
-.tb .k { font-size: 11.5px; fill: var(--muted); }
-.tb .v { font-size: 17px; font-weight: 600; }
+.yard { position: relative; border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; background: var(--ground); transition: background .6s;
+  --ground: #b9c4b4; --slab: #e3e6df; --slab-e: #c5ccc3; --wall-t: #f4f5f2; --wall-l: #c9cfc7; --wall-r: #aab3a8;
+  --steel-t: #8d9aa3; --steel-l: #6c7a84; --steel-r: #56636c; --yel-t: #f2c230; --yel-l: #d3a41a; --yel-r: #b38810;
+  --desk-t: #e8e1d2; --desk-l: #cbc2ae; --desk-r: #b2a891; --screen: #2b6fd6; --granite-t: #5d6466; --granite-l: #474d4f; --granite-r: #383d3f;
+  --red-t: #d0453f; --red-l: #ad2f2a; --red-r: #8e2420; --crate-t: #3f7be0; --crate-l: #2a5fb9; --crate-r: #1f4b95;
+  --road: #8d978a; --line: #e2b01e; --glass: #cfe2ee; --label: #16201c; --label-bg: #fbfcfa; }
+.yard.night { --ground: #1c2622; --slab: #2c3732; --slab-e: #222b27; --wall-t: #3b4842; --wall-l: #2c3732; --wall-r: #222b27;
+  --steel-t: #4e5b63; --steel-l: #3c474e; --steel-r: #2f383e; --desk-t: #4a4639; --desk-l: #3a372d; --desk-r: #2e2b23;
+  --granite-t: #3a4042; --granite-l: #2d3234; --granite-r: #232729; --crate-t: #3567bd; --crate-l: #24508f; --crate-r: #1b3d70;
+  --road: #303a35; --glass: #f6d98a; --label-bg: #24302b; --label: #e6ede8; }
+.yard svg { display: block; width: 100%; height: auto; }
+.f { stroke: rgba(0,0,0,.18); stroke-width: .6; stroke-linejoin: round; }
+.night .f { stroke: rgba(0,0,0,.35); }
+.wall .t { fill: var(--wall-t); } .wall .l { fill: var(--wall-l); } .wall .r { fill: var(--wall-r); }
+.steel .t { fill: var(--steel-t); } .steel .l { fill: var(--steel-l); } .steel .r { fill: var(--steel-r); }
+.yel .t { fill: var(--yel-t); } .yel .l { fill: var(--yel-l); } .yel .r { fill: var(--yel-r); }
+.desk .t { fill: var(--desk-t); } .desk .l { fill: var(--desk-l); } .desk .r { fill: var(--desk-r); }
+.granite .t { fill: var(--granite-t); } .granite .l { fill: var(--granite-l); } .granite .r { fill: var(--granite-r); }
+.redc .t { fill: var(--red-t); } .redc .l { fill: var(--red-l); } .redc .r { fill: var(--red-r); }
+.crate .t { fill: var(--crate-t); } .crate .l { fill: var(--crate-l); } .crate .r { fill: var(--crate-r); }
+.scr .t, .scr .l, .scr .r { fill: var(--screen); }
+.glass .t { fill: var(--glass); } .glass .l, .glass .r { fill: var(--glass); opacity: .75; }
+.empty .f { fill: transparent; stroke: var(--steel-l); stroke-dasharray: 3 3; stroke-width: 1; }
+.slab { fill: var(--slab); stroke: var(--slab-e); stroke-width: 2; }
+.room { fill: none; stroke: var(--line); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.road { fill: var(--road); }
+.dash { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 10 9; }
+.zone { cursor: pointer; }
+.zone .hit { fill: transparent; }
+.zone:hover .hit, .zone[aria-pressed="true"] .hit { fill: rgba(27,79,168,.14); stroke: var(--blue); stroke-width: 2.5; }
+.zone:focus { outline: none; }
+.zone:focus-visible .hit { stroke: var(--focus); stroke-width: 3.5; fill: rgba(179,18,42,.08); }
+.tag rect { fill: var(--label-bg); stroke: var(--label); stroke-width: 1.2; }
+.tag text { fill: var(--label); font: 600 15px var(--letter); }
+.halo { opacity: .35; }
+.night .halo { opacity: .6; }
+.blink { animation: blink 1.2s steps(2, end) infinite; }
+@keyframes blink { 50% { opacity: .05; } }
+.cart { display: none; }
+.night .cart { display: inline; }
+.caption { position: absolute; left: 14px; bottom: 12px; max-width: min(560px, 70%); margin: 0; padding: 8px 12px; border-radius: 6px; background: var(--label-bg); color: var(--label); font: 500 15px/1.4 var(--body); border: 1px solid var(--rule); }
 
-.traveler { margin-top: 18px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; background: var(--sheet); border: 2px solid var(--ink); }
+.traveler { margin-top: 16px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); background: var(--paper); border: 2px solid var(--ink); border-radius: 4px; }
 .traveler > * { padding: 20px 24px; }
 .traveler .card { border-right: 1px solid var(--rule); }
 .traveler h2 { margin: 0; font: 600 34px/1.05 var(--letter); display: flex; align-items: center; gap: 12px; }
-.traveler .station { margin: 0 0 4px; font: 500 16px var(--letter); color: var(--muted); }
-.traveler .does { margin: 10px 0 16px; max-width: 60ch; }
-.state { margin: 0 0 16px; font: 600 20px/1.3 var(--letter); }
+.where { margin: 0 0 4px; font: 500 16px var(--letter); color: var(--muted); }
+.does { margin: 10px 0 14px; max-width: 62ch; }
+.state { margin: 0 0 14px; font: 600 20px/1.3 var(--letter); }
 .facts { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; }
 .facts dt { font: 500 15px var(--letter); color: var(--muted); padding-top: 2px; }
 .facts dd { margin: 0; font-variant-numeric: tabular-nums; }
 .gaps h3 { margin: 0 0 8px; font: 600 19px var(--letter); }
 .gaps ul { margin: 0 0 18px; padding-left: 20px; }
 .gaps li { margin: 4px 0; }
+.dot { width: 13px; height: 13px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.go { background: var(--go); } .dot.part { background: var(--part); } .dot.stop { background: var(--stop); } .dot.off { border: 2px solid var(--off); }
 .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 18px; border-radius: 6px; background: var(--blue); color: var(--on-blue); font: 600 16px var(--body); text-decoration: none; }
 .btn.quiet { background: transparent; color: var(--blue); border: 1px solid var(--blue); }
 .acts { display: flex; flex-wrap: wrap; gap: 10px; }
-.foot { margin-top: 18px; font-size: 14px; color: var(--muted); max-width: 90ch; }
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; padding: 0; list-style: none; font: 500 15px var(--letter); color: var(--muted); }
+.legend li { display: flex; align-items: center; gap: 7px; }
+.foot { margin-top: 14px; font-size: 14px; color: var(--muted); max-width: 90ch; }
 @media (max-width: 860px) {
   .traveler { grid-template-columns: 1fr; }
   .traveler .card { border-right: 0; border-bottom: 1px solid var(--rule); }
-  .wrap { padding: 18px 12px 40px; }
-  .sheet { overflow-x: auto; }
-  .sheet svg { min-width: 880px; }
-  .facts { grid-template-columns: 1fr; gap: 0; }
-  .facts dd { margin-bottom: 8px; }
+  .wrap { padding: 16px 10px 40px; }
+  .yard { overflow-x: auto; }
+  .yard svg { min-width: 900px; }
+  .caption { position: static; max-width: none; border-radius: 0; border: 0; border-top: 1px solid var(--rule); }
+  .facts { grid-template-columns: 1fr; gap: 0; } .facts dd { margin-bottom: 8px; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
@@ -106,34 +125,28 @@ svg text { font-family: var(--letter); fill: var(--ink); }
   <div class="head">
     <div>
       <h1>The plant</h1>
-      <p>ZTHR is a software factory laid out like a plant. Work enters as what a person means and leaves as software in service. Pick any department to see what it does and where it stands today, or read <a id="how-line" href="/line/">how the line works</a>.</p>
+      <p>ZTHR builds software the way a plant builds parts. The front office runs it, engineering defines the product and then how to make it, the hall builds it, QA inspects it, and it ships to the field. Pick any area to see what it does and where it stands today, or read <a id="how-line" href="/line/">how the line works</a>.</p>
     </div>
-    <ul class="legend" aria-label="What the lamps mean">
-      <li><span class="dot go"></span>Running, with evidence</li>
-      <li><span class="dot part"></span>Running, partly proven</li>
-      <li><span class="dot stop"></span>Stopped on a defect</li>
-      <li><span class="dot off"></span>Not started</li>
-    </ul>
+    <div class="shift" role="group" aria-label="Shift">
+      <button type="button" id="day" aria-pressed="true">Day shift</button>
+      <button type="button" id="night" aria-pressed="false">Night shift</button>
+    </div>
   </div>
 
-  <div class="sheet">
-    <svg id="plan" viewBox="0 0 1240 930" role="group" aria-label="Plant layout: eight departments along the line, with metrology and maintenance beneath">
-      <g class="grid" aria-hidden="true">
-        <rect x="14" y="14" width="1212" height="902" fill="none" stroke="currentColor" style="stroke:var(--ink)" stroke-width="1.2"/>
-        <rect x="34" y="34" width="1172" height="862" fill="none" style="stroke:var(--ink)" stroke-width="2"/>
-      </g>
-      <g id="layer-service"></g>
-      <g id="layer-belt"></g>
-      <g id="layer-route"></g>
-      <g id="layer-bays"></g>
-      <g id="layer-token"></g>
-      <g id="layer-tb" class="tb"></g>
-    </svg>
+  <div class="yard" id="yard">
+    <svg id="plant" viewBox="0 0 1240 720" role="group" aria-label="The plant, roofs off"></svg>
+    <p class="caption" id="caption"></p>
   </div>
+  <ul class="legend" aria-label="What the lamps mean">
+    <li><span class="dot go"></span>Running, with evidence</li>
+    <li><span class="dot part"></span>Running, partly proven</li>
+    <li><span class="dot stop"></span>Stopped on a defect</li>
+    <li><span class="dot off"></span>Not started</li>
+  </ul>
 
-  <section class="traveler" id="traveler" aria-live="polite">
+  <section class="traveler" aria-live="polite">
     <div class="card">
-      <p class="station" id="t-station"></p>
+      <p class="where" id="t-where"></p>
       <h2 id="t-name"></h2>
       <p class="does" id="t-does"></p>
       <p class="state" id="t-state"></p>
@@ -143,260 +156,286 @@ svg text { font-family: var(--letter); fill: var(--ink); }
       <h3>Not proven yet</h3>
       <ul id="t-gaps"></ul>
       <div class="acts">
-        <a class="btn" id="t-open" href="#">Open the department</a>
+        <a class="btn" id="t-open" href="#">Open</a>
         <a class="btn quiet" id="t-how" href="#">How it works</a>
       </div>
     </div>
   </section>
-
   <p class="foot" id="foot"></p>
 </main>
 
 <script>
-// Every figure is the factory's own, from the repository at the commit named in the title block. Where a department
-// has nothing to show, the page says so rather than showing a zero that looks like a measurement.
-const PLANT = {
-  commit: '6cf406a',
-  asOf: '2026-11-28',
-  products: [{ name: 'Files', at: 'qa', note: 'A Nextcloud-compatible file server, the first product on the line' }],
-  claims: { proven: 10, partial: 43, unproven: 20 },
-};
+{
+// Every figure is the factory's own, read from the repository at the revision below. Where an area has nothing to
+// show, it says so rather than showing a zero that looks like a measurement.
+const PLANT = { commit: '340bd74', asOf: '2026-11-28', claims: { proven: 10, partial: 43, unproven: 20 } };
 
-const DEPTS = [
-  { key: 'mission', n: '1', label: 'Mission control', lamp: 'part',
-    does: 'Every product line and product, where each stands, and what is waiting on a person.',
-    fig: '1', figl: 'product on the line',
-    state: 'Shows the platform, but journey results reach it only from a published build feed, and none is published yet.',
-    facts: [['Products', '1, Files, now in QA'], ['Journeys reported', 'Waiting on the build feed'], ['Waiting on a person', 'Nothing']],
-    gaps: ['The reference build does not publish its feed, so the journey totals read 0 of 0'] },
-  { key: 'lines', n: '2', label: 'Product lines', lamp: 'part',
-    does: 'Define a line: who it serves, and the defaults every product in it starts from.',
-    fig: '1', figl: 'line defined',
-    state: 'One line runs: a Nextcloud-compatible file service, measured against stock Nextcloud.',
-    facts: [['Lines', '1'], ['Reference system', 'Nextcloud 32.0.15']],
-    gaps: ['Lines are kept in the browser; no line is held centrally yet'] },
-  { key: 'intent', n: '3', label: 'Intent studio', lamp: 'go',
-    does: 'Say what a product must do, settle the questions, and sign the schematic as what you mean.',
-    fig: '6', figl: 'steps from words to package',
-    state: 'Works end to end in the browser: rough words become a numbered schematic, questions, and a released package.',
+const AREAS = [
+  { key: 'mission', label: 'Mission control', where: 'The front office: runs the whole plant', lamp: 'part', page: 'mission',
+    does: 'Sees every product line, every product and where each stands, and holds what is waiting on a person. It runs the plant rather than being a step in it.',
+    state: 'The office is open, but journey results reach it only from a published build feed, and none is published yet.',
+    facts: [['Product lines', '1'], ['Products in work', '1, Files'], ['Waiting on a person', 'Nothing']],
+    gaps: ['The build feed is not published, so the plant-wide journey totals read 0 of 0'] },
+  { key: 'lines', label: 'Product lines', where: 'In the front office', lamp: 'part', page: 'lines',
+    does: 'Each product family: who it serves and the defaults every product in it starts from. A family can hold many products, each built separately in the hall.',
+    state: 'One family runs: file services compatible with Nextcloud, with one product, Files.',
+    facts: [['Families', '1, file services'], ['Products', '1, Files'], ['Reference system', 'Nextcloud 32.0.15']],
+    gaps: ['Families are kept in the browser; none is held centrally yet'] },
+  { key: 'intent', label: 'Intent studio', where: 'In each product line', lamp: 'go', page: 'intent',
+    does: 'Defines the thing. A person says what the product must do in their own words; the studio turns it into a numbered schematic, settles the questions, and releases a signed intent package.',
+    state: 'Works end to end in the browser, from rough words to a released package.',
     facts: [['Steps', 'Rough intent, read, questions, review, signed, released'], ['Runs', 'In the browser, nothing sent anywhere']],
     gaps: ['Held-out phrasing sets are sealed by convention, not by signature'] },
-  { key: 'engineering', n: '4', label: 'Engineering', lamp: 'go',
-    does: 'Turn the signed schematic into a complete specification: outcomes, data, compliance, operations, measures and tests.',
-    fig: '85', figl: 'library blocks built',
-    state: 'The library every product draws on: 85 blocks, each with its tests, and 15 more that run the factory itself.',
-    facts: [['Library blocks', '85, plus 15 factory blocks'], ['Block tests', '1,063 passing'], ['Top 50 app needs', '38 covered, 12 partly, none missing']],
-    gaps: ['Partly covered: HTTP routing, forms, uploads and storage, background jobs, payments, billing, rate limiting, tracing, admin console, single sign-on, maps, images'] },
-  { key: 'factory', n: '5', label: 'Factory', lamp: 'part',
-    does: 'Build to the released package, and measure what was built.',
-    fig: '76', figl: 'Files tests passing',
-    state: 'Files is built and passes its own suite. Its build feed is not published, so this department reads nothing live yet.',
+  { key: 'design', label: 'Product engineering', where: 'Engineering, first step: what to build', lamp: 'go', page: 'engineering',
+    does: 'Takes the intent package and designs the app and its blocks: outcomes, data, compliance, operations, measures and tests.',
+    state: 'Designs from a library of 85 standard blocks, each with its tests. The catalogue specs about 300; the rest are being built.',
+    facts: [['Standard blocks', '85 built of about 300 specced'], ['Block tests', '1,063 passing'], ['Top 50 app needs', '38 covered, 12 partly']],
+    gaps: ['About 215 specced blocks are not built yet', 'Partly covered: HTTP routing, forms, uploads, background jobs, payments, billing, rate limiting, tracing, admin console, single sign-on, maps, images'] },
+  { key: 'process', label: 'Manufacturing engineering', where: 'Engineering, second step: how to build it', lamp: 'part', page: 'engineering',
+    does: 'Adapts the design for manufacture: the build package, the routing through the hall, the fixtures, and the gates each step must pass. Then releases it to the floor.',
+    state: 'The build package, the gates and the required checks are defined; not every stage of the routing has run.',
+    facts: [['Gates', '8, run on every change'], ['Routing run so far', 'Build, QA, release'], ['Defined, never run', 'Data, signing, canary, operate']],
+    gaps: ['The canary, signing and operate stages have never run', 'Failure modes are not analysed per block'] },
+  { key: 'factory', label: 'Factory floor', where: 'The production hall', lamp: 'part', page: 'factory',
+    does: 'Builds to the released package, on the line, and measures what was built.',
+    state: 'Files is built and passes its own suite; builds are reproducible byte for byte.',
     facts: [['Files suite', '76 of 76 passing'], ['Builds', 'Reproducible byte for byte'], ['Supply chain', 'SBOM and licence gate passing']],
-    gaps: ['The build feed the console reads is not published'] },
-  { key: 'qa', n: '6', label: 'QA', lamp: 'stop',
-    does: 'Walk every journey as a person would, prove every gate can fail, hold every ratchet.',
-    fig: '2', figl: 'sync steps failing',
-    state: 'Files is measured against stock Nextcloud with the real desktop client. Two sync steps failed where Nextcloud passed; the fix is in the run now.',
+    gaps: ['The build feed the office reads is not published'] },
+  { key: 'qa', label: 'QA', where: 'End of the line', lamp: 'stop', page: 'qa',
+    does: 'Inspects every product as a person would use it: every journey walked, every gate proven able to fail, every ratchet held.',
+    state: 'Files is inspected against stock Nextcloud with the real desktop sync client. Two sync steps failed where Nextcloud passed; the fix is under test.',
     facts: [['WebDAV conformance (litmus)', '100%, level with Nextcloud'], ['Sync journey', '2 steps failing, fix under test'], ['Recorded differences', '101, each explained, none closed']],
     gaps: ['No gauge is certified, so QA cannot yet meet its rule of using only certified gauges', 'Cross-family review has never run'] },
-  { key: 'shipping', n: '7', label: 'Shipping', lamp: 'off',
-    does: 'Move a certified build to the people it is for, stage by stage, with a person approving production.',
-    fig: '0', figl: 'builds shipped',
-    state: 'Nothing has shipped. Files goes out when it clears QA and the branch merges.',
-    facts: [['Shipped', 'None'], ['Next to ship', 'Files, after QA']],
-    gaps: ['The canary, signing and operate stages are defined but have never run'] },
-  { key: 'fleet', n: '8', label: 'Fleet', lamp: 'off',
-    does: 'Everything in service, the library each app draws on, and the data it keeps.',
-    fig: '0', figl: 'products in service',
-    state: 'Nothing from the line is in service yet. What service teaches will flow back to mission control.',
-    facts: [['In service', 'None'], ['Live elsewhere', 'zthr.ai, walked and scanned every two hours']],
+  { key: 'shipping', label: 'Shipping', where: 'The dock', lamp: 'off', page: 'shipping',
+    does: 'Moves a certified build to the people it is for, stage by stage, with a person approving production.',
+    state: 'Nothing has shipped. Files goes out when it clears QA.',
+    facts: [['Shipped', 'None'], ['Next out', 'Files, after QA']],
+    gaps: ['No product build has been deployed'] },
+  { key: 'fleet', label: 'Fleet', where: 'In the field', lamp: 'off', page: 'fleet',
+    does: 'Everything in service, the blocks each app draws on, and the data it keeps. What the field teaches goes back to the front office.',
+    state: 'Nothing from the line is in service yet.',
+    facts: [['In service', 'None']],
     gaps: ['No product has been used by a person'] },
-  { key: 'metrology', n: '±', label: 'Metrology', lamp: 'stop', beneath: true,
-    does: 'The lab: defines every measure QA uses, traces it to a reference, certifies every gauge, and charts the factory for drift.',
-    fig: '0/85', figl: 'gauges certified',
-    state: 'Every block is calibrated nightly by planting defects in it. None is certified yet; certification needs every planted defect caught.',
-    facts: [['Median mutation score', '75.2%'], ['Best', 'testdata 100%, validate 97.9%, contact 97.5%, pdf 96.8%'], ['Surviving planted defects', '5,659'], ['Claims audited', `${PLANT.claims.proven} proven, ${PLANT.claims.partial} partial, ${PLANT.claims.unproven} unproven`]],
-    gaps: ['Repeatability and reproducibility are not measured', 'The factory against a bare agent has not been measured'] },
-  { key: 'maintenance', n: '↻', label: 'Maintenance', lamp: 'part', beneath: true,
-    does: 'The night shift: works what every department tagged, through the same gates as day work, and reports each morning.',
-    fig: '5,659', figl: 'work orders queued',
-    state: 'Works the backlog within its budget, one work order at a time, without holding up the day line.',
-    facts: [['Queue', '5,659 work orders'], ['Closed so far', 'About 1,260 surviving defects, and about 300 defects fixed'], ['Crew', 'Budgeted; runs as sub-agents until the Vertex crew is live']],
+  { key: 'maintenance', label: 'Maintenance', where: 'Works on the factory', lamp: 'part', page: 'maintenance',
+    does: 'Keeps the factory running and improves it. The night shift works the backlog every department tags, within its budget, through the same gates as day work, and reports each morning.',
+    state: 'Works the queue a little each night without holding up the day line.',
+    facts: [['Queue', '5,659 work orders'], ['Closed so far', 'About 1,260 weak gauge points, and about 300 defects fixed'], ['Crew', 'Budgeted; runs as sub-agents until the Vertex crew is live']],
     gaps: ['The Vertex crew has not run a shift'] },
+  { key: 'metrology', label: 'Metrology', where: 'Works on QA', lamp: 'stop', page: 'metrology',
+    does: 'The lab behind QA: defines every measure QA uses, traces it to a reference, and certifies every gauge before QA may use it.',
+    state: 'Every block is calibrated by planting defects in it. None is certified yet; certification needs every planted defect caught.',
+    facts: [['Gauges certified', '0 of 85'], ['Median mutation score', '75.2%'], ['Best', 'testdata 100%, validate 97.9%, contact 97.5%, pdf 96.8%'], ['Surviving planted defects', '5,659'], ['Claims audited', `${PLANT.claims.proven} proven, ${PLANT.claims.partial} partial, ${PLANT.claims.unproven} unproven`]],
+    gaps: ['Repeatability and reproducibility are not measured', 'The factory against a bare agent has not been measured'] },
+  { key: 'deploy', label: 'Deployment engineering', where: 'Supports shipping and the fleet', lamp: 'part', page: 'shipping',
+    does: 'The cloud and field engineers: stand up where products run, deploy them, watch them in service, and bring back what the field shows.',
+    state: 'Runs the live site today: zthr.ai deploys, and is walked and security-scanned every two hours. No product of the line has been deployed.',
+    facts: [['Live today', 'zthr.ai, walked and scanned every two hours'], ['Products deployed', 'None']],
+    gaps: ['Files has never been deployed'] },
 ];
 
-const ROUTE = ['mission', 'lines', 'intent', 'engineering', 'factory', 'qa', 'shipping', 'fleet'];
 const live = /(^|\.)zthr\.ai$/.test(location.hostname) || location.hostname === 'localhost';
 const SRC = 'https://github.com/russlittle/ZTHR/blob/intent-surface/intent';
-const hrefOpen = (k) => (live ? `/${k}/` : `${SRC}/site/${k}.html`);
-const hrefHow = (k) => (live ? `/line/${k}/` : `${SRC}/docs/line/${k}.md`);
+const hrefOpen = (p) => (live ? `/${p}/` : `${SRC}/site/${p}.html`);
+const hrefHow = (p) => (live ? `/line/${p}/` : `${SRC}/docs/line/${p}.md`);
 if (!live) document.getElementById('how-line').href = `${SRC}/docs/line/README.md`;
 
-// ---------------------------------------------------------------- layout
-const W = 236, H = 156;
-const TOPY = 120, BOTY = 400, xs = [86, 360, 634, 908];
-const pos = {
-  mission: [xs[0], TOPY], lines: [xs[1], TOPY], intent: [xs[2], TOPY], engineering: [xs[3], TOPY],
-  factory: [xs[3], BOTY], qa: [xs[2], BOTY], shipping: [xs[1], BOTY], fleet: [xs[0], BOTY],
-  metrology: [86, 640], maintenance: [634, 640],
+// ---------------------------------------------------------------- isometric drawing
+const svg = document.getElementById('plant');
+const NS = 'http://www.w3.org/2000/svg';
+const U = 18, OX = 500, OY = 72;
+const P = (x, y, z = 0) => [OX + (x - y) * U, OY + (x + y) * U / 2 - z * U];
+const pts = (a) => a.map(([x, y, z]) => P(x, y, z).join(',')).join(' ');
+const mk = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
+const layer = (name) => mk('g', { id: name });
+const L = { ground: layer('ground'), slabs: layer('slabs'), objs: layer('objs'), zones: layer('zones'), tags: layer('tags') };
+const objs = [];
+const box = (x, y, z, w, d, h, cls) => objs.push({ x, y, z, w, d, h, cls });
+function drawBox({ x, y, z, w, d, h, cls }, parent) {
+  const g = mk('g', { class: cls }, parent);
+  mk('polygon', { class: 'f t', points: pts([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]]) }, g);
+  mk('polygon', { class: 'f l', points: pts([[x, y + d, z], [x + w, y + d, z], [x + w, y + d, z + h], [x, y + d, z + h]]) }, g);
+  mk('polygon', { class: 'f r', points: pts([[x + w, y, z], [x + w, y + d, z], [x + w, y + d, z + h], [x + w, y, z + h]]) }, g);
+  return g;
+}
+const flat = (x, y, w, d, cls, parent, z = 0) => mk('polygon', { class: cls, points: pts([[x, y, z], [x + w, y, z], [x + w, y + d, z], [x, y + d, z]]) }, parent);
+
+// The ground, the road out to the field, and the painted aisles.
+const g0 = flat(-3, -3, 49, 38, 'road', L.ground); g0.setAttribute('style', 'fill:var(--ground)');
+flat(36.4, 14.6, 8.6, 3, 'road', L.ground);
+flat(42.2, -1, 2.8, 18.6, 'road', L.ground);
+mk('polyline', { class: 'dash', points: pts([[36.4, 16.1, 0], [43.6, 16.1, 0], [43.6, -1, 0]]) }, L.ground);
+
+// Buildings: a floor slab, tall back walls, low front walls. The roofs are off so the work shows.
+const building = (x, y, w, d, wallH) => {
+  flat(x, y, w, d, 'slab', L.slabs);
+  box(x - .3, y - .3, 0, w + .3, .3, wallH, 'wall');
+  box(x - .3, y, 0, .3, d, wallH, 'wall');
+  box(x, y + d, 0, w, .25, .45, 'wall');
+  box(x + w, y, 0, .25, d + .25, .45, 'wall');
 };
-const size = (k) => (k === 'metrology' || k === 'maintenance' ? [510, 140] : [W, H]);
-const ns = 'http://www.w3.org/2000/svg';
-const el = (tag, attrs = {}, parent) => {
-  const e = document.createElementNS(ns, tag);
-  for (const [a, v] of Object.entries(attrs)) e.setAttribute(a, v);
-  if (parent) parent.appendChild(e);
-  return e;
-};
-const txt = (parent, x, y, cls, s, anchor = 'start') => { const t = el('text', { x, y, class: cls, 'text-anchor': anchor }, parent); t.textContent = s; return t; };
-const mid = (k) => { const [x, y] = pos[k], [w, h] = size(k); return [x + w / 2, y + h / 2]; };
+building(0, 0, 12, 9, 2.4);      // the front office
+building(14, 0, 13, 9, 2.0);     // engineering
+building(0, 11, 27, 11, 2.8);    // the production hall
+building(29, 11, 7, 9, 2.2);     // QA and the dock
+building(0, 24, 12, 7, 2.0);     // the maintenance shop, off the hall
+building(29, 22, 7, 9, 2.0);     // the metrology lab, behind QA
 
-// The belt: along the top left to right, round the end, back along the bottom, and back up to mission control.
-const belt = document.getElementById('layer-belt');
-const bx0 = xs[0] + W / 2, bx1 = xs[3] + W / 2, by0 = TOPY + H / 2, by1 = BOTY + H / 2, turn = 1176, back = 66;
-const beltPath = `M ${bx0} ${by0} H ${bx1} M ${xs[3] + W} ${by0} H ${turn - 20} Q ${turn} ${by0} ${turn} ${by0 + 20} V ${by1 - 20} Q ${turn} ${by1} ${turn - 20} ${by1} H ${xs[3] + W}`;
-el('path', { d: beltPath, class: 'belt' }, belt);
-el('path', { d: `M ${xs[0]} ${by1} H ${back + 20} Q ${back} ${by1} ${back} ${by1 - 20} V ${by0 + 20} Q ${back} ${by0} ${back + 20} ${by0} H ${xs[0]}`, class: 'belt-in', 'stroke-width': 2 }, belt);
-// Arrows between stations in the direction work moves.
-const arrow = (x, y, dir) => el('path', { d: dir > 0 ? `M ${x - 9} ${y - 7} L ${x + 3} ${y} L ${x - 9} ${y + 7}` : `M ${x + 9} ${y - 7} L ${x - 3} ${y} L ${x + 9} ${y + 7}`, fill: 'none', style: 'stroke:var(--ink)', 'stroke-width': 2 }, belt);
-for (let i = 0; i < 3; i++) arrow((xs[i] + W + xs[i + 1]) / 2 + 4, by0, 1);
-for (let i = 3; i > 0; i--) arrow((xs[i - 1] + W + xs[i]) / 2 - 4, by1, -1);
-txt(belt, turn - 10, (by0 + by1) / 2, 'zone-label', 'to QA', 'end').setAttribute('transform', `rotate(90 ${turn + 14} ${(by0 + by1) / 2})`);
-const ret = txt(belt, back - 18, (by0 + by1) / 2, 'zone-label', 'what service teaches comes back', 'middle');
-ret.setAttribute('transform', `rotate(-90 ${back - 18} ${(by0 + by1) / 2})`);
-txt(belt, xs[0], TOPY - 26, 'zone-label', 'The line: from what a person means to software in service');
-txt(belt, 86, 622, 'zone-label', 'Beneath the line, serving every department');
+const room = (x, y, w, d) => flat(x, y, w, d, 'room', L.slabs, 0.02);
+room(0.4, 0.4, 5.2, 8.2); room(6.2, 0.4, 5.4, 8.2); room(8.8, 0.8, 2.6, 7.4);
+room(14.4, 0.4, 6.0, 8.2); room(21, 0.4, 5.6, 8.2);
+room(29.4, 11.4, 6.2, 4.4); room(29.4, 16.4, 6.2, 3.2);
 
-// Service lines from the lab and the shop to every station.
-const service = document.getElementById('layer-service');
-const header = 600;
-el('path', { d: `M 86 ${header} H 1144`, class: 'service', 'data-svc': 'all' }, service);
-const svc = {};
-for (const k of ROUTE) {
-  const [x, y] = pos[k];
-  const cx = x + W / 2 + (y === TOPY ? 70 : -70);
-  const d = y === BOTY ? `M ${cx} ${header} V ${BOTY + H}` : `M ${cx} ${header} V ${BOTY - 30} M ${cx} ${TOPY + H + 34} V ${TOPY + H}`;
-  svc[k] = el('path', { d, class: 'service' }, service);
+// Mission control: a wall of screens and the desks that watch the whole plant.
+box(0.6, 0.6, 0, 4.8, .3, .2, 'steel'); for (let i = 0; i < 4; i++) box(0.8 + i * 1.15, 0.65, .3, 1, .12, .9, 'scr');
+for (let r = 0; r < 2; r++) for (let c = 0; c < 2; c++) box(1 + c * 2.2, 3 + r * 2.6, 0, 1.8, 1.1, .55, 'desk');
+// Product lines, each family a table; inside each line its intent studio, where the product is defined.
+box(6.6, 1, 0, 1.9, 2.8, .55, 'desk'); box(6.6, 5, 0, 1.9, 2.8, .55, 'empty');
+box(9.1, 1.2, 0, 2, 1.4, .7, 'desk'); box(9.3, 1.4, .7, 1.6, 1, .05, 'glass'); box(9.1, 4.2, 0, 2, 1.4, .7, 'desk'); box(9.3, 4.4, .7, 1.6, 1, .05, 'glass');
+// Product engineering: drafting desks and the racks of standard blocks; empty slots are specced, not yet built.
+for (let i = 0; i < 2; i++) box(14.8 + i * 2.4, 1, 0, 1.9, 1.2, .6, 'desk');
+for (let lvl = 0; lvl < 3; lvl++) for (let c = 0; c < 6; c++) for (let r = 0; r < 5; r++) {
+  const n = lvl * 30 + c * 5 + r;
+  box(14.9 + c * .9, 4.2 + r * .78, lvl * .62, .7, .62, .55, n < 26 ? 'crate' : 'empty');
 }
-for (const k of ['metrology', 'maintenance']) {
-  const [x, y] = pos[k], [w] = size(k);
-  svc[k] = el('path', { d: `M ${x + w / 2} ${y} V ${header}`, class: 'service' }, service);
-}
+// Manufacturing engineering: the build plan and a fixture being proven.
+box(21.5, 1, 0, 4.6, 2.2, .55, 'desk'); box(21.9, 1.3, .55, 3.8, 1.6, .05, 'glass');
+box(22, 4.6, 0, 3.2, 2.6, .35, 'granite'); box(22.4, 5, .35, .4, .4, 1.1, 'yel'); box(24.4, 5, .35, .4, .4, 1.1, 'yel'); box(22.4, 6.4, .35, .4, .4, 1.1, 'yel'); box(24.4, 6.4, .35, .4, .4, 1.1, 'yel'); box(22.4, 5, 1.45, 2.4, 1.8, .2, 'yel');
+// The production hall: the line runs the length of the hall into QA, cells along it.
+box(1, 16, 0, 33.5, 1.2, .55, 'steel');
+box(1, 16, .55, 33.5, .12, .08, 'yel'); box(1, 17.08, .55, 33.5, .12, .08, 'yel');
+for (let i = 0; i < 4; i++) { const x = 2.5 + i * 6.2; box(x, 12, 0, 3.4, 2.8, 1.5, 'steel'); box(x + .4, 12.4, 1.5, 2.6, 2, .35, 'yel'); box(x + 1.2, 14.8, 0, .9, .9, 1.9, 'steel'); }
+for (let i = 0; i < 3; i++) box(4 + i * 7.5, 18.8, 0, 4, 2, .8, 'steel');
+// QA: the coordinate measuring machine straddles the line at the end of the hall.
+box(30, 15.2, 0, 4.6, 2.8, .45, 'granite'); box(30.3, 15.2, .45, .5, .5, 2.4, 'steel'); box(33.8, 15.2, .45, .5, .5, 2.4, 'steel'); box(30.3, 15.2, 2.85, 4, .5, .4, 'yel');
+box(30, 12, 0, 2.4, 1.6, .9, 'desk'); box(32.8, 12, 0, 2.4, 1.6, .9, 'desk');
+// Shipping: dock doors and a trailer waiting, empty.
+for (let i = 0; i < 2; i++) box(36, 16.6 + i * 1.6, 0, .25, 1.2, 1.6, 'steel');
+box(37.4, 14.8, 0, 4.4, 1.6, 1.8, 'empty');
+// The field: sites where products run. None yet. The deployment engineers' van waits by the gate.
+for (let i = 0; i < 3; i++) box(38.2, 1 + i * 4, 0, 3, 2.4, 1.2, 'empty');
+box(37.4, 12.4, 0, 1.8, 1, .9, 'wall'); box(39.2, 12.4, 0, .6, 1, .6, 'wall');
+// The maintenance shop: tool cabinets, the bench, and the crew's carts.
+for (let i = 0; i < 4; i++) box(0.6 + i * 1.3, 24.4, 0, 1, .7, 1.4, 'redc');
+box(1, 27, 0, 4.5, 1.4, .8, 'desk'); box(7, 26.4, 0, 3.6, 2.6, .8, 'steel');
+// The metrology lab: granite tables and the reference standards.
+box(29.6, 22.6, 0, 2.6, 2.4, .8, 'granite'); box(30, 23, .8, .8, .6, .5, 'glass'); box(31, 23, .8, .9, .9, .3, 'steel');
+box(32.8, 22.6, 0, 2.6, 2.4, .8, 'granite'); box(33.1, 23, .8, 2, .3, .9, 'steel');
+box(29.6, 27.6, 0, 5.8, .8, 1.1, 'desk');
 
-// The route the product in focus has travelled, drawn under the bays.
-const routeLayer = document.getElementById('layer-route');
-const product = PLANT.products[0];
-const reached = ROUTE.slice(0, ROUTE.indexOf(product.at) + 1);
-const pts = reached.map(mid);
-const routeD = pts.map(([x, y], i) => {
-  if (i === 0) return `M ${x} ${y}`;
-  const [px, py] = pts[i - 1];
-  if (py !== y) return `H ${turn - 28} Q ${turn - 8} ${py} ${turn - 8} ${py + 20} V ${y - 20} Q ${turn - 8} ${y} ${turn - 28} ${y} H ${x}`;
-  return `H ${x}`;
-}).join(' ');
-const route = el('path', { d: routeD, class: 'route' }, routeLayer);
+objs.sort((a, b) => (a.x + a.y + a.z * .01) - (b.x + b.y + b.z * .01) || a.z - b.z);
+for (const o of objs) drawBox(o, L.objs);
 
-// ---------------------------------------------------------------- bays
-const lampR = 11;
-const bays = {};
-const bayLayer = document.getElementById('layer-bays');
-for (const d of DEPTS) {
-  const [x, y] = pos[d.key], [w, h] = size(d.key);
-  const g = el('g', { class: 'bay', tabindex: '0', role: 'button', 'aria-pressed': 'false', 'data-key': d.key,
-    'aria-label': `${d.label}. ${d.fig} ${d.figl}. ${({ go: 'Running, with evidence', part: 'Running, partly proven', stop: 'Stopped on a defect', off: 'Not started' })[d.lamp]}.` }, bayLayer);
-  el('rect', { class: 'box', x, y, width: w, height: h, rx: 3 }, g);
-  txt(g, x + 16, y + 26, 'n', d.beneath ? (d.key === 'metrology' ? 'Lab' : 'Shop') : `Station ${d.n}`);
-  txt(g, x + 16, y + 56, 'name', d.label);
-  if (d.lamp !== 'off') el('circle', { cx: x + w - 24, cy: y + 24, r: lampR + 5, class: `lamp-halo`, style: `stroke:var(--${d.lamp})` }, g);
-  el('circle', { cx: x + w - 24, cy: y + 24, r: lampR, class: `lamp-${d.lamp}` }, g);
-  txt(g, x + 16, y + h - 34, 'fig', d.fig);
-  const fl = txt(g, x + 16, y + h - 14, 'figl', d.figl);
-  bays[d.key] = g;
-  g.addEventListener('click', () => select(d.key, true));
-  g.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(d.key, true); }
-    const order = DEPTS.map((x) => x.key), i = order.indexOf(d.key);
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); bays[order[(i + 1) % order.length]].focus(); }
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); bays[order[(i - 1 + order.length) % order.length]].focus(); }
-  });
-  g.addEventListener('mouseenter', () => light(d.key, true));
-  g.addEventListener('mouseleave', () => light(d.key, false));
-  g.addEventListener('focus', () => light(d.key, true));
-  g.addEventListener('blur', () => light(d.key, false));
-}
-function light(k, on) {
-  if (k === 'metrology' || k === 'maintenance') { for (const s of Object.values(svc)) s.classList.toggle('lit', on); service.firstChild.classList.toggle('lit', on); }
-  else svc[k].classList.toggle('lit', on);
-}
-
-// ---------------------------------------------------------------- the product token
-const tokenLayer = document.getElementById('layer-token');
-const tok = el('g', { class: 'token', 'aria-hidden': 'true' }, tokenLayer);
-el('rect', { x: -34, y: -15, width: 68, height: 30, rx: 15 }, tok);
-txt(tok, 0, 5, '', product.name, 'middle');
-const [qx, qy] = pos[product.at];
-const end = [qx + W / 2, qy];
-const place = (x, y) => tok.setAttribute('transform', `translate(${x} ${y})`);
-place(...end);
+// The product: Files, in its crate, travels its route and waits at QA.
+const route = [[9.9, 1.9, .75], [13, 4.5, 0], [17.5, 0.9, .6], [23.6, 2.1, .6], [27.6, 10, 0], [1.6, 10, 0], [1.6, 16.6, .63], [31.6, 16.6, .63]];
+const crate = mk('g', { 'aria-hidden': 'true' }, L.objs);
+drawBox({ x: -.55, y: -.5, z: 0, w: 1.1, d: 1, h: .8, cls: 'crate' }, crate);
+const [cx0, cy0] = P(0, 0, 0);
+const ct = mk('text', { x: cx0, y: cy0 - 30, 'text-anchor': 'middle', style: 'font:600 14px var(--letter);fill:var(--label);paint-order:stroke;stroke:var(--label-bg);stroke-width:4px' }, crate); ct.textContent = 'Files';
+const [ox0, oy0] = P(0, 0, 0);
+const placeAt = (g, [x, y, z]) => { const [a, b] = P(x, y, z); g.setAttribute('transform', `translate(${a - ox0} ${b - oy0})`); };
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+placeAt(crate, route[route.length - 1]);
+const along = (p, d) => {
+  const lens = p.slice(1).map((q, j) => Math.hypot(q[0] - p[j][0], q[1] - p[j][1]));
+  let j = 0; while (j < lens.length - 1 && d > lens[j]) { d -= lens[j]; j++; }
+  const a = p[j], b = p[j + 1], f = lens[j] ? Math.min(1, d / lens[j]) : 1;
+  return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, (a[2] ?? 0) + ((b[2] ?? 0) - (a[2] ?? 0)) * f];
+};
+const lengthOf = (p) => p.slice(1).reduce((s, q, j) => s + Math.hypot(q[0] - p[j][0], q[1] - p[j][1]), 0);
 if (!still) {
-  // One move on arrival: the product travels its route to where it stands.
-  const len = route.getTotalLength();
-  route.style.strokeDasharray = `${len}`;
-  route.style.strokeDashoffset = `${len}`;
-  const t0 = performance.now(), dur = 2200;
-  const step = (now) => {
-    const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
-    route.style.strokeDashoffset = `${len * (1 - e)}`;
-    const pt = route.getPointAtLength(len * e);
-    place(pt.x, p < 1 ? pt.y - 26 : end[1]);
-    if (p < 1) requestAnimationFrame(step);
-    else { route.style.strokeDasharray = ''; place(...end); }
-  };
-  place(pts[0][0], pts[0][1] - 26);
+  const total = lengthOf(route), t0 = performance.now(), dur = 4200;
+  const step = (now) => { const k = Math.min(1, (now - t0) / dur); placeAt(crate, along(route, (1 - Math.pow(1 - k, 2)) * total)); if (k < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
 
-// ---------------------------------------------------------------- title block
-const tb = document.getElementById('layer-tb');
-const tbx = 1144 - 340, tby = 796, rows = [
-  [['Drawing', 'ZTHR plant layout', 340]],
-  [['Revision', PLANT.commit, 110], ['Date', PLANT.asOf, 110], ['Products on the line', String(PLANT.products.length), 120]],
-];
-el('rect', { x: tbx, y: tby, width: 340, height: 92 }, tb);
-let ry = tby;
-rows.forEach((r, i) => {
-  let cx = tbx;
-  for (const [k, v, w] of r) {
-    if (cx > tbx) el('line', { x1: cx, y1: ry, x2: cx, y2: ry + 46 }, tb);
-    txt(tb, cx + 8, ry + 15, 'k', k);
-    txt(tb, cx + 8, ry + 37, 'v', v);
-    cx += w;
-  }
-  ry += 46;
-  if (i < rows.length - 1) el('line', { x1: tbx, y1: ry, x2: tbx + 340, y2: ry }, tb);
-});
+// The night crew: carts leave the shop for the hall and come back.
+const carts = mk('g', { class: 'cart', 'aria-hidden': 'true' }, L.objs);
+const cartPaths = [[[3, 23.6], [3, 18.3], [12, 18.3], [12, 15.3]], [[8.5, 23.6], [8.5, 22.7], [26.2, 22.7], [26.2, 15.3]], [[5.6, 23.6], [5.6, 10.1], [20, 10.1], [20, 15.3]]];
+const cartEls = cartPaths.map(() => { const g = mk('g', {}, carts); drawBox({ x: -.4, y: -.35, z: 0, w: .8, d: .7, h: .5, cls: 'redc' }, g); mk('circle', { cx: 0, cy: -16, r: 3.5, fill: '#f2c230' }, g); return g; });
+let night = false, nightT0 = 0;
+function crew(now) {
+  if (!night) return;
+  cartPaths.forEach((p, i) => { const total = lengthOf(p); let ph = ((now - nightT0) / 1000 * 1.5 + i * 6) % (total * 2); if (ph > total) ph = total * 2 - ph; placeAt(cartEls[i], along(p, ph)); });
+  if (!still) requestAnimationFrame(crew);
+}
+
+// ---------------------------------------------------------------- areas: hit zones, lamps and tags
+const ZONES = {
+  mission: { at: [0.4, 0.4, 5.2, 8.2], tag: [2.4, 4.2, 3.4] },
+  lines: { at: [6.2, 0.4, 2.6, 8.2], tag: [7.4, 6.4, 2.2] },
+  intent: { at: [8.8, 0.8, 2.6, 7.4], tag: [10.2, 3, 4.4] },
+  design: { at: [14.4, 0.4, 6.0, 8.2], tag: [16.8, 2.4, 3.6] },
+  process: { at: [21, 0.4, 5.6, 8.2], tag: [23.8, 3.6, 2.4] },
+  factory: { at: [0.4, 11.4, 26.2, 10.2], tag: [14, 19.6, 3] },
+  qa: { at: [29.4, 11.4, 6.2, 4.4], tag: [32, 12.8, 4.2] },
+  shipping: { at: [29.4, 16.4, 6.2, 3.2], tag: [35.4, 18.6, 2.2] },
+  fleet: { at: [37.6, 0.4, 4.6, 11.4], tag: [38.8, 2.6, 3.2] },
+  deploy: { at: [37, 11.9, 3.4, 2], tag: [38.2, 12.9, 1.8] },
+  maintenance: { at: [0.4, 24.4, 11.2, 6.2], tag: [6, 27.4, 2.4] },
+  metrology: { at: [29.4, 22.4, 6.2, 8.2], tag: [32.4, 26.4, 2.4] },
+};
+const zoneEls = {};
+const order = AREAS.map((a) => a.key);
+const lampWord = { go: 'Running, with evidence', part: 'Running, partly proven', stop: 'Stopped on a defect', off: 'Not started' };
+for (const a of AREAS) {
+  const z = ZONES[a.key];
+  const g = mk('g', { class: 'zone', tabindex: '0', role: 'button', 'aria-pressed': 'false', 'aria-label': `${a.label}, ${a.where}. ${lampWord[a.lamp]}.` }, L.zones);
+  const [x, y, w, d] = z.at;
+  flat(x, y, w, d, 'hit', g, 0.03);
+  g.addEventListener('click', () => select(a.key, true));
+  g.addEventListener('keydown', (e) => {
+    const i = order.indexOf(a.key);
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(a.key, true); }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); zoneEls[order[(i + 1) % order.length]].focus(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); zoneEls[order[(i - 1 + order.length) % order.length]].focus(); }
+  });
+  zoneEls[a.key] = g;
+  const [tx, ty, th] = z.tag, [px, py] = P(tx, ty, 0), [qx, qy] = P(tx, ty, th);
+  const tg = mk('g', { class: 'tag', 'aria-hidden': 'true' }, L.tags);
+  mk('line', { x1: px, y1: py, x2: qx, y2: qy, stroke: 'var(--label)', 'stroke-width': 1.2 }, tg);
+  const rect = mk('rect', { x: qx - 6, y: qy - 24, height: 26, rx: 4 }, tg);
+  const t = mk('text', { x: qx + 4, y: qy - 6 }, tg); t.textContent = a.label;
+  const wdt = Math.ceil(t.getComputedTextLength()) + 40;
+  rect.setAttribute('width', wdt);
+  const col = `var(--${a.lamp})`;
+  if (a.lamp !== 'off') { const h = mk('circle', { cx: qx + wdt - 18, cy: qy - 11, r: 9, fill: col, class: 'halo' }, tg); if (a.lamp === 'stop') h.classList.add('blink'); }
+  mk('circle', { cx: qx + wdt - 18, cy: qy - 11, r: 5.5, fill: a.lamp === 'off' ? 'none' : col, stroke: a.lamp === 'off' ? 'var(--off)' : 'rgba(0,0,0,.3)', 'stroke-width': a.lamp === 'off' ? 2 : 1 }, tg);
+}
+
+// ---------------------------------------------------------------- shifts
+const yard = document.getElementById('yard'), caption = document.getElementById('caption');
+const DAY = 'Day shift: Files has come through engineering and the hall, and waits at QA on two failing sync steps.';
+const NIGHT = 'Night shift: the hall is quiet and the maintenance crew works the queue of 5,659 work orders, as far as tonight’s budget goes.';
+const setShift = (n) => {
+  night = n; yard.classList.toggle('night', n);
+  document.getElementById('day').setAttribute('aria-pressed', String(!n));
+  document.getElementById('night').setAttribute('aria-pressed', String(n));
+  caption.textContent = n ? NIGHT : DAY;
+  if (n) { nightT0 = performance.now(); if (still) { cartEls.forEach((c, i) => placeAt(c, cartPaths[i][cartPaths[i].length - 1])); } else requestAnimationFrame(crew); }
+};
+document.getElementById('day').addEventListener('click', () => setShift(false));
+document.getElementById('night').addEventListener('click', () => setShift(true));
+setShift(false);
 
 // ---------------------------------------------------------------- the traveler
 const $ = (id) => document.getElementById(id);
-const lampWord = { go: 'Running, with evidence', part: 'Running, partly proven', stop: 'Stopped on a defect', off: 'Not started' };
 function select(k, fromUser) {
-  const d = DEPTS.find((x) => x.key === k);
-  for (const [key, g] of Object.entries(bays)) g.setAttribute('aria-pressed', String(key === k));
-  $('t-station').textContent = d.beneath ? `Beneath the line, serving every department` : `Station ${d.n} of 8`;
-  $('t-name').innerHTML = `<span class="dot ${d.lamp}" aria-hidden="true"></span>${d.label}`;
-  $('t-does').textContent = d.does;
-  $('t-state').textContent = `${lampWord[d.lamp]}. ${d.state}`;
-  $('t-facts').replaceChildren(...d.facts.flatMap(([a, b]) => { const dt = document.createElement('dt'); dt.textContent = a; const dd = document.createElement('dd'); dd.textContent = b; return [dt, dd]; }));
-  $('t-gaps').replaceChildren(...d.gaps.map((g) => { const li = document.createElement('li'); li.textContent = g; return li; }));
-  $('t-open').href = hrefOpen(k);
-  $('t-open').textContent = `Open ${d.label}`;
-  $('t-how').href = hrefHow(k);
+  const a = AREAS.find((x) => x.key === k);
+  for (const [key, g] of Object.entries(zoneEls)) g.setAttribute('aria-pressed', String(key === k));
+  $('t-where').textContent = a.where;
+  $('t-name').replaceChildren(Object.assign(document.createElement('span'), { className: `dot ${a.lamp}` }), document.createTextNode(a.label));
+  $('t-does').textContent = a.does;
+  $('t-state').textContent = `${lampWord[a.lamp]}. ${a.state}`;
+  $('t-facts').replaceChildren(...a.facts.flatMap(([d, v]) => [Object.assign(document.createElement('dt'), { textContent: d }), Object.assign(document.createElement('dd'), { textContent: v })]));
+  $('t-gaps').replaceChildren(...a.gaps.map((g) => Object.assign(document.createElement('li'), { textContent: g })));
+  $('t-open').href = hrefOpen(a.page); $('t-open').textContent = `Open ${a.label}`;
+  $('t-how').href = hrefHow(a.page);
   if (fromUser) history.replaceState(null, '', `#${k}`);
 }
 const first = location.hash.slice(1);
-select(DEPTS.some((d) => d.key === first) ? first : product.at, false);
+select(order.includes(first) ? first : 'qa', false);
 $('foot').textContent = `Every figure is the factory's own, read from the repository at revision ${PLANT.commit} on ${PLANT.asOf}. Claims audited: ${PLANT.claims.proven} proven, ${PLANT.claims.partial} partly proven, ${PLANT.claims.unproven} not proven yet.`;
+}
 </script>
 </body>
 </html>
