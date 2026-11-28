@@ -53,18 +53,19 @@ jobs:
           elif [ "$EVENT" = push ] && git diff --name-only "$base" HEAD | grep -qE '^(tools/mutation/|\.github/workflows/night-shift\.yml)'; then picked="$all"
           elif [ "$EVENT" = push ]; then picked=$(git diff --name-only "$base" HEAD -- intent/blocks | cut -d/ -f3 | sort -u | grep -Fx -f <(echo "$all") || true)
           else picked="$all"; fi
-          echo "blocks=$(printf '%s\n' $picked | jq -R . | jq -cs 'map(select(length>0))')" >> "$GITHUB_OUTPUT"
+          # GitHub runs at most 256 jobs in a matrix, so the blocks go out in at most 60 shards, each run in turn.
+          echo "blocks=$(printf '%s\n' $picked | jq -R . | jq -cs 'map(select(length>0)) | . as $b | ([60, length] | min) as $n | if $n == 0 then [] else [range(0; $n) as $i | [$b | to_entries[] | select(.key % $n == $i) | .value] | join(" ")] end')" >> "$GITHUB_OUTPUT"
 
   calibrate:
     needs: plan
     if: needs.plan.outputs.blocks != '[]'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 300
     strategy:
       fail-fast: false
       max-parallel: 20
       matrix:
-        block: ${{ fromJson(needs.plan.outputs.blocks) }}
+        shard: ${{ fromJson(needs.plan.outputs.blocks) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -77,14 +78,25 @@ jobs:
       # Every calibration is a full run. Incremental runs reuse a mutant's last verdict when its code is unchanged,
       # but with the command runner Stryker cannot see which tests changed, so a new test that kills an old survivor
       # would never be credited.
-      - name: Calibrate ${{ matrix.block }}
+      - name: Calibrate ${{ matrix.shard }}
         env:
           MUTATION_CONCURRENCY: '4'
-        run: node tools/mutation/run.ts ${{ matrix.block }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/out"
+          for b in $SHARD; do
+            node tools/mutation/run.ts "$b"
+            cp "intent/eval/mutation/$b.json" "$RUNNER_TEMP/out/"
+          done
+      - id: name
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: echo "name=certificate-$(printf '%s' "$SHARD" | sha256sum | cut -c1-12)" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: certificate-${{ matrix.block }}
-          path: intent/eval/mutation/${{ matrix.block }}.json
+          name: ${{ steps.name.outputs.name }}
+          path: ${{ runner.temp }}/out
 
   record:
     needs: calibrate
