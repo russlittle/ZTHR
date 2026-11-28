@@ -118,7 +118,7 @@ erDiagram
 
 ### Testing the system itself
 
-4,821 tests cover the engine, the agent API, the generated SQL (run in DuckDB), the information pipeline (run on PostgreSQL), the compliance set (validated against NIST's schema), the Rego policy, the Prisma output and the blocks. Every page of the site is walked in a real browser and checked against WCAG 2.2 A and AA, and these docs are regenerated and compared on every run.
+5,077 tests cover the engine, the agent API, the generated SQL (run in DuckDB), the information pipeline (run on PostgreSQL), the compliance set (validated against NIST's schema), the Rego policy, the Prisma output and the blocks. Every page of the site is walked in a real browser and checked against WCAG 2.2 A and AA, and these docs are regenerated and compared on every run.
 
 ## Architect
 

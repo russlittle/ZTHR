@@ -2325,6 +2325,131 @@
       ],
       "tests": 13,
       "home": "intent/blocks/datasource-queries"
+    },
+    {
+      "name": "content-chunking",
+      "purpose": "Content-defined chunking (FastCDC) with salted gears, keyed chunk ids, and a deduplicating chunk store with reference counts",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/content-chunking"
+    },
+    {
+      "name": "sigv4",
+      "purpose": "AWS Signature Version 4: signing, presigned links, verification with skew and scope checks, and signed streaming bodies",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/sigv4"
+    },
+    {
+      "name": "graphql-schema",
+      "purpose": "GraphQL: schemas and queries parsed and validated, depth, alias and cost limits, introspection switched, and execution",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/graphql-schema"
+    },
+    {
+      "name": "qr-barcode",
+      "purpose": "QR codes, Code 128, EAN and UPC, and Data Matrix encoded and decoded with Reed-Solomon, drawn as SVG or text",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/qr-barcode"
+    },
+    {
+      "name": "png-codec",
+      "purpose": "PNG in every colour type and depth, interlaced, with checksums and a decompression-bomb ceiling; BMP and GIF too",
+      "requires": [],
+      "tests": 19,
+      "home": "intent/blocks/png-codec"
+    },
+    {
+      "name": "channels",
+      "purpose": "Chat channels, public, private and direct, with roles, threads, mentions, mutes, read markers, pins and retention",
+      "requires": [
+        "comments",
+        "events"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/channels"
+    },
+    {
+      "name": "exif-full",
+      "purpose": "Photo metadata, EXIF, GPS, IPTC and XMP, read safely from JPEG, PNG, WebP and TIFF, capture time and zone inferred, and location removed",
+      "requires": [
+        "imagemeta"
+      ],
+      "tests": 23,
+      "home": "intent/blocks/exif-full"
+    },
+    {
+      "name": "tasks",
+      "purpose": "Shared tasks with subtasks, status by workflow, recurrence in the person's zone, reminders, progress rolled up and ranking",
+      "requires": [
+        "workflow",
+        "time"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/tasks"
+    },
+    {
+      "name": "notifications-inbox",
+      "purpose": "A notifications inbox per person: grouped, deduplicated, safe links, read and archive, unread counts, paging and digests",
+      "requires": [
+        "notify"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/notifications-inbox"
+    },
+    {
+      "name": "s3-api",
+      "purpose": "An S3-compatible API over any object store: buckets, objects with ranges and conditions, listing and multipart uploads, signed by SigV4",
+      "requires": [
+        "objects",
+        "sigv4"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/s3-api"
+    },
+    {
+      "name": "crdt-text",
+      "purpose": "Collaborative text as a YATA sequence CRDT: state vectors, compact binary updates, out-of-order delivery and stable positions",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/crdt-text"
+    },
+    {
+      "name": "object-versioning",
+      "purpose": "Object versions and delete markers, restore, object lock with legal hold and retention, and lifecycle rules",
+      "requires": [
+        "retention"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/object-versioning"
+    },
+    {
+      "name": "webdav-props",
+      "purpose": "WebDAV properties and search: PROPFIND, atomic PROPPATCH, COPY and MOVE with depth and quota, and DASL search",
+      "requires": [
+        "dav",
+        "tree"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/webdav-props"
+    },
+    {
+      "name": "vcard",
+      "purpose": "vCard 3.0 and 4.0 read and written with folding, escapes and groups, photos checked, converted and merged three ways",
+      "requires": [
+        "contact"
+      ],
+      "tests": 13,
+      "home": "intent/blocks/vcard"
+    },
+    {
+      "name": "outbound",
+      "purpose": "The one door out to the internet for app code: allowed hosts with named purposes, internal and resolved addresses refused, redirects re-checked, byte caps and a redacted log",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/outbound"
     }
   ]
 }

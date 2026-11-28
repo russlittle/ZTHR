@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->265<!-- /fact --> blocks, <!-- fact:blocks.tests -->4529<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->280<!-- /fact --> blocks, <!-- fact:blocks.tests -->4785<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -274,6 +274,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [sbom](sbom/index.ts) | Software bills of materials: package URLs, CycloneDX and SPDX read and written, advisories matched by path, VEX and diffs | 17 |
 | [crm-pipeline](crm-pipeline/index.ts) | A sales pipeline: leads, deals and stages, scoring that decays, ownership rules, activities, rotting deals and a forecast | 15 |
 | [datasource-queries](datasource-queries/index.ts) | Saved queries for no-code apps: typed parameters, paging, a cache scoped by role and person, and table, column and row permissions | 13 |
+| [content-chunking](content-chunking/index.ts) | Content-defined chunking (FastCDC) with salted gears, keyed chunk ids, and a deduplicating chunk store with reference counts | 15 |
+| [sigv4](sigv4/index.ts) | AWS Signature Version 4: signing, presigned links, verification with skew and scope checks, and signed streaming bodies | 15 |
+| [graphql-schema](graphql-schema/index.ts) | GraphQL: schemas and queries parsed and validated, depth, alias and cost limits, introspection switched, and execution | 20 |
+| [qr-barcode](qr-barcode/index.ts) | QR codes, Code 128, EAN and UPC, and Data Matrix encoded and decoded with Reed-Solomon, drawn as SVG or text | 20 |
+| [png-codec](png-codec/index.ts) | PNG in every colour type and depth, interlaced, with checksums and a decompression-bomb ceiling; BMP and GIF too | 19 |
+| [channels](channels/index.ts) | Chat channels, public, private and direct, with roles, threads, mentions, mutes, read markers, pins and retention | 17 |
+| [exif-full](exif-full/index.ts) | Photo metadata, EXIF, GPS, IPTC and XMP, read safely from JPEG, PNG, WebP and TIFF, capture time and zone inferred, and location removed | 23 |
+| [tasks](tasks/index.ts) | Shared tasks with subtasks, status by workflow, recurrence in the person's zone, reminders, progress rolled up and ranking | 15 |
+| [notifications-inbox](notifications-inbox/index.ts) | A notifications inbox per person: grouped, deduplicated, safe links, read and archive, unread counts, paging and digests | 14 |
+| [s3-api](s3-api/index.ts) | An S3-compatible API over any object store: buckets, objects with ranges and conditions, listing and multipart uploads, signed by SigV4 | 18 |
+| [crdt-text](crdt-text/index.ts) | Collaborative text as a YATA sequence CRDT: state vectors, compact binary updates, out-of-order delivery and stable positions | 17 |
+| [object-versioning](object-versioning/index.ts) | Object versions and delete markers, restore, object lock with legal hold and retention, and lifecycle rules | 16 |
+| [webdav-props](webdav-props/index.ts) | WebDAV properties and search: PROPFIND, atomic PROPPATCH, COPY and MOVE with depth and quota, and DASL search | 18 |
+| [vcard](vcard/index.ts) | vCard 3.0 and 4.0 read and written with folding, escapes and groups, photos checked, converted and merged three ways | 13 |
+| [outbound](outbound/index.ts) | The one door out to the internet for app code: allowed hosts with named purposes, internal and resolved addresses refused, redirects re-checked, byte caps and a redacted log | 16 |
 <!-- /gen -->
 
 ```mermaid
