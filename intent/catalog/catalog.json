@@ -848,6 +848,13 @@
       ],
       "tests": 9,
       "home": "intent/blocks/speech"
+    },
+    {
+      "name": "router",
+      "purpose": "Chooses the cheapest model proven good enough for each kind of task: a dated price table, per-request cost with long-context and regional rates, pass rates per model per task kind trusted on a Wilson lower bound, exploration of cheaper models, escalation through tiers, judges from another family, and a daily budget",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/router"
     }
   ]
 }

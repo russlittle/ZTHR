@@ -442,7 +442,7 @@ export function runStryker(block: string, o: { mutate?: string; incrementalFile?
   const dir = mkdtempSync(join(tmpdir(), `mutation-${block}-`));
   const out = join(dir, 'report.json');
   const conf = join(dir, 'stryker.conf.json');
-  writeJson(conf, strykerConfig(block, { out, tmp: join(dir, 'sandbox'), mutate: o.mutate, incrementalFile: o.incrementalFile }));
+  writeJson(conf, strykerConfig(block, { out, tmp: join(dir, 'sandbox'), ...(o.mutate ? { mutate: o.mutate } : {}), ...(o.incrementalFile ? { incrementalFile: o.incrementalFile } : {}) }));
   if (o.incrementalFile) mkdirSync(dirname(o.incrementalFile), { recursive: true });
   const r = spawnSync(STRYKER, ['run', conf], { cwd: INTENT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
   if (!existsSync(out)) throw new Error(`stryker produced no report for ${block} (exit ${r.status}): ${((t) => (t.length > 3000 ? `${t.slice(0, 1500)}\n…\n${t.slice(-1500)}` : t))(r.stdout + r.stderr)}`);

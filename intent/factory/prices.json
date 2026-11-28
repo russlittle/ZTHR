@@ -1,0 +1,73 @@
+{
+  "checked": "2026-11-27",
+  "currency": "USD",
+  "unit": "per-million-tokens",
+  "endpoint": "global",
+  "regionalMultiplier": 1.1,
+  "regionalSource": "https://platform.claude.com/docs/build-with-claude/claude-on-vertex-ai",
+  "models": [
+    {
+      "id": "claude-opus-5-5",
+      "input": 4.0,
+      "output": 20.0,
+      "batch": { "input": 2.5, "output": 12.5 },
+      "cache": { "read": 0.1, "write": 1.25, "confirmed": false },
+      "source": "https://cloud.google.com/model-garden/partner-models/pricing",
+      "checked": "2026-11-27"
+    },
+    {
+      "id": "claude-sonnet-5-5",
+      "input": 2.0,
+      "output": 10.0,
+      "cache": { "read": 0.1, "write": 1.25, "confirmed": false },
+      "source": "https://cloud.google.com/model-garden/partner-models/pricing",
+      "checked": "2026-11-27"
+    },
+    {
+      "id": "claude-haiku-5-5",
+      "input": 0.1,
+      "output": 0.5,
+      "long": { "aboveInputTokens": 100000, "input": 0.5, "output": 2.5, "confirmed": false },
+      "cache": { "read": 0.1, "write": 1.25, "confirmed": false },
+      "source": "https://cloud.google.com/model-garden/partner-models/pricing",
+      "checked": "2026-11-27"
+    },
+    {
+      "id": "deepseek-v4.1-flash",
+      "input": 0.3,
+      "output": 1.2,
+      "source": "https://cloud.google.com/model-garden/partner-models/pricing",
+      "checked": "2026-11-27"
+    },
+    {
+      "id": "qwen3-coder-480b-a35b-instruct",
+      "input": 0.22,
+      "output": 1.8,
+      "source": "https://cloud.google.com/model-garden/partner-models/pricing",
+      "checked": "2026-11-27",
+      "retired": "2026-10-21"
+    },
+    {
+      "id": "gpt-oss-120b",
+      "input": 0.09,
+      "output": 0.36,
+      "source": "https://cloud.google.com/model-garden/partner-models/pricing",
+      "checked": "2026-11-27"
+    },
+    {
+      "id": "gemini-3.5-flash-lite",
+      "input": 0.3,
+      "output": 2.5,
+      "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+      "checked": "2026-11-27"
+    },
+    {
+      "id": "gemini-3.8-flash",
+      "input": 0.75,
+      "output": 3.75,
+      "source": "https://cloud.google.com/vertex-ai/generative-ai/pricing",
+      "checked": "2026-11-27",
+      "validUntil": "2026-12-31"
+    }
+  ]
+}

@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->84<!-- /fact --> blocks, <!-- fact:blocks.tests -->542<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->85<!-- /fact --> blocks, <!-- fact:blocks.tests -->559<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -93,6 +93,7 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [factoryreports](factoryreports/index.ts) | Feature reports, operations reports and the improvement brief as documents with tables and evidenced findings, rendered to Markdown and delivered on a schedule, with the brief ranking what to change next by weighted evidence and saying why | 7 |
 | [walkthrough](walkthrough/index.ts) | A guided, ordered walk through a feature's journey steps showing each claim, its evidence and whether that evidence is current, with step-by-step sign-off refused on stale, failed, missing or untraceable evidence and voided when covered code changes | 5 |
 | [speech](speech/index.ts) | Speech transcripts turned into palette commands with spoken confirmation for destructive ones, dictation with spoken punctuation and corrections, and numbers and dates spoken in words, with a feature-detected Web Speech adapter | 9 |
+| [router](router/index.ts) | Chooses the cheapest model proven good enough for each kind of task: a dated price table, per-request cost with long-context and regional rates, pass rates per model per task kind trusted on a Wilson lower bound, exploration of cheaper models, escalation through tiers, judges from another family, and a daily budget | 17 |
 <!-- /gen -->
 
 ```mermaid

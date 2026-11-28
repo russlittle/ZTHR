@@ -49,7 +49,7 @@ Every app can reach the tools people already use, through 20 connectors of 5 kin
 
 ### Housekeeping blocks
 
-The fleet maintains the code most apps get wrong, as tested blocks every product starts from (542 tests between them):
+The fleet maintains the code most apps get wrong, as tested blocks every product starts from (559 tests between them):
 
 | Block | What it holds | Tests |
 | --- | --- | --- |
@@ -137,13 +137,14 @@ The fleet maintains the code most apps get wrong, as tested blocks every product
 | [factoryreports](../../blocks/factoryreports/index.ts) | Feature reports, operations reports and the improvement brief as documents with tables and evidenced findings, rendered to Markdown and delivered on a schedule, with the brief ranking what to change next by weighted evidence and saying why | 7 |
 | [walkthrough](../../blocks/walkthrough/index.ts) | A guided, ordered walk through a feature's journey steps showing each claim, its evidence and whether that evidence is current, with step-by-step sign-off refused on stale, failed, missing or untraceable evidence and voided when covered code changes | 5 |
 | [speech](../../blocks/speech/index.ts) | Speech transcripts turned into palette commands with spoken confirmation for destructive ones, dictation with spoken punctuation and corrections, and numbers and dates spoken in words, with a feature-detected Web Speech adapter | 9 |
+| [router](../../blocks/router/index.ts) | Chooses the cheapest model proven good enough for each kind of task: a dated price table, per-request cost with long-context and regional rates, pass rates per model per task kind trusted on a Wilson lower bound, exploration of cheaper models, escalation through tiers, judges from another family, and a daily budget | 17 |
 
 ```mermaid
 xychart-beta
   title "Library blocks built in this repository, by the tests each carries; every product that uses one inherits them."
-  x-axis ["tree", "importer", "objects", "etl", "speech", "uploads", "grants", "dav", "console", "factoryreports", "leases", "devices", "ux", "ask", "conflicts", "jobs", "accounts", "walkthrough", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "tabular", "time", "upkeep", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "reports", "search", "i18n", "booking", "contact", "payments", "docparse", "imagemeta", "palette", "testdata", "surfaces", "backups", "loadsoak", "datagate", "pwa", "migrations", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter", "analytics", "pdf", "geo", "sitemap", "apiver", "drafts", "privacy", "pipeline", "sync", "feedback", "cmi5", "mcp", "query", "uat"]
+  x-axis ["router", "tree", "importer", "objects", "etl", "speech", "uploads", "grants", "dav", "console", "factoryreports", "leases", "devices", "ux", "ask", "conflicts", "jobs", "accounts", "walkthrough", "resilience", "idempotency", "money", "oracle", "ratelimit", "uploadsafe", "validate", "config", "observe", "health", "crypto", "rbac", "sessions", "notify", "tabular", "time", "upkeep", "paging", "retention", "watchdog", "audit", "oidc", "events", "slo", "reports", "search", "i18n", "booking", "contact", "payments", "docparse", "imagemeta", "palette", "testdata", "surfaces", "backups", "loadsoak", "datagate", "pwa", "migrations", "expiry", "secheaders", "apikeys", "webhooks", "flags", "cache", "consent", "refdata", "comments", "history", "workflow", "costmeter", "analytics", "pdf", "geo", "sitemap", "apiver", "drafts", "privacy", "pipeline", "sync", "feedback", "cmi5", "mcp", "query", "uat"]
   y-axis "tests" 0 --> 50
-  bar [12, 11, 10, 10, 9, 8, 8, 8, 7, 7, 6, 6, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+  bar [17, 12, 11, 10, 10, 9, 8, 8, 8, 7, 7, 6, 6, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 ```
 
 ## Architect
