@@ -97,7 +97,10 @@ ${p.body}
 `;
   writeFileSync(join(OUT, dir, 'index.html'), html);
 }
+// The front door: the plant laid out, open to anyone, with each department's standing. It links into the console.
+mkdirSync(join(OUT, 'plant'), { recursive: true });
+copyFileSync(join(HERE, 'site/plant.html'), join(OUT, 'plant/index.html'));
 copyFileSync(join(HERE, 'site/docs.css'), join(OUT, 'console/docs.css'));
 copyFileSync(join(HERE, 'site/console.css'), join(OUT, 'console/console.css'));
 copyFileSync(join(HERE, 'site/bar.css'), join(OUT, 'console/bar.css'));
-console.log(`built ${PAGES.map((x) => `/${x}`).join(', ')} and /line into ${OUT}${GATED ? ', behind Google sign-in by invitation' : ', open'}`);
+console.log(`built ${PAGES.map((x) => `/${x}`).join(', ')} , /line and /plant into ${OUT}${GATED ? ', behind Google sign-in by invitation' : ', open'}`);
