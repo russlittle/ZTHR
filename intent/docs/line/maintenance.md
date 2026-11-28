@@ -124,7 +124,7 @@ Scores per block, from metrology's certificates (115 blocks scored, 3 with no su
 | `apikeys` | 79.9% | none | 32 | 0 |
 | `apiver` | 87.4% | none | 15 | 0 |
 | `ask` | 98.2% | none | 16 | 0 |
-| `asn1-der` | 77.8% | none | 291 | 0 |
+| `asn1-der` | 96.3% | none | 50 | 0 |
 | `audio-tags` | 60.6% | none | 947 | 0 |
 | `audit` | 75.0% | none | 32 | 0 |
 | `backups` | 79.3% | none | 33 | 0 |

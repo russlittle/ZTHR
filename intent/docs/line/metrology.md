@@ -160,7 +160,7 @@ The 115 blocks calibrated so far, of 310:
 | `factoryreports` | not certified: 6 planted defects not rejected, and not ruled equivalent | 99.3% | 6 | 0 | 2026-11-28 |
 | `walkthrough` | not certified: 12 planted defects not rejected, and not ruled equivalent | 93.9% | 12 | 0 | 2026-11-28 |
 | `speech` | not certified: 327 planted defects not rejected, and not ruled equivalent | 71.2% | 327 | 0 | 2026-11-28 |
-| `asn1-der` | not certified: 291 planted defects not rejected, and not ruled equivalent | 77.8% | 291 | 0 | 2026-11-28 |
+| `asn1-der` | not certified: 50 planted defects not rejected, and not ruled equivalent | 96.3% | 50 | 0 | 2026-11-28 |
 | `activitypub` | not certified: 342 planted defects not rejected, and not ruled equivalent | 69.5% | 342 | 0 | 2026-11-28 |
 | `microblog` | not certified: 313 planted defects not rejected, and not ruled equivalent | 69.0% | 313 | 0 | 2026-11-28 |
 | `timeline-assembly` | not certified: 120 planted defects not rejected, and not ruled equivalent | 76.9% | 120 | 0 | 2026-11-28 |

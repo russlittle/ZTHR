@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "asn1-der",
+  "mutant": {
+    "id": "1232",
+    "line": 719,
+    "column": 25,
+    "endLine": 719,
+    "endColumn": 33,
+    "mutator": "StringLiteral",
+    "original": "'latin1'",
+    "replacement": "\"\"",
+    "lineText": "return Buffer.from(s, 'latin1');",
+    "prevText": "if (!s || /[^\\x20-\\x7e]/.test(s)) throw new DerError('a SAN entry must be non-empty ASCII (use punycode for international names)');",
+    "nextText": "};"
+  },
+  "mayEdit": [
+    "intent/blocks/asn1-der/asn1-der.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/asn1-der-1232.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"asn1-der\". Mutant: line 719:25-719:33, mutator StringLiteral: \"'latin1'\" becomes \"\\\"\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/asn1-der/index.ts (> marks the mutated line):\n   713        return implicit(7, ipBytes(e.ip));\n   714      }),\n   715    );\n   716  }\n   717  const ia5Checked = (s: string): Buffer => {\n   718    if (!s || /[^\\x20-\\x7e]/.test(s)) throw new DerError('a SAN entry must be non-empty ASCII (use punycode for international names)');\n>  719    return Buffer.from(s, 'latin1');\n   720  };\n   721  \n   722  function sigFor(key: KeyObject): { oid: string; hash: string | null; params: boolean } {\n   723    const t = key.asymmetricKeyType;\n   724    if (t === 'rsa') return { oid: oidOf('sha256WithRSAEncryption'), hash: 'sha256', params: true };\n   725    if (t === 'ed25519') return { oid: oidOf('Ed25519'), hash: null, params: false };\n\nTest file style (intent/blocks/asn1-der/asn1-der.test.ts):\n53 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { generateKeyPairSync } from 'node:crypto';\nimport { spawnSync } from 'node:child_process';\nimport { mkdtempSync, rmSync, writeFileSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nimport { test } from 'node:test';\nimport { DerError, UT, asBits, asBoolean, asInteger, asOid, asString, asTime, bitString, boolean, buildCsr, explicit, fromPem, generalNames, ia5String, implicit, integer, matchesHostname, nameToString, nullValue, octetString, oid, oidName, oidOf, parseAll, parseCertificate, parseCsr, parseDer, parseSpki, printableString, sanExtension, sequence, set, signedBy, time, tlv, toPem, utf8String, validAt } from './index.ts';\nimport type { Der } from './index.ts';\nimport { OID, asOctets, checkSignature } from './index.ts';\nimport { sign as cryptoSign } from 'node:crypto';\n\n// Made with OpenSSL for these tests: a root, a server certificate it signed (SAN, key usage, EKU), and a self-signed Ed25519 certificate.\nconst ROOT = `-----BEGIN CERTIFICATE-----\nMIIBvDCCAWGgAwIBAgIUZ+gke9PhlRiiEM92FYa3KyKtMNcwCgYIKoZIzj0EAwIw\nMjEeMBwGA1UEAwwVVGVzdCBBdHRlc3RhdGlvbiBSb290MRAwDgYDVQQKDAdFeGFt\ncGxlMCAXDTI2MTEyODA1NTMyOVoYDzIxMjYxMTA0MDU1MzI5WjAyMR4wHAYDVQQD\nDBVUZXN0IEF0dGVzdGF0aW9uIFJvb3QxEDAOBgNVBAoMB0V4YW1wbGUwWTATBgcq\nhkjOPQIBBggqhkjOPQMBBwNCAARUZQDumQ7QAf1EvzzU8RPnLx1et7vmCeDCAcv3\nXv13VLK9ZQZX9vKZEZzqIZtJac1JJNomZF5oEumt6GdRQLzuo1MwUTAdBgNVHQ4E\nFgQUaEjkGdoZ/KvUZcsBsihfJX7qq1kwHwYDVR0jBBgwFoAUaEjkGdoZ/KvUZcsB\nsihfJX7qq1kwDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAgNJADBGAiEA7FDz\nbLwiEfFSQE167DkcHmHARg1UKLttn+Q3OcwAlfsCIQDPCyLcFSmaplhuBfn5CoXq\nDGahgBWU86o3N97hxpsTCw==\n-----END CERTIFICATE-----\n`;\nconst SERVER = `-----BEGIN CERTIFICATE-----\nMIICejCCAiCgAwIBAgIURvhxSDLWZiKYHY7EHgT92yUR7JkwCgYIKoZIzj0EAwIw\nMjEeMBwGA1UEAwwVVGVzdCBBdHRlc3RhdGlvbiBSb290MRAwDgYDVQQKDAdFeGFt\ncGxlMCAXDTI2MTEyODA2MjEyOVoYDzIxMjYxMTA0MDYyMTI5WjBbMQswCQYDVQQG\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/asn1-der-1232.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "8c1e9af4f569b072e1a89c370d675bc4cfd24577"
+  },
+  "createdAt": "2026-11-28T10:28:10.528Z"
+}
