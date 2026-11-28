@@ -1,6 +1,6 @@
-# Shipping: Moving a Certified Build to People, One Proven Stage at a Time
+# Shipping: Packaging a Signed Release and Moving It to People, One Proven Stage at a Time
 
-**Patterns for staged delivery with a gate at every stage, a person approving production, and a way back that always takes one step**
+**Patterns for a signed release package, publication to the repository and the sites, staged delivery with a gate at every stage, a person approving production, and a way back that always takes one step**
 
 Russ Little · Pattern paper · Draft for review · Nov 26, 2026
 
@@ -8,18 +8,68 @@ v0.1 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0. P
 
 ## Abstract
 
-A certified build is not yet software in service. Between the two lie the steps where most outages begin: a data migration that loses records, an image nobody can trace, a revision that starts but fails under real traffic, a release that cannot be undone. Shipping moves a certified build to the people it is for through eight stages, each with a gate it must pass and evidence it must record: build, test, rehearse the data, package and sign, deploy without traffic, canary, release and operate. The operator asks for each stage in order; the pipeline runs it under its own identity and records what it proved; a named person approves production after the canary; and going back is always allowed and always one step. A stage is passed only by what was observed. This paper sets out eight patterns for that work.
+A passed product is not yet software in service. Between the two are two jobs. The first is to turn the product into a release: package the code, the tests, the docs and the version history into one signed, versioned release, and publish it to the repository and the sites. The second is to move that release to the people it is for, where most outages begin: a data migration that loses records, an image nobody can trace, a revision that starts but fails under real traffic, a release that cannot be undone. Shipping does both, to the standard of configuration management as AS9100 states it. Delivery runs through eight stages, each with a gate it must pass and evidence it must record: build, test, rehearse the data, package and sign, deploy without traffic, canary, release and operate. The operator asks for each stage in order; the pipeline runs it under its own identity and records what it proved; a named person approves production after the canary; and going back is always allowed and always one step. A stage is passed only by what was observed. This paper sets out the patterns for that work. [Deployment engineering](deployment-engineering.md) serves shipping, and sends the release on to the fleet over the air.
 
-> **Central proposition.** Ship in stages that each prove one thing, record what was observed rather than what was intended, put a person's signature on production, and keep the way back one step long.
+> **Central proposition.** Ship a signed, traceable release in stages that each prove one thing, record what was observed rather than what was intended, put a person's signature on production, and keep the way back one step long.
+
+## Where it sits
+
+Shipping is shipping, release and configuration management. It is done by an agent. It takes in a product that passed QA and gives a signed release in the repository, on the sites, and in production. Deployment engineering serves it, and the fleet receives its releases over the air.
+
+```mermaid
+flowchart LR
+  QA["QA"] -- "passed product" --> SH
+  subgraph SH["Shipping"]
+    direction TB
+    PK["Package: code, tests, docs, version history,<br/>SBOM, licences"] --> SG["Sign and tag"] --> PB["Publish: repository and sites"] --> DP["Deploy in stages,<br/>a person approving production"]
+  end
+  SH -- "signed release, over the air" --> FL["Fleet"]
+  DE["Deployment engineering"] -. "serves" .-> SH
+  DE -. "serves" .-> FL
+```
+
+```mermaid
+erDiagram
+  RELEASE ||--|| VERSION_TAG : "is named by"
+  RELEASE ||--o{ ARTEFACT : "contains"
+  RELEASE ||--|| SBOM : "lists dependencies in"
+  RELEASE ||--o{ LICENCE_CHECK : "passes"
+  RELEASE ||--o{ STAGE_RECORD : "is moved by"
+  RELEASE ||--o| APPROVAL : "reaches production only with"
+  RELEASE }o--|| PRODUCT_REVISION : "builds"
+  RELEASE {
+    string version
+    string commit
+    string digest
+    datetime signedAt
+  }
+  ARTEFACT {
+    string kind "code, tests, docs, version history"
+    string checksum
+  }
+  STAGE_RECORD {
+    string stage
+    string observed
+    string result "passed, failed, not measured"
+  }
+  APPROVAL {
+    string person
+    string release
+    datetime at
+  }
+```
 
 ## 1. The problem
 
+- **Nothing packaged.** A release is a branch and a hope: no version, no bill of materials, no docs that match the code.
 - **Done means deployed.** A deploy command that returned success is reported as a release, though nothing checked what is actually serving.
 - **The data is an afterthought.** Code is tested; migrations run for the first time in production.
 - **Images from nowhere.** What runs cannot be traced to the build that was certified.
 - **No way back.** A bad release is fixed forward, under pressure, because rolling back was never rehearsed.
 
-## 2. The stages
+## 2. The release, then the stages
+
+The release is built once, from the passed product: the code, the tests, the docs built fresh from the source and checked, the version history, a bill of materials (SBOM) and the licence check, under a signed version tag, published to the repository and the sites. The stages then move that exact release.
 
 ```mermaid
 flowchart LR
@@ -108,9 +158,16 @@ sequenceDiagram
 
 Files ships as one container to Cloud Run, with its bytes and its state in one Cloud Storage bucket and the first admin's password in Secret Manager. It runs as one instance that scales to zero: its state log has one writer, and refuses a second rather than interleave with it. Its maximum upload chunk is held under Cloud Run's request limit, and advertised to the apps in its capabilities so they never send a larger one.
 
-For the reference product the line already runs, zthr.ai's own deploy is the Release stage's observer: it fetches the copy of the site the running service serves, checks every part against the build's own checksums, and records the commit it verified. The shipping department shows each stage from what was recorded: build and test from the build's own readings, release from that verification, and the stages the reference pipeline does not have yet (data rehearsal, signed images, deploy without traffic, canary, operate) as not measured.
+The plant's own site, zthr.ai, is the reference for the release path: it is packaged with an SBOM, a licence check, a reproducible build and docs checked fresh from the source, and deployed from the main branch; its deploy is the Release stage's observer, fetching the copy of the site the running service serves, checking every part against the build's own checksums, and recording the commit it verified. No product of the line has shipped yet; the live standing of each stage, including the stages the reference pipeline has defined and not run (data rehearsal, signing, canary, operate), is on [/plant](https://zthr.ai/plant) and shown as not measured until it is observed.
 
-## 5. Evaluating it
+```mermaid
+flowchart LR
+  P["Passed Files"] --> PK["Package, SBOM, licences, docs fresh"] --> SG["Signed version tag"] --> PB["Repository and sites"] --> ST["Staged deploy, person approves"] --> OTA["Over the air to the fleet"]
+```
+
+## 5. What it needs, and how it is judged
+
+Shipping needs a release package (code, tests, docs, SBOM, licences), a signed version tag, docs built and checked from the source, and staged deploys with a person approving production. Which are met is shown on [/plant](https://zthr.ai/plant).
 
 - **Observed releases.** Every release recorded as serving has an outside check of the commit it served.
 - **Approval.** Every production release has a person's signed approval of that release.

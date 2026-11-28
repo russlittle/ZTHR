@@ -1,4 +1,4 @@
-# Maintenance: The Night Shift That Keeps Every Department Working
+# Maintenance: The Night Shift That Keeps the Factory Floor Running
 
 **Patterns for tagging instead of stopping, fixing through the same gates as day work, repairing the gauges, and staffing the crew by evidence**
 
@@ -8,7 +8,7 @@ v0.1 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0. P
 
 ## Abstract
 
-A line that stops for every defect stalls everything behind it; a line that ignores defects lets them compound until a product fails in service. A plant answers this with two shifts. The day shift builds, and anyone who finds something wrong hangs a tag on it and carries on. The night shift is maintenance: a crew that works the tags, fixes what it can to the same standard as production, repairs the instruments the lab finds wanting, and leaves a report on the manager's desk in the morning. This paper applies that structure to a software line run by agents. Every department, gate, reviewer, fuzz run and user report, and metrology's calibration runs, tag what is not working instead of stopping: what is wrong, where, how it is known, and the test that will prove it fixed. Metrology measures and certifies; maintenance repairs. A crew of models works the tags overnight at five stations, through the same acceptance gates as day work, and escalates what is above its tier. Each task goes to the cheapest model whose measured pass rate at that kind of task is good enough. The department's output is evidence: a shift log per night, mutation scores per block, cost per accepted change, pass rate per model per task kind, and time from tag to fix. This paper sets out ten patterns for that work, and why maintenance sits beneath the line rather than in it.
+A line that stops for every defect stalls everything behind it; a line that ignores defects lets them compound until a product fails in service. A plant answers this with two shifts. The day shift builds, and anyone who finds something wrong hangs a tag on it and carries on. The night shift is maintenance: a crew that works the tags, fixes what it can to the same standard as production, repairs the instruments the lab finds wanting, and leaves a report on the manager's desk in the morning. This paper applies that structure to a software plant run by agents. Every area, gate, reviewer, fuzz run and user report, and metrology's calibration runs, tag what is not working instead of stopping: what is wrong, where, how it is known, and the test that will prove it fixed. Metrology measures and certifies; maintenance repairs. A crew of models works the tags overnight at five stations, through the same acceptance gates as day work, and escalates what is above its tier. Each task goes to the cheapest model whose measured pass rate at that kind of task is good enough. The crew's output is evidence: a shift log per night, mutation scores per block, cost per accepted change, pass rate per model per task kind, and time from tag to fix. This paper sets out ten patterns for that work, and where maintenance sits: beside the factory floor it keeps running, not in the flow of work. It is maintenance to the standard of total productive maintenance, done by a crew.
 
 > **Central proposition.** Never stop the line and never lose a defect: tag it with its evidence and the test that will prove it fixed, work the tags overnight through exactly the gates day work passes, repair every instrument the lab finds wanting, and let measured pass rates, not reputation, decide which model does each job.
 
@@ -22,7 +22,7 @@ A line that stops for every defect stalls everything behind it; a line that igno
 ```mermaid
 flowchart LR
   subgraph Day["Day shift: the line builds"]
-    D1[Departments] --> D2[Gates and reviewers]
+    D1[Areas] --> D2[Gates and reviewers]
     D2 --> D3[Fuzz and mutation runs]
     D3 --> D4[People's reports]
   end
@@ -42,22 +42,26 @@ flowchart LR
 
 ## 2. Where maintenance sits
 
-Every department of the line has a place in the order work moves through: each receives something from the one before and hands something to the one after. Maintenance does not, and neither does metrology, the lab that certifies the gauges it repairs. It receives tags from every department and returns fixes to every department, and its report goes to mission control. Putting it at the end of the line, after the fleet, would say it handles only what is in service; putting it anywhere else would say the same of whatever came before it. Both would be false.
+Maintenance keeps the factory floor running: it is the crew that serves the floor, as a plant's maintenance department serves its machines without being one of them. It takes in work orders that every area tags and gives back a floor that keeps running and gets better. Intake is open: a tag may come from any area, gate, reviewer or person, and that makes the tag a source of work orders, not a service relationship. What maintenance serves is the floor.
 
-Maintenance is not ordered in, and its work never outranks the line's. No one dispatches the crew to a particular repair: the line's work goes first, and the crew works the backlog on its own budget, as far as each night's budget reaches, in the order the queue sets (defects a test has exposed, then the most critical gauges, then the weakest). The backlog is visible and shrinks over time; what one night cannot reach waits for the next.
+Maintenance is not in the flow of work, and its work never outranks the line's. No one dispatches the crew to a particular repair: the line's work goes first, and the crew works the backlog on its own budget, as far as each night's budget reaches, in the order the queue sets (defects a test has exposed, then the most critical gauges, then the weakest). The backlog is visible and shrinks over time; what one night cannot reach waits for the next.
 
-So maintenance is drawn beneath the line, beside metrology: a crew that serves every station, as a plant's maintenance department serves every machine without being one of them. On zthr.ai both appear after the numbered departments, unnumbered, with no handoff of their own.
+Its sister crew is [metrology](metrology.md), which keeps QA's quality and process true: metrology measures and certifies, and maintenance repairs what metrology finds wanting.
 
 ```mermaid
 flowchart LR
-  M["1 Mission control"] --> L["2 Product lines"] --> I["3 Intent studio"] --> E["4 Engineering"] --> F["5 Factory"] --> Q["6 QA"] --> S["7 Shipping"] --> V["8 Fleet"]
-  subgraph Beneath["Beneath the line"]
-    MY["Metrology<br/><small>measures and certifies</small>"] -. tags .-> MT["Maintenance<br/><small>the night shift: repairs</small>"]
+  subgraph Flow["The flow of work"]
+    FF["Factory floor"] --> QA["QA"]
   end
-  L & I & E & F & Q & S & V -. tags .-> MT
-  MY -. certified gauges .-> Q
-  MT -. fixes, through the same gates .-> I & E & F & Q & S & V
-  MT -. the morning report .-> M
+  subgraph Sup["Support"]
+    MG["Metrology<br/><small>measures and certifies</small>"]
+    MT["Maintenance<br/><small>the night shift: repairs</small>"]
+  end
+  ANY["Any area, gate, reviewer, run or person"] -. "tags: intake" .-> MT
+  MG -. "work orders from calibration" .-> MT
+  MT -. "keeps running, through the same gates" .-> FF
+  MG -. "certified gauges" .-> QA
+  MT -. "the morning report" .-> MC["Mission control"]
 ```
 
 ## 3. Principles
@@ -74,7 +78,7 @@ flowchart LR
 
 **Problem.** A defect found mid-flow either halts the line or is forgotten.
 
-**Pattern.** Every department, gate, reviewer, fuzz run, mutation run and user report can raise a tag and carry on. Raising a tag is the only thing a finding needs to do; it is never a reason to hold work that does not depend on it. A defect that does block a change (a required check failing on that change) still blocks it there: the tag is for what the change does not own.
+**Pattern.** Every area, gate, reviewer, fuzz run, mutation run and user report can raise a tag and carry on. Raising a tag is the only thing a finding needs to do; it is never a reason to hold work that does not depend on it. A defect that does block a change (a required check failing on that change) still blocks it there: the tag is for what the change does not own.
 
 **Consequences.** The line keeps moving. The list grows by day and shrinks by night, and its length is a reading on mission control.
 
@@ -233,7 +237,7 @@ When the list changes the table is re-read and re-dated; the router never assume
 
 ## 5. What maintenance records
 
-Every figure the department reports is read from these records. Nothing is inferred: a record that is not there is reported as not measured, and before the first shift the department says, plainly, that no shift has run yet.
+Every figure the crew reports is read from these records. Nothing is inferred: a record that is not there is reported as not measured, and before the first shift the crew says, plainly, that no shift has run yet.
 
 ```mermaid
 erDiagram
@@ -249,7 +253,7 @@ erDiagram
   MODEL ||--|| PRICE : "priced by, dated"
   TAG {
     string id
-    string raisedBy "department, gate, reviewer, run or report"
+    string raisedBy "area, gate, reviewer, run or report"
     string station "gauges, wear, restore, scrap, suspicion"
     string where "block, file, line"
     string what
@@ -313,7 +317,7 @@ erDiagram
   }
 ```
 
-From these records come the five readings the department publishes:
+From these records come the five readings the crew publishes:
 
 | Reading | Read from |
 | --- | --- |
@@ -325,7 +329,7 @@ From these records come the five readings the department publishes:
 
 ## 6. Where the crew runs
 
-The crew runs on the owner's Google Cloud project, calling the partner models on Vertex AI. It authenticates through Workload Identity Federation: each run receives a short-lived identity for that run alone, and no key is stored in the repository, the runner or anywhere else. The runner is not yet live. Until it is, no shift runs; the list still fills from the day shift's tags and the mutation runs' results, and the maintenance page reports "no shift has run yet" rather than any figure it does not have.
+The crew runs on the owner's Google Cloud project, calling the partner models on Vertex AI. It authenticates through Workload Identity Federation: each run receives a short-lived identity for that run alone, and no key is stored in the repository, the runner or anywhere else. Until the Vertex AI runner is live, the crew runs as sub-agents. The queue, the work closed so far and the nights that have run are read from the shift records and shown on [/plant](https://zthr.ai/plant); where there is no record, the maintenance page reports "no shift has run yet" rather than any figure it does not have.
 
 ```mermaid
 sequenceDiagram
@@ -348,9 +352,12 @@ sequenceDiagram
 
 ## 7. Files, at night
 
-Files is built on twelve library blocks, and every one is a station's work. Metrology calibrates each block (the tree's etag propagation, the object store's checksums, the uploads' expiry, the grants' throttling), and the crew works the survivors in round order; a fix to a block reaches Files and every later product that uses it. Restore drills restore its Cloud Storage data into a scratch bucket and read it back against its checksums. Wear checks watch the dependencies of its protocol layer and the expiry of its sign-in tokens. A report from a person whose desktop app stopped syncing is reproduced as a failing test before anything is fixed. And a reviewer's open doubt about a lease's timeout is settled by a test or dismissed with reasons another family accepts.
+Files is built on library blocks, and every one is a station's work. Metrology calibrates each block (the tree's etag propagation, the object store's checksums, the uploads' expiry, the grants' throttling), and the crew works the survivors in round order; a fix to a block reaches Files and every later product that uses it. Restore drills restore its Cloud Storage data into a scratch bucket and read it back against its checksums. Wear checks watch the dependencies of its protocol layer and the expiry of its sign-in tokens. A report from a person whose desktop app stopped syncing is reproduced as a failing test before anything is fixed. And a reviewer's open doubt about a lease's timeout is settled by a test or dismissed with reasons another family accepts.
 
-## 8. Evaluating it
+## 8. What it needs, and how it is judged
+
+Maintenance needs a budget per shift, work orders each with their acceptance test, and the same gates as day work. Which are met is shown on [/plant](https://zthr.ai/plant). The measures:
+
 
 - **Nothing lost.** Every finding raised anywhere on the line is a tag, and every tag reaches fixed, equivalent or escalated. A query on the records.
 - **No night exemption.** Every accepted night change has a failing-first test, nothing weakened, and a check by another family. A query on the ledger.
