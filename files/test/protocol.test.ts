@@ -172,7 +172,7 @@ test('an upload whose Destination Files cannot place is refused as a bad Destina
   const s = await start();
   const ana = s.as('ana', PASS);
   try {
-    const odd = await ana('/remote.php/dav/uploads/ana/u9', { method: 'MKCOL', headers: { destination: 'http://elsewhere.example/remote.php/dav/files/ana/big/large.bin' } });
+    const odd = await ana('/remote.php/dav/uploads/ana/u9', { method: 'MKCOL', headers: { destination: `${s.base}/remote.php/dav/files/ben/big/large.bin` } });
     assert.equal(odd.status, 400, 'the Destination is the problem, and the reply says so');
     assert.match(await odd.text(), /Destination/);
     const stray = await ana('/remote.php/dav/uploads/ana/u9', { method: 'PROPFIND', headers: { depth: '1' } });

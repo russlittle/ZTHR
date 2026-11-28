@@ -369,16 +369,20 @@ export function depth(header: string | null | undefined, fallback: Depth = 'infi
 /** Overwrite: T unless the client says F. */
 export const overwrite = (header: string | null | undefined) => header?.trim().toUpperCase() !== 'F';
 
-/** The path a Destination header points at, decoded, when it is on this server under `base`. */
+/**
+ * The path a Destination header points at, decoded, when it is under `base`. As in Nextcloud, only the path counts:
+ * a proxy in front may rewrite Host and leave the client's URL as it was. The path rules are what keep a client
+ * inside its own files.
+ */
 export function destination(header: string | null | undefined, host: string, base: string): string | null {
   if (!header) return null;
   let u: URL;
   try {
-    u = new URL(header, `http://${host}`);
+    u = new URL(header, `http://${host || 'localhost'}`);
   } catch {
     return null;
   }
-  if (u.host && u.host !== host) return null;
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
   let p: string;
   try {
     p = decodePath(u.pathname);

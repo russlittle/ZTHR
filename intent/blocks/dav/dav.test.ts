@@ -65,7 +65,9 @@ test('WebDAV headers: depth, overwrite, destination, lock tokens, timeout', () =
   assert.equal(overwrite('F'), false);
   assert.equal(overwrite(undefined), true);
   assert.equal(destination('http://h/remote.php/dav/files/ana/new%20name.txt', 'h', '/remote.php/dav/files/ana'), '/new name.txt');
-  assert.equal(destination('http://evil/remote.php/dav/files/ana/x', 'h', '/remote.php/dav/files/ana'), null, 'another host is refused');
+  assert.equal(destination('http://127.0.0.1:37147/remote.php/dav/files/ana/x', 'localhost:8080', '/remote.php/dav/files/ana'), '/x', 'as in Nextcloud, only the path counts: a proxy may rewrite Host');
+  assert.equal(destination('http://other/remote.php/dav/files/ben/x', 'h', '/remote.php/dav/files/ana'), null, 'another host does not widen the base');
+  assert.equal(destination('ftp://h/remote.php/dav/files/ana/x', 'h', '/remote.php/dav/files/ana'), null, 'only http and https');
   assert.equal(destination('/remote.php/dav/files/ben/x', 'h', '/remote.php/dav/files/ana'), null, 'another base is refused');
   assert.deepEqual(ifTokens('(<opaquelocktoken:abc>) (<opaquelocktoken:def>)'), ['opaquelocktoken:abc', 'opaquelocktoken:def']);
   assert.equal(timeout('Second-60', 3_600_000), 60_000);
