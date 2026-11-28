@@ -147,3 +147,14 @@ test('a ruling record keeps a recorded "no simplification" note when re-claimed'
   assert.equal(again.rulings.length, 1);
   assert.equal(again.ruling.simplify?.reason, 'public API');
 });
+
+test("a block's work orders are found by their exact names, not by a shared prefix", async () => {
+  const { isTaskOf } = await import('./lib.ts');
+  assert.equal(isTaskOf('pdf', 'pdf-12.json'), true);
+  assert.equal(isTaskOf('pdf', 'pdf-12-fix.json'), true);
+  assert.equal(isTaskOf('pdf', 'pdf-12-simplify.json'), true);
+  assert.equal(isTaskOf('pdf', 'pdf-sign-12.json'), false, "pdf-sign's orders are not pdf's");
+  assert.equal(isTaskOf('pdf', 'pdf-forms-3-fix.json'), false);
+  assert.equal(isTaskOf('time', 'timeseries-4.json'), false);
+  assert.equal(isTaskOf('pdf', 'pdf-12.txt'), false);
+});

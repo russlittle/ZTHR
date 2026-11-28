@@ -7,12 +7,14 @@
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { QUEUE, buildPrompt, blockSrc, blockTest, excerpt, isEquivalent, loadResult, loadRulings, mutantKey, rel, rulingFor, snapshotDirty, taskFiles, testStyle, writeJson, KIND_RANK, type Mutant, type Task, type TaskKind } from './lib.ts';
+import { QUEUE, buildPrompt, isTaskOf, blockSrc, blockTest, excerpt, isEquivalent, loadResult, loadRulings, mutantKey, rel, rulingFor, snapshotDirty, taskFiles, testStyle, writeJson, KIND_RANK, type Mutant, type Task, type TaskKind } from './lib.ts';
 
 const BUDGET: Record<TaskKind, number> = { 'fix-bug': 80_000, 'kill-mutant': 40_000, simplify: 40_000 };
 
 export const taskName = (block: string, kind: TaskKind, id: string) => `${block}-${id}${kind === 'kill-mutant' ? '' : kind === 'fix-bug' ? '-fix' : '-simplify'}`;
 export const taskPath = (block: string, kind: TaskKind, id: string) => join(QUEUE, `${taskName(block, kind, id)}.json`);
+
+let dirtyAtStart: Record<string, string> | undefined;
 
 export function makeTask(kind: TaskKind, block: string, mutant: Mutant, o: { evidence?: string } = {}): Task {
   const mayEdit = kind === 'kill-mutant' ? [`intent/blocks/${block}/${block}.test.ts`] : [`intent/blocks/${block}/index.ts`, `intent/blocks/${block}/${block}.test.ts`];
@@ -29,7 +31,8 @@ export function makeTask(kind: TaskKind, block: string, mutant: Mutant, o: { evi
     tier: 'worker',
     priority: KIND_RANK[kind],
     prompt: buildPrompt(kind, { block, mutant, sourceExcerpt: excerpt(src, mutant.line), testStyle: testStyle(tst), acceptance, mayEdit, evidence: o.evidence }),
-    baseline: snapshotDirty(),
+    // One snapshot per run: asking git for every task took hours once the queue held thousands of orders.
+    baseline: (dirtyAtStart ??= snapshotDirty()),
     createdAt: new Date().toISOString(),
     ...(o.evidence ? { evidence: o.evidence } : {}),
   };
@@ -47,7 +50,7 @@ export function emitTasks(block: string): { files: string[]; killMutant: number;
   if (!result) throw new Error(`no result for ${block}: run node tools/mutation/run.ts ${block} first`);
   const rulings = loadRulings(block);
   mkdirSync(QUEUE, { recursive: true });
-  for (const f of readdirSync(QUEUE)) if (f.startsWith(`${block}-`) && f.endsWith('.json') && !f.endsWith('-fix.json')) rmSync(join(QUEUE, f)); // stale ids
+  for (const f of readdirSync(QUEUE)) if (isTaskOf(block, f) && !f.endsWith('-fix.json')) rmSync(join(QUEUE, f)); // stale ids
   // A fix-bug task is stale once the mutant it came from is no longer a survivor.
   const keys = new Set(result.survivors.map(mutantKey));
   for (const f of taskFiles(block)) {
