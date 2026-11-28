@@ -113,7 +113,7 @@ flowchart LR
   r -.->|next round, until no survivors but recorded equivalents| m
 ```
 
-Scores per block, from metrology's certificates (84 blocks scored, 0 with no survivors but recorded equivalents):
+Scores per block, from metrology's certificates (84 blocks scored, 1 with no survivors but recorded equivalents):
 
 | Block | Score | Floor | Survived | Recorded equivalent |
 | --- | --- | --- | --- | --- |
@@ -132,7 +132,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 | `conflicts` | 90.7% | none | 4 | 0 |
 | `consent` | 86.1% | none | 16 | 0 |
 | `console` | 78.4% | none | 150 | 0 |
-| `contact` | 48.4% | none | 203 | 0 |
+| `contact` | 97.5% | none | 10 | 0 |
 | `costmeter` | 79.1% | none | 28 | 0 |
 | `crypto` | 89.2% | none | 14 | 0 |
 | `datagate` | 80.5% | none | 42 | 0 |
@@ -168,7 +168,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 | `paging` | 71.6% | none | 56 | 0 |
 | `palette` | 66.4% | none | 48 | 0 |
 | `payments` | 77.8% | none | 70 | 0 |
-| `pdf` | 46.4% | none | 147 | 0 |
+| `pdf` | 96.8% | none | 9 | 0 |
 | `pipeline` | 73.2% | none | 71 | 0 |
 | `privacy` | 78.0% | none | 22 | 0 |
 | `pwa` | 73.8% | none | 34 | 0 |
@@ -188,7 +188,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 | `surfaces` | 66.3% | none | 64 | 0 |
 | `sync` | 73.9% | none | 43 | 0 |
 | `tabular` | 74.8% | none | 113 | 0 |
-| `testdata` | 33.5% | none | 123 | 0 |
+| `testdata` | 100.0% | none | 0 | 0 |
 | `time` | 71.1% | none | 144 | 0 |
 | `tree` | 65.0% | none | 130 | 0 |
 | `uat` | 75.2% | none | 58 | 0 |
@@ -196,7 +196,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 | `uploads` | 64.7% | none | 65 | 0 |
 | `uploadsafe` | 64.4% | none | 69 | 0 |
 | `ux` | 69.5% | none | 117 | 0 |
-| `validate` | 53.9% | none | 172 | 0 |
+| `validate` | 97.9% | none | 8 | 0 |
 | `walkthrough` | 93.9% | none | 12 | 0 |
 | `watchdog` | 75.0% | none | 29 | 0 |
 | `webhooks` | 75.1% | none | 67 | 0 |
