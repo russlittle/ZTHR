@@ -212,8 +212,13 @@ async function provisioning(files: Files, r: Req, v: 1 | 2, rest: string): Promi
     await files.removePerson(id);
     return ocs(r, v, 200, []);
   }
+  if (r.method === 'POST' && action === 'wipe') {
+    // Nextcloud's provisioning call: every device of the person is told to erase itself when it next asks.
+    await files.wipeAll(id);
+    return ocs(r, v, 200, []);
+  }
   if (r.method === 'PUT' && (action === 'disable' || action === 'enable')) {
-    files.updatePerson(id, { disabled: action === 'disable' });
+    await files.setEnabled(id, action === 'enable');
     return ocs(r, v, 200, []);
   }
   if (action === 'groups' && (r.method === 'POST' || r.method === 'DELETE')) {

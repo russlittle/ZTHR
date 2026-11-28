@@ -86,3 +86,28 @@ test('passwords hash with a salt, so the same password hashes differently and st
   assert.ok(!(await checkPassword('pw-12346', a)));
   assert.notEqual(linkToken(), linkToken());
 });
+
+test('given the owner, effective() caps each reshare by what its giver still has, so lowering or revoking cuts it', async () => {
+  const { g } = setup();
+  // Ana owns folder 1 with file 2 in it; she shares the folder with Ben, who reshares it with Cy.
+  const chain = [
+    { id: 2, kind: 'file' as const },
+    { id: 1, kind: 'folder' as const },
+  ];
+  const groups: Record<string, string[]> = { ana: [], ben: [], cy: [] };
+  const o = { owner: 'ana', groupsOf: async (p: string) => groups[p] };
+  const toBen = await g.create({ ...folder, resource: 1, kind: 'person', to: 'ben', permissions: ALL });
+  await g.create({ ...folder, resource: 1, by: 'ben', giverHas: ALL, kind: 'person', to: 'cy', permissions: ALL });
+  assert.equal(await g.effective('cy', [], chain.slice(1), o), ALL);
+  assert.equal(await g.effective('cy', [], chain, o), ALL & ~CREATE, 'a file inside a shared folder may be deleted, not created in');
+  await g.update(toBen.id, 'ana', ALL, { permissions: READ | SHARE });
+  assert.equal(await g.effective('cy', [], chain.slice(1), o), READ | SHARE, 'Ben has only read and share now, so Cy too');
+  assert.equal(await g.effective('ana', [], chain, o), ALL, 'the owner may do everything');
+  delete groups['ben'];
+  assert.equal(await g.effective('cy', [], chain.slice(1), o), 0, 'a giver who is gone gives nothing');
+  groups['ben'] = [];
+  await g.revoke(toBen.id, 'ana');
+  assert.equal(await g.effective('cy', [], chain.slice(1), o), 0, 'revoking Ben’s share ends Cy’s');
+  await g.create({ ...folder, resource: 2, resourceKind: 'file', kind: 'person', to: 'cy', permissions: READ | UPDATE });
+  assert.equal(await g.effective('cy', [], chain, o), READ | UPDATE, 'a file shared by itself');
+});

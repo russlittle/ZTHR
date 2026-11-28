@@ -80,3 +80,13 @@ test('a word typed past its stem keeps matching until it is finished ("budgete" 
   assert.equal(typedToward('budgete', 'budget'), true);
   assert.equal(typedToward('budgetes', 'budget'), false, 'a whole ending typed is a finished word, stemmed as one');
 });
+
+test('facet values named like Object.prototype members are counted as plain values', () => {
+  const i = new Index();
+  const vals = ['constructor', '__proto__', 'toString', 'hasOwnProperty', 'valueOf', 'constructor'];
+  vals.forEach((v, n) => i.add({ id: `p${n}`, fields: { title: 'apple' }, facets: { kind: v } }));
+  const c = i.search('apple', { canSee: () => true, facets: ['kind'] }).facets.kind!;
+  assert.equal(Object.getOwnPropertyDescriptor(c, 'constructor')!.value, 2);
+  for (const v of ['__proto__', 'toString', 'hasOwnProperty', 'valueOf']) assert.equal(Object.getOwnPropertyDescriptor(c, v)!.value, 1, v);
+  assert.equal(Object.keys(c).length, 5);
+});

@@ -8,8 +8,8 @@
  */
 import { createHash, randomUUID } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { mkdir, readdir, rm, stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, open, readdir, rm, stat } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
@@ -171,7 +171,21 @@ export function memoryObjects(): ObjectStore & { readonly count: () => number } 
   return store;
 }
 
-/** Objects as files in a folder, two levels of fan-out so no folder grows large. */
+/** Forces a file or folder to disk. */
+async function fsync(path: string): Promise<void> {
+  const fh = await open(path, 'r');
+  try {
+    await fh.sync();
+  } finally {
+    await fh.close();
+  }
+}
+
+/**
+ * Objects as files in a folder, two levels of fan-out so no folder grows large. A put returns only once the bytes,
+ * and the folder entries that name them, are forced to disk, so a machine crash cannot lose an object whose key
+ * the caller has already recorded.
+ */
 export function diskObjects(root: string): ObjectStore {
   const at = (key: string) => {
     if (!/^[0-9a-f-]{36}$/.test(key)) throw new Missing(key);
@@ -181,10 +195,21 @@ export function diskObjects(root: string): ObjectStore {
     async put(data, o = {}) {
       const key = randomUUID();
       const path = at(key);
-      await mkdir(join(path, '..'), { recursive: true });
+      const leaf = join(path, '..');
+      const made = await mkdir(leaf, { recursive: true });
       const d = new Digest(o.algos ?? DEFAULT);
       try {
         await pipeline(Readable.from(limit(data instanceof Uint8Array ? once(data) : data, d, o.maxBytes)), createWriteStream(path));
+        await fsync(path);
+        await fsync(leaf);
+        // Fan-out folders made for this object are entries in their own parents, which are forced too.
+        if (made) {
+          const top = resolve(made, '..');
+          for (let p = resolve(leaf); p !== top && join(p, '..') !== p; ) {
+            p = join(p, '..');
+            await fsync(p);
+          }
+        }
       } catch (e) {
         await rm(path, { force: true });
         throw e;

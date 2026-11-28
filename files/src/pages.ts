@@ -32,6 +32,9 @@ button,.btn{display:inline-block;margin-top:1.1rem;font:inherit;font-weight:600;
 
 // ---------------------------------------------------------------- login flow v2
 
+/** How long a sign-in flow lives: the devices block's default, which Files uses. */
+const FLOW_MS = 20 * 60_000;
+
 export async function loginFlow(files: Files, r: Req, rest: string, origin: string): Promise<Reply> {
   try {
     if (rest === '' && r.method === 'POST') {
@@ -47,7 +50,11 @@ export async function loginFlow(files: Files, r: Req, rest: string, origin: stri
     const m = /^\/flow\/([A-Za-z0-9_-]+)$/.exec(rest);
     if (m) {
       const token = m[1]!;
-      if (r.method === 'GET') return html(200, page('Connect an app', `<h1>Connect an app to your files</h1><p>An app is asking to sign in to your account. Sign in to allow it. It will get its own password, which you can revoke at any time.</p>${signInForm(token, '')}`));
+      // As Nextcloud does, the page names the app that is asking: the client name it sent when it started.
+      const flow = await files.state.devices.flows.get(token);
+      if (!flow || flow.login !== token || flow.result || files.now() - flow.started > FLOW_MS) return html(410, page('Sign-in expired', '<h1>This sign-in has expired</h1><p>Start again from the app.</p>'));
+      const asking = (err: string, user: string) => `<h1>Connect an app to your files</h1><p><strong>${esc(flow.client)}</strong> is asking to sign in to your account. Sign in to allow it. It will get its own password, which you can revoke at any time.</p>${err}${signInForm(token, user)}`;
+      if (r.method === 'GET') return html(200, page('Connect an app', asking('', '')));
       if (r.method === 'POST') {
         const f = await fields(r);
         try {
@@ -58,7 +65,7 @@ export async function loginFlow(files: Files, r: Req, rest: string, origin: stri
         } catch (e) {
           const s = statusOf(e);
           if (s.status === 404) return html(410, page('Sign-in expired', '<h1>This sign-in has expired</h1><p>Start again from the app.</p>'));
-          return html(s.status === 429 ? 429 : 401, page('Connect an app', `<h1>Connect an app to your files</h1><p class="err" role="alert">That name and password did not sign in.</p>${signInForm(token, f['user'] ?? '')}`));
+          return html(s.status === 429 ? 429 : 401, page('Connect an app', asking('<p class="err" role="alert">That name and password did not sign in.</p>', f['user'] ?? '')));
         }
       }
     }

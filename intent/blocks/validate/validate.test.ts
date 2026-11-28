@@ -63,3 +63,12 @@ test('a pattern with the global flag gives the same answer every time', () => {
   assert.equal(s.check('abc', 'x').ok, true);
   assert.equal(s.check('abc', 'x').ok, true);
 });
+
+test('fieldErrors keeps a message for __proto__ and constructor paths', () => {
+  const r = record({ name: text().optional() }).check(JSON.parse('{"__proto__":1,"constructor":1}'), '');
+  assert.equal(r.ok, false);
+  if (r.ok) return;
+  const errs = fieldErrors(r.problems);
+  for (const p of r.problems) assert.ok(Object.hasOwn(errs, p.path) && typeof Object.getOwnPropertyDescriptor(errs, p.path)!.value === 'string', p.path);
+  assert.equal(Object.keys(errs).length, r.problems.length);
+});

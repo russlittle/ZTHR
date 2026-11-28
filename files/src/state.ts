@@ -4,14 +4,14 @@
  *
  * It is kept as a write-ahead log. Each change appends only the records it touched (a file write is a few hundred
  * bytes, whatever the size of the tree), a snapshot is written every so often and the log before it dropped, and
- * a restart reads the snapshot and replays what came after. The server waits for a change to be in the log before
- * it answers, so nothing a client was told is saved can be lost.
+ * a restart reads the snapshot and replays what came after. The server waits for a change to be in the log, forced
+ * to disk, before it answers, so nothing a client was told is saved can be lost.
  *
  * One writer at a time suits Files on Cloud Run (one instance, scaling to zero). The log refuses a second writer
  * rather than interleave with it. The stores are interfaces, so a document database replaces this without any
  * block changing.
  */
-import { appendFile, mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, open, readFile, readdir, rename, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { DeviceStore, Device, Flow } from '../../intent/blocks/devices/index.ts';
 import type { Grant, GrantStore } from '../../intent/blocks/grants/index.ts';
@@ -29,6 +29,8 @@ export interface Person {
   readonly email?: string;
   readonly created: number;
   readonly disabled?: boolean;
+  /** Raised on a password change and on disabling: a web session made before it no longer signs in. */
+  readonly epoch?: number;
 }
 
 export interface Trashed {
@@ -103,33 +105,103 @@ export const memoryPersist = (): Persist & { snap: string | null; entries: Map<n
   return p;
 };
 
-/** A folder holding snapshot.json and one log file of JSON lines, appended and replaced atomically. */
-export function diskPersist(dir: string): Persist {
+/** Writes a whole file and forces it to disk before returning. */
+async function writeDurable(path: string, text: string): Promise<void> {
+  const fh = await open(path, 'w');
+  try {
+    await fh.writeFile(text);
+    await fh.sync();
+  } finally {
+    await fh.close();
+  }
+}
+
+/** Forces a folder's entries (a file made or renamed in it) to disk. */
+async function syncDir(dir: string): Promise<void> {
+  const fh = await open(dir, 'r');
+  try {
+    await fh.sync();
+  } finally {
+    await fh.close();
+  }
+}
+
+export interface DiskPersistOptions {
+  /** Told about anything repaired on load, such as a torn last line; it goes to the server's log. */
+  readonly report?: (message: string) => void;
+}
+
+/**
+ * A folder holding snapshot.json and one log file of JSON lines. Every entry is forced to disk (fsync) before
+ * append returns, so a machine crash cannot lose a change a client was told is saved; a snapshot is written to a
+ * temporary file, forced to disk, renamed into place, and the folder forced too, before the log is cut.
+ */
+export function diskPersist(dir: string, o: DiskPersistOptions = {}): Persist {
   const snap = join(dir, 'snapshot.json');
   const log = join(dir, 'log.jsonl');
+  const report = o.report ?? ((m: string) => process.stderr.write(`${JSON.stringify({ severity: 'WARNING', message: m })}\n`));
+  let dirSynced = false;
   return {
     async load() {
       await mkdir(dir, { recursive: true });
       const s = await readFile(snap, 'utf8').catch(() => null);
-      const lines = (await readFile(log, 'utf8').catch(() => '')).split('\n').filter(Boolean);
-      // A line torn by a crash mid-write is the last one, and was never acknowledged: it is dropped.
-      const whole = lines.filter((l, i) => {
-        if (i < lines.length - 1) return true;
+      const raw = await readFile(log, 'utf8').catch(() => '');
+      const lines = raw.split('\n');
+      if (lines[lines.length - 1] === '') lines.pop();
+      const parsed: Delta[] = [];
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i]!;
         try {
-          JSON.parse(l);
-          return true;
+          parsed.push(JSON.parse(l) as Delta);
         } catch {
-          return false;
+          if (i < lines.length - 1)
+            throw new Error(`the state log ${log} is damaged at line ${i + 1} of ${lines.length}, which is not the last line: that is corruption, not a write cut short by a crash. Files will not start on it; restore the state folder from a backup, or inspect that line.`);
+          // The last line torn by a crash mid-write was never acknowledged: it is reported and cut off, so the next
+          // entry starts on a line of its own.
+          report(`the state log ended in a torn line of ${l.length} characters, written when a crash cut a write short; it was never acknowledged and has been dropped`);
+          const keep = Buffer.byteLength(lines.slice(0, i).map((x) => `${x}\n`).join(''));
+          const fh = await open(log, 'r+');
+          try {
+            await fh.truncate(keep);
+            await fh.sync();
+          } finally {
+            await fh.close();
+          }
         }
-      });
+      }
+      // A whole last entry whose newline was lost gets it back before anything is appended after it.
+      if (raw && !raw.endsWith('\n') && parsed.length === lines.length) {
+        const fh = await open(log, 'a');
+        try {
+          await fh.write('\n');
+          await fh.sync();
+        } finally {
+          await fh.close();
+        }
+      }
       const after = s ? (JSON.parse(s) as { n: number }).n : 0;
-      return { snapshot: s, log: whole.filter((l) => (JSON.parse(l) as Delta).n > after) };
+      return { snapshot: s, log: parsed.filter((d) => d.n > after).map((d) => JSON.stringify(d)) };
     },
-    append: async (_n, text) => appendFile(log, `${text}\n`),
+    async append(_n, text) {
+      const fh = await open(log, 'a');
+      try {
+        await fh.write(`${text}\n`);
+        await fh.sync();
+      } finally {
+        await fh.close();
+      }
+      // The first append may have made the log file: its folder entry is forced to disk too.
+      if (!dirSynced) {
+        await syncDir(dir);
+        dirSynced = true;
+      }
+    },
     async snapshot(n, text) {
       const tmp = `${snap}.${process.pid}.tmp`;
-      await writeFile(tmp, text);
+      await writeDurable(tmp, text);
       await rename(tmp, snap);
+      // The new snapshot must be on disk before the log entries it holds are dropped.
+      await syncDir(dir);
       const lines = (await readFile(log, 'utf8').catch(() => '')).split('\n').filter(Boolean);
       const keep = lines.filter((l) => {
         try {
@@ -139,8 +211,10 @@ export function diskPersist(dir: string): Persist {
         }
       });
       const t2 = `${log}.${process.pid}.tmp`;
-      await writeFile(t2, keep.map((l) => `${l}\n`).join(''));
+      await writeDurable(t2, keep.map((l) => `${l}\n`).join(''));
       await rename(t2, log);
+      await syncDir(dir);
+      dirSynced = true;
     },
   };
 }

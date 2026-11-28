@@ -2,7 +2,8 @@
  * Grants: one person gives another person, a group, or anyone holding a link, a stated set of permissions on one
  * resource and everything under it. A grant can never give more than the giver has; a link can carry a password
  * (stored only as a salted hash) and an expiry, and wrong passwords are throttled per link. What a person may do on a
- * resource is the union of every grant that reaches them on it or on any resource above it.
+ * resource is the union of every grant that reaches them on it or on any resource above it, each capped by what its
+ * giver may still do there.
  */
 import { randomBytes, randomInt, scrypt as scryptCb, timingSafeEqual } from 'node:crypto';
 import { promisify } from 'node:util';
@@ -113,6 +114,17 @@ export interface GrantsOptions {
   readonly requireLinkPassword?: boolean;
   readonly minPasswordLength?: number;
 }
+
+export interface EffectiveOptions {
+  /** Whose resource the chain is: they may do everything, and their grants are not capped. */
+  readonly owner: string;
+  /** A giver's groups; undefined when the giver is gone or disabled, so their grants give nothing. */
+  readonly groupsOf: (person: string) => Promise<readonly string[] | undefined> | readonly string[] | undefined;
+  /** How deep a chain of reshares is followed; deeper gives nothing. */
+  readonly maxDepth?: number;
+}
+
+const reaches = (g: Grant, person: string, groups: readonly string[]) => (g.kind === 'person' && g.to === person) || (g.kind === 'group' && !!g.to && groups.includes(g.to));
 
 export class Grants {
   private readonly store: GrantStore;
@@ -239,12 +251,41 @@ export class Grants {
   /**
    * What a person may do on a resource through grants to them or their groups, given the resource and its
    * ancestors (nearest first). A link grant is not counted here; it is opened with its token.
+   *
+   * Pass `owner` (whose resource it is) and `groupsOf` (a giver's groups, or undefined when the giver can no longer
+   * act) and each grant counts only as far as its giver still may on the granted resource, worked out the same way:
+   * lowering or revoking a share lowers or ends every reshare made from it. The owner may do everything.
+   *
+   * @deprecated without `o`: a plain union of the grants, not capped by what each giver still has. Only for
+   * callers that never allow resharing.
    */
-  async effective(person: string, groups: readonly string[], chain: readonly { id: number; kind: 'file' | 'folder' }[]): Promise<number> {
-    const ids = new Set(chain.map((c) => c.id));
-    const mine = await this.live((g) => ids.has(g.resource) && ((g.kind === 'person' && g.to === person) || (g.kind === 'group' && !!g.to && groups.includes(g.to))));
-    const bits = mine.reduce((a, g) => a | g.permissions, 0);
-    return chain[0]?.kind === 'file' ? bits & FILE_MAX : bits;
+  async effective(person: string, groups: readonly string[], chain: readonly { id: number; kind: 'file' | 'folder' }[], o?: EffectiveOptions): Promise<number> {
+    if (!o) {
+      const ids = new Set(chain.map((c) => c.id));
+      const mine = await this.live((g) => ids.has(g.resource) && reaches(g, person, groups));
+      const bits = mine.reduce((a, g) => a | g.permissions, 0);
+      return chain[0]?.kind === 'file' ? bits & FILE_MAX : bits;
+    }
+    return this.capped(person, groups, chain, o, 0);
+  }
+
+  private async capped(person: string, groups: readonly string[], chain: readonly { id: number; kind: 'file' | 'folder' }[], o: EffectiveOptions, depth: number): Promise<number> {
+    if (person === o.owner) return ALL;
+    const top = chain[0];
+    if (!top || depth > (o.maxDepth ?? 16)) return 0;
+    const at = new Map(chain.map((c, i) => [c.id, i]));
+    let bits = 0;
+    for (const g of await this.live((g) => at.has(g.resource) && reaches(g, person, groups))) {
+      let cap = ALL;
+      if (g.by !== o.owner) {
+        const theirs = await o.groupsOf(g.by);
+        cap = theirs === undefined ? 0 : await this.capped(g.by, theirs, chain.slice(at.get(g.resource)!), o, depth + 1);
+      }
+      // A file shared by itself has no inside to create or delete in; a file inside a shared folder may be deleted
+      // when the folder's grant allows deleting.
+      bits |= g.permissions & cap & (top.kind === 'file' ? (g.resource === top.id ? FILE_MAX : ~CREATE) : ALL);
+    }
+    return bits;
   }
 
   /** Removes grants that expired, and every grant on a resource that is gone; returns how many. */

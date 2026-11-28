@@ -78,7 +78,7 @@ test('snippets never carry an unescaped < or > from document text; only <mark> a
   });
 });
 
-test('facet counts are whole numbers that add up to the matched documents carrying each facet (600 cases)', { todo: 'facet counts are kept in a plain object, so a facet value named __proto__ is dropped and one named constructor, toString, hasOwnProperty or valueOf becomes a string like "function Object() { [native code] }1"' }, async () => {
+test('facet counts are whole numbers that add up to the matched documents carrying each facet (600 cases)', async () => {
   await forAll('search facet counts', {
     cases: 600,
     gen,

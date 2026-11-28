@@ -321,7 +321,7 @@ export function toXlsx(rows: readonly (readonly unknown[])[], sheet = 'Sheet1', 
     .map((r, ri) => `<row r="${ri + 1}">${r.map((v, ci) => {
       const ref = `${colName(ci)}${ri + 1}`;
       const s = ri === 0 ? ' s="1"' : '';
-      if (typeof v === 'number' && Number.isFinite(v)) return `<c r="${ref}"${s}><v>${v}</v></c>`;
+      if (typeof v === 'number' && Number.isFinite(v)) return `<c r="${ref}"${s}><v>${Object.is(v, -0) ? '-0' : v}</v></c>`;
       if (typeof v === 'boolean') return `<c r="${ref}" t="b"${s}><v>${v ? 1 : 0}</v></c>`;
       if (v === null || v === undefined) return '';
       let text = xclean(v instanceof Date ? v.toISOString() : String(v));

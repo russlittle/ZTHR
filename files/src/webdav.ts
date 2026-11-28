@@ -3,7 +3,7 @@
  * /remote.php/webdav), chunked uploads under /uploads, the trash under /trashbin and old copies under /versions.
  * Each answer carries the properties clients read to sync: ids, etags, permission letters, sizes, checksums.
  */
-import { DAV, child, depth as depthOf, destination as davDestination, el, encodePath, httpDate, ifTokens, keyOf, multistatus, overwrite as overwriteOf, parseXml, propfindRequest, proppatchRequest, timeout, type Out, type PropRequest } from '../../intent/blocks/dav/index.ts';
+import { DAV, child, depth as depthOf, destination as davDestination, el, encodePath, httpDate, ifHolds, ifTokens, keyOf, multistatus, netPropChanges, overwrite as overwriteOf, parseIf, parseXml, propfindRequest, proppatchOps, timeout, type Out, type PropRequest } from '../../intent/blocks/dav/index.ts';
 import { parseChecksums, parseRange } from '../../intent/blocks/objects/index.ts';
 import { NotFound, type Node } from '../../intent/blocks/tree/index.ts';
 import type { Files, Where } from './app.ts';
@@ -166,14 +166,8 @@ export function davPath(path: string): DavPath | null {
   return { area: m[1] as DavPath['area'], user, rest: m[3] ?? '/', base: `/remote.php/dav/${m[1]}/${encodePath(user)}` };
 }
 
-/**
- * The path a Destination header names under `base`. It must be `base` itself or below it: a name that only begins
- * like it (another person's folder, `/files/anabel` for `ana`) is not a path under it.
- */
-function destination(h: string | undefined, host: string, base: string): string | null {
-  const p = davDestination(h, host, base);
-  return p !== null && p.startsWith('/') ? p : null;
-}
+/** The path a Destination header names under `base`, in NFC as every name is kept. */
+const destination = (h: string | undefined, host: string, base: string): string | null => davDestination(h, host, base)?.normalize('NFC') ?? null;
 
 const DAV_HEADERS = { dav: '1, 3, extended-mkcol, access-control, calendarserver-principal-property-search, nextcloud-checksum-update, nc-calendar-search, nc-enable-birthday-calendar', 'ms-author-via': 'DAV' };
 
@@ -187,7 +181,7 @@ export async function webdav(files: Files, r: Req, p: DavPath): Promise<Reply> {
     if (p.area === 'uploads') return await uploads(files, r, p, user);
     if (p.area === 'trashbin') return await trashbin(files, r, p, user);
     if (p.area === 'versions') return await versions(files, r, p, user);
-    return await filesArea(files, r, decodeURIComponent(p.rest), user, base);
+    return await filesArea(files, r, decodeURIComponent(p.rest).normalize('NFC'), user, base);
   } catch (e) {
     const s = statusOf(e);
     return davError(s.status, s.message);
@@ -196,8 +190,33 @@ export async function webdav(files: Files, r: Req, p: DavPath): Promise<Reply> {
 
 const hrefFor = (base: string, path: string, folder: boolean) => `${base}${encodePath(path === '/' ? '/' : path)}${folder && path !== '/' ? '/' : ''}`;
 
+/**
+ * Evaluates an If header (RFC 4918 10.4) against the resources it names: the request's own for untagged lists,
+ * and each tagged one by its URL. A state token holds when it is the lock on the resource (or on a folder whose
+ * deep lock covers it); an entity tag when it is the resource's etag. False when no list holds.
+ */
+async function ifHeaderHolds(files: Files, r: Req, user: string, base: string, path: string): Promise<boolean> {
+  const lists = parseIf(header(r, 'if'));
+  if (!lists) return true;
+  const host = header(r, 'host') ?? '';
+  const states = new Map<string | undefined, { etag?: string; tokens: string[] }>();
+  for (const res of new Set(lists.map((l) => l.resource))) {
+    const p = res === undefined ? path : destination(res, host, base);
+    if (p === null) {
+      states.set(res, { tokens: [] });
+      continue;
+    }
+    const { w, node } = await files.resolve(user, p);
+    const lease = await files.leases.heldOn(`/${w.owner}${w.path}`);
+    const etag = node ? `"${p.replace(/\/+$/, '') === '' ? await files.rootEtag(user) : node.etag}"` : undefined;
+    states.set(res, { ...(etag ? { etag } : {}), tokens: lease ? [lease.token] : [] });
+  }
+  return ifHolds(lists, (res) => states.get(res) ?? { tokens: [] });
+}
+
 async function filesArea(files: Files, r: Req, path: string, user: string, base: string): Promise<Reply> {
   const tokens = ifTokens(header(r, 'if'));
+  if (!(await ifHeaderHolds(files, r, user, base, path))) return davError(412, 'the If header does not hold for this resource');
   switch (r.method) {
     case 'PROPFIND': {
       const req = propfindRequest(await text(r));
@@ -248,7 +267,7 @@ async function filesArea(files: Files, r: Req, path: string, user: string, base:
     }
     case 'MKCOL': {
       if (Number(header(r, 'content-length') ?? 0) > 0) return davError(415, 'MKCOL with a body is not supported');
-      const n = await files.mkdir(user, path);
+      const n = await files.mkdir(user, path, tokens);
       return { status: 201, headers: { 'oc-fileid': pad(n.id, files.instance) } };
     }
     case 'DELETE':
@@ -263,30 +282,28 @@ async function filesArea(files: Files, r: Req, path: string, user: string, base:
       return { status: out.created ? 201 : 204, headers: { etag: `"${out.node.etag}"`, 'oc-etag': `"${out.node.etag}"`, 'oc-fileid': pad(out.node.id, files.instance) } };
     }
     case 'PROPPATCH': {
-      const { set, remove } = proppatchRequest(await text(r));
+      const ops = proppatchOps(await text(r));
       const { w, node } = await files.resolve(user, path);
       if (!node) throw new NotFound(path);
-      const writable = (ns: string) => ns === OC || ns === NC || (ns !== DAV && !!ns);
+      const writable = (ns: string) => ns === OC || ns === NC || ns !== DAV;
       const ok: Out[] = [];
       const refused: Out[] = [];
-      const setMap: Record<string, string> = {};
-      const clear: string[] = [];
+      const props: typeof ops = [];
       let mtime: number | undefined;
-      for (const s of set) {
-        if (s.ns === DAV && s.name === 'lastmodified') {
-          const t = Date.parse(s.value);
-          mtime = Number.isNaN(t) ? Number(s.value) : Math.floor(t / 1000);
-          ok.push(el(DAV, s.name));
-        } else if (writable(s.ns) && !(s.ns === OC && ['fileid', 'id', 'permissions', 'size'].includes(s.name))) {
-          setMap[`{${s.ns}}${s.name}`] = s.value;
-          ok.push(el(s.ns, s.name));
-        } else refused.push(el(s.ns, s.name));
-      }
-      for (const x of remove) {
-        clear.push(`{${x.ns}}${x.name}`);
-        ok.push(el(x.ns, x.name));
+      // Instructions apply in document order (RFC 4918 9.2): a remove then a set of one property leaves it set.
+      for (const o of ops) {
+        if (o.op === 'set' && o.ns === DAV && o.name === 'lastmodified') {
+          const t = Date.parse(o.value);
+          mtime = Number.isNaN(t) ? Number(o.value) : Math.floor(t / 1000);
+          ok.push(el(DAV, o.name));
+        } else if (o.op === 'remove' || (writable(o.ns) && !(o.ns === OC && ['fileid', 'id', 'permissions', 'size'].includes(o.name)))) {
+          props.push(o);
+          ok.push(el(o.ns, o.name));
+        } else refused.push(el(o.ns, o.name));
       }
       if (refused.length) return xml(207, multistatus([{ href: hrefFor(base, path, node.kind === 'folder'), propstats: [{ status: 403, props: refused }, { status: 424, props: ok }] }], PREFIXES));
+      await files.checkLock(w, user, tokens);
+      const { set: setMap, clear } = netPropChanges(props);
       if (Object.keys(setMap).length || clear.length) await files.tree.setProps(w.owner, w.path, setMap, clear);
       if (mtime && Number.isFinite(mtime)) await files.tree.touch(w.owner, w.path, mtime);
       return xml(207, multistatus([{ href: hrefFor(base, path, node.kind === 'folder'), propstats: [{ status: 200, props: ok }] }], PREFIXES));
@@ -346,7 +363,7 @@ function lockXml(l: { token: string; owner: string; holder: string; deep: boolea
 // ---------------------------------------------------------------- chunked uploads (v2)
 
 async function uploads(files: Files, r: Req, p: DavPath, user: string): Promise<Reply> {
-  const parts = p.rest.split('/').filter(Boolean).map(decodeURIComponent);
+  const parts = p.rest.split('/').filter(Boolean).map((x) => decodeURIComponent(x).normalize('NFC'));
   const [id, name] = parts;
   const dest = (h: string | undefined) => destination(h, header(r, 'host') ?? '', `/remote.php/dav/files/${encodePath(user)}`);
   const total = header(r, 'oc-total-length') ? Number(header(r, 'oc-total-length')) : undefined;
@@ -369,26 +386,10 @@ async function uploads(files: Files, r: Req, p: DavPath, user: string): Promise<
         if (!to) return davError(404, 'no such upload; create it with MKCOL first');
         await files.uploads.start(user, id, to, total);
       }
-      // The chunks together may not pass the declared total, nor the room the person has: checked from the
-      // chunk's length before its bytes are kept, and again from what arrived when it had no length.
-      const over = async (incoming: number): Promise<Reply | null> => {
-        const sess = files.state.doc.sessions[`${user}\u0000${id}`];
-        const others = Object.entries(sess?.chunks ?? {}).reduce((a, [n, c]) => (Number(n) === Number(name) ? a : a + c.size), 0);
-        const declared = total ?? sess?.totalLength;
-        if (declared !== undefined && others + incoming > declared) return davError(400, `the chunks come to more than the ${declared} bytes declared`);
-        const room = await files.room(user);
-        if (room !== undefined && others + incoming > room) return davError(507, `needs ${others + incoming} bytes, ${room} free`);
-        return null;
-      };
+      // The uploads block cuts the chunk off at the declared total and at the room the person has, counting the
+      // chunks already there, and refuses at once when the chunk's length already says it will not fit.
       const len = Number(header(r, 'content-length'));
-      const early = Number.isFinite(len) ? await over(len) : null;
-      if (early) return early;
-      const got = await files.uploads.chunk(user, id, name, stream(r), total);
-      const late = await over(got.size);
-      if (late) {
-        await files.uploads.abort(user, id);
-        return late;
-      }
+      await files.uploads.chunk(user, id, name, stream(r), total, Number.isFinite(len) ? len : undefined);
       return { status: 201 };
     }
     case 'MOVE': {
@@ -398,7 +399,11 @@ async function uploads(files: Files, r: Req, p: DavPath, user: string): Promise<
       const w = await files.uploads.assemble(user, id, total);
       const mtime = Number(header(r, 'x-oc-mtime'));
       const want = parseChecksums(header(r, 'oc-checksum'));
+      // The chunks stay until the file is committed and in the log; a refusal or a crash before then leaves them
+      // for the client to assemble again.
       const { node, created } = await files.commitFile(user, to, w, { ...(mtime > 0 ? { mtime: Math.floor(mtime) } : {}), ...(want.length ? { checksum: want } : {}), ifMatch: header(r, 'if-match') ?? null, ifNoneMatch: header(r, 'if-none-match') ?? null, tokens: ifTokens(header(r, 'if')) });
+      await files.state.flush();
+      await files.uploads.finish(user, id);
       return { status: created ? 201 : 204, headers: { etag: `"${node.etag}"`, 'oc-etag': `"${node.etag}"`, 'oc-fileid': pad(node.id, files.instance), ...(mtime > 0 ? { 'x-oc-mtime': 'accepted' } : {}) } };
     }
     case 'DELETE':

@@ -105,7 +105,7 @@ export function parseRule(s: string): Rule {
       if (!m) throw new Error(`bad BYDAY ${x}`);
       if (m[1] && freq !== 'MONTHLY') throw new Error(`unsupported numbered BYDAY ${x} with FREQ=${freq}`);
       return { ...(m[1] ? { n: Number(m[1]) } : {}), day: DAYS.indexOf(m[2]!) };
-    }) } : {}),
+    }).filter((b, i, all) => all.findIndex((c) => c.day === b.day && c.n === b.n) === i) } : {}),
     ...(kv.BYMONTHDAY ? { byMonthDay: kv.BYMONTHDAY.split(',').map((x) => {
       if (!/^[+-]?\d{1,2}$/.test(x) || Number(x) === 0 || Math.abs(Number(x)) > 31) throw new Error(`bad BYMONTHDAY ${x}`);
       return Number(x);

@@ -51,6 +51,7 @@ export function unzip(buf: Buffer, o: ZipLimits = {}): Map<string, Buffer> {
     const name = buf.subarray(p + 46, p + 46 + nlen).toString('utf8');
     p += 46 + nlen + xlen + clen;
     if (name.startsWith('/') || name.split(/[\\/]/).includes('..')) throw new Refused(`unsafe path ${name}`);
+    if (name.includes('\\') || /^[A-Za-z]:/.test(name)) throw new Refused(`unsafe path ${name}: Windows-style names (backslashes, drive letters, network shares) are not allowed`);
     const folded = name.replace(/[A-Z]/g, (c) => c.toLowerCase());
     if (names.has(folded)) throw new Refused(`${name} appears more than once`);
     names.add(folded);

@@ -103,9 +103,19 @@ export const PHONE: Readonly<Record<string, { cc: string; trunk?: string; len: r
   IE: { cc: '353', trunk: '0', len: [7, 9] },
 };
 
+/** Full-width and other Unicode decimal digits (Nd) become ASCII by numeric value; nothing is dropped. */
+const asciiDigits = (s: string): string => s.replace(/\p{Nd}/gu, (c) => {
+  if (c <= '\u007f') return c;
+  // Nd characters sit in contiguous runs made of whole sets of ten, so the value is the offset within the run mod 10.
+  const cp = c.codePointAt(0)!;
+  let r = cp;
+  while (/\p{Nd}/u.test(String.fromCodePoint(r - 1))) r--;
+  return String((cp - r) % 10);
+});
+
 /** E.164 from what was typed, assuming `country` when there is no + or 00 prefix. */
 export function phone(typed: string, country: string): string {
-  const t = typed.trim();
+  const t = asciiDigits(typed.trim());
   const main = t.replace(/\s*(ext|x)\.?\s*\d+$/i, '');
   if (/[a-z]/i.test(main)) throw new Error('a phone number cannot contain letters');
   let digits = main.replace(/[^\d+]/g, '');

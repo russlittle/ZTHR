@@ -150,7 +150,7 @@ test('COUNT gives exactly COUNT occurrences when the rule can fill it (DAILY and
   });
 });
 
-test('a weekday listed twice in BYDAY gives each occurrence once (WEEKLY, 100 cases)', { todo: 'WEEKLY expands BYDAY without removing duplicates, so BYDAY=MO,MO yields every Monday twice (DAILY and MONTHLY de-duplicate)' }, async () => {
+test('a weekday listed twice in BYDAY gives each occurrence once (WEEKLY, 100 cases)', async () => {
   await forAll('rrule duplicate BYDAY', {
     cases: 100,
     gen: (r) => {

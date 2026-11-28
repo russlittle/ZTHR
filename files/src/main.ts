@@ -37,7 +37,7 @@ async function stores(): Promise<{ objects: ObjectStore; persist: Persist }> {
   }
   const dir = env['FILES_DIR'] ?? './data';
   await mkdir(join(dir, 'objects'), { recursive: true });
-  return { objects: diskObjects(join(dir, 'objects')), persist: diskPersist(join(dir, 'state')) };
+  return { objects: diskObjects(join(dir, 'objects')), persist: diskPersist(join(dir, 'state'), { report: (message) => log({ severity: 'WARNING', message }) }) };
 }
 
 async function main() {

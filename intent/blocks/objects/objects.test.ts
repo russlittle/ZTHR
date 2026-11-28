@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, open, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test } from 'node:test';
+import { mock, test } from 'node:test';
 import { Adler32, Missing, TooLarge, diskKeys, diskObjects, memoryObjects, parseChecksums, parseRange, readAll, type ObjectStore } from './index.ts';
 
 const bytes = (s: string) => new TextEncoder().encode(s);
@@ -95,6 +95,23 @@ test('the disk store fans keys out and can list them for a sweep', async () => {
     assert.equal(await s.size(w.key), undefined);
     await assert.rejects(s.get('../../etc/passwd'), Missing, 'a key is never a path');
   } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('on disk, a stored object and the folders it was made in are forced to disk before put returns', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'objects-sync-'));
+  const probe = await open(tmpdir(), 'r');
+  const proto = Object.getPrototypeOf(probe) as { sync: () => Promise<void> };
+  await probe.close();
+  const m = mock.method(proto, 'sync');
+  try {
+    const s = diskObjects(dir);
+    const w = await s.put(new TextEncoder().encode('durable'));
+    assert.ok(m.mock.callCount() >= 2, `the file and its folder: ${m.mock.callCount()} syncs`);
+    assert.equal((await readAll(await s.get(w.key))).toString(), 'durable');
+  } finally {
+    m.mock.restore();
     await rm(dir, { recursive: true, force: true });
   }
 });

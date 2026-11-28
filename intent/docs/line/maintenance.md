@@ -117,16 +117,16 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 
 | Block | Score | Floor | Survived | Recorded equivalent |
 | --- | --- | --- | --- | --- |
-| `accounts` | 62.2% | none | 143 | 0 |
+| `accounts` | 62.7% | none | 148 | 0 |
 | `analytics` | 75.9% | none | 41 | 0 |
-| `apikeys` | 77.9% | none | 29 | 0 |
+| `apikeys` | 79.9% | none | 32 | 0 |
 | `apiver` | 87.4% | none | 15 | 0 |
 | `ask` | 79.2% | none | 188 | 0 |
 | `audit` | 75.0% | none | 32 | 0 |
 | `backups` | 79.3% | none | 33 | 0 |
 | `booking` | 80.0% | none | 43 | 0 |
 | `cache` | 85.5% | none | 9 | 0 |
-| `cmi5` | 70.4% | none | 53 | 0 |
+| `cmi5` | 70.4% | none | 60 | 0 |
 | `comments` | 74.5% | none | 53 | 0 |
 | `config` | 71.1% | none | 46 | 0 |
 | `conflicts` | 90.7% | none | 4 | 0 |
@@ -135,7 +135,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 | `contact` | 48.4% | none | 203 | 0 |
 | `costmeter` | 79.1% | none | 28 | 0 |
 | `crypto` | 89.2% | none | 14 | 0 |
-| `datagate` | 85.6% | none | 26 | 0 |
+| `datagate` | 80.5% | none | 42 | 0 |
 | `dav` | 66.4% | none | 186 | 0 |
 | `devices` | 77.6% | none | 32 | 0 |
 | `docparse` | 66.6% | none | 165 | 0 |
@@ -154,16 +154,16 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 | `idempotency` | 86.4% | none | 8 | 0 |
 | `imagemeta` | 63.8% | none | 135 | 0 |
 | `importer` | 78.1% | none | 223 | 0 |
-| `jobs` | 79.5% | none | 63 | 0 |
+| `jobs` | 78.7% | none | 73 | 0 |
 | `leases` | 83.7% | none | 21 | 0 |
-| `loadsoak` | 66.2% | none | 52 | 0 |
-| `mcp` | 65.5% | none | 106 | 0 |
-| `migrations` | 77.1% | none | 30 | 0 |
+| `loadsoak` | 68.9% | none | 56 | 0 |
+| `mcp` | 69.3% | none | 109 | 0 |
+| `migrations` | 79.9% | none | 32 | 0 |
 | `money` | 76.1% | none | 43 | 0 |
 | `notify` | 75.4% | none | 69 | 0 |
 | `objects` | 75.0% | none | 51 | 0 |
-| `observe` | 63.2% | none | 138 | 0 |
-| `oidc` | 69.7% | none | 67 | 0 |
+| `observe` | 64.1% | none | 137 | 0 |
+| `oidc` | 70.6% | none | 67 | 0 |
 | `oracle` | 53.0% | none | 151 | 0 |
 | `paging` | 71.6% | none | 56 | 0 |
 | `palette` | 66.4% | none | 48 | 0 |
@@ -172,7 +172,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 | `pipeline` | 73.2% | none | 71 | 0 |
 | `privacy` | 78.0% | none | 22 | 0 |
 | `pwa` | 73.8% | none | 34 | 0 |
-| `query` | 71.7% | none | 90 | 0 |
+| `query` | 69.9% | none | 106 | 0 |
 | `ratelimit` | 60.0% | none | 32 | 0 |
 | `rbac` | 70.0% | none | 58 | 0 |
 | `refdata` | 79.6% | none | 22 | 0 |
@@ -181,7 +181,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 | `retention` | 70.8% | none | 28 | 0 |
 | `search` | 66.3% | none | 99 | 0 |
 | `secheaders` | 66.2% | none | 50 | 0 |
-| `sessions` | 80.6% | none | 41 | 0 |
+| `sessions` | 78.2% | none | 64 | 0 |
 | `sitemap` | 68.2% | none | 71 | 0 |
 | `slo` | 78.2% | none | 29 | 0 |
 | `speech` | 71.2% | none | 327 | 0 |
@@ -191,15 +191,15 @@ Scores per block, from metrology's certificates (84 blocks scored, 0 with no sur
 | `testdata` | 33.5% | none | 123 | 0 |
 | `time` | 71.1% | none | 144 | 0 |
 | `tree` | 65.0% | none | 130 | 0 |
-| `uat` | 79.0% | none | 42 | 0 |
+| `uat` | 75.2% | none | 58 | 0 |
 | `upkeep` | 66.7% | none | 96 | 0 |
 | `uploads` | 64.7% | none | 65 | 0 |
 | `uploadsafe` | 64.4% | none | 69 | 0 |
-| `ux` | 68.3% | none | 117 | 0 |
+| `ux` | 69.5% | none | 117 | 0 |
 | `validate` | 53.9% | none | 172 | 0 |
 | `walkthrough` | 93.9% | none | 12 | 0 |
 | `watchdog` | 75.0% | none | 29 | 0 |
-| `webhooks` | 77.5% | none | 39 | 0 |
+| `webhooks` | 75.1% | none | 67 | 0 |
 | `workflow` | 81.8% | none | 35 | 0 |
 
 ### The crew

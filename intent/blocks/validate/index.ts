@@ -142,6 +142,6 @@ export function problemDetails(problems: readonly Problem[], instance?: string) 
 /** For a form: each field's first problem, keyed by path, so it is shown beside that field. */
 export function fieldErrors(problems: readonly Problem[]): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const x of problems) out[x.path] ??= x.message;
+  for (const x of problems) if (!Object.hasOwn(out, x.path)) Object.defineProperty(out, x.path, { value: x.message, enumerable: true, writable: true, configurable: true });
   return out;
 }

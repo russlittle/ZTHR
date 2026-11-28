@@ -7,11 +7,11 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { NotSignedIn } from '../../intent/blocks/devices/index.ts';
-import { BadXml } from '../../intent/blocks/dav/index.ts';
+import { BadIf, BadXml } from '../../intent/blocks/dav/index.ts';
 import { Refused, Throttled } from '../../intent/blocks/grants/index.ts';
 import { Held } from '../../intent/blocks/leases/index.ts';
 import { Missing, TooLarge } from '../../intent/blocks/objects/index.ts';
-import { Failures, Limited } from '../../intent/blocks/ratelimit/index.ts';
+import { Limited, SignInFailures } from '../../intent/blocks/ratelimit/index.ts';
 import { Unsafe } from '../../intent/blocks/uploadsafe/index.ts';
 import { Exists, IntoItself, InvalidName, MissingParent, NotFound } from '../../intent/blocks/tree/index.ts';
 import { BadChunk, NoSession, OverQuota, WrongLength } from '../../intent/blocks/uploads/index.ts';
@@ -67,26 +67,29 @@ export async function fields(r: Req): Promise<Record<string, string>> {
 }
 
 /**
- * Wrong passwords from one address: ten a minute, then it waits. Every way in counts against the same limit (Basic,
- * the web sign-in, the app sign-in page), and a success does not clear it, so signing in to an account of your own
- * between guesses at someone else's buys no more guesses. One limit per server, so two servers in one process
- * (as in tests) do not share it.
+ * Wrong passwords, counted per address and login name (ten a minute) and per address over every login (thirty a
+ * minute). Every way in counts against the same limits (Basic, the web sign-in, the app sign-in page). A right
+ * password clears only that address's mistakes at that login, so a person who mistyped is not held back once they
+ * get it right, while signing in to an account of your own between guesses at someone else's buys no more guesses.
+ * One limit per server, so two servers in one process (as in tests) do not share it.
  */
-const limits = new WeakMap<Files, Failures>();
+const limits = new WeakMap<Files, SignInFailures>();
 const signIns = (files: Files) => {
   let f = limits.get(files);
-  if (!f) limits.set(files, (f = new Failures(10, 60_000, { what: 'too many failed sign-ins from this address' })));
+  if (!f) limits.set(files, (f = new SignInFailures({ perLogin: 10, perAddress: 30, windowMs: 60_000 }, { what: 'too many failed sign-ins from this address' })));
   return f;
 };
 
-/** Checks a login name and password (or app password), counted against the address's limit. */
+/** Checks a login name and password (or app password), counted against the address's limits. */
 export async function signInAs(files: Files, r: Req, user: string, password: string): ReturnType<Files['signIn']> {
   const lim = signIns(files);
-  lim.check(r.ip);
+  lim.check(r.ip, user);
   try {
-    return await files.signIn(user, password);
+    const s = await files.signIn(user, password);
+    lim.succeed(r.ip, user);
+    return s;
   } catch (e) {
-    lim.fail(r.ip);
+    lim.fail(r.ip, user);
     throw e;
   }
 }
@@ -95,7 +98,6 @@ export async function signInAs(files: Files, r: Req, user: string, password: str
 export async function authenticate(files: Files, r: Req): Promise<boolean> {
   const h = header(r, 'authorization');
   if (!h?.startsWith('Basic ')) return false;
-  signIns(files).check(r.ip);
   const raw = Buffer.from(h.slice(6), 'base64').toString('utf8');
   const i = raw.indexOf(':');
   if (i < 0) throw new NotSignedIn();
@@ -126,7 +128,7 @@ export function statusOf(e: unknown): { status: number; message: string; retryAf
   if (e instanceof Held) return { status: 423, message: m };
   if (e instanceof Insufficient || e instanceof OverQuota) return { status: 507, message: m };
   if (e instanceof TooLarge) return { status: 413, message: m };
-  if (e instanceof InvalidName || e instanceof BadChunk || e instanceof BadXml || e instanceof WrongLength || e instanceof SyntaxError || e instanceof URIError) return { status: 400, message: m };
+  if (e instanceof InvalidName || e instanceof BadChunk || e instanceof BadXml || e instanceof BadIf || e instanceof WrongLength || e instanceof SyntaxError || e instanceof URIError) return { status: 400, message: m };
   if (e instanceof Refused) return { status: 400, message: m };
   return { status: 500, message: 'something went wrong on the server' };
 }

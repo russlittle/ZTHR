@@ -131,3 +131,46 @@ test('properties change without changing the etag; owners never see each other',
   assert.equal(await tr.resolve('ben', 'x'), undefined);
   assert.equal(await tr.pathOf((await tr.resolve('ana', 'x'))!), '/x');
 });
+
+test('names are Unicode NFC: a name sent decomposed (NFD) reaches the same node as its composed form', async () => {
+  const tr = make();
+  const nfc = 'café';
+  const nfd = 'café';
+  await tr.mkdir('ana', nfd);
+  await tr.put('ana', `${nfc}/résumé.txt`, file(3));
+  assert.equal((await tr.resolve('ana', nfc))!.name, nfc, 'stored composed');
+  assert.equal((await tr.resolve('ana', `${nfd}/résumé.txt`))!.size, 3);
+  await assert.rejects(tr.mkdir('ana', nfc), Exists, 'one folder, not two');
+  assert.deepEqual(steps(`/${nfd}/x`), [nfc, 'x']);
+});
+
+test('a move into another owner’s tree keeps the ids, changes the owner below it, and fixes both trees’ sizes', async () => {
+  const tr = make();
+  await tr.mkdir('ana', 'a');
+  await tr.put('ana', 'a/x.txt', file(10));
+  await tr.mkdir('ben', 'in');
+  await tr.put('ben', 'in/old', file(4));
+  const a = (await tr.resolve('ana', 'a'))!;
+  const x = (await tr.resolve('ana', 'a/x.txt'))!;
+  const benIn = (await tr.resolve('ben', 'in'))!.etag;
+  await assert.rejects(tr.moveAcross('ana', 'a', 'ben', 'in/old'), Exists);
+  const r = await tr.moveAcross('ana', 'a', 'ben', 'in/old', true);
+  assert.equal(r.node.id, a.id);
+  assert.equal(r.node.owner, 'ben');
+  assert.deepEqual(r.replaced.map((n) => n.name), ['old']);
+  const moved = (await tr.resolve('ben', 'in/old/x.txt'))!;
+  assert.equal(moved.id, x.id, 'the file keeps its id');
+  assert.equal(moved.owner, 'ben');
+  assert.equal(await tr.resolve('ana', 'a'), undefined);
+  assert.equal((await tr.root('ana')).size, 0);
+  assert.equal((await tr.root('ben')).size, 10);
+  assert.notEqual((await tr.resolve('ben', 'in'))!.etag, benIn);
+  await assert.rejects(tr.moveAcross('ana', 'nope', 'ben', 'z'), NotFound);
+  await assert.rejects(tr.moveAcross('ben', 'in', 'ana', 'missing/in'), MissingParent);
+  // Two moves in opposite directions at once do not wait on each other for ever.
+  await tr.put('ana', 'p', file(1));
+  await tr.put('ben', 'q', file(2));
+  await Promise.all([tr.moveAcross('ana', 'p', 'ben', 'p'), tr.moveAcross('ben', 'q', 'ana', 'q')]);
+  assert.equal((await tr.root('ana')).size, 2);
+  assert.equal((await tr.root('ben')).size, 11);
+});

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { BadXml, DAV, depth, destination, el, encodePath, ifTokens, multistatus, overwrite, parseXml, propfindRequest, proppatchRequest, timeout, writeXml } from './index.ts';
+import { BadIf, BadXml, DAV, depth, destination, el, encodePath, ifHolds, ifTokens, multistatus, netPropChanges, overwrite, parseIf, parseXml, propfindRequest, proppatchOps, proppatchRequest, timeout, writeXml } from './index.ts';
 
 const OC = 'http://owncloud.org/ns';
 
@@ -75,4 +75,76 @@ test('WebDAV headers: depth, overwrite, destination, lock tokens, timeout', () =
 test('paths are encoded step by step like rawurlencode', () => {
   assert.equal(encodePath("/a b/c's (1).txt"), '/a%20b/c%27s%20%281%29.txt');
   assert.equal(encodePath('/ü/€'), '/%C3%BC/%E2%82%AC');
+});
+
+test('a Destination under a base that only begins like it is not under it', () => {
+  const base = '/remote.php/dav/files/ana';
+  assert.equal(destination('http://h/remote.php/dav/files/anabel/x.txt', 'h', base), null, 'anabel is not under ana');
+  assert.equal(destination('http://h/remote.php/dav/files/ana', 'h', base), '/', 'the base itself is its root');
+  assert.equal(destination('http://h/remote.php/dav/files/ana/', 'h', base), '/');
+  assert.equal(destination('http://h/remote.php/dav/files/ana/x', 'h', base), '/x');
+});
+
+test('element and attribute names must be XML names, so nothing read can break the XML written back', () => {
+  for (const bad of ['<d:prop xmlns:d="DAV:"><d:a"b/></d:prop>', '<a<b/>', '<a&b/>', '<a b<c="1"/>', '<a b&c="1"/>', '<a b"c="1"/>', '<1a/>', '<-a/>', '<a:b:c xmlns:a="u"/>', '<a junk b="1"/>', '<a b="1" b="2"/>'])
+    assert.throws(() => parseXml(bad), BadXml, bad);
+  // Names from other scripts and with dots, dashes and digits after the first character are names.
+  const ok = parseXml('<x:été-1.b xmlns:x="urn:u" x:ü_2="v"><_a/></x:été-1.b>');
+  assert.equal(ok.name, 'été-1.b');
+  assert.equal(ok.attrs['{urn:u}ü_2'], 'v');
+  assert.equal(propfindRequest('<propfind xmlns="DAV:"><prop><getetag/></prop></propfind>').kind, 'prop');
+});
+
+test('If headers: tagged and untagged lists, Not, state tokens and etags', () => {
+  assert.deepEqual(parseIf('(<opaquelocktoken:a> ["e1"])'), [{ conditions: [{ not: false, token: 'opaquelocktoken:a' }, { not: false, etag: '"e1"' }] }]);
+  assert.deepEqual(parseIf('<http://h/x> (Not <DAV:no-lock> [W/"e2"]) (<urn:t>)'), [
+    { resource: 'http://h/x', conditions: [{ not: true, token: 'DAV:no-lock' }, { not: false, etag: 'W/"e2"' }] },
+    { resource: 'http://h/x', conditions: [{ not: false, token: 'urn:t' }] },
+  ]);
+  assert.equal(parseIf(undefined), null);
+  assert.throws(() => parseIf('(<a>'), BadIf);
+  assert.throws(() => parseIf('nonsense'), BadIf);
+  assert.throws(() => parseIf('()'), BadIf);
+  const state = (r?: string) => (r === 'http://h/x' ? { etag: '"e2"', tokens: [] } : { etag: '"e1"', tokens: ['opaquelocktoken:a'] });
+  assert.equal(ifHolds(parseIf('(<opaquelocktoken:a>)')!, state), true);
+  assert.equal(ifHolds(parseIf('(<opaquelocktoken:b>)')!, state), false, 'a token that is not the lock on it');
+  assert.equal(ifHolds(parseIf('(["e1"])')!, state), true);
+  assert.equal(ifHolds(parseIf('(["e9"])')!, state), false, 'an etag that changed');
+  assert.equal(ifHolds(parseIf('(["e9"]) (<opaquelocktoken:a>)')!, state), true, 'any one list holding is enough');
+  assert.equal(ifHolds(parseIf('(<opaquelocktoken:a> ["e9"])')!, state), false, 'every condition in a list must hold');
+  assert.equal(ifHolds(parseIf('(Not <DAV:no-lock> ["e1"])')!, state), true);
+  assert.equal(ifHolds(parseIf('<http://h/x> ([W/"e2"])')!, state), true, 'a weak etag compares by its value');
+  assert.equal(ifHolds(parseIf('(Not ["e1"])')!, state), false);
+  assert.equal(ifHolds(parseIf('(["e1"])')!, () => ({ tokens: [] })), false, 'nothing there has no etag');
+});
+
+test('a prefix bound to an empty namespace is an invalid declaration (litmus propfind_invalid2)', () => {
+  assert.throws(() => propfindRequest('<?xml version="1.0"?><propfind xmlns="DAV:"><prop><bar:foo xmlns:bar=""/></prop></propfind>'), BadXml);
+  assert.throws(() => parseXml('<a xmlns:xml="urn:not-xml"/>'), BadXml);
+  // Undeclaring the default namespace is allowed: the element is then in no namespace.
+  assert.equal(parseXml('<a xmlns="DAV:"><b xmlns=""/></a>').children[0]!.ns, '');
+});
+
+test('a property in no namespace is written without a prefix and parses back in no namespace (litmus propnullns)', () => {
+  const x = multistatus([{ href: '/x', propstats: [{ status: 200, props: [el('', 'nonamespace', 'randomvalue'), el('urn:u', 'other', 'v')] }] }]);
+  assert.ok(!/xmlns:\w+=""/.test(x), `no prefix is bound to the empty namespace: ${x}`);
+  const prop = parseXml(x).children[0]!.children[1]!.children[0]!;
+  assert.deepEqual(
+    prop.children.map((c) => [c.ns, c.name, c.text]),
+    [
+      ['', 'nonamespace', 'randomvalue'],
+      ['urn:u', 'other', 'v'],
+    ],
+  );
+});
+
+test('PROPPATCH instructions apply in document order: a remove then a set leaves the property set (litmus propremoveset)', () => {
+  const ops = proppatchOps('<propertyupdate xmlns="DAV:" xmlns:z="urn:z"><remove><prop><z:removeset/></prop></remove><set><prop><z:removeset>x</z:removeset></prop></set></propertyupdate>');
+  assert.deepEqual(ops, [
+    { op: 'remove', ns: 'urn:z', name: 'removeset' },
+    { op: 'set', ns: 'urn:z', name: 'removeset', value: 'x' },
+  ]);
+  assert.deepEqual(netPropChanges(ops), { set: { '{urn:z}removeset': 'x' }, clear: [] });
+  const back = proppatchOps('<propertyupdate xmlns="DAV:" xmlns:z="urn:z"><set><prop><z:p>x</z:p></prop></set><remove><prop><z:p/></prop></remove></propertyupdate>');
+  assert.deepEqual(netPropChanges(back), { set: {}, clear: ['{urn:z}p'] });
 });

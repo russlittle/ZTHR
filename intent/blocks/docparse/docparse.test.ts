@@ -111,3 +111,10 @@ test('nested paragraphs and fallbacks are scanned in linear time', () => {
     assert.ok(performance.now() - started < 1500, `${xml.slice(0, 14)}… took too long`);
   }
 });
+
+test('unzip refuses Windows-absolute and backslash names', () => {
+  for (const name of ['\\evil', '\\\\srv\\share\\x', 'C:\\Windows\\x', 'C:/x', 'c:x', 'a\\b']) {
+    assert.throws(() => unzip(zip([{ name, data: 'x' }])), (e: Error) => e instanceof Refused && /unsafe path/.test(e.message) && /Windows/.test(e.message), name);
+  }
+  assert.deepEqual([...unzip(zip([{ name: 'a/b.xml', data: 'x' }])).keys()], ['a/b.xml']);
+});

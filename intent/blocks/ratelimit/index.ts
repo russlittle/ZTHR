@@ -61,7 +61,11 @@ export class Limiter {
 
 /**
  * Failures by key within a window: allowed until `limit` failures, then refused until the oldest falls out of
- * the window. A success clears the key. For sign-ins and passwords, where only mistakes should slow anyone down.
+ * the window. `succeed` clears the key. For sign-ins and passwords, where only mistakes should slow anyone down.
+ *
+ * Clearing on success is only safe when the key names what succeeded. Keyed by address alone, one sign-in to an
+ * account of the guesser's own clears every guess that address made at someone else's: for sign-ins use
+ * SignInFailures, or never call `succeed` on an address key.
  */
 export class Failures {
   private readonly limit: number;
@@ -95,7 +99,44 @@ export class Failures {
     if (this.seen.size > 50_000) for (const k of [...this.seen.keys()]) if (!this.recent(k).length) this.seen.delete(k);
   }
 
+  /** Clears a key's failures. Never for a key that is an address alone: see above. */
   succeed(key: string): void {
     this.seen.delete(key);
+  }
+}
+
+/**
+ * Wrong passwords counted two ways: per address and login, which a success at that login clears (a person who
+ * mistyped is not held back once they get it right), and per address over every login, which nothing clears, so
+ * guesses spread across many logins, or interleaved with sign-ins to an account of the guesser's own, still run out.
+ */
+export class SignInFailures {
+  private readonly pair: Failures;
+  private readonly address: Failures;
+
+  constructor(l: { readonly perLogin: number; readonly perAddress: number; readonly windowMs: number }, o: { now?: () => number; what?: string } = {}) {
+    const what = o.what ?? 'too many failed sign-ins';
+    this.pair = new Failures(l.perLogin, l.windowMs, { ...o, what });
+    this.address = new Failures(l.perAddress, l.windowMs, { ...o, what });
+  }
+
+  private static key(address: string, login: string): string {
+    return `${address}\u0000${login}`;
+  }
+
+  /** Refuses when this address has failed too often at this login, or at all logins together. */
+  check(address: string, login: string): void {
+    this.address.check(address);
+    this.pair.check(SignInFailures.key(address, login));
+  }
+
+  fail(address: string, login: string): void {
+    this.address.fail(address);
+    this.pair.fail(SignInFailures.key(address, login));
+  }
+
+  /** A right password clears that address's failures at that login only. */
+  succeed(address: string, login: string): void {
+    this.pair.succeed(SignInFailures.key(address, login));
   }
 }

@@ -160,3 +160,10 @@ test('headers that repeat are told apart and reported, so no column overwrites a
   const bad = importRows(parseCsv('Email,Name,Name\n,Ana,Smith\n'), fields, m);
   assert.deepEqual(bad.quarantine[0]!.raw, { Email: '', Name: 'Ana', 'Name (2)': 'Smith' }, 'both values are kept in the raw row');
 });
+
+test('xlsx keeps negative zero as negative zero', async () => {
+  const { xlsx } = await import('../docparse/index.ts');
+  const v = xlsx(toXlsx([[-0, 0]]))[0]!.rows[0]!;
+  assert.ok(Object.is(v[0], -0), 'minus zero reads back as minus zero');
+  assert.ok(Object.is(v[1], 0), 'plus zero stays plus zero');
+});

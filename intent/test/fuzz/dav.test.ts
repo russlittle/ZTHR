@@ -107,7 +107,7 @@ test('element and attribute prefixes named like Object.prototype members resolve
   await bounded({ module: jobs, fn: 'prototypePrefixes', cases: 300, ms: 5000 });
 });
 
-test('one start tag with a 30-60 kB attribute run is parsed or refused in under 250 ms (4 cases, 2 s deadline)', { todo: 'the attribute regex /([^\\s=]+)\\s*=\\s*(...)/g backtracks from every position of a long run without "=": quadratic, about 4 s at 40 kB and hours at the 1 MB default cap' }, async () => {
+test('one start tag with a 30-60 kB attribute run is parsed or refused in under 250 ms (4 cases, 2 s deadline)', async () => {
   await bounded({ module: jobs, fn: 'hugeAttribute', cases: 4, ms: 2000 });
 });
 

@@ -92,7 +92,7 @@ test('blocks/validate: inputs with __proto__, constructor and prototype keys nev
   });
 });
 
-test('fieldErrors keeps a message for every problem path, including __proto__ and constructor (500 cases)', { todo: 'fieldErrors writes into a plain object with ??=, so the path "__proto__" reads Object.prototype and "constructor" reads Object (not nullish): those problems never get a message on the form' }, async () => {
+test('fieldErrors keeps a message for every problem path, including __proto__ and constructor (500 cases)', async () => {
   await forAll('validate fieldErrors paths', {
     cases: 500,
     gen: (r) => `{${r.array(1, 4, () => `${JSON.stringify(r.pick(['__proto__', 'constructor', 'toString', 'valueOf', 'extra']))}:1`).join(',')}}`,

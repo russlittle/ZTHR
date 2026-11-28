@@ -2,9 +2,12 @@
  * Resumable uploads: a session collects numbered chunks in any order, a repeated chunk replaces the earlier one, and
  * assembly joins them in number order into one object, in the store, without the bytes coming back through the app.
  * The total length, when the client says it up front, is checked against the quota on the first chunk, not after
- * gigabytes have arrived. A session nobody has touched for a day expires and its chunks are swept.
+ * gigabytes have arrived, and every chunk's stream is cut off at what may still arrive: the chunk limit, the
+ * declared total less what came before, and the free space less what came before. Assembly leaves the chunks in
+ * place; the caller commits the joined object and only then calls finish, so a crash in between loses nothing.
+ * A session nobody has touched for a day expires and its chunks are swept.
  */
-import type { ObjectStore, Written } from '../objects/index.ts';
+import { TooLarge, type ObjectStore, type Written } from '../objects/index.ts';
 
 export interface Rules {
   /** Chunk numbers allowed, inclusive. */
@@ -138,15 +141,45 @@ export class Uploads {
     return s;
   }
 
-  async chunk(owner: string, id: string, name: string, data: AsyncIterable<Uint8Array> | Uint8Array, totalLength?: number): Promise<{ size: number }> {
+  /**
+   * Stores one chunk. Its bytes are cut off at the most it may have: the chunk limit, the declared total less the
+   * other chunks, and the free space less the other chunks (a resent chunk replaces its earlier copy, so that one is
+   * not counted). `size`, when the client says it (Content-Length), is checked against the same before any byte is read.
+   */
+  async chunk(owner: string, id: string, name: string, data: AsyncIterable<Uint8Array> | Uint8Array, totalLength?: number, size?: number): Promise<{ size: number }> {
     const s = await this.live(owner, id);
     const n = Number(name);
     if (!/^\d+$/.test(name) || n < this.rules.minChunk || n > this.rules.maxChunk) throw new BadChunk(`chunk names are whole numbers from ${this.rules.minChunk} to ${this.rules.maxChunk}`);
     await this.checkQuota(owner, totalLength ?? s.totalLength);
+    const free = await this.free(owner);
+    const limits = (sess: Session) => {
+      const others = Object.entries(sess.chunks).reduce((a, [k, c]) => (Number(k) === n ? a : a + c.size), 0);
+      const declared = totalLength ?? sess.totalLength;
+      return { others, declared, byTotal: declared === undefined ? Infinity : declared - others, byFree: free === undefined ? Infinity : free - others };
+    };
+    const refuse = (l: ReturnType<typeof limits>, got: number): never => {
+      if (got > l.byTotal) throw new BadChunk(`the chunks come to more than the ${l.declared} bytes declared`);
+      throw new OverQuota(l.others + got, free!);
+    };
+    const first = limits(s);
+    const cap = Math.max(0, Math.min(this.rules.maxBytes, first.byTotal, first.byFree));
+    if (size !== undefined && Number.isFinite(size) && size > cap) {
+      if (size > this.rules.maxBytes && cap === this.rules.maxBytes) throw new TooLarge(this.rules.maxBytes);
+      refuse(first, size);
+    }
     // The bytes are written outside the queue, so chunks upload in parallel; only the record of them is serial.
-    const w = await this.objects.put(data, { maxBytes: this.rules.maxBytes, algos: [] });
+    let w: Written;
+    try {
+      w = await this.objects.put(data, { maxBytes: cap, algos: [] });
+    } catch (e) {
+      if (e instanceof TooLarge && cap < this.rules.maxBytes) refuse(first, cap + 1);
+      throw e;
+    }
     const old = await this.serial(owner, id, async () => {
       const latest = await this.live(owner, id);
+      // Chunks stored in parallel each fit alone; together they are checked again as each is recorded.
+      const l = limits(latest);
+      if (w.size > l.byTotal || w.size > l.byFree) refuse(l, w.size);
       const before = latest.chunks[String(n)];
       await this.sessions.set({ ...latest, ...(totalLength !== undefined ? { totalLength } : {}), chunks: { ...latest.chunks, [String(n)]: { key: w.key, size: w.size } }, touched: this.now() });
       return before;
@@ -166,7 +199,10 @@ export class Uploads {
       .sort((a, b) => a.n - b.n);
   }
 
-  /** Joins the chunks in number order into one object and ends the session. */
+  /**
+   * Joins the chunks in number order into one new object. The chunks and the session stay: the caller commits the
+   * object where it belongs, makes that durable, and then calls finish. Until then a retry assembles again.
+   */
   async assemble(owner: string, id: string, totalLength?: number): Promise<Written & { destination: string }> {
     return this.serial(owner, id, () => this.assembleNow(owner, id, totalLength));
   }
@@ -185,8 +221,20 @@ export class Uploads {
     if (want !== undefined && want !== got) throw new WrongLength(want, got);
     await this.checkQuota(owner, got);
     const w = await this.join(order.map((c) => c.key));
-    await this.discard(s);
     return { ...w, destination: s.destination };
+  }
+
+  /** Ends a session whose joined object is committed: its chunks and its record go. */
+  async finish(owner: string, id: string): Promise<void> {
+    return this.serial(owner, id, async () => {
+      const s = await this.sessions.get(owner, id);
+      if (s) await this.discard(s);
+    });
+  }
+
+  /** Every session a person has open, for removing them with the person. */
+  async of(owner: string): Promise<Session[]> {
+    return (await this.sessions.all()).filter((s) => s.owner === owner);
   }
 
   /** Joins in a tree of compose calls, `width` parts at a time, deleting each intermediate object once used. */

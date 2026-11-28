@@ -53,16 +53,16 @@ flowchart TB
 
 | Block | What it does in Files |
 | --- | --- |
-| tree | Folders and files with stable ids; a change re-tags every folder above it, so an app skips unchanged folders in one comparison |
+| tree | Folders and files with stable ids, kept through moves between people's trees; names in Unicode NFC; a change re-tags every folder above it, so an app skips unchanged folders in one comparison |
 | objects | Bytes streamed once with checksums computed on the way; byte ranges; joins done in the bucket |
-| uploads | Chunked uploads in any order, resumable, quota checked before the first byte, idle uploads swept |
+| uploads | Chunked uploads in any order, resumable, quota checked before the first byte, each chunk cut off at what may still arrive, chunks kept until the file is saved, idle uploads swept |
 | leases | WebDAV locks that end on their own |
-| grants | Shares with people, groups and links: never more than the giver has; link passwords hashed and throttled; expiry |
-| devices | The browser sign-in for a new app, an app password per device, revoke one, wipe one |
-| dav | The XML reader (no DTDs, so no external entities) and the multistatus writer |
+| grants | Shares with people, groups and links: never more than the giver has, and a reshare never more than its giver still has; link passwords hashed and throttled; expiry |
+| devices | The browser sign-in for a new app, an app password per device, revoke one, wipe one or all |
+| dav | The XML reader (no DTDs, so no external entities; every name an XML name), the multistatus writer, and the WebDAV headers, If included |
 | retention | Plans what the trash and old versions give up each night |
 | resilience | Timeouts and jittered retries on every call to Cloud Storage |
-| ratelimit | Wrong passwords slow an address down, with a Retry-After the apps can wait on |
+| ratelimit | Wrong passwords slow an address down, per login and over all logins, with a Retry-After the apps can wait on; a right password clears only that login's mistakes |
 | uploadsafe | Names the apps cannot hold (.part, .htaccess, Windows-reserved names) refused before any bytes are kept |
 | oracle | Checks Files against a real Nextcloud, request by request |
 
@@ -86,11 +86,13 @@ erDiagram
     int quota "null is no limit"
     bool admin
     string[] groups
+    bool disabled
+    int epoch "raised by a new password or disabling; ends web sessions"
   }
   NODE {
     int id "stable; kept through moves and restores"
     int parent
-    string name
+    string name "Unicode NFC"
     string kind "file or folder"
     int size "a folder's is everything inside"
     string etag "changes with it and every folder above"
@@ -131,7 +133,7 @@ erDiagram
   }
 ```
 
-The state is a write-ahead log: each change appends only the records it touched, a snapshot every 2,000 entries lets the older ones go, and a restart replays the snapshot and what follows it. A request that changes anything is answered only after its entry is written, so nothing a client was told is saved can be lost. A second writer is refused rather than interleaved.
+The state is a write-ahead log: each change appends only the records it touched, a snapshot every 2,000 entries lets the older ones go, and a restart replays the snapshot and what follows it. A request that changes anything is answered only after its entry is written and forced to disk (and on a disk store, the file's bytes too), so nothing a client was told is saved can be lost, even when the machine crashes. A line torn by a crash mid-write is the last one and was never acknowledged: it is reported and cut off. A damaged line anywhere else is corruption, and Files refuses to start on it. A second writer is refused rather than interleaved.
 
 ## How an app signs in
 
@@ -172,7 +174,8 @@ sequenceDiagram
   end
   A->>F: MOVE /uploads/ana/id/.file
   F->>S: compose (32 at a time)
-  F->>F: one log entry: the file node and its folders
+  F->>F: one log entry, forced to disk: the file node and its folders
+  F->>S: delete the chunks, now that the file is saved
   F-->>A: 201, etag, file id
 ```
 
@@ -191,16 +194,18 @@ On Cloud Run each write adds an object upload and a log entry to the bucket; tho
 
 | Works | Not yet |
 | --- | --- |
-| Login flow v2, app passwords, revoke, remote wipe | The Nextcloud web interface itself (it is server-rendered PHP); Files has its own, simpler one |
+| Login flow v2 (the sign-in page names the app asking), app passwords, revoke, remote wipe by the person (web interface) or an admin (provisioning API) | The Nextcloud web interface itself (it is server-rendered PHP); Files has its own, simpler one |
 | A web interface: sign in, browse, upload, download, make folders, delete to the trash, share by link | Editing share passwords and expiry in the web interface (the apps do it) |
 | Files over WebDAV: list, read, ranges, write, folders, move, copy, delete | Thumbnails and previews (`has-preview` is false) |
 | Chunked upload v2, resumable, with quota up front | Bulk upload, and the older chunking v1 |
-| If-Match and If-None-Match: no silent overwrite | Downloading a whole folder as a ZIP |
+| If-Match, If-None-Match and WebDAV If headers (lock tokens and etags): no silent overwrite | Downloading a whole folder as a ZIP |
 | Versions: every overwrite kept, restore keeps the replaced copy | Calendars and contacts (CalDAV, CardDAV: the dav block is ready for them) |
 | Trash: delete, list, restore with the same id, purge, nightly sweep | Push notifications of changes (apps poll instead) |
 | Shares with people, groups and links; permissions; passwords; expiry | Federation, end-to-end encryption, group folders, the app store |
-| Quotas, admins adding and removing people | Comments and tags beyond favourites |
-| WebDAV locks with time limits | |
+| Quotas counting old versions and the trash; admins adding, disabling and removing people (disabling or a new password ends web sessions) | Comments and tags beyond favourites |
+| WebDAV locks with time limits, checked on every change | |
+| Names in Unicode NFC, as Nextcloud keeps them: é typed on a Mac and on Windows is one file | |
+| Moves into and out of folders shared with you keep the file id and its versions | |
 | Cloud Storage for bytes and state, on Cloud Run | A document database for state at more than one instance |
 
 ## Run it

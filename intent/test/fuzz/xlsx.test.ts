@@ -41,7 +41,7 @@ test('xlsx(toXlsx(rows)) round-trips random tables of strings, numbers, booleans
   });
 });
 
-test('-0 written to xlsx reads back as -0 (1 case)', { todo: 'toXlsx writes -0 as "0" (template string), so it reads back as +0' }, async () => {
+test('-0 written to xlsx reads back as -0 (1 case)', async () => {
   await forAll('xlsx negative zero', {
     cases: 1,
     gen: () => [[-0]],

@@ -38,16 +38,25 @@ test('phone() output, when it returns, is always ^\\+\\d{8,15}$ (5000 cases)', a
   });
 });
 
-test('a number containing digits from other scripts (１, ٣, ४) is refused, not read with those digits dropped (500 cases)', { todo: 'phone() strips everything but ASCII digits, so full-width or Arabic-Indic digits are silently dropped and the rest is accepted as a different, shorter number' }, async () => {
+test('digits from other scripts (１, ٣, ४) are read as the digits they are, never dropped (500 cases)', async () => {
+  const ASCII: Record<string, string> = { '１': '1', '٣': '3', '४': '4', '๕': '5', '۷': '7' };
+  const outcome = (t: string) => {
+    try {
+      return phone(t, 'US');
+    } catch {
+      return 'refused';
+    }
+  };
   await forAll('phone non-ASCII digits', {
     cases: 500,
     gen: (r) => {
       const n = `(937) 555-01${r.int(10, 99)}`;
       const at = r.int(0, n.length);
-      return n.slice(0, at) + r.pick(['１', '٣', '४', '๕', '۷']) + n.slice(at);
+      return n.slice(0, at) + r.pick(Object.keys(ASCII)) + n.slice(at);
     },
     shrink: () => [],
-    check: (t) => assert.throws(() => phone(t, 'US')),
+    // The same number written with ASCII digits must give the same answer: a digit is never silently dropped.
+    check: (t) => assert.equal(outcome(t), outcome(t.replace(/[１٣४๕۷]/g, (d) => ASCII[d]!))),
   });
 });
 

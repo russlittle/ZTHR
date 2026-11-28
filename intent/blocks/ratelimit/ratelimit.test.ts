@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Failures, Limited, Limiter } from './index.ts';
+import { Failures, Limited, Limiter, SignInFailures } from './index.ts';
 
 test('a bucket allows a burst, then refills at its rate, and says how long to wait', () => {
   let t = 0;
@@ -54,4 +54,25 @@ test('failures slow a key down only after the limit, and a success clears them',
   f.fail('ip');
   f.fail('ip');
   f.check('ip');
+});
+
+test('sign-in failures: a success clears only that address and login, never the address’s guesses at others', () => {
+  let t = 0;
+  const s = new SignInFailures({ perLogin: 3, perAddress: 7, windowMs: 60_000 }, { now: () => t });
+  s.fail('ip', 'ben');
+  s.fail('ip', 'ben');
+  s.succeed('ip', 'ana');
+  s.fail('ip', 'ben');
+  assert.throws(() => s.check('ip', 'ben'), Limited, 'signing in as ana bought no more guesses at ben');
+  s.check('ip', 'ana');
+  s.check('other', 'ben');
+  s.fail('ip', 'ana');
+  s.fail('ip', 'ana');
+  s.succeed('ip', 'ana');
+  s.check('ip', 'ana');
+  s.fail('ip', 'cy');
+  s.fail('ip', 'dee');
+  assert.throws(() => s.check('ip', 'eve'), Limited, 'guesses spread over many logins still count against the address');
+  t += 60_001;
+  s.check('ip', 'ben');
 });

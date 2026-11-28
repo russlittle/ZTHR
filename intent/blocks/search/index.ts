@@ -149,10 +149,12 @@ export class Index {
     matched.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
     const facets: Record<string, Record<string, number>> = {};
     for (const f of o.facets ?? []) {
-      facets[f] = {};
+      const counts: Record<string, number> = {};
+      facets[f] = counts;
       for (const m of matched) {
-        const v = this.docs.get(m.id)!.facets?.[f];
-        if (v) facets[f]![v] = (facets[f]![v] ?? 0) + 1;
+        const df = this.docs.get(m.id)!.facets;
+        const v = df && Object.hasOwn(df, f) ? df[f] : undefined;
+        if (v) Object.defineProperty(counts, v, { value: (Object.hasOwn(counts, v) ? counts[v]! : 0) + 1, enumerable: true, writable: true, configurable: true });
       }
     }
     const marks = new Set([...qWords, ...phrases.flat()].map(stem));

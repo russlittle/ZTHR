@@ -44,7 +44,7 @@ test('names with .. segments or a leading / are refused, never returned (300 cas
   });
 });
 
-test('names that are absolute on Windows (leading backslash, drive letter) are refused (200 cases)', { todo: 'unzip refuses only a leading / and .. segments: "\\evil", "\\\\srv\\share\\x", "C:\\Windows\\x", "C:/x" and "c:x" are returned as entry names' }, async () => {
+test('names that are absolute on Windows (leading backslash, drive letter) are refused (200 cases)', async () => {
   await forAll('zip windows-absolute names', {
     cases: 200,
     gen: (r) => ({ files: [{ name: r.pick(['\\evil', '\\\\srv\\share\\x', 'C:\\Windows\\x', 'C:/x', 'c:x']) + r.pick(['', '.txt', '\\y']), data: Buffer.from('x') }] }),

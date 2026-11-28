@@ -24,6 +24,16 @@ export class BadXml extends Error {
   }
 }
 
+/** The XML Name production's characters (XML 1.0 fifth edition, 2.3), without the colon: an NCName. */
+const START = 'A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\u{10000}-\\u{EFFFF}';
+const CHAR = `${START}\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040`;
+const NCNAME = `[${START}][${CHAR}]*`;
+const QNAME = new RegExp(`^${NCNAME}(?::${NCNAME})?$`, 'u');
+const ATTRS = new RegExp(`^(?:\\s+[^\\s=]+\\s*=\\s*(?:"[^"]*"|'[^']*'))*\\s*$`, 'u');
+
+/** A name with at most one colon, each side an XML name, as element and attribute names must be with namespaces. */
+export const isQName = (s: string) => QNAME.test(s);
+
 const ENT: Record<string, string> = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
 const unescape = (s: string) =>
   s.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-z]+);/g, (m, e: string) => {
@@ -102,21 +112,37 @@ export function parseXml(src: string, o: { maxBytes?: number; maxDepth?: number 
       const m = /^([^\s/>]+)/.exec(inner);
       if (!m) throw new BadXml('a tag without a name');
       const raw = m[1]!;
+      if (!isQName(raw)) throw new BadXml(`${JSON.stringify(raw)} is not an element name`);
       const rawAttrs: [string, string][] = [];
+      const rest = inner.slice(raw.length);
+      // Every character between the name and the end of the tag must belong to an attribute: nothing is skipped.
+      if (!ATTRS.test(rest)) throw new BadXml(`the attributes of <${raw}> are not well formed`);
       const re = /([^\s=]+)\s*=\s*("([^"]*)"|'([^']*)')/g;
       let a: RegExpExecArray | null;
-      const rest = inner.slice(raw.length);
-      while ((a = re.exec(rest))) rawAttrs.push([a[1]!, unescape(a[3] ?? a[4] ?? '')]);
+      while ((a = re.exec(rest))) {
+        const k = a[1]!;
+        if (!isQName(k)) throw new BadXml(`${JSON.stringify(k)} is not an attribute name`);
+        if (rawAttrs.some(([x]) => x === k)) throw new BadXml(`the attribute ${k} is given twice`);
+        rawAttrs.push([k, unescape(a[3] ?? a[4] ?? '')]);
+      }
       const scope = { ...(stack.length ? stack[stack.length - 1]!.scope : base) };
       for (const [k, v] of rawAttrs) {
         if (k === 'xmlns') scope[''] = v;
-        else if (k.startsWith('xmlns:')) scope[k.slice(6)] = v;
+        else if (k.startsWith('xmlns:')) {
+          const p = k.slice(6);
+          // Namespaces in XML 1.0: a prefix cannot be bound to the empty name, and xml and xmlns are reserved.
+          if (v === '') throw new BadXml(`invalid namespace declaration: the prefix ${p} is bound to an empty namespace`);
+          if (p === 'xmlns' || (p === 'xml') !== (v === base['xml'])) throw new BadXml(`invalid namespace declaration for the prefix ${p}`);
+          scope[p] = v;
+        }
       }
       const attrs: Record<string, string> = {};
       for (const [k, v] of rawAttrs) {
         if (k === 'xmlns' || k.startsWith('xmlns:')) continue;
         const r = resolve(k, scope, true);
-        attrs[r.ns ? `{${r.ns}}${r.name}` : r.name] = v;
+        const ek = r.ns ? `{${r.ns}}${r.name}` : r.name;
+        if (ek in attrs) throw new BadXml(`the attribute ${ek} is given twice`);
+        attrs[ek] = v;
       }
       const { ns, name } = resolve(raw, scope, false);
       if (stack.length >= maxDepth) throw new BadXml('nested too deeply');
@@ -160,19 +186,20 @@ export function writeXml(root: Out, prefixes: Readonly<Record<string, string>> =
   const pre = new Map(Object.entries(prefixes));
   let n = 0;
   const collect = (o: Out) => {
-    if (!pre.has(o.ns)) pre.set(o.ns, `x${++n}`);
+    if (o.ns !== '' && !pre.has(o.ns)) pre.set(o.ns, `x${++n}`);
     o.children?.forEach(collect);
   };
   collect(root);
   const used = new Set<string>();
   const mark = (o: Out) => {
-    used.add(o.ns);
+    if (o.ns !== '') used.add(o.ns);
     o.children?.forEach(mark);
   };
   mark(root);
   const decl = [...used].map((ns) => ` xmlns:${pre.get(ns)}="${escapeXml(ns)}"`).join('');
   const w = (o: Out, top: boolean): string => {
-    const tag = `${pre.get(o.ns)}:${o.name}`;
+    // An element in no namespace has no prefix; no default namespace is ever declared, so it stays in none.
+    const tag = o.ns === '' ? o.name : `${pre.get(o.ns)}:${o.name}`;
     const at = Object.entries(o.attrs ?? {})
       .map(([k, v]) => ` ${k}="${escapeXml(v)}"`)
       .join('');
@@ -222,19 +249,49 @@ export function propfindRequest(body: string): PropRequest {
   return { kind: 'allprop' };
 }
 
-/** What a PROPPATCH sets and removes, in document order. */
-export function proppatchRequest(body: string): { set: { ns: string; name: string; value: string }[]; remove: { ns: string; name: string }[] } {
+export type PropOp = { readonly op: 'set'; readonly ns: string; readonly name: string; readonly value: string } | { readonly op: 'remove'; readonly ns: string; readonly name: string };
+
+/** Every instruction of a PROPPATCH in document order, which is the order RFC 4918 (9.2) says they apply in. */
+export function proppatchOps(body: string): PropOp[] {
   const r = parseXml(body);
   if (r.ns !== DAV || r.name !== 'propertyupdate') throw new BadXml('the body is not a propertyupdate');
-  const set: { ns: string; name: string; value: string }[] = [];
-  const remove: { ns: string; name: string }[] = [];
+  const ops: PropOp[] = [];
   for (const op of r.children) {
     const p = child(op, DAV, 'prop');
     if (!p) continue;
-    if (op.ns === DAV && op.name === 'set') for (const c of p.children) set.push({ ns: c.ns, name: c.name, value: c.text.trim() });
-    else if (op.ns === DAV && op.name === 'remove') for (const c of p.children) remove.push({ ns: c.ns, name: c.name });
+    if (op.ns === DAV && op.name === 'set') for (const c of p.children) ops.push({ op: 'set', ns: c.ns, name: c.name, value: c.text.trim() });
+    else if (op.ns === DAV && op.name === 'remove') for (const c of p.children) ops.push({ op: 'remove', ns: c.ns, name: c.name });
   }
-  return { set, remove };
+  return ops;
+}
+
+/**
+ * What a PROPPATCH sets and removes, by kind. It loses the order between kinds, so a caller that applies the
+ * changes uses proppatchOps and netPropChanges instead: a remove followed by a set of one property leaves it set.
+ */
+export function proppatchRequest(body: string): { set: { ns: string; name: string; value: string }[]; remove: { ns: string; name: string }[] } {
+  const ops = proppatchOps(body);
+  return {
+    set: ops.flatMap((o) => (o.op === 'set' ? [{ ns: o.ns, name: o.name, value: o.value }] : [])),
+    remove: ops.flatMap((o) => (o.op === 'remove' ? [{ ns: o.ns, name: o.name }] : [])),
+  };
+}
+
+/** The properties a PROPPATCH leaves set, and those it leaves removed, after applying its instructions in order. */
+export function netPropChanges(ops: readonly PropOp[]): { set: Record<string, string>; clear: string[] } {
+  const set: Record<string, string> = {};
+  const clear = new Set<string>();
+  for (const o of ops) {
+    const k = key(o.ns, o.name);
+    if (o.op === 'set') {
+      set[k] = o.value;
+      clear.delete(k);
+    } else {
+      delete set[k];
+      clear.add(k);
+    }
+  }
+  return { set, clear: [...clear] };
 }
 
 export type Depth = 0 | 1 | 'infinity';
@@ -263,8 +320,112 @@ export function destination(header: string | null | undefined, host: string, bas
   } catch {
     return null;
   }
-  if (!p.startsWith(base)) return null;
-  return p.slice(base.length) || '/';
+  // Under `base` means `base` itself or a path below it: /files/anabel only begins like /files/ana.
+  const b = base.replace(/\/+$/, '');
+  if (p !== b && !p.startsWith(`${b}/`)) return null;
+  return p.slice(b.length) || '/';
+}
+
+export class BadIf extends Error {
+  constructor(why: string) {
+    super(`the If header cannot be read: ${why}`);
+  }
+}
+
+export interface IfCondition {
+  readonly not: boolean;
+  /** A state token (a lock token, or any URI such as DAV:no-lock). */
+  readonly token?: string;
+  /** An entity tag as sent, quotes and any W/ included. */
+  readonly etag?: string;
+}
+
+export interface IfList {
+  /** The resource a tagged list is about; none means the request's own resource. */
+  readonly resource?: string;
+  readonly conditions: readonly IfCondition[];
+}
+
+/**
+ * Parses an If header (RFC 4918 10.4): untagged lists, or lists tagged with the resource they are about; each list
+ * holds state tokens and entity tags, each possibly negated with Not. Returns null when there is no header.
+ */
+export function parseIf(header: string | null | undefined): IfList[] | null {
+  if (header === null || header === undefined || !header.trim()) return null;
+  const s = header;
+  let i = 0;
+  const ws = () => {
+    while (i < s.length && /\s/.test(s[i]!)) i++;
+  };
+  const until = (close: string) => {
+    const e = s.indexOf(close, i);
+    if (e < 0) throw new BadIf(`an unclosed ${s[i - 1]}`);
+    const v = s.slice(i, e);
+    i = e + 1;
+    return v;
+  };
+  const out: IfList[] = [];
+  let tagged: boolean | undefined;
+  let resource: string | undefined;
+  for (ws(); i < s.length; ws()) {
+    const c = s[i]!;
+    if (c === '<') {
+      if (tagged === false) throw new BadIf('tagged and untagged lists are mixed');
+      tagged = true;
+      i++;
+      resource = until('>');
+      if (!resource) throw new BadIf('an empty resource tag');
+      ws();
+      if (s[i] !== '(') throw new BadIf('a resource tag needs a list after it');
+    } else if (c === '(') {
+      if (tagged === undefined) tagged = false;
+      i++;
+      const conditions: IfCondition[] = [];
+      for (ws(); s[i] !== ')'; ws()) {
+        if (i >= s.length) throw new BadIf('an unclosed list');
+        let not = false;
+        if (/^not\b/i.test(s.slice(i, i + 4)) && /\s|<|\[/.test(s[i + 3] ?? '')) {
+          not = true;
+          i += 3;
+          ws();
+        }
+        if (s[i] === '<') {
+          i++;
+          const token = until('>');
+          if (!token) throw new BadIf('an empty state token');
+          conditions.push({ not, token });
+        } else if (s[i] === '[') {
+          i++;
+          const etag = until(']').trim();
+          if (!/^(W\/)?"[^"]*"$/.test(etag)) throw new BadIf(`${etag} is not an entity tag`);
+          conditions.push({ not, etag });
+        } else throw new BadIf(`unexpected ${JSON.stringify(s[i] ?? 'end')}`);
+      }
+      i++;
+      if (!conditions.length) throw new BadIf('an empty list');
+      out.push({ ...(tagged && resource !== undefined ? { resource } : {}), conditions });
+    } else throw new BadIf(`unexpected ${JSON.stringify(c)}`);
+  }
+  if (!out.length) throw new BadIf('no list');
+  return out;
+}
+
+/** An entity tag's opaque value, for the weak comparison If conditions use. */
+const etagValue = (e: string) => e.replace(/^W\//, '').replace(/^"|"$/g, '');
+
+/**
+ * Whether an If header holds: some list whose every condition is true of its resource. A state token is true when
+ * it is a lock token of a lock on the resource; an entity tag when it matches the resource's (a resource that does
+ * not exist has none). `state` describes the resource a list names (undefined: the request's own).
+ */
+export function ifHolds(lists: readonly IfList[], state: (resource: string | undefined) => { readonly etag?: string; readonly tokens: readonly string[] }): boolean {
+  return lists.some((l) => {
+    const st = state(l.resource);
+    return l.conditions.every((c) => {
+      const t = c.token !== undefined ? st.tokens.includes(c.token) : st.etag !== undefined && etagValue(st.etag) === etagValue(c.etag!);
+      return c.not ? !t : t;
+    });
+  });
 }
 
 /** Lock tokens named in an If header. */

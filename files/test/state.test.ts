@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { appendFile, mkdtemp, readFile } from 'node:fs/promises';
+import { appendFile, mkdtemp, open, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test } from 'node:test';
+import { mock, test } from 'node:test';
 import { State, diskPersist, memoryPersist, removeDiskState } from '../src/state.ts';
 import { PASS, start } from './helpers.ts';
 
@@ -52,6 +52,75 @@ test('on disk: a line torn by a crash mid-write is dropped, and everything befor
     assert.ok(again.doc.people['a']);
     await again.compact();
     assert.equal((await readFile(join(dir, 'log.jsonl'), 'utf8')).trim(), '', 'a compaction leaves an empty log');
+  } finally {
+    await removeDiskState(dir);
+  }
+});
+
+/** Counts fsync calls on files and folders while `run` runs. */
+async function syncs(run: () => Promise<void>): Promise<number> {
+  const probe = await open(tmpdir(), 'r');
+  const proto = Object.getPrototypeOf(probe) as { sync: () => Promise<void> };
+  await probe.close();
+  const m = mock.method(proto, 'sync');
+  try {
+    await run();
+    return m.mock.callCount();
+  } finally {
+    m.mock.restore();
+  }
+}
+
+const person = (id: string) => ({ id, display: id, passwordHash: 'h', quota: null, admin: false, groups: [], created: 0 });
+
+test('on disk: every log entry is forced to disk before it counts as saved, and a snapshot forces the file and its folder', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'files-state-'));
+  try {
+    const p = diskPersist(dir);
+    await p.load();
+    assert.ok((await syncs(() => p.append(1, JSON.stringify({ n: 1, seq: { node: 0, grant: 0, device: 0 }, put: {} })))) >= 1, 'append calls fsync');
+    assert.ok((await syncs(() => p.snapshot(1, JSON.stringify({ n: 1, doc: {} })))) >= 3, 'the snapshot file, the new log and their folder');
+  } finally {
+    await removeDiskState(dir);
+  }
+});
+
+test('on disk: a torn last line is reported and cut off, so the next entry starts on a line of its own', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'files-state-'));
+  try {
+    const st = await State.open(diskPersist(dir));
+    st.doc.people['a'] = person('a');
+    st.mark('people', 'a');
+    await st.flush();
+    await appendFile(join(dir, 'log.jsonl'), '{"n":2,"seq":{"node":0,"gr');
+    const reports: string[] = [];
+    const again = await State.open(diskPersist(dir, { report: (m) => reports.push(m) }));
+    assert.equal(reports.length, 1);
+    assert.match(reports[0]!, /torn/);
+    again.doc.people['b'] = person('b');
+    again.mark('people', 'b');
+    await again.flush();
+    const third = await State.open(diskPersist(dir));
+    assert.ok(third.doc.people['a'] && third.doc.people['b'], 'the entry after the torn one was kept, and the log still reads');
+  } finally {
+    await removeDiskState(dir);
+  }
+});
+
+test('on disk: a damaged line that is not the last is corruption, and the server refuses to start with a clear message', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'files-state-'));
+  try {
+    const st = await State.open(diskPersist(dir));
+    for (const id of ['a', 'b', 'c']) {
+      st.doc.people[id] = person(id);
+      st.mark('people', id);
+      await st.flush();
+    }
+    const log = join(dir, 'log.jsonl');
+    const lines = (await readFile(log, 'utf8')).split('\n');
+    lines[1] = lines[1]!.slice(0, 20);
+    await writeFile(log, lines.join('\n'));
+    await assert.rejects(State.open(diskPersist(dir)), /line 2 of 3.*not the last.*corrupt/s);
   } finally {
     await removeDiskState(dir);
   }

@@ -138,9 +138,15 @@ export function checkName(name: string): void {
   if (name !== name.trim()) throw new InvalidName(name, 'it starts or ends with a space');
 }
 
-/** A path's steps: "/a/b/" and "a/b" are the same; "." and ".." are refused rather than resolved. */
+/**
+ * A path's steps: "/a/b/" and "a/b" are the same; "." and ".." are refused rather than resolved. Each step is
+ * Unicode NFC, as Nextcloud stores names, so "é" sent composed or decomposed (as macOS sends it) is one name.
+ */
 export function steps(path: string): string[] {
-  const s = path.split('/').filter((x) => x !== '');
+  const s = path
+    .normalize('NFC')
+    .split('/')
+    .filter((x) => x !== '');
   for (const x of s) checkName(x);
   return s;
 }
@@ -364,6 +370,38 @@ export class Tree {
       await this.store.commit([moved, ...up], replaced.map((x) => x.id));
       return { node: moved, replaced };
     });
+  }
+
+  /**
+   * Moves a node and everything under it into another owner's tree, as moving into or out of a folder shared by
+   * someone else does. Every id stays; the owner of each moved node changes; both trees' ancestors get new sizes
+   * and etags, all in one commit. Both owners' queues are held, taken in name order so opposite moves cannot wait
+   * on each other.
+   */
+  async moveAcross(fromOwner: string, from: string, toOwner: string, to: string, overwrite = false): Promise<{ node: Node; moved: Node[]; replaced: Node[] }> {
+    if (fromOwner === toOwner) {
+      const r = await this.move(fromOwner, from, to, overwrite);
+      return { ...r, moved: [r.node, ...(await this.descendants(r.node))] };
+    }
+    const [first, second] = [fromOwner, toOwner].sort();
+    return this.serial(first!, () =>
+      this.serial(second!, async () => {
+        const n = await this.resolve(fromOwner, from);
+        if (!n) throw new NotFound(from);
+        if (n.parent === null) throw new InvalidName('/', 'the root cannot be moved');
+        const { parent, name } = await this.parentFor(toOwner, to);
+        const existing = await this.store.child(parent.id, name);
+        if (existing && !overwrite) throw new Exists(to);
+        const replaced = existing ? [existing, ...(await this.descendants(existing))] : [];
+        const t = this.now();
+        const top: Node = { ...n, parent: parent.id, name, owner: toOwner, etag: this.etag() };
+        const below = (await this.descendants(n)).map((d) => ({ ...d, owner: toOwner }));
+        const oldParent = (await this.store.get(n.parent))!;
+        const up = [...(await this.bubble(oldParent, -n.size, t)), ...(await this.bubble(parent, n.size - (existing?.size ?? 0), t))];
+        await this.store.commit([top, ...below, ...up], replaced.map((x) => x.id));
+        return { node: top, moved: [top, ...below], replaced };
+      }),
+    );
   }
 
   /** Sizes and etags for a move between two folders: each ancestor written once, with its net change. */

@@ -64,3 +64,8 @@ test('gaps and overlaps in half-hour and quarter-hour zones', () => {
   assert.equal(iso(instant({ y: 2026, m: 3, d: 29, h: 1, min: 30 }, 'Europe/London')), '2026-03-29T01:30');
   assert.equal(iso(instant({ y: 2026, m: 10, d: 25, h: 1, min: 30 }, 'Europe/London')), '2026-10-25T00:30');
 });
+
+test('WEEKLY BYDAY with repeated days does not repeat occurrences', () => {
+  const o = occurrences({ y: 2026, m: 1, d: 5, h: 9, min: 0 }, 'UTC', parseRule('FREQ=WEEKLY;COUNT=4;BYDAY=MO,MO'));
+  assert.deepEqual(o.map((d) => d.toISOString()), ['2026-01-05T09:00:00.000Z', '2026-01-12T09:00:00.000Z', '2026-01-19T09:00:00.000Z', '2026-01-26T09:00:00.000Z']);
+});

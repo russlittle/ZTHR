@@ -55,3 +55,11 @@ test('address values are inserted literally, never read as patterns or placehold
   assert.deepEqual(formatAddress({ country: 'constructor', lines: ['x'], city: 'Y' }), ['x', 'Y']);
   assert.deepEqual(checkAddress({ country: 'toString', lines: ['x'] }), []);
 });
+
+test('phone turns full-width and other Unicode digits into ASCII digits, never dropping them', () => {
+  assert.throws(() => phone('(937) 555-01１91', 'US'), /10 digits/, 'the full-width 1 is an eleventh digit, counted, not dropped');
+  assert.equal(phone('９３７５５５０１９１', 'US'), '+19375550191');
+  assert.equal(phone('(937) 555-0191', 'US'), '+19375550191');
+  assert.equal(phone('٩٣٧ ٥٥٥ ٠١٩١', 'US'), '+19375550191');
+  assert.equal(phone('+４４ ２０ ７９４６ ０９５８', 'GB'), '+442079460958');
+});

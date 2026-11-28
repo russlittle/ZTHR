@@ -67,6 +67,8 @@ export class Files {
   readonly devices: Devices;
   readonly now: () => number;
   private readonly o: Options;
+  /** Bytes each person's old versions and trash take, kept up to date by every change to either. */
+  private keptTotals: Map<string, number>;
 
   constructor(state: State, objects: ObjectStore, o: Options = {}) {
     this.state = state;
@@ -78,6 +80,7 @@ export class Files {
     this.leases = new Leases(memoryLeases(), { now: this.now });
     this.grants = new Grants(state.grants, { now: this.now });
     this.devices = new Devices(state.devices, { now: this.now });
+    this.keptTotals = this.recountKept();
   }
 
   get maxChunk(): number {
@@ -110,35 +113,87 @@ export class Files {
     return p;
   }
 
+  /** Changes a person's details. Disabling goes through setEnabled, which also ends their sessions and app passwords. */
   updatePerson(id: string, change: Partial<Pick<Person, 'display' | 'quota' | 'admin' | 'groups' | 'email' | 'disabled'>>): Person {
     const p = this.state.doc.people[id];
     if (!p) throw new NotFound(id);
-    const next: Person = { ...p, ...change };
+    const { disabled, ...rest } = change;
+    const next: Person = { ...p, ...rest };
     this.state.doc.people[id] = next;
     this.state.mark('people', id);
-    return next;
+    if (disabled === undefined || !!p.disabled === disabled) return next;
+    // The account record changes now; the app passwords end as soon as setEnabled has revoked them. Callers that
+    // can wait call setEnabled itself.
+    void this.setEnabled(id, !disabled).catch(() => undefined);
+    return this.state.doc.people[id]!;
   }
 
+  /**
+   * Sets a new password. Every web session ends (they signed in with the old one); app passwords stay, as in
+   * Nextcloud, since each is its own key to one device and can be revoked or wiped on its own.
+   */
   async setPassword(id: string, password: string): Promise<void> {
     const p = this.state.doc.people[id];
     if (!p) throw new NotFound(id);
     if (password.length < 10) throw new Denied('a password needs at least 10 characters', 400);
-    this.state.doc.people[id] = { ...p, passwordHash: await hashPassword(password) };
+    const hash = await hashPassword(password);
+    const now = this.state.doc.people[id]!;
+    this.state.doc.people[id] = { ...now, passwordHash: hash, epoch: (now.epoch ?? 0) + 1 };
     this.state.mark('people', id);
   }
 
-  /** Removes a person and everything they own: their files, their grants, their devices. */
+  /**
+   * Disables or enables an account. Disabling ends every web session and every app password, so enabling again
+   * brings none of them back; a device marked for wipe keeps its record, so it can still be told to wipe.
+   */
+  async setEnabled(id: string, enabled: boolean): Promise<Person> {
+    const p = this.state.doc.people[id];
+    if (!p) throw new NotFound(id);
+    if (enabled) {
+      const { disabled: _, ...rest } = p;
+      this.state.doc.people[id] = rest;
+    } else {
+      this.state.doc.people[id] = { ...p, disabled: true, epoch: (p.epoch ?? 0) + 1 };
+      for (const d of await this.devices.list(id)) if (!d.wipe) await this.devices.revoke(id, d.id);
+    }
+    this.state.mark('people', id);
+    return this.state.doc.people[id]!;
+  }
+
+  /** Marks one of a person's devices to wipe itself: its app password stops working, and it is told so when it asks. */
+  async wipeDevice(user: string, device: number): Promise<boolean> {
+    const d = (await this.devices.list(user)).find((x) => x.id === device);
+    if (!d) return false;
+    await this.devices.markWipe(user, device);
+    return true;
+  }
+
+  /** Marks every device of a person for wipe, as an admin does when a person leaves or loses their devices. */
+  async wipeAll(user: string): Promise<number> {
+    const ds = await this.devices.list(user);
+    for (const d of ds) await this.devices.markWipe(user, d.id);
+    return ds.length;
+  }
+
+  /**
+   * Removes a person and everything they own: their files and every old version of them, their trash, their
+   * unfinished uploads, their grants and their devices.
+   */
   async removePerson(id: string): Promise<void> {
     const p = this.state.doc.people[id];
     if (!p) throw new NotFound(id);
     const root = await this.tree.root(id);
-    for (const n of [root, ...(await this.tree.descendants(root))]) if (n.blob) await this.objects.delete(n.blob);
-    await this.state.nodes.commit([], [root.id, ...(await this.tree.descendants(root)).map((n) => n.id)]);
+    const all = [root, ...(await this.tree.descendants(root))];
+    for (const n of all) if (n.blob) await this.objects.delete(n.blob);
+    await this.dropVersionsOf(all, id);
+    await this.state.nodes.commit([], all.map((n) => n.id));
     for (const g of await this.grants.live((g) => g.by === id || g.to === id)) await this.state.grants.delete(g.id);
     for (const d of await this.devices.list(id)) await this.devices.revoke(id, d.id);
     for (const t of Object.values(this.state.doc.trash).filter((t) => t.owner === id)) await this.purgeTrash(t);
+    for (const u of await this.uploads.of(id)) await this.uploads.abort(id, u.id);
     delete this.state.doc.people[id];
     this.state.mark('people', id);
+    this.keptTotals.delete(id);
   }
 
   /** A login name and either the person's password or one of their app passwords. */
@@ -171,7 +226,64 @@ export class Files {
 
   /** Bytes a person's files, old versions and trash take: all of it counts against their quota. */
   async used(user: string): Promise<number> {
-    return (await this.tree.root(user)).size + (await this.kept(user)).bytes;
+    return (await this.tree.root(user)).size + (this.keptTotals.get(user) ?? 0);
+  }
+
+  /**
+   * What each person's old versions and trash take, counted from scratch: whose a version is follows its file,
+   * wherever the file is now, in a tree or in a trash. The running totals start from this and must always equal it.
+   */
+  private recountKept(): Map<string, number> {
+    const out = new Map<string, number>();
+    const add = (u: string | undefined, n: number) => {
+      if (u !== undefined) out.set(u, (out.get(u) ?? 0) + n);
+    };
+    const trashed = new Map<number, string>();
+    for (const t of Object.values(this.state.doc.trash)) {
+      add(t.owner, t.nodes[0]!.size);
+      for (const n of t.nodes) trashed.set(n.id, t.owner);
+    }
+    for (const [file, vs] of Object.entries(this.state.doc.versions)) {
+      const owner = this.state.doc.nodes[file]?.owner ?? trashed.get(Number(file));
+      for (const v of vs) add(owner, v.size);
+    }
+    return out;
+  }
+
+  /** The running total of a person's old versions and trash beside a recount, for checks and tests. */
+  usageCheck(user: string): { running: number; recount: number } {
+    return { running: this.keptTotals.get(user) ?? 0, recount: this.recountKept().get(user) ?? 0 };
+  }
+
+  private adjustKept(user: string | undefined, delta: number): void {
+    if (user === undefined || !delta) return;
+    this.keptTotals.set(user, (this.keptTotals.get(user) ?? 0) + delta);
+  }
+
+  /** Whose a file's versions are: the owner of the file, in a tree or in a trash. */
+  private versionOwner(file: string): string | undefined {
+    const n = this.state.doc.nodes[file];
+    if (n) return n.owner;
+    const id = Number(file);
+    return Object.values(this.state.doc.trash).find((t) => t.nodes.some((x) => x.id === id))?.owner;
+  }
+
+  /** Gives up every version of these nodes, as when they are removed for good or replaced. */
+  private async dropVersionsOf(nodes: readonly Node[], owner: string | undefined): Promise<void> {
+    for (const n of nodes) {
+      const list = this.state.doc.versions[String(n.id)];
+      if (!list) continue;
+      for (const v of list) await this.objects.delete(v.blob);
+      if (this.state.doc.versions[String(n.id)] !== list) continue;
+      delete this.state.doc.versions[String(n.id)];
+      this.state.mark('versions', String(n.id));
+      this.adjustKept(owner, -list.reduce((a, v) => a + v.size, 0));
+    }
+  }
+
+  /** Bytes the versions of these nodes take. */
+  private versionBytes(nodes: readonly Node[]): number {
+    return nodes.reduce((a, n) => a + (this.state.doc.versions[String(n.id)] ?? []).reduce((b, v) => b + v.size, 0), 0);
   }
 
   /** The old versions and trashed items a person keeps, oldest first, with what each takes. */
@@ -191,11 +303,13 @@ export class Files {
   }
 
   private async dropVersion(file: string, v: Version): Promise<void> {
+    if (!(this.state.doc.versions[file] ?? []).includes(v)) return;
+    await this.objects.delete(v.blob);
     const list = this.state.doc.versions[file] ?? [];
     if (!list.includes(v)) return;
-    await this.objects.delete(v.blob);
     this.state.doc.versions[file] = list.filter((x) => x !== v);
     this.state.mark('versions', file);
+    this.adjustKept(this.versionOwner(file), -v.size);
   }
 
   /** Bytes left; undefined when the person has no limit. */
@@ -389,10 +503,11 @@ export class Files {
     await this.checkLock(w, user, tokens);
   }
 
-  async mkdir(user: string, path: string): Promise<Node> {
+  async mkdir(user: string, path: string, tokens: readonly string[] = []): Promise<Node> {
     this.safe(path);
     const w = await this.where(user, path);
     this.need(await this.parentWhere(user, path), CREATE, 'add folders');
+    await this.checkLock(w, user, tokens);
     return this.tree.mkdir(w.owner, w.path);
   }
 
@@ -415,6 +530,7 @@ export class Files {
     for (let i = 1; this.state.doc.trash[`${w.owner}\u0000${id}`]; i++) id = `${t.id}.${i}`;
     this.state.doc.trash[`${w.owner}\u0000${id}`] = { ...t, id };
     this.state.mark('trash', `${w.owner}\u0000${id}`);
+    this.adjustKept(w.owner, node.size);
   }
 
   async move(user: string, from: string, to: string, overwrite: boolean, tokens: readonly string[] = []): Promise<{ node: Node; created: boolean }> {
@@ -436,14 +552,28 @@ export class Files {
     if (a.w.owner === b.w.owner) {
       const r = await this.tree.move(a.w.owner, a.w.path, b.w.path, overwrite);
       await this.leases.rename(`/${a.w.owner}${a.w.path}`, `/${b.w.owner}${b.w.path}`);
-      for (const n of r.replaced) if (n.blob) await this.objects.delete(n.blob);
+      await this.discardReplaced(r.replaced, b.w.owner);
       return { node: r.node, created: !b.node };
     }
-    // Between two people's trees: the bytes are copied in the store, then the original goes.
-    const c = await this.copy(user, from, to, overwrite, tokens);
-    const gone = await this.tree.remove(a.w.owner, a.w.path);
-    for (const n of gone) if (n.blob) await this.objects.delete(n.blob);
-    return c;
+    // Between two people's trees, as into or out of a folder shared with you: as in Nextcloud, the file keeps its
+    // id and its old versions, which from now on count against the new owner's quota.
+    const subtree = [a.node, ...(await this.tree.descendants(a.node))];
+    const need = a.node.size + this.versionBytes(subtree) - (b.node?.size ?? 0);
+    const free = await this.makeRoom(b.w.owner, need);
+    if (free !== undefined && need > free) throw new Insufficient(need, free);
+    const r = await this.tree.moveAcross(a.w.owner, a.w.path, b.w.owner, b.w.path, overwrite);
+    const moved = this.versionBytes(r.moved);
+    this.adjustKept(a.w.owner, -moved);
+    this.adjustKept(b.w.owner, moved);
+    await this.leases.rename(`/${a.w.owner}${a.w.path}`, `/${b.w.owner}${b.w.path}`);
+    await this.discardReplaced(r.replaced, b.w.owner);
+    return { node: r.node, created: !b.node };
+  }
+
+  /** What a move or copy replaced is gone for good: its bytes and its old versions with it. */
+  private async discardReplaced(replaced: readonly Node[], owner: string): Promise<void> {
+    for (const n of replaced) if (n.blob) await this.objects.delete(n.blob);
+    await this.dropVersionsOf(replaced, owner);
   }
 
   async copy(user: string, from: string, to: string, overwrite: boolean, tokens: readonly string[] = []): Promise<{ node: Node; created: boolean }> {
@@ -461,7 +591,7 @@ export class Files {
     const dup = async (blob: string) => (await this.objects.compose([blob])).key;
     if (a.w.owner === b.w.owner) {
       const r = await this.tree.copy(a.w.owner, a.w.path, b.w.path, overwrite, dup);
-      for (const n of r.replaced) if (n.blob) await this.objects.delete(n.blob);
+      await this.discardReplaced(r.replaced, b.w.owner);
       return { node: r.node, created: !b.node };
     }
     const tree = this.tree;
@@ -471,25 +601,21 @@ export class Files {
       for (const k of await tree.list(src)) await into(k, `${path}/${k.name}`);
       return made;
     };
-    if (b.node && overwrite) {
-      const gone = await this.tree.remove(b.w.owner, b.w.path);
-      for (const n of gone) if (n.blob) await this.objects.delete(n.blob);
-    }
+    if (b.node && overwrite) await this.discardReplaced(await this.tree.remove(b.w.owner, b.w.path), b.w.owner);
     return { node: await into(a.node, b.w.path), created: !b.node };
   }
 
   // ---------------------------------------------------------------- versions
 
   private async keepVersion(old: Node, author: string): Promise<void> {
-    const list = this.state.doc.versions[String(old.id)] ?? [];
+    const list = [...(this.state.doc.versions[String(old.id)] ?? [])];
     list.push({ id: String(old.mtime), blob: old.blob!, size: old.size, mtime: old.mtime, etag: old.etag, closedAt: this.now(), author });
     const max = this.o.versions?.max ?? 50;
-    while (list.length > max) {
-      const v = list.shift()!;
-      await this.objects.delete(v.blob);
-    }
+    const dropped = list.splice(0, Math.max(0, list.length - max));
     this.state.doc.versions[String(old.id)] = list;
     this.state.mark('versions', String(old.id));
+    this.adjustKept(old.owner, old.size - dropped.reduce((a, v) => a + v.size, 0));
+    for (const v of dropped) await this.objects.delete(v.blob);
   }
 
   versionsOf(fileId: number): Version[] {
@@ -537,18 +663,18 @@ export class Files {
     const n = await this.tree.restore(owner, target, t.nodes);
     delete this.state.doc.trash[`${owner}\u0000${id}`];
     this.state.mark('trash', `${owner}\u0000${id}`);
+    this.adjustKept(owner, -t.nodes[0]!.size);
     return n;
   }
 
   async purgeTrash(t: Trashed): Promise<void> {
-    for (const n of t.nodes) {
-      if (n.blob) await this.objects.delete(n.blob);
-      for (const v of this.state.doc.versions[String(n.id)] ?? []) await this.objects.delete(v.blob);
-      delete this.state.doc.versions[String(n.id)];
-      this.state.mark('versions', String(n.id));
-    }
+    if (this.state.doc.trash[`${t.owner}\u0000${t.id}`] !== t) return;
+    for (const n of t.nodes) if (n.blob) await this.objects.delete(n.blob);
+    await this.dropVersionsOf(t.nodes, t.owner);
+    if (this.state.doc.trash[`${t.owner}\u0000${t.id}`] !== t) return;
     delete this.state.doc.trash[`${t.owner}\u0000${t.id}`];
     this.state.mark('trash', `${t.owner}\u0000${t.id}`);
+    this.adjustKept(t.owner, -t.nodes[0]!.size);
   }
 
   async emptyTrash(owner: string): Promise<number> {
@@ -583,9 +709,7 @@ export class Files {
         const list = this.state.doc.versions[file!] ?? [];
         const v = list.find((x) => x.id === id);
         if (v) {
-          await this.objects.delete(v.blob);
-          this.state.doc.versions[file!] = list.filter((x) => x !== v);
-          this.state.mark('versions', file!);
+          await this.dropVersion(file!, v);
           versions++;
         }
       }
@@ -607,24 +731,16 @@ export class Files {
   }
 
   /**
-   * What a person may do on a node, wherever it sits: everything on their own; otherwise the union of the grants
-   * that reach them on it or above it, each limited to what its giver may still do there. So a reshare loses what
-   * its giver loses: lowering or revoking a share lowers or ends every share made from it.
+   * What a person may do on a node, wherever it sits: everything on their own; otherwise what the grants block
+   * works out from the grants that reach them on it or above it, each limited to what its giver may still do there.
+   * So a reshare loses what its giver loses: lowering or revoking a share lowers or ends every share made from it.
    */
-  async permsOn(user: string, node: Node, depth = 0): Promise<number> {
+  async permsOn(user: string, node: Node): Promise<number> {
     if (node.owner === user) return ALL;
     const p = this.person(user);
-    if (!p || depth > 16) return 0;
-    const chain = [node, ...(await this.tree.ancestors(node))];
-    const at = new Map(chain.map((n) => [n.id, n]));
-    let bits = 0;
-    for (const g of await this.grants.live((g) => at.has(g.resource) && ((g.kind === 'person' && g.to === user) || (g.kind === 'group' && !!g.to && p.groups.includes(g.to))))) {
-      const cap = g.by === node.owner ? ALL : await this.permsOn(g.by, at.get(g.resource)!, depth + 1);
-      // A file shared by itself has no inside to create or delete in; a file inside a shared folder may be deleted
-      // when the folder's share allows deleting.
-      bits |= g.permissions & cap & (node.kind === 'file' ? (g.resource === node.id ? FILE_MAX : ~CREATE) : ALL);
-    }
-    return bits;
+    if (!p) return 0;
+    const chain = [node, ...(await this.tree.ancestors(node))].map((n) => ({ id: n.id, kind: n.kind }));
+    return this.grants.effective(user, p.groups, chain, { owner: node.owner, groupsOf: (id) => this.person(id)?.groups });
   }
 
   /** Grants on paths a person owns, or made by them. */

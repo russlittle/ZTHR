@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { memoryObjects, readAll } from '../objects/index.ts';
+import { TooLarge, memoryObjects, readAll } from '../objects/index.ts';
 import { BadChunk, NoSession, OverQuota, Uploads, WrongLength, memorySessions, type Rules } from './index.ts';
 
 const RULES: Rules = { minChunk: 1, maxChunk: 10_000, minBytes: 4, maxBytes: 64, idleMs: 1000 };
@@ -20,6 +20,7 @@ test('chunks sent out of order assemble in number order into one object, and the
   await up.chunk('ana', 'u1', '00001', b('abcd'));
   await up.chunk('ana', 'u1', '00002', b('efgh'));
   const w = await up.assemble('ana', 'u1');
+  await up.finish('ana', 'u1');
   assert.equal((await readAll(await objects.get(w.key))).toString(), 'abcdefghijkl');
   assert.equal(w.destination, '/files/ana/big.bin');
   assert.equal(objects.count(), 1, 'only the assembled object is left');
@@ -46,6 +47,7 @@ test('chunks arriving at the same moment are all kept', async () => {
   await Promise.all(Array.from({ length: 20 }, (_, i) => up.chunk('ana', 'u', String(i + 1), b(String.fromCharCode(97 + i).repeat(4)))));
   assert.equal((await up.received('ana', 'u')).length, 20);
   const w = await up.assemble('ana', 'u');
+  await up.finish('ana', 'u');
   assert.equal(w.size, 80);
   assert.equal((await readAll(await objects.get(w.key))).toString().slice(0, 8), 'aaaabbbb');
   assert.equal(objects.count(), 1, 'every intermediate join is deleted');
@@ -98,4 +100,40 @@ test('sessions belong to their owner, and abort discards everything', async () =
   await assert.rejects(up.chunk('ben', 'u', '2', b('abcd')), NoSession);
   await up.abort('ana', 'u');
   assert.equal(objects.count(), 0);
+});
+
+test('a chunk stream is cut off at the declared total and at the free space, counting what already arrived', async () => {
+  const { up, objects } = setup(10);
+  await up.start('ana', 'u', '/d', 8);
+  await up.chunk('ana', 'u', '1', b('abcd'));
+  await assert.rejects(up.chunk('ana', 'u', '2', b('efghi')), BadChunk, 'four more bytes than the eight declared');
+  await up.chunk('ana', 'u', '2', b('efgh'));
+  await up.chunk('ana', 'u', '1', b('ABCD'), undefined);
+  assert.equal(objects.count(), 2, 'a refused chunk keeps no bytes, and a resent one replaces the first');
+  const { up: up2 } = setup(10);
+  await up2.start('ana', 'v', '/d');
+  await up2.chunk('ana', 'v', '1', b('abcdefgh'));
+  await assert.rejects(up2.chunk('ana', 'v', '2', b('ijk')), OverQuota, 'eight arrived, two free');
+  await up2.chunk('ana', 'v', '2', b('ij'));
+  await assert.rejects(up2.chunk('ana', 'v', '3', b('xxxx'), undefined, 4), OverQuota, 'a declared chunk size over the room is refused before reading');
+  const { up: up3 } = setup();
+  await up3.start('ana', 'w', '/d');
+  await assert.rejects(up3.chunk('ana', 'w', '1', b('x'.repeat(65))), TooLarge, 'never more than a chunk may have');
+});
+
+test('assembly keeps the chunks until finish, so a crash before the file is committed loses nothing', async () => {
+  const { up, objects } = setup();
+  await up.start('ana', 'u', '/d');
+  await up.chunk('ana', 'u', '1', b('abcd'));
+  await up.chunk('ana', 'u', '2', b('ef'));
+  const w = await up.assemble('ana', 'u');
+  assert.equal(objects.count(), 3, 'the chunks are still there beside the joined object');
+  assert.equal((await up.received('ana', 'u')).length, 2, 'and the session can be assembled again');
+  // A crash here: the joined object was never committed, and the client retries.
+  await objects.delete(w.key);
+  const again = await up.assemble('ana', 'u');
+  assert.equal((await readAll(await objects.get(again.key))).toString(), 'abcdef');
+  await up.finish('ana', 'u');
+  assert.equal(objects.count(), 1, 'finish removes the chunks and the session');
+  await assert.rejects(up.received('ana', 'u'), NoSession);
 });
