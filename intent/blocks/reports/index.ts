@@ -1,7 +1,7 @@
 /**
  * Reports from rows: a report names its filters, the dimensions to group by, and measures (count, sum, average,
  * min, max, distinct count), and comes back as a table with a totals row, or pivoted with one dimension across the
- * columns. Groups smaller than a threshold can be suppressed. Saved templates have parameters with defaults; a
+ * columns. Groups smaller than a threshold can be suppressed without the totals giving them away. Saved templates have parameters with defaults; a
  * schedule (5-field cron, UTC) decides when a template is run and delivered, and every delivery is logged.
  */
 import { cron } from '../jobs/index.ts';
@@ -22,7 +22,11 @@ export interface Spec {
   readonly groupBy: readonly string[];
   readonly measures: readonly Measure[];
   readonly sort?: { readonly by: string; readonly desc?: boolean };
-  /** Groups with fewer rows than this are hidden; their rows still count in the totals. */
+  /**
+   * Groups with fewer rows than this are hidden. Their rows still count in the totals, so when exactly one group
+   * would be hidden the next smallest is hidden too (or totals minus the rows shown would give it away), and when
+   * fewer rows than this match at all the totals are withheld.
+   */
   readonly minGroup?: number;
 }
 
@@ -51,7 +55,10 @@ function measure(rows: readonly Row[], m: Measure): number | null {
 export interface Result {
   readonly columns: readonly string[];
   readonly rows: readonly Record<string, unknown>[];
+  /** The totals row; when `totalsWithheld`, every measure in it is null. */
   readonly totals: Record<string, unknown>;
+  /** True when fewer rows than `minGroup` match, so the totals would describe a group too small to show. */
+  readonly totalsWithheld: boolean;
   readonly hidden: number;
 }
 
@@ -65,13 +72,18 @@ export function run(data: readonly Row[], s: Spec): Result {
     if (g) g.push(r);
     else groups.set(k, [r]);
   }
-  let hidden = 0;
+  const floor = s.minGroup ?? 0;
+  const small = new Set([...groups.keys()].filter((k) => groups.get(k)!.length < floor));
+  if (small.size === 1) {
+    // One hidden group is the totals minus the rest: hide the next smallest with it.
+    let next: string | undefined;
+    for (const [k, g] of groups) if (!small.has(k) && (next === undefined || g.length < groups.get(next)!.length)) next = k;
+    if (next !== undefined) small.add(next);
+  }
+  const hidden = small.size;
   let out: Record<string, unknown>[] = [];
   for (const [k, g] of groups) {
-    if (s.minGroup && g.length < s.minGroup) {
-      hidden++;
-      continue;
-    }
+    if (small.has(k)) continue;
     const keys = JSON.parse(k) as unknown[];
     const rec: Record<string, unknown> = {};
     s.groupBy.forEach((d, i) => (rec[d] = keys[i]));
@@ -89,8 +101,9 @@ export function run(data: readonly Row[], s: Spec): Result {
     });
   const totals: Record<string, unknown> = {};
   s.groupBy.forEach((d, i) => (totals[d] = i === 0 ? 'Total' : ''));
-  for (const m of s.measures) totals[m.name] = measure(rows, m);
-  return { columns: [...s.groupBy, ...s.measures.map((m) => m.name)], rows: out, totals, hidden };
+  const totalsWithheld = rows.length < floor;
+  for (const m of s.measures) totals[m.name] = totalsWithheld ? null : measure(rows, m);
+  return { columns: [...s.groupBy, ...s.measures.map((m) => m.name)], rows: out, totals, totalsWithheld, hidden };
 }
 
 /** One dimension down, one across, one measure in the cells. */
@@ -109,7 +122,8 @@ export function pivot(data: readonly Row[], down: string, across: string, m: Mea
   return { columns: [down, ...cols], rows: [...byDown.values()].map((rec) => Object.fromEntries([[down, rec.key], ...cols.map((c) => [c, rec.cells.get(c) ?? null])])) };
 }
 
-export const asCsv = (r: Result) => toCsv([r.columns, ...r.rows.map((x) => r.columns.map((c) => x[c])), r.columns.map((c) => r.totals[c])]);
+/** The result as CSV: a header, the rows shown, and the totals row unless it is withheld. */
+export const asCsv = (r: Result) => toCsv([r.columns, ...r.rows.map((x) => r.columns.map((c) => x[c])), ...(r.totalsWithheld ? [] : [r.columns.map((c) => r.totals[c])])]);
 
 export interface Template {
   readonly id: string;

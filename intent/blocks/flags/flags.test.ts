@@ -32,3 +32,13 @@ test('a percentage that is not a number reaches nobody rather than everybody', (
   const f = { key: 'risky', description: '', owner: 'ana', on: true, rules: [{ percent: Number('ten') }] };
   assert.equal(people.filter((p) => evaluate(f, p).on).length, 0);
 });
+
+test('a missing attribute matches nothing, even when the allowed list holds an empty string', () => {
+  const f = new Flags([{ key: 'x', description: 'x', owner: 'ana', on: true, rules: [{ attrs: { plan: ['', 'pro'] } }], removeBy: '2026-12-31' }]);
+  assert.equal(f.isOn('x', { id: 'ben' }), false, 'no attrs at all');
+  assert.equal(f.isOn('x', { id: 'ben', attrs: { region: 'us' } }), false, 'no plan attribute');
+  assert.equal(f.isOn('x', { id: 'ben', attrs: { plan: '' } }), true, 'a plan set to "" is allowed');
+  assert.equal(f.isOn('x', { id: 'ben', attrs: { plan: 'pro' } }), true);
+  const g = new Flags([{ key: 'y', description: 'y', owner: 'ana', on: true, rules: [{ attrs: { constructor: ['function Object() { [native code] }', ''] } }], removeBy: '2026-12-31' }]);
+  assert.equal(g.isOn('y', { id: 'ben', attrs: {} }), false, 'an inherited property is not an attribute');
+});

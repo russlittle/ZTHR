@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
 export interface Rule {
   readonly people?: readonly string[];
   readonly groups?: readonly string[];
-  /** Attributes that must match (plan, region). */
+  /** Attributes that must match (plan, region): the person must have each one, set to one of the values listed. */
   readonly attrs?: Readonly<Record<string, readonly string[]>>;
   /** 0 to 100: share of the people this rule reaches; a value that is not a number reaches nobody. */
   readonly percent?: number;
@@ -44,7 +44,11 @@ export function evaluate(f: Flag | undefined, who: Who): { on: boolean; because:
   for (const [i, r] of f.rules.entries()) {
     if (r.people && !r.people.includes(who.id)) continue;
     if (r.groups && !r.groups.some((g) => who.groups?.includes(g))) continue;
-    if (r.attrs && !Object.entries(r.attrs).every(([k, vs]) => vs.includes(who.attrs?.[k] ?? ''))) continue;
+    if (r.attrs && !Object.entries(r.attrs).every(([k, vs]) => {
+      // A missing attribute matches nothing, not even an allowed "".
+      const v = who.attrs && Object.hasOwn(who.attrs, k) ? who.attrs[k] : undefined;
+      return typeof v === 'string' && vs.includes(v);
+    })) continue;
     if (r.percent !== undefined && !(bucket(f.key, who.id) < r.percent)) continue;
     return { on: true, because: `rule ${i + 1}${r.percent !== undefined ? ` (${r.percent}% rollout)` : ''}` };
   }

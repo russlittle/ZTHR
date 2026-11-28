@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { inflateRawSync } from 'node:zlib';
 import { test } from 'node:test';
-import { dedupe, importRows, parseCsv, suggestMapping, toCsv, toJsonLines, toXlsx, zip } from './index.ts';
+import { dedupe, distinctHeaders, importRows, parseCsv, suggestMapping, toCsv, toJsonLines, toXlsx, XLSX_CELL_LIMIT, XLSX_TRUNCATED, zip } from './index.ts';
 
 test('CSV round-trips RFC 4180 quoting, and defuses formulas on the way out', () => {
   const text = '﻿name,note\r\n"Smith, Ana","said ""hi""\nthen left"\r\nBen,\r\n';
@@ -111,4 +111,52 @@ test('an empty value in xlsx is a blank cell, not a cell holding empty text', ()
   const sheet = unzip(toXlsx([['a', null, undefined, 'd']]))['xl/worksheets/sheet1.xml']!;
   assert.doesNotMatch(sheet, /r="B1"|r="C1"/);
   assert.match(sheet, /r="D1"/);
+});
+
+test('a final row of one empty cell survives a CSV round trip', () => {
+  const rows = [['a', 'b'], ['']];
+  assert.equal(toCsv(rows), 'a,b\r\n""');
+  assert.deepEqual(parseCsv(toCsv(rows)), rows);
+  assert.deepEqual(parseCsv(toCsv([['']])), [['']]);
+  assert.deepEqual(parseCsv(toCsv([['x'], [''], ['y']])), [['x'], [''], ['y']]);
+});
+
+test('a first cell that starts with U+FEFF is quoted, so it reads back whole; a byte-order mark before the text is still dropped', () => {
+  const rows = [['﻿id', 'x']];
+  assert.equal(toCsv(rows), '"﻿id",x');
+  assert.deepEqual(parseCsv(toCsv(rows)), rows);
+  assert.deepEqual(parseCsv(`﻿${toCsv(rows)}`), rows, 'a real mark in front of a quoted cell is dropped, the cell kept');
+});
+
+test('defusing covers String objects and any object that prints as a formula, not only primitive strings', () => {
+  const evil = { toString: () => '=cmd|"/c calc"!A1' };
+  const back = parseCsv(toCsv([[new String('=1+1'), evil, new String('@SUM(A1)'), -3, 3n, true]]))[0]!;
+  assert.deepEqual(back, ["'=1+1", `'=cmd|"/c calc"!A1`, "'@SUM(A1)", '-3', '3', 'true']);
+});
+
+test('xlsx refuses text past the 32,767-character cell limit, or cuts it with a marker when told to', () => {
+  const long = 'a'.repeat(XLSX_CELL_LIMIT + 1);
+  assert.throws(() => toXlsx([['ok'], ['x', long]]), /cell B2 holds 32768 characters, more than the 32767/);
+  assert.doesNotThrow(() => toXlsx([['a'.repeat(XLSX_CELL_LIMIT)]]), 'exactly at the limit is kept');
+  assert.doesNotThrow(() => toXlsx([[`${'a'.repeat(XLSX_CELL_LIMIT)}\u0000`]]), 'forbidden characters are dropped before counting');
+  const t = /<t xml:space="preserve">([^<]*)<\/t>/.exec(unzip(toXlsx([[`${'a'.repeat(XLSX_CELL_LIMIT - XLSX_TRUNCATED.length - 1)}😀${'tail'.repeat(10)}`]], 'S', { long: 'truncate' }))['xl/worksheets/sheet1.xml']!)![1]!;
+  assert.ok(t.length <= XLSX_CELL_LIMIT);
+  assert.ok(t.endsWith(XLSX_TRUNCATED));
+  assert.doesNotMatch(t, /[\ud800-\udbff](?![\udc00-\udfff])/, 'never splits a character');
+});
+
+test('headers that repeat are told apart and reported, so no column overwrites another', () => {
+  assert.deepEqual(distinctHeaders(['Name', 'Name', 'Name (2)', 'Name']), {
+    headers: ['Name', 'Name (3)', 'Name (2)', 'Name (4)'],
+    renamed: [{ column: 1, header: 'Name', as: 'Name (3)' }, { column: 3, header: 'Name', as: 'Name (4)' }],
+  });
+  const t = parseCsv('Email,Name,Name\nana@x.org,Ana,Smith\n');
+  const m = suggestMapping(t[0]!, fields);
+  assert.deepEqual(m, { Email: 'email', Name: 'name', 'Name (2)': undefined });
+  const r = importRows(t, fields, m);
+  assert.deepEqual(r.good, [{ email: 'ana@x.org', name: 'Ana' }]);
+  assert.deepEqual(r.renamed, [{ column: 2, header: 'Name', as: 'Name (2)' }]);
+  assert.deepEqual(r.unmapped, ['Name (2)']);
+  const bad = importRows(parseCsv('Email,Name,Name\n,Ana,Smith\n'), fields, m);
+  assert.deepEqual(bad.quarantine[0]!.raw, { Email: '', Name: 'Ana', 'Name (2)': 'Smith' }, 'both values are kept in the raw row');
 });

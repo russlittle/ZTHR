@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Palette, score } from './index.ts';
+import { Palette, normKeys, score } from './index.ts';
 
 const make = () => {
   const ran: string[] = [];
@@ -51,4 +51,40 @@ test('an empty permission name still has to be granted', async () => {
   assert.equal(p.forKeys('shift+mod+w', none), undefined);
   assert.deepEqual(p.cheatsheet(none), []);
   await assert.rejects(p.run('wipe', none), /cannot do that/);
+});
+
+test('"mod" and Ctrl or Cmd are the same shortcut on the platform, so clashes are caught', () => {
+  const run = () => {};
+  const both = new Palette();
+  both.register({ id: 'save', title: 'Save', section: 'S', shortcut: 'mod+s', run });
+  assert.throws(() => both.register({ id: 'a', title: 'A', section: 'S', shortcut: 'Ctrl+S', run }), /already Save/);
+  assert.throws(() => both.register({ id: 'b', title: 'B', section: 'S', shortcut: 'Cmd+S', run }), /already Save/);
+  assert.equal(both.forKeys('ctrl+s', anyone)!.id, 'save');
+  assert.equal(both.forKeys('meta+s', anyone)!.id, 'save');
+  const mac = new Palette({ platform: 'mac' });
+  mac.register({ id: 'save', title: 'Save', section: 'S', shortcut: 'mod+s', run });
+  assert.throws(() => mac.register({ id: 'b', title: 'B', section: 'S', shortcut: '⌘+S', run }), /already Save/);
+  mac.register({ id: 'c', title: 'C', section: 'S', shortcut: 'Control+S', run });
+  assert.equal(mac.forKeys('cmd+s', anyone)!.id, 'save');
+  assert.equal(mac.forKeys('ctrl+s', anyone)!.id, 'c', 'on a Mac, Ctrl is not mod');
+  const pc = new Palette({ platform: 'other' });
+  pc.register({ id: 'save', title: 'Save', section: 'S', shortcut: 'mod+s', run });
+  assert.throws(() => pc.register({ id: 'a', title: 'A', section: 'S', shortcut: 's+control', run }), /already Save/);
+  assert.equal(pc.forKeys('cmd+s', anyone), undefined);
+  assert.deepEqual(normKeys('Option+Shift+Mod+K'), ['alt+meta+shift+k', 'alt+ctrl+shift+k']);
+});
+
+test('"+" can be the key, and a shortcut with no key or an empty part is refused', () => {
+  assert.deepEqual(normKeys('Ctrl++'), ['ctrl++']);
+  assert.deepEqual(normKeys('shift + +'), ['shift++']);
+  assert.deepEqual(normKeys('+'), ['+']);
+  assert.deepEqual(normKeys('Mod++', 'mac'), ['meta++']);
+  assert.throws(() => normKeys('Ctrl+'), /empty part/);
+  assert.throws(() => normKeys('Ctrl+Shift'), /exactly one key/);
+  assert.throws(() => normKeys('a+b'), /exactly one key/);
+  const p = new Palette();
+  p.register({ id: 'zoom', title: 'Zoom in', section: 'View', shortcut: 'Ctrl++', run: () => {} });
+  assert.equal(p.forKeys('ctrl + +', anyone)!.id, 'zoom');
+  assert.equal(p.forKeys('ctrl', anyone), undefined);
+  assert.throws(() => p.register({ id: 'x', title: 'X', section: 'S', shortcut: 'ctrl+', run: () => {} }), /empty part/);
 });

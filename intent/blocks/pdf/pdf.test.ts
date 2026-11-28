@@ -53,3 +53,22 @@ test('an empty table and a very long table are handled', () => {
   const rows = Array.from({ length: 150_000 }, (_, i) => [`${i}`]);
   assert.ok(pdf([{ table: rows }], { title: 'T' }).length > 0);
 });
+
+/** The y of every line of text placed on each page, footer left out. */
+const placed = (buf: Buffer) =>
+  [...buf.toString('latin1').matchAll(/stream\n([\s\S]*?)\nendstream/g)].map((m) => [...m[1]!.matchAll(/ Tf [\d.]+ ([-\d.]+) Td/g)].map((t) => Number(t[1])).slice(0, -1));
+
+test('a heading taller than a page continues on the next page, never below the bottom margin', () => {
+  const buf = pdf([{ p: 'Intro' }, { h: Array.from({ length: 400 }, (_, i) => `word${i}`).join(' ') }, { p: 'After' }], { title: 'T' });
+  const pages = placed(buf);
+  assert.ok(pages.length >= 2, 'the heading spans pages');
+  for (const ys of pages) for (const y of ys) assert.ok(y >= 56 && y <= 841.89 - 56, `text at y=${y} is off the page`);
+  assert.equal(pages.flat().length, wrap(Array.from({ length: 400 }, (_, i) => `word${i}`).join(' '), 16, 595.28 - 112, true).length + 2, 'every line is drawn');
+});
+
+test('a negative or non-finite space block is refused, rather than pushing text off the top', () => {
+  assert.throws(() => pdf([{ space: -500 }, { p: 'x' }], { title: 'T' }), /space block must be zero or more points, not -500/);
+  assert.throws(() => pdf([{ space: Number.NaN }], { title: 'T' }), /zero or more/);
+  assert.throws(() => pdf([{ space: Infinity }], { title: 'T' }), /zero or more/);
+  for (const y of placed(pdf([{ space: 0 }, { space: 2000 }, { p: 'x' }], { title: 'T' })).flat()) assert.ok(y <= 841.89 - 56);
+});

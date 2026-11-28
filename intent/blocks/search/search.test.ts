@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Index, fold, stem, words } from './index.ts';
+import { Index, fold, stem, typedToward, words } from './index.ts';
 
 const idx = () => {
   const i = new Index({ weights: { title: 3, body: 1 } });
@@ -66,4 +66,17 @@ test('fields named like object properties are indexed with weight 1', () => {
   i.add({ id: 'x', fields: { constructor: 'scaffold hire' } });
   const [h] = i.search('scaffold ', { canSee: all }).hits;
   assert.ok(h && Number.isFinite(h.score) && h.score > 0, String(h?.score));
+});
+
+test('a word typed past its stem keeps matching until it is finished ("budgete" on the way to "budgeted")', () => {
+  const ids = (q: string) => idx().search(q, { canSee: all }).hits.map((h) => h.id).sort();
+  const want = ['d1', 'd2', 'd3'];
+  for (const q of ['budg', 'budget', 'budgete', 'budgeted']) assert.deepEqual(ids(q), want, q);
+  assert.deepEqual(ids('budgetx'), [], 'not a way any ending starts');
+  assert.match(idx().search('budgete', { canSee: all }).hits[0]!.snippet, /<mark>budget<\/mark>/i);
+  const i = new Index();
+  i.add({ id: 's', fields: { body: 'Case studies and classes' } });
+  for (const q of ['studi', 'studie', 'classe']) assert.deepEqual(i.search(q, { canSee: all }).hits.map((h) => h.id), ['s'], q);
+  assert.equal(typedToward('budgete', 'budget'), true);
+  assert.equal(typedToward('budgetes', 'budget'), false, 'a whole ending typed is a finished word, stemmed as one');
 });

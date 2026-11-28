@@ -2,11 +2,16 @@
  * Tables in and out. CSV is read and written to RFC 4180 (quoted fields, doubled quotes, line breaks inside quotes,
  * a byte-order mark tolerated) and cells that a spreadsheet would run as a formula are defused on export. An import
  * maps columns to fields (suggesting a mapping from the headers), checks every row and keeps the good ones while
- * the bad ones go to quarantine with their row number and reasons, to be fixed and retried. Duplicates are found
- * by a key and merged by rules that say which value wins. Exports go to CSV, JSON lines, or a real .xlsx file.
+ * the bad ones go to quarantine with their row number and reasons, to be fixed and retried. Headers that repeat
+ * are told apart ("Name", "Name (2)") and reported. Duplicates are found by a key and merged by rules that say
+ * which value wins. Exports go to CSV, JSON lines, or a real .xlsx file.
  */
 import { crc32, deflateRawSync } from 'node:zlib';
 
+/**
+ * Reads CSV text into rows of cells. A U+FEFF as the very first character is a byte-order mark and is dropped;
+ * `toCsv` quotes a cell that starts with U+FEFF, so such a cell never reaches this position bare.
+ */
 export function parseCsv(text: string, sep = ','): string[][] {
   const s = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   const rows: string[][] = [];
@@ -52,17 +57,26 @@ export function parseCsv(text: string, sep = ','): string[][] {
 /** A cell a spreadsheet would treat as a formula gets a leading apostrophe (CSV injection). */
 const defuse = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
 
+/**
+ * Writes rows as RFC 4180 CSV, lines joined by CRLF. Every value written as text is defused (unless `defuse` is
+ * false): strings, String objects and any other object, by what it prints as. Numbers, bigints, booleans and dates
+ * are written as they are, so -3 stays a number. A row that is one empty cell is written as `""`, so it reads back
+ * as a row even at the end of the text, and a cell starting with U+FEFF is quoted so it is not read as a byte-order
+ * mark.
+ */
 export function toCsv(rows: readonly (readonly unknown[])[], o: { defuse?: boolean } = {}): string {
   return rows
-    .map((r) =>
-      r
+    .map((r) => {
+      if (r.length === 1 && (r[0] === null || r[0] === undefined || String(r[0]) === '')) return '""';
+      return r
         .map((v) => {
           let s = v === null || v === undefined ? '' : v instanceof Date ? v.toISOString() : String(v);
-          if (o.defuse !== false && typeof v === 'string') s = defuse(s);
-          return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+          const literal = typeof v === 'number' || typeof v === 'bigint' || typeof v === 'boolean' || v instanceof Date;
+          if (o.defuse !== false && !literal) s = defuse(s);
+          return /[",\r\n]|^\uFEFF/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
         })
-        .join(','),
-    )
+        .join(',');
+    })
     .join('\r\n');
 }
 
@@ -81,8 +95,12 @@ const own = <V>(o: Readonly<Record<string, V>>, k: string): V | undefined => (Ob
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-/** For each header, the field it most likely is (exact, alias, then contained), or undefined. */
-export function suggestMapping(headers: readonly string[], fields: readonly Field[]): Record<string, string | undefined> {
+/**
+ * For each header, the field it most likely is (exact, alias, then contained), or undefined. Headers that repeat
+ * are keyed by their distinct names ("Name (2)"), as `importRows` reads them.
+ */
+export function suggestMapping(given: readonly string[], fields: readonly Field[]): Record<string, string | undefined> {
+  const { headers } = distinctHeaders(given);
   const out: Record<string, string | undefined> = {};
   const taken = new Set<string>();
   const pick = (h: string) => {
@@ -108,9 +126,46 @@ export interface Quarantined {
   readonly problems: readonly string[];
 }
 
-export function importRows(table: readonly (readonly string[])[], fields: readonly Field[], mapping: Readonly<Record<string, string | undefined>>): { good: Record<string, unknown>[]; quarantine: Quarantined[]; unmapped: string[] } {
-  const [headers, ...rows] = table;
-  if (!headers) return { good: [], quarantine: [], unmapped: [] };
+/** A header that repeats an earlier one: its column (from 0), the header as written, and the name it is known by. */
+export interface RenamedHeader {
+  readonly column: number;
+  readonly header: string;
+  readonly as: string;
+}
+
+/**
+ * Makes every header distinct: the first of a name keeps it, later ones become "Name (2)", "Name (3)" and so on
+ * (skipping any name already taken), and each one renamed is reported. `suggestMapping` and `importRows` both use
+ * these names, so a mapping is keyed by them.
+ */
+export function distinctHeaders(headers: readonly string[]): { headers: string[]; renamed: RenamedHeader[] } {
+  const taken = new Set(headers);
+  const seen = new Set<string>();
+  const renamed: RenamedHeader[] = [];
+  const out = headers.map((h, column) => {
+    if (!seen.has(h)) {
+      seen.add(h);
+      return h;
+    }
+    let n = 2;
+    while (taken.has(`${h} (${n})`)) n++;
+    const as = `${h} (${n})`;
+    taken.add(as);
+    seen.add(as);
+    renamed.push({ column, header: h, as });
+    return as;
+  });
+  return { headers: out, renamed };
+}
+
+/**
+ * Checks every row against the fields through the mapping (keyed by the distinct header names). Headers that
+ * repeat are renamed as `distinctHeaders` does and listed in `renamed`, so no column overwrites another.
+ */
+export function importRows(table: readonly (readonly string[])[], fields: readonly Field[], mapping: Readonly<Record<string, string | undefined>>): { good: Record<string, unknown>[]; quarantine: Quarantined[]; unmapped: string[]; renamed: RenamedHeader[] } {
+  const [given, ...rows] = table;
+  if (!given) return { good: [], quarantine: [], unmapped: [], renamed: [] };
+  const { headers, renamed } = distinctHeaders(given);
   const missingCols = fields.filter((f) => f.required && !headers.some((h) => own(mapping, h) === f.name)).map((f) => f.label);
   if (missingCols.length) throw new Error(`no column is mapped to ${missingCols.join(', ')}`);
   const good: Record<string, unknown>[] = [];
@@ -138,7 +193,7 @@ export function importRows(table: readonly (readonly string[])[], fields: readon
     if (problems.length) quarantine.push({ row: i + 2, raw, problems });
     else good.push(rec);
   });
-  return { good, quarantine, unmapped: headers.filter((h) => !own(mapping, h)) };
+  return { good, quarantine, unmapped: headers.filter((h) => !own(mapping, h)), renamed };
 }
 
 export type MergeRule = 'first' | 'last' | 'longest' | 'nonEmpty' | ((values: unknown[]) => unknown);
@@ -222,8 +277,11 @@ export function zip(files: readonly { name: string; data: string | Uint8Array }[
   return Buffer.concat([...parts, cd, end]);
 }
 
-/** XML-escapes, and drops what XML 1.0 cannot carry at all: control characters, U+FFFE, U+FFFF, lone surrogates. */
-const xesc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '');
+/** Drops what XML 1.0 cannot carry at all: control characters, U+FFFE, U+FFFF, lone surrogates. */
+const xclean = (s: string) => s.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '');
+
+/** XML-escapes, after dropping what XML 1.0 cannot carry. */
+const xesc = (s: string) => xclean(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
 /** A name Excel accepts for a sheet: none of \ / ? * : [ ], no apostrophe at either end, 1 to 31 UTF-16 units. */
 const sheetName = (s: string) => {
@@ -237,11 +295,28 @@ const sheetName = (s: string) => {
 
 const colName = (i: number): string => (i < 26 ? String.fromCharCode(65 + i) : colName(Math.floor(i / 26) - 1) + String.fromCharCode(65 + (i % 26)));
 
+/** The most text Excel keeps in one cell, in UTF-16 units. */
+export const XLSX_CELL_LIMIT = 32767;
+
+/** What `toXlsx` appends to text it cut to fit a cell. */
+export const XLSX_TRUNCATED = '…[truncated]';
+
+/** Cuts text to fit a cell with the marker at the end, never splitting a surrogate pair. */
+const fitCell = (t: string) => {
+  let end = XLSX_CELL_LIMIT - XLSX_TRUNCATED.length;
+  const c = t.charCodeAt(end - 1);
+  if (c >= 0xd800 && c <= 0xdbff) end--;
+  return t.slice(0, end) + XLSX_TRUNCATED;
+};
+
 /**
  * An .xlsx workbook with one sheet; numbers and booleans stay as they are, null and undefined are blank cells,
- * everything else is inline text, and the first row is bold.
+ * everything else is inline text, and the first row is bold. Text longer than Excel's cell limit
+ * (`XLSX_CELL_LIMIT`, 32,767 characters, counted after characters XML forbids are dropped) is refused with the
+ * cell named, since Excel would cut it on opening; with `long: 'truncate'` it is cut to the limit instead, ending
+ * in `XLSX_TRUNCATED` so a reader can see it was cut.
  */
-export function toXlsx(rows: readonly (readonly unknown[])[], sheet = 'Sheet1'): Buffer {
+export function toXlsx(rows: readonly (readonly unknown[])[], sheet = 'Sheet1', o: { long?: 'refuse' | 'truncate' } = {}): Buffer {
   const body = rows
     .map((r, ri) => `<row r="${ri + 1}">${r.map((v, ci) => {
       const ref = `${colName(ci)}${ri + 1}`;
@@ -249,7 +324,11 @@ export function toXlsx(rows: readonly (readonly unknown[])[], sheet = 'Sheet1'):
       if (typeof v === 'number' && Number.isFinite(v)) return `<c r="${ref}"${s}><v>${v}</v></c>`;
       if (typeof v === 'boolean') return `<c r="${ref}" t="b"${s}><v>${v ? 1 : 0}</v></c>`;
       if (v === null || v === undefined) return '';
-      const text = v instanceof Date ? v.toISOString() : String(v);
+      let text = xclean(v instanceof Date ? v.toISOString() : String(v));
+      if (text.length > XLSX_CELL_LIMIT) {
+        if (o.long !== 'truncate') throw new Error(`cell ${ref} holds ${text.length} characters, more than the ${XLSX_CELL_LIMIT} a spreadsheet cell can hold`);
+        text = fitCell(text);
+      }
       return `<c r="${ref}" t="inlineStr"${s}><is><t xml:space="preserve">${xesc(text)}</t></is></c>`;
     }).join('')}</row>`)
     .join('');

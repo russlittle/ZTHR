@@ -2,7 +2,8 @@
  * Booking and finding a time. Each person or resource has working hours in their own zone and busy periods;
  * finding a time returns slots where everyone needed is free and inside their hours, ranked so earlier slots and
  * those nearer the middle of people's days come first. Booking takes a slot only if it is still free, with a
- * buffer either side, so two people can never book the same slot; a hold expires if not confirmed.
+ * buffer either side, so two people can never book the same slot; a hold expires if not confirmed. Only the person
+ * who made a booking, or someone with a role allowed to, can cancel it.
  */
 import { instant, wallOf } from '../time/index.ts';
 
@@ -14,7 +15,11 @@ export interface Span {
 export interface Calendar {
   readonly id: string;
   readonly tz: string;
-  /** Per weekday (0 = Sunday): [startHour, endHour] in local time (9.5 is 9:30); missing means not working. */
+  /**
+   * Per weekday (0 = Sunday): [startHour, endHour] in local time (9.5 is 9:30); missing means not working. An end
+   * before the start crosses midnight: [22, 6] on Monday is Monday 22:00 to Tuesday 06:00. Equal hours mean not
+   * working that day; [0, 24] is the whole day.
+   */
   readonly hours: Readonly<Partial<Record<number, readonly [number, number]>>>;
   readonly busy: Span[];
 }
@@ -38,13 +43,21 @@ export function free(c: Calendar, range: Span): Span[] {
     const [y, m, d] = [dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate()];
     if (at(y, m, d, 0, c.tz) >= range.end) break;
     const h = c.hours[dt.getUTCDay()];
-    if (!h) continue;
-    const span = { start: Math.max(at(y, m, d, h[0], c.tz), range.start), end: Math.min(at(y, m, d, h[1], c.tz), range.end) };
+    if (!h || h[0] === h[1]) continue;
+    const next = new Date(Date.UTC(y, m - 1, d + 1));
+    const end = h[1] > h[0] ? at(y, m, d, h[1], c.tz) : at(next.getUTCFullYear(), next.getUTCMonth() + 1, next.getUTCDate(), h[1], c.tz);
+    const span = { start: Math.max(at(y, m, d, h[0], c.tz), range.start), end: Math.min(end, range.end) };
     if (span.end > span.start) out.push(span);
   }
+  // Hours that cross midnight can run into the next day's: join spans that touch or overlap.
+  const joined: Span[] = [];
+  for (const sp of out.sort((a, b) => a.start - b.start)) {
+    const last = joined.at(-1);
+    if (last && sp.start <= last.end) joined[joined.length - 1] = { start: last.start, end: Math.max(last.end, sp.end) };
+    else joined.push(sp);
+  }
   const busy = [...c.busy].sort((a, b) => a.start - b.start);
-  return out
-    .sort((a, b) => a.start - b.start)
+  return joined
     .flatMap((sp) => {
       let pieces = [sp];
       for (const b of busy) pieces = pieces.flatMap((p) => (overlaps(p, b) ? [{ start: p.start, end: b.start }, { start: b.end, end: p.end }].filter((x) => x.end > x.start) : [p]));
@@ -65,13 +78,18 @@ export function findTime(cals: readonly Calendar[], range: Span, minutes: number
   const step = (o.stepMinutes ?? 15) * 60_000;
   const slots: Span[] = [];
   for (const sp of common) for (let t = Math.ceil(sp.start / step) * step; t + len <= sp.end; t += step) slots.push({ start: t, end: t + len });
-  // Distance of the slot's middle from the middle of each person's working day, in hours.
+  // Distance of the slot's middle from the middle of each person's working day, in hours, round the clock: the day
+  // is yesterday when the slot falls in the part of yesterday's hours that crossed midnight, else the slot's own.
   const comfort = (s: Span) =>
     cals.reduce((sum, c) => {
       const w = wallOf(new Date((s.start + s.end) / 2), c.tz);
-      const h = c.hours[w.weekday];
-      const mid = h ? (h[0] + h[1]) / 2 : 13;
-      return sum + Math.abs(w.h + w.min / 60 - mid);
+      const x = w.h + w.min / 60;
+      const today = c.hours[w.weekday];
+      const yesterday = c.hours[(w.weekday + 6) % 7];
+      const h = yesterday && yesterday[1] < yesterday[0] && x < yesterday[1] ? yesterday : today;
+      const mid = h ? ((h[0] + (h[1] < h[0] ? h[1] + 24 : h[1])) / 2) % 24 : 13;
+      const dist = Math.abs(x - mid) % 24;
+      return sum + Math.min(dist, 24 - dist);
     }, 0);
   const day = (t: number) => Math.floor(t / 86_400_000);
   return slots.sort((a, b) => day(a.start) - day(b.start) || comfort(a) - comfort(b) || a.start - b.start).slice(0, o.limit ?? 5);
@@ -90,9 +108,12 @@ export class Bookings {
   private readonly list: Booking[] = [];
   private readonly now: () => number;
   private readonly bufferMs: number;
-  constructor(o: { now?: () => number; bufferMinutes?: number } = {}) {
+  private readonly cancelRoles: ReadonlySet<string>;
+  /** `cancelRoles`: roles that may cancel anyone's booking (none by default). */
+  constructor(o: { now?: () => number; bufferMinutes?: number; cancelRoles?: readonly string[] } = {}) {
     this.now = o.now ?? Date.now;
     this.bufferMs = (o.bufferMinutes ?? 0) * 60_000;
+    this.cancelRoles = new Set(o.cancelRoles ?? []);
   }
   private live(b: Booking): boolean {
     return b.state === 'confirmed' || (b.state === 'held' && (b.holdUntil ?? Infinity) > this.now());
@@ -114,9 +135,15 @@ export class Bookings {
     b.state = 'confirmed';
     return b;
   }
-  cancel(id: number): void {
+  /**
+   * Cancels a booking for the person who made it, or for someone holding one of the `cancelRoles`. Anyone else is
+   * told there is no such booking, as for an id that does not exist, so ids cannot be probed.
+   */
+  cancel(id: number, by: string, roles: readonly string[] = []): Booking {
     const b = this.list[id - 1];
-    if (b) b.state = 'cancelled';
+    if (!b || (b.by !== by && !roles.some((r) => this.cancelRoles.has(r)))) throw new Error('no such booking');
+    b.state = 'cancelled';
+    return b;
   }
   /** Live bookings as busy spans, to feed back into a calendar. */
   busy(resource: string): Span[] {

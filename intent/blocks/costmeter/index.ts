@@ -33,9 +33,33 @@ export interface Budget {
   readonly hard?: boolean;
 }
 
+/** One bill line's running sum: its units and its micro-cents after free units. */
+interface Line {
+  readonly meter: string;
+  readonly feature: string;
+  readonly tenant: string;
+  units: number;
+  micro: number;
+}
+
+/** A month's running state: the bill's lines, free units left per meter, and hundredths of a cent per budget. */
+interface Month {
+  readonly uses: Use[];
+  readonly lines: Map<string, Line>;
+  readonly freeLeft: Map<string, number>;
+  /** The latest `at` seen per meter, to tell whether a use arrived in time order. */
+  readonly lastAt: Map<string, string>;
+  /** Per budget, the sum of its covered lines' cents, in whole hundredths of a cent. */
+  readonly budget: Map<Budget, number>;
+}
+
+/** A line's cents in whole hundredths of a cent, rounded half up once, as the bill shows it. */
+const hundredths = (micro: number) => Math.round(micro / 1e4);
+
 export class Meter {
   private readonly rates = new Map<string, Rate>();
   private readonly uses: Use[] = [];
+  private readonly months = new Map<string, Month>();
   private readonly warned = new Set<string>();
   private readonly budgets: Budget[];
   private readonly onWarn: (b: Budget, fraction: number, cents: number) => void;
@@ -48,18 +72,32 @@ export class Meter {
 
   /** Whether this feature and tenant may spend: false once a hard budget covering them is spent. */
   allowed(feature: string, tenant: string, month: string): boolean {
-    return !this.budgets.some((b) => b.hard && covers(b, feature, tenant) && this.spent(month, b) >= b.cents);
+    return !this.budgets.some((b) => b.hard && covers(b, feature, tenant) && this.budgetSpent(month, b) >= b.cents);
   }
 
+  /**
+   * Records a use and warns any budget it takes past a step. Each month keeps running totals per bill line and per
+   * budget, so a use costs a fixed amount of work however many came before it. A use dated before the latest one
+   * already recorded for a meter with free units can move those free units to it; the month's totals are then
+   * worked out again from its own uses, and every budget, not only those covering the use, is checked for warnings.
+   */
   record(u: Use): void {
     if (!this.rates.has(u.meter)) throw new Error(`no rate for ${u.meter}`);
     if (!(u.units >= 0)) throw new Error('usage cannot be negative');
     if (!Number.isFinite(u.units)) throw new Error('usage must be a finite number');
     this.uses.push(u);
     const month = u.at.slice(0, 7);
+    let m = this.months.get(month);
+    if (!m) this.months.set(month, (m = { uses: [], lines: new Map(), freeLeft: new Map(), lastAt: new Map(), budget: new Map() }));
+    m.uses.push(u);
+    const last = m.lastAt.get(u.meter);
+    // Moving free units can raise what other scopes spent, so after a rebuild every budget is checked.
+    const rebuilt = last !== undefined && u.at < last && (this.rates.get(u.meter)!.free ?? 0) > 0;
+    if (rebuilt) this.rebuild(m);
+    else this.add(m, u);
     for (const b of this.budgets) {
-      if (!covers(b, u.feature, u.tenant)) continue;
-      const cents = this.spent(month, b);
+      if (!rebuilt && !covers(b, u.feature, u.tenant)) continue;
+      const cents = this.budgetSpent(month, b);
       for (const f of b.warnAt ?? [0.5, 0.8, 1]) {
         const key = `${b.name}\n${month}\n${f}`;
         if (cents >= b.cents * f && !this.warned.has(key)) {
@@ -68,6 +106,38 @@ export class Meter {
         }
       }
     }
+  }
+
+  /** Adds one use, the latest so far for its meter, to a month's running totals. */
+  private add(m: Month, u: Use): void {
+    const r = this.rates.get(u.meter)!;
+    const left = m.freeLeft.get(u.meter) ?? r.free ?? 0;
+    const free = Math.min(left, u.units);
+    m.freeLeft.set(u.meter, left - free);
+    const last = m.lastAt.get(u.meter);
+    if (last === undefined || u.at > last) m.lastAt.set(u.meter, u.at);
+    const k = `${u.meter}\n${u.feature}\n${u.tenant}`;
+    let line = m.lines.get(k);
+    if (!line) m.lines.set(k, (line = { meter: u.meter, feature: u.feature, tenant: u.tenant, units: 0, micro: 0 }));
+    const before = hundredths(line.micro);
+    line.units += u.units;
+    line.micro += (u.units - free) * r.microCentsPerUnit;
+    const change = hundredths(line.micro) - before;
+    if (change) for (const b of this.budgets) if (covers(b, u.feature, u.tenant)) m.budget.set(b, (m.budget.get(b) ?? 0) + change);
+  }
+
+  /** Works a month's running totals out again from its uses, in time order. */
+  private rebuild(m: Month): void {
+    m.lines.clear();
+    m.freeLeft.clear();
+    m.lastAt.clear();
+    m.budget.clear();
+    for (const u of [...m.uses].sort((a, b) => a.at.localeCompare(b.at))) this.add(m, u);
+  }
+
+  /** Cents a budget's scope has spent in a month, from the running totals. */
+  private budgetSpent(month: string, b: Budget): number {
+    return (this.months.get(month)?.budget.get(b) ?? 0) / 100;
   }
 
   /** Cents for a month, optionally for one feature or tenant, after free units: the sum of the bill's lines. */

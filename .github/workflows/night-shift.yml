@@ -105,6 +105,11 @@ jobs:
           set -euo pipefail
           blocks=$(ls intent/eval/mutation/*.json | xargs -n1 basename | sed 's/\.json$//' | grep -v '^loop' || true)
           [ -n "$blocks" ] && node tools/mutation/tasks.ts $blocks
+      - name: Regenerate the docs that read the certificates
+        working-directory: intent
+        run: |
+          npm ci --no-audit --no-fund
+          node tools/docs.ts --write && node tools/docs.ts --write && node tools/docs.ts --check
       - name: No block's score fell
         id: ratchet
         continue-on-error: true
@@ -127,7 +132,7 @@ jobs:
           if [ "$h" -ge 0630 ] && [ "$h" -lt 0830 ]; then echo "Inside the 06:30-08:30 UTC no-push window; results are in the artefacts."; exit 0; fi
           git config user.name 'zthr-night-shift'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add intent/eval/mutation intent/factory/queue/mutation
+          git add intent/eval/mutation intent/factory/queue/mutation intent/docs intent/blocks/README.md intent/papers docs
           git diff --cached --quiet && { echo 'Nothing changed.'; exit 0; }
           git commit -q -m "Night shift: gauge certificates and work orders (${{ github.event_name }})"
           for i in 1 2 3; do git pull --rebase -q origin intent-surface && git push -q origin HEAD:intent-surface && exit 0; sleep 5; done

@@ -4,7 +4,7 @@ import { Analytics } from './index.ts';
 
 const make = () => {
   let t = 0;
-  const a = new Analytics({ consented: (id) => !id.startsWith('no'), key: 'k', allow: { '*': ['plan'], upload: ['size'] }, now: () => t });
+  const a = new Analytics({ consented: (id) => !id.startsWith('no'), key: 'k', events: ['open', 'visit', 'signup', 'upload', 'constructor'], allow: { '*': ['plan'], upload: ['size'] }, now: () => t });
   return { a, at: (n: number) => (t = n) };
 };
 
@@ -52,4 +52,16 @@ test('event names that are also Object properties do not break tracking', () => 
   const { a } = make();
   assert.equal(a.track('u1', 'constructor', { plan: 'pro' }), true);
   assert.deepEqual(a.events[0]!.props, { plan: 'pro' });
+});
+
+test('only declared event names are recorded; any other is dropped and counted, never stored', () => {
+  const { a } = make();
+  assert.equal(a.track('u1', 'searched for ana@x.org'), false);
+  assert.equal(a.track('u1', 'Upload'), false, 'names match exactly');
+  assert.equal(a.track('u1', 'toString'), false, 'a name like an Object property is not declared by being one');
+  assert.equal(a.track('u1', 'upload', { size: 1 }), true);
+  assert.deepEqual(a.events.map((e) => e.name), ['upload']);
+  assert.equal(a.unknownNames, 3);
+  assert.doesNotMatch(JSON.stringify(a), /ana@x\.org/, 'the unknown name is not kept anywhere');
+  assert.equal(new Analytics({ consented: () => true, key: 'k', events: [], allow: {} }).track('u1', 'visit'), false, 'an empty list records nothing');
 });

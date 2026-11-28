@@ -63,6 +63,21 @@ export function localHour(d: Date, tz: string): number {
   return Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone: tz }).format(d));
 }
 
+/** One key per person and category, whatever characters either holds. */
+const key = (who: string, category: string) => JSON.stringify([who, category]);
+
+/** The person and category a token carries: a JSON pair of strings, or the earlier two-line form. */
+function readPair(text: string): [string, string] | undefined {
+  try {
+    const v: unknown = JSON.parse(text);
+    if (Array.isArray(v) && v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string') return [v[0], v[1]];
+  } catch {
+    // Not JSON: the earlier two-line form, below.
+  }
+  const lines = text.split('\n');
+  return lines.length === 2 ? [lines[0]!, lines[1]!] : undefined;
+}
+
 const inQuiet = (h: number, [from, to]: readonly [number, number]) => (from <= to ? h >= from && h < to : h >= from || h < to);
 
 export interface NotifyOptions {
@@ -95,22 +110,40 @@ export class Notify {
     return full;
   }
 
-  /** A signed token for one person and category, for the unsubscribe link. */
+  /**
+   * A signed token for one person and category, for the unsubscribe link. The pair is carried as a JSON array, so
+   * any character in either (a line break included) reads back as the same pair.
+   */
   token(who: string, category: string): string {
-    const p = Buffer.from(`${who}\n${category}`).toString('base64url');
+    const p = Buffer.from(JSON.stringify([who, category])).toString('base64url');
     return `${p}.${createHmac('sha256', this.o.secret).update(p).digest('base64url')}`;
   }
 
-  /** Handles the one-click POST (or the link). Returns who and what, or undefined for a bad token. */
+  /**
+   * Handles the one-click POST (or the link). Returns who and what, or undefined for a bad token. A signed token
+   * whose pair is two lines ("who", line break, "category", the earlier form) is read too, so links already sent
+   * keep working.
+   */
   unsubscribe(token: string): { who: string; category: string } | undefined {
-    const [p, s] = token.split('.');
-    if (!p || !s) return undefined;
+    const [p, s, extra] = token.split('.');
+    if (!p || !s || extra !== undefined) return undefined;
     const want = createHmac('sha256', this.o.secret).update(p).digest();
     const got = Buffer.from(s, 'base64url');
     if (got.length !== want.length || !timingSafeEqual(got, want)) return undefined;
-    const [who, category] = Buffer.from(p, 'base64url').toString().split('\n');
-    this.unsubscribed.add(`${who}\n${category}`);
-    return { who: who!, category: category! };
+    const pair = readPair(Buffer.from(p, 'base64url').toString());
+    if (!pair) return undefined;
+    const [who, category] = pair;
+    this.unsubscribed.add(key(who, category));
+    return { who, category };
+  }
+
+  /** The unsubscribe link for a token: `t` is added to the configured URL's query, before any fragment. */
+  private link(token: string): string {
+    const u = this.o.unsubscribeUrl;
+    const hash = u.indexOf('#');
+    const base = hash < 0 ? u : u.slice(0, hash);
+    const sep = !base.includes('?') ? '?' : /[?&]$/.test(base) ? '' : '&';
+    return `${base}${sep}t=${token}${hash < 0 ? '' : u.slice(hash)}`;
   }
 
   /** From the mail provider: a hard bounce or a complaint stops mail to the address. */
@@ -127,7 +160,7 @@ export class Notify {
     const body = render(t.body, values);
     const out: Receipt[] = [];
     let collected = false;
-    if (!t.essential && this.unsubscribed.has(`${who}\n${t.category}`)) return [this.receipt({ to: who, template: t.key, channel: 'email', outcome: 'off', why: 'unsubscribed' })];
+    if (!t.essential && this.unsubscribed.has(key(who, t.category))) return [this.receipt({ to: who, template: t.key, channel: 'email', outcome: 'off', why: 'unsubscribed' })];
     for (const channel of channels) {
       if (channel === 'email' && this.suppressed.has(address.toLowerCase())) {
         out.push(this.receipt({ to: who, template: t.key, channel, outcome: 'suppressed', why: `address ${this.suppressed.get(address.toLowerCase())} bounced` }));
@@ -145,7 +178,7 @@ export class Notify {
       }
       const headers: Record<string, string> = {};
       if (channel === 'email' && !t.essential) {
-        headers['List-Unsubscribe'] = `<${this.o.unsubscribeUrl}?t=${this.token(who, t.category)}>`;
+        headers['List-Unsubscribe'] = `<${this.link(this.token(who, t.category))}>`;
         headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
       }
       const m: Message = { to: channel === 'email' ? address : who, channel, subject, body, headers };
@@ -177,7 +210,7 @@ export class Notify {
         this.receipt({ to: h.to, template: h.template, channel: h.m.channel, outcome: 'suppressed', why: `address ${this.suppressed.get(address)} bounced` });
         continue;
       }
-      if (this.unsubscribed.has(`${h.to}\n${h.category}`)) {
+      if (this.unsubscribed.has(key(h.to, h.category))) {
         this.receipt({ to: h.to, template: h.template, channel: h.m.channel, outcome: 'off', why: 'unsubscribed' });
         continue;
       }
@@ -200,12 +233,12 @@ export class Notify {
       this.receipt({ to: who, template: 'digest', channel: 'email', outcome: 'suppressed', why: `address ${this.suppressed.get(address.toLowerCase())} bounced` });
       return false;
     }
-    if (this.unsubscribed.has(`${who}\ndigest`)) {
+    if (this.unsubscribed.has(key(who, 'digest'))) {
       this.receipt({ to: who, template: 'digest', channel: 'email', outcome: 'off', why: 'unsubscribed' });
       return false;
     }
     const body = `<ul>${items.map((i) => `<li>${esc(i.subject)}</li>`).join('')}</ul>`;
-    await this.o.send({ to: address, channel: 'email', subject: `${items.length} update${items.length === 1 ? '' : 's'}`, body, headers: { 'List-Unsubscribe': `<${this.o.unsubscribeUrl}?t=${this.token(who, 'digest')}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } });
+    await this.o.send({ to: address, channel: 'email', subject: `${items.length} update${items.length === 1 ? '' : 's'}`, body, headers: { 'List-Unsubscribe': `<${this.link(this.token(who, 'digest'))}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } });
     this.receipt({ to: who, template: 'digest', channel: 'email', outcome: 'sent' });
     return true;
   }

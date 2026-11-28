@@ -16,12 +16,30 @@ const STOP = new Set('a an and are as at be by for from in is it of on or that t
 
 export const fold = (s: string) => s.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase();
 
+const ENDINGS = [['ies', 'y'], ['sses', 'ss'], ['ing', ''], ['edly', ''], ['ed', ''], ['ly', ''], ['es', ''], ['s', '']] as const;
+
 /** A light English stemmer: enough to match plurals and common endings. */
 export function stem(w: string): string {
   if (w.length <= 3) return w;
-  for (const [end, rep] of [['ies', 'y'], ['sses', 'ss'], ['ing', ''], ['edly', ''], ['ed', ''], ['ly', ''], ['es', ''], ['s', '']] as const)
-    if (w.endsWith(end) && w.length - end.length >= 3) return w.slice(0, -end.length) + rep;
+  for (const [end, rep] of ENDINGS) if (w.endsWith(end) && w.length - end.length >= 3) return w.slice(0, -end.length) + rep;
   return w;
+}
+
+/**
+ * Whether a word being typed can still become one indexed under `term`: the term starts with it, or it is the
+ * term's stem followed by the start of an ending the stemmer removes ("budgete" on the way to "budgeted", "studi"
+ * on the way to "studies"), so results do not drop out while a word is typed past its stem.
+ */
+export function typedToward(prefix: string, term: string): boolean {
+  if (term.startsWith(prefix)) return true;
+  for (const [end, rep] of ENDINGS) {
+    if (!term.endsWith(rep)) continue;
+    const base = term.slice(0, term.length - rep.length);
+    if (base.length < 3 || !prefix.startsWith(base)) continue;
+    const rest = prefix.slice(base.length);
+    if (rest.length > 0 && rest.length < end.length && end.startsWith(rest) && stem(base + end) === term) return true;
+  }
+  return false;
 }
 
 export function words(s: string): string[] {
@@ -102,7 +120,7 @@ export class Index {
     const scores = new Map<string, number>();
     // The word being typed is a prefix unless the same stem also appears as a finished word earlier in the query.
     const prefixStem = lastPrefix !== undefined && !qWords.slice(0, -1).some((w) => stem(w) === stem(lastPrefix)) && !phrases.flat().some((w) => stem(w) === stem(lastPrefix)) ? stem(lastPrefix) : undefined;
-    const expand = (t: string) => (t === prefixStem ? [...this.terms.keys()].filter((k) => k.startsWith(lastPrefix!) || k === t) : [t]);
+    const expand = (t: string) => (t === prefixStem ? [...this.terms.keys()].filter((k) => k === t || typedToward(lastPrefix!, k)) : [t]);
     for (const t of terms) {
       for (const term of expand(t)) {
         const posting = this.terms.get(term);
@@ -125,7 +143,7 @@ export class Index {
       const stems = new Set(perField.flat().map(stem));
       const required = (prefixStem === undefined ? qWords : qWords.slice(0, -1)).map(stem);
       if (!required.every((t) => stems.has(t))) continue;
-      if (prefixStem !== undefined && !stems.has(prefixStem) && ![...stems].some((t) => t.startsWith(lastPrefix!))) continue;
+      if (prefixStem !== undefined && !stems.has(prefixStem) && ![...stems].some((t) => typedToward(lastPrefix!, t))) continue;
       matched.push({ id, score });
     }
     matched.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
@@ -149,7 +167,7 @@ export function snippet(text: string, marks: Set<string>, prefix?: string, width
   const tokens = text.split(/(\s+)/);
   const hit = (w: string) => {
     const f = fold(w.replace(/[^\p{L}\p{N}]/gu, ''));
-    return f.length > 0 && (marks.has(stem(f)) || (!!prefix && f.startsWith(prefix)));
+    return f.length > 0 && (marks.has(stem(f)) || (!!prefix && (f.startsWith(prefix) || typedToward(prefix, stem(f)))));
   };
   const first = tokens.findIndex(hit);
   let start = 0;

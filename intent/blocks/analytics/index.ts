@@ -1,7 +1,7 @@
 /**
  * Product analytics that respects consent. Nothing is recorded for someone who has not agreed; events carry a
- * pseudonymous id (a keyed hash, so the raw account id never reaches the store) and only properties on an allow
- * list, so a stray email or free text cannot leak in. Funnels count how many people reach each step in order within
+ * pseudonymous id (a keyed hash, so the raw account id never reaches the store), only event names the product
+ * declared and only properties on an allow list, so a stray email or free text cannot leak in through either. Funnels count how many people reach each step in order within
  * a time limit, with the drop at each step; journeys show the most common paths; counts below a threshold are
  * suppressed so a small group cannot be picked out.
  */
@@ -17,6 +17,11 @@ export interface Event {
 export interface AnalyticsOptions {
   readonly consented: (accountId: string) => boolean;
   readonly key: string;
+  /**
+   * Every event name that may be recorded. A name not on the list is dropped and counted (`unknownNames`), never
+   * stored, since a name built from user input could carry personal data.
+   */
+  readonly events: readonly string[];
   /** Allowed property names, per event or for all events under "*". */
   readonly allow: Readonly<Record<string, readonly string[]>>;
   readonly now?: () => number;
@@ -25,10 +30,14 @@ export interface AnalyticsOptions {
 export class Analytics {
   readonly events: Event[] = [];
   readonly dropped = { noConsent: 0, props: 0 };
+  /** Events dropped because their name was not declared in `events`; the names themselves are not kept. */
+  unknownNames = 0;
   private readonly o: AnalyticsOptions & { now: () => number };
+  private readonly names: ReadonlySet<string>;
 
   constructor(o: AnalyticsOptions) {
     this.o = { now: Date.now, ...o };
+    this.names = new Set(o.events);
   }
 
   pseudonym(accountId: string): string {
@@ -38,6 +47,10 @@ export class Analytics {
   track(accountId: string, name: string, props: Readonly<Record<string, unknown>> = {}): boolean {
     if (!this.o.consented(accountId)) {
       this.dropped.noConsent++;
+      return false;
+    }
+    if (!this.names.has(name)) {
+      this.unknownNames++;
       return false;
     }
     const list = (k: string) => (Object.hasOwn(this.o.allow, k) ? this.o.allow[k]! : []);

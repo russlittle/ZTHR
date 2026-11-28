@@ -144,3 +144,93 @@ test('a cancelled subscription cannot change plan, and a downgrade credit is use
   await assert.rejects(b.change(s.id, 'pro'), /cancelled/);
   await assert.rejects(b.change(99, 'pro'), /no subscription/);
 });
+
+test('a first payment the customer must confirm leaves the subscription waiting, and confirming it pays the invoice and starts it', async () => {
+  let t = 0;
+  const p = new TwinProvider();
+  const b = new Billing(p, [{ id: 'pro', price: money(3000, 'USD'), periodDays: 30 }], { now: () => t, retryDays: [1, 3] });
+  const s = await b.subscribe('gil', 'pro', M.needsAction);
+  assert.equal(s.state, 'requires_action', 'not refused, not past due');
+  const inv = b.invoices[0]!;
+  assert.equal(inv.state, 'open', 'the invoice is not voided');
+  assert.equal(p.charges.get(inv.charge!)!.state, 'requires_action', 'the invoice holds the charge to confirm');
+  t = DAY;
+  await b.tick();
+  assert.equal(p.charges.size, 1, 'waiting on the customer is not a reason to charge again');
+  const settled = await b.confirm(inv.charge!);
+  assert.equal(settled, inv);
+  assert.equal(inv.state, 'paid');
+  assert.equal(s.state, 'active');
+  await assert.rejects(b.confirm(inv.charge!), /no open invoice is waiting on charge/);
+  const late = await b.subscribe('hal', 'pro', M.needsAction);
+  t = 4 * DAY;
+  await b.tick();
+  assert.equal(late.state, 'cancelled', 'never confirmed by the last retry day');
+  assert.equal(b.invoices.at(-1)!.state, 'void');
+});
+
+test('a renewal or a plan change that needs confirmation waits for it, and the confirmation settles that invoice', async () => {
+  let t = 0;
+  const p = new TwinProvider();
+  const b = new Billing(p, [{ id: 'pro', price: money(3000, 'USD'), periodDays: 30 }, { id: 'max', price: money(9000, 'USD'), periodDays: 30 }], { now: () => t });
+  const s = await b.subscribe('ivy', 'pro', M.ok);
+  s.method = M.needsAction;
+  t = 15 * DAY;
+  const change = await b.change(s.id, 'max');
+  assert.equal(change.state, 'open');
+  assert.equal(s.plan, 'pro', 'the new plan waits for the payment');
+  assert.equal(s.state, 'active');
+  await b.confirm(change.charge!);
+  assert.equal(change.state, 'paid');
+  assert.equal(s.plan, 'max', 'confirmed: the change takes effect');
+  t = 30 * DAY;
+  await b.tick();
+  const renewal = b.invoices.at(-1)!;
+  assert.equal(s.state, 'requires_action', 'not past due: the customer has a charge to confirm');
+  assert.equal(renewal.state, 'open');
+  await b.confirm(renewal.charge!);
+  assert.equal(renewal.state, 'paid');
+  assert.equal(s.state, 'active');
+  assert.equal([...p.charges.values()].filter((c) => c.state === 'succeeded').length, 3, 'one charge per invoice');
+});
+
+test('subscribe with an idempotency key: a retry gets the same subscription and creates no second invoice', async () => {
+  const p = new TwinProvider();
+  const b = new Billing(p, [{ id: 'pro', price: money(3000, 'USD'), periodDays: 30 }], { now: () => 0 });
+  const [a, again] = await Promise.all([b.subscribe('jo', 'pro', M.ok, { idempotencyKey: 'k1' }), b.subscribe('jo', 'pro', M.ok, { idempotencyKey: 'k1' })]);
+  assert.equal(a, again);
+  assert.equal(await b.subscribe('jo', 'pro', M.ok, { idempotencyKey: 'k1' }), a);
+  assert.equal(b.subs.length, 1);
+  assert.equal(b.invoices.length, 1);
+  assert.equal(p.calls, 1);
+  await assert.rejects(b.subscribe('jo', 'pro', M.declined, { idempotencyKey: 'k1' }), /used with different details/);
+  await assert.rejects(b.subscribe('kim', 'pro', M.declined, { idempotencyKey: 'k2' }), /did not go through/);
+  await assert.rejects(b.subscribe('kim', 'pro', M.declined, { idempotencyKey: 'k2' }), /did not go through/);
+  assert.equal(b.invoices.length, 2, 'the refused retry did not invoice again');
+  assert.notEqual(await b.subscribe('jo', 'pro', M.ok), a, 'without a key, each call is a new subscription');
+});
+
+test('a confirmation that fails ends a first invoice, drops a plan change, and sends a renewal to the retry schedule', async () => {
+  class Refuses extends TwinProvider {
+    override async confirm(id: string) {
+      const c = this.charges.get(id)!;
+      c.state = 'failed';
+      return c;
+    }
+  }
+  let t = 0;
+  const b = new Billing(new Refuses(), [{ id: 'pro', price: money(3000, 'USD'), periodDays: 30 }, { id: 'max', price: money(9000, 'USD'), periodDays: 30 }], { now: () => t });
+  const first = await b.subscribe('lu', 'pro', M.needsAction);
+  await b.confirm(b.invoices[0]!.charge!);
+  assert.deepEqual([b.invoices[0]!.state, first.state], ['void', 'cancelled']);
+  const s = await b.subscribe('mo', 'pro', M.ok);
+  s.method = M.needsAction;
+  t = 10 * DAY;
+  const change = await b.change(s.id, 'max');
+  await b.confirm(change.charge!);
+  assert.deepEqual([change.state, s.plan, s.state], ['void', 'pro', 'active']);
+  t = 30 * DAY;
+  await b.tick();
+  await b.confirm(b.invoices.at(-1)!.charge!);
+  assert.deepEqual([b.invoices.at(-1)!.state, s.state], ['open', 'past_due']);
+});

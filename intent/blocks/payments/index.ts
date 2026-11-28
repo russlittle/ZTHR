@@ -3,8 +3,9 @@
  * card that needs the customer to confirm, idempotency keys, partial refunds), so every path is tested without a
  * real account. Money is integer minor units with a currency, never floats. Billing on top: plans, subscriptions
  * with trials, plan changes prorated to the second, invoices with line items, retries on failed renewals that end
- * in cancellation, and cancel-at-period-end. Prices and totals are always worked out here, never trusted from a
- * client.
+ * in cancellation, and cancel-at-period-end. A charge the customer must confirm leaves its invoice open, linked to
+ * the charge, until `confirm` settles it. Starting a subscription takes an idempotency key, so a client's retry
+ * gets the same subscription. Prices and totals are always worked out here, never trusted from a client.
  */
 
 export interface Money {
@@ -119,7 +120,8 @@ export interface Subscription {
   readonly customer: string;
   plan: string;
   method: string;
-  state: 'trialing' | 'active' | 'past_due' | 'cancelled';
+  /** `requires_action`: an invoice's charge waits for the customer to confirm it (see `Billing.confirm`). */
+  state: 'trialing' | 'active' | 'past_due' | 'requires_action' | 'cancelled';
   periodStart: number;
   periodEnd: number;
   cancelAtPeriodEnd: boolean;
@@ -127,7 +129,7 @@ export interface Subscription {
 
 const DAY = 86_400_000;
 
-type Outcome = 'paid' | 'failed' | 'unknown';
+type Outcome = 'paid' | 'failed' | 'unknown' | 'action';
 
 export class Billing {
   readonly plans: Map<string, Plan>;
@@ -141,6 +143,12 @@ export class Billing {
   private readonly unsure = new Set<number>();
   /** Credit owed to each subscription (from a downgrade), taken off its next invoices. */
   private readonly credit = new Map<number, number>();
+  /** First invoices of subscriptions, which start the subscription when paid and end it when they fail. */
+  private readonly first = new Set<number>();
+  /** Plan changes waiting on their invoice's confirmation: invoice id to the plan it moves to. */
+  private readonly pendingPlan = new Map<number, string>();
+  /** Subscribe calls by idempotency key: what was asked, and the answer every retry gets. */
+  private readonly subscribeKeys = new Map<string, { body: string; result: Promise<Subscription> }>();
 
   constructor(p: Provider, plans: readonly Plan[], o: { now?: () => number; retryDays?: readonly number[] } = {}) {
     this.p = p;
@@ -163,7 +171,8 @@ export class Billing {
 
   /**
    * Charges an invoice. A provider error leaves the outcome unknown (the card may have been charged), so the next
-   * attempt reuses the same idempotency key and cannot charge twice.
+   * attempt reuses the same idempotency key and cannot charge twice. A charge that needs the customer's
+   * confirmation leaves the invoice open with that charge on it.
    */
   private async collect(inv: Invoice, s: Subscription): Promise<Outcome> {
     if (inv.total <= 0) {
@@ -181,7 +190,7 @@ export class Billing {
     this.unsure.delete(inv.id);
     inv.charge = c.id;
     if (c.state === 'succeeded') inv.state = 'paid';
-    return c.state === 'succeeded' ? 'paid' : 'failed';
+    return c.state === 'succeeded' ? 'paid' : c.state === 'requires_action' ? 'action' : 'failed';
   }
 
   /** An invoice for a subscription, with any credit it is owed taken off (never below zero). */
@@ -200,21 +209,40 @@ export class Billing {
 
   /**
    * Starts a subscription. A declined first payment refuses it; a payment whose answer was lost leaves it past due,
-   * and the next tick retries that same payment.
+   * and the next tick retries that same payment; a payment the customer must confirm leaves it `requires_action`,
+   * its first invoice open with the charge to confirm. With an idempotency key, a repeat of the call (the same
+   * customer, plan and method) gets the first call's answer, the subscription or the refusal, and creates nothing;
+   * the same key with other details is refused.
    */
-  async subscribe(customer: string, planId: string, method: string): Promise<Subscription> {
+  subscribe(customer: string, planId: string, method: string, o: { idempotencyKey?: string } = {}): Promise<Subscription> {
+    const key = o.idempotencyKey;
+    if (key === undefined) return this.start(customer, planId, method);
+    const body = JSON.stringify([customer, planId, method]);
+    const seen = this.subscribeKeys.get(key);
+    if (seen) {
+      if (seen.body !== body) return Promise.reject(new Error('this idempotency key was used with different details'));
+      return seen.result;
+    }
+    const result = this.start(customer, planId, method);
+    this.subscribeKeys.set(key, { body, result });
+    return result;
+  }
+
+  private async start(customer: string, planId: string, method: string): Promise<Subscription> {
     const p = this.plan(planId);
     const t = this.now();
     const trial = (p.trialDays ?? 0) * DAY;
     const s: Subscription = { id: this.subs.length + 1, customer, plan: p.id, method, state: trial ? 'trialing' : 'active', periodStart: t, periodEnd: t + (trial || p.periodDays * DAY), cancelAtPeriodEnd: false };
     if (!trial) {
       const inv = this.invoice(s, p.price.currency, [{ description: `${p.id}, first period`, amount: p.price.amount }]);
+      this.first.add(inv.id);
       const r = await this.collect(inv, s);
       if (r === 'failed') {
         inv.state = 'void';
         throw new Error('the first payment did not go through');
       }
       if (r === 'unknown') s.state = 'past_due';
+      if (r === 'action') s.state = 'requires_action';
     }
     this.subs.push(s);
     return s;
@@ -222,7 +250,8 @@ export class Billing {
 
   /**
    * Changes plan now, crediting the unused part of the old plan and charging the rest of the period on the new. A
-   * net credit is kept and taken off the next invoices; a declined payment undoes the change.
+   * net credit is kept and taken off the next invoices; a declined payment undoes the change. A payment the
+   * customer must confirm returns the invoice open with its charge, and the plan changes when `confirm` sees it paid.
    */
   async change(subId: number, planId: string): Promise<Invoice> {
     const s = this.sub(subId);
@@ -246,8 +275,44 @@ export class Billing {
       inv.state = 'void';
       throw new Error('the payment for the change did not go through');
     }
+    if (r === 'action') {
+      s.plan = from.id;
+      this.pendingPlan.set(inv.id, to.id);
+    }
     if (r === 'unknown') s.state = 'past_due';
     return inv;
+  }
+
+  /**
+   * Settles an invoice whose charge waited for the customer's confirmation, once they have confirmed (or the
+   * provider reports back). Paid: the invoice is paid, its subscription active, and a plan change it carried takes
+   * effect. Failed: a first invoice is void and its subscription cancelled, a plan change is dropped, and a renewal
+   * goes past due on the retry schedule. Still waiting: nothing changes. Refused for a charge no open invoice holds.
+   */
+  async confirm(chargeId: string): Promise<Invoice> {
+    const inv = this.invoices.find((i) => i.charge === chargeId && i.state === 'open');
+    if (!inv) throw new Error(`no open invoice is waiting on charge ${chargeId}`);
+    const c = await this.p.confirm(chargeId);
+    if (c.state === 'requires_action') return inv;
+    const s = inv.sub === undefined ? undefined : this.sub(inv.sub);
+    const to = this.pendingPlan.get(inv.id);
+    this.pendingPlan.delete(inv.id);
+    if (c.state === 'succeeded') {
+      inv.state = 'paid';
+      if (s && to !== undefined && s.state !== 'cancelled') s.plan = to;
+      if (s && (s.state === 'requires_action' || s.state === 'past_due') && !this.owes(s.id)) s.state = 'active';
+      return inv;
+    }
+    if (this.first.has(inv.id) || to !== undefined) {
+      inv.state = 'void';
+      if (s && this.first.has(inv.id)) s.state = 'cancelled';
+    } else if (s && s.state === 'requires_action') s.state = 'past_due';
+    return inv;
+  }
+
+  /** Whether a subscription still has an open invoice other than a pending plan change. */
+  private owes(subId: number): boolean {
+    return this.invoices.some((i) => i.sub === subId && i.state === 'open' && !this.pendingPlan.has(i.id));
   }
 
   cancel(subId: number, atPeriodEnd = true): void {
@@ -256,13 +321,28 @@ export class Billing {
     else s.state = 'cancelled';
   }
 
-  /** Renews what is due and retries what failed; run it often. */
+  /**
+   * Renews what is due and retries what failed; run it often. A subscription waiting on a confirmation is not
+   * charged again; if the last retry day passes unconfirmed, its invoice is void (a first invoice) or uncollectible
+   * and the subscription cancelled.
+   */
   async tick(): Promise<void> {
     const t = this.now();
     for (const s of this.subs) {
       if (s.state === 'cancelled') continue;
+      if (s.state === 'requires_action') {
+        const inv = [...this.invoices].reverse().find((i) => i.sub === s.id && i.state === 'open' && !this.pendingPlan.has(i.id));
+        if (!inv) {
+          s.state = 'active';
+          continue;
+        }
+        if (t < s.periodStart + (this.retryDays.at(-1) ?? 0) * DAY) continue;
+        inv.state = this.first.has(inv.id) ? 'void' : 'uncollectible';
+        s.state = 'cancelled';
+        continue;
+      }
       if (s.state === 'past_due') {
-        const inv = [...this.invoices].reverse().find((i) => i.sub === s.id && i.state === 'open');
+        const inv = [...this.invoices].reverse().find((i) => i.sub === s.id && i.state === 'open' && !this.pendingPlan.has(i.id));
         if (!inv) {
           s.state = 'active';
           continue;
@@ -271,6 +351,7 @@ export class Billing {
         if (t < due) continue;
         const r = await this.collect(inv, s);
         if (r === 'paid') s.state = 'active';
+        else if (r === 'action') s.state = 'requires_action';
         else if (r === 'failed' && inv.attempts > this.retryDays.length) {
           inv.state = 'uncollectible';
           s.state = 'cancelled';
@@ -286,7 +367,8 @@ export class Billing {
       s.periodStart = s.periodEnd;
       s.periodEnd = s.periodStart + p.periodDays * DAY;
       const inv = this.invoice(s, p.price.currency, [{ description: `${p.id} renewal`, amount: p.price.amount }]);
-      s.state = (await this.collect(inv, s)) === 'paid' ? 'active' : 'past_due';
+      const r = await this.collect(inv, s);
+      s.state = r === 'paid' ? 'active' : r === 'action' ? 'requires_action' : 'past_due';
     }
   }
 }

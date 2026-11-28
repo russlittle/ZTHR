@@ -2,8 +2,8 @@
  * Reads the text out of Office files people upload: .docx paragraphs (with headings and list items marked) and
  * .xlsx sheets as rows of cells (shared strings, inline strings, numbers, booleans). Both are zip files, read here
  * from the central directory with limits on entry count, total size and compression ratio, so a zip bomb or a
- * path-traversal name is refused rather than unpacked, and so is an entry whose CRC-32 does not match. The XML is
- * scanned in linear time, and a sheet that reaches past Excel's grid or would pad out to millions of cells is
+ * path-traversal name is refused rather than unpacked, and so is an entry whose CRC-32 does not match or whose name
+ * another entry already has. The XML is scanned in linear time, and a sheet that reaches past Excel's grid or would pad out to millions of cells is
  * refused; every refusal is a Refused error.
  */
 import { crc32, inflateRawSync } from 'node:zlib';
@@ -16,6 +16,10 @@ export interface ZipLimits {
 
 export class Refused extends Error {}
 
+/**
+ * The entries of a zip, by name. Two entries with the same name, compared ignoring ASCII case as Office part names
+ * are, are refused: which one a reader takes would otherwise depend on the reader.
+ */
 export function unzip(buf: Buffer, o: ZipLimits = {}): Map<string, Buffer> {
   const maxEntries = o.maxEntries ?? 2000;
   const maxTotal = o.maxTotalBytes ?? 200 * 1024 * 1024;
@@ -32,6 +36,7 @@ export function unzip(buf: Buffer, o: ZipLimits = {}): Map<string, Buffer> {
   if (count > maxEntries) throw new Refused(`too many entries (${count})`);
   let p = buf.readUInt32LE(eocd + 16);
   const out = new Map<string, Buffer>();
+  const names = new Set<string>();
   let total = 0;
   for (let n = 0; n < count; n++) {
     if (p + 46 > buf.length || buf.readUInt32LE(p) !== 0x02014b50) throw new Refused('the zip directory is damaged');
@@ -46,6 +51,9 @@ export function unzip(buf: Buffer, o: ZipLimits = {}): Map<string, Buffer> {
     const name = buf.subarray(p + 46, p + 46 + nlen).toString('utf8');
     p += 46 + nlen + xlen + clen;
     if (name.startsWith('/') || name.split(/[\\/]/).includes('..')) throw new Refused(`unsafe path ${name}`);
+    const folded = name.replace(/[A-Z]/g, (c) => c.toLowerCase());
+    if (names.has(folded)) throw new Refused(`${name} appears more than once`);
+    names.add(folded);
     if (name.endsWith('/')) continue;
     total += usize;
     if (total > maxTotal) throw new Refused('the contents are too large');
@@ -133,15 +141,93 @@ export interface Para {
   readonly list?: boolean;
 }
 
+/** Drops every <mc:Fallback> block, nesting included: it repeats what its <mc:Choice> holds (a text box twice). */
+function withoutFallbacks(xml: string): string {
+  const open = '<mc:Fallback';
+  const close = '</mc:Fallback>';
+  let out = '';
+  let i = 0;
+  let depth = 0;
+  let from = 0;
+  let a = -2;
+  let b = -2;
+  for (;;) {
+    if (a !== -1 && a < i) a = xml.indexOf(open, i);
+    if (b !== -1 && b < i) b = xml.indexOf(close, i);
+    if (a < 0 && b < 0) break;
+    if (a >= 0 && (b < 0 || a < b)) {
+      const gt = xml.indexOf('>', a);
+      if (gt < 0) break;
+      if (xml[gt - 1] === '/') {
+        if (depth === 0) out += xml.slice(from, a), (from = gt + 1);
+        i = gt + 1;
+        continue;
+      }
+      if (depth++ === 0) out += xml.slice(from, a);
+      i = gt + 1;
+    } else {
+      i = b + close.length;
+      if (depth > 0 && --depth === 0) from = i;
+    }
+  }
+  return depth > 0 ? out : out + xml.slice(from);
+}
+
+/**
+ * Each <w:p>'s own content, in document order: a paragraph inside another (a text box's) is its own paragraph,
+ * coming after the one that holds it, and is left out of that one's content. Linear: one indexOf scan.
+ */
+function paragraphs(xml: string): string[] {
+  const done: { order: number; own: string }[] = [];
+  const stack: { order: number; parts: string[]; cursor: number }[] = [];
+  let n = 0;
+  let i = 0;
+  // The next open and close found so far, kept while still ahead, so no stretch of the text is searched twice.
+  let a = -2;
+  let b = -2;
+  for (;;) {
+    if (a !== -1 && a < i) {
+      a = xml.indexOf('<w:p', i);
+      while (a >= 0 && !/[\s/>]/.test(xml[a + 4] ?? '')) a = xml.indexOf('<w:p', a + 4);
+    }
+    if (b !== -1 && b < i) b = xml.indexOf('</w:p>', i);
+    if (a < 0 && b < 0) break;
+    if (a >= 0 && (b < 0 || a < b)) {
+      const gt = xml.indexOf('>', a);
+      if (gt < 0) break;
+      if (xml[gt - 1] === '/') {
+        done.push({ order: n++, own: '' });
+        i = gt + 1;
+        continue;
+      }
+      const top = stack.at(-1);
+      if (top) top.parts.push(xml.slice(top.cursor, a));
+      stack.push({ order: n++, parts: [], cursor: gt + 1 });
+      i = gt + 1;
+    } else {
+      const top = stack.pop();
+      i = b + 6;
+      if (!top) continue;
+      top.parts.push(xml.slice(top.cursor, b));
+      done.push({ order: top.order, own: top.parts.join('') });
+      const parent = stack.at(-1);
+      if (parent) parent.cursor = i;
+    }
+  }
+  return done.sort((x, y) => x.order - y.order).map((d) => d.own);
+}
+
+/**
+ * The paragraphs of a .docx, text boxes included (each of their paragraphs on its own, after the paragraph that
+ * anchors it, and once, not again from the fallback copy Word writes beside it).
+ */
 export function docx(buf: Buffer, o: ZipLimits = {}): Para[] {
   const z = unzip(buf, o);
   const doc = z.get('word/document.xml');
   if (!doc) throw new Refused('not a Word document');
-  const xml = doc.toString('utf8');
+  const xml = withoutFallbacks(doc.toString('utf8'));
   const out: Para[] = [];
-  for (const { inner } of elements(xml, 'w:p')) {
-    if (inner === undefined) continue;
-    const p = inner;
+  for (const p of paragraphs(xml)) {
     const text = unxml([...p.matchAll(/<w:t(?:\s[^<>]*)?>([^<]*)<\/w:t>|<w:tab\/>|<w:br(?:\s[^<>]*)?\/>|<w:cr\/>/g)].map((t) => (t[0].startsWith('<w:tab') ? '\t' : t[0].startsWith('<w:br') || t[0].startsWith('<w:cr') ? '\n' : t[1]!)).join(''));
     const style = /<w:pStyle w:val="([^"]+)"/.exec(p)?.[1];
     const h = style && /^(?:Heading|heading)\s?(\d)$/.exec(style)?.[1];

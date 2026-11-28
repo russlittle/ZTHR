@@ -5,6 +5,7 @@
  * table; text is escaped and limited to WinAnsi, so a stray character cannot break the file.
  */
 
+/** A heading, a paragraph, a table, or vertical space in points (zero or more: a negative space is refused). */
 export type Block = { readonly h: string } | { readonly p: string } | { readonly table: readonly (readonly string[])[]; readonly widths?: readonly number[] } | { readonly space: number };
 
 export interface PdfOptions {
@@ -72,12 +73,16 @@ export function pdf(blocks: readonly Block[], o: PdfOptions): Buffer {
   };
   const text = (s: string, x: number, size: number, bold = false) => page().push(`BT /${bold ? 'F2' : 'F1'} ${size} Tf ${x.toFixed(2)} ${y.toFixed(2)} Td (${esc(s)}) Tj ET`);
   for (const b of blocks) {
-    if ('space' in b) y -= b.space;
-    else if ('h' in b) {
+    if ('space' in b) {
+      if (!(b.space >= 0) || !Number.isFinite(b.space)) throw new Error(`a space block must be zero or more points, not ${b.space}`);
+      y -= b.space;
+    } else if ('h' in b) {
+      // A heading starts on a fresh page rather than split; one taller than a page continues line by line.
       const lines = wrap(b.h, 16, usable, true);
       need(lines.length * 20 + 8);
       y -= 4;
       for (const l of lines) {
+        need(18);
         y -= 18;
         text(l, margin, 16, true);
       }

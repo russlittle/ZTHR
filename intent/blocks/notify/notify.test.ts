@@ -115,3 +115,32 @@ test('a digest lists each notice once, whatever channels the category uses', asy
   await n.digest('ben', 'ben@example.org');
   assert.equal(sent[0]!.subject, '1 update');
 });
+
+test('the unsubscribe link keeps a query the configured URL already has, and a fragment stays last', async () => {
+  const sent: Message[] = [];
+  const n = new Notify({ send: async (m) => void sent.push(m), secret: 's', unsubscribeUrl: 'https://x.example/u?list=news#done', now: () => new Date('2026-11-26T15:00:00Z') });
+  n.setPrefs('ben', { tz: 'UTC', categories: { sharing: { channels: ['email'], digest: true } } });
+  await n.notify('ben', 'ben@example.org', shared, { who: 'Ana', name: 'A' });
+  await n.digest('ben', 'ben@example.org');
+  const link = sent[0]!.headers['List-Unsubscribe']!.slice(1, -1);
+  const u = new URL(link);
+  assert.equal(u.searchParams.get('list'), 'news');
+  assert.equal(u.hash, '#done');
+  assert.deepEqual(n.unsubscribe(u.searchParams.get('t')!), { who: 'ben', category: 'digest' });
+});
+
+test('an id or category holding a line break reads back as the same pair, never another person', () => {
+  const n = new Notify({ send: async () => {}, secret: 's', unsubscribeUrl: 'https://x.example/u' });
+  assert.deepEqual(n.unsubscribe(n.token('ana\nsharing', 'digest')), { who: 'ana\nsharing', category: 'digest' });
+  assert.deepEqual(n.unsubscribe(n.token('ana', 'sharing\ndigest')), { who: 'ana', category: 'sharing\ndigest' });
+  assert.notEqual(n.token('ana\nsharing', 'digest'), n.token('ana', 'sharing\ndigest'));
+});
+
+test('a signed link in the earlier two-line form still unsubscribes', async () => {
+  const { createHmac } = await import('node:crypto');
+  const n = new Notify({ send: async () => {}, secret: 's', unsubscribeUrl: 'https://x.example/u' });
+  const p = Buffer.from('ben\ndigest').toString('base64url');
+  assert.deepEqual(n.unsubscribe(`${p}.${createHmac('sha256', 's').update(p).digest('base64url')}`), { who: 'ben', category: 'digest' });
+  const q = Buffer.from('a\nb\nc').toString('base64url');
+  assert.equal(n.unsubscribe(`${q}.${createHmac('sha256', 's').update(q).digest('base64url')}`), undefined, 'three lines cannot be told apart');
+});

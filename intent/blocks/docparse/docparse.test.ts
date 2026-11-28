@@ -86,3 +86,28 @@ test('an entry whose bytes do not match its CRC-32 is refused, not returned corr
   z.writeUInt32LE((z.readUInt32LE(cd + 16) ^ 1) >>> 0, cd + 16);
   assert.throws(() => unzip(z), /CRC|damaged/);
 });
+
+test('docx: a text box inside a paragraph is read whole, as its own paragraphs, once', () => {
+  const box = (text: string) => `<w:txbxContent><w:p><w:r><w:t>${text} one</w:t></w:r></w:p><w:p><w:r><w:t>${text} two</w:t></w:r></w:p></w:txbxContent>`;
+  const body = '<w:document><w:body>' +
+    '<w:p><w:r><w:t>Before </w:t></w:r><w:r><mc:AlternateContent><mc:Choice Requires="wps"><w:drawing>' + box('Box') + '</w:drawing></mc:Choice>' +
+    '<mc:Fallback><w:pict>' + box('Box') + '</w:pict></mc:Fallback></mc:AlternateContent></w:r><w:r><w:t>after</w:t></w:r></w:p>' +
+    '<w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr><w:r><w:t>Next</w:t></w:r></w:p>' +
+    '</w:body></w:document>';
+  assert.deepEqual(docx(zip([{ name: 'word/document.xml', data: body }])), [{ text: 'Before after' }, { text: 'Box one' }, { text: 'Box two' }, { text: 'Next', heading: 2 }]);
+});
+
+test('a zip holding two entries with the same name is refused', () => {
+  assert.throws(() => unzip(zip([{ name: 'word/document.xml', data: 'a' }, { name: 'word/document.xml', data: 'b' }])), /word\/document\.xml appears more than once/);
+  assert.throws(() => unzip(zip([{ name: 'word/document.xml', data: 'a' }, { name: 'Word/Document.xml', data: 'b' }])), /appears more than once/, 'Office part names ignore case');
+  assert.equal(unzip(zip([{ name: 'a', data: 'x' }, { name: 'b', data: 'y' }])).size, 2);
+});
+
+test('nested paragraphs and fallbacks are scanned in linear time', () => {
+  const n = 40_000;
+  for (const xml of ['</w:p>'.repeat(n) + '<w:pPr>'.repeat(n), '<w:p>'.repeat(n) + '</w:p>'.repeat(n), '<mc:Fallback>'.repeat(n) + '</mc:Fallback>'.repeat(n), '<w:pPr>'.repeat(n) + '</w:p>'.repeat(n)]) {
+    const started = performance.now();
+    docx(zip([{ name: 'word/document.xml', data: `<w:document><w:body>${xml}</w:body></w:document>` }]), { maxRatio: 1e9 });
+    assert.ok(performance.now() - started < 1500, `${xml.slice(0, 14)}… took too long`);
+  }
+});

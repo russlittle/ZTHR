@@ -67,3 +67,31 @@ test('slots nearer the middle of each person’s own working day rank first', ()
   const slots = findTime([early], { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-01T00:00:00Z') }, 60, { stepMinutes: 60, limit: 1 });
   assert.equal(iso(slots[0]!.start), '2026-11-30T09:00');
 });
+
+test('working hours that cross midnight run into the next morning', () => {
+  const night: Calendar = { id: 'n', tz: 'UTC', hours: { 1: [22, 6] }, busy: [] };
+  const spans = free(night, { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-02T00:00:00Z') });
+  assert.deepEqual(spans.map((s) => [iso(s.start), iso(s.end)]), [['2026-11-30T22:00', '2026-12-01T06:00']]);
+  const nyc: Calendar = { id: 'y', tz: 'America/New_York', hours: { 0: [22, 6], 1: [22, 6] }, busy: [{ start: t('2026-11-30T05:00:00Z'), end: t('2026-11-30T06:00:00Z') }] };
+  assert.deepEqual(free(nyc, { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-01T12:00:00Z') }).map((s) => [iso(s.start), iso(s.end)]), [['2026-11-30T03:00', '2026-11-30T05:00'], ['2026-11-30T06:00', '2026-11-30T11:00'], ['2026-12-01T03:00', '2026-12-01T11:00']], 'Sunday night into Monday, in their own zone, around the busy hour');
+  const both: Calendar = { id: 'b', tz: 'UTC', hours: { 1: [22, 6], 2: [0, 8] }, busy: [] };
+  assert.deepEqual(free(both, { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-02T00:00:00Z') }).map((s) => [iso(s.start), iso(s.end)]), [['2026-11-30T22:00', '2026-12-01T08:00']], 'overlapping hours join into one span');
+  const best = findTime([night], { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-02T00:00:00Z') }, 60, { stepMinutes: 60, limit: 8 });
+  assert.equal(best.length, 8);
+  assert.equal(iso(best[0]!.start), '2026-11-30T23:00', 'the earlier day first, nearest the middle of the shift (2:00) within it');
+  assert.deepEqual(best.slice(1, 3).map((s) => iso(s.start)), ['2026-11-30T22:00', '2026-12-01T01:00'], 'then the next day, from the slot nearest 2:00');
+  assert.equal(free({ ...night, hours: { 1: [9, 9] } }, { start: t('2026-11-30T00:00:00Z'), end: t('2026-12-01T00:00:00Z') }).length, 0, 'equal hours are not working');
+});
+
+test('only the person who booked, or a permitted role, can cancel', () => {
+  const b = new Bookings({ now: () => 0, cancelRoles: ['admin'] });
+  const span = { start: 1_000_000, end: 2_000_000 };
+  const mine = b.hold('room', span, 'ana');
+  assert.throws(() => b.cancel(mine.id, 'ben'), /no such booking/);
+  assert.throws(() => b.cancel(mine.id, 'ben', ['member']), /no such booking/);
+  assert.throws(() => b.cancel(99, 'ana'), /no such booking/);
+  assert.equal(b.busy('room').length, 1, 'still held');
+  assert.equal(b.cancel(mine.id, 'ana').state, 'cancelled');
+  const other = b.hold('room', span, 'cy');
+  assert.equal(b.cancel(other.id, 'ops', ['admin']).state, 'cancelled');
+});

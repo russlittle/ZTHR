@@ -3,6 +3,8 @@
  * (letters in order, word starts and consecutive runs score higher), keywords and synonyms count, commands a
  * person cannot use are never offered, recently used ones rise, and each result says where its keys are bound. The
  * same registry feeds keyboard shortcuts, so a conflict between two shortcuts is found when they are registered.
+ * Shortcuts are read the same however they are written: modifiers in any order and under any common name, and
+ * "mod" as the platform's command key (Cmd on a Mac, Ctrl elsewhere, or both when the platform is not given).
  */
 
 export interface Command {
@@ -35,20 +37,57 @@ export function score(query: string, text: string): number {
   return s - t.length * 0.05;
 }
 
-const normKeys = (k: string) => k.toLowerCase().split('+').map((x) => x.trim()).sort().join('+');
+/** Which key "mod" is: Cmd on a Mac, Ctrl elsewhere, or both (the default, for an app that runs on either). */
+export type Platform = 'mac' | 'other' | 'both';
+
+const MODIFIERS: Readonly<Record<string, string>> = { ctrl: 'ctrl', control: 'ctrl', ctl: 'ctrl', cmd: 'meta', command: 'meta', meta: 'meta', super: 'meta', win: 'meta', '⌘': 'meta', alt: 'alt', option: 'alt', opt: 'alt', '⌥': 'alt', shift: 'shift', '⇧': 'shift', mod: 'mod' };
+const ORDER = ['alt', 'ctrl', 'meta', 'shift'];
+
+/**
+ * The key combinations a shortcut stands for, each written one way ("ctrl+shift+u"): modifiers by their canonical
+ * name in a fixed order, then the one key, lower-cased. "+" can be the key ("Ctrl++", "Shift + +"). "mod" becomes
+ * meta on a Mac, ctrl elsewhere, and both combinations when the platform is "both". Refused: no key, more than one,
+ * or an empty part.
+ */
+export function normKeys(shortcut: string, platform: Platform = 'both'): string[] {
+  const k = shortcut.trim();
+  const plusKey = k === '+' || /\+\s*\+$/.test(k);
+  const parts = (plusKey ? k.replace(/\+?\s*\+$/, '') : k).split('+').map((x) => x.trim().toLowerCase());
+  if (plusKey && parts.length === 1 && parts[0] === '') parts.length = 0;
+  if (parts.some((x) => x === '')) throw new Error(`${shortcut} is not a shortcut: it has an empty part`);
+  const mods = new Set<string>();
+  const others: string[] = plusKey ? ['+'] : [];
+  for (const x of parts) {
+    const m = Object.hasOwn(MODIFIERS, x) ? MODIFIERS[x]! : undefined;
+    if (m) mods.add(m);
+    else others.push(x);
+  }
+  if (others.length !== 1) throw new Error(`${shortcut} is not a shortcut: it needs exactly one key besides the modifiers`);
+  const meant = mods.has('mod') ? (platform === 'mac' ? ['meta'] : platform === 'other' ? ['ctrl'] : ['meta', 'ctrl']) : [undefined];
+  mods.delete('mod');
+  return [...new Set(meant.map((extra) => [...ORDER.filter((m) => mods.has(m) || m === extra), others[0]!].join('+')))];
+}
 
 export class Palette {
   private readonly commands = new Map<string, Command>();
   private readonly keys = new Map<string, string>();
   private readonly recent: string[] = [];
+  private readonly platform: Platform;
+
+  /** `platform` says which key "mod" is, for shortcuts and key presses alike (default both Cmd and Ctrl). */
+  constructor(o: { platform?: Platform } = {}) {
+    this.platform = o.platform ?? 'both';
+  }
 
   register(c: Command): void {
     if (this.commands.has(c.id)) throw new Error(`${c.id} is already registered`);
     if (c.shortcut) {
-      const k = normKeys(c.shortcut);
-      const other = this.keys.get(k);
-      if (other) throw new Error(`${c.shortcut} is already ${this.commands.get(other)!.title}`);
-      this.keys.set(k, c.id);
+      const ks = normKeys(c.shortcut, this.platform);
+      for (const k of ks) {
+        const other = this.keys.get(k);
+        if (other) throw new Error(`${c.shortcut} is already ${this.commands.get(other)!.title}`);
+      }
+      for (const k of ks) this.keys.set(k, c.id);
     }
     this.commands.set(c.id, c);
   }
@@ -76,9 +115,16 @@ export class Palette {
     await c.run();
   }
 
-  /** The command for a key press, if it is bound and allowed. */
+  /** The command for a key press, if it is bound and allowed; a press that is not a shortcut finds none. */
   forKeys(keys: string, can: (permission: string) => boolean): Command | undefined {
-    const c = this.commands.get(this.keys.get(normKeys(keys)) ?? '');
+    let ks: string[];
+    try {
+      ks = normKeys(keys, this.platform);
+    } catch {
+      return undefined;
+    }
+    const id = ks.map((k) => this.keys.get(k)).find((x) => x !== undefined);
+    const c = id === undefined ? undefined : this.commands.get(id);
     return c && (c.permission === undefined || can(c.permission)) ? c : undefined;
   }
 
