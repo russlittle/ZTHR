@@ -64,7 +64,13 @@ export function decode(bytes: Uint8Array): { text: string; encoding: Encoding } 
     if (body.length % 2) throw new Refused('The file says it is UTF-16 text but ends half way through a character. Save it again and retry.');
     const copy = Buffer.from(body);
     if (!le) copy.swap16();
-    return { text: new TextDecoder('utf-16le', { fatal: true }).decode(copy), encoding: le ? 'utf-16le' : 'utf-16be' };
+    let text: string;
+    try {
+      text = new TextDecoder('utf-16le', { fatal: true }).decode(copy);
+    } catch {
+      throw new Refused('The file says it is UTF-16 text but holds characters that are not valid UTF-16. Save it again as CSV UTF-8 and retry.');
+    }
+    return { text, encoding: le ? 'utf-16le' : 'utf-16be' };
   }
   return { text: utf8(b), encoding: 'utf-8' };
 }
