@@ -412,8 +412,12 @@ async function uploads(files: Files, r: Req, p: DavPath, user: string): Promise<
   }
   switch (r.method) {
     case 'MKCOL': {
-      const to = dest(header(r, 'destination')) ?? '/';
-      if (header(r, 'destination')) await files.mayWrite(user, to);
+      // A Destination that does not name a path under your files is refused as such; falling back to the root
+      // turned it into "already exists", which a sync client reads as a clash and retries forever.
+      const named = header(r, 'destination');
+      const to = named ? dest(named) : '/';
+      if (to === null) return davError(400, 'the Destination header must name a path under your files');
+      if (named) await files.mayWrite(user, to);
       await files.uploads.start(user, id, to, total);
       return { status: 201 };
     }

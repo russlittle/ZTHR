@@ -168,6 +168,20 @@ test('chunked upload v2: chunks out of order, a quota check up front, assembly a
   }
 });
 
+test('an upload whose Destination Files cannot place is refused as a bad Destination, not as an existing folder', async () => {
+  const s = await start();
+  const ana = s.as('ana', PASS);
+  try {
+    const odd = await ana('/remote.php/dav/uploads/ana/u9', { method: 'MKCOL', headers: { destination: 'http://elsewhere.example/remote.php/dav/files/ana/big/large.bin' } });
+    assert.equal(odd.status, 400, 'the Destination is the problem, and the reply says so');
+    assert.match(await odd.text(), /Destination/);
+    const stray = await ana('/remote.php/dav/uploads/ana/u9', { method: 'PROPFIND', headers: { depth: '1' } });
+    assert.notEqual(stray.status, 207, 'no upload session was opened for it');
+  } finally {
+    await s.close();
+  }
+});
+
 test('sharing with a person: they see it at their root, with only the permissions given', async () => {
   const s = await start();
   const ana = s.as('ana', PASS);
