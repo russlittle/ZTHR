@@ -138,12 +138,12 @@ Scores per block, from metrology's certificates (84 blocks scored, 2 with no sur
 | `datagate` | 80.5% | none | 42 | 0 |
 | `dav` | 100.0% | none | 0 | 0 |
 | `devices` | 77.6% | none | 32 | 0 |
-| `docparse` | 66.6% | none | 165 | 0 |
+| `docparse` | 92.8% | none | 50 | 0 |
 | `drafts` | 82.1% | none | 15 | 0 |
 | `etl` | 83.1% | none | 102 | 0 |
 | `events` | 72.9% | none | 39 | 0 |
 | `expiry` | 72.3% | none | 18 | 0 |
-| `factoryreports` | 70.3% | none | 256 | 0 |
+| `factoryreports` | 99.3% | none | 6 | 0 |
 | `feedback` | 63.3% | none | 91 | 0 |
 | `flags` | 77.7% | none | 21 | 0 |
 | `geo` | 78.8% | none | 44 | 0 |
