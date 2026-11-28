@@ -154,9 +154,9 @@ The 84 blocks calibrated so far, of 85:
 | `query` | not certified: 106 planted defects not rejected, and not ruled equivalent | 69.9% | 106 | 0 | 2026-11-28 |
 | `uat` | not certified: 58 planted defects not rejected, and not ruled equivalent | 75.2% | 58 | 0 | 2026-11-28 |
 | `importer` | not certified: 223 planted defects not rejected, and not ruled equivalent | 78.1% | 223 | 0 | 2026-11-28 |
-| `ask` | not certified: 188 planted defects not rejected, and not ruled equivalent | 79.2% | 188 | 0 | 2026-11-28 |
+| `ask` | not certified: 16 planted defects not rejected, and not ruled equivalent | 98.2% | 16 | 0 | 2026-11-28 |
 | `etl` | not certified: 102 planted defects not rejected, and not ruled equivalent | 83.1% | 102 | 0 | 2026-11-28 |
-| `console` | not certified: 150 planted defects not rejected, and not ruled equivalent | 78.4% | 150 | 0 | 2026-11-28 |
+| `console` | not certified: 12 planted defects not rejected, and not ruled equivalent | 98.3% | 12 | 0 | 2026-11-28 |
 | `factoryreports` | not certified: 256 planted defects not rejected, and not ruled equivalent | 70.3% | 256 | 0 | 2026-11-28 |
 | `walkthrough` | not certified: 12 planted defects not rejected, and not ruled equivalent | 93.9% | 12 | 0 | 2026-11-28 |
 | `speech` | not certified: 327 planted defects not rejected, and not ruled equivalent | 71.2% | 327 | 0 | 2026-11-28 |

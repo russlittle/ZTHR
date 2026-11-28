@@ -8,7 +8,7 @@ v0.1 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0. P
 
 ## Abstract
 
-QA certifies that a build does what was meant, and it does so with instruments: tests, gates, an oracle, journeys. Nothing in QA says whether those instruments are any good. Metrology is the department that does. It defines every measure QA uses and traces each to a reference standard: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. It certifies every gauge before QA may use it: capability (the mutation score of a block: does each of its tests reject a planted defect), repeatability (the flake rate) and reproducibility (the same verdicts in a fresh clone and on CI), after the gauge R&R method of AIAG's *Measurement Systems Analysis*. Certificates are dated and lapse on change. It charts the factory's own process (test time, flake rate, mutation score, cost per change) after Shewhart, reads drift by the Western Electric rules, and raises a tag on every signal. And it audits the factory's claims about itself against their evidence. Metrology measures and certifies; maintenance repairs what it finds. This paper sets out eight patterns for that work, and says plainly how far the factory has got.
+QA certifies that a build does what was meant, and it does so with instruments: tests, gates, an oracle, journeys. Nothing in QA says whether those instruments are any good. Metrology is the department that does. It defines every measure QA uses and traces each to a reference standard: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. It certifies every gauge before QA may use it: capability (the mutation score of a block: does each of its tests reject a planted defect), repeatability (the flake rate) and reproducibility (the same verdicts in a fresh clone and on CI), after the gauge R&R method of AIAG's *Measurement Systems Analysis*. Certificates are dated and lapse on change. It charts the factory's own process (test time, flake rate, mutation score, cost per change) after Shewhart, reads drift by the Western Electric rules, and raises a tag on every signal. And it audits the factory's claims about itself against their evidence. Metrology measures and certifies; maintenance repairs what it finds. It is metrology, to the standards of ISO/IEC 17025 and AIAG's *Measurement Systems Analysis*, done by a crew; it keeps QA's quality and process true. This paper sets out eight patterns for that work, and says plainly where the plant stands.
 
 > **Central proposition.** Judge a build only with instruments that have themselves been judged: defined once, traced to a reference, shown to reject planted defects, shown to give the same answer twice and anywhere, and watched over time for drift.
 
@@ -34,7 +34,24 @@ flowchart LR
 
 ## 2. Where metrology sits
 
-Metrology serves QA most directly, but also the factory's required checks, the oracle the fleet relies on and the service levels shipping watches. It receives nothing from the department before it and hands nothing to the one after, so it has no place in the order work moves through. It sits beneath the line beside maintenance: metrology measures, certifies and tags; maintenance repairs.
+Metrology is the lab behind QA: it takes in every gauge QA uses, and gives back certified gauges and a better QA process. It serves QA, and QA uses only the gauges it has certified. Some of what it certifies is used elsewhere too (the required checks on the branch, the oracle, the service levels shipping watches), but its service relationship is with QA. It receives nothing from the area before it and hands nothing to the one after, so it has no place in the flow of work: it stands beside QA, and beside its sister crew, maintenance. Metrology measures, certifies and tags; maintenance repairs.
+
+```mermaid
+flowchart LR
+  FF["Factory floor"] -- "built product" --> QA["QA"]
+  QA -- "passed" --> SH["Shipping"]
+  QA -- "failed" --> RW["Rework"]
+  subgraph MG["Metrology: the lab behind QA"]
+    direction TB
+    DEF["Measures, defined once"] --> TR["Traced to a reference"] --> CE["Gauges certified"]
+    SPC["Control charts on the plant's process"]
+    AUD["Claims audit"]
+  end
+  CE -- "certified gauges" --> QA
+  QA -- "every gauge it uses" --> MG
+  MG -. "survivors, signals: work orders" .-> MT["Maintenance"]
+  AUD --> MC["Mission control"]
+```
 
 ## 3. Principles
 
@@ -48,7 +65,7 @@ Metrology serves QA most directly, but also the factory's required checks, the o
 
 ### Pattern 1. Measures Defined Once
 
-**Problem.** Each department measures "passing" its own way, and the numbers cannot be compared.
+**Problem.** Each area measures "passing" its own way, and the numbers cannot be compared.
 
 **Pattern.** Every measure QA uses is defined in one place: what it is, its unit, and what it is traced to.
 
@@ -66,11 +83,11 @@ Metrology serves QA most directly, but also the factory's required checks, the o
 
 **Pattern.** Every measure traces to a reference the factory does not write: a specification's published test vectors; a recording of the real system a product replaces, captured once and replayed against every build; sets of phrasings held out from the factory and sealed, so a pass cannot be memorised.
 
-| Reference | Where it stands |
-| --- | --- |
-| Published test vectors | Partial: some blocks test against their RFC's vectors; no catalogue says which measure traces to which vector |
-| A recording of a real Nextcloud, for the Files oracle | Missing: the oracle can replay a recorded corpus, but no recording has been made |
-| Sealed held-out phrasing sets | Partial: held in a person-only path, sealed by convention, with no hash a gate checks |
+| Reference | What it is | Standing |
+| --- | --- | --- |
+| Published test vectors | A specification's own vectors, run against the block | Shown per block on [/plant](https://zthr.ai/plant); no catalogue yet says which measure traces to which vector |
+| A recording of a real Nextcloud, for the Files oracle | The replaced system's answers, captured once | The oracle can replay a recorded corpus; whether a recording exists is shown on [/plant](https://zthr.ai/plant), and without one the oracle's verdicts are traced to nothing outside the plant |
+| Sealed held-out phrasing sets | Phrasings the builder never sees | Held in a person-only path and sealed by convention; no hash that a gate checks |
 
 ### Pattern 3. Certified Before Use
 
@@ -107,7 +124,7 @@ Each survivor is a work order for maintenance: add the missing test, fix the def
 
 **Problem.** An oracle that compares a product with the system it replaces is itself an instrument, and can mask a real difference or report a rightful one.
 
-**Pattern.** The oracle is put through a measurement system analysis of its own: a suite of planted differences in a recorded corpus, each of which it must report, and rightful differences (etags, ids, dates, tokens), each of which it must mask. Its discrimination is a measure like any other. Today the oracle's unit tests plant differences; with no recording yet, there is no corpus to run the suite on.
+**Pattern.** The oracle is put through a measurement system analysis of its own: a suite of planted differences in a recorded corpus, each of which it must report, and rightful differences (etags, ids, dates, tokens), each of which it must mask. Its discrimination is a measure like any other. The oracle's unit tests plant differences; the planted-difference suite needs a recorded corpus to run on.
 
 ### Pattern 7. Control Charts on the Factory
 
@@ -133,30 +150,30 @@ flowchart LR
   T --> MT[Maintenance]
 ```
 
-A series has no limits until it has 25 points, as the AIAG SPC manual asks, so a new factory raises no false alarms. No series has its 25 points yet.
+A series has no limits until it has 25 points, as the AIAG SPC manual asks, so a new plant raises no false alarms. Which series have their 25 points is shown on [/plant](https://zthr.ai/plant).
 
 ### Pattern 8. Audit the Factory's Claims
 
 **Problem.** A factory's description of itself is its least checked output.
 
-**Pattern.** Every claim the factory makes about itself is entered in a claims-to-evidence ledger and checked: proven (a test or record shows it), partial (some of it exists, and the gap is named) or unproven. The audit is repeated, and each finding becomes a tag. The audit of 27 November 2026 found 73 claims: 10 proven, 43 partial, 20 unproven.
+**Pattern.** Every claim the factory makes about itself is entered in a claims-to-evidence ledger and checked: proven (a test or record shows it), partial (some of it exists, and the gap is named) or unproven. The audit is repeated, and each finding becomes a tag. The counts of proven, partial and unproven claims are those of the latest audit, shown on [/plant](https://zthr.ai/plant) and in the claims ledger; they are not typed here.
 
 ```mermaid
-pie showData title "The factory's claims, audited 27 November 2026"
-  "Proven" : 10
-  "Partial" : 43
-  "Unproven" : 20
+stateDiagram-v2
+  [*] --> Unproven: the claim is entered
+  Unproven --> Partial: some of it has evidence, the gap is named
+  Partial --> Proven: a test or record shows all of it
+  Proven --> Partial: the evidence lapses
+  Unproven --> Proven: a test or record shows all of it
 ```
 
-Its findings:
+Gaps the audit of 27 November 2026 found, which stay listed until the ledger shows them closed:
 
 1. Review by two other model families is designed but not running.
 2. Branches are not protected, so the record can be bypassed by a direct push.
 3. There is no recording of a real Nextcloud for the Files oracle.
 4. Held-out sets are sealed by convention, not by a hash a gate checks.
-5. The papers' figures are typed, not generated.
-6. Deploys name a movable image tag, not a digest.
-7. The reference build was red for 13 days while commits continued.
+5. Deploys name a movable image tag, not a digest.
 
 ## 5. What metrology records
 
@@ -234,9 +251,12 @@ erDiagram
 
 ## 6. Files, in the lab
 
-Files would be the factory's first article: its first build measured, characteristic by characteristic, against the system it replaces (AS9102 first article inspection). That needs the reference: a recording of a real Nextcloud answering the requests its clients make. With the recording, the oracle is measured on planted differences, and every one of Files' twelve library blocks is calibrated and certified before QA uses its tests. Without it, the oracle's verdicts are traced to nothing outside the factory, and the first article inspection cannot be made.
+Files is the plant's first article: its first build measured, characteristic by characteristic, against the system it replaces (AS9102 first article inspection). That needs the reference: a recording of a real Nextcloud answering the requests its clients make. With the recording, the oracle is measured on planted differences, and every library block Files is made of is calibrated and certified before QA uses its tests. Without it, the oracle's verdicts are traced to nothing outside the factory, and the first article inspection cannot be made.
 
-## 7. Evaluating it
+## 7. What it needs, and how it is judged
+
+Metrology needs planted-defect calibration of every gauge, repeatability and reproducibility measured, and every claim audited against its evidence. Certification needs every planted defect caught, so a gauge is not certified while any survivor remains; how many gauges are certified, and the median mutation score, are shown on [/plant](https://zthr.ai/plant). The measures:
+
 
 - **Certified share.** The share of gauges QA uses that hold a current certificate. It should reach all of them; until it does, QA's rule is not met, and that is a reading.
 - **Discrimination.** For the oracle, planted differences reported and rightful differences masked.

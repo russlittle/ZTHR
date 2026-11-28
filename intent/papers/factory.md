@@ -1,6 +1,6 @@
-# The Factory: Agents That Build to a Package, and Cannot Grade Their Own Work
+# The Factory Floor: Agents That Build to a Package, and Cannot Grade Their Own Work
 
-**Patterns for roles defined by what they may not do, admission computed from the record, correction without a person, and cost held to a budget**
+**Patterns for an operator agent that drives each product down the line, roles defined by what they may not do, admission computed from the record, correction without a person, and cost held to a budget**
 
 Russ Little · Pattern paper · Draft for review · Nov 26, 2026
 
@@ -8,9 +8,27 @@ v0.1 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0. P
 
 ## Abstract
 
-The factory is where agents write the software. Its design problem is not how to make an agent write good code; it is how to make the result trustworthy when every worker is a model that is confident, fast and sometimes wrong. The answer here is organisational. Agents work in seven roles, each defined by what it may not do. The acts only a person may perform have no tool, so no role can reach them. A change is admitted only when every required check has been run by the factory itself and two reviewers from model families other than the author's have passed it, and admission is computed from the record, never set. When a check, a review or a stage fails, a case is opened and diagnosed (a bug, an intent problem, something infeasible, or a fault in the factory) and corrected without a person until the attempts, the trend or the budget say a person must decide. Cheap checks run first, review happens only on green, the builder must run the existing tests before it pushes, and every call is metered against a budget. This paper sets out eleven patterns for that factory and the agent interface that implements them.
+The factory floor is where agents write the software. An operator agent drives each product down the line, station by station, building to the build package and measuring what was built. Its design problem is not how to make an agent write good code; it is how to make the result trustworthy when every worker is a model that is confident, fast and sometimes wrong. The answer here is organisational. Agents work in seven roles, each defined by what it may not do. The acts only a person may perform have no tool, so no role can reach them. A change is admitted only when every required check has been run by the plant itself and two reviewers from model families other than the author's have passed it, and admission is computed from the record, never set. When a check, a review or a stage fails, a case is opened and diagnosed (a bug, an intent problem, something infeasible, or a fault in the plant) and corrected without a person until the attempts, the trend or the budget say a person must decide. Cheap checks run first, review happens only on green, the builder must run the existing tests before it pushes, and every call is metered against a budget. This paper sets out eleven patterns for that floor and the agent interface that implements them. What QA sends back is handled by [Rework](rework.md), which shares the correction loop set out here.
 
 > **Central proposition.** Build trust in agent-written software from structure, not from any one agent: roles that cannot approve their own work, admission computed from the record, and a correction loop that settles everything except what truly needs a person.
+
+## Where it sits
+
+The floor is production, to the standard of work instructions under a control plan. It is done by an agent. It takes in the build package from manufacturing engineering, driven along the line by its operator agent, and hands QA the built product with its measurements. Maintenance keeps the floor running.
+
+```mermaid
+flowchart LR
+  ME["Manufacturing engineering"] -- "build package" --> OP
+  subgraph FF["Factory floor"]
+    OP["Operator agent<br/><small>one per line, within its budget</small>"] --> ST["Stations: build to the package, measure what was built"]
+    RT["Model router<br/><small>the cheapest model that passes</small>"] -.-> ST
+  end
+  ST -- "built product, with its measurements" --> QA["QA"]
+  RW["Rework"] -- "fixed product" --> QA
+  QA -- "failed product and its evidence" --> RW
+  MT["Maintenance"] -. "keeps running" .-> FF
+  FF -- "published build feed" --> MC["Mission control"]
+```
 
 ## 1. The problem
 
@@ -66,7 +84,7 @@ flowchart LR
 
 **Problem.** "Approved" is a status anyone with access can set.
 
-**Pattern.** A change is admitted when, and only when, the record shows every required check passing on its exact commit, run by the factory's own interface, and two passing reviews from model families other than the author's. Nothing sets admission; it is read.
+**Pattern.** A change is admitted when, and only when, the record shows every required check passing on its exact commit, run by the plant's own interface, and two passing reviews from model families other than the author's. Nothing sets admission; it is read.
 
 ```mermaid
 flowchart TB
@@ -110,14 +128,14 @@ flowchart TB
 | Bug | The code does not do what the intent says | The builder fixes it |
 | Intent | The intent is unclear or contradicts itself | A clarification is proposed against the balloons named |
 | Infeasible | The intent cannot be met as stated | Escalated to the holder |
-| Factory | A check, gate or tool is wrong | Raised against the factory, not the product |
+| Plant | A check, gate or tool is wrong | Raised against the plant, not the product |
 
 Any diagnosis other than a bug must name the balloons involved and be confirmed by a reviewer from another model family.
 
 ```mermaid
 stateDiagram-v2
   [*] --> Open: failure recorded
-  Open --> Diagnosed: diagnose (bug / intent / infeasible / factory)
+  Open --> Diagnosed: diagnose (bug / intent / infeasible / plant)
   Diagnosed --> Fixing: bug
   Diagnosed --> Clarifying: intent, confirmed by another family
   Clarifying --> Fixing: Class II issued under delegation
@@ -131,7 +149,7 @@ stateDiagram-v2
 
 ### Pattern 7. Class II by Delegation, Class I by Signature
 
-**Problem.** Every clarification sent to a person stalls the factory; every clarification made without one risks changing what they meant.
+**Problem.** Every clarification sent to a person stalls the line; every clarification made without one risks changing what they meant.
 
 **Pattern.** A clarification is classed by what it changes. Class II (an example, a note, a tolerance inside the range the person gave) is issued under a delegation the holder signed in advance, and supplied as derived and assumed. Class I (anything that changes what the software must do) becomes a proposal the holder signs.
 
@@ -157,11 +175,11 @@ stateDiagram-v2
 
 **Problem.** Agents asked to build a product build everything, including what every product needs.
 
-**Pattern.** The factory builds to the manifest. Standard assemblies are taken from the library; catalogued parts needed by more than one product are built as library blocks first, each with its own tests; the factory then architects only the delta: the custom assemblies, which join blocks.
+**Pattern.** The floor builds to the manifest. Standard assemblies are taken from the library; catalogued parts needed by more than one product are built as library blocks first, each with its own tests; the floor then architects only the delta: the custom assemblies, which join blocks.
 
-## 5. Files, in the factory
+## 5. Files, on the floor
 
-Files is built on twelve library blocks and a protocol layer. The eight blocks a file server needs were built before its delta, each tested alone (12 tests for the tree, 10 for the object store, 8 each for uploads, grants and the DAV core, 6 each for leases and devices, 4 each for the oracle, rate limits and upload safety). Its own layer is WebDAV, OCS sharing and the sign-in pages, and is tested end to end against a server in process: 20 tests covering the login flow, sync properties, conditional writes, versions, the trash, chunked uploads with quota, sharing, public links, device revocation and wipe, refused names and sign-in throttling, administration, restarts, the nightly sweep, Cloud Storage against a stand-in, and the oracle script.
+Files is built on the library blocks its manifest names and a protocol layer. The blocks a file server needs (the tree, the object store, uploads, leases, grants, device sessions, the DAV core, the oracle, rate limits and upload safety) are each tested alone; the counts are generated, not typed here. Its own layer is WebDAV, OCS sharing and the sign-in pages, and is tested end to end against a server in process: the login flow, sync properties, conditional writes, versions, the trash, chunked uploads with quota, sharing, public links, device revocation and wipe, refused names and sign-in throttling, administration, restarts, the nightly sweep, Cloud Storage against a stand-in, and the oracle script. Files builds reproducibly; the operator agent that drives a line and the build feed that carries results to mission control are needs of this area, and [/plant](https://zthr.ai/plant) shows whether they are live.
 
 ## 6. Evaluating it
 
@@ -172,4 +190,4 @@ Files is built on twelve library blocks and a protocol layer. The eight blocks a
 
 ## 7. What it does not claim
 
-The factory does not make any single agent trustworthy. It makes the result trustworthy by arranging untrusted workers so that none can approve itself, and by measuring everything they produce against gauges they cannot change.
+The floor does not make any single agent trustworthy. It makes the result trustworthy by arranging untrusted workers so that none can approve itself, and by measuring everything they produce against gauges they cannot change.

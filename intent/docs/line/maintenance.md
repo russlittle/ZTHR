@@ -121,7 +121,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 2 with no sur
 | `analytics` | 75.9% | none | 41 | 0 |
 | `apikeys` | 79.9% | none | 32 | 0 |
 | `apiver` | 87.4% | none | 15 | 0 |
-| `ask` | 79.2% | none | 188 | 0 |
+| `ask` | 98.2% | none | 16 | 0 |
 | `audit` | 75.0% | none | 32 | 0 |
 | `backups` | 79.3% | none | 33 | 0 |
 | `booking` | 80.0% | none | 43 | 0 |
@@ -131,7 +131,7 @@ Scores per block, from metrology's certificates (84 blocks scored, 2 with no sur
 | `config` | 71.1% | none | 46 | 0 |
 | `conflicts` | 90.7% | none | 4 | 0 |
 | `consent` | 86.1% | none | 16 | 0 |
-| `console` | 78.4% | none | 150 | 0 |
+| `console` | 98.3% | none | 12 | 0 |
 | `contact` | 97.5% | none | 10 | 0 |
 | `costmeter` | 79.1% | none | 28 | 0 |
 | `crypto` | 89.2% | none | 14 | 0 |

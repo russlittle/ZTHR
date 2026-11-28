@@ -49,7 +49,7 @@ Every app can reach the tools people already use, through 20 connectors of 5 kin
 
 ### Housekeeping blocks
 
-The fleet maintains the code most apps get wrong, as tested blocks every product starts from (781 tests between them):
+The fleet maintains the code most apps get wrong, as tested blocks every product starts from (830 tests between them):
 
 | Block | What it holds | Tests |
 | --- | --- | --- |

@@ -1,6 +1,6 @@
-# The Fleet: Keeping Every Product in Service as One
+# The Fleet: Keeping Every Product in Service, Updated Over the Air, Reporting Back
 
-**Patterns for shared assemblies maintained once and updated everywhere, service levels that decide, and incidents that become ratchets**
+**Patterns for the installed base: updates over the air with rollback, service levels that decide, incidents that become ratchets, and what the field shows reported back to the office**
 
 Russ Little · Pattern paper · Draft for review · Nov 26, 2026
 
@@ -8,9 +8,27 @@ v0.1 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0. P
 
 ## Abstract
 
-Most of the cost of software comes after it ships: fixing what breaks, keeping dependencies current, answering the same incident in a second product a month after the first. A factory that makes products mostly from shared assemblies can do something a set of separate teams cannot: fix a shared assembly once and move the fix to every product that uses it. The fleet is the department that keeps every product in service as one: each held to the service levels its package set, each drawing on the library it was built from, each governed the same way for the data it keeps. Every incident becomes a defect, a test and a ratchet, in the assembly where it began, so no product meets the same failure twice. This paper sets out seven patterns for the fleet, and how its reports close the loop back to mission control.
+Most of the cost of software comes after it ships: fixing what breaks, keeping dependencies current, answering the same incident in a second product a month after the first. The fleet is everything in service: each app, the blocks it draws on and the data it keeps. It is field service for the installed base, to the standard of service bulletins and field updates. A plant that makes products mostly from shared assemblies can do something separate teams cannot: fix a shared assembly once, in the library, and send the fix to every app that uses it as an update over the air, with rollback. The fleet receives signed releases from shipping, holds each product to the service levels its package set, shows which version each app runs and which apps use which block, and governs the data the same way everywhere. Every incident becomes a defect, a test and a ratchet, in the assembly where it began, so no product meets the same failure twice. What the field shows goes back to mission control, and the plant runs again. This paper sets out seven patterns for the fleet.
 
-> **Central proposition.** Maintain what products share once, push each fix to everyone who uses it, let error budgets decide what happens next, and turn every incident into an instrument so no product fails the same way twice.
+> **Central proposition.** Receive every release over the air, hold each app to its service levels, let error budgets decide what happens next, turn every incident into an instrument so no product fails the same way twice, and report what the field shows back to the office.
+
+## Where it sits
+
+The fleet is the field group, after shipping. It is done by an agent. It takes in signed releases, delivered over the air, and gives mission control what the field shows. [Deployment engineering](deployment-engineering.md) serves it: the environments, the updates, the monitoring.
+
+```mermaid
+flowchart LR
+  SH["Shipping"] -- "signed release, over the air" --> FL
+  subgraph FL["Fleet: the installed base"]
+    direction TB
+    APP["Each app in service, and the version it runs"]
+    SLO["Service levels and error budgets"]
+    APP --> SLO
+  end
+  FL -- "what the field shows" --> MC["Mission control"]
+  DE["Deployment engineering"] -. "serves" .-> FL
+  FL -- "defects, tests, ratchets" --> LIB[("Block library, in product engineering")]
+```
 
 ## 1. The problem
 
@@ -35,25 +53,41 @@ flowchart TB
 
 ## 2. Principles
 
-**Maintained by the fleet, or by the product, never by neither.** Every line of every manifest names who maintains it.
+**Maintained by the library, or by the product, never by neither.** Every line of every manifest names who maintains it: standard assemblies are maintained once in the library by product engineering, and the fleet shows where each is used and which version each app runs.
 
 **Budgets decide.** Error budgets, not opinions, decide whether a product takes new changes, is held, or is rolled back.
 
 ## 3. Patterns
 
-### Pattern 1. Maintained Once, Updated Everywhere
+### Pattern 1. Maintained Once, Updated Over the Air
 
 **Problem.** Copies of the same part diverge, and each fix reaches one copy.
 
-**Pattern.** A standard assembly used as it is, or extended, is maintained by the fleet. A fix to it is made once, in the library, and pushed to every product that uses it as a change through each product's own line, admitted and certified there like any other.
+**Pattern.** A standard assembly used as it is, or extended, is maintained in the library. A fix to it is made once, there, and sent to every product that uses it as a change through each product's own line, admitted and certified there like any other, then released and delivered over the air. Every update can be rolled back in one step.
 
-**Consequences.** The cost of a fix is paid once. Each product still proves the fix with its own journeys before it ships.
+**Consequences.** The cost of a fix is paid once. Each product still proves the fix with its own journeys before it ships, and the fleet shows which apps have taken it.
+
+```mermaid
+sequenceDiagram
+  participant LIB as Block library
+  participant LN as A product's line
+  participant SH as Shipping
+  participant DE as Deployment engineering
+  participant FL as Fleet
+  LIB->>LN: fix to a shared block
+  LN->>LN: admitted and passed by QA, like any change
+  LN->>SH: passed product
+  SH->>DE: signed release
+  DE->>FL: update over the air
+  FL->>FL: take it, watch the budgets
+  FL-->>DE: rollback if a budget burns fast
+```
 
 ### Pattern 2. Where Used Before Changed
 
 **Problem.** A change to a shared part breaks a product nobody thought of.
 
-**Pattern.** Before a shared assembly changes, the fleet lists every product that uses it, how (as is, extended, inside a custom assembly) and with which of its data. The change is certified against all of them.
+**Pattern.** Before a shared assembly changes, the fleet lists every product that uses it, how (as is, extended, inside a custom assembly), which version each app runs and with which of its data. The change is certified against all of them.
 
 ### Pattern 3. Error Budgets Decide
 
@@ -87,7 +121,7 @@ stateDiagram-v2
 
 **Problem.** Dependency and security updates wait for a crisis.
 
-**Pattern.** The fleet updates dependencies of shared assemblies on a fixed cadence, through the line, and records for each product how far behind the library it is. A product far behind is a reading on mission control, not a surprise.
+**Pattern.** Dependencies of shared assemblies are updated on a fixed cadence, through the line, and records for each product how far behind the library it is. A product far behind is a reading on mission control, not a surprise.
 
 ### Pattern 6. One Governance for the Data
 
@@ -99,15 +133,34 @@ stateDiagram-v2
 
 **Problem.** What people report about a product in service never reaches the place that could change it.
 
-**Pattern.** Problems people report are filed in their own words, triaged into defects or intent questions, and shown on mission control against the product and the balloon they concern. An intent question goes to the holder as a clarification; a defect goes to the factory as a case.
+**Pattern.** Problems people report, and what the field's telemetry shows, are filed in their own words, triaged into defects or intent questions, and shown on mission control against the product and the balloon they concern. An intent question goes to the holder as a clarification; a defect goes to rework as a return and, where its cause is a shared block, to the library.
+
+```mermaid
+flowchart LR
+  FIELD["People and telemetry in the field"] --> FL["Fleet"]
+  FL -- "what the field shows" --> MC["Mission control"]
+  MC --> T{"Triage"}
+  T -- "intent question" --> IS["Intent studio: a clarification for the holder"]
+  T -- "defect" --> RW["Rework: a return"]
+  T -- "defect in a shared block" --> LIB["Block library"]
+  IS -.-> PL["Next release"]
+  RW -.-> PL
+  LIB -.-> PL
+  PL -- "signed release, over the air" --> FL
+```
 
 ## 4. Files, in the fleet
 
-Files draws on twelve library blocks. A fix to any of them (the tree's etag propagation, the object store's checksums, the uploads' expiry, the grants' throttling) is made once in the library, and reaches Files and every later product that uses the same block, each through its own line. Its service levels come from its package, and its nightly sweep (the trash after its days, old versions after theirs, idle uploads, expired links) is planned by the retention block and recorded as a run.
+Files draws on the library blocks its manifest names. A fix to any of them (the tree's etag propagation, the object store's checksums, the uploads' expiry, the grants' throttling) is made once in the library, and reaches Files and every later product that uses the same block, each through its own line and over the air. Its service levels come from its package, and its nightly sweep (the trash after its days, old versions after theirs, idle uploads, expired links) is planned by the retention block and recorded as a run.
 
 A second product in its line (calendars and contacts) would share the device sessions, grants and DAV core with Files. An incident in sign-in found in either would become a test in the devices block, protecting both.
 
-## 5. Evaluating it
+Nothing from the line is in service yet, so the fleet's lamp is off, and it stays off until an app is live; [/plant](https://zthr.ai/plant) shows the standing.
+
+## 5. What it needs, and how it is judged
+
+The fleet needs updates over the air with rollback, live walks of every product in service, and telemetry back to mission control. Which are met is shown on [/plant](https://zthr.ai/plant).
+
 
 - **Reach of fixes.** For each fix to a shared assembly, the share of products using it that have taken it, and how long they took.
 - **Recurrence.** The number of incidents whose cause was already covered by a ratchet: it should be zero.
