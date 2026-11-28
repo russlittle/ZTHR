@@ -403,3 +403,74 @@ test('the sweep removes expired grants and grants on gone resources, and nothing
   assert.equal(await g.get(gone.id), undefined);
   assert.equal(await g.sweep(async () => true), 0);
 });
+
+test('a chain of reshares is followed only so deep: sixteen hands by default, or as many as the deployment sets', async () => {
+  const { g } = setup();
+  const people = ['ana', ...Array.from({ length: 20 }, (_, i) => `p${i + 1}`)];
+  for (let i = 1; i < people.length; i++) await g.create({ ...folder, by: people[i - 1]!, kind: 'person', to: people[i]!, permissions: READ | SHARE });
+  const chain = chainOf([10, 'folder']);
+  const at = (who: string, maxDepth?: number) => g.effective(who, [], chain, { owner: 'ana', groupsOf: () => [], ...(maxDepth === undefined ? {} : { maxDepth }) });
+  assert.equal(await at('p1'), READ | SHARE, 'straight from the owner');
+  assert.equal(await at('p17'), READ | SHARE, 'sixteen hands down is still followed');
+  assert.equal(await at('p18'), 0, 'seventeen is not');
+  assert.equal(await at('p20'), 0);
+  assert.equal(await at('p3', 2), READ | SHARE, 'p3 is two reshares down, and two are allowed');
+  assert.equal(await at('p4', 2), 0, 'three reshares down is one too many');
+  assert.equal(await at('p2', 0), 0, 'with no depth allowed, one reshare is already too deep');
+  assert.equal(await at('p1', 0), READ | SHARE, 'but a grant straight from the owner is not a reshare');
+  assert.equal(await at('p3', 1), 0);
+  assert.equal(await at('p2', 1), READ | SHARE);
+});
+
+test('two people who only reshare to each other give each other nothing, and the search ends', async () => {
+  const { g } = setup();
+  await g.create({ ...folder, by: 'ben', kind: 'person', to: 'cy' });
+  await g.create({ ...folder, by: 'cy', kind: 'person', to: 'ben' });
+  const o = { owner: 'ana', groupsOf: () => [] as string[] };
+  assert.equal(await g.effective('cy', [], chainOf([10, 'folder']), o), 0);
+  assert.equal(await g.effective('ben', [], chainOf([10, 'folder']), o), 0);
+});
+
+test('the owner needs no standing of their own: their grants count even if they are not in the directory', async () => {
+  const { g } = setup();
+  await g.create({ ...folder, kind: 'person', to: 'ben', permissions: READ | UPDATE });
+  const asked: string[] = [];
+  const o = {
+    owner: 'ana',
+    groupsOf: (p: string) => {
+      asked.push(p);
+      return p === 'ana' ? undefined : [];
+    },
+  };
+  assert.equal(await g.effective('ben', [], chainOf([10, 'folder']), o), READ | UPDATE);
+  assert.deepEqual(asked, [], 'the owner is not looked up, so cannot be found missing');
+});
+
+test('a reshare is capped by what the giver has where the reshare was made, not elsewhere in the chain', async () => {
+  const { g } = setup();
+  const chain = chainOf([2, 'file'], [1, 'folder']);
+  // Ben has only the file itself; he hands out the folder, which he has no right to.
+  await g.create({ ...folder, resource: 2, resourceKind: 'file', kind: 'person', to: 'ben', permissions: READ | UPDATE });
+  await g.create({ ...folder, resource: 1, by: 'ben', kind: 'person', to: 'cy', permissions: ALL });
+  const o = { owner: 'ana', groupsOf: () => [] as string[] };
+  assert.equal(await g.effective('ben', [], chain, o), READ | UPDATE);
+  assert.equal(await g.effective('cy', [], chain, o), 0, 'Ben cannot give what he does not hold on the folder');
+  // Once Ben holds the folder too, his reshare of it counts, as far as he holds it.
+  await g.create({ ...folder, resource: 1, kind: 'person', to: 'ben', permissions: READ | DELETE | SHARE });
+  assert.equal(await g.effective('cy', [], chain, o), READ | DELETE | SHARE);
+});
+
+test('a file in the chain is held to what a file can have, however the stored grant reads', async () => {
+  const s = memoryGrants();
+  const g = new Grants(s, { now: () => 1000 });
+  // A grant stored with more than a file can have, e.g. by an older version.
+  await s.set({ id: 1, resource: 2, resourceKind: 'file', by: 'ana', kind: 'person', to: 'ben', permissions: ALL, created: 0 });
+  assert.equal(await g.effective('ben', [], chainOf([2, 'file']), { owner: 'ana', groupsOf: () => [] }), FILE_MAX);
+});
+
+test('the sweep keeps grants that never expire', async () => {
+  const { g } = setup();
+  await g.create({ ...folder, kind: 'person', to: 'ben' });
+  assert.equal(await g.sweep(async () => true), 0);
+  assert.equal((await g.live()).length, 1);
+});

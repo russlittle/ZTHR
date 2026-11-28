@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->85<!-- /fact --> blocks, <!-- fact:blocks.tests -->889<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->235<!-- /fact --> blocks, <!-- fact:blocks.tests -->3957<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -94,6 +94,156 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [walkthrough](walkthrough/index.ts) | A guided, ordered walk through a feature's journey steps showing each claim, its evidence and whether that evidence is current, with step-by-step sign-off refused on stale, failed, missing or untraceable evidence and voided when covered code changes | 5 |
 | [speech](speech/index.ts) | Speech transcripts turned into palette commands with spoken confirmation for destructive ones, dictation with spoken punctuation and corrections, and numbers and dates spoken in words, with a feature-detected Web Speech adapter | 9 |
 | [router](router/index.ts) | Chooses the cheapest model proven good enough for each kind of task: a dated price table, per-request cost with long-context and regional rates, pass rates per model per task kind trusted on a Wilson lower bound, exploration of cheaper models, escalation through tiers, judges from another family, and a daily budget | 17 |
+| [node-registry](node-registry/index.ts) | Node and credential types for workflow engines: parameter schemas checked, defaults filled, credentials redacted and authenticated, versions migrated | 14 |
+| [execution-log](execution-log/index.ts) | Workflow runs and steps recorded with secrets redacted as written, size caps, a readable prune plan, pinned runs and replay from any step | 15 |
+| [trigger-polling](trigger-polling/index.ts) | Poll and webhook triggers on the job queue: deduplicated polls, test polls and test listening, and an overview of every trigger | 17 |
+| [storage-policies](storage-policies/index.ts) | Bucket policies with a decision engine, cleaned paths, sniffed content, signed URLs, and image transforms in one canonical form with size caps | 15 |
+| [webrtc-signaling](webrtc-signaling/index.ts) | SDP read and written (RFC 8866), ICE candidates (RFC 8839), TURN credentials, signed room tokens and a signalling hub | 25 |
+| [call-rooms](call-rooms/index.ts) | Call rooms with roles, signed join tokens, limits and recording plans | 18 |
+| [icalendar](icalendar/index.ts) | iCalendar (RFC 5545): folded content lines, events, recurrence expanded to the RFC's own examples, time zones read and written, and alarms | 25 |
+| [caldav](caldav/index.ts) | A CalDAV store: put, get, delete, calendar queries, free-busy, sync tokens and the scheduling inbox and outbox | 19 |
+| [rest-filter-syntax](rest-filter-syntax/index.ts) | PostgREST, Strapi and Directus filter syntaxes read into one filter tree, with range headers, an evaluator and a canonical form | 18 |
+| [view-engine](view-engine/index.ts) | Saved views shared and defaulted, compiled and run without ever widening access, exported and fingerprinted | 15 |
+| [dashboards](dashboards/index.ts) | Dashboards: panels, time ranges, variables, grid layout, shares and public links kept as hashes, and provisioning from files | 18 |
+| [dns-wire](dns-wire/index.ts) | DNS messages (RFC 1035) with name compression safe from pointer loops, EDNS(0), zone files read and written, and serial arithmetic | 19 |
+| [geoip](geoip/index.ts) | MaxMind database reader, most-specific CIDR tables, special ranges, address truncation, and locations never finer than allowed | 18 |
+| [text-diff](text-diff/index.ts) | Myers diff of lines, words or characters, unified patches identical to GNU diff, applied with offsets and reversed, and moved blocks | 16 |
+| [oidc-provider](oidc-provider/index.ts) | An OpenID Provider: discovery, rotating keys, the code flow with PKCE, ID tokens, UserInfo, pairwise subjects, revocation and logout | 27 |
+| [alert-rules](alert-rules/index.ts) | Alert rules that go pending, firing and resolved, with matchers, fingerprints, silences, grouping, routing and inhibition, as Alertmanager does | 20 |
+| [cors-cookies](cors-cookies/index.ts) | CORS decisions by the Fetch standard, and cookies by RFC 6265bis: parsed, written, and kept in a jar with SameSite, domain and path rules | 24 |
+| [sun-calc](sun-calc/index.ts) | Sun and moon positions, sunrise and sunset including polar day and night, and moon phases, after Meeus | 17 |
+| [prometheus-text](prometheus-text/index.ts) | Prometheus and OpenMetrics text exposition, a registry with a cardinality cap, and a parser safe on hostile input | 16 |
+| [svg-writer](svg-writer/index.ts) | A safe SVG writer: everything escaped, accessible titles, shapes and paths built and parsed, and text widths estimated | 18 |
+| [chart-spec](chart-spec/index.ts) | Declarative charts drawn to SVG with nice ticks and scales, a colour-blind-safe palette checked for contrast, and alt text | 17 |
+| [iam-policy](iam-policy/index.ts) | Policy evaluation as AWS IAM does it: explicit deny wins, wildcards, conditions and IP ranges, and policies validated | 17 |
+| [identity-brokering](identity-brokering/index.ts) | Sign-in through other identity providers, with account linking that refuses pre-hijack and issuer mix-up, role mapping and unlinking | 16 |
+| [columnar-agg](columnar-agg/index.ts) | A small column store: filters, group-by, approximate distinct counts and time rollups corrected for late data | 16 |
+| [access-policy](access-policy/index.ts) | Forward-auth rules: paths normalised and double encoding refused, hosts and address ranges, a guard on slow patterns, and every decision explained | 17 |
+| [email-threading](email-threading/index.ts) | Mail threads by the JWZ method, base subjects (RFC 5256), encoded words (RFC 2047), auto-reply rules (RFC 3834) and reply headers | 17 |
+| [login-flows](login-flows/index.ts) | Declared login flows with step-up, required actions, brute-force lockout, and failures that never say whether an account exists | 17 |
+| [stats-basic](stats-basic/index.ts) | Descriptive statistics and quantiles, common distributions, t and chi-square tests, confidence intervals, effect sizes and power | 20 |
+| [cert-store](cert-store/index.ts) | Certificates read with a strict DER reader, chains built and checked, host names matched (RFC 9525), and expiry alerts | 23 |
+| [subscriber-lists](subscriber-lists/index.ts) | Mailing lists with double opt-in, one-click unsubscribe (RFC 8058), preferences, suppression kept as keyed hashes, consent evidence and CSV | 22 |
+| [webhook-catalog](webhook-catalog/index.ts) | Outgoing webhook events declared once: schemas checked, sample payloads, and a delivery log per subscriber | 17 |
+| [template-engine](template-engine/index.ts) | A logic-light template language: escaped by default, filters, includes and a step limit so no template can run away | 18 |
+| [tenant-model](tenant-model/index.ts) | Tenant isolation: a store scoped to the tenant, keys per tenant, quotas and fair shares, and permissions through roles | 16 |
+| [smtp-protocol](smtp-protocol/index.ts) | SMTP and ESMTP client and server state machines: STARTTLS, AUTH, pipelining and reply parsing | 27 |
+| [mail-queue](mail-queue/index.ts) | Outbound mail decisions: the retry curve, state per receiving domain, and sender warm-up | 17 |
+| [api-client](api-client/index.ts) | Calls to outside APIs only to allowed hosts, with rate limits honoured, paging, and a circuit breaker | 19 |
+| [html-sanitize](html-sanitize/index.ts) | Allow-list HTML cleaning in three strengths, for comments, posts and rich pages | 15 |
+| [zip-write](zip-write/index.ts) | ZIP (with ZIP64) and tar written as streams, and read back, checked against Python's zipfile and GNU tar | 20 |
+| [jwt](jwt/index.ts) | JSON Web Signatures signed and verified, claims checked, key sets rotated and revoked, JWKS and thumbprints (RFC 7515, 7638, 8037) | 19 |
+| [ldap](ldap/index.ts) | LDAP names and filters (RFC 4514, 4515), a directory with scoped and paged search, safe binds, nested groups mapped to roles, and user sync | 19 |
+| [webpush](webpush/index.ts) | Web Push: VAPID, payloads encrypted to RFC 8291 byte for byte, requests checked, and subscriptions kept sealed and pruned on 404 and 410 | 18 |
+| [credential-vault](credential-vault/index.ts) | Stored credentials sealed to their owner, shared by level with expiry, sent only to their own hosts, refreshed one at a time and rotated | 14 |
+| [workflow-graph](workflow-graph/index.ts) | Workflow graphs with branches, merges, loops, waits and per-item retries, validated, and run step by step as plain JSON on the job queue | 19 |
+| [timeseries](timeseries/index.ts) | Time series downsampled and rolled up so rollups of rollups agree, counter rates across resets, gaps found and filled, tiered retention | 15 |
+| [json-patch](json-patch/index.ts) | JSON Pointer, JSON Patch and Merge Patch (RFC 6901, 6902, 7396) applied atomically, diffed, inverted and merged three ways | 18 |
+| [websocket-frames](websocket-frames/index.ts) | WebSocket (RFC 6455): the handshake, frames with masking and length rules, close codes, ping and pong, and backpressure | 24 |
+| [ws-rpc](ws-rpc/index.ts) | Requests and subscriptions over WebSocket: sign-in first, allowed topics, signed resume tokens with replay, and slow clients closed | 16 |
+| [magic-links](magic-links/index.ts) | Sign-in links and codes by email, stored as keyed hashes, bound to the device, safe from mail scanners, and throttled | 19 |
+| [token-service](token-service/index.ts) | Access and refresh tokens: RFC 9068 access tokens, rotating refresh with reuse detection, introspection, revocation, exchange and binding | 18 |
+| [webauthn](webauthn/index.ts) | Passkeys: registration and sign-in with COSE keys, authenticator data, counters and backup flags, and none, packed and U2F attestation | 22 |
+| [document-templates](document-templates/index.ts) | Document templates merged strictly with roles and repeaters, frozen by content hash, and a stamped PDF footer | 18 |
+| [mime](mime/index.ts) | Mail messages read and built (RFC 5322, 2045, 2047, 2231): folding, encoded words, quoted-printable and attachments | 23 |
+| [pdf-parse](pdf-parse/index.ts) | PDF read with both kinds of cross-reference, object streams and repair, text extracted, and pages split, merged and rotated | 25 |
+| [asn1-der](asn1-der/index.ts) | A strict DER reader and canonical writer, with X.509 certificates and certificate requests | 21 |
+| [email-html](email-html/index.ts) | HTML for email: allow-list cleaning, CSS inlined by real specificity, tracked links, a plain-text part and a client-support report | 21 |
+| [password-policy](password-policy/index.ts) | Password rules after NIST 800-63B: strength by guess count, breached-password checks by k-anonymity, and reuse history | 16 |
+| [argon2id](argon2id/index.ts) | Argon2id, Argon2i and Argon2d (RFC 9106) and BLAKE2b (RFC 7693) in plain TypeScript, with every RFC vector | 17 |
+| [password-hash](password-hash/index.ts) | Password hashing over Argon2id, scrypt and PBKDF2 with a rotating pepper, rehash on sign-in, and equal timing for unknown users | 16 |
+| [xml-dsig](xml-dsig/index.ts) | XML signatures: exclusive canonicalisation, signing and verifying, with signature wrapping refused | 19 |
+| [saml](saml/index.ts) | A SAML 2.0 service provider: signed requests, strict response checks, replay refused, and metadata written and read | 20 |
+| [client-registry](client-registry/index.ts) | OAuth clients registered (RFC 7591, 7592), secrets rotated with an overlap, redirect addresses matched exactly, and scopes filtered | 16 |
+| [oauth2-server](oauth2-server/index.ts) | An OAuth 2.1 authorisation server: PKCE, the device flow, rotating refresh tokens with reuse detection, introspection and revocation | 24 |
+| [thumbnails](thumbnails/index.ts) | Images resized five ways with orientation applied, crop and fit planned, derivatives keyed for the cache, and PNG built in | 18 |
+| [markdown](markdown/index.ts) | CommonMark and GitHub-flavoured Markdown read to a tree and written to safe HTML, with heading ids and front matter | 11 |
+| [custom-fields](custom-fields/index.ts) | Custom fields people add to records: typed, stored, indexed, redacted and kept unique where asked | 15 |
+| [toc-outline](toc-outline/index.ts) | Tables of contents and outlines with stable anchors, section ranges, word counts, reading time and excerpts | 14 |
+| [scim](scim/index.ts) | A SCIM 2.0 server (RFC 7643, 7644): filters, patch operations, ETags, bulk requests and discovery | 19 |
+| [snapshot-restore](snapshot-restore/index.ts) | Snapshots hashed and compared, and a restore planned, confirmed by code, applied and verified | 13 |
+| [expression-engine](expression-engine/index.ts) | A sandboxed expression language for templates and workflows, with allowed methods only and limits on steps, size and memory | 24 |
+| [json-schema](json-schema/index.ts) | JSON Schema 2020-12: validation with references and error paths, schemas inferred from samples, examples generated, and breaking changes found | 29 |
+| [wiki-pages](wiki-pages/index.ts) | Wiki pages in a tree with revisions, templates, inherited permissions, edit locks and backlinks | 24 |
+| [multipart-parse](multipart-parse/index.ts) | Form uploads (RFC 7578) parsed as they stream, with limits enforced as bytes arrive, real types checked and file names made safe | 24 |
+| [llm-provider](llm-provider/index.ts) | One request shape over model vendors: streaming, tool calls, structured output with repair, retries and fallbacks, a twin, and cost records | 30 |
+| [agent-loop](agent-loop/index.ts) | A bounded agent loop: budgets for steps, tools, cost, tokens and time, repeats caught, tools checked, approvals that suspend and resume, and a trace | 22 |
+| [jsonpath](jsonpath/index.ts) | JSONPath (RFC 9535) with slices, filters and typed functions, normalised paths and limits, and a jq-like transform | 17 |
+| [entity-registry](entity-registry/index.ts) | A registry of devices, entities and areas as Home Assistant keeps it: devices merged by identifiers, renames that keep old ids, and areas without loops | 16 |
+| [automation-engine](automation-engine/index.ts) | Automations: triggers, conditions and actions with single, restart, queued and parallel modes, a safe template language, and traces | 27 |
+| [plugin-manifest](plugin-manifest/index.ts) | Plugin manifests checked all at once, permissions reviewed, packages signed with Ed25519 against scoped trust, and install plans in dependency order | 24 |
+| [relations](relations/index.ts) | Relations between records: belongs-to, one-to-one, ordered many-to-many and soft links, with delete plans and orphan repair | 18 |
+| [media-assets](media-assets/index.ts) | A media library: real types sniffed, dangerous SVG refused, usage tracked, alt text reported, derivatives and srcset planned | 25 |
+| [i18n-content](i18n-content/index.ts) | Content in many languages: variants that know when they are stale, review, machine translation with placeholders kept, and alternates | 18 |
+| [avatars](avatars/index.ts) | Avatars: Gravatar hashes, identicons and initials on a palette checked for contrast, sizes and srcset | 16 |
+| [emoji](emoji/index.ts) | Emoji found whole across joiners and skin tones, shortcodes, a custom set, safe HTML and reactions | 22 |
+| [content-versions](content-versions/index.ts) | Content revisions with conflict detection, publish, schedule and roll back, field and text diffs, and signed preview links | 25 |
+| [hooks](hooks/index.ts) | Actions and filters as WordPress has them: priorities, run-once, owners, a declared catalogue, deprecations forwarded, and async forms | 20 |
+| [spam-heuristics](spam-heuristics/index.ts) | Spam scored by rules: honeypots, fill time, links, text shape, email, rate and duplicates, with reputation and an explanation | 19 |
+| [feed-write](feed-write/index.ts) | RSS 2.0, Atom 1.0 and JSON Feed 1.1 written with podcast and media tags, every problem reported first, and conditional GET | 19 |
+| [theme-resolver](theme-resolver/index.ts) | Themes: the template hierarchy, child themes with site edits on top, merged theme settings, hashed asset URLs with integrity | 20 |
+| [webmention](webmention/index.ts) | Webmention sent and received with the source verified, private hosts refused, microformats read, and replies, likes and reposts sorted | 18 |
+| [redirects](redirects/index.ts) | Redirect rules, exact, glob and pattern, safe from open redirects and slow patterns, with loops and chains found and flattened, and CSV | 20 |
+| [signing-keys](signing-keys/index.ts) | Signing keys from pending to revoked with usage limits, rotation, JWKS and a revocation list; what a compromised key signed is voided, and algorithm confusion refused | 16 |
+| [bounce-classify](bounce-classify/index.ts) | Bounces (RFC 3464), complaints and auto-replies read and classified, soft bounces tracked, and suppression fed to notifications | 17 |
+| [realm-model](realm-model/index.ts) | Identity realms: roles that compose without cycles, a group tree, declared user attributes, password policy and lockout | 16 |
+| [signature-capture](signature-capture/index.ts) | Signatures drawn, typed or uploaded, with the signer's statement of intent, device evidence and a seal | 16 |
+| [unicode-text](unicode-text/index.ts) | Unicode text handled right: normalised, folded, split into graphemes, truncated safely, collated, and look-alike names caught (UTS #39) | 14 |
+| [fuzzy-match](fuzzy-match/index.ts) | Fuzzy matching: edit distances, Jaro-Winkler, a trigram index as pg_trgm has it, Soundex and Metaphone, and suggestions | 16 |
+| [doc-classify](doc-classify/index.ts) | Documents classified by rules or learned from examples, with slow patterns refused, and stored by path templates | 16 |
+| [consume-inbox](consume-inbox/index.ts) | A document inbox: folders and mail polled, content sniffed, pages split by separator or barcode, and work queued | 16 |
+| [email-address](email-address/index.ts) | Email addresses read as RFC 5322 has them, international domains in Punycode (RFC 3492), canonical forms and role addresses | 15 |
+| [dkim-sign](dkim-sign/index.ts) | DKIM (RFC 6376): canonicalised, signed and verified, key records and selectors, alignment, and a rotation plan | 20 |
+| [trusted-timestamp](trusted-timestamp/index.ts) | Trusted timestamps (RFC 3161) asked for, issued and verified, and Merkle trees with proofs (RFC 6962), checked against OpenSSL | 18 |
+| [document-seal](document-seal/index.ts) | Documents sealed and verified, with a certificate of the signing as text, HTML or a PDF, and links by seal id | 16 |
+| [mqtt](mqtt/index.ts) | MQTT 3.1.1 and 5: packets encoded and decoded, topics matched, shared subscriptions, retained messages, and QoS 1 and 2 sessions | 22 |
+| [mdns-ssdp](mdns-ssdp/index.ts) | Local discovery: mDNS and DNS-SD announced, browsed and resolved with caches, and SSDP searches with the device's address checked | 28 |
+| [state-store](state-store/index.ts) | Entity states with attributes and change times, change events published, history compacted, and statistics that survive meter resets | 22 |
+| [status-pages](status-pages/index.ts) | Status pages: components from monitors, uptime bars, incident feeds in Atom and JSON, subscribers with signed links, and a badge | 18 |
+| [push-monitors](push-monitors/index.ts) | Heartbeat monitors: cron schedules and next runs, late, down and overlong runs found, alerts tracked, and signed ping links | 15 |
+| [assignment-rules](assignment-rules/index.ts) | Work assigned round-robin, least-loaded, by skill or by weight, within shifts and capacity, with fair shares and overrides | 14 |
+| [ua-parse](ua-parse/index.ts) | User agents and client hints read by a versioned rule table, bots detected, with input capped | 16 |
+| [sketches](sketches/index.ts) | Probabilistic summaries: HyperLogLog, t-digest, count-min and Bloom filters, serialised and checked | 21 |
+| [pdf-sign](pdf-sign/index.ts) | PDF signing to PAdES-B-B with CMS SignedData and incremental updates, verified by OpenSSL, qpdf and pdfsig | 38 |
+| [pdf-forms](pdf-forms/index.ts) | PDF forms read, filled, flattened and added, with required fields checked | 30 |
+| [esign-envelope](esign-envelope/index.ts) | Signing envelopes: routing order, field checks, signed links, access codes with lockout, reminders, a hash-chained trail and a sealed certificate | 20 |
+| [entitlements](entitlements/index.ts) | Plans and entitlements: features resolved, usage metered once per event, overage, trials and safe downgrades | 19 |
+| [vault-model](vault-model/index.ts) | A password vault as Bitwarden keeps one: cipher strings, the key hierarchy, items, folders, organisations with key rotation, Send and emergency access | 25 |
+| [secret-sharing](secret-sharing/index.ts) | Shamir secret sharing over GF(256) with checksummed shares and a commitment that names a bad share | 15 |
+| [password-generator](password-generator/index.ts) | Passwords, passphrases, PINs and usernames generated without bias, with exact strength and site rules | 16 |
+| [sequences](sequences/index.ts) | Outreach sequences: email, task and call steps with waits and send windows, a daily cap, and stops on reply, unsubscribe or bounce | 19 |
+| [cohorts](cohorts/index.ts) | Cohort analysis: retention by period, growth accounting, churn and Kaplan-Meier survival, with small cells suppressed | 17 |
+| [segments](segments/index.ts) | Audience segments as rule trees with references, previewed with counts, refreshed as snapshots, and exported safely with an audit log | 16 |
+| [slugs](slugs/index.ts) | Slugs made by transliteration, kept unique, and remembered across renames so old addresses redirect | 14 |
+| [permalinks](permalinks/index.ts) | Route patterns that match and build addresses, canonical URLs, paging links and one trailing-slash rule | 14 |
+| [options-store](options-store/index.ts) | Typed site settings by scope: autoloaded, versioned, announced on change, and snapshotted | 14 |
+| [menus](menus/index.ts) | Menus as trees with conditions and permissions, language, safe links, the active trail and breadcrumbs | 13 |
+| [shortcodes](shortcodes/index.ts) | Shortcodes from an allow-list parsed and expanded with limits and escaping | 13 |
+| [semver](semver/index.ts) | Semantic versions: strict parsing, npm ranges, a solver that explains conflicts, and calendar versions | 14 |
+| [reading-time](reading-time/index.ts) | Reading and listening time across scripts and images, and excerpts cut at sentence, word or grapheme boundaries | 13 |
+| [openapi](openapi/index.ts) | OpenAPI 3.1 built from routes and checked, breaking changes found, contract tests generated and responses verified | 15 |
+| [crud-from-schema](crud-from-schema/index.ts) | Create, read, update and delete routes from one entity declaration, with validation, filters, paging, relations and field permissions | 14 |
+| [html-parse](html-parse/index.ts) | A tolerant HTML reader with limits, CSS selectors, serialising, diffing and entities | 17 |
+| [link-preview](link-preview/index.ts) | Link previews fetched safely (private addresses, DNS pinning, every redirect checked), cards read and oEmbed | 15 |
+| [accessibility-checks](accessibility-checks/index.ts) | WCAG checks on HTML: contrast, accessible names, focus order and a report | 16 |
+| [block-markup](block-markup/index.ts) | Block editor markup as Gutenberg has it: parsed and written, validated by a registry, plain text and a walker | 15 |
+| [delta-sync](delta-sync/index.ts) | File sync by rolling checksums as rsync does it, three-way comparison with conflicts named, and ignore rules | 20 |
+| [http-cache](http-cache/index.ts) | HTTP caching: dates, ETags, preconditions, Cache-Control and freshness, Vary, ranges and multipart byte ranges | 23 |
+| [pricing](pricing/index.ts) | Prices with tiers, customer groups and dates, promotions that stack or exclude, coupons with limits, and every price explained | 15 |
+| [ocr-plan](ocr-plan/index.ts) | OCR behind one interface with a twin: hOCR and ALTO read safely, confidence judged, retries, and the plan for a searchable PDF layer | 17 |
+| [web-analytics](web-analytics/index.ts) | Privacy-first web analytics: visitor hashes salted daily, sessions, referrers and campaigns, bots and opt-outs filtered, goals and stats | 15 |
+| [imap-protocol](imap-protocol/index.ts) | IMAP: responses with literals, fetch and body structure, sequence sets, modified UTF-7, safe commands, search, IDLE and a resync plan | 17 |
+| [embed-protocol](embed-protocol/index.ts) | Embedding in other sites: allowed origins, snippets, a sequenced postMessage handshake, resizing and the headers that allow framing | 16 |
+| [ledger](ledger/index.ts) | Double-entry bookkeeping: entries posted once and frozen in a hash chain, corrections only by reversal, periods closed, and statements | 13 |
+| [inventory](inventory/index.ts) | Stock as moves between places, lots with expiry and serials, FIFO and average cost, reservations that expire, counts, and postings to the ledger | 13 |
+| [cart](cart/index.ts) | Shopping carts: lines merged and capped, prices refreshed with changes reported, stock held, carts merged at sign-in, and abandonment | 18 |
+| [checkout](checkout/index.ts) | Checkout as a state machine: address, shipping, payment, review and placed, totals computed on the server, charges idempotent and refunded on failure | 15 |
+| [formula-engine](formula-engine/index.ts) | Spreadsheet formulas with Excel precedence and dates, a workbook with dependencies and cycles found, and over 80 functions | 21 |
+| [form-builder](form-builder/index.ts) | Forms as data: rules by formula, validation, pages, routing, confirmation and prefill, with answers always kept as text | 15 |
+| [mail-tracking](mail-tracking/index.ts) | Email opens and clicks tracked with signed links, in full, aggregate or off, proxy opens and bots discounted, and signed opt-out | 14 |
+| [campaigns](campaigns/index.ts) | Email campaigns: segments, escaped templates, scheduling, throttled sending with retries, A/B variants, unsubscribe headers and reports | 17 |
+| [experiments](experiments/index.ts) | Experiments: stable assignment behind flags, exposures logged, tests that stay valid while you watch, ratio checks, guardrails and a verdict | 17 |
+| [uptime-probes](uptime-probes/index.ts) | Uptime probes over HTTP, keywords, JSON, TCP, DNS and certificates, with retries, flap damping, maintenance windows and private addresses refused | 22 |
 <!-- /gen -->
 
 ```mermaid

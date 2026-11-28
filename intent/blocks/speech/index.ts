@@ -257,6 +257,7 @@ function whole(words: readonly string[]): number | null {
     const w = words[i]!;
     const next = words[i + 1];
     if (w === 'and') {
+      if (next === undefined || next === 'and') return null;
       if (last !== 'hundred' && lastScale === Infinity) return null;
       continue;
     }
