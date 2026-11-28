@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->175<!-- /fact --> blocks, <!-- fact:blocks.tests -->2781<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->190<!-- /fact --> blocks, <!-- fact:blocks.tests -->3049<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -184,6 +184,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [theme-resolver](theme-resolver/index.ts) | Themes: the template hierarchy, child themes with site edits on top, merged theme settings, hashed asset URLs with integrity | 20 |
 | [webmention](webmention/index.ts) | Webmention sent and received with the source verified, private hosts refused, microformats read, and replies, likes and reposts sorted | 18 |
 | [redirects](redirects/index.ts) | Redirect rules, exact, glob and pattern, safe from open redirects and slow patterns, with loops and chains found and flattened, and CSV | 20 |
+| [signing-keys](signing-keys/index.ts) | Signing keys from pending to revoked with usage limits, rotation, JWKS and a revocation list; what a compromised key signed is voided, and algorithm confusion refused | 16 |
+| [bounce-classify](bounce-classify/index.ts) | Bounces (RFC 3464), complaints and auto-replies read and classified, soft bounces tracked, and suppression fed to notifications | 17 |
+| [realm-model](realm-model/index.ts) | Identity realms: roles that compose without cycles, a group tree, declared user attributes, password policy and lockout | 16 |
+| [signature-capture](signature-capture/index.ts) | Signatures drawn, typed or uploaded, with the signer's statement of intent, device evidence and a seal | 16 |
+| [unicode-text](unicode-text/index.ts) | Unicode text handled right: normalised, folded, split into graphemes, truncated safely, collated, and look-alike names caught (UTS #39) | 14 |
+| [fuzzy-match](fuzzy-match/index.ts) | Fuzzy matching: edit distances, Jaro-Winkler, a trigram index as pg_trgm has it, Soundex and Metaphone, and suggestions | 16 |
+| [doc-classify](doc-classify/index.ts) | Documents classified by rules or learned from examples, with slow patterns refused, and stored by path templates | 16 |
+| [consume-inbox](consume-inbox/index.ts) | A document inbox: folders and mail polled, content sniffed, pages split by separator or barcode, and work queued | 16 |
+| [email-address](email-address/index.ts) | Email addresses read as RFC 5322 has them, international domains in Punycode (RFC 3492), canonical forms and role addresses | 15 |
+| [dkim-sign](dkim-sign/index.ts) | DKIM (RFC 6376): canonicalised, signed and verified, key records and selectors, alignment, and a rotation plan | 20 |
+| [trusted-timestamp](trusted-timestamp/index.ts) | Trusted timestamps (RFC 3161) asked for, issued and verified, and Merkle trees with proofs (RFC 6962), checked against OpenSSL | 18 |
+| [document-seal](document-seal/index.ts) | Documents sealed and verified, with a certificate of the signing as text, HTML or a PDF, and links by seal id | 16 |
+| [mqtt](mqtt/index.ts) | MQTT 3.1.1 and 5: packets encoded and decoded, topics matched, shared subscriptions, retained messages, and QoS 1 and 2 sessions | 22 |
+| [mdns-ssdp](mdns-ssdp/index.ts) | Local discovery: mDNS and DNS-SD announced, browsed and resolved with caches, and SSDP searches with the device's address checked | 28 |
+| [state-store](state-store/index.ts) | Entity states with attributes and change times, change events published, history compacted, and statistics that survive meter resets | 22 |
 <!-- /gen -->
 
 ```mermaid

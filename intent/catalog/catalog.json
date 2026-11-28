@@ -1578,6 +1578,122 @@
       "requires": [],
       "tests": 20,
       "home": "intent/blocks/redirects"
+    },
+    {
+      "name": "signing-keys",
+      "purpose": "Signing keys from pending to revoked with usage limits, rotation, JWKS and a revocation list; what a compromised key signed is voided, and algorithm confusion refused",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/signing-keys"
+    },
+    {
+      "name": "bounce-classify",
+      "purpose": "Bounces (RFC 3464), complaints and auto-replies read and classified, soft bounces tracked, and suppression fed to notifications",
+      "requires": [
+        "notify"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/bounce-classify"
+    },
+    {
+      "name": "realm-model",
+      "purpose": "Identity realms: roles that compose without cycles, a group tree, declared user attributes, password policy and lockout",
+      "requires": [
+        "rbac"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/realm-model"
+    },
+    {
+      "name": "signature-capture",
+      "purpose": "Signatures drawn, typed or uploaded, with the signer's statement of intent, device evidence and a seal",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/signature-capture"
+    },
+    {
+      "name": "unicode-text",
+      "purpose": "Unicode text handled right: normalised, folded, split into graphemes, truncated safely, collated, and look-alike names caught (UTS #39)",
+      "requires": [],
+      "tests": 14,
+      "home": "intent/blocks/unicode-text"
+    },
+    {
+      "name": "fuzzy-match",
+      "purpose": "Fuzzy matching: edit distances, Jaro-Winkler, a trigram index as pg_trgm has it, Soundex and Metaphone, and suggestions",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/fuzzy-match"
+    },
+    {
+      "name": "doc-classify",
+      "purpose": "Documents classified by rules or learned from examples, with slow patterns refused, and stored by path templates",
+      "requires": [
+        "fuzzy-match",
+        "search"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/doc-classify"
+    },
+    {
+      "name": "consume-inbox",
+      "purpose": "A document inbox: folders and mail polled, content sniffed, pages split by separator or barcode, and work queued",
+      "requires": [
+        "jobs"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/consume-inbox"
+    },
+    {
+      "name": "email-address",
+      "purpose": "Email addresses read as RFC 5322 has them, international domains in Punycode (RFC 3492), canonical forms and role addresses",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/email-address"
+    },
+    {
+      "name": "dkim-sign",
+      "purpose": "DKIM (RFC 6376): canonicalised, signed and verified, key records and selectors, alignment, and a rotation plan",
+      "requires": [],
+      "tests": 20,
+      "home": "intent/blocks/dkim-sign"
+    },
+    {
+      "name": "trusted-timestamp",
+      "purpose": "Trusted timestamps (RFC 3161) asked for, issued and verified, and Merkle trees with proofs (RFC 6962), checked against OpenSSL",
+      "requires": [],
+      "tests": 18,
+      "home": "intent/blocks/trusted-timestamp"
+    },
+    {
+      "name": "document-seal",
+      "purpose": "Documents sealed and verified, with a certificate of the signing as text, HTML or a PDF, and links by seal id",
+      "requires": [],
+      "tests": 16,
+      "home": "intent/blocks/document-seal"
+    },
+    {
+      "name": "mqtt",
+      "purpose": "MQTT 3.1.1 and 5: packets encoded and decoded, topics matched, shared subscriptions, retained messages, and QoS 1 and 2 sessions",
+      "requires": [],
+      "tests": 22,
+      "home": "intent/blocks/mqtt"
+    },
+    {
+      "name": "mdns-ssdp",
+      "purpose": "Local discovery: mDNS and DNS-SD announced, browsed and resolved with caches, and SSDP searches with the device's address checked",
+      "requires": [],
+      "tests": 28,
+      "home": "intent/blocks/mdns-ssdp"
+    },
+    {
+      "name": "state-store",
+      "purpose": "Entity states with attributes and change times, change events published, history compacted, and statistics that survive meter resets",
+      "requires": [
+        "events"
+      ],
+      "tests": 22,
+      "home": "intent/blocks/state-store"
     }
   ]
 }
