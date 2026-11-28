@@ -2190,6 +2190,141 @@
       ],
       "tests": 17,
       "home": "intent/blocks/tax-engine"
+    },
+    {
+      "name": "ocs-share-api",
+      "purpose": "Nextcloud's sharing API (OCS v1 and v2, XML or JSON) over grants, with permissions held to what a file or link may carry",
+      "requires": [
+        "grants"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/ocs-share-api"
+    },
+    {
+      "name": "carddav",
+      "purpose": "A CardDAV server (RFC 6352): vCards read and written, address book queries and multiget",
+      "requires": [
+        "dav"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/carddav"
+    },
+    {
+      "name": "rich-text-doc",
+      "purpose": "A rich-text document model as ProseMirror has it: schemas, positions, steps that map and invert, and HTML in and out",
+      "requires": [
+        "html-sanitize"
+      ],
+      "tests": 21,
+      "home": "intent/blocks/rich-text-doc"
+    },
+    {
+      "name": "rich-text-collab",
+      "purpose": "Collaborative rich-text editing: a central authority, steps rebased, selections mapped, and undo and redo per person",
+      "requires": [
+        "rich-text-doc"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/rich-text-collab"
+    },
+    {
+      "name": "fractional-index",
+      "purpose": "Ordering keys that always fit between two others, with jitter, repair and rebalancing",
+      "requires": [],
+      "tests": 13,
+      "home": "intent/blocks/fractional-index"
+    },
+    {
+      "name": "kanban",
+      "purpose": "Kanban boards: cards ordered by fractional keys, WIP limits, blockers and tasks, merged by last writer wins",
+      "requires": [
+        "fractional-index"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/kanban"
+    },
+    {
+      "name": "vector-index",
+      "purpose": "Vector search, exact or HNSW, by cosine, dot or distance, with metadata filters and a checksummed save",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/vector-index"
+    },
+    {
+      "name": "embeddings",
+      "purpose": "Embeddings behind one interface: batched, cached once per input, retried with a breaker, and dimensions checked",
+      "requires": [
+        "resilience",
+        "cache"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/embeddings"
+    },
+    {
+      "name": "sql-builder",
+      "purpose": "SQL built with parameters for Postgres, SQLite and MySQL, and a read-only checker with allow-lists, hidden columns and cost caps",
+      "requires": [
+        "query"
+      ],
+      "tests": 22,
+      "home": "intent/blocks/sql-builder"
+    },
+    {
+      "name": "table-schema",
+      "purpose": "Tables defined at run time: field types, constraints, conversions previewed, and migrations diffed for three dialects",
+      "requires": [
+        "validate",
+        "migrations"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/table-schema"
+    },
+    {
+      "name": "log-shipping",
+      "purpose": "Logs and spans shipped in batches with backpressure and loss accounting, as Loki and OTLP bodies, redacted, with label limits",
+      "requires": [
+        "observe"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/log-shipping"
+    },
+    {
+      "name": "change-feed",
+      "purpose": "Row changes as an ordered feed with transactions, signed resume tokens, filters, hidden columns, backpressure and CloudEvents",
+      "requires": [
+        "events"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/change-feed"
+    },
+    {
+      "name": "sbom",
+      "purpose": "Software bills of materials: package URLs, CycloneDX and SPDX read and written, advisories matched by path, VEX and diffs",
+      "requires": [
+        "upkeep"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/sbom"
+    },
+    {
+      "name": "crm-pipeline",
+      "purpose": "A sales pipeline: leads, deals and stages, scoring that decays, ownership rules, activities, rotting deals and a forecast",
+      "requires": [
+        "workflow",
+        "contact"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/crm-pipeline"
+    },
+    {
+      "name": "datasource-queries",
+      "purpose": "Saved queries for no-code apps: typed parameters, paging, a cache scoped by role and person, and table, column and row permissions",
+      "requires": [
+        "sql-builder",
+        "cache"
+      ],
+      "tests": 13,
+      "home": "intent/blocks/datasource-queries"
     }
   ]
 }

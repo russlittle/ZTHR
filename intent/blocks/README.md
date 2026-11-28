@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->250<!-- /fact --> blocks, <!-- fact:blocks.tests -->4281<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->265<!-- /fact --> blocks, <!-- fact:blocks.tests -->4529<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -259,6 +259,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [rate-plans](rate-plans/index.ts) | Rate limits by plan: bursts, route costs, windows, concurrency, cooldowns, fair shares and quota overage | 14 |
 | [wiki-links](wiki-links/index.ts) | Wiki links read into a graph with backlinks, orphans and broken links, and renames planned and rewritten | 13 |
 | [tax-engine](tax-engine/index.ts) | Tax by dated rules for place, category and customer: stacking levels, inclusive or exclusive prices, reverse charge, exemptions, rounding and withholding | 17 |
+| [ocs-share-api](ocs-share-api/index.ts) | Nextcloud's sharing API (OCS v1 and v2, XML or JSON) over grants, with permissions held to what a file or link may carry | 16 |
+| [carddav](carddav/index.ts) | A CardDAV server (RFC 6352): vCards read and written, address book queries and multiget | 16 |
+| [rich-text-doc](rich-text-doc/index.ts) | A rich-text document model as ProseMirror has it: schemas, positions, steps that map and invert, and HTML in and out | 21 |
+| [rich-text-collab](rich-text-collab/index.ts) | Collaborative rich-text editing: a central authority, steps rebased, selections mapped, and undo and redo per person | 15 |
+| [fractional-index](fractional-index/index.ts) | Ordering keys that always fit between two others, with jitter, repair and rebalancing | 13 |
+| [kanban](kanban/index.ts) | Kanban boards: cards ordered by fractional keys, WIP limits, blockers and tasks, merged by last writer wins | 16 |
+| [vector-index](vector-index/index.ts) | Vector search, exact or HNSW, by cosine, dot or distance, with metadata filters and a checksummed save | 15 |
+| [embeddings](embeddings/index.ts) | Embeddings behind one interface: batched, cached once per input, retried with a breaker, and dimensions checked | 15 |
+| [sql-builder](sql-builder/index.ts) | SQL built with parameters for Postgres, SQLite and MySQL, and a read-only checker with allow-lists, hidden columns and cost caps | 22 |
+| [table-schema](table-schema/index.ts) | Tables defined at run time: field types, constraints, conversions previewed, and migrations diffed for three dialects | 18 |
+| [log-shipping](log-shipping/index.ts) | Logs and spans shipped in batches with backpressure and loss accounting, as Loki and OTLP bodies, redacted, with label limits | 18 |
+| [change-feed](change-feed/index.ts) | Row changes as an ordered feed with transactions, signed resume tokens, filters, hidden columns, backpressure and CloudEvents | 18 |
+| [sbom](sbom/index.ts) | Software bills of materials: package URLs, CycloneDX and SPDX read and written, advisories matched by path, VEX and diffs | 17 |
+| [crm-pipeline](crm-pipeline/index.ts) | A sales pipeline: leads, deals and stages, scoring that decays, ownership rules, activities, rotting deals and a forecast | 15 |
+| [datasource-queries](datasource-queries/index.ts) | Saved queries for no-code apps: typed parameters, paging, a cache scoped by role and person, and table, column and row permissions | 13 |
 <!-- /gen -->
 
 ```mermaid
