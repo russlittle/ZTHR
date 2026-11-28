@@ -62,8 +62,10 @@ export function review(deps: readonly Dep[], advisories: readonly Advisory[], o:
       const hits = advisories.filter((a) => a.package === d.name && compare(d.version, a.fixedIn) < 0 && (!a.introducedIn || compare(d.version, a.introducedIn) >= 0));
       const worst = hits.find((h) => h.severity === 'critical' || h.severity === 'high');
       if (worst) return { name: d.name, verdict: 'urgent' as const, because: `${worst.id} (${worst.severity}) is fixed in ${worst.fixedIn}` };
-      const clears = hits.map((h) => h.fixedIn).reduce((x, y) => (compare(x, y) >= 0 ? x : y), '0');
-      if (hits.length) return { name: d.name, verdict: 'update' as const, because: `${hits.map((h) => h.id).join(', ')} fixed in ${clears}` };
+      if (hits.length) {
+        const clears = hits.map((h) => h.fixedIn).reduce((x, y) => (compare(x, y) >= 0 ? x : y));
+        return { name: d.name, verdict: 'update' as const, because: `${hits.map((h) => h.id).join(', ')} fixed in ${clears}` };
+      }
       const behindMajor = Number(d.latest.split('.')[0]) > Number(d.version.split('.')[0]);
       if (behindMajor && o.staleMajor !== false) return { name: d.name, verdict: 'update' as const, because: `a major version behind (${d.version} → ${d.latest})` };
       return { name: d.name, verdict: 'fine' as const, because: compare(d.version, d.latest) < 0 ? `minor update to ${d.latest} available` : 'current' };
@@ -79,16 +81,32 @@ export interface Expiring {
 }
 
 const DAY = 86_400_000;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})?$/;
+
+/** A calendar day that exists: 2026-02-30 is refused rather than read as 2 March. */
+const realDay = (s: string): boolean => {
+  const d = new Date(`${s.slice(0, 10)}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s.slice(0, 10);
+};
+
+function readExpiry(s: string): number {
+  if (DATE.test(s)) return realDay(s) ? Date.parse(`${s}T00:00:00Z`) : Number.NaN;
+  const m = DATE_TIME.exec(s);
+  if (!m || !realDay(s)) return Number.NaN;
+  return Date.parse(m[1] ? s : `${s}Z`);
+}
 
 /**
  * Days left and whether to warn now: at 30, 14, 7, 3 and 1 day(s), and every day once expired. An expiry is a date
- * (taken as its start, UTC) or a date and time; one that cannot be read is refused, never reported as fine.
+ * (taken as its start, UTC) or an ISO 8601 date and time (a time with no offset is UTC, never the machine's zone);
+ * anything else is refused, never reported as fine.
  */
 export function expiry(items: readonly Expiring[], today: string, warnAt: readonly number[] = [30, 14, 7, 3, 1]): { what: string; owner: string; daysLeft: number; warn: boolean; state: 'ok' | 'soon' | 'expired' }[] {
   const t = Date.parse(`${today}T00:00:00Z`);
   return items
     .map((i) => {
-      const ends = Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(i.expires) ? `${i.expires}T00:00:00Z` : i.expires);
+      const ends = readExpiry(i.expires);
       if (Number.isNaN(ends)) throw new Error(`${i.what}: cannot read the expiry ${JSON.stringify(i.expires)}`);
       const daysLeft = Math.ceil((ends - t) / DAY);
       const state: 'ok' | 'soon' | 'expired' = daysLeft <= 0 ? 'expired' : daysLeft <= Math.max(...warnAt) ? 'soon' : 'ok';
