@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "slash-commands",
+  "mutant": {
+    "id": "631",
+    "line": 428,
+    "column": 50,
+    "endLine": 428,
+    "endColumn": 52,
+    "mutator": "StringLiteral",
+    "original": "''",
+    "replacement": "\"Stryker was here!\"",
+    "lineText": "const empty = raw === undefined || raw === '' || (Array.isArray(raw) && raw.length === 0);",
+    "prevText": "const raw = values[bid]?.[e.action_id!];",
+    "nextText": "if (empty) {"
+  },
+  "mayEdit": [
+    "intent/blocks/slash-commands/slash-commands.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/slash-commands-631.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"slash-commands\". Mutant: line 428:50-428:52, mutator StringLiteral: \"''\" becomes \"\\\"Stryker was here!\\\"\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/slash-commands/index.ts (> marks the mutated line):\n   422        for (const aid of Object.keys(fields)) if (aid !== b.element!.action_id) throw new SlashError(`unknown field ${aid} in ${bid}`);\n   423      }\n   424      const errors: Record<string, string> = {};\n   425      for (const [bid, b] of inputs) {\n   426        const e = b.element!;\n   427        const raw = values[bid]?.[e.action_id!];\n>  428        const empty = raw === undefined || raw === '' || (Array.isArray(raw) && raw.length === 0);\n   429        if (empty) {\n   430          if (!b.optional) errors[bid] = 'This field is required.';\n   431          continue;\n   432        }\n   433        const list = Array.isArray(raw) ? (raw as readonly string[]) : [raw as string];\n   434        if (e.type === 'plain_text_input') {\n\nTest file style (intent/blocks/slash-commands/slash-commands.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, createHmac } from 'node:crypto';\nimport { test } from 'node:test';\nimport { signature } from '../webhooks/index.ts';\nimport { ActionSigner, BadSignature, BadToken, BotTokens, Dispatcher, InteractiveReceiver, MemoryDirectory, Modals, ResponseUrls, SlashError, blockProblems, escapeMarkup, later, mention, parseCommandLine, parseForm, replyJson, signRequest, tokenize, verifyRequest, viewProblems, type Block, type Deps, type View } from './index.ts';\n\n// Everything secret is derived when the test runs; nothing credential-shaped is written in the file.\nconst derive = (label: string) => createHash('sha256').update(`slash-commands test ${label}`).digest('hex');\nconst KEY = derive('request signing');\nconst KEY2 = derive('rotated signing');\n\nfunction deps(start = 1_700_000_000_000): Deps & { t: number } {\n  let n = 0;\n  const d = {\n    t: start,\n    now: () => d.t,\n    random: (len: number) => {\n      let out = Buffer.alloc(0);\n      while (out.length < len) out = Buffer.concat([out, createHash('sha256').update(`r${++n}`).digest()]);\n      return out.subarray(0, len);\n    },\n  };\n  return d;\n}\n\nconst form = (o: Record<string, string>) => Object.entries(o).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');\nconst signed = (d: { t: number }, body: string, key = KEY) => {\n  const ts = Math.floor(d.t / 1000);\n  return { body, headers: { 'x-slack-request-timestamp': String(ts), 'x-slack-signature': signRequest(key, ts, body) } };\n};\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/slash-commands-631.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "97d1d7efe5ec567a980fc0e91ce5147a3f2b0341"
+  },
+  "createdAt": "2026-11-28T10:12:57.485Z"
+}

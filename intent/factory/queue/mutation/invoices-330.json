@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "invoices",
+  "mutant": {
+    "id": "330",
+    "line": 305,
+    "column": 26,
+    "endLine": 305,
+    "endColumn": 44,
+    "mutator": "EqualityOperator",
+    "original": "members.length > 1",
+    "replacement": "members.length >= 1",
+    "lineText": "const nets = incl && members.length > 1 ? allocate(money(lineNetGroup, cur), members.map((r) => Number(r.amount))).map((m) => m.minor) : incl ? [lineNetGroup] : members.map((r) => r.amount);",
+    "prevText": "const allowance = lineNetGroup - taxable;",
+    "nextText": "let tax: bigint;"
+  },
+  "mayEdit": [
+    "intent/blocks/invoices/invoices.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/invoices-330.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"invoices\". Mutant: line 305:26-305:44, mutator EqualityOperator: \"members.length > 1\" becomes \"members.length >= 1\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/invoices/index.ts (> marks the mutated line):\n   299      const sum = groupSum.get(code)!;\n   300      const share = shares[gi]!;\n   301      // net before and after the document discount, taxable amount and tax\n   302      const lineNetGroup = incl ? netOfGross(sum, rate.rateBp) : sum;\n   303      const taxable = incl ? netOfGross(sum - share, rate.rateBp) : sum - share;\n   304      const allowance = lineNetGroup - taxable;\n>  305      const nets = incl && members.length > 1 ? allocate(money(lineNetGroup, cur), members.map((r) => Number(r.amount))).map((m) => m.minor) : incl ? [lineNetGroup] : members.map((r) => r.amount);\n   306      let tax: bigint;\n   307      if (perLine) tax = nets.reduce((a, n) => a + times(money(n, cur), BigInt(rate.rateBp), BP).minor, 0n);\n   308      else if (incl) tax = sum - share - taxable;\n   309      else tax = times(money(taxable, cur), BigInt(rate.rateBp), BP).minor;\n   310      taxes.push({ code, name: rate.name, rateBp: rate.rateBp, ...(rate.exemptReason !== undefined ? { exemptReason: rate.exemptReason } : {}), taxable: money(taxable, cur), tax: money(tax, cur), allowance: money(allowance, cur) });\n   311      members.forEach((r, i) => lines.push({ description: r.l.description, quantityMilli: r.q, unitPrice: r.l.unitPrice, lineDiscount: money(r.disc, cur), net: money(nets[i]!, cur), tax: code }));\n\nTest file style (intent/blocks/invoices/invoices.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { test } from 'node:test';\nimport { parseXml, child, children } from '../dav/index.ts';\nimport { money, format } from '../money/index.ts';\nimport { InvoiceBook, InvoiceError, NotAllowed, Numbering, OutOfOrder, computeTotals, dueDate, earlyDiscount, gaps, parseQuantity, parseTerms, toPdf, toUbl, type DraftInput, type LineInput, type TaxRate } from './index.ts';\n\nconst RATES: Record<string, TaxRate> = {\n  VAT20: { code: 'VAT20', name: 'VAT', rateBp: 2000 },\n  VAT5: { code: 'VAT5', name: 'VAT reduced', rateBp: 500 },\n  ZERO: { code: 'ZERO', name: 'Zero rated', rateBp: 0 },\n  EXEMPT: { code: 'EXEMPT', name: 'Exempt', rateBp: 0, exemptReason: 'Education is exempt' },\n  US: { code: 'US', name: 'Sales tax', rateBp: 825 },\n};\nconst usd = (n: number) => money(n, 'USD');\nconst line = (description: string, quantity: string | number, price: number, tax = 'VAT20', extra: Partial<LineInput> = {}): LineInput => ({ description, quantity, unitPrice: usd(price), tax, ...extra });\nconst seller = { name: 'Acme & Sons <Ltd>', address: ['1 High Street'], country: 'GB', taxId: 'GB123456789', email: 'billing@example.test' };\nconst buyer = { name: 'Buyer plc', address: ['2 Low Road'], country: 'GB' };\nconst draftOf = (lines: LineInput[], extra: Partial<DraftInput> = {}): DraftInput => ({ seller, buyer, currency: 'USD', lines, terms: 'net 30', ...extra });\nconst newBook = () => {\n  let n = 0;\n  return new InvoiceBook({ rates: RATES, newId: () => `id${++n}` });\n};\n\ntest('totals: tax is rounded once per rate, half-even, from whole minor units', () => {\n  const t = computeTotals({ currency: 'USD', lines: [line('Widget', 2, 1999)] }, RATES);\n  assert.equal(t.net.minor, 3998n);\n  assert.equal(t.tax.minor, 800n, '3998 at 20% is 799.6, rounded to 800');\n  assert.equal(t.total.minor, 4798n);\n  assert.equal(t.lines[0]!.net.minor, 3998n);\n  assert.equal(t.taxes[0]!.taxable.minor, 3998n);\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/invoices-330.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "97d1d7efe5ec567a980fc0e91ce5147a3f2b0341"
+  },
+  "createdAt": "2026-11-28T10:11:39.003Z"
+}

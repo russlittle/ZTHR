@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 100 of 310 blocks calibrated; 0 certified, 97 with survivors still to close, 3 capable but not yet checked for repeatability and reproducibility.
+QA judges builds; metrology judges QA's instruments. Every measure is defined once, here, and traced to a reference: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. Every gauge gets a dated certificate: its capability (the mutation score of its block: does each test reject a planted defect), its repeatability (the flake rate) and its reproducibility (the same verdicts in a fresh clone and on CI), re-checked nightly and whenever its code changes. QA may use only gauges metrology has certified. Where it stands: 115 of 310 blocks calibrated; 0 certified, 112 with survivors still to close, 3 capable but not yet checked for repeatability and reproducibility.
 
 ```mermaid
 flowchart LR
@@ -72,7 +72,7 @@ flowchart LR
   k -.->|the block changes: calibrate again| x
 ```
 
-The 100 blocks calibrated so far, of 310:
+The 115 blocks calibrated so far, of 310:
 
 | Block | Certificate | Capability | Survivors | Ruled equivalent | Issued |
 | --- | --- | --- | --- | --- | --- |
@@ -176,6 +176,21 @@ The 100 blocks calibrated so far, of 310:
 | `rate-plans` | not certified: 123 planted defects not rejected, and not ruled equivalent | 76.3% | 123 | 0 | 2026-11-28 |
 | `wiki-links` | not certified: 69 planted defects not rejected, and not ruled equivalent | 84.4% | 69 | 0 | 2026-11-28 |
 | `tax-engine` | not certified: 282 planted defects not rejected, and not ruled equivalent | 71.6% | 282 | 0 | 2026-11-28 |
+| `invoices` | not certified: 276 planted defects not rejected, and not ruled equivalent | 68.2% | 276 | 0 | 2026-11-28 |
+| `recurring-billing` | not certified: 118 planted defects not rejected, and not ruled equivalent | 77.9% | 118 | 0 | 2026-11-28 |
+| `crdt-map` | not certified: 126 planted defects not rejected, and not ruled equivalent | 77.3% | 126 | 0 | 2026-11-28 |
+| `slash-commands` | not certified: 184 planted defects not rejected, and not ruled equivalent | 80.9% | 184 | 0 | 2026-11-28 |
+| `crdt-awareness` | not certified: 76 planted defects not rejected, and not ruled equivalent | 85.8% | 76 | 0 | 2026-11-28 |
+| `playback-state` | not certified: 109 planted defects not rejected, and not ruled equivalent | 80.0% | 109 | 0 | 2026-11-28 |
+| `metadata-match` | not certified: 159 planted defects not rejected, and not ruled equivalent | 70.9% | 159 | 0 | 2026-11-28 |
+| `library-scan` | not certified: 233 planted defects not rejected, and not ruled equivalent | 73.8% | 233 | 0 | 2026-11-28 |
+| `audio-tags` | not certified: 947 planted defects not rejected, and not ruled equivalent | 60.6% | 947 | 0 | 2026-11-28 |
+| `playlists` | not certified: 420 planted defects not rejected, and not ruled equivalent | 65.4% | 420 | 0 | 2026-11-28 |
+| `opds-epub` | not certified: 631 planted defects not rejected, and not ruled equivalent | 61.8% | 631 | 0 | 2026-11-28 |
+| `subtitles` | not certified: 846 planted defects not rejected, and not ruled equivalent | 64.2% | 846 | 0 | 2026-11-28 |
+| `xmltv-epg` | not certified: 466 planted defects not rejected, and not ruled equivalent | 68.8% | 466 | 0 | 2026-11-28 |
+| `media-name-parse` | not certified: 648 planted defects not rejected, and not ruled equivalent | 58.8% | 648 | 0 | 2026-11-28 |
+| `matroska-probe` | not certified: 597 planted defects not rejected, and not ruled equivalent | 62.2% | 597 | 0 | 2026-11-28 |
 
 ### Control charts
 

@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "slash-commands",
+  "mutant": {
+    "id": "593",
+    "line": 408,
+    "column": 25,
+    "endLine": 408,
+    "endColumn": 95,
+    "mutator": "ObjectLiteral",
+    "original": "{ ...v, view, hash: hex(sha256(JSON.stringify(view)).subarray(0, 8)) }",
+    "replacement": "{}",
+    "lineText": "const n: OpenView = { ...v, view, hash: hex(sha256(JSON.stringify(view)).subarray(0, 8)) };",
+    "prevText": "if (p.length) throw new SlashError(p.join('; '));",
+    "nextText": "this.views.set(viewId, n);"
+  },
+  "mayEdit": [
+    "intent/blocks/slash-commands/slash-commands.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/slash-commands-593.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"slash-commands\". Mutant: line 408:25-408:95, mutator ObjectLiteral: \"{ ...v, view, hash: hex(sha256(JSON.stringify(view)).subarray(0, 8)) }\" becomes \"{}\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/slash-commands/index.ts (> marks the mutated line):\n   402    update(viewId: string, hash: string, view: View): OpenView {\n   403      const v = this.views.get(viewId);\n   404      if (!v) throw new SlashError('no such view');\n   405      if (v.hash !== hash) throw new SlashError('the view changed since you read it');\n   406      const p = viewProblems(view);\n   407      if (p.length) throw new SlashError(p.join('; '));\n>  408      const n: OpenView = { ...v, view, hash: hex(sha256(JSON.stringify(view)).subarray(0, 8)) };\n   409      this.views.set(viewId, n);\n   410      return n;\n   411    }\n   412  \n   413    /** Check a submission against the inputs. Unknown fields are refused; errors come back by block id. */\n   414    submit(viewId: string, user: string, values: Values): SubmitResult {\n\nTest file style (intent/blocks/slash-commands/slash-commands.test.ts):\n16 test() blocks. Imports and the first tests, verbatim:\nimport assert from 'node:assert/strict';\nimport { createHash, createHmac } from 'node:crypto';\nimport { test } from 'node:test';\nimport { signature } from '../webhooks/index.ts';\nimport { ActionSigner, BadSignature, BadToken, BotTokens, Dispatcher, InteractiveReceiver, MemoryDirectory, Modals, ResponseUrls, SlashError, blockProblems, escapeMarkup, later, mention, parseCommandLine, parseForm, replyJson, signRequest, tokenize, verifyRequest, viewProblems, type Block, type Deps, type View } from './index.ts';\n\n// Everything secret is derived when the test runs; nothing credential-shaped is written in the file.\nconst derive = (label: string) => createHash('sha256').update(`slash-commands test ${label}`).digest('hex');\nconst KEY = derive('request signing');\nconst KEY2 = derive('rotated signing');\n\nfunction deps(start = 1_700_000_000_000): Deps & { t: number } {\n  let n = 0;\n  const d = {\n    t: start,\n    now: () => d.t,\n    random: (len: number) => {\n      let out = Buffer.alloc(0);\n      while (out.length < len) out = Buffer.concat([out, createHash('sha256').update(`r${++n}`).digest()]);\n      return out.subarray(0, len);\n    },\n  };\n  return d;\n}\n\nconst form = (o: Record<string, string>) => Object.entries(o).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');\nconst signed = (d: { t: number }, body: string, key = KEY) => {\n  const ts = Math.floor(d.t / 1000);\n  return { body, headers: { 'x-slack-request-timestamp': String(ts), 'x-slack-signature': signRequest(key, ts, body) } };\n};\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/slash-commands-593.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "97d1d7efe5ec567a980fc0e91ce5147a3f2b0341"
+  },
+  "createdAt": "2026-11-28T10:12:57.371Z"
+}

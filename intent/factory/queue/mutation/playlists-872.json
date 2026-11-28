@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "playlists",
+  "mutant": {
+    "id": "872",
+    "line": 414,
+    "column": 36,
+    "endLine": 414,
+    "endColumn": 50,
+    "mutator": "ConditionalExpression",
+    "original": "i.length > 200",
+    "replacement": "false",
+    "lineText": "for (const i of items) if (!i || i.length > 200) throw new PlaylistError('an item id is 1 to 200 characters');",
+    "prevText": "if (at !== undefined && (!Number.isInteger(at) || at < 0 || at > p.entries.length)) throw new PlaylistError('no such position');",
+    "nextText": "const added = items.map((item) => ({ id: newId(), item }));"
+  },
+  "mayEdit": [
+    "intent/blocks/playlists/playlists.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/playlists-872.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"playlists\". Mutant: line 414:36-414:50, mutator ConditionalExpression: \"i.length > 200\" becomes \"false\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/playlists/index.ts (> marks the mutated line):\n   408  }\n   409  \n   410  export function addEntries(p: Playlist, version: number, items: readonly string[], newId: () => string, at?: number): Playlist {\n   411    guard(p, version);\n   412    if (p.entries.length + items.length > MAX_ENTRIES) throw new PlaylistError(`a playlist holds at most ${MAX_ENTRIES} entries`);\n   413    if (at !== undefined && (!Number.isInteger(at) || at < 0 || at > p.entries.length)) throw new PlaylistError('no such position');\n>  414    for (const i of items) if (!i || i.length > 200) throw new PlaylistError('an item id is 1 to 200 characters');\n   415    const added = items.map((item) => ({ id: newId(), item }));\n   416    const entries = [...p.entries];\n   417    entries.splice(at ?? entries.length, 0, ...added);\n   418    return bump(p, entries);\n   419  }\n   420  \n\nTest file style (intent/blocks/playlists/playlists.test.ts):\n22 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport {\n  ALBUM_ORDER, BadRule, PlaylistCycle, PlaylistError, Rng, ShareLinks, StaleVersion, addEntries, addToBag, canEdit, canView, createPlaylist, dedupe, fold, fromM3u,\n  matches, moveEntry, naturalCompare, newBag, nextInBag, removeEntries, removeFromBag, ruleProblems, runSmart, shuffle, shuffleSpread, sortItems, sortKey, sortPlaylist, toM3u,\n} from './index.ts';\nimport type { Item, Rule, Smart } from './index.ts';\n\nconst NOW = Date.parse('2026-06-15T12:00:00Z');\nconst DAY = 86_400_000;\nconst ctx = { now: () => NOW };\nconst derive = (s: string) => createHash('sha256').update(`playlists-test:${s}`).digest('hex').slice(0, 12);\nconst counter = () => { let n = 0; return () => `e${++n}`; };\nconst det = (seed: string) => { let c = 0; return (n: number) => Uint8Array.from(Buffer.concat(Array.from({ length: Math.ceil(n / 32) }, (_, i) => createHash('sha256').update(`${seed}:${c}:${n}:${i}`).digest())).subarray(0, n), (c++, (x: number) => x)); };\n\nconst lib: Item[] = [\n  { id: 't1', title: 'The Wall', artist: 'Pink Floyd', album: 'The Wall', albumArtist: 'Pink Floyd', genre: ['Rock', 'Prog'], year: 1979, durationMs: 200_000, playCount: 5, trackNo: 1, discNo: 1, addedAt: new Date(NOW - 3 * DAY).toISOString(), favourite: true },\n  { id: 't2', title: 'Track 10', artist: 'Björk', album: 'Homogenic', albumArtist: 'Björk', genre: ['Electronic'], year: 1997, durationMs: 300_000, playCount: 0, trackNo: 10, discNo: 1, addedAt: new Date(NOW - 40 * DAY).toISOString() },\n  { id: 't3', title: 'Track 2', artist: 'Bjork', album: 'Homogenic', albumArtist: 'Björk', genre: ['Electronic', 'Pop'], year: 1997, durationMs: 250_000, playCount: 12, trackNo: 2, discNo: 1, addedAt: new Date(NOW - 10 * DAY).toISOString(), favourite: false },\n  { id: 't4', title: 'Untitled', artist: 'Nobody', album: 'Demo', albumArtist: 'Nobody', durationMs: 100_000 },\n];\n\ntest('fold and sort keys ignore case, accents and a leading article', () => {\n  assert.equal(fold('  Björk – Hyper-Ballad! '), 'bjork hyper ballad');\n  assert.equal(fold('Straße'), 'strasse');\n  assert.equal(sortKey('The Beatles'), 'beatles');\n  assert.equal(sortKey('The Beatles', false), 'the beatles');\n});\n\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/playlists-872.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "97d1d7efe5ec567a980fc0e91ce5147a3f2b0341"
+  },
+  "createdAt": "2026-11-28T10:12:49.639Z"
+}

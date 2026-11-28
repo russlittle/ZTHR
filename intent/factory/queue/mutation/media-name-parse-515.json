@@ -1,0 +1,29 @@
+{
+  "kind": "kill-mutant",
+  "block": "media-name-parse",
+  "mutant": {
+    "id": "515",
+    "line": 280,
+    "column": 12,
+    "endLine": 280,
+    "endColumn": 122,
+    "mutator": "Regex",
+    "original": "/(?<![A-Za-z0-9])S(\\d{1,3})[ ._-]?E(\\d{1,4})((?:[ ._]?(?:-?E|-|\\+E?)\\d{1,4}){0,20})(?:[ ._-]*\\((\\d{1,4})\\))?/i",
+    "replacement": "/(?<![A-Za-z0-9])S(\\d{1,3})[ ._-]?E(\\d{1,4})((?:[^ ._]?(?:-?E|-|\\+E?)\\d{1,4}){0,20})(?:[ ._-]*\\((\\d{1,4})\\))?/i",
+    "lineText": "if ((m = /(?<![A-Za-z0-9])S(\\d{1,3})[ ._-]?E(\\d{1,4})((?:[ ._]?(?:-?E|-|\\+E?)\\d{1,4}){0,20})(?:[ ._-]*\\((\\d{1,4})\\))?/i.exec(s)))",
+    "prevText": "let m: RegExpExecArray | null;",
+    "nextText": "return { pattern: 'sxxexx', index: m.index, length: m[0].length, season: Number(m[1]), episodes: expandTail(Number(m[2]), m[3] ?? ''), ...(m[4] ? { absolute: [Number(m[4])] } : {}) };"
+  },
+  "mayEdit": [
+    "intent/blocks/media-name-parse/media-name-parse.test.ts"
+  ],
+  "acceptance": "node tools/mutation/accept.ts intent/factory/queue/mutation/media-name-parse-515.json",
+  "budgetTokens": 40000,
+  "tier": "worker",
+  "priority": 1,
+  "prompt": "TASK kill-mutant. Block \"media-name-parse\". Mutant: line 280:12-280:122, mutator Regex: \"/(?<![A-Za-z0-9])S(\\\\d{1,3})[ ._-]?E(\\\\d{1,4})((?:[ ._]?(?:-?E|-|\\\\+E?)\\\\d{1,4}){0,20})(?:[ ._-]*\\\\((\\\\d{1,4})\\\\))?/i\" becomes \"/(?<![A-Za-z0-9])S(\\\\d{1,3})[ ._-]?E(\\\\d{1,4})((?:[^ ._]?(?:-?E|-|\\\\+E?)\\\\d{1,4}){0,20})(?:[ ._-]*\\\\((\\\\d{1,4})\\\\))?/i\".\n\nThe tests still pass when the code is changed this way, so nothing checks this behaviour.\n\nSurrounding code in intent/blocks/media-name-parse/index.ts (> marks the mutated line):\n   274    const t = new Date(Date.UTC(y, m - 1, d));\n   275    return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d && y >= 1900 ? `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}` : undefined;\n   276  };\n   277  \n   278  function findEpisode(s: string, ctx: { seriesContext: boolean; seasonDir: boolean; concatenated: boolean; anime: boolean }, o: Options): EpHit | undefined {\n   279    let m: RegExpExecArray | null;\n>  280    if ((m = /(?<![A-Za-z0-9])S(\\d{1,3})[ ._-]?E(\\d{1,4})((?:[ ._]?(?:-?E|-|\\+E?)\\d{1,4}){0,20})(?:[ ._-]*\\((\\d{1,4})\\))?/i.exec(s)))\n   281      return { pattern: 'sxxexx', index: m.index, length: m[0].length, season: Number(m[1]), episodes: expandTail(Number(m[2]), m[3] ?? ''), ...(m[4] ? { absolute: [Number(m[4])] } : {}) };\n   282    if ((m = /(?<![A-Za-z0-9])S(\\d{1,3})[ ._-]*-[ ._-]*E(\\d{1,4})/i.exec(s))) return { pattern: 'sxx-exx', index: m.index, length: m[0].length, season: Number(m[1]), episodes: [Number(m[2])] };\n   283    if ((m = /(?<![0-9A-Za-z])(\\d{1,2})x(\\d{2,3})((?:-\\d{2,3}){0,5})(?![0-9A-Za-z])/i.exec(s)) && !/^\\d{3,4}$/.test(m[1]!)) {\n   284      const tail = m[3] ? m[3].replace(/-(\\d+)/g, '-$1') : '';\n   285      return { pattern: 'nxnn', index: m.index, length: m[0].length, season: Number(m[1]), episodes: expandTail(Number(m[2]), tail) };\n   286    }\n\nTest file style (intent/blocks/media-name-parse/media-name-parse.test.ts):\n18 test() blocks. Imports and the first tests, verbatim:\nimport { test } from 'node:test';\nimport assert from 'node:assert/strict';\nimport { identify, parseAlbumDir, parseDiscDir, parseQuality, parseSeasonDir, parseSidecar, parseTrackName, splitExt, titleKey, episodeKey, movieKey } from './index.ts';\nimport type { Episode, Extra, Movie, Options, Track } from './index.ts';\n\nconst NOW = Date.UTC(2026, 5, 1);\nconst O: Options = { now: () => NOW };\nconst mov = (p: string, o: Options = O) => {\n  const r = identify(p, o);\n  assert.equal(r.kind, 'movie', `${p} -> ${JSON.stringify(r)}`);\n  return r as Movie;\n};\nconst ep = (p: string, o: Options = O) => {\n  const r = identify(p, o);\n  assert.equal(r.kind, 'episode', `${p} -> ${JSON.stringify(r)}`);\n  return r as Episode;\n};\n\ntest('splitExt only strips extensions that are media or sidecars', () => {\n  assert.deepEqual(splitExt('Movie.2019.mkv'), { base: 'Movie.2019', ext: 'mkv' });\n  assert.deepEqual(splitExt('Dr. Strangelove'), { base: 'Dr. Strangelove', ext: '' });\n  assert.deepEqual(splitExt('Mr.Robot.S01E01.1080p'), { base: 'Mr.Robot.S01E01.1080p', ext: '' });\n  assert.deepEqual(splitExt('song.FLAC'), { base: 'song', ext: 'flac' });\n});\n\ntest('movies: release names, brackets, year as title, the title keeps its own numbers', () => {\n  const rows: [string, string, number | undefined][] = [\n    ['The.Matrix.1999.1080p.BluRay.x264-GRP.mkv', 'The Matrix', 1999],\n    ['Blade Runner 2049 (2017) 2160p.mkv', 'Blade Runner 2049', 2017],\n    ['Blade.Runner.2049.2017.UHD.BluRay.mkv', 'Blade Runner 2049', 2017],\n\nRules:\n- Edit only the files listed in mayEdit. Do not touch anything else.\n- Never remove or weaken an assertion, never add skip, todo, only or a Stryker disable comment. Only add lines.\n- Add the smallest test (or a new assertion inside a new test) that passes on the real code and fails on the mutant. Follow the file's style.\n- Assert behaviour a person could state in a sentence, not the implementation. Use exact values, not ranges, where the code is exact.\n- If your new test FAILS on the real code, do not bend it to pass: leave it in place and stop. That is a real bug and a fix-bug task follows.\n- If you think the mutant is equivalent (no input can tell it from the original), do not write a test: stop and say why, with the argument.\n\nRun when done: node tools/mutation/accept.ts intent/factory/queue/mutation/media-name-parse-515.json\nCommit only if it prints \"pass\": true.",
+  "baseline": {
+    "tools/mutation/proposals/mutation-floors-2026-11-28.md": "97d1d7efe5ec567a980fc0e91ce5147a3f2b0341"
+  },
+  "createdAt": "2026-11-28T10:12:07.341Z"
+}

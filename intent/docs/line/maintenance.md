@@ -113,7 +113,7 @@ flowchart LR
   r -.->|next round, until no survivors but recorded equivalents| m
 ```
 
-Scores per block, from metrology's certificates (100 blocks scored, 3 with no survivors but recorded equivalents):
+Scores per block, from metrology's certificates (115 blocks scored, 3 with no survivors but recorded equivalents):
 
 | Block | Score | Floor | Survived | Recorded equivalent |
 | --- | --- | --- | --- | --- |
@@ -125,6 +125,7 @@ Scores per block, from metrology's certificates (100 blocks scored, 3 with no su
 | `apiver` | 87.4% | none | 15 | 0 |
 | `ask` | 98.2% | none | 16 | 0 |
 | `asn1-der` | 77.8% | none | 291 | 0 |
+| `audio-tags` | 60.6% | none | 947 | 0 |
 | `audit` | 75.0% | none | 32 | 0 |
 | `backups` | 79.3% | none | 33 | 0 |
 | `booking` | 80.0% | none | 43 | 0 |
@@ -138,6 +139,8 @@ Scores per block, from metrology's certificates (100 blocks scored, 3 with no su
 | `console` | 98.3% | none | 12 | 0 |
 | `contact` | 97.5% | none | 10 | 0 |
 | `costmeter` | 79.1% | none | 28 | 0 |
+| `crdt-awareness` | 85.8% | none | 76 | 0 |
+| `crdt-map` | 77.3% | none | 126 | 0 |
 | `crypto` | 89.2% | none | 14 | 0 |
 | `datagate` | 80.5% | none | 42 | 0 |
 | `dav` | 100.0% | none | 0 | 0 |
@@ -159,11 +162,16 @@ Scores per block, from metrology's certificates (100 blocks scored, 3 with no su
 | `idempotency` | 86.4% | none | 8 | 0 |
 | `imagemeta` | 63.8% | none | 135 | 0 |
 | `importer` | 78.1% | none | 223 | 0 |
+| `invoices` | 68.2% | none | 276 | 0 |
 | `jobs` | 99.4% | none | 2 | 0 |
 | `leases` | 83.7% | none | 21 | 0 |
+| `library-scan` | 73.8% | none | 233 | 0 |
 | `loadsoak` | 68.9% | none | 56 | 0 |
+| `matroska-probe` | 62.2% | none | 597 | 0 |
 | `mcp` | 69.3% | none | 109 | 0 |
+| `media-name-parse` | 58.8% | none | 648 | 0 |
 | `message-search` | 71.2% | none | 223 | 0 |
+| `metadata-match` | 70.9% | none | 159 | 0 |
 | `microblog` | 69.0% | none | 313 | 0 |
 | `migrations` | 79.9% | none | 32 | 0 |
 | `moderation-model` | 77.9% | none | 137 | 0 |
@@ -172,12 +180,15 @@ Scores per block, from metrology's certificates (100 blocks scored, 3 with no su
 | `objects` | 75.0% | none | 51 | 0 |
 | `observe` | 64.1% | none | 137 | 0 |
 | `oidc` | 70.6% | none | 67 | 0 |
+| `opds-epub` | 61.8% | none | 631 | 0 |
 | `oracle` | 53.0% | none | 151 | 0 |
 | `paging` | 71.6% | none | 56 | 0 |
 | `palette` | 66.4% | none | 48 | 0 |
 | `payments` | 77.8% | none | 70 | 0 |
 | `pdf` | 96.8% | none | 9 | 0 |
 | `pipeline` | 73.2% | none | 71 | 0 |
+| `playback-state` | 80.0% | none | 109 | 0 |
+| `playlists` | 65.4% | none | 420 | 0 |
 | `privacy` | 78.0% | none | 22 | 0 |
 | `prompt-store` | 80.4% | none | 155 | 0 |
 | `pwa` | 73.8% | none | 34 | 0 |
@@ -186,6 +197,7 @@ Scores per block, from metrology's certificates (100 blocks scored, 3 with no su
 | `rate-plans` | 76.3% | none | 123 | 0 |
 | `ratelimit` | 60.0% | none | 32 | 0 |
 | `rbac` | 70.0% | none | 58 | 0 |
+| `recurring-billing` | 77.9% | none | 118 | 0 |
 | `refdata` | 79.6% | none | 22 | 0 |
 | `reports` | 81.9% | none | 41 | 0 |
 | `resilience` | 78.7% | none | 19 | 0 |
@@ -195,8 +207,10 @@ Scores per block, from metrology's certificates (100 blocks scored, 3 with no su
 | `session-replay-plan` | 69.5% | none | 348 | 0 |
 | `sessions` | 78.2% | none | 64 | 0 |
 | `sitemap` | 96.9% | none | 7 | 0 |
+| `slash-commands` | 80.9% | none | 184 | 0 |
 | `slo` | 78.2% | none | 29 | 0 |
 | `speech` | 71.2% | none | 327 | 0 |
+| `subtitles` | 64.2% | none | 846 | 0 |
 | `surfaces` | 66.3% | none | 64 | 0 |
 | `sync` | 73.9% | none | 43 | 0 |
 | `tabular` | 74.8% | none | 113 | 0 |
@@ -217,6 +231,7 @@ Scores per block, from metrology's certificates (100 blocks scored, 3 with no su
 | `webhooks` | 75.1% | none | 67 | 0 |
 | `wiki-links` | 84.4% | none | 69 | 0 |
 | `workflow` | 81.8% | none | 35 | 0 |
+| `xmltv-epg` | 68.8% | none | 466 | 0 |
 
 ### The crew
 
