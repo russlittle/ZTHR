@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->220<!-- /fact --> blocks, <!-- fact:blocks.tests -->3656<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->235<!-- /fact --> blocks, <!-- fact:blocks.tests -->3901<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |
@@ -229,6 +229,21 @@ randomness as arguments so every behaviour is testable, and ships with its tests
 | [block-markup](block-markup/index.ts) | Block editor markup as Gutenberg has it: parsed and written, validated by a registry, plain text and a walker | 15 |
 | [delta-sync](delta-sync/index.ts) | File sync by rolling checksums as rsync does it, three-way comparison with conflicts named, and ignore rules | 20 |
 | [http-cache](http-cache/index.ts) | HTTP caching: dates, ETags, preconditions, Cache-Control and freshness, Vary, ranges and multipart byte ranges | 23 |
+| [pricing](pricing/index.ts) | Prices with tiers, customer groups and dates, promotions that stack or exclude, coupons with limits, and every price explained | 15 |
+| [ocr-plan](ocr-plan/index.ts) | OCR behind one interface with a twin: hOCR and ALTO read safely, confidence judged, retries, and the plan for a searchable PDF layer | 17 |
+| [web-analytics](web-analytics/index.ts) | Privacy-first web analytics: visitor hashes salted daily, sessions, referrers and campaigns, bots and opt-outs filtered, goals and stats | 15 |
+| [imap-protocol](imap-protocol/index.ts) | IMAP: responses with literals, fetch and body structure, sequence sets, modified UTF-7, safe commands, search, IDLE and a resync plan | 17 |
+| [embed-protocol](embed-protocol/index.ts) | Embedding in other sites: allowed origins, snippets, a sequenced postMessage handshake, resizing and the headers that allow framing | 16 |
+| [ledger](ledger/index.ts) | Double-entry bookkeeping: entries posted once and frozen in a hash chain, corrections only by reversal, periods closed, and statements | 13 |
+| [inventory](inventory/index.ts) | Stock as moves between places, lots with expiry and serials, FIFO and average cost, reservations that expire, counts, and postings to the ledger | 13 |
+| [cart](cart/index.ts) | Shopping carts: lines merged and capped, prices refreshed with changes reported, stock held, carts merged at sign-in, and abandonment | 18 |
+| [checkout](checkout/index.ts) | Checkout as a state machine: address, shipping, payment, review and placed, totals computed on the server, charges idempotent and refunded on failure | 15 |
+| [formula-engine](formula-engine/index.ts) | Spreadsheet formulas with Excel precedence and dates, a workbook with dependencies and cycles found, and over 80 functions | 21 |
+| [form-builder](form-builder/index.ts) | Forms as data: rules by formula, validation, pages, routing, confirmation and prefill, with answers always kept as text | 15 |
+| [mail-tracking](mail-tracking/index.ts) | Email opens and clicks tracked with signed links, in full, aggregate or off, proxy opens and bots discounted, and signed opt-out | 14 |
+| [campaigns](campaigns/index.ts) | Email campaigns: segments, escaped templates, scheduling, throttled sending with retries, A/B variants, unsubscribe headers and reports | 17 |
+| [experiments](experiments/index.ts) | Experiments: stable assignment behind flags, exposures logged, tests that stay valid while you watch, ratio checks, guardrails and a verdict | 17 |
+| [uptime-probes](uptime-probes/index.ts) | Uptime probes over HTTP, keywords, JSON, TCP, DNS and certificates, with retries, flap damping, maintenance windows and private addresses refused | 22 |
 <!-- /gen -->
 
 ```mermaid

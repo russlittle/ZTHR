@@ -1932,6 +1932,133 @@
       "requires": [],
       "tests": 23,
       "home": "intent/blocks/http-cache"
+    },
+    {
+      "name": "pricing",
+      "purpose": "Prices with tiers, customer groups and dates, promotions that stack or exclude, coupons with limits, and every price explained",
+      "requires": [
+        "money",
+        "rbac"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/pricing"
+    },
+    {
+      "name": "ocr-plan",
+      "purpose": "OCR behind one interface with a twin: hOCR and ALTO read safely, confidence judged, retries, and the plan for a searchable PDF layer",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/ocr-plan"
+    },
+    {
+      "name": "web-analytics",
+      "purpose": "Privacy-first web analytics: visitor hashes salted daily, sessions, referrers and campaigns, bots and opt-outs filtered, goals and stats",
+      "requires": [],
+      "tests": 15,
+      "home": "intent/blocks/web-analytics"
+    },
+    {
+      "name": "imap-protocol",
+      "purpose": "IMAP: responses with literals, fetch and body structure, sequence sets, modified UTF-7, safe commands, search, IDLE and a resync plan",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/imap-protocol"
+    },
+    {
+      "name": "embed-protocol",
+      "purpose": "Embedding in other sites: allowed origins, snippets, a sequenced postMessage handshake, resizing and the headers that allow framing",
+      "requires": [
+        "secheaders"
+      ],
+      "tests": 16,
+      "home": "intent/blocks/embed-protocol"
+    },
+    {
+      "name": "ledger",
+      "purpose": "Double-entry bookkeeping: entries posted once and frozen in a hash chain, corrections only by reversal, periods closed, and statements",
+      "requires": [
+        "audit"
+      ],
+      "tests": 13,
+      "home": "intent/blocks/ledger"
+    },
+    {
+      "name": "inventory",
+      "purpose": "Stock as moves between places, lots with expiry and serials, FIFO and average cost, reservations that expire, counts, and postings to the ledger",
+      "requires": [
+        "ledger"
+      ],
+      "tests": 13,
+      "home": "intent/blocks/inventory"
+    },
+    {
+      "name": "cart",
+      "purpose": "Shopping carts: lines merged and capped, prices refreshed with changes reported, stock held, carts merged at sign-in, and abandonment",
+      "requires": [
+        "money"
+      ],
+      "tests": 18,
+      "home": "intent/blocks/cart"
+    },
+    {
+      "name": "checkout",
+      "purpose": "Checkout as a state machine: address, shipping, payment, review and placed, totals computed on the server, charges idempotent and refunded on failure",
+      "requires": [
+        "payments"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/checkout"
+    },
+    {
+      "name": "formula-engine",
+      "purpose": "Spreadsheet formulas with Excel precedence and dates, a workbook with dependencies and cycles found, and over 80 functions",
+      "requires": [],
+      "tests": 21,
+      "home": "intent/blocks/formula-engine"
+    },
+    {
+      "name": "form-builder",
+      "purpose": "Forms as data: rules by formula, validation, pages, routing, confirmation and prefill, with answers always kept as text",
+      "requires": [
+        "formula-engine"
+      ],
+      "tests": 15,
+      "home": "intent/blocks/form-builder"
+    },
+    {
+      "name": "mail-tracking",
+      "purpose": "Email opens and clicks tracked with signed links, in full, aggregate or off, proxy opens and bots discounted, and signed opt-out",
+      "requires": [
+        "crypto"
+      ],
+      "tests": 14,
+      "home": "intent/blocks/mail-tracking"
+    },
+    {
+      "name": "campaigns",
+      "purpose": "Email campaigns: segments, escaped templates, scheduling, throttled sending with retries, A/B variants, unsubscribe headers and reports",
+      "requires": [],
+      "tests": 17,
+      "home": "intent/blocks/campaigns"
+    },
+    {
+      "name": "experiments",
+      "purpose": "Experiments: stable assignment behind flags, exposures logged, tests that stay valid while you watch, ratio checks, guardrails and a verdict",
+      "requires": [
+        "flags"
+      ],
+      "tests": 17,
+      "home": "intent/blocks/experiments"
+    },
+    {
+      "name": "uptime-probes",
+      "purpose": "Uptime probes over HTTP, keywords, JSON, TCP, DNS and certificates, with retries, flap damping, maintenance windows and private addresses refused",
+      "requires": [
+        "resilience",
+        "health"
+      ],
+      "tests": 22,
+      "home": "intent/blocks/uptime-probes"
     }
   ]
 }
