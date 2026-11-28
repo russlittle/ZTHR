@@ -25,13 +25,13 @@ test('a session follows the cmi5 rules and the unit is satisfied only per its mo
   s.completed();
   s.terminated();
   assert.throws(() => s.completed(), /ended/);
-  assert.equal(satisfied(unit, s.statements), false, 'completed but not passed');
+  assert.equal(satisfied(unit, s.statements, { actor, registration: 'reg-1' }), false, 'completed but not passed');
   const again = new Session(unit, actor, 'reg-1', () => new Date(t));
   again.initialized();
   const passed = again.judged(0.85);
   assert.deepEqual(passed.context.contextActivities.category.map((c) => c.id), [CMI5_CATEGORY, MOVEON_CATEGORY]);
   again.terminated();
-  assert.equal(satisfied(unit, [...s.statements, ...again.statements]), true);
+  assert.equal(satisfied(unit, [...s.statements, ...again.statements], { actor, registration: 'reg-1' }), true);
   assert.throws(() => again.judged(2), /ended/);
   assert.equal(new Session(unit, actor, 'r', () => new Date(t)).abandoned().verb.id, VERBS.abandoned);
 });
@@ -62,4 +62,30 @@ test('passed and completed are sent at most once per registration, and failed ne
   const other = new Session(unit, actor, 'reg-4', () => new Date(t), first.statements);
   other.initialized();
   assert.equal(other.judged(0.9).verb.id, VERBS.passed, 'another registration starts afresh');
+});
+
+test('only this learner’s statements in this registration satisfy a unit, whatever else the record store returns', () => {
+  const t = Date.parse('2026-11-26T10:00:00Z');
+  const other = { objectType: 'Agent' as const, account: { homePage: 'https://files.example.org', name: 'u-99' } };
+  const elsewhere = { objectType: 'Agent' as const, account: { homePage: 'https://other.example.org', name: 'u-42' } };
+  const run = (who: typeof actor, reg: string) => {
+    const s = new Session(unit, who, reg, () => new Date(t));
+    s.initialized();
+    s.judged(0.9);
+    s.completed();
+    s.terminated();
+    return s.statements;
+  };
+  const mine = { actor, registration: 'reg-5' };
+  assert.equal(satisfied(unit, run(other, 'reg-5'), mine), false, 'another learner’s results never count');
+  assert.equal(satisfied(unit, run(elsewhere, 'reg-5'), mine), false, 'the same name on another home page is another learner');
+  assert.equal(satisfied(unit, run(actor, 'reg-6'), mine), false, 'another registration’s results never count');
+  const passedOnly = new Session(unit, actor, 'reg-5', () => new Date(t));
+  passedOnly.initialized();
+  passedOnly.judged(0.9);
+  const completedByOther = run(other, 'reg-5').filter((s) => s.verb.id === VERBS.completed);
+  assert.equal(satisfied(unit, [...passedOnly.statements, ...completedByOther], mine), false, 'a mixed set cannot borrow another learner’s completion');
+  assert.equal(satisfied(unit, [...run(other, 'reg-5'), ...run(actor, 'reg-5')], mine), true);
+  const relabelled = run(actor, 'reg-5').map((s) => (s.verb.id === VERBS.failed || s.verb.id === VERBS.completed ? s : { ...s, verb: { id: VERBS.failed, display: { 'en-US': 'passed' as const } } }));
+  assert.equal(satisfied(unit, relabelled, mine), false, 'a verb is its id, not its display text');
 });

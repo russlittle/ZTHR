@@ -1,7 +1,7 @@
 /**
  * API keys: issued with scopes and an expiry, shown once, kept only as a hash, found by a public prefix so a
  * lookup never scans, rotated with an overlap so callers move to the new key without an outage, and revoked one
- * at a time. A key's prefix says what it is ("zk_live_"), so a leaked key is recognisable to secret scanners.
+ * at a time. Scopes may end in ":*" to allow everything under a prefix (see `allows`). A key's prefix says what it is ("zk_live_"), so a leaked key is recognisable to secret scanners.
  */
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
@@ -39,6 +39,15 @@ export class Rejected extends Error {
 
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 
+/**
+ * Whether a key's scopes allow one. A scope allows itself; "*" allows every scope; "<prefix>:*" allows every scope
+ * under that prefix ("files:*" allows "files:read" and "files:share:write", but not "files" itself or
+ * "filesystem:read"). A "*" anywhere else is an ordinary character, so "files:re*" allows only "files:re*".
+ */
+export function allows(scopes: readonly string[], scope: string): boolean {
+  return scopes.some((s) => s === scope || s === '*' || (s.endsWith(':*') && s.length > 2 && scope.startsWith(s.slice(0, -1)) && scope.length > s.length - 1));
+}
+
 export class ApiKeys {
   private readonly store: KeyStore;
   private readonly prefix: string;
@@ -71,7 +80,7 @@ export class ApiKeys {
     if (k.revoked) throw new Rejected('that key was revoked');
     if (k.expires && k.expires <= t) throw new Rejected('that key has expired');
     if (k.retiresAt && k.retiresAt <= t) throw new Rejected('that key was replaced; use the new one');
-    if (!k.scopes.includes(scope) && !k.scopes.includes('*')) throw new Rejected(`that key does not allow ${scope}`);
+    if (!allows(k.scopes, scope)) throw new Rejected(`that key does not allow ${scope}`);
     if (!k.lastUsed || t - k.lastUsed > 60_000) {
       k.lastUsed = t;
       await this.store.set(k);

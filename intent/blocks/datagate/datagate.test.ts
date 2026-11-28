@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Gate, inventory, mask, type Field } from './index.ts';
+import { Gate, inventory, mask, type Decision, type Field } from './index.ts';
 
 const fields: Field[] = [
   { collection: 'users', field: 'id', level: 'internal' },
@@ -48,4 +48,13 @@ test('a destination pattern with the global flag decides the same way every time
   const a = g.decide('users', ['plan'], 'staging', 'ci')[0]!.action;
   const b = g.decide('users', ['plan'], 'staging', 'ci')[0]!.action;
   assert.deepEqual([a, b], ['allow', 'allow']);
+});
+
+test('evidence keeps the most recent decisions in memory and hands every one to the sink', () => {
+  const stored: Decision[] = [];
+  const g = new Gate(fields, [{ destination: 'staging', allow: 'internal', why: 'staging' }], () => new Date('2026-11-26T00:00:00Z'), { keep: 2, sink: (e) => void stored.push(e) });
+  for (let i = 0; i < 4; i++) g.decide('users', ['plan'], 'staging', `job-${i}`);
+  assert.deepEqual(g.evidence.map((e) => e.who), ['job-2', 'job-3']);
+  assert.deepEqual(stored.map((e) => e.who), ['job-0', 'job-1', 'job-2', 'job-3']);
+  assert.deepEqual([g.decisions.recorded, g.decisions.handed, g.decisions.evicted], [4, 4, 2]);
 });

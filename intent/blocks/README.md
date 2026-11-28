@@ -4,7 +4,7 @@ Known-good code for the parts almost every app needs and most apps get wrong, so
 the AI designs only what is different. Each block is plain TypeScript with no dependencies, takes its clock and its
 randomness as arguments so every behaviour is testable, and ships with its tests.
 
-<!-- fact:blocks.count -->84<!-- /fact --> blocks, <!-- fact:blocks.tests -->465<!-- /fact --> tests between them:
+<!-- fact:blocks.count -->84<!-- /fact --> blocks, <!-- fact:blocks.tests -->490<!-- /fact --> tests between them:
 
 <!-- gen:blocks-here -->
 | Block | What it holds | Tests |

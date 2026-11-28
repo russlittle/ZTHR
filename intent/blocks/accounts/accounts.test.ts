@@ -33,7 +33,7 @@ test('sign-up sends a confirmation; a second sign-up with the same email reveals
   assert.equal(ana.emailConfirmed, true);
   await assert.rejects(a.confirm(tokenOf(0)), /not valid/, 'a link works once');
   const again = await a.signUp('ana@example.org', 'Someone', 'other-pw-123');
-  assert.equal(again.id, ana.id);
+  assert.notEqual(again.id, ana.id, 'the existing account is not handed to whoever typed its address');
   assert.equal(a.accounts.size, 1);
   assert.equal((await a.signIn('ANA@example.org', 'pw-ana-12345')).id, ana.id);
   await assert.rejects(a.signIn('ana@example.org', 'wrong'), Refused);
@@ -135,4 +135,46 @@ test('an elevation needs a real length of time, and ends when its holder is deac
   await a.offboard(adm.id, adm.id);
   assert.equal(a.active(adm.id), undefined);
   assert.equal(a.toReview().length, 2, 'both wait for review');
+});
+
+test('a sign-up with an address that has an account looks like any sign-up, and tells the owner instead', async () => {
+  const { a, sent } = setup();
+  const ana = await a.signUp('ana@example.org', 'Ana', 'pw-ana-12345');
+  const fresh = await a.signUp('ben@example.org', 'Ben', 'pw-ben-12345');
+  const again = await a.signUp('ANA@example.org', 'Mallory', 'other-pw-123');
+  assert.deepEqual(Object.keys(again).sort(), Object.keys(fresh).sort(), 'the same shape as a new sign-up');
+  assert.equal(again.passwordHash, 'h:other-pw-123', 'only the hash of what the caller typed');
+  assert.notEqual(again.id, ana.id);
+  assert.equal(again.emailConfirmed, false);
+  assert.equal(again.name, 'Mallory', 'nothing of the real account shows through');
+  assert.equal(a.accounts.size, 2, 'nothing new is kept');
+  assert.deepEqual(sent.at(-1), { to: 'ana@example.org', purpose: 'signup-attempt', link: 'https://app.example.org/signin' });
+  assert.equal((await a.signIn('ana@example.org', 'pw-ana-12345')).id, ana.id, 'the real account is untouched');
+});
+
+test('signing in with an unknown address costs a password check like a known one', async () => {
+  let checks = 0;
+  const a = new Accounts(
+    { send: async () => undefined, hash: async (pw) => `h:${pw}`, check: async (pw, h) => (checks++, h === `h:${pw}`) },
+    { baseUrl: 'https://app.example.org' },
+  );
+  await a.signUp('ana@example.org', 'Ana', 'pw-ana-12345');
+  await assert.rejects(a.signIn('ana@example.org', 'wrong'), /do not sign in/);
+  assert.equal(checks, 1);
+  await assert.rejects(a.signIn('nobody@example.org', 'wrong'), /do not sign in/);
+  assert.equal(checks, 2, 'a dummy hash is checked for an unknown address');
+  await assert.rejects(a.signIn('nobody@example.org', 'h:'), /do not sign in/, 'and the dummy never signs anyone in');
+});
+
+test('links that expire unused are swept, not kept until someone uses them', async () => {
+  const { a, tick } = setup();
+  await a.signUp('ana@example.org', 'Ana', 'pw-ana-12345');
+  await a.requestReset('ana@example.org');
+  await a.requestReset('ana@example.org');
+  assert.equal(a.sweep(), 0, 'nothing has expired yet');
+  tick(3_600_001);
+  assert.equal(a.sweep(), 2, 'the two reset links');
+  tick(7 * 86_400_000);
+  await a.requestReset('ana@example.org');
+  assert.equal(a.sweep(), 0, 'making a link swept the expired confirmation on its own');
 });

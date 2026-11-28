@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { test } from 'node:test';
-import { Expired, Sessions, base32, checkCode, enrol, hotp, recoveryCodes, totp, unbase32, useRecovery } from './index.ts';
+import { Expired, Sessions, base32, checkCode, enrol, hashRecovery, hotp, recoveryCodes, totp, unbase32, useRecovery } from './index.ts';
 
 test('RFC 6238 test vectors: the codes match the published values for SHA-1, SHA-256 and SHA-512', () => {
   const s1 = Buffer.from('12345678901234567890');
@@ -83,4 +84,17 @@ test('a recovery code typed without its hyphen, or with spaces, still works', ()
   const { codes, hashes } = recoveryCodes();
   assert.equal(useRecovery(codes[0]!.replace('-', ''), hashes)?.length, 9);
   assert.equal(useRecovery(` ${codes[1]!.replace('-', ' ')} `, hashes)?.length, 9);
+});
+
+test('recovery codes are kept as salted scrypt hashes, so a leaked list cannot be looked up or brute-forced cheaply', () => {
+  const { codes, hashes } = recoveryCodes(2);
+  const plain = createHash('sha256').update(codes[0]!).digest('hex');
+  assert.ok(!hashes.includes(plain), 'not the bare SHA-256 of the code');
+  assert.match(hashes[0]!, /^scrypt\$16384\$8\$1\$[A-Za-z0-9_-]{22}\$[A-Za-z0-9_-]{43}$/);
+  assert.notEqual(hashRecovery(codes[0]!), hashRecovery(codes[0]!), 'a fresh salt each time');
+  assert.equal(useRecovery(codes[0]!, hashes)?.length, 1);
+  const peppered = recoveryCodes(1, { pepper: 'server-secret' });
+  assert.equal(useRecovery(peppered.codes[0]!, peppered.hashes), null, 'without the pepper the code does not match');
+  assert.deepEqual(useRecovery(peppered.codes[0]!, peppered.hashes, { pepper: 'server-secret' }), []);
+  assert.equal(useRecovery(codes[0]!, ['scrypt$1099511627776$8$1$AAAA$AAAA']), null, 'a stored hash naming an absurd cost is refused, not run');
 });

@@ -19,6 +19,7 @@ It is the front office's whiteboard. Each order has a row; each department has a
 - **Waiting on you.** Built from what the browser knows: the product open in the studio, with its open questions, whether it is signed, and whether a revision is released; and every product kept in the library that is not yet released. The factory's own decisions for a person (Class I clarifications, production approvals, cases that stopped converging) are read with `intent agents proposals`.
 - **Products along the line.** One row per product; one lamp per department from the intent studio to shipping, then the fleet. A product with several intents shows, at each department, the worst light any of them shows.
 - **How the platform works.** Every intent's lamps, by department, and the measure: journeys walked as a person would, and passing.
+- **The fleet, metrology and maintenance.** The fleet, for what is in service; metrology, for which gauges are certified; maintenance, for the night shift's morning report.
 - **Drill-down.** Platform, then product, then intent, then a journey's trail through every department.
 
 {{diagram:waiting}}

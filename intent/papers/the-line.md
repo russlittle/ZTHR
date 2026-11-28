@@ -4,11 +4,11 @@
 
 Russ Little · Overview paper · Draft for review · Nov 26, 2026
 
-v0.1 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0. The roll-up of the series that begins with *ZTHR: A Pattern Language for Autonomous Software Delivery* ([10.5281/zenodo.23826734](https://doi.org/10.5281/zenodo.23826734)) and *Intent as the Datum*. Each department has its own paper: [Mission control](mission-control.md), [Product lines](product-lines.md), [Engineering](engineering.md), [Factory](factory.md), [QA](qa.md), [Shipping](shipping.md) and [Fleet](fleet.md).
+v0.1 · Request for comments · © 2026 Russ Little. Licensed under CC BY 4.0. The roll-up of the series that begins with *ZTHR: A Pattern Language for Autonomous Software Delivery* ([10.5281/zenodo.23826734](https://doi.org/10.5281/zenodo.23826734)) and *Intent as the Datum*. Each department has its own paper: [Mission control](mission-control.md), [Product lines](product-lines.md), [Engineering](engineering.md), [Factory](factory.md), [QA](qa.md), [Shipping](shipping.md) and [Fleet](fleet.md); beneath the line, [Metrology](metrology.md) and [Maintenance](maintenance.md).
 
 ## Abstract
 
-When agents write the code, a software organisation stops being a set of teams and becomes a production line. What it produces is not code but evidence that software does what a person meant, delivered to the people it is for and kept that way. This paper describes that line as eight departments in a fixed order: mission control, product lines, the intent studio, engineering, the factory, QA, shipping and the fleet. Each department does one job, hands the next a signed or computed artefact the next can check without trusting it, and turns what it learns into fixtures that every later product inherits.
+When agents write the code, a software organisation stops being a set of teams and becomes a production line. What it produces is not code but evidence that software does what a person meant, delivered to the people it is for and kept that way. This paper describes that line as eight departments in a fixed order: mission control, product lines, the intent studio, engineering, the factory, QA, shipping and the fleet. Each department does one job, hands the next a signed or computed artefact the next can check without trusting it, and turns what it learns into fixtures that every later product inherits. Beneath the line, two functions serve every department: metrology, which defines and certifies the instruments QA judges with, and maintenance, the night shift that repairs what is tagged.
 
 Two properties follow. **Separation of duties** is structural: no department, agent or person can both make a thing and approve it, and the acts only a person may perform have no tool at all. **Value compounds**: each product through the line leaves behind parts, gauges, controls and checklists, so the next product is mostly assembled from what is already specified, built and proven, and people and models design only what is new.
 
@@ -45,9 +45,14 @@ flowchart LR
   F -. intent cannot be met .-> I
   E -. Class I clarification .-> I
   V -. incidents and reports .-> M
+  subgraph Beneath["Beneath the line, serving every department"]
+    MY["Metrology<br/><small>certified gauges</small>"] -. tags .-> MT["Maintenance<br/><small>the night shift</small>"]
+  end
+  MY -. certified gauges .-> Q
+  MT -. the morning report .-> M
 ```
 
-The forward arrows carry work. The dotted arrows carry what was learned back to the department that can act on it.
+The forward arrows carry work. The dotted arrows carry what was learned back to the department that can act on it. Metrology and maintenance sit beneath the line because they serve every department rather than following any one: metrology measures and certifies, and maintenance repairs.
 
 ## 2. Two principles
 
@@ -64,6 +69,9 @@ Every hand-off is an artefact the receiving department can verify without trusti
 | QA | Shipping | A certified phase | Every journey walked as a person would; every gate proven able to fail |
 | Shipping | Fleet | A release that is serving | The running service answers with the build's own identity |
 | Fleet | Mission control | Readings, incidents, reports | Each reading links to the evidence it came from |
+| Metrology | QA | Certified gauges | QA uses a gauge only while its certificate is current |
+| Every department, and metrology | Maintenance | Tags: what is wrong, where, the evidence, and the test that will prove it fixed | A tag missing any of the four is refused |
+| Maintenance | Every department, and mission control | Fixes, and the morning report | Each fix passes the gates of day work, with a failing test first and a check by another model family |
 
 Nothing is accepted on a claim. A department that receives something it cannot check sends it back.
 
@@ -120,6 +128,14 @@ A certified build moves to people in stages: build, test, rehearse the data, pac
 ### 3.8 The fleet
 
 Everything in service, held to its service levels, and maintained as one. A fix to a standard assembly reaches every product that uses it. Every incident becomes a defect, a test and a ratchet. What people report flows back to mission control, and the line runs again.
+
+### 3.9 Metrology, beneath the line
+
+Metrology defines every measure QA uses and traces each to a reference standard: published test vectors, a recording of the system a product replaces, sealed held-out phrasing sets. It certifies every gauge before QA may use it: capability (does each test reject a planted defect, measured as the block's mutation score), repeatability (the flake rate) and reproducibility (the same verdicts in a fresh clone and on CI), after AIAG's *Measurement Systems Analysis*. It charts the factory's own process for drift and audits the factory's claims against their evidence. Its paper is [Metrology](metrology.md).
+
+### 3.10 Maintenance, beneath the line
+
+The line runs two shifts. By day every department, gate, reviewer and run tags what is not working instead of stopping the line. By night a crew of models works the tags, through the same gates as day work, staffed by a router that gives each task the cheapest model proven good enough for it, and leaves a morning report: fixed, with evidence; escalated, and why; new on the list. Its paper is [Maintenance](maintenance.md).
 
 ## 4. Separation of duties
 
@@ -243,3 +259,54 @@ The line makes claims that can be tested.
 ## 9. What it does not claim
 
 The line does not make a bad intent good: it makes a stated intent measurable and shows where it is not. It does not remove people: it moves them to the acts that need judgement (stating intent, approving production, governing the gauges) and gives those acts no shortcut. And it does not make the first product cheap: the first product pays for the fixtures. The claim is about the ones after it.
+
+## 10. The plant map
+
+The line borrows from manufacturing only where manufacturing brings a method, a number or a standard. A classic software build is deterministic: the same source gives the same result every time, so software never needed the statistics a plant uses to manage variation. AI workers bring variation back. The same task can pass on one run and fail on the next, and models differ in their defect rates. The plant's measurement disciplines were made for exactly that, and the factory's own records (pass rates per model per task kind, flake rates, mutation scores) are the data those methods consume.
+
+The factory stands in a long line of practice. Shewhart's control charts and Deming's quality system made variation something to measure rather than argue about; the Toyota Production System added stopping the line at a defect and maintaining equipment as planned work; automotive and aerospace quality turned measurement itself into a discipline, with measurement systems analysis (AIAG) and first article inspection (AS9102); lean software and DevOps carried flow and its measures into software delivery (the DORA measures of throughput and stability). AI workers reintroduce the process variation those disciplines were built for, so they apply directly rather than by analogy.
+
+Each plant function below is mapped to its equivalent in the software factory, with where the factory stands and the evidence. The table is generated from the factory's own source, so it changes as the factory does.
+
+<!-- gen:diagram:plant -->
+```mermaid
+xychart-beta
+  title "The plant map: functions of a manufacturing plant, by where the software factory stands on each."
+  x-axis ["Built and proven", "Partial", "Missing"]
+  y-axis "functions" 0 --> 50
+  bar [1, 20, 7]
+```
+<!-- /gen -->
+
+<!-- gen:plant-map -->
+| Plant function | Method or standard | In the software factory | Where it stands | Evidence |
+| --- | --- | --- | --- | --- |
+| Metrology lab | ISO 10012 measurement management | Metrology: defines every measure QA uses and certifies every gauge | partial | Calibration runs nightly and on change (night-shift workflow, tools/mutation); repeatability and reproducibility are not measured yet |
+| Reference standards | Traceability to a reference (ISO/IEC 17025) | Published test vectors, a recording of the replaced system, sealed held-out phrasing sets | partial | Some blocks test against their RFC’s vectors; no Nextcloud recording yet; held-out sets sealed by convention only |
+| Gauge R&R | AIAG Measurement Systems Analysis | Repeatability: the flake rate. Reproducibility: the same verdicts in a fresh clone and on CI | missing | Neither is measured. Builds are reproducible byte for byte (tools/supply/repro.ts); test verdicts are not yet compared |
+| Calibration certificates and intervals | ISO 9001 clause 7.1.5 | A dated certificate per block: mutation score, survivors, rulings; re-run nightly and on every change | partial | Certificates are written to eval/mutation/ as blocks are calibrated; most blocks have none yet |
+| Gauge capability | AIAG Measurement Systems Analysis | Mutation score per block: does each test reject a planted defect | partial | Measured for the blocks calibrated so far; every survivor is a work order |
+| Measurement system analysis of a fixture | AIAG Measurement Systems Analysis | The Files oracle checked on planted differences: what it must report, what it must mask | partial | The oracle’s unit tests plant differences; there is no recorded corpus to run a planted-difference suite on |
+| Inspection (QA) | ISO 9001 clause 8.6 | Journeys walked as a person would; gates proven on planted defects; QA uses only certified gauges | partial | Gates carry planted-defect proofs; no gauge is certified yet, so the rule that QA uses only certified gauges is not met |
+| Maintenance | Planned maintenance work orders | The night shift: work orders from every tag, through the same gates as day work | partial | Work orders and their acceptance gate exist (tools/mutation); the crew’s runner is not live, so no shift has run |
+| Incoming inspection | CycloneDX SBOM; licence allow list | Every dependency in an SBOM, every licence checked; model suppliers qualified by measured pass rates | partial | SBOMs and the licence gate run in the supply-chain workflow; model suppliers have a dated price table but no measured pass rates yet |
+| Document control | ISO 9001 clause 7.5; AS9100 | Journey cards locked by hash, the hash-chained ledger, signed provenance | partial | The ledger is hash-chained and journeys are locked by hash; branches are not protected, so the record can be bypassed |
+| Engineering change control | AS9100 configuration management | The intent signed by its holder; every change to it a signed revision | partial | A signature is bound to the exact content by hash; unprotected branches leave the repository’s own changes uncontrolled |
+| FMEA | AIAG-VDA FMEA Handbook | Failure modes per block, ranked by severity, occurrence and detection, each with its preventive test | missing | No failure-mode analysis is recorded for any block |
+| Control plan | AIAG APQP control plan | The required checks and the delivery stages, each with its gate | partial | Every stage and gate is defined; the reference pipeline does not yet run the data, signing, candidate, canary or operate stages |
+| First article inspection | AS9102 | A new product’s first build measured against its reference, characteristic by characteristic | missing | Files is the first product; its reference recording does not exist yet |
+| Statistical process control | Shewhart control charts; Western Electric rules | Control charts on test time, flake rate, mutation score and cost per change; a signal raises a tag | missing | The chart logic exists in metrology; no series has the 25 points limits need |
+| Service monitoring | The Site Reliability Workbook, burn-rate alerts | Error budgets watched in service; a fast burn rolls back | missing | Service levels are generated with the package; the reference pipeline does not watch them yet |
+| Nonconformance and review board | ISO 9001 clause 8.7 | A red build stops work on that line until it is dispositioned | missing | The reference build was red for 13 days while commits continued |
+| Corrective and preventive action | ISO 9001 clause 10.2; AS9100 | Every fix with its preventive test: a test that fails first | partial | The acceptance gate enforces failing-first for mutation work orders; it is a rule, not a gate, for other changes |
+| Andon | Stop-and-signal at the station | The tag: what, where, evidence and proving test, raised without stopping the line | partial | Calibration runs tag every survivor; other departments do not raise tags yet |
+| Poka-yoke | Error-proofing by design | Gates that make the wrong act impossible: person-only acts have no tool | built and proven | A test checks that no agent tool exists for any person-only act and that no tool admits a change |
+| Tool crib | Controlled, certified tooling | The block library, each block certified before a product uses it | partial | The library is catalogued and tested; blocks are not yet issued only on a certificate |
+| Work instructions | ISO 9001 clause 8.5.1 | Task specifications: what may be edited, the acceptance command, the budget | partial | Every mutation work order carries them; other task kinds have no written specification yet |
+| Lot traceability | AS9100 identification and traceability | Commit to artefact digest to deployed digest | partial | Builds are reproducible and attested by digest; deploys name a movable tag, not a digest |
+| Certificate of conformance | AS9100 release documentation | The release record: signed provenance and an SBOM for the exact artefact | partial | Provenance and SBOM attestations are made on push; the release record does not yet bind the deployed digest |
+| Internal audit | ISO 19011 | The claims-to-evidence ledger: every claim proven, partial or unproven | partial | An audit has been run once (73 claims: 10 proven, 43 partial, 20 unproven); the claim-by-claim ledger is not yet a record the site reads |
+| Registrar audit | ISO 17021 certification audit | An outside party audits the factory against its own claims | missing | No outside audit has been made |
+| Kaizen | Continuous improvement | The improvement brief: one page a week, what to change and why | partial | Catalogued as a part for products; not yet produced for the factory itself |
+| Capacity planning | Load against capacity and cost | The model router: the cheapest model proven for each task kind, within the day’s budget | partial | The router and its dated price table are built and tested; no pass rates are measured yet |
+<!-- /gen -->

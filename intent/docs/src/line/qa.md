@@ -37,6 +37,7 @@ The measure (journeys walked as a person would, and passing), every journey by p
 QA is the functional gauge on the assembly: parts that each meet their drawing can still fail to assemble, and only a whole-activity check catches that.
 
 - **Intent is the primary datum.** A board that is all green while a journey fails is a failure. A failing unit test with every journey intact is a defect to fix before it reaches anyone.
+- **QA uses certified gauges.** [Metrology](metrology.md) defines every measure QA uses and certifies each gauge; a gauge without a current certificate is not used.
 - **Gauges are proven before they are trusted.** Falsification (plant the defect, require the gate to fail) is what makes a pass mean something.
 - **Unknown is a state.** Not measured is shown as not measured, never as pass, and an older green result never stands in for a missing current one.
 - **Journeys come from the intent, not the code**, so they cannot enshrine what the code happens to do.

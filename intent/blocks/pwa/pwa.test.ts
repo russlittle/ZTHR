@@ -64,3 +64,30 @@ test('idempotency keys are unique across queues, so two devices offline at the s
   const b = new OfflineQueue(at).add('POST', '/api/folders', { name: 'B' });
   assert.notEqual(a.key, b.key);
 });
+
+test('every cache write is held in the fetch event’s waitUntil, so the worker lives until the response is stored', async () => {
+  const src = worker({ version: 'v3', precache: [], offline: '/offline.html', routes: [{ match: '^/assets/', strategy: 'cacheFirst' }, { match: '^/img/', strategy: 'staleWhileRevalidate' }, { match: '^/', strategy: 'networkFirst' }] });
+  type Ev = { request: { url: string; method: string; mode: string }; respondWith: (p: Promise<unknown>) => void; waitUntil: (p: Promise<unknown>) => void };
+  const handlers: Record<string, (e: Ev) => void> = {};
+  const self = { addEventListener: (k: string, f: (e: Ev) => void) => void (handlers[k] = f), clients: { claim: async () => {} }, skipWaiting: async () => {} };
+  const stored = new Map<string, unknown>();
+  const caches = {
+    keys: async () => [],
+    delete: async () => true,
+    match: async (r: { url: string } | string) => stored.get(typeof r === 'string' ? r : r.url),
+    open: async () => ({ put: (r: { url: string }, res: unknown) => new Promise<void>((done) => setTimeout(() => void (stored.set(r.url, res), done()), 5)) }),
+  };
+  const fetch = async (r: { url: string }) => ({ ok: true, url: r.url, clone() { return { copy: r.url }; } });
+  new Function('self', 'caches', 'location', 'fetch', 'Response', src)(self, caches, { origin: 'https://x' }, fetch, { error: () => 'error' });
+  for (const path of ['/assets/app.js', '/img/cat.png', '/page']) {
+    const url = `https://x${path}`;
+    const lifetime: Promise<unknown>[] = [];
+    let response!: Promise<unknown>;
+    handlers.fetch!({ request: { url, method: 'GET', mode: 'no-cors' }, respondWith: (p) => void (response = p), waitUntil: (p) => void lifetime.push(p) });
+    await response;
+    // Like the browser, settle every promise the event asked to be kept alive for, including ones added meanwhile.
+    for (let i = 0; i < lifetime.length; i++) await lifetime[i];
+    assert.ok(lifetime.length > 0, `${path}: the write is held in waitUntil`);
+    assert.deepEqual(stored.get(url), { copy: url }, `${path}: stored by the time the event's lifetime ends`);
+  }
+});

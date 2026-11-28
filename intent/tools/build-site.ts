@@ -4,6 +4,8 @@
  *   /intent    the studio: rough words to a released drawing and its package
  *   /factory   the factory console: the latest build's readings, journeys, phases, gates and ratchets
  *   /mission   mission control: intents on the left, the factory on the right, working software the measure
+ *   /metrology    the lab: the measures QA uses, gauge certificates, control charts, the claims audit
+ *   /maintenance  the night shift: the tags, the morning report, gauge scores and the crew, read from the records
  *
  * The deploy workflow runs it before the link check, so what is served is always built from the source in this
  * repository, never a copy. Assets are referenced by absolute path, because zthr.ai serves /intent without a slash.
@@ -16,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { DEPARTMENTS, lineBar, type Dept } from '../src/console/line.ts';
 import { sitePages } from './docs.ts';
+import { readNight } from './night.ts';
 
 const HERE = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const i = process.argv.indexOf('--out');
@@ -25,7 +28,7 @@ const OUT = resolve(HERE, i > 0 ? process.argv[i + 1]! : '../docs');
 const GATED = !process.argv.includes('--open');
 const gate = (html: string) => {
   if (!GATED) return html;
-  const out = html.replace('<html lang="en">', '<html lang="en" class="gated">').replace(/(<script src="\/(intent|mission|factory|lines|shipping|fleet)\/app\.js"><\/script>)/, '<script src="/console/gate.js"></script>\n$1');
+  const out = html.replace('<html lang="en">', '<html lang="en" class="gated">').replace(/(<script src="\/(intent|mission|factory|lines|shipping|fleet|metrology|maintenance)\/app\.js"><\/script>)/, '<script src="/console/gate.js"></script>\n$1');
   if (!out.includes('class="gated"') || !out.includes('/console/gate.js')) throw new Error('a gated page did not take the gate');
   return out;
 };
@@ -40,7 +43,7 @@ async function bundle(entry: string, out: string) {
   await build({ entryPoints: [join(HERE, entry)], bundle: true, format: 'iife', target: 'es2022', minify: true, outfile: join(OUT, out), logLevel: 'warning', legalComments: 'none' });
 }
 
-const PAGES = ['intent', 'engineering', 'mission', 'lines', 'factory', 'qa', 'shipping', 'fleet'] as const;
+const PAGES = ['intent', 'engineering', 'mission', 'lines', 'factory', 'qa', 'shipping', 'fleet', 'metrology', 'maintenance'] as const;
 for (const d of [...PAGES, 'console']) mkdirSync(join(OUT, d), { recursive: true });
 await bundle('src/studio/app.ts', 'intent/app.js');
 await bundle('src/console/mission.ts', 'mission/app.js');
@@ -49,6 +52,11 @@ await bundle('src/gate.ts', 'console/gate.js');
 await bundle('src/console/lines.ts', 'lines/app.js');
 await bundle('src/console/shipping.ts', 'shipping/app.js');
 await bundle('src/console/fleet.ts', 'fleet/app.js');
+await bundle('src/console/metrology.ts', 'metrology/app.js');
+await bundle('src/console/maintenance.ts', 'maintenance/app.js');
+// The calibration certificates and the night shift's records, as this commit holds them: metrology and maintenance
+// read them, and say so when there are none.
+writeFileSync(join(OUT, 'maintenance/night.json'), JSON.stringify(readNight()));
 
 const studio = readFileSync(join(HERE, 'studio/index.html'), 'utf8');
 const page = studio
@@ -65,7 +73,7 @@ const eng = page
 if (!eng.includes('data-dept="engineering"') || !eng.includes('<h1>Engineering</h1>')) throw new Error('the engineering page did not take its department');
 writeFileSync(join(OUT, 'engineering/index.html'), gate(withLine(eng, 'engineering')));
 const sitePage = (d: Dept, file: string) => writeFileSync(join(OUT, `${d}/index.html`), gate(withLine(readFileSync(join(HERE, `site/${file}.html`), 'utf8'), d)));
-for (const d of ['mission', 'lines', 'factory', 'qa', 'shipping', 'fleet'] as const) sitePage(d, d);
+for (const d of ['mission', 'lines', 'factory', 'qa', 'shipping', 'fleet', 'metrology', 'maintenance'] as const) sitePage(d, d);
 // How it works: the line's docs as pages, generated from the same sources as docs/line/*.md, with the depth ladder.
 const head = readFileSync(join(HERE, 'site/factory.html'), 'utf8').split('<title>')[0]!.replace('<link rel="stylesheet" href="/console/bar.css">', '<link rel="stylesheet" href="/console/bar.css">\n<link rel="stylesheet" href="/console/docs.css">');
 const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');

@@ -3,7 +3,8 @@
  * fails, and moved to a dead-letter list with its last error once its attempts are spent, where it waits for a
  * fix and a replay. A job with a key is enqueued once however often it is asked for. Long tasks report progress
  * and can be cancelled; backfills walk existing records in checkpointed batches that resume where they stopped
- * and can run dry first. Cron expressions schedule recurring jobs.
+ * and can run dry first. Cron expressions schedule recurring jobs. Finished jobs are forgotten after a retention
+ * period, so the queue does not grow without bound; dead letters are kept until they are replayed or dropped.
  */
 
 export type JobState = 'waiting' | 'running' | 'done' | 'dead' | 'cancelled';
@@ -38,6 +39,11 @@ export interface QueueOptions {
   readonly baseMs?: number;
   readonly maxMs?: number;
   readonly random?: () => number;
+  /**
+   * How long a job that is done or cancelled stays readable (for its result, progress and status page) before it is
+   * forgotten. Default one day. Dead jobs are never forgotten this way: they wait for `replay` or `drop`.
+   */
+  readonly retainMs?: number;
 }
 
 export class Queue {
@@ -46,9 +52,26 @@ export class Queue {
   private readonly running = new Map<string, AbortController>();
   private readonly o: Required<QueueOptions>;
   private seq = 0;
+  private lastSweep = -Infinity;
 
   constructor(o: QueueOptions = {}) {
-    this.o = { now: o.now ?? Date.now, baseMs: o.baseMs ?? 1000, maxMs: o.maxMs ?? 3_600_000, random: o.random ?? Math.random };
+    this.o = { now: o.now ?? Date.now, baseMs: o.baseMs ?? 1000, maxMs: o.maxMs ?? 3_600_000, random: o.random ?? Math.random, retainMs: o.retainMs ?? 86_400_000 };
+  }
+
+  /**
+   * Forgets jobs done or cancelled longer ago than the retention period; returns how many. `tick` runs it on its
+   * own, at most once a minute (or once per retention period, when that is shorter).
+   */
+  sweep(): number {
+    const t = this.o.now();
+    this.lastSweep = t;
+    let n = 0;
+    for (const [id, j] of this.jobs)
+      if ((j.state === 'done' || j.state === 'cancelled') && j.finished !== undefined && t - j.finished >= this.o.retainMs) {
+        this.jobs.delete(id);
+        n++;
+      }
+    return n;
   }
 
   handle(kind: string, h: Handler): void {
@@ -74,6 +97,7 @@ export class Queue {
    * overlapping tick, after the list was made is skipped.
    */
   async tick(): Promise<number> {
+    if (this.o.now() - this.lastSweep >= Math.min(this.o.retainMs, 60_000)) this.sweep();
     let n = 0;
     for (const j of this.due()) if (await this.run(j)) n++;
     return n;
@@ -134,6 +158,16 @@ export class Queue {
 
   dead(): Job[] {
     return [...this.jobs.values()].filter((j) => j.state === 'dead');
+  }
+
+  /** Removes dead jobs that will not be replayed (the cause is known and the work is not wanted); returns how many. */
+  drop(filter: (j: Job) => boolean = () => true): number {
+    let n = 0;
+    for (const j of this.dead().filter(filter)) {
+      this.jobs.delete(j.id);
+      n++;
+    }
+    return n;
   }
 
   /** Puts dead jobs back in the queue with fresh attempts, after a fix; returns how many. */
@@ -232,16 +266,20 @@ function field(spec: string, [lo, hi]: [number, number]): Set<number> {
 
 /**
  * A parsed five-field cron expression (minute hour day-of-month month day-of-week, where Sunday is 0 or 7), in
- * UTC. When both day fields are restricted, either may match.
+ * UTC. The day fields follow Vixie cron (the cron of most Linux systems): when both are restricted, a day matches
+ * either one ("0 0 1 * 1": the 1st, and every Monday); a field that starts with "*" ("*" or "*\/2") counts as
+ * unrestricted for that rule, so the two are then both required ("0 0 1 * *\/2": the 1st, when it falls on an
+ * even weekday).
  */
 export function cron(expr: string) {
   const parts = expr.trim().split(/\s+/);
   if (parts.length !== 5) throw new Error('a cron expression has five fields: minute hour day month weekday');
   const [mi, h, dom, mo, dow] = parts.map((p, i) => field(p, RANGES[i]!)) as [Set<number>, Set<number>, Set<number>, Set<number>, Set<number>];
   if (dow.delete(7)) dow.add(0);
-  const domAny = parts[2] === '*';
-  const dowAny = parts[4] === '*';
-  const dayOk = (d: Date) => (domAny && dowAny ? true : domAny ? dow.has(d.getUTCDay()) : dowAny ? dom.has(d.getUTCDate()) : dom.has(d.getUTCDate()) || dow.has(d.getUTCDay()));
+  // As Vixie cron's DOM_STAR and DOW_STAR: decided by the first character, not by whether every value is listed.
+  const domStar = parts[2]!.startsWith('*');
+  const dowStar = parts[4]!.startsWith('*');
+  const dayOk = (d: Date) => (domStar || dowStar ? dom.has(d.getUTCDate()) && dow.has(d.getUTCDay()) : dom.has(d.getUTCDate()) || dow.has(d.getUTCDay()));
   const matches = (d: Date) => mi.has(d.getUTCMinutes()) && h.has(d.getUTCHours()) && mo.has(d.getUTCMonth() + 1) && dayOk(d);
   return {
     matches,

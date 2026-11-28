@@ -21,7 +21,7 @@ flowchart LR
 
 ## On zthr.ai
 
-The tools are one line of <!-- fact:dept.count -->8<!-- /fact --> departments, in the order work moves through them. How the line works, and how value compounds as each department is added, is in [the line](docs/line/README.md), at four depths.
+The tools are one line of <!-- fact:line.count -->8<!-- /fact --> departments, in the order work moves through them, and beneath them a metrology lab and a maintenance crew that serve every one. How the line works, and how value compounds as each department is added, is in [the line](docs/line/README.md), at four depths.
 
 <!-- gen:departments-root -->
 | # | Department | What it does | Open it | How it works |
@@ -34,11 +34,14 @@ The tools are one line of <!-- fact:dept.count -->8<!-- /fact --> departments, i
 | 6 | QA | Walk every journey as a person would, prove every gate can fail, hold every ratchet. | [/qa](https://zthr.ai/qa) | [QA](docs/line/qa.md) |
 | 7 | Shipping | Move a certified build to the people it is for, stage by stage, with a person approving production. | [/shipping](https://zthr.ai/shipping) | [Shipping](docs/line/shipping.md) |
 | 8 | Fleet | Everything in service, the library each app draws on, and the data it keeps. | [/fleet](https://zthr.ai/fleet) | [Fleet](docs/line/fleet.md) |
+| beneath | Metrology | The lab: defines every measure QA uses, traces it to a reference, certifies every gauge, and charts the factory for drift. | [/metrology](https://zthr.ai/metrology) | [Metrology](docs/line/metrology.md) |
+| beneath | Maintenance | The night shift: works what every department tagged, through the same gates as day work, and reports each morning. | [/maintenance](https://zthr.ai/maintenance) | [Maintenance](docs/line/maintenance.md) |
 <!-- /gen -->
 
 The deploy workflow builds every page from this folder (`npm run build`) after typecheck and tests pass. Nothing
 built is committed. The factory, QA, shipping, fleet and mission control read `/reference/factory/factory.json`, which the
-reference build writes from its own evidence.
+reference build writes from its own evidence. Metrology and maintenance read `/maintenance/night.json`, which the site build writes from
+the night shift's records in this repository (`eval/mutation/`, `factory/queue/`, `factory/shifts/`, `factory/rulings/`).
 
 ## The release package
 

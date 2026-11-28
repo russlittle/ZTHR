@@ -3,15 +3,24 @@
  * an `up` step and a `verify` that proves it worked. The ledger records each applied migration with a checksum of
  * its source; an applied migration whose source has changed since is refused, because the database and the code
  * would no longer agree about what was done. One runner holds a lease while it works, so two starting servers never
- * migrate at once; a dry run lists what would run without touching anything; a failed step or verify stops the run
+ * migrate at once. The runner renews the lease before every step and again before recording it, and hands each
+ * step a `renew` it can call during long work; if a renewal fails the lease has gone to another runner, so this one
+ * stops, records nothing more and reports why. A dry run lists what would run without touching anything; a failed step or verify stops the run
  * and is reported with the error, leaving it unrecorded so it runs again next time.
  */
 import { createHash } from 'node:crypto';
 
+/** What a running step is given: a way to keep the migration lock through long work. */
+export interface Lease {
+  /** Extends the lock for another lease period; throws if another runner now holds it, which fails the step. */
+  renew(): Promise<void>;
+}
+
 export interface Migration<Db> {
   readonly id: string;
   readonly description: string;
-  readonly up: (db: Db) => Promise<void>;
+  /** Applies the change. A step that may outlast the lease calls `lease.renew()` as it goes. */
+  readonly up: (db: Db, lease: Lease) => Promise<void>;
   readonly verify?: (db: Db) => Promise<boolean | string>;
 }
 
@@ -27,6 +36,8 @@ export interface Ledger {
   record(a: Applied): Promise<void>;
   /** Takes the migration lock for `ms`, or returns false if another runner holds it. */
   lock(owner: string, ms: number): Promise<boolean>;
+  /** Extends `owner`'s lock to `ms` from now, or returns false if `owner` no longer holds it. */
+  renew(owner: string, ms: number): Promise<boolean>;
   unlock(owner: string): Promise<void>;
 }
 
@@ -59,22 +70,33 @@ export async function migrate<Db>(db: Db, list: readonly Migration<Db>[], ledger
   const now = o.now ?? Date.now;
   const p = plan(list, await ledger.applied());
   if (p.problems.length || o.dryRun) return { ran: [], pending: [...p.pending], problems: [...p.problems] };
-  if (!(await ledger.lock(o.owner, o.lockMs ?? 600_000))) return { ran: [], pending: [...p.pending], problems: ['another runner is migrating; this one waits'] };
+  const lockMs = o.lockMs ?? 600_000;
+  if (!(await ledger.lock(o.owner, lockMs))) return { ran: [], pending: [...p.pending], problems: ['another runner is migrating; this one waits'] };
   const ran: string[] = [];
   try {
     // Read the ledger again under the lease: another runner may have finished between the first read and the lock.
     const q = plan(list, await ledger.applied());
     if (q.problems.length) return { ran: [], pending: [...q.pending], problems: [...q.problems] };
+    const left = () => q.pending.filter((x) => !ran.includes(x));
+    const lost = (id: string, when: string) => ({ ran, pending: left(), problems: [`the migration lock was lost to another runner ${when} ${id}; this one stopped`] });
+    const lease: Lease = {
+      async renew() {
+        if (!(await ledger.renew(o.owner, lockMs))) throw new Error('the migration lock was lost to another runner');
+      },
+    };
     for (const id of q.pending) {
       const m = list.find((x) => x.id === id)!;
+      if (!(await ledger.renew(o.owner, lockMs))) return lost(id, 'before');
       const t0 = now();
       try {
-        await m.up(db);
+        await m.up(db, lease);
         const v = m.verify ? await m.verify(db) : true;
         if (v !== true) throw new Error(typeof v === 'string' ? v : 'verify said no');
       } catch (e) {
-        return { ran, pending: q.pending.filter((x) => !ran.includes(x)), problems: [], failed: { id, error: e instanceof Error ? e.message : String(e) } };
+        return { ran, pending: left(), problems: [], failed: { id, error: e instanceof Error ? e.message : String(e) } };
       }
+      // A step that outlasted the lease may now be running under another runner too: leave the record to the holder.
+      if (!(await ledger.renew(o.owner, lockMs))) return lost(id, 'while running');
       await ledger.record({ id, checksum: checksum(m as Migration<unknown>), at: new Date(now()).toISOString(), ms: now() - t0 });
       ran.push(id);
     }
@@ -96,6 +118,11 @@ export function memoryLedger(now: () => number = Date.now): Ledger & { rows: App
     },
     async lock(owner: string, ms: number) {
       if (holder && holder.owner !== owner && holder.until > now()) return false;
+      holder = { owner, until: now() + ms };
+      return true;
+    },
+    async renew(owner: string, ms: number) {
+      if (holder?.owner !== owner) return false;
       holder = { owner, until: now() + ms };
       return true;
     },

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Progress, comfortCss, magicPaste, meOrDown, openView, preview, shareView, smartDefault, snoozeUntil, why } from './index.ts';
+import { Progress, canonicalJson, comfortCss, magicPaste, meOrDown, openView, preview, shareView, smartDefault, snoozeUntil, why } from './index.ts';
 
 const NY = 'America/New_York';
 const iso = (d: Date) => d.toISOString().slice(0, 16);
@@ -61,4 +61,19 @@ test('reading comfort, why am I seeing this, and is it me or is it down', () => 
   assert.match(meOrDown({ service: 'down', internet: true, incident: 'uploads failing' }).say, /^It is us, not you: uploads failing/);
   assert.equal(meOrDown({ service: 'unreachable', internet: true }).who, 'you');
   assert.equal(meOrDown({ service: 'ok', internet: true }).who, 'nobody');
+});
+
+test('a preview compares values canonically: the same keys in another order are not a change', () => {
+  const records = [
+    { id: 'a', share: { role: 'viewer', with: 'ana' } as Record<string, unknown> },
+    { id: 'b', share: { role: 'viewer', with: 'ben' } as Record<string, unknown> },
+  ];
+  const p = preview(records, (r) => ({ share: { with: r.share.with, role: 'viewer' } }));
+  assert.deepEqual(p, { changes: [], unchanged: ['a', 'b'], refused: [] });
+  const nested = preview([{ id: 'c', meta: { a: { x: 1, y: [1, 2] }, b: 2 } as unknown }], () => ({ meta: { b: 2, a: { y: [1, 2], x: 1 } } }));
+  assert.deepEqual(nested.unchanged, ['c']);
+  const real = preview([{ id: 'd', meta: { a: [1, 2] } as unknown }], () => ({ meta: { a: [2, 1] } }));
+  assert.equal(real.changes.length, 1, 'array order still matters');
+  assert.equal(canonicalJson({ at: new Date('2026-11-26T00:00:00Z') }), '{"at":"2026-11-26T00:00:00.000Z"}');
+  assert.deepEqual(smartDefault([{ sort: 'name', desc: true }, { desc: true, sort: 'name' }, { sort: 'name', desc: true }]), { sort: 'name', desc: true });
 });

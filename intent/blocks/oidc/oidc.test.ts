@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash, generateKeyPairSync, sign as signWith, type KeyObject } from 'node:crypto';
 import { test } from 'node:test';
-import { Keys, SignInFailed, callback, start, verifyIdToken, type Provider } from './index.ts';
+import { Keys, SignInFailed, callback, sameState, start, verifyIdToken, type Provider } from './index.ts';
 
 const P: Provider = { issuer: 'https://idp.example.org', authorizationEndpoint: 'https://idp.example.org/auth', tokenEndpoint: 'https://idp.example.org/token', jwksUri: 'https://idp.example.org/keys', clientId: 'files', redirectUri: 'https://files.example.org/cb' };
 
@@ -86,4 +86,14 @@ test('the header alg must fit the key: an RSA key is never used for ES256, nor a
   })();
   await assert.rejects(verifyIdToken(rsaUnderEs, P, keys, { nonce: 'n1', now }), SignInFailed);
   await assert.rejects(verifyIdToken(jwt(base, { alg: 'RS256', kid: 'k2' }), P, keys, { nonce: 'n1', now }), SignInFailed);
+});
+
+test('the state is compared in constant time: equal only when identical, whatever the lengths', () => {
+  const s = start(P);
+  assert.equal(sameState(s.state, s.state), true);
+  assert.equal(sameState(null, s.state), false);
+  assert.equal(sameState('', s.state), false);
+  assert.equal(sameState(s.state.slice(0, -1), s.state), false, 'a prefix is not a match');
+  assert.equal(sameState(`${s.state}x`, s.state), false);
+  assert.equal(sameState('state-abc', 'state-ABC'), false, 'case matters');
 });

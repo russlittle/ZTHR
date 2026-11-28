@@ -127,3 +127,19 @@ test('an all-zero trace or parent id in traceparent is invalid (W3C Trace Contex
     assert.equal(spans[0]!.parent, undefined);
   }
 });
+
+test('error groups are capped: the least recently seen is evicted, and evictions are counted', () => {
+  const errs = new Errors({ maxGroups: 3 });
+  const fail = (name: string) => errs.capture(new Error(`no user named ${name}`));
+  for (const k of ['alpha', 'bravo', 'charlie', 'alpha', 'delta']) fail(k);
+  assert.equal(errs.groups.size, 3);
+  assert.deepEqual([...errs.groups.values()].map((g) => g.message), ['no user named charlie', 'no user named alpha', 'no user named delta'], 'bravo, seen least recently, went');
+  assert.equal(errs.evicted, 1);
+  assert.equal([...errs.groups.values()][1]!.count, 2, 'a group kept keeps its count');
+  const many = new Errors();
+  // Base 20 written in letters that are not hex digits, so the message stripping leaves every one distinct.
+  const word = (i: number) => [...i.toString(20)].map((c) => 'ghijklmnopqrstuvwxyz'[parseInt(c, 20)]!).join('');
+  for (let i = 0; i < 1500; i++) many.capture(new Error(`no user named ${word(i)}`));
+  assert.equal(many.groups.size, 1000, 'the default cap holds');
+  assert.equal(many.evicted, 500);
+});

@@ -45,7 +45,7 @@ There is one rulebook, and everyone uses the same copy. The customer's words go 
 | `src/delivery.ts`, `src/reports.ts` | Delivery stages, service levels, runbook; reports and use tracking |
 | `src/release.ts` | The hashed package, its change notice and its agents' brief |
 | `src/agents/` | The agent API: roles, ledger, tools, correction cases, cost, MCP server, supervisor |
-| `src/studio`, `src/console` | The intent studio and engineering; mission control, lines, factory, QA, shipping, fleet |
+| `src/studio`, `src/console` | The intent studio and engineering; mission control, lines, factory, QA, shipping, fleet; metrology (`src/console/lab.ts`) and maintenance with its crew's router and dated price table (`src/console/crew.ts`) |
 | `blocks/` | Housekeeping blocks: tested code every product starts from |
 
 ### The package
@@ -117,7 +117,7 @@ erDiagram
 
 ### Testing the system itself
 
-639 tests cover the engine, the agent API, the generated SQL (run in DuckDB), the information pipeline (run on PostgreSQL), the compliance set (validated against NIST's schema), the Rego policy, the Prisma output and the blocks. Every page of the site is walked in a real browser and checked against WCAG 2.2 A and AA, and these docs are regenerated and compared on every run.
+677 tests cover the engine, the agent API, the generated SQL (run in DuckDB), the information pipeline (run on PostgreSQL), the compliance set (validated against NIST's schema), the Rego policy, the Prisma output and the blocks. Every page of the site is walked in a real browser and checked against WCAG 2.2 A and AA, and these docs are regenerated and compared on every run.
 
 ## Architect
 

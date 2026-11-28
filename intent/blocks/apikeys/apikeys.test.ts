@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { ApiKeys, Rejected, memoryKeys } from './index.ts';
+import { ApiKeys, Rejected, allows, memoryKeys } from './index.ts';
 
 const setup = () => {
   let t = 1000;
@@ -48,4 +48,17 @@ test('a replacement keeps the expiry the old key had, and a retired or expired k
   await assert.rejects(k.check(a.secret, 'x'), /was replaced/, 'rotating again must not reopen the overlap');
   tick(10_000);
   await assert.rejects(k.rotate('ana', b.key.id, 60_000), /expired/);
+});
+
+test('"<prefix>:*" allows any scope under that prefix and nothing else', async () => {
+  const { k } = setup();
+  const { secret } = await k.issue('ana', 'files', ['files:*', 'reports:re*']);
+  assert.ok(await k.check(secret, 'files:read'));
+  assert.ok(await k.check(secret, 'files:share:write'), 'deeper scopes are under the prefix too');
+  await assert.rejects(k.check(secret, 'files'), /does not allow files$/, 'the prefix alone is not under itself');
+  await assert.rejects(k.check(secret, 'files:'), /does not allow/);
+  await assert.rejects(k.check(secret, 'filesystem:read'), /does not allow/, 'a longer word is not under the prefix');
+  await assert.rejects(k.check(secret, 'reports:read'), /does not allow/, 'a star not after a colon is literal');
+  assert.ok(await k.check(secret, 'reports:re*'));
+  assert.equal(allows([':*'], 'x'), false);
 });

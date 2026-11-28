@@ -33,6 +33,13 @@ export function snoozeUntil(when: When, now: Date, tz: string): Date {
   }
 }
 
+/**
+ * JSON with object keys sorted at every level, so values that differ only in key order encode the same; everything
+ * else follows JSON.stringify (dates by their ISO text, undefined properties left out, array order kept).
+ */
+export const canonicalJson = (v: unknown): string | undefined =>
+  JSON.stringify(v, (_k, x: unknown) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((k) => [k, (x as Record<string, unknown>)[k]])) : x));
+
 export interface Change {
   readonly id: string;
   readonly field: string;
@@ -40,7 +47,10 @@ export interface Change {
   readonly to: unknown;
 }
 
-/** What a bulk edit would do, record by record, field by field; records it would not change are listed apart. */
+/**
+ * What a bulk edit would do, record by record, field by field; records it would not change are listed apart. Values
+ * are compared canonically, so an object with the same keys in another order is not a change.
+ */
 export function preview<T extends { id: string }>(records: readonly T[], edit: (r: T) => Partial<T>, can: (r: T) => boolean = () => true): { changes: Change[]; unchanged: string[]; refused: string[] } {
   const changes: Change[] = [];
   const unchanged: string[] = [];
@@ -51,7 +61,7 @@ export function preview<T extends { id: string }>(records: readonly T[], edit: (
       continue;
     }
     const next = edit(r);
-    const diff = Object.entries(next).filter(([k, v]) => JSON.stringify((r as Record<string, unknown>)[k]) !== JSON.stringify(v));
+    const diff = Object.entries(next).filter(([k, v]) => canonicalJson((r as Record<string, unknown>)[k]) !== canonicalJson(v));
     if (!diff.length) unchanged.push(r.id);
     for (const [field, to] of diff) changes.push({ id: r.id, field, from: (r as Record<string, unknown>)[field], to });
   }
@@ -76,12 +86,15 @@ export function openView(token: string, secret: string): Record<string, unknown>
   }
 }
 
-/** Suggests the value a person most often chose for a field, if they chose it at least `min` times and most recently. */
+/**
+ * Suggests the value a person most often chose for a field, if they chose it at least `min` times and most recently.
+ * Choices are compared canonically, so the same object with its keys in another order counts as the same choice.
+ */
 export function smartDefault(history: readonly unknown[], o: { min?: number; window?: number } = {}): unknown {
   const recent = history.slice(-(o.window ?? 10));
   const counts = new Map<string, { v: unknown; n: number; last: number }>();
   recent.forEach((v, i) => {
-    const k = JSON.stringify(v);
+    const k = String(canonicalJson(v));
     const c = counts.get(k) ?? { v, n: 0, last: 0 };
     c.n++;
     c.last = i;

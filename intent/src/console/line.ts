@@ -1,11 +1,12 @@
 /**
- * The line: every surface of zthr.ai in the order work moves through it, from mission control to the fleet. Each
- * page carries the same bar, the product in focus, and a lamp for where that product stands at each department, so a
- * person can move along the line without losing the thread.
+ * The line: every surface of zthr.ai in the order work moves through it, from mission control to the fleet, and the
+ * metrology lab and maintenance crew beneath it that serve every department. Each page carries the same bar, the product in focus, and
+ * a lamp for where that product stands at each department, so a person can move along the line without losing the
+ * thread.
  */
 import type { Flow, Light, StageKey } from './pipeline.ts';
 
-export type Dept = 'mission' | 'lines' | 'intent' | 'engineering' | 'factory' | 'qa' | 'shipping' | 'fleet';
+export type Dept = 'mission' | 'lines' | 'intent' | 'engineering' | 'factory' | 'qa' | 'shipping' | 'fleet' | 'metrology' | 'maintenance';
 
 export interface Department {
   readonly key: Dept;
@@ -15,6 +16,8 @@ export interface Department {
   readonly does: string;
   /** The factory station it reports on, when it has one. */
   readonly station?: StageKey;
+  /** Beneath the line, not a step in it: a function that serves every department, so it has no number and no handoff. */
+  readonly beneath?: true;
 }
 
 export const DEPARTMENTS: readonly Department[] = [
@@ -26,16 +29,21 @@ export const DEPARTMENTS: readonly Department[] = [
   { key: 'qa', href: '/qa', label: 'QA', does: 'Walk every journey as a person would, prove every gate can fail, hold every ratchet.', station: 'qa' },
   { key: 'shipping', href: '/shipping', label: 'Shipping', does: 'Move a certified build to the people it is for, stage by stage, with a person approving production.', station: 'release' },
   { key: 'fleet', href: '/fleet', label: 'Fleet', does: 'Everything in service, the library each app draws on, and the data it keeps.' },
+  { key: 'metrology', href: '/metrology', label: 'Metrology', does: 'The lab: defines every measure QA uses, traces it to a reference, certifies every gauge, and charts the factory for drift.', beneath: true },
+  { key: 'maintenance', href: '/maintenance', label: 'Maintenance', does: 'The night shift: works what every department tagged, through the same gates as day work, and reports each morning.', beneath: true },
 ];
 
+/** The departments work moves through, in order; metrology and maintenance sit beneath them. */
+export const LINE = DEPARTMENTS.filter((d) => !d.beneath);
+export const BENEATH = DEPARTMENTS.filter((d) => d.beneath);
+
 export const dept = (k: Dept) => DEPARTMENTS.find((d) => d.key === k)!;
-export const nextDept = (k: Dept): Department | null => DEPARTMENTS[DEPARTMENTS.findIndex((d) => d.key === k) + 1] ?? null;
+export const nextDept = (k: Dept): Department | null => (dept(k).beneath ? null : (LINE[LINE.findIndex((d) => d.key === k) + 1] ?? null));
 
 /** The bar, as static HTML: the line in order, the current department marked, lamps filled in by the page's script. */
 export function lineBar(current: Dept | null, docs = false): string {
-  return `<header class="zbar"><a class="brand" href="/">ZTHR</a><nav aria-label="Departments"><ol class="zline">${DEPARTMENTS.map(
-    (d, i) => `<li><a href="${d.href}"${d.key === current ? ' aria-current="page"' : ''} data-dept="${d.key}"><span class="zl-n" aria-hidden="true">${i + 1}</span><span class="zl-name">${d.label}</span><span class="zl-lamp" data-lamp="${d.key}" aria-hidden="true"></span></a></li>`,
-  ).join('')}</ol></nav><a class="zl-product" id="zl-product" href="/lines" hidden></a><a class="zl-docs" href="/line/${!docs && current ? `${current}/` : ''}"${docs && !current ? ' aria-current="page"' : ''}>How it works</a></header>`;
+  const item = (d: Department, n: string) => `<a href="${d.href}"${d.key === current ? ' aria-current="page"' : ''} data-dept="${d.key}"${d.beneath ? ` title="${d.does}"` : ''}><span class="zl-n" aria-hidden="true">${n}</span><span class="zl-name">${d.label}</span><span class="zl-lamp" data-lamp="${d.key}" aria-hidden="true"></span>${d.beneath ? '<span class="sr">, beneath the line, serving every department</span>' : ''}</a>`;
+  return `<header class="zbar"><a class="brand" href="/">ZTHR</a><nav aria-label="Departments"><ol class="zline">${LINE.map((d, i) => `<li>${item(d, String(i + 1))}</li>`).join('')}</ol><p class="zl-beneath">${BENEATH.map((d) => item(d, d.key === 'metrology' ? '±' : '↻')).join('')}</p></nav><a class="zl-product" id="zl-product" href="/lines" hidden></a><a class="zl-docs" href="/line/${!docs && current ? `${current}/` : ''}"${docs && !current ? ' aria-current="page"' : ''}>How it works</a></header>`;
 }
 
 /** The one action that hands the work to the next department. */
@@ -77,7 +85,7 @@ export function paintLine(flow: Flow | null): void {
     const left = here.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
     nav.scrollLeft = Math.max(0, left - (nav.clientWidth - here.offsetWidth) / 2);
   }
-  for (const d of DEPARTMENTS) {
+  for (const d of LINE) {
     const el = document.querySelector<HTMLElement>(`[data-lamp="${d.key}"]`);
     const a = document.querySelector<HTMLElement>(`a[data-dept="${d.key}"]`);
     if (!el || !a) continue;

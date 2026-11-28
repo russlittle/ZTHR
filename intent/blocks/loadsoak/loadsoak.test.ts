@@ -53,3 +53,24 @@ test('a target that throws before returning a promise counts as an error, not a 
   const r = await load(() => { throw new Error('bad config'); }, { rps: 5, seconds: 1, limits: {}, now: () => clock, sleep: async (ms) => void (clock += ms) });
   assert.deepEqual([r.sent, r.errors], [5, 5]);
 });
+
+test('a target that never answers times out as an error instead of hanging the run', async () => {
+  let n = 0;
+  const hangsSometimes = () => (++n % 2 ? new Promise<void>(() => {}) : Promise.resolve());
+  const guard = new Promise<'hung'>((r) => setTimeout(() => r('hung'), 2000).unref());
+  const run = load(hangsSometimes, { rps: 100, seconds: 0.04, timeoutMs: 50, limits: { maxErrorRate: 0.1 } });
+  const r = await Promise.race([run, guard]);
+  assert.notEqual(r, 'hung', 'the run finished');
+  if (r === 'hung') return;
+  assert.deepEqual([r.sent, r.ok, r.errors, r.timeouts], [4, 2, 2, 2]);
+  assert.equal(r.pass, false);
+  assert.match(r.failures[0]!, /50\.00% errors/);
+  await assert.rejects(load(() => Promise.resolve(), { rps: 1, seconds: 1, timeoutMs: 0, limits: {} }), /time limit/);
+});
+
+test('a call that answers after its time limit is not counted twice', async () => {
+  const late = () => new Promise<void>((r) => setTimeout(r, 60));
+  const r = await load(late, { rps: 100, seconds: 0.01, timeoutMs: 20, limits: {} });
+  await new Promise((res) => setTimeout(res, 80));
+  assert.deepEqual([r.sent, r.ok, r.errors, r.timeouts], [1, 0, 1, 1]);
+});

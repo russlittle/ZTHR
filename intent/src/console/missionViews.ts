@@ -35,7 +35,7 @@ export interface Lib {
 /** Where each standard assembly is used, and for what: one part number, many intended uses. */
 export function whereUsed(lib: Lib, flows: readonly Flow[]): string {
   const uses = flows.flatMap((f) => f.uses);
-  return `<div class="tbl-wrap"><table class="swim wu"><caption>Where used: each standard assembly, every product and intent that uses it, and what for. One part number serves every use it was designed for; a new use that does not fit is a new part.</caption><thead><tr><th scope="col">Standard assembly</th><th scope="col">Used by</th><th scope="col">Intended uses</th></tr></thead><tbody>${lib.assemblies
+  return `<div class="tbl-wrap" tabindex="0" role="region" aria-label="Where used"><table class="swim wu"><caption>Where used: each standard assembly, every product and intent that uses it, and what for. One part number serves every use it was designed for; a new use that does not fit is a new part.</caption><thead><tr><th scope="col">Standard assembly</th><th scope="col">Used by</th><th scope="col">Intended uses</th></tr></thead><tbody>${lib.assemblies
     .map((a) => {
       const us = uses.filter((u) => u.assembly === a.name);
       const by = [...new Set(us.map((u) => `${u.product}`))];
@@ -74,7 +74,7 @@ export function platform(flows: readonly Flow[], lib: Lib, extra = ''): string {
 <p class="io in">Intent in</p>
 <ol class="stations">${STAGES.map(station).join('')}</ol>
 <p class="io out">Working software out</p>
-<div class="loops"><p class="loop ratchet"><span aria-hidden="true">↺</span> QA to build: every defect found becomes a ratchet, so it can never come back</p><p class="loop fleet"><span aria-hidden="true">↻</span> Release to the library: a fix to a standard assembly is pushed to every app that uses it</p></div>
+<div class="loops"><p class="loop ratchet"><span aria-hidden="true">↺</span> QA to build: every defect found becomes a ratchet, so it can never come back</p><p class="loop fleet"><span aria-hidden="true">↻</span> Release to the library: a fix to a standard assembly is pushed to every app that uses it</p><p class="loop night"><span aria-hidden="true">↻</span> Beneath every department: what is tagged by day, maintenance works by night, through the same gates</p></div>
 <div class="libbox"><p class="lib-h"><strong>The library every intent draws on in design</strong>, maintained by the fleet</p><ul class="lib-stats"><li><span class="n">${lib.assemblies.length}</span> standard assemblies, ${tests} tests between them</li><li><span class="n">${lib.parts}</span> catalogued parts in ${lib.groups} groups</li><li><span class="n">${lib.minimum}</span> in the ${esc(lib.minimumName)}, inherited by every app</li></ul><details><summary>The standard assemblies</summary><ul class="asm">${lib.assemblies.map((a) => `<li><code>${esc(a.name)}</code> <span class="muted">${a.tests} tests${a.mutationFloor ? `, mutation floor ${a.mutationFloor}%` : ''}</span></li>`).join('')}</ul></details></div>
 </div>`;
   const prods = products(flows)
@@ -87,7 +87,9 @@ export function platform(flows: readonly Flow[], lib: Lib, extra = ''): string {
   const table = `<ul class="prod-list">${prods || '<li>No products yet. <a href="/intent">Write an intent in the studio</a>.</li>'}</ul>`;
   return `${extra}<section class="sheet measure" aria-label="The measure across the platform"><div class="headline"><p class="eyebrowless">Across the platform</p><p class="big">${total.total && total.pass + total.fail === 0 ? `<span class="num">${total.total}</span> journeys waiting to be walked` : `<span class="num">${total.pass}</span> of <span class="num">${total.total}</span> journeys pass`}</p><p class="verdict v-${total.total && total.pass === total.total ? 'ok' : total.fail ? 'bad' : 'unk'}">${total.pass + total.fail === 0 ? 'Nothing walked yet: the measure fills in as the factory walks each journey' : total.fail ? `${total.fail} failing, ${total.unmeasured} not walked` : `${total.unmeasured} not walked yet`}</p>${bar(total)}</div></section>
 <section class="sheet" aria-labelledby="h-sys"><h2 id="h-sys">How the platform works</h2><p class="muted">Every intent goes through the same departments, from the intent studio to shipping. Lamps show where each intent stands at each: ✓ holds, ✕ open or failing, ? not measured, … waiting for an earlier department. Select a department for every intent's reading there.</p>${flow}</section>
-<section class="sheet" aria-labelledby="h-fl"><h2 id="h-fl">The fleet</h2><p><a href="/fleet">The fleet: what is in service, the library where used, and sensitive data across every app</a></p></section>`;
+<section class="sheet" aria-labelledby="h-fl"><h2 id="h-fl">The fleet</h2><p><a href="/fleet">The fleet: what is in service, the library where used, and sensitive data across every app</a></p></section>
+<section class="sheet" aria-labelledby="h-my"><h2 id="h-my">Metrology</h2><p><a href="/metrology">The lab: which gauges QA may use, the measures and their references, control charts on the factory, and the claims audit</a></p></section>
+<section class="sheet" aria-labelledby="h-mt"><h2 id="h-mt">Maintenance</h2><p><a href="/maintenance">The night shift: the morning report, what every department tagged, gauge scores per block, and the crew's cost and pass rates</a></p></section>`;
 }
 
 export function intent(f: Flow, station: StageKey, filter: string): string {

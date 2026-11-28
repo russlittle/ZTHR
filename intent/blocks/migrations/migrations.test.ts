@@ -68,3 +68,61 @@ test('the lease is released even when the ledger fails to record', async () => {
   await assert.rejects(migrate({ users: [] }, [m2], broken, { owner: 'a' }), /ledger offline/);
   assert.equal(await l.lock('b', 1000), true);
 });
+
+test('the lease is renewed between steps, so a second runner cannot take it while a slow run is still going', async () => {
+  let clock = 0;
+  const l = memoryLedger(() => clock);
+  let stolen: boolean | undefined;
+  const slow1: Migration<Db> = { id: '2026-11-21-a', description: '', up: async () => void (clock += 800) };
+  const slow2: Migration<Db> = { id: '2026-11-22-b', description: '', up: async () => {
+    clock += 400;
+    stolen = await l.lock('b', 1000);
+    clock += 400;
+  } };
+  const r = await migrate({ users: [] }, [slow1, slow2], l, { owner: 'a', lockMs: 1000, now: () => clock });
+  assert.equal(stolen, false, 'the lease taken at 0 for 1000 ms was renewed at 800, so at 1200 it is still held');
+  assert.deepEqual(r.ran, ['2026-11-21-a', '2026-11-22-b']);
+});
+
+test('a long step keeps the lease with renew; a runner whose lease was lost stops and records nothing more', async () => {
+  let clock = 0;
+  const l = memoryLedger(() => clock);
+  let stolen: boolean | undefined;
+  const long: Migration<Db> = { id: '2026-11-21-long', description: '', up: async (_db, lease) => {
+    for (let i = 0; i < 5; i++) {
+      clock += 800;
+      await lease.renew();
+    }
+    stolen = await l.lock('b', 1000);
+  } };
+  assert.deepEqual((await migrate({ users: [] }, [long], l, { owner: 'a', lockMs: 1000, now: () => clock })).ran, ['2026-11-21-long']);
+  assert.equal(stolen, false);
+
+  clock = 0;
+  const l2 = memoryLedger(() => clock);
+  let after = 0;
+  const lost: Migration<Db> = { id: '2026-11-21-lost', description: '', up: async () => {
+    clock += 1500;
+    assert.equal(await l2.lock('b', 60_000), true, 'the lease ran out and another runner took it');
+  } };
+  const next: Migration<Db> = { id: '2026-11-22-next', description: '', up: async () => void after++ };
+  const r = await migrate({ users: [] }, [lost, next], l2, { owner: 'a', lockMs: 1000, now: () => clock });
+  assert.equal(after, 0, 'the next step does not run without the lock');
+  assert.deepEqual(r.ran, []);
+  assert.deepEqual(r.pending, ['2026-11-21-lost', '2026-11-22-next']);
+  assert.deepEqual(r.problems, ['the migration lock was lost to another runner while running 2026-11-21-lost; this one stopped']);
+  assert.equal(l2.rows.length, 0, 'the runner that lost the lock records nothing');
+  assert.equal(await l2.lock('a', 1000), false, 'and it did not release the other runner’s lock');
+
+  clock = 0;
+  const l3 = memoryLedger(() => clock);
+  const renewsTooLate: Migration<Db> = { id: '2026-11-21-late', description: '', up: async (_db, lease) => {
+    clock += 1500;
+    await l3.lock('b', 60_000);
+    await lease.renew();
+    after++;
+  } };
+  const r3 = await migrate({ users: [] }, [renewsTooLate], l3, { owner: 'a', lockMs: 1000, now: () => clock });
+  assert.deepEqual(r3.failed, { id: '2026-11-21-late', error: 'the migration lock was lost to another runner' });
+  assert.equal(after, 0, 'a failed renew stops the step');
+});

@@ -5,7 +5,7 @@
  * nonce before anything in it is believed. Keys are fetched once and refreshed when an unknown key id appears,
  * which is how providers rotate them.
  */
-import { createHash, createPublicKey, randomBytes, verify as verifySig, type JsonWebKey } from 'node:crypto';
+import { createHash, createPublicKey, randomBytes, timingSafeEqual, verify as verifySig, type JsonWebKey } from 'node:crypto';
 
 export interface Provider {
   readonly issuer: string;
@@ -125,11 +125,18 @@ export async function verifyIdToken(token: string, p: Provider, keys: Keys, o: {
   return c;
 }
 
+/** Whether the state sent back is the one started, compared in constant time (as digests, so lengths may differ). */
+export function sameState(got: string | null, want: string): boolean {
+  if (got === null) return false;
+  const d = (x: string) => createHash('sha256').update(x).digest();
+  return timingSafeEqual(d(got), d(want));
+}
+
 /** The callback: the state must match the one started, then the code is exchanged and the ID token verified. */
 export async function callback(p: Provider, keys: Keys, started: Started, query: URLSearchParams, o: { fetch?: typeof fetch; now?: number; maxAgeMs?: number } = {}): Promise<Claims> {
   const now = o.now ?? Date.now();
   if (query.get('error')) throw new SignInFailed(`the provider refused: ${query.get('error_description') ?? query.get('error')}`);
-  if (query.get('state') !== started.state) throw new SignInFailed('this sign-in was not started here');
+  if (!sameState(query.get('state'), started.state)) throw new SignInFailed('this sign-in was not started here');
   if (now - started.at > (o.maxAgeMs ?? 10 * 60_000)) throw new SignInFailed('the sign-in took too long; start again');
   const code = query.get('code');
   if (!code) throw new SignInFailed('the provider sent no code');

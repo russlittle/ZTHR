@@ -8,6 +8,12 @@ flowchart LR
   FL -. reports, alerts, cases .-> M
   Q -. failing journeys become cases .-> F
   E -. clarifications the factory may not make .-> I
+  MY[Metrology: the lab, beneath every department]
+  MT[Maintenance: the night shift, beneath every department]
+  MY -. certified gauges .-> Q
+  FL -. tags, from every department .-> MY
+  MY -. tags .-> MT
+  MT -. the morning report .-> M
 ```
 
 | Department | What it is for | What carries forward |
@@ -20,8 +26,10 @@ flowchart LR
 | QA | Journeys walked as a person would, gates proven able to fail, ratchets | The certified phases |
 | Shipping | The delivery stages and their gates, and the service levels the product will be held to | The shipped build |
 | Fleet | What is in service, the library where it is used, and sensitive data across every app | Reports and alerts, back to mission control |
+| Metrology, beneath the line | The measures QA uses and their references, gauge certificates, control charts, and the claims audit | Certified gauges, to QA; tags, to maintenance |
+| Maintenance, beneath the line | What every department tagged, the morning report, gauge scores per block, and the crew's cost and pass rates | The morning report, back to mission control |
 
-Every page carries the same bar: the departments, numbered in order, the product in focus, and a lamp for where that product stands in each department. Every page ends with one handoff to the next department. The handoff is filled in only when the work there is ready to go on.
+Every page carries the same bar: the departments, numbered in order, then metrology and maintenance beneath them, unnumbered, the product in focus, and a lamp for where that product stands in each department. Every page ends with one handoff to the next department. The handoff is filled in only when the work there is ready to go on.
 
 ## Who walked it
 

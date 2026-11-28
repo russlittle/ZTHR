@@ -1,5 +1,7 @@
 /**
- * Accounts and organisations: sign-up with an emailed confirmation, invitations into an organisation with a
+ * Accounts and organisations: sign-up with an emailed confirmation (a sign-up with an address that already has an
+ * account looks the same to the caller and tells the owner instead, and sign-in costs the same whether or not the
+ * address has an account, so neither reveals who has one), invitations into an organisation with a
  * role, password reset by a single-use expiring link, and a lifecycle (invited, active, deactivated, offboarded)
  * where offboarding removes every membership and grant on the way out. People who belong to several
  * organisations, or hold several roles, switch between them; an admin can act as a person to reproduce a problem,
@@ -61,9 +63,15 @@ export class Refused extends Error {
   }
 }
 
+/**
+ * What a message to a person is for: a link to confirm, reset or accept, or "signup-attempt", telling the owner of
+ * an address that someone tried to sign up with it (the link is to sign in or reset the password).
+ */
+export type Purpose = Pending['purpose'] | 'signup-attempt';
+
 export interface Hooks {
-  /** Send a link to a person: confirmation, reset or invitation. */
-  readonly send: (to: string, purpose: Pending['purpose'], link: string) => Promise<void>;
+  /** Send a message with a link to a person: confirmation, reset, invitation, or a sign-up attempt notice. */
+  readonly send: (to: string, purpose: Purpose, link: string) => Promise<void>;
   /** Hash and check passwords (the grants block's scrypt). */
   readonly hash: (pw: string) => Promise<string>;
   readonly check: (pw: string, hash: string) => Promise<boolean>;
@@ -88,11 +96,17 @@ export class Accounts {
   private readonly now: () => number;
   private readonly base: string;
   private seq = 0;
+  private lastSweep = -Infinity;
+  /** A hash of a random password, checked against when an email has no password, so sign-in always costs one check. */
+  private readonly dummy: Promise<string>;
 
   constructor(h: Hooks, o: { now?: () => number; baseUrl: string }) {
     this.h = h;
     this.now = o.now ?? Date.now;
     this.base = o.baseUrl.replace(/\/$/, '');
+    this.dummy = h.hash(randomBytes(18).toString('base64url'));
+    // Awaited at sign-in, where a failure surfaces; never an unhandled rejection meanwhile.
+    this.dummy.catch(() => undefined);
   }
 
   private id(p: string) {
@@ -103,7 +117,21 @@ export class Accounts {
     return [...this.accounts.values()].find((a) => a.email === norm(email));
   }
 
+  /** Forgets every link that has expired unused; returns how many. Runs on its own as links are made. */
+  sweep(): number {
+    const t = this.now();
+    this.lastSweep = t;
+    let n = 0;
+    for (const [k, p] of this.pending)
+      if (p.expires < t) {
+        this.pending.delete(k);
+        n++;
+      }
+    return n;
+  }
+
   private async link(purpose: Pending['purpose'], account: Account, ttlMs: number, extra: Partial<Pending> = {}): Promise<string> {
+    if (this.now() - this.lastSweep >= 60_000) this.sweep();
     const token = randomBytes(24).toString('base64url');
     this.pending.set(sha(token), { purpose, account: account.id, expires: this.now() + ttlMs, ...extra });
     const link = `${this.base}/${purpose}/${token}`;
@@ -121,14 +149,22 @@ export class Accounts {
     return p;
   }
 
+  /**
+   * Signs a person up and sends the confirmation link. When the address already has an account, the caller gets an
+   * account of the same shape that is not kept (a fresh id, unconfirmed, the hash of the password just typed, as a
+   * new sign-up would return), and the owner of the address is sent a "signup-attempt" notice in place of a
+   * confirmation, so sign-up cannot be used to find out who has an account. The caller shows "check your email"
+   * either way.
+   */
   async signUp(email: string, name: string, password: string): Promise<Account> {
-    if (this.byEmail(email)) {
-      // Say nothing different to the caller, so sign-up cannot be used to find out who has an account.
-      const existing = this.byEmail(email)!;
-      await this.h.send(existing.email, 'reset', `${this.base}/signin`);
-      return existing;
+    const existing = this.byEmail(email);
+    const passwordHash = await this.h.hash(password);
+    const a: Account = { id: this.id('acct'), email: norm(email), name: name.trim(), state: 'active', emailConfirmed: false, passwordHash, created: this.now() };
+    if (existing) {
+      await this.h.send(existing.email, 'signup-attempt', `${this.base}/signin`);
+      await this.h.record?.('*', 'sign-up-attempt', existing.id);
+      return a;
     }
-    const a: Account = { id: this.id('acct'), email: norm(email), name: name.trim(), state: 'active', emailConfirmed: false, passwordHash: await this.h.hash(password), created: this.now() };
     this.accounts.set(a.id, a);
     await this.link('confirm', a, 7 * 86_400_000);
     await this.h.record?.(a.id, 'sign-up', a.id);
@@ -142,9 +178,14 @@ export class Accounts {
     return a;
   }
 
+  /** Signs in; an unknown address, or one with no password yet, is checked against a dummy hash at the same cost. */
   async signIn(email: string, password: string): Promise<Account> {
     const a = this.byEmail(email);
-    if (!a || !a.passwordHash || !(await this.h.check(password, a.passwordHash))) throw new Refused('that email and password do not sign in');
+    if (!a || !a.passwordHash) {
+      await this.h.check(password, await this.dummy);
+      throw new Refused('that email and password do not sign in');
+    }
+    if (!(await this.h.check(password, a.passwordHash))) throw new Refused('that email and password do not sign in');
     if (a.state !== 'active') throw new Refused(a.state === 'invited' ? 'accept your invitation first' : 'this account is not active');
     return a;
   }

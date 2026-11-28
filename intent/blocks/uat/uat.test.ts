@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Uat } from './index.ts';
+import { Uat, type OverrideLog } from './index.ts';
 
 test('overrides apply to the tester alone, end on their own, show on a banner and are recorded', () => {
   let t = Date.parse('2026-11-26T10:00:00Z');
@@ -45,4 +45,15 @@ test('production is refused however it is spelled, and so is any environment not
 test('an override needs a real, positive length of time', () => {
   const u = new Uat({ env: 'uat' });
   for (const m of [Number.NaN, 0, -5]) assert.throws(() => u.set('ana', { kind: 'flag', flag: 'x', on: true }, 'checking the flag', m), /minutes/, String(m));
+});
+
+test('the override log keeps the most recent overrides in memory, hands every one to the sink, and ids never repeat', () => {
+  const stored: OverrideLog[] = [];
+  const u = new Uat({ env: 'uat', log: { keep: 2, sink: (e) => void stored.push(e) } });
+  const ids = Array.from({ length: 5 }, (_, i) => u.set('ana', { kind: 'flag', flag: `f${i}`, on: true }, 'checking each flag in turn').id);
+  assert.equal(u.log.length, 2);
+  assert.deepEqual(u.log.map((l) => l.what), ['f3 on', 'f4 on']);
+  assert.deepEqual(stored.map((l) => l.what), ['f0 on', 'f1 on', 'f2 on', 'f3 on', 'f4 on']);
+  assert.deepEqual([u.records.recorded, u.records.handed, u.records.evicted], [5, 5, 3]);
+  assert.equal(new Set(ids).size, 5, 'override ids stay unique once the log is full');
 });

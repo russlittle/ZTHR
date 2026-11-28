@@ -2,9 +2,9 @@
  * Sessions and a second factor. A session has an idle limit and an absolute limit, warns before it ends so work
  * is not lost, can be extended by activity, and can be ended everywhere at once. Sign-in can require a second
  * factor: time-based one-time codes (RFC 6238, the authenticator apps everyone has), with a one-step allowance for
- * clock drift and each code usable once, and single-use recovery codes kept only as hashes.
+ * clock drift and each code usable once, and single-use recovery codes kept only as salted scrypt hashes.
  */
-import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'node:crypto';
 
 export interface Session {
   readonly id: string;
@@ -189,20 +189,72 @@ export function checkCode(secretB32: string, code: string, at: number, lastStep?
   return null;
 }
 
-/** Ten recovery codes, shown once; only their hashes are kept, and each works once. */
-export function recoveryCodes(n = 10): { codes: string[]; hashes: string[] } {
+/**
+ * How recovery codes are kept: scrypt with a fresh 16-byte salt per code, so a leaked list cannot be checked against
+ * one precomputed table and each guess at a ten-digit code costs a full scrypt. The defaults (N = 2^14, r = 8, p = 1,
+ * 16 MiB and tens of milliseconds a guess) make trying every code for one stored hash take years of CPU. A caller
+ * may add a pepper: a server-held secret mixed in as an HMAC key before scrypt, kept outside the database, so a
+ * leaked list alone is not enough to start guessing.
+ */
+export interface RecoveryKdf {
+  readonly N?: number;
+  readonly r?: number;
+  readonly p?: number;
+  readonly pepper?: string | Uint8Array;
+}
+
+const KDF = { N: 2 ** 14, r: 8, p: 1 } as const;
+
+/** A code in the form it is hashed in: "12345-67890", however it was typed. */
+const canonical = (code: string) => {
+  const digits = code.replace(/[\s-]/g, '');
+  return /^\d{10}$/.test(digits) ? `${digits.slice(0, 5)}-${digits.slice(5)}` : code.trim();
+};
+
+const derive = (code: string, salt: Buffer, N: number, r: number, p: number, pepper?: string | Uint8Array) => {
+  const input = pepper === undefined ? Buffer.from(code) : createHmac('sha256', pepper).update(code).digest();
+  return scryptSync(input, salt, 32, { N, r, p, maxmem: 256 * N * r });
+};
+
+/** One stored recovery code: "scrypt$<N>$<r>$<p>$<salt base64url>$<hash base64url>". */
+export function hashRecovery(code: string, o: RecoveryKdf = {}): string {
+  const N = o.N ?? KDF.N;
+  const r = o.r ?? KDF.r;
+  const p = o.p ?? KDF.p;
+  const salt = randomBytes(16);
+  return `scrypt$${N}$${r}$${p}$${salt.toString('base64url')}$${derive(canonical(code), salt, N, r, p, o.pepper).toString('base64url')}`;
+}
+
+/** Whether a typed code is the one a stored hash was made from; the cost parameters are read from the hash. */
+export function matchesRecovery(code: string, stored: string, o: Pick<RecoveryKdf, 'pepper'> = {}): boolean {
+  const m = /^scrypt\$(\d+)\$(\d+)\$(\d+)\$([A-Za-z0-9_-]+)\$([A-Za-z0-9_-]+)$/.exec(stored);
+  if (!m) return false;
+  const [N, r, p] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  // A stored hash names its own cost; one far outside sane bounds is refused rather than run.
+  if (!(N >= 2 ** 10 && N <= 2 ** 20 && (N & (N - 1)) === 0 && r >= 1 && r <= 32 && p >= 1 && p <= 16)) return false;
+  const want = Buffer.from(m[5]!, 'base64url');
+  const got = derive(canonical(code), Buffer.from(m[4]!, 'base64url'), N, r, p, o.pepper);
+  return want.length === got.length && timingSafeEqual(want, got);
+}
+
+/** Ten recovery codes, shown once; only their salted scrypt hashes are kept, and each works once. */
+export function recoveryCodes(n = 10, o: RecoveryKdf = {}): { codes: string[]; hashes: string[] } {
   const codes = Array.from({ length: n }, () => {
     const d = String(randomInt(0, 10 ** 10)).padStart(10, '0');
     return `${d.slice(0, 5)}-${d.slice(5)}`;
   });
-  return { codes, hashes: codes.map((c) => createHash('sha256').update(c).digest('hex')) };
+  return { codes, hashes: codes.map((c) => hashRecovery(c, o)) };
 }
 
-/** Uses a recovery code: returns the hashes left, or null when the code is not one of them. */
-export function useRecovery(code: string, hashes: readonly string[]): string[] | null {
-  const digits = code.replace(/[\s-]/g, '');
-  const typed = /^\d{10}$/.test(digits) ? `${digits.slice(0, 5)}-${digits.slice(5)}` : code.trim();
-  const h = createHash('sha256').update(typed).digest('hex');
-  const i = hashes.indexOf(h);
-  return i < 0 ? null : hashes.filter((_, j) => j !== i);
+/**
+ * Uses a recovery code: returns the hashes left, or null when the code is not one of them. Every stored hash is
+ * checked, matched or not, so the time taken does not say which one matched. Store the list it returns in place of
+ * the old one, so the code cannot be used again.
+ */
+export function useRecovery(code: string, hashes: readonly string[], o: Pick<RecoveryKdf, 'pepper'> = {}): string[] | null {
+  let hit = -1;
+  hashes.forEach((h, i) => {
+    if (matchesRecovery(code, h, o) && hit < 0) hit = i;
+  });
+  return hit < 0 ? null : hashes.filter((_, j) => j !== hit);
 }

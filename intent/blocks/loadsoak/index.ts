@@ -1,7 +1,8 @@
 /**
  * Load and soak checks with pass/fail thresholds. A load run calls a target at a steady arrival rate (open model,
  * so a slow service does not quietly lower the load) for a duration, and reports throughput, error rate and latency
- * percentiles against limits. A soak repeats it for longer and fits a line through memory (or any gauge) over time,
+ * percentiles against limits. Every call has a time limit; one that has not settled by then counts as an error and
+ * is no longer waited for, so a target that hangs fails the run instead of hanging it. A soak repeats it for longer and fits a line through memory (or any gauge) over time,
  * failing on a steady climb even when every single sample looks fine: the shape of a leak.
  */
 
@@ -44,15 +45,20 @@ export function judge(latencies: readonly number[], errors: number, seconds: num
 }
 
 /**
- * Calls `target` at `rps` for `seconds`; calls start on schedule whether or not earlier ones have finished. The
- * reported rate is over the whole run, until the last call settles.
+ * Calls `target` at `rps` for `seconds`; calls start on schedule whether or not earlier ones have finished. A call
+ * that has not settled within `timeoutMs` (30 seconds if not given) counts as an error and in `timeouts`; whatever it
+ * does later is ignored. The time limit runs on real timers, apart from `now` and `sleep`. The reported rate is over
+ * the whole run, until the last call settles or times out.
  */
-export async function load(target: () => Promise<unknown>, o: { rps: number; seconds: number; limits: Limits; now?: () => number; sleep?: (ms: number) => Promise<void> }): Promise<Report> {
+export async function load(target: () => Promise<unknown>, o: { rps: number; seconds: number; limits: Limits; timeoutMs?: number; now?: () => number; sleep?: (ms: number) => Promise<void> }): Promise<Report & { readonly timeouts: number }> {
+  const timeoutMs = o.timeoutMs ?? 30_000;
+  if (!(timeoutMs > 0)) throw new Error('a request time limit is a number of milliseconds above 0');
   const now = o.now ?? (() => performance.now());
   const sleep = o.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const total = Math.round(o.rps * o.seconds);
   const lat: number[] = [];
   let errors = 0;
+  let timeouts = 0;
   const start = now();
   const running: Promise<void>[] = [];
   for (let i = 0; i < total; i++) {
@@ -67,15 +73,33 @@ export async function load(target: () => Promise<unknown>, o: { rps: number; sec
       call = Promise.reject(e);
     }
     running.push(
-      call.then(
-        () => void lat.push(now() - t0),
-        () => void errors++,
-      ),
+      new Promise<void>((settle) => {
+        let done = false;
+        const timer = setTimeout(() => {
+          if (done) return;
+          done = true;
+          errors++;
+          timeouts++;
+          settle();
+        }, timeoutMs);
+        const finish = (ok: boolean) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          if (ok) lat.push(now() - t0);
+          else errors++;
+          settle();
+        };
+        call.then(
+          () => finish(true),
+          () => finish(false),
+        );
+      }),
     );
   }
   await Promise.all(running);
   // Throughput over the time the run really took: a service that cannot keep up stretches it past the plan.
-  return judge(lat, errors, Math.max(o.seconds, (now() - start) / 1000), o.limits);
+  return { ...judge(lat, errors, Math.max(o.seconds, (now() - start) / 1000), o.limits), timeouts };
 }
 
 /** Least-squares slope of samples over time, per hour. */

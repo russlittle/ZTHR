@@ -144,9 +144,17 @@ export class Session {
   }
 }
 
-/** Whether the learner has satisfied the unit, from all their statements across sessions. */
-export function satisfied(u: Unit, statements: readonly Statement[]): boolean {
-  const did = (v: Verb) => statements.some((s) => s.object.id === u.id && s.verb.display['en-US'] === v);
+/** Whether two actors are the same learner: the same account name on the same home page. */
+export const sameActor = (a: Actor, b: Actor): boolean => a.account?.homePage === b.account?.homePage && a.account?.name === b.account?.name;
+
+/**
+ * Whether this learner has satisfied the unit in this registration, from their statements across sessions. Only
+ * statements about this unit, in this registration and by this actor (matched on account home page and name) count,
+ * so a mixed set fetched from a learning record store can never satisfy a unit with another learner's results or
+ * another registration's. Verbs are matched on their id, not their display text.
+ */
+export function satisfied(u: Unit, statements: readonly Statement[], who: { readonly actor: Actor; readonly registration: string }): boolean {
+  const did = (v: Verb) => statements.some((s) => s.object?.id === u.id && s.context?.registration === who.registration && !!s.actor && sameActor(s.actor, who.actor) && s.verb?.id === VERBS[v]);
   const passed = did('passed') || did('waived');
   const completed = did('completed') || did('waived');
   switch (u.moveOn) {

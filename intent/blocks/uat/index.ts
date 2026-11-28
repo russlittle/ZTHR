@@ -2,7 +2,8 @@
  * UAT overrides: what a tester needs to reach a case without editing data by hand. In a test environment, and only
  * there, a tester can switch a feature flag for themselves, set their own clock (to see what happens after a trial
  * ends), or act with a different role, each for a limited time with a reason. Overrides apply to the tester alone,
- * end on their own, show on a banner so nobody forgets one is on, and are recorded. Outside the named test
+ * end on their own, show on a banner so nobody forgets one is on, and are recorded in a bounded in-memory log of
+ * the most recent overrides, each also handed to a caller-provided sink for durable storage. Outside the named test
  * environments, and in production however it is spelled, every override is refused, whatever the caller says.
  */
 
@@ -19,20 +20,95 @@ export interface Active {
   readonly until: number;
 }
 
+/** One override as recorded. */
+export interface OverrideLog {
+  readonly at: string;
+  readonly who: string;
+  readonly what: string;
+  readonly why: string;
+}
+
+/** How a bounded log keeps its entries: the most recent `keep` in memory, every one handed to `sink` as it is recorded. */
+export interface LogOptions<E> {
+  /** How many of the most recent entries stay in memory; a whole number of at least 1, 1000 if not given. */
+  readonly keep?: number;
+  /**
+   * Durable storage, provided by the caller: called once with every entry as it is recorded, before anything is
+   * evicted from memory. A sink that throws or whose promise rejects is counted in `sinkFailures` and never breaks
+   * the work being recorded.
+   */
+  readonly sink?: (entry: E) => void | Promise<unknown>;
+}
+
+/** An in-memory log that holds only the most recent entries, with counts that say what was recorded, handed on and evicted. */
+export class BoundedLog<E> {
+  private readonly list: E[] = [];
+  private readonly keep: number;
+  private readonly sink: ((entry: E) => void | Promise<unknown>) | undefined;
+  /** Entries recorded since the log was made. */
+  recorded = 0;
+  /** Entries handed to the sink. */
+  handed = 0;
+  /** Hand-offs where the sink threw or its promise rejected. */
+  sinkFailures = 0;
+  /** Entries dropped from memory to stay within `keep`. */
+  evicted = 0;
+
+  constructor(o: LogOptions<E> = {}) {
+    const keep = o.keep ?? 1000;
+    if (!Number.isInteger(keep) || keep < 1) throw new Error('a log keeps a whole number of entries, at least 1');
+    this.keep = keep;
+    this.sink = o.sink;
+  }
+
+  /** The most recent entries, oldest first. */
+  get entries(): readonly E[] {
+    return this.list;
+  }
+
+  push(entry: E): void {
+    this.recorded++;
+    if (this.sink) {
+      this.handed++;
+      try {
+        const r = this.sink(entry);
+        if (r && typeof (r as Promise<unknown>).then === 'function') (r as Promise<unknown>).then(undefined, () => void this.sinkFailures++);
+      } catch {
+        this.sinkFailures++;
+      }
+    }
+    this.list.push(entry);
+    while (this.list.length > this.keep) {
+      this.list.shift();
+      this.evicted++;
+    }
+  }
+}
+
 export class Uat {
   private readonly list: Active[] = [];
-  readonly log: { at: string; who: string; what: string; why: string }[] = [];
+  /** The override log: the most recent overrides in memory, with counts of what was recorded, handed to the sink and evicted. */
+  readonly records: BoundedLog<OverrideLog>;
   private readonly env: string;
   private readonly now: () => number;
   private readonly allowedRoles: readonly string[];
   private readonly testEnvs: readonly string[];
 
-  /** `testEnvs` names the environments overrides work in; any other environment, production above all, refuses them. */
-  constructor(o: { env: string; now?: () => number; allowedRoles?: readonly string[]; testEnvs?: readonly string[] }) {
+  /**
+   * `testEnvs` names the environments overrides work in; any other environment, production above all, refuses them.
+   * `log` bounds the in-memory record and names its durable sink.
+   */
+  constructor(o: { env: string; now?: () => number; allowedRoles?: readonly string[]; testEnvs?: readonly string[]; log?: LogOptions<OverrideLog> }) {
+    this.records = new BoundedLog(o.log);
     this.env = o.env.trim().toLowerCase();
     this.testEnvs = (o.testEnvs ?? TEST_ENVS).map((e) => e.trim().toLowerCase());
     this.now = o.now ?? Date.now;
     this.allowedRoles = o.allowedRoles ?? ['member', 'editor', 'viewer'];
+  }
+
+  /** The most recent overrides, oldest first. */
+  get log(): readonly OverrideLog[] {
+    return this.records.entries;
   }
 
   private live(): Active[] {
@@ -51,9 +127,10 @@ export class Uat {
       const a = this.list[i]!;
       if (a.who === who && a.o.kind === o.kind && (o.kind !== 'flag' || (a.o as { flag: string }).flag === o.flag)) this.list.splice(i, 1);
     }
-    const a: Active = { id: this.log.length + 1, who, o, why, until: this.now() + minutes * 60_000 };
+    // Ids follow every override ever recorded, not the bounded log's length, so they never repeat.
+    const a: Active = { id: this.records.recorded + 1, who, o, why, until: this.now() + minutes * 60_000 };
     this.list.push(a);
-    this.log.push({ at: new Date(this.now()).toISOString(), who, what: describe(o), why });
+    this.records.push({ at: new Date(this.now()).toISOString(), who, what: describe(o), why });
     return a;
   }
 

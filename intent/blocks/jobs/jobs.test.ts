@@ -145,3 +145,39 @@ test('resuming a backfill that already finished does not walk everything again',
   assert.equal(pages, 1);
   assert.equal(again.changed, 2);
 });
+
+test('cron: a day field written as */N counts as unrestricted for the either-day rule, as in Vixie cron', () => {
+  // 2026-11-26 is a Thursday; 1 December 2026 is a Tuesday.
+  assert.equal(cron('0 0 1 * */2').next(new Date('2026-11-26T00:00:00Z')).toISOString(), '2026-12-01T00:00:00.000Z', 'the 1st, on an even weekday');
+  assert.equal(cron('0 0 */10 * 2').next(new Date('2026-11-26T00:00:00Z')).toISOString(), '2026-12-01T00:00:00.000Z', 'a Tuesday that is the 1st, 11th, 21st or 31st');
+  assert.equal(cron('0 0 1 * 0').next(new Date('2026-11-26T00:00:00Z')).toISOString(), '2026-11-29T00:00:00.000Z', 'both restricted: either');
+  assert.equal(cron('0 0 1-31 * 0').next(new Date('2026-11-26T00:00:00Z')).toISOString(), '2026-11-27T00:00:00.000Z', 'every day listed is still restricted, so either');
+});
+
+test('finished jobs are forgotten after the retention period; dead letters stay until replayed or dropped', async () => {
+  let t = 0;
+  const q = new Queue({ now: () => t, retainMs: 1000 });
+  q.handle('ok', async () => 'fine');
+  q.handle('bad', async () => {
+    throw new Error('no');
+  });
+  const done = q.enqueue('ok', 1);
+  const cancelled = q.enqueue('ok', 2, { runAt: 500 });
+  q.cancel(cancelled.id);
+  const dead = q.enqueue('bad', 3, { maxAttempts: 1 });
+  const dead2 = q.enqueue('bad', 4, { maxAttempts: 1 });
+  await q.tick();
+  assert.equal(done.state, 'done');
+  t = 999;
+  assert.equal(q.sweep(), 0, 'still within the retention period');
+  assert.equal(q.jobs.get(done.id)?.result, 'fine');
+  t = 2000;
+  await q.tick();
+  assert.deepEqual([...q.jobs.keys()].sort(), [dead.id, dead2.id].sort(), 'a tick forgot the done and cancelled jobs');
+  t = 1_000_000;
+  assert.equal(q.sweep(), 0, 'dead letters are not forgotten by age');
+  assert.equal(q.drop((j) => j.id === dead2.id), 1);
+  assert.deepEqual(q.dead().map((j) => j.id), [dead.id]);
+  assert.equal(q.replay(), 1);
+  assert.equal(new Queue().sweep(), 0);
+});

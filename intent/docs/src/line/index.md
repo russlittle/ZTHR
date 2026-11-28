@@ -1,10 +1,10 @@
 # The line
 
-> One factory, {{dept.count}} departments, in the order work moves through them: from what a person means to software in service, and back.
+> One factory, {{line.count}} departments, in the order work moves through them: from what a person means to software in service, and back. Beneath them, a metrology lab and a maintenance crew that serve every one.
 
 ## TL;DR
 
-A person who knows the work says what software must do, in their own words. The line turns that into software in service, one department at a time: {{dept.names}}. Each department does one job, hands the next one something it can check, and turns what it learns into fixtures every later product inherits. The first product through the line is the expensive one. Each one after costs less, because most of it is already specified, built and proven.
+A person who knows the work says what software must do, in their own words. The line turns that into software in service, one department at a time: {{line.names}}. Each department does one job, hands the next one something it can check, and turns what it learns into fixtures every later product inherits. Beneath every department are two more. Metrology defines every measure QA uses and certifies every gauge before QA may use it. Maintenance, the night shift, works what is tagged through the same gates as day work and reports each morning, so a defect never has to stop the line to be fixed. The first product through the line is the expensive one. Each one after costs less, because most of it is already specified, built and proven.
 
 {{diagram:line}}
 
@@ -28,6 +28,10 @@ The **shipping dock** delivers it in steps: to one classroom first, then to the 
 
 Every shelf ever delivered is the **fleet**. When one school finds a wobbly bracket, the fix is made to the standard bracket, and every shelf that uses it gets the fix. What customers report comes back to the front office, and the line runs again.
 
+The **lab** keeps the master gauges, checks every inspection gauge on parts made wrong on purpose, and puts a dated sticker on each one that passes. Inspection may only use a gauge with a current sticker. That is **metrology**.
+
+Nobody stops the line for a small fault. Whoever finds it hangs a tag on it and carries on. At night the **maintenance crew** walks the tags, fixes what it can the way the day crew would have to, and tests the inspectors' gauges on bad parts made on purpose. In the morning the front office has a sheet: fixed, with the proof; waiting for a person, and why; and the new tags. That is **maintenance**.
+
 The trick is that every department keeps what it learns. The drafting office keeps its standard parts and joints. Inspection keeps its gauges. The shipping dock keeps its checklist. So the hundredth order is mostly assembled from things already proven, and the people only design what is new.
 
 ## Engineer
@@ -49,6 +53,9 @@ Every department is a page on zthr.ai with the same bar across the top: the line
 | QA | Shipping | A certified phase: every journey walked as a person would, every gate proven able to fail | A gate counts only after planted defects make it fail |
 | Shipping | Fleet | A build released stage by stage, approved in production by a named person | Each stage's result is recorded by the pipeline, never by the operator |
 | Fleet | Mission control | Reports, alerts and cases | Each becomes a case: a bug for the factory, an idea for the holder |
+| Metrology | QA | Certified gauges: each measure defined and traced to a reference, each gauge with a dated certificate | QA uses a gauge only while its certificate is current |
+| Every department, and metrology | Maintenance | Tags: what is wrong, where, the evidence, and the test that will prove it fixed | A tag missing any of the four is refused |
+| Maintenance | Every department, and mission control | Fixes, and the morning report | Each fix carries its failing-first test and a check by another model family; the report links every fix to its evidence |
 
 ### Why it compounds
 
@@ -71,6 +78,8 @@ Each department also makes the others cheaper:
 - **QA makes shipping cheaper.** Only certified phases ship, so each stage confirms what is already known instead of discovering it.
 - **Shipping makes the fleet cheaper.** Every app arrives with the same stages, service levels and rollback, so one way of running serves all of them.
 - **The fleet makes everything cheaper.** A fix to a shared part reaches every app that uses it, and every report becomes a test, a part or a clarification for the next product.
+- **Metrology makes QA worth trusting.** A gauge proven to reject planted defects, the same way every time, is a gauge whose pass means something, in every product that inherits it.
+- **Maintenance makes every department cheaper.** Nothing waits on a stopped line, the gauges every product inherits are calibrated, and code that does nothing is removed before the next product assembles it.
 
 ## Architect
 
@@ -113,9 +122,12 @@ Nothing moves backwards by editing a document in place.
 | QA | Journeys walked; gates proven; ratchets held | Pass for anything not measured |
 | Shipping | Each stage's result, from the pipeline | A stage passed that was not recorded |
 | Fleet | Service levels; where each part is used; sensitive data by class | That a fix reached an app before its tests prove it |
+| Metrology | Certificates per gauge; measures and their references; control charts; the claims audit | A gauge certified that was not calibrated, or a claim proven that has no evidence |
+| Maintenance | Tags by station; fixes accepted; mutation scores per block; pass rate per model per kind; cost per accepted change; time from tag to fix | A fix that skipped a gate, or a shift that did not run |
 
 ### Reading further
 
 - [Architecture: the engine, the package and the records](architecture.md)
-- Each department, at the same four depths: [mission control](mission.md), [product lines](lines.md), [intent studio](intent.md), [engineering](engineering.md), [factory](factory.md), [QA](qa.md), [shipping](shipping.md), [fleet](fleet.md)
+- Each department, at the same four depths: [mission control](mission.md), [product lines](lines.md), [intent studio](intent.md), [engineering](engineering.md), [factory](factory.md), [QA](qa.md), [shipping](shipping.md), [fleet](fleet.md), and beneath them [metrology](metrology.md) and [maintenance](maintenance.md)
+- [The plant map: each plant function, its equivalent here, and where the factory stands](plant.md)
 - [Intent as the Datum: the pattern paper](../../PAPER.md)

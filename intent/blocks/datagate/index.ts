@@ -2,8 +2,9 @@
  * Knowing where sensitive data is, and stopping it going where it should not. Every field in every collection is
  * classified (public, internal, personal, sensitive, secret); an unclassified field is itself a finding. The gate
  * checks each flow (a copy to staging, an export, a log line, a call to an outside service) against rules for its
- * destination and returns allow, mask or deny per field with the rule that decided. Each decision can be kept as
- * evidence for an audit.
+ * destination and returns allow, mask or deny per field with the rule that decided. Each decision is kept as
+ * evidence for an audit: a bounded in-memory log of the most recent decisions, each also handed to a
+ * caller-provided sink for durable storage.
  */
 
 export type Level = 'public' | 'internal' | 'personal' | 'sensitive' | 'secret';
@@ -56,13 +57,80 @@ export interface Rule {
 
 export type Verdict = { readonly field: string; readonly action: 'allow' | 'mask' | 'deny'; readonly level: Level | 'unclassified'; readonly rule: string };
 
+/** One decision as kept for an audit: the flow's destination, who asked, and the verdict on every field. */
+export interface Decision {
+  readonly at: string;
+  readonly destination: string;
+  readonly who: string;
+  readonly verdicts: readonly Verdict[];
+}
+
+/** How a bounded log keeps its entries: the most recent `keep` in memory, every one handed to `sink` as it is recorded. */
+export interface LogOptions<E> {
+  /** How many of the most recent entries stay in memory; a whole number of at least 1, 1000 if not given. */
+  readonly keep?: number;
+  /**
+   * Durable storage, provided by the caller: called once with every entry as it is recorded, before anything is
+   * evicted from memory. A sink that throws or whose promise rejects is counted in `sinkFailures` and never breaks
+   * the work being recorded.
+   */
+  readonly sink?: (entry: E) => void | Promise<unknown>;
+}
+
+/** An in-memory log that holds only the most recent entries, with counts that say what was recorded, handed on and evicted. */
+export class BoundedLog<E> {
+  private readonly list: E[] = [];
+  private readonly keep: number;
+  private readonly sink: ((entry: E) => void | Promise<unknown>) | undefined;
+  /** Entries recorded since the log was made. */
+  recorded = 0;
+  /** Entries handed to the sink. */
+  handed = 0;
+  /** Hand-offs where the sink threw or its promise rejected. */
+  sinkFailures = 0;
+  /** Entries dropped from memory to stay within `keep`. */
+  evicted = 0;
+
+  constructor(o: LogOptions<E> = {}) {
+    const keep = o.keep ?? 1000;
+    if (!Number.isInteger(keep) || keep < 1) throw new Error('a log keeps a whole number of entries, at least 1');
+    this.keep = keep;
+    this.sink = o.sink;
+  }
+
+  /** The most recent entries, oldest first. */
+  get entries(): readonly E[] {
+    return this.list;
+  }
+
+  push(entry: E): void {
+    this.recorded++;
+    if (this.sink) {
+      this.handed++;
+      try {
+        const r = this.sink(entry);
+        if (r && typeof (r as Promise<unknown>).then === 'function') (r as Promise<unknown>).then(undefined, () => void this.sinkFailures++);
+      } catch {
+        this.sinkFailures++;
+      }
+    }
+    this.list.push(entry);
+    while (this.list.length > this.keep) {
+      this.list.shift();
+      this.evicted++;
+    }
+  }
+}
+
 export class Gate {
   private readonly levels = new Map<string, Level>();
   private readonly rules: readonly Rule[];
-  readonly evidence: { at: string; destination: string; who: string; verdicts: readonly Verdict[] }[] = [];
+  /** The evidence log: the most recent decisions in memory, with counts of what was recorded, handed to the sink and evicted. */
+  readonly decisions: BoundedLog<Decision>;
   private readonly now: () => Date;
 
-  constructor(fields: readonly Field[], rules: readonly Rule[], now: () => Date = () => new Date()) {
+  constructor(fields: readonly Field[], rules: readonly Rule[], now: () => Date = () => new Date(), log: LogOptions<Decision> = {}) {
+    this.decisions = new BoundedLog(log);
     for (const f of fields) {
       const id = `${f.collection}.${f.field}`;
       const was = this.levels.get(id);
@@ -70,6 +138,11 @@ export class Gate {
     }
     this.rules = rules;
     this.now = now;
+  }
+
+  /** The most recent decisions, oldest first. */
+  get evidence(): readonly Decision[] {
+    return this.decisions.entries;
   }
 
   decide(collection: string, fields: readonly string[], destination: string, who: string): Verdict[] {
@@ -87,7 +160,7 @@ export class Gate {
       if (rule.mask && i <= ORDER.indexOf(rule.mask)) return { field: f, action: 'mask', level, rule: rule.why };
       return { field: f, action: 'deny', level, rule: rule.why };
     });
-    this.evidence.push({ at: this.now().toISOString(), destination, who, verdicts });
+    this.decisions.push({ at: this.now().toISOString(), destination, who, verdicts });
     return verdicts;
   }
 

@@ -4,7 +4,8 @@
  * plan that is checked against the declared collections and fields before it runs: no writes exist in the
  * language, unknown fields are refused by name, results are capped, sensitive fields are masked unless the person
  * may see them (and cannot be filtered or sorted on, which would reveal them), and every query is recorded with
- * who ran it and how many rows came back.
+ * who ran it and how many rows came back. The record is a bounded in-memory log of the most recent queries, each
+ * also handed to a caller-provided sink for durable storage.
  */
 
 export interface Collection {
@@ -119,15 +120,87 @@ const test = (v: unknown, c: Cond) => {
   }
 };
 
+/** One query as recorded: who ran it, the text, the rows returned, and the error if it was refused. */
+export interface QueryLog {
+  readonly at: string;
+  readonly who: string;
+  readonly query: string;
+  readonly rows: number;
+  readonly error?: string;
+}
+
+/** How a bounded log keeps its entries: the most recent `keep` in memory, every one handed to `sink` as it is recorded. */
+export interface LogOptions<E> {
+  /** How many of the most recent entries stay in memory; a whole number of at least 1, 1000 if not given. */
+  readonly keep?: number;
+  /**
+   * Durable storage, provided by the caller: called once with every entry as it is recorded, before anything is
+   * evicted from memory. A sink that throws or whose promise rejects is counted in `sinkFailures` and never breaks
+   * the work being recorded.
+   */
+  readonly sink?: (entry: E) => void | Promise<unknown>;
+}
+
+/** An in-memory log that holds only the most recent entries, with counts that say what was recorded, handed on and evicted. */
+export class BoundedLog<E> {
+  private readonly list: E[] = [];
+  private readonly keep: number;
+  private readonly sink: ((entry: E) => void | Promise<unknown>) | undefined;
+  /** Entries recorded since the log was made. */
+  recorded = 0;
+  /** Entries handed to the sink. */
+  handed = 0;
+  /** Hand-offs where the sink threw or its promise rejected. */
+  sinkFailures = 0;
+  /** Entries dropped from memory to stay within `keep`. */
+  evicted = 0;
+
+  constructor(o: LogOptions<E> = {}) {
+    const keep = o.keep ?? 1000;
+    if (!Number.isInteger(keep) || keep < 1) throw new Error('a log keeps a whole number of entries, at least 1');
+    this.keep = keep;
+    this.sink = o.sink;
+  }
+
+  /** The most recent entries, oldest first. */
+  get entries(): readonly E[] {
+    return this.list;
+  }
+
+  push(entry: E): void {
+    this.recorded++;
+    if (this.sink) {
+      this.handed++;
+      try {
+        const r = this.sink(entry);
+        if (r && typeof (r as Promise<unknown>).then === 'function') (r as Promise<unknown>).then(undefined, () => void this.sinkFailures++);
+      } catch {
+        this.sinkFailures++;
+      }
+    }
+    this.list.push(entry);
+    while (this.list.length > this.keep) {
+      this.list.shift();
+      this.evicted++;
+    }
+  }
+}
+
 export class Console {
-  readonly log: { at: string; who: string; query: string; rows: number; error?: string }[] = [];
+  /** The query log: the most recent queries in memory, with counts of what was recorded, handed to the sink and evicted. */
+  readonly queries: BoundedLog<QueryLog>;
   private readonly cols: readonly Collection[];
   private readonly data: (name: string) => readonly Readonly<Record<string, unknown>>[];
   private readonly now: () => Date;
-  constructor(cols: readonly Collection[], data: (name: string) => readonly Readonly<Record<string, unknown>>[], now: () => Date = () => new Date()) {
+  constructor(cols: readonly Collection[], data: (name: string) => readonly Readonly<Record<string, unknown>>[], now: () => Date = () => new Date(), log: LogOptions<QueryLog> = {}) {
     this.cols = cols;
     this.data = data;
     this.now = now;
+    this.queries = new BoundedLog(log);
+  }
+  /** The most recent queries, oldest first. */
+  get log(): readonly QueryLog[] {
+    return this.queries.entries;
   }
   run(who: string, query: string, o: { seeSensitive?: boolean } = {}): { rows: Record<string, unknown>[]; capped: boolean; masked: string[] } {
     const at = this.now().toISOString();
@@ -148,10 +221,10 @@ export class Console {
       const fields = p.select ?? Object.keys(c.fields);
       const masked = o.seeSensitive ? [] : fields.filter((f) => c.fields[f]!.sensitive);
       const out = rows.slice(0, p.limit).map((r) => Object.fromEntries(fields.map((f) => [f, masked.includes(f) ? '•••' : r[f]])));
-      this.log.push({ at, who, query, rows: out.length });
+      this.queries.push({ at, who, query, rows: out.length });
       return { rows: out, capped, masked };
     } catch (e) {
-      this.log.push({ at, who, query, rows: 0, error: e instanceof Error ? e.message : String(e) });
+      this.queries.push({ at, who, query, rows: 0, error: e instanceof Error ? e.message : String(e) });
       throw e;
     }
   }

@@ -176,13 +176,20 @@ const whereOf = (e: Error) =>
 
 /**
  * Errors grouped by kind and the place they were thrown, with numbers and ids stripped from the message, so a
- * thousand occurrences are one group with a count, linked to the builds, features and traces that saw it.
+ * thousand occurrences are one group with a count, linked to the builds, features and traces that saw it. At most
+ * `maxGroups` groups are kept (default 1000): when a new kind arrives beyond that, the group seen least recently is
+ * evicted and counted in `evicted`, so an error whose message varies in ways the stripping misses cannot grow the
+ * map without bound. `groups` iterates least recently seen first.
  */
 export class Errors {
   readonly groups = new Map<string, ErrorGroup>();
+  /** How many groups were evicted to stay within `maxGroups`. */
+  evicted = 0;
   private readonly onNew?: (g: ErrorGroup) => void;
-  constructor(o: { onNew?: (g: ErrorGroup) => void } = {}) {
+  private readonly max: number;
+  constructor(o: { onNew?: (g: ErrorGroup) => void; maxGroups?: number } = {}) {
     if (o.onNew) this.onNew = o.onNew;
+    this.max = Math.max(1, o.maxGroups ?? 1000);
   }
   capture(e: unknown, o: { build?: string; feature?: string } = {}): ErrorGroup {
     const err = e instanceof Error ? e : new Error(String(e));
@@ -191,11 +198,18 @@ export class Errors {
     const fingerprint = createHash('sha256').update(`${err.name}|${where}|${shape}`).digest('hex').slice(0, 16);
     const now = new Date().toISOString();
     let g = this.groups.get(fingerprint);
-    if (!g) {
+    if (g) this.groups.delete(fingerprint);
+    else {
       g = { fingerprint, name: err.name, message: shape, where, count: 0, first: now, last: now, builds: new Set(), features: new Set(), traces: [] };
-      this.groups.set(fingerprint, g);
+      for (const oldest of this.groups.keys()) {
+        if (this.groups.size < this.max) break;
+        this.groups.delete(oldest);
+        this.evicted++;
+      }
       this.onNew?.(g);
     }
+    // Re-inserted on every capture, so the map's order is least recently seen first.
+    this.groups.set(fingerprint, g);
     g.count++;
     g.last = now;
     const feature = o.feature ?? als.getStore()?.feature;

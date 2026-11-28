@@ -11,6 +11,11 @@
 .zline li { flex: none; position: relative; }
 .zline li + li::before { content: ""; position: absolute; left: -2px; top: 50%; width: 2px; height: 12px; margin-top: -6px; background: color-mix(in srgb, var(--sheet) 25%, transparent); }
 .zbar nav .zline a { gap: 7px; padding: 8px 10px; font-size: 14.5px; }
+/* Beneath the line: the functions that serve every department, drawn under it, unnumbered, set off by a dashed rule. */
+.zbar nav:has(.zl-beneath) { flex-direction: column; align-items: flex-start; gap: 0; }
+.zl-beneath { flex: none; display: flex; gap: 2px; align-items: center; margin: 2px 0 0; padding-top: 2px; border-top: 1.5px dashed color-mix(in srgb, var(--sheet) 45%, transparent); }
+.zbar nav .zl-beneath a { gap: 7px; padding: 8px 10px; font-size: 14.5px; }
+.zl-beneath .zl-n { border-style: dashed; font-size: 13px; }
 .zl-n { font: 700 12px/1 var(--letter); width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; border: 1.5px solid currentColor; opacity: .85; }
 .zl-lamp { width: 9px; height: 9px; border-radius: 50%; display: none; }
 .zl-lamp.l-pass { display: inline-block; background: #7ad49a; }

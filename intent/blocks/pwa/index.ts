@@ -50,7 +50,9 @@ export interface Route {
 
 /**
  * The service worker source for a plan. Routes are regexes over the path, first match wins. Activation keeps only
- * this version's caches (the precache and each route's cache) and deletes every other.
+ * this version's caches (the precache and each route's cache) and deletes every other. Every cache write is held in
+ * the fetch event's `waitUntil`, and so is the background refresh of stale-while-revalidate, so the browser keeps the
+ * worker alive until the response is stored and an asset fetched once is there offline afterwards.
  */
 export function worker(o: { version: string; precache: readonly string[]; routes: readonly Route[]; offline: string }): string {
   const routes = o.routes.map((r) => `[${JSON.stringify(r.match)},${JSON.stringify(r.strategy)},${JSON.stringify(r.cache ?? `rt-${o.version}`)}]`).join(',');
@@ -59,10 +61,10 @@ self.addEventListener('install',e=>e.waitUntil(caches.open('pre-'+V).then(c=>c.a
 const KEEP=new Set(['pre-'+V,...R.map(([,,c])=>c)]);
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>!KEEP.has(k)).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==location.origin)return;const r=R.find(([m])=>m.test(u.pathname));if(!r||r[1]==='networkOnly')return;const [,s,c]=r;
-const net=()=>fetch(e.request).then(res=>{if(res.ok){const cl=res.clone();caches.open(c).then(x=>x.put(e.request,cl));}return res;});
+const net=()=>fetch(e.request).then(res=>{if(res.ok){const cl=res.clone();e.waitUntil(caches.open(c).then(x=>x.put(e.request,cl)));}return res;});
 if(s==='cacheFirst')e.respondWith(caches.match(e.request).then(h=>h||net()));
 else if(s==='networkFirst')e.respondWith(net().catch(()=>caches.match(e.request).then(h=>h||(e.request.mode==='navigate'?caches.match(OFF):Response.error()))));
-else e.respondWith(caches.match(e.request).then(h=>{const n=net().catch(()=>h);return h||n;}));});
+else e.respondWith(caches.match(e.request).then(h=>{const n=net().catch(()=>h);e.waitUntil(n);return h||n;}));});
 `;
 }
 

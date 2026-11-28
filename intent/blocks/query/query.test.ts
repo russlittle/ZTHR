@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { Console, QueryError, parse, type Collection } from './index.ts';
+import { Console, QueryError, parse, type Collection, type QueryLog } from './index.ts';
 
 const cols: Collection[] = [{ name: 'files', fields: { name: { type: 'string' }, size: { type: 'number' }, owner: { type: 'string' }, shared: { type: 'boolean' }, email: { type: 'string', sensitive: true } } }];
 const files = [
@@ -51,4 +51,19 @@ test('names inherited from Object.prototype are not fields', () => {
 
 test('a text value with a bad escape is a query error, not a crash', () => {
   assert.throws(() => parse('from files where name = "a\\q"'), QueryError);
+});
+
+test('the query log keeps the most recent queries in memory and hands every one to the sink', () => {
+  const stored: QueryLog[] = [];
+  const c = new Console(cols, () => files, () => new Date('2026-11-26T00:00:00Z'), { keep: 3, sink: (e) => void stored.push(e) });
+  for (let i = 0; i < 10; i++) c.run(`user-${i}`, 'from files limit 1');
+  assert.throws(() => c.run('x', 'from users'));
+  assert.deepEqual(c.log.map((l) => l.who), ['user-8', 'user-9', 'x']);
+  assert.equal(c.log.at(-1)!.error, 'no collection users; there are files');
+  assert.deepEqual(stored.map((l) => l.who), [...Array.from({ length: 10 }, (_, i) => `user-${i}`), 'x']);
+  assert.deepEqual([c.queries.recorded, c.queries.handed, c.queries.evicted], [11, 11, 8]);
+  const unbounded = make();
+  for (let i = 0; i < 1500; i++) unbounded.run('ana', 'from files limit 1');
+  assert.equal(unbounded.log.length, 1000, 'by default the most recent 1000 stay in memory');
+  assert.equal(unbounded.queries.evicted, 500);
 });
