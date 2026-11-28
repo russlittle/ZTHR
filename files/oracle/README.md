@@ -96,6 +96,7 @@ A masked value is compared by its shape (digits, date, text, empty) rather than 
 | JSON `token`, `url`; `lock-token`, `lock-time`, `data-fingerprint` | Share and lock answers | Random or derived from the server's address |
 | `quota-available-bytes`; JSON `free`, `total`, `relative` | Quota | The runner's free disk, not the protocol |
 | JSON `storageLocation` | Who am I | A path on the server's own disk |
+| JSON `name`, `productName`, `slogan`, `color`, `color-element`, `color-element-bright`, `color-element-dark` | Capabilities, theming | The product's own name, tagline and brand colours: a server identity |
 | JSON `version`, `versionstring`, `edition`, `productname`, `extendedSupport`, `installed`, `maintenance`, `needsDbUpgrade`; `uid_owner`, `displayname_owner`, `uid_file_owner`, `displayname_file_owner`, `mail_send` | Status and shares | Product identity and the people's display names, which the oracle does not test |
 | `checksums` | Properties | Present on both; algorithms differ by configuration |
 | Text `{base}` | Every body | The server's own address: the two servers listen on different ports |

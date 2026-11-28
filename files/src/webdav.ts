@@ -5,8 +5,9 @@
  */
 import { DAV, child, depth as depthOf, destination as davDestination, el, encodePath, httpDate, ifHolds, ifTokens, keyOf, multistatus, netPropChanges, overwrite as overwriteOf, parseIf, parseXml, propfindRequest, proppatchOps, timeout, type Out, type PropRequest } from '../../intent/blocks/dav/index.ts';
 import { parseChecksums, parseRange } from '../../intent/blocks/objects/index.ts';
-import { NotFound, type Node } from '../../intent/blocks/tree/index.ts';
-import type { Files, Where } from './app.ts';
+import { UPDATE } from '../../intent/blocks/grants/index.ts';
+import { Exists, MissingParent, NotFound, type Node } from '../../intent/blocks/tree/index.ts';
+import { OverwriteOff, type Files, type Where } from './app.ts';
 import { davError, header, statusOf, stream, text, xml, type Reply, type Req } from './http.ts';
 import { mimeOf } from './mime.ts';
 
@@ -62,7 +63,7 @@ async function propValue(files: Files, s: Seen, key: string): Promise<Out | null
     case k(OC, 'size'):
       return v(n.size);
     case k(OC, 'favorite'):
-      return v(n.props?.[k(OC, 'favorite')] ?? '0');
+      return v(files.isFavorite(s.user, n) ? '1' : '0');
     case k(OC, 'owner-id'):
       return v(n.owner);
     case k(OC, 'owner-display-name'):
@@ -92,7 +93,8 @@ async function propValue(files: Files, s: Seen, key: string): Promise<Out | null
     case k(NC, 'is-mount-root'):
       return v(s.mountRoot ? 'true' : 'false');
     case k(NC, 'is-encrypted'):
-      return v(0);
+      // Nextcloud answers it only for an end-to-end encrypted folder; Files has none, so it is never found.
+      return null;
     case k(NC, 'hidden'):
       return v('false');
     case k(NC, 'creation_time'):
@@ -169,9 +171,22 @@ export function davPath(path: string): DavPath | null {
 /** The path a Destination header names under `base`, in NFC as every name is kept. */
 const destination = (h: string | undefined, host: string, base: string): string | null => davDestination(h, host, base)?.normalize('NFC') ?? null;
 
-const DAV_HEADERS = { dav: '1, 3, extended-mkcol, access-control, calendarserver-principal-property-search, nextcloud-checksum-update, nc-calendar-search, nc-enable-birthday-calendar', 'ms-author-via': 'DAV' };
+/**
+ * The DAV compliance classes and extensions Files really has: class 1 and RFC 4918's class 3. Nextcloud's own list
+ * also names extended MKCOL, WebDAV ACL, calendar and paging extensions that Files does not implement, so they are
+ * not claimed. Class 2 (locks) is implemented but not claimed, as Nextcloud does not claim it either.
+ */
+export const DAV_CLASSES = '1, 3';
+const DAV_HEADERS = { dav: DAV_CLASSES, 'ms-author-via': 'DAV' };
 
 export async function webdav(files: Files, r: Req, p: DavPath): Promise<Reply> {
+  const out = await davRoute(files, r, p);
+  // Sabre sends the DAV header with every PROPFIND answer, an error included, as calendar apps expect.
+  if (r.method === 'PROPFIND') out.headers = { ...(out.headers ?? {}), dav: DAV_CLASSES };
+  return out;
+}
+
+async function davRoute(files: Files, r: Req, p: DavPath): Promise<Reply> {
   const user = r.person!.id;
   if (p.user && p.user !== user) return davError(403, 'you can only reach your own files here');
   const base = p.user ? p.base : '/remote.php/webdav';
@@ -183,9 +198,21 @@ export async function webdav(files: Files, r: Req, p: DavPath): Promise<Reply> {
     if (p.area === 'versions') return await versions(files, r, p, user);
     return await filesArea(files, r, decodeURIComponent(p.rest).normalize('NFC'), user, base);
   } catch (e) {
-    const s = statusOf(e);
-    return davError(s.status, s.message);
+    return davFailure(e, r.method);
   }
+}
+
+/**
+ * A failure as Sabre words it in Nextcloud, for the errors whose wording clients and people see most: a missing
+ * resource, a folder made twice or inside a missing one, and a copy or move that may not overwrite.
+ */
+export function davFailure(e: unknown, method: string): Reply {
+  if (e instanceof NotFound && e.path.startsWith('/')) return davError(404, `File with name ${e.path} could not be located`);
+  if (method === 'MKCOL' && e instanceof Exists) return davError(405, 'The resource you tried to create already exists');
+  if (method === 'MKCOL' && e instanceof MissingParent) return davError(409, 'Parent node does not exist');
+  if (e instanceof OverwriteOff) return davError(412, 'The destination node already exists, and the overwrite header is set to false', 'Overwrite');
+  const s = statusOf(e);
+  return davError(s.status, s.message);
 }
 
 const hrefFor = (base: string, path: string, folder: boolean) => `${base}${encodePath(path === '/' ? '/' : path)}${folder && path !== '/' ? '/' : ''}`;
@@ -240,7 +267,7 @@ async function filesArea(files: Files, r: Req, path: string, user: string, base:
       if (!node) throw new NotFound(path);
       if (node.kind === 'folder') return { status: 200, headers: { 'content-type': 'text/plain; charset=utf-8' }, body: 'This is a folder. Open it with a Nextcloud app or a WebDAV client.\n' };
       const range = parseRange(header(r, 'range'), node.size);
-      const common = { etag: `"${node.etag}"`, 'oc-etag': `"${node.etag}"`, 'oc-fileid': pad(node.id, files.instance), 'last-modified': httpDate(node.mtime), 'accept-ranges': 'bytes', 'content-type': node.mime ?? mimeOf(node.name), 'content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(node.name)}`, ...(node.checksums?.length ? { 'oc-checksum': node.checksums[0]! } : {}) };
+      const common = { etag: `"${node.etag}"`, 'oc-etag': `"${node.etag}"`, 'last-modified': httpDate(node.mtime), 'accept-ranges': 'bytes', 'content-type': node.mime ?? mimeOf(node.name), 'content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(node.name)}`, ...(node.checksums?.length ? { 'oc-checksum': node.checksums[0]! } : {}) };
       if (range === 'unsatisfiable') return { status: 416, headers: { 'content-range': `bytes */${node.size}` } };
       if (range) return { status: 206, headers: { ...common, 'content-range': `bytes ${range.start}-${range.end}/${node.size}`, 'content-length': String(range.end - range.start + 1) }, body: r.method === 'HEAD' ? '' : await files.objects.get(node.blob!, range) };
       return { status: 200, headers: { ...common, 'content-length': String(node.size) }, body: r.method === 'HEAD' || node.size === 0 ? '' : await files.objects.get(node.blob!) };
@@ -279,7 +306,9 @@ async function filesArea(files: Files, r: Req, path: string, user: string, base:
       if (!to) return davError(400, 'the Destination header must name a path on this server, under your files');
       const ow = overwriteOf(header(r, 'overwrite'));
       const out = r.method === 'MOVE' ? await files.move(user, path, to, ow, tokens) : await files.copy(user, path, to, ow, tokens);
-      return { status: out.created ? 201 : 204, headers: { etag: `"${out.node.etag}"`, 'oc-etag': `"${out.node.etag}"`, 'oc-fileid': pad(out.node.id, files.instance) } };
+      // As Nextcloud: a move names the file's etag and id, a copy only the new file's id.
+      const tags = r.method === 'MOVE' ? { etag: `"${out.node.etag}"`, 'oc-etag': `"${out.node.etag}"` } : {};
+      return { status: out.created ? 201 : 204, headers: { ...tags, 'oc-fileid': pad(out.node.id, files.instance) } };
     }
     case 'PROPPATCH': {
       const ops = proppatchOps(await text(r));
@@ -289,10 +318,15 @@ async function filesArea(files: Files, r: Req, path: string, user: string, base:
       const ok: Out[] = [];
       const refused: Out[] = [];
       const props: typeof ops = [];
+      let favorite: boolean | undefined;
       let mtime: number | undefined;
       // Instructions apply in document order (RFC 4918 9.2): a remove then a set of one property leaves it set.
       for (const o of ops) {
-        if (o.op === 'set' && o.ns === DAV && o.name === 'lastmodified') {
+        if (o.ns === OC && o.name === 'favorite') {
+          // A favourite is the person's own, kept with them and not on the node: anyone who can see it may set it.
+          favorite = o.op === 'set' && ['1', 'true'].includes(o.value.trim().toLowerCase());
+          ok.push(el(o.ns, o.name));
+        } else if (o.op === 'set' && o.ns === DAV && o.name === 'lastmodified') {
           const t = Date.parse(o.value);
           mtime = Number.isNaN(t) ? Number(o.value) : Math.floor(t / 1000);
           ok.push(el(DAV, o.name));
@@ -301,11 +335,16 @@ async function filesArea(files: Files, r: Req, path: string, user: string, base:
           ok.push(el(o.ns, o.name));
         } else refused.push(el(o.ns, o.name));
       }
+      // Anything else written is written on the node itself, which needs the right to change it.
+      const changesNode = props.length > 0 || mtime !== undefined;
+      if (changesNode && !(w.perms & UPDATE)) return davError(403, 'you may not change the properties of this');
       if (refused.length) return xml(207, multistatus([{ href: hrefFor(base, path, node.kind === 'folder'), propstats: [{ status: 403, props: refused }, { status: 424, props: ok }] }], PREFIXES));
+      // A lock stops every PROPPATCH on what it covers, favourites included, as Sabre's lock plugin does.
       await files.checkLock(w, user, tokens);
       const { set: setMap, clear } = netPropChanges(props);
       if (Object.keys(setMap).length || clear.length) await files.tree.setProps(w.owner, w.path, setMap, clear);
       if (mtime && Number.isFinite(mtime)) await files.tree.touch(w.owner, w.path, mtime);
+      if (favorite !== undefined) await files.setFavorite(user, (await files.tree.resolve(w.owner, w.path)) ?? node, favorite);
       return xml(207, multistatus([{ href: hrefFor(base, path, node.kind === 'folder'), propstats: [{ status: 200, props: ok }] }], PREFIXES));
     }
     case 'LOCK': {
@@ -340,7 +379,7 @@ async function filesArea(files: Files, r: Req, path: string, user: string, base:
         const req: PropRequest = prop ? { kind: 'prop', props: prop.children.map((c) => ({ ns: c.ns, name: c.name })) } : { kind: 'allprop' };
         const { w, node } = await files.resolve(user, path);
         if (!node) throw new NotFound(path);
-        const hits = (await files.tree.descendants(node)).filter((n) => !wantFav || n.props?.[k(OC, 'favorite')] === '1');
+        const hits = (await files.tree.descendants(node)).filter((n) => !wantFav || files.isFavorite(user, n));
         const out = [];
         for (const n of hits) {
           const np = `${path.replace(/\/+$/, '')}${(await files.tree.pathOf(n)).slice((await files.tree.pathOf(node)).length) || ''}`;
@@ -449,7 +488,9 @@ async function trashbin(files: Files, r: Req, p: DavPath, user: string): Promise
       const keys = req.kind === 'prop' ? req.props.map(keyOf) : Object.keys(all);
       return { href: `${p.base}/trash/${encodePath(t.id)}`, propstats: [{ status: 200, props: keys.filter((x) => all[x]).map((x) => all[x]!) }, { status: 404, props: keys.filter((x) => !all[x]).map((x) => el(x.slice(1, x.indexOf('}')), x.slice(x.indexOf('}') + 1))) }] };
     };
-    const head = { href: `${p.base}/trash/`, propstats: [{ status: 200, props: [el(DAV, 'resourcetype', [el(DAV, 'collection')])] }] };
+    // The trash itself is a collection with no other properties: anything else asked of it is not found, as in Nextcloud.
+    const asked = req.kind === 'prop' ? req.props.map(keyOf) : [k(DAV, 'resourcetype')];
+    const head = { href: `${p.base}/trash/`, propstats: [{ status: 200, props: asked.includes(k(DAV, 'resourcetype')) ? [el(DAV, 'resourcetype', [el(DAV, 'collection')])] : [] }, { status: 404, props: asked.filter((x) => x !== k(DAV, 'resourcetype')).map((x) => el(x.slice(1, x.indexOf('}')), x.slice(x.indexOf('}') + 1))) }] };
     return xml(207, multistatus(id ? list.map(item) : depthOf(header(r, 'depth'), 1) === 0 ? [head] : [head, ...list.map(item)], PREFIXES));
   }
   if (r.method === 'MOVE' && id) {
@@ -497,7 +538,7 @@ async function versions(files: Files, r: Req, p: DavPath, user: string): Promise
         [k(DAV, 'getcontenttype')]: el(DAV, 'getcontenttype', mimeOf(node.name)),
         [k(DAV, 'resourcetype')]: el(DAV, 'resourcetype'),
         [k(NC, 'version-author')]: el(NC, 'version-author', v.author),
-        [k(NC, 'version-label')]: el(NC, 'version-label', ''),
+        [k(NC, 'version-label')]: el(NC, 'version-label', v.label ?? ''),
         [k(NC, 'has-preview')]: el(NC, 'has-preview', 'false'),
       };
       const keys = req.kind === 'prop' ? req.props.map(keyOf) : Object.keys(all);
@@ -512,6 +553,20 @@ async function versions(files: Files, r: Req, p: DavPath, user: string): Promise
   if (r.method === 'MOVE') {
     const n = await files.restoreVersion(user, node.id, v.id);
     return { status: 204, headers: { etag: `"${n.etag}"`, 'oc-etag': `"${n.etag}"` } };
+  }
+  if (r.method === 'DELETE') {
+    await files.deleteVersion(user, node.id, v.id);
+    return { status: 204 };
+  }
+  if (r.method === 'PROPPATCH') {
+    // Only a version's label can be written, as in Nextcloud; anything else is refused and nothing changes.
+    const ops = proppatchOps(await text(r));
+    const label = (o: (typeof ops)[number]) => o.ns === NC && o.name === 'version-label';
+    const href = `${p.base}/versions/${fid}/${encodePath(v.id)}`;
+    const other = ops.filter((o) => !label(o));
+    if (other.length) return xml(207, multistatus([{ href, propstats: [{ status: 403, props: other.map((o) => el(o.ns, o.name)) }, { status: 424, props: ops.filter(label).map((o) => el(o.ns, o.name)) }] }], PREFIXES));
+    for (const o of ops) await files.labelVersion(user, node.id, v.id, o.op === 'set' ? o.value : '');
+    return xml(207, multistatus([{ href, propstats: [{ status: 200, props: ops.map((o) => el(o.ns, o.name)) }] }], PREFIXES));
   }
   return davError(405, `${r.method} is not supported for versions`);
 }

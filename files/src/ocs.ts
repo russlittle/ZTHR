@@ -3,7 +3,8 @@
  * sharing, managing people (for admins), and app passwords. Version 1 answers 200 with the outcome in the body;
  * version 2 answers with the real HTTP status. JSON when asked for, XML otherwise.
  */
-import { ALL, READ, type Grant } from '../../intent/blocks/grants/index.ts';
+import { createHash } from 'node:crypto';
+import { ALL, CREATE, READ, type Grant } from '../../intent/blocks/grants/index.ts';
 import { NotFound } from '../../intent/blocks/tree/index.ts';
 import { Denied, type Files } from './app.ts';
 import { fields, header, statusOf, type Reply, type Req } from './http.ts';
@@ -23,23 +24,54 @@ function toXml(v: Data, tag: string): string {
 export function ocs(r: Req, v: 1 | 2, status: number, data: Data, message = ''): Reply {
   const ok = status >= 200 && status < 300;
   const code = ok ? (v === 1 ? 100 : 200) : v === 1 ? ({ 400: 400, 401: 997, 403: 403, 404: 998 } as Record<number, number>)[status] ?? 996 : status;
-  const meta = { status: ok ? 'ok' : 'failure', statuscode: code, message: message || (ok ? 'OK' : ''), totalitems: '', itemsperpage: '' };
+  // Version 1 carries the paging fields, always empty; version 2 leaves them out, as Nextcloud does.
+  const meta = { status: ok ? 'ok' : 'failure', statuscode: code, message: message || (ok ? 'OK' : ''), ...(v === 1 ? { totalitems: '', itemsperpage: '' } : {}) };
   const asJson = r.url.searchParams.get('format') === 'json' || (header(r, 'accept') ?? '').includes('application/json');
   const http = v === 1 ? (status === 401 ? 401 : 200) : status;
   if (asJson) return { status: http, headers: { 'content-type': 'application/json; charset=utf-8' }, body: JSON.stringify({ ocs: { meta, data: ok ? data : [] } }) };
   return { status: http, headers: { 'content-type': 'text/xml; charset=UTF-8' }, body: `<?xml version="1.0"?>\n<ocs>${toXml(meta, 'meta')}${toXml(ok ? data : [], 'data')}</ocs>\n` };
 }
 
-export function capabilities(files: Files) {
+/** The names Files refuses whatever their extension, as the upload-safety block's Windows rule does. */
+const RESERVED_BASENAMES = ['con', 'prn', 'aux', 'nul', ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `com${n}`), ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `lpt${n}`)];
+
+/**
+ * What the server can do, as Nextcloud's apps read it. Only what Files really does is claimed: a feature Files does
+ * not have is left out, or false where Nextcloud itself says false when it is off. `signedIn` adds the person's
+ * own settings (language, locale, time zone), which Nextcloud gives only to someone signed in.
+ */
+export function capabilities(files: Files, signedIn = false) {
   return {
     version: VERSION,
     capabilities: {
-      core: { pollinterval: 60, 'webdav-root': 'remote.php/webdav', 'reference-api': false, 'mod-rewrite-working': true },
-      dav: { chunking: '1.0', bulkupload: '', 'absence-supported': false, 'absence-replacement': false },
-      files: { bigfilechunking: true, blacklisted_files: ['.htaccess'], forbidden_filenames: ['.htaccess'], forbidden_filename_characters: ['\\', '/'], forbidden_filename_extensions: [' ', '.part', '.filepart'], undelete: true, versioning: true, version_labeling: false, version_deletion: false, chunked_upload: { max_size: files.maxChunk, max_parallel_count: 5 } },
+      core: { pollinterval: 60, 'webdav-root': 'remote.php/webdav', 'reference-api': false, 'mod-rewrite-working': true, ...(signedIn ? { user: { language: '', locale: '', timezone: 'UTC' } } : {}) },
+      // No bulk upload, no out-of-office, no DAV SEARCH and no uploads into public links: their keys are absent.
+      dav: { chunking: '1.0', public_shares_chunking: false },
+      // Wrong passwords are refused with a Retry-After rather than slowed down, so no request is ever delayed.
+      bruteforce: { 'allow-listed': false, delay: 0 },
+      files: {
+        $comment: '"blacklisted_files" is deprecated as of Nextcloud 30, use "forbidden_filenames" instead',
+        bigfilechunking: true,
+        blacklisted_files: ['.htaccess'],
+        forbidden_filenames: ['.htaccess'],
+        // What the upload-safety block refuses: Windows' reserved names, and names ending in a space or a dot.
+        forbidden_filename_basenames: RESERVED_BASENAMES,
+        forbidden_filename_characters: ['\\', '/'],
+        forbidden_filename_extensions: [' ', '.', '.filepart', '.part'],
+        // Not every character Windows forbids is refused, so the full Windows rule is not claimed.
+        windows_compatible_filenames: false,
+        file_conversions: [],
+        undelete: true,
+        delete_from_trash: true,
+        versioning: true,
+        version_labeling: true,
+        version_deletion: true,
+        chunked_upload: { max_size: files.maxChunk, max_parallel_count: 5 },
+      },
       files_sharing: {
         api_enabled: true,
-        public: { enabled: true, password: { enforced: false, askForOptionalPassword: false }, expire_date: { enabled: true, enforced: false }, multiple_links: true, upload: false, upload_files_drop: false, send_mail: false, custom_tokens: false },
+        // expire_date says whether a default expiry is set for new links; Files sets none, though any link may expire.
+        public: { enabled: true, password: { enforced: false, askForOptionalPassword: false }, expire_date: { enabled: false }, expire_date_internal: { enabled: false }, expire_date_remote: { enabled: false }, multiple_links: true, upload: false, upload_files_drop: false, send_mail: false, custom_tokens: false },
         resharing: true,
         user: { send_mail: false, expire_date: { enabled: true } },
         group_sharing: true,
@@ -48,8 +80,7 @@ export function capabilities(files: Files) {
         federation: { outgoing: false, incoming: false, expire_date: { enabled: false } },
         sharee: { query_lookup_default: false, always_show_unique: true },
       },
-      theming: { name: 'Files', url: 'https://zthr.ai', slogan: 'Your files, on your own server', color: '#1f5f8b', 'color-text': '#ffffff', 'color-element': '#1f5f8b', 'color-element-bright': '#1f5f8b', 'color-element-dark': '#1f5f8b', logo: '', background: '', 'background-plain': true, 'background-default': true, logoheader: '', favicon: '' },
-      user: { expose_categories: false },
+      theming: { name: 'Files', productName: 'Files', url: 'https://zthr.ai', slogan: 'Your files, on your own server', color: '#1f5f8b', 'color-text': '#ffffff', 'color-element': '#1f5f8b', 'color-element-bright': '#1f5f8b', 'color-element-dark': '#1f5f8b', logo: '', background: '', 'background-plain': true, 'background-default': true, 'background-text': '#ffffff', logoheader: '', favicon: '' },
       notifications: { 'ocs-endpoints': ['list', 'get', 'delete', 'delete-all'], push: [] },
     },
   };
@@ -84,6 +115,13 @@ async function shareJson(files: Files, g: Grant, viewer: string, origin: string)
     item_type: g.resourceKind,
     mimetype: g.resourceKind === 'folder' ? 'httpd/unix-directory' : mimeOf(node?.name ?? ''),
     has_preview: false,
+    item_size: node?.size ?? 0,
+    item_mtime: node?.mtime ?? 0,
+    // What the person asking may do on the item itself; a file is never created in, so it never has create.
+    item_permissions: node ? (await files.permsOn(viewer, node)) & (node.kind === 'file' ? ~CREATE : ALL) : 0,
+    // The owner sees it in their own tree; anyone it is shared with sees it as the root of a shared mount.
+    'is-mount-root': viewer !== owner,
+    'mount-type': viewer === owner ? '' : 'shared',
     storage_id: `home::${owner}`,
     storage: 1,
     item_source: g.resource,
@@ -91,7 +129,7 @@ async function shareJson(files: Files, g: Grant, viewer: string, origin: string)
     file_parent: parent,
     file_target: `/${node?.name ?? ''}`,
     share_with: g.kind === 'link' ? (g.passwordHash ? '***redacted***' : null) : (g.to ?? null),
-    share_with_displayname: g.kind === 'link' ? (g.label ?? '') : g.kind === 'person' ? (files.person(g.to ?? '')?.display ?? g.to) : g.to,
+    share_with_displayname: g.kind === 'link' ? '(Shared link)' : g.kind === 'person' ? (files.person(g.to ?? '')?.display ?? g.to) : g.to,
     password: g.passwordHash ? '***redacted***' : null,
     send_password_by_talk: false,
     url: g.token ? `${origin}/s/${g.token}` : undefined,
@@ -111,7 +149,13 @@ const dateMs = (s: string | undefined) => {
 export async function ocsRoute(files: Files, r: Req, v: 1 | 2, rest: string, origin: string): Promise<Reply> {
   const me = r.person;
   try {
-    if (rest === '/cloud/capabilities') return ocs(r, v, 200, capabilities(files));
+    if (rest === '/cloud/capabilities') {
+      // An etag over the answer, as Nextcloud sends, so an app can ask again with If-None-Match and get a 304.
+      const out = ocs(r, v, 200, capabilities(files, !!me));
+      const etag = `"${createHash('md5').update(String(out.body)).digest('hex')}"`;
+      if (header(r, 'if-none-match') === etag) return { status: 304, headers: { etag } };
+      return { ...out, headers: { ...(out.headers ?? {}), etag } };
+    }
     if (!me) return ocs(r, v, 401, [], 'sign in first');
     if (rest === '/cloud/user' && r.method === 'GET') return ocs(r, v, 200, await userJson(files, me.id));
     if (rest.startsWith('/cloud/users')) return await provisioning(files, r, v, rest.slice('/cloud/users'.length));
@@ -165,6 +209,21 @@ async function userJson(files: Files, id: string) {
     groups: p.groups,
     language: 'en',
     locale: '',
+    timezone: '',
+    // The profile fields Nextcloud keeps for everyone; Files keeps none of them, so each is empty.
+    additional_mail: [],
+    biography: '',
+    bluesky: '',
+    fediverse: '',
+    headline: '',
+    manager: '',
+    notify_email: null,
+    organisation: '',
+    pronouns: '',
+    role: '',
+    // Sign-in times are not recorded, as lastLogin is not: 0 is Nextcloud's value for never.
+    firstLoginTimestamp: 0,
+    lastLoginTimestamp: 0,
     backendCapabilities: { setDisplayName: true, setPassword: true },
   };
 }

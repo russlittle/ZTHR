@@ -157,6 +157,26 @@ export const html = (status: number, body: string, headers: Record<string, strin
 
 export const esc = (s: string) => s.replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-/** A WebDAV error body, as Sabre shapes it, which is what Nextcloud clients parse for the message. */
-export const davError = (status: number, message: string): Reply =>
-  xml(status, `<?xml version="1.0" encoding="utf-8"?>\n<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns"><s:exception>${esc(status === 404 ? 'Sabre\\DAV\\Exception\\NotFound' : status === 423 ? 'Sabre\\DAV\\Exception\\Locked' : status === 412 ? 'Sabre\\DAV\\Exception\\PreconditionFailed' : status === 507 ? 'Sabre\\DAV\\Exception\\InsufficientStorage' : 'Sabre\\DAV\\Exception')}</s:exception><s:message>${esc(message)}</s:message></d:error>`);
+/** The Sabre exception class Nextcloud names in an error body for each status. */
+const SABRE: Readonly<Record<number, string>> = {
+  400: 'BadRequest',
+  401: 'NotAuthenticated',
+  403: 'Forbidden',
+  404: 'NotFound',
+  405: 'MethodNotAllowed',
+  409: 'Conflict',
+  412: 'PreconditionFailed',
+  415: 'UnsupportedMediaType',
+  416: 'RequestedRangeNotSatisfiable',
+  423: 'Locked',
+  501: 'NotImplemented',
+  503: 'ServiceUnavailable',
+  507: 'InsufficientStorage',
+};
+
+/**
+ * A WebDAV error body, as Sabre shapes it, which is what Nextcloud clients parse for the message. `about` names
+ * the request header the error is about, as Sabre's s:header does (Overwrite, If-Match).
+ */
+export const davError = (status: number, message: string, about?: string): Reply =>
+  xml(status, `<?xml version="1.0" encoding="utf-8"?>\n<d:error xmlns:d="DAV:" xmlns:s="http://sabredav.org/ns"><s:exception>${esc(SABRE[status] ? `Sabre\\DAV\\Exception\\${SABRE[status]}` : 'Sabre\\DAV\\Exception')}</s:exception><s:message>${esc(message)}</s:message>${about ? `<s:header>${esc(about)}</s:header>` : ''}</d:error>`);

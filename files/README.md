@@ -88,6 +88,7 @@ erDiagram
     string[] groups
     bool disabled
     int epoch "raised by a new password or disabling; ends web sessions"
+    int[] favorites "node ids; each person's own"
   }
   NODE {
     int id "stable; kept through moves and restores"
@@ -194,14 +195,15 @@ On Cloud Run each write adds an object upload and a log entry to the bucket; tho
 
 | Works | Not yet |
 | --- | --- |
-| Login flow v2 (the sign-in page names the app asking), app passwords, revoke, remote wipe by the person (web interface) or an admin (provisioning API) | The Nextcloud web interface itself (it is server-rendered PHP); Files has its own, simpler one |
+| Login flow v2 (the sign-in page names the app asking), app passwords, revoke, remote wipe by the person or an admin in the web interface (confirmed with their own password), or by an admin over the provisioning API | The Nextcloud web interface itself (it is server-rendered PHP); Files has its own, simpler one |
 | A web interface: sign in, browse, upload, download, make folders, delete to the trash, share by link | Editing share passwords and expiry in the web interface (the apps do it) |
 | Files over WebDAV: list, read, ranges, write, folders, move, copy, delete | Thumbnails and previews (`has-preview` is false) |
 | Chunked upload v2, resumable, with quota up front | Bulk upload, and the older chunking v1 |
 | If-Match, If-None-Match and WebDAV If headers (lock tokens and etags): no silent overwrite | Downloading a whole folder as a ZIP |
-| Versions: every overwrite kept, restore keeps the replaced copy | Calendars and contacts (CalDAV, CardDAV: the dav block is ready for them) |
+| Versions: every overwrite kept, restore keeps the replaced copy, label one, delete one | Calendars and contacts (CalDAV, CardDAV: the dav block is ready for them) |
 | Trash: delete, list, restore with the same id, purge, nightly sweep | Push notifications of changes (apps poll instead) |
 | Shares with people, groups and links; permissions; passwords; expiry | Federation, end-to-end encryption, group folders, the app store |
+| Favourites that are each person's own, on shared files too; other properties on a shared file need the right to change it | |
 | Quotas counting old versions and the trash; admins adding, disabling and removing people (disabling or a new password ends web sessions) | Comments and tags beyond favourites |
 | WebDAV locks with time limits, checked on every change | |
 | Names in Unicode NFC, as Nextcloud keeps them: é typed on a Mac and on Windows is one file | |

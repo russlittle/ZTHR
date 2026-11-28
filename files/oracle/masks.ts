@@ -19,6 +19,13 @@ export const EXTRA_JSON_MASKS: readonly { key: string; why: string }[] = [
   { key: 'total', why: 'free plus used: follows the runner\'s disk' },
   { key: 'relative', why: 'used over total: follows the runner\'s disk' },
   { key: 'storageLocation', why: 'a path on the server\'s own disk' },
+  { key: 'name', why: 'theming: the product\'s own name (Nextcloud, Files), a server identity' },
+  { key: 'productName', why: 'theming: the product\'s own name, a server identity' },
+  { key: 'slogan', why: 'theming: the product\'s own tagline, a server identity' },
+  { key: 'color', why: 'theming: the product\'s brand colour, a server identity' },
+  { key: 'color-element', why: 'theming: the brand colour as used on elements, a server identity' },
+  { key: 'color-element-bright', why: 'theming: the brand colour on a bright background, a server identity' },
+  { key: 'color-element-dark', why: 'theming: the brand colour on a dark background, a server identity' },
 ];
 
 export const EXTRA_PROP_MASKS: readonly { prop: string; why: string }[] = [

@@ -22,8 +22,8 @@ async function browser(s: Running, user: string, password = PASS) {
   return { as, token };
 }
 
-async function appPassword(s: Running, user: string): Promise<string> {
-  const r = await (await s.as(user, PASS)('/ocs/v2.php/core/getapppassword?format=json', { headers: { 'ocs-apirequest': 'true', 'user-agent': 'Nextcloud-android' } })).json();
+async function appPassword(s: Running, user: string, password = PASS): Promise<string> {
+  const r = await (await s.as(user, password)('/ocs/v2.php/core/getapppassword?format=json', { headers: { 'ocs-apirequest': 'true', 'user-agent': 'Nextcloud-android' } })).json();
   return r.ocs.data.apppassword;
 }
 
@@ -357,7 +357,7 @@ test('remote wipe: a person marks a device in the web interface, and the device 
     assert.match(page, /Nextcloud-android/);
     const id = /name="device" value="(\d+)"/.exec(page)![1]!;
     assert.equal((await as('/apps/files/devices/wipe', form({ device: id }))).status, 403, 'not without the request token');
-    assert.equal((await as('/apps/files/devices/wipe', form({ device: id, requesttoken: token }))).status, 303);
+    assert.equal((await as('/apps/files/devices/wipe', form({ device: id, requesttoken: token, password: PASS }))).status, 303);
     assert.equal((await s.as('ben', app)('/remote.php/dav/files/ben/', { method: 'PROPFIND', headers: { depth: '0' } })).status, 401);
     assert.equal((await s.as('ben', other)('/remote.php/dav/files/ben/', { method: 'PROPFIND', headers: { depth: '0' } })).status, 207, 'only that device');
     const check = await s.anon('/index.php/core/wipe/check', form({ token: app }));
@@ -368,7 +368,7 @@ test('remote wipe: a person marks a device in the web interface, and the device 
     // Ana, an admin, cannot be stopped by Ben's devices page, but someone else's device is not Ben's to wipe.
     const anas = await appPassword(s, 'ana');
     const anaId = (await s.files.devices.list('ana'))[0]!.id;
-    await as('/apps/files/devices/wipe', form({ device: String(anaId), requesttoken: token }));
+    await as('/apps/files/devices/wipe', form({ device: String(anaId), requesttoken: token, password: PASS }));
     assert.equal((await s.as('ana', anas)('/remote.php/dav/files/ana/', { method: 'PROPFIND', headers: { depth: '0' } })).status, 207);
   } finally {
     await s.close();
@@ -390,7 +390,7 @@ test('remote wipe: an admin wipes every device of a person over the provisioning
     const ids = [...page.matchAll(/name="device" value="(\d+)"/g)].map((m) => m[1]);
     const id = String((await s.files.devices.list('ben')).find((d) => !d.wipe)!.id);
     assert.ok(ids.includes(id));
-    assert.equal((await as('/apps/files/devices/wipe', form({ device: id, user: 'ben', requesttoken: token }))).status, 303);
+    assert.equal((await as('/apps/files/devices/wipe', form({ device: id, user: 'ben', requesttoken: token, password: PASS }))).status, 303);
     assert.deepEqual(await (await s.anon('/index.php/core/wipe/check', form({ token: three }))).json(), { wipe: true });
   } finally {
     await s.close();
@@ -409,6 +409,92 @@ test('the app sign-in page says which app is asking, escaped', async () => {
     const poll = new URL(f.poll.endpoint);
     assert.equal((await s.anon(`/index.php/login/v2/flow/${f.poll.token}`)).status, 410, 'the poll token does not open the page');
     assert.ok(poll);
+  } finally {
+    await s.close();
+  }
+});
+
+// ---------------------------------------------------------------- properties on shared nodes
+
+const FAV = (v: string) => `<d:propertyupdate xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns"><d:set><d:prop><oc:favorite>${v}</oc:favorite></d:prop></d:set></d:propertyupdate>`;
+const favOf = async (f: (p: string, i?: RequestInit & { headers?: Record<string, string> }) => Promise<Response>, path: string) =>
+  parseMultistatus(await (await f(path, { method: 'PROPFIND', headers: { depth: '0' }, body: '<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns"><d:prop><oc:favorite/></d:prop></d:propfind>' })).text())[0]!.props['oc:favorite'];
+
+test('favourites are each person’s own: a recipient’s favourite never changes the owner’s, as in Nextcloud', async () => {
+  const s = await start({ people: [{ id: 'ana' }, { id: 'ben' }, { id: 'cy' }] });
+  const ana = s.as('ana', PASS);
+  const ben = s.as('ben', PASS);
+  const cy = s.as('cy', PASS);
+  try {
+    await ana('/remote.php/dav/files/ana/Team', { method: 'MKCOL' });
+    await ana('/remote.php/dav/files/ana/Team/plan.txt', { method: 'PUT', body: 'x' });
+    for (const who of ['ben', 'cy']) await ana('/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json', { method: 'POST', headers: ocsForm, body: `path=/Team&shareType=0&shareWith=${who}&permissions=1` });
+    assert.equal((await ben('/remote.php/dav/files/ben/Team/plan.txt', { method: 'PROPPATCH', body: FAV('1') })).status, 207, 'a read-only recipient may favourite');
+    assert.equal(await favOf(ben, '/remote.php/dav/files/ben/Team/plan.txt'), '1');
+    assert.equal(await favOf(ana, '/remote.php/dav/files/ana/Team/plan.txt'), '0', 'the owner’s favourite is untouched');
+    assert.equal(await favOf(cy, '/remote.php/dav/files/cy/Team/plan.txt'), '0', 'and so is every other recipient’s');
+    await ana('/remote.php/dav/files/ana/Team/plan.txt', { method: 'PROPPATCH', body: FAV('1') });
+    await ben('/remote.php/dav/files/ben/Team/plan.txt', { method: 'PROPPATCH', body: FAV('0') });
+    assert.equal(await favOf(ana, '/remote.php/dav/files/ana/Team/plan.txt'), '1');
+    assert.equal(await favOf(ben, '/remote.php/dav/files/ben/Team/plan.txt'), '0');
+    const report = '<oc:filter-files xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns"><d:prop><oc:fileid/></d:prop><oc:filter-rules><oc:favorite>1</oc:favorite></oc:filter-rules></oc:filter-files>';
+    assert.equal(parseMultistatus(await (await ana('/remote.php/dav/files/ana/', { method: 'REPORT', body: report })).text()).length, 1, 'the owner’s favourites report lists it');
+    await cy('/remote.php/dav/files/cy/Team', { method: 'PROPPATCH', body: FAV('1') });
+    assert.equal(parseMultistatus(await (await ben('/remote.php/dav/files/ben/Team', { method: 'REPORT', body: report })).text()).length, 0, 'Ben’s lists none of Ana’s or Cy’s');
+  } finally {
+    await s.close();
+  }
+});
+
+test('any other property write on a shared node needs update permission', async () => {
+  const s = await start();
+  const ana = s.as('ana', PASS);
+  const ben = s.as('ben', PASS);
+  const custom = '<d:propertyupdate xmlns:d="DAV:" xmlns:x="urn:x"><d:set><d:prop><x:colour>red</x:colour></d:prop></d:set></d:propertyupdate>';
+  const mtime = '<d:propertyupdate xmlns:d="DAV:"><d:set><d:prop><d:lastmodified>1000</d:lastmodified></d:prop></d:set></d:propertyupdate>';
+  try {
+    await ana('/remote.php/dav/files/ana/Read', { method: 'MKCOL' });
+    await ana('/remote.php/dav/files/ana/Read/f.txt', { method: 'PUT', body: 'x' });
+    await ana('/remote.php/dav/files/ana/Write', { method: 'MKCOL' });
+    await ana('/remote.php/dav/files/ana/Write/f.txt', { method: 'PUT', body: 'x' });
+    await ana('/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json', { method: 'POST', headers: ocsForm, body: 'path=/Read&shareType=0&shareWith=ben&permissions=1' });
+    await ana('/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json', { method: 'POST', headers: ocsForm, body: 'path=/Write&shareType=0&shareWith=ben&permissions=3' });
+    const before = (await s.files.tree.resolve('ana', '/Read/f.txt'))!;
+    assert.equal((await ben('/remote.php/dav/files/ben/Read/f.txt', { method: 'PROPPATCH', body: custom })).status, 403);
+    assert.equal((await ben('/remote.php/dav/files/ben/Read/f.txt', { method: 'PROPPATCH', body: mtime })).status, 403);
+    const after = (await s.files.tree.resolve('ana', '/Read/f.txt'))!;
+    assert.deepEqual([after.props, after.mtime], [before.props, before.mtime], 'nothing on Ana’s file changed');
+    assert.equal((await ben('/remote.php/dav/files/ben/Write/f.txt', { method: 'PROPPATCH', body: custom })).status, 207);
+    assert.equal((await s.files.tree.resolve('ana', '/Write/f.txt'))!.props?.['{urn:x}colour'], 'red');
+  } finally {
+    await s.close();
+  }
+});
+
+// ---------------------------------------------------------------- confirming a wipe
+
+test('wiping a device on the web takes the person’s password again, and an admin confirms with their own', async () => {
+  const s = await start();
+  try {
+    const BEN = 'bens own password';
+    await s.files.setPassword('ben', BEN);
+    const app = await appPassword(s, 'ben', BEN);
+    const id = String((await s.files.devices.list('ben'))[0]!.id);
+    const ben = await browser(s, 'ben', BEN);
+    const page = await (await ben.as('/apps/files/devices')).text();
+    assert.match(page, /type="password"[^>]*name="password"|name="password"[^>]*type="password"/, 'the wipe form asks for the password');
+    const stillWorks = async () => (await s.as('ben', app)('/remote.php/dav/files/ben/', { method: 'PROPFIND', headers: { depth: '0' } })).status === 207;
+    assert.equal((await ben.as('/apps/files/devices/wipe', form({ device: id, requesttoken: ben.token }))).status, 403, 'no password');
+    assert.ok(await stillWorks());
+    assert.equal((await ben.as('/apps/files/devices/wipe', form({ device: id, requesttoken: ben.token, password: 'not it' }))).status, 403, 'a wrong password');
+    assert.equal((await ben.as('/apps/files/devices/wipe', form({ device: id, requesttoken: ben.token, password: app }))).status, 403, 'an app password does not confirm');
+    assert.ok(await stillWorks());
+    const ana = await browser(s, 'ana');
+    assert.equal((await ana.as('/apps/files/devices/wipe', form({ device: id, user: 'ben', requesttoken: ana.token, password: BEN }))).status, 403, 'the admin confirms with their own password, not Ben’s');
+    assert.ok(await stillWorks());
+    assert.equal((await ana.as('/apps/files/devices/wipe', form({ device: id, user: 'ben', requesttoken: ana.token, password: PASS }))).status, 303, 'the admin’s own password confirms');
+    assert.ok(!(await stillWorks()));
+    assert.deepEqual(await (await s.anon('/index.php/core/wipe/check', form({ token: app }))).json(), { wipe: true });
   } finally {
     await s.close();
   }

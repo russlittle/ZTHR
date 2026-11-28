@@ -149,6 +149,16 @@ export async function web(files: Files, r: Req): Promise<Reply> {
         // A person manages their own devices; an admin also anyone's.
         const whose = f['user'] && who.person.admin ? f['user'] : user;
         const id = Number(f['device']);
+        if (p.endsWith('/wipe')) {
+          // As Nextcloud's password confirmation does for sensitive actions: whoever acts (the person, or the admin
+          // acting for them) enters their own account password again. An app password does not confirm, and
+          // wrong ones count against the sign-in limits.
+          const confirmed = await signInAs(files, r, user, f['password'] ?? '').then(
+            (c) => c.device === undefined,
+            () => false,
+          );
+          if (!confirmed) return page(403, 'Confirm with your password', `<h1>Confirm with your password</h1><p>Wiping a device needs your account password. Nothing was wiped.</p><p><a href="/apps/files/devices${whose !== user ? `?user=${encodeURIComponent(whose)}` : ''}">Back to devices</a></p>`, who);
+        }
         const done = p.endsWith('/wipe') ? await files.wipeDevice(whose, id) : (await files.devices.list(whose)).some((d) => d.id === id) && (await files.devices.revoke(whose, id), true);
         const note = done ? (p.endsWith('/wipe') ? 'The device will erase this account the next time it connects.' : 'The device is signed out.') : 'No such device.';
         return { status: 303, headers: { location: `/apps/files/devices?${whose !== user ? `user=${encodeURIComponent(whose)}&` : ''}note=${encodeURIComponent(note)}` } };
@@ -221,7 +231,7 @@ async function devicesPage(files: Files, r: Req, who: { person: Person; csrf: st
   const rows = list.map((d) => {
     const actions = d.wipe
       ? '<span class="muted">Waiting to erase itself</span>'
-      : `<form method="post" action="/apps/files/devices/revoke">${hidden(d.id)}<button type="submit">Sign out<span class="sr"> ${esc(d.name)}</span></button></form><form method="post" action="/apps/files/devices/wipe">${hidden(d.id)}<button type="submit">Wipe<span class="sr"> ${esc(d.name)}</span></button></form>`;
+      : `<form method="post" action="/apps/files/devices/revoke">${hidden(d.id)}<button type="submit">Sign out<span class="sr"> ${esc(d.name)}</span></button></form><form method="post" action="/apps/files/devices/wipe">${hidden(d.id)}<label class="sr" for="pw${d.id}">Your password, to confirm wiping ${esc(d.name)}</label><input type="password" id="pw${d.id}" name="password" autocomplete="current-password" required placeholder="Your password"> <button type="submit">Wipe<span class="sr"> ${esc(d.name)}</span></button></form>`;
     return `<tr><td>${esc(d.name)}</td><td class="num hide">${when(Math.floor(d.lastUsed / 1000))}</td><td><div class="actions">${actions}</div></td></tr>`;
   });
   const title = whose === who.person.id ? 'Devices and apps' : `Devices and apps of ${files.state.doc.people[whose]!.display}`;
@@ -229,7 +239,7 @@ async function devicesPage(files: Files, r: Req, who: { person: Person; csrf: st
     200,
     title,
     `<h1>${esc(title)}</h1><nav aria-label="Folder path"><ol><li><a href="/apps/files">Your files</a></li><li aria-current="page">Devices</li></ol></nav>${note ? `<div class="note" role="status">${esc(note)}</div>` : ''}
-<p class="muted">Wiping a device signs it out and tells it to erase this account’s files from itself the next time it connects.</p>
+<p class="muted">Wiping a device signs it out and tells it to erase this account’s files from itself the next time it connects. To wipe one, confirm with your own account password.</p>
 ${list.length ? `<table><caption class="sr">${esc(title)}</caption><thead><tr><th scope="col">App</th><th scope="col" class="num hide">Last used (UTC)</th><th scope="col"><span class="sr">Actions</span></th></tr></thead><tbody>${rows.join('')}</tbody></table>` : '<p>No apps are signed in.</p>'}`,
     who,
   );

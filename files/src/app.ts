@@ -36,6 +36,13 @@ export class PreconditionFailed extends Error {
   }
 }
 
+/** A copy or move onto something that exists, with Overwrite: F. */
+export class OverwriteOff extends PreconditionFailed {
+  constructor(to: string) {
+    super(`${to} exists and overwrite is off`);
+  }
+}
+
 /** Where a path a person sees lands: whose tree, the path within it, and what the person may do there. */
 export interface Where {
   readonly owner: string;
@@ -56,6 +63,7 @@ export interface Options {
 }
 
 const DAY = 86_400_000;
+const FAVORITE = '{http://owncloud.org/ns}favorite';
 
 export class Files {
   readonly state: State;
@@ -194,6 +202,29 @@ export class Files {
     delete this.state.doc.people[id];
     this.state.mark('people', id);
     this.keptTotals.delete(id);
+  }
+
+  // ---------------------------------------------------------------- favourites
+
+  /**
+   * Whether a person marked a node as a favourite. Favourites are each person's own, as in Nextcloud, so marking
+   * something shared with you never changes what its owner or anyone else sees. A favourite an owner set before
+   * favourites were per person (kept on the node) still counts for the owner.
+   */
+  isFavorite(user: string, node: Node): boolean {
+    if (this.state.doc.people[user]?.favorites?.includes(node.id)) return true;
+    return node.owner === user && node.props?.[FAVORITE] === '1';
+  }
+
+  /** Marks or unmarks a favourite for one person; it needs only that they can see the node. */
+  async setFavorite(user: string, node: Node, on: boolean): Promise<void> {
+    const p = this.state.doc.people[user];
+    if (!p) throw new NotFound(user);
+    const rest = (p.favorites ?? []).filter((id) => id !== node.id);
+    this.state.doc.people[user] = { ...p, favorites: on ? [...rest, node.id] : rest };
+    this.state.mark('people', user);
+    // The owner's favourite from the time it was kept on the node moves to their own list.
+    if (node.owner === user && node.props?.[FAVORITE] !== undefined) await this.tree.setProps(node.owner, await this.tree.pathOf(node), {}, [FAVORITE]);
   }
 
   /** A login name and either the person's password or one of their app passwords. */
@@ -547,7 +578,7 @@ export class Files {
     this.need(await this.parentWhere(user, to), CREATE, 'add things there');
     await this.checkLock(a.w, user, tokens, true);
     await this.checkLock(b.w, user, tokens, true);
-    if (b.node && !overwrite) throw new PreconditionFailed(`${to} exists and overwrite is off`);
+    if (b.node && !overwrite) throw new OverwriteOff(to);
     if (b.node) this.needToReplace(b.w, b.node);
     if (a.w.owner === b.w.owner) {
       const r = await this.tree.move(a.w.owner, a.w.path, b.w.path, overwrite);
@@ -584,7 +615,7 @@ export class Files {
     const b = await this.resolve(user, to);
     this.need(await this.parentWhere(user, to), CREATE, 'add things there');
     await this.checkLock(b.w, user, tokens, true);
-    if (b.node && !overwrite) throw new PreconditionFailed(`${to} exists and overwrite is off`);
+    if (b.node && !overwrite) throw new OverwriteOff(to);
     if (b.node) this.needToReplace(b.w, b.node);
     const free = await this.makeRoom(b.w.owner, a.node.size - (b.node?.size ?? 0));
     if (free !== undefined && a.node.size - (b.node?.size ?? 0) > free) throw new Insufficient(a.node.size, free);
@@ -620,6 +651,34 @@ export class Files {
 
   versionsOf(fileId: number): Version[] {
     return [...(this.state.doc.versions[String(fileId)] ?? [])].reverse();
+  }
+
+  /** An old copy of a file someone can see, with what they may do to the file, or NotFound. */
+  private async versionFor(user: string, fileId: number, versionId: string): Promise<{ node: Node; v: Version; perms: number }> {
+    const node = await this.tree.get(fileId);
+    if (!node || node.kind !== 'file') throw new NotFound(String(fileId));
+    const perms = await this.permsOn(user, node);
+    const v = perms ? (this.state.doc.versions[String(fileId)] ?? []).find((x) => x.id === versionId) : undefined;
+    if (!v) throw new NotFound(versionId);
+    return { node, v, perms };
+  }
+
+  /** Gives up one old copy for good, as Nextcloud allows whoever may delete the file. */
+  async deleteVersion(user: string, fileId: number, versionId: string): Promise<void> {
+    const { v, perms } = await this.versionFor(user, fileId, versionId);
+    if (!(perms & DELETE)) throw new Denied('you may not delete versions of this file');
+    await this.dropVersion(String(fileId), v);
+  }
+
+  /** Names an old copy (an empty label clears it), as Nextcloud allows whoever may change the file. */
+  async labelVersion(user: string, fileId: number, versionId: string, label: string): Promise<Version> {
+    const { v, perms } = await this.versionFor(user, fileId, versionId);
+    if (!(perms & UPDATE)) throw new Denied('you may not label versions of this file');
+    const { label: _old, ...rest } = v;
+    const next: Version = label.trim() ? { ...rest, label: label.trim() } : rest;
+    this.state.doc.versions[String(fileId)] = (this.state.doc.versions[String(fileId)] ?? []).map((x) => (x === v ? next : x));
+    this.state.mark('versions', String(fileId));
+    return next;
   }
 
   /** Makes an old copy current again; the copy it replaces becomes a version, so nothing is lost. */

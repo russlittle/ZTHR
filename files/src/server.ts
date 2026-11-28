@@ -3,6 +3,7 @@
  * WebDAV, OCS or a page, and records every request as one structured log line (method, route, status, time, who),
  * never with a password, a token or a file name in it.
  */
+import { randomBytes } from 'node:crypto';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { Files } from './app.ts';
 import { authenticate, davError, header, json, send, statusOf, type Reply, type Req } from './http.ts';
@@ -66,6 +67,7 @@ export function handler(files: Files, o: ServeOptions = {}) {
       if (s.status >= 500) o.log?.({ severity: 'ERROR', message: e instanceof Error ? e.stack : String(e) });
     }
     if (out.status === 401 && !out.headers?.['www-authenticate']) out.headers = { ...(out.headers ?? {}), 'www-authenticate': 'Basic realm="Files", charset="UTF-8"' };
+    out.headers = { ...wireHeaders(path, out), ...(out.headers ?? {}) };
     try {
       await send(res, r.method, out);
     } catch {
@@ -73,6 +75,20 @@ export function handler(files: Files, o: ServeOptions = {}) {
     }
     o.log?.({ severity: out.status >= 500 ? 'ERROR' : 'INFO', httpRequest: { requestMethod: r.method, status: out.status, latency: `${(Date.now() - started) / 1000}s` }, route: routeOf(path), user: r.person ? 'signed-in' : 'anonymous' });
   };
+}
+
+/**
+ * The headers Nextcloud puts on answers whatever the route, so a client that reads them finds them here too: a
+ * request id on every answer but status.php and a WebDAV error (Nextcloud adds it after a WebDAV method completes,
+ * so an exception goes without), and, as PHP does, text/html on an empty WebDAV answer other than 204 and 304.
+ */
+export function wireHeaders(path: string, out: Reply): Record<string, string> {
+  const h: Record<string, string> = {};
+  const dav = path.startsWith('/remote.php');
+  if (path !== '/status.php' && !(dav && out.status >= 400)) h['x-request-id'] = randomBytes(15).toString('base64url');
+  const empty = out.body === undefined || out.body === '' || (out.body instanceof Uint8Array && out.body.length === 0);
+  if (dav && empty && out.status !== 204 && out.status !== 304 && !out.headers?.['content-type']) h['content-type'] = 'text/html; charset=UTF-8';
+  return h;
 }
 
 const signedIn = (files: Files, r: Req) => authenticate(files, r);

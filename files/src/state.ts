@@ -31,6 +31,8 @@ export interface Person {
   readonly disabled?: boolean;
   /** Raised on a password change and on disabling: a web session made before it no longer signs in. */
   readonly epoch?: number;
+  /** Ids of the files and folders this person marked as favourites: each person's own, as in Nextcloud. */
+  readonly favorites?: readonly number[];
 }
 
 export interface Trashed {
@@ -54,6 +56,8 @@ export interface Version {
   /** When a newer copy replaced it. */
   readonly closedAt: number;
   readonly author: string;
+  /** A name a person gave it, so it is easy to find again; absent or empty is none. */
+  readonly label?: string;
 }
 
 export interface Doc {
